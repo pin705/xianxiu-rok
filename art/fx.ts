@@ -218,3 +218,104 @@ export function farRange(w: number, h: number, seed: number, tone: string, alpha
     },
   }
 }
+
+// Kiếm khí hình trăng khuyết (bay ngang, tô màu bằng tint)
+export function slashTex(w = 96, h = 48) {
+  const cv = canvas(w, h)
+  const g = cv.getContext('2d') as G
+  const gr = g.createLinearGradient(0, 0, w, 0)
+  gr.addColorStop(0, 'rgba(255,255,255,0)')
+  gr.addColorStop(0.7, 'rgba(255,255,255,0.9)')
+  gr.addColorStop(1, 'rgba(255,255,255,1)')
+  g.fillStyle = gr
+  g.beginPath()
+  g.moveTo(w * 0.05, h * 0.5)
+  g.quadraticCurveTo(w * 0.7, -h * 0.05, w * 0.98, h * 0.5)
+  g.quadraticCurveTo(w * 0.7, h * 0.28, w * 0.05, h * 0.5)
+  g.fill()
+  g.globalAlpha = 0.5
+  g.beginPath()
+  g.moveTo(w * 0.1, h * 0.5)
+  g.quadraticCurveTo(w * 0.72, h * 1.02, w * 0.96, h * 0.52)
+  g.quadraticCurveTo(w * 0.7, h * 0.7, w * 0.1, h * 0.5)
+  g.fill()
+  return cv
+}
+
+// Vết vuốt: ba đường cong song song
+export function clawTex(size = 64) {
+  const cv = canvas(size, size)
+  const g = cv.getContext('2d') as G
+  g.lineCap = 'round'
+  for (let i = 0; i < 3; i++) {
+    const o = (i - 1) * size * 0.2
+    const gr = g.createLinearGradient(size * 0.2, 0, size * 0.8, size)
+    gr.addColorStop(0, 'rgba(255,255,255,0)')
+    gr.addColorStop(0.5, 'rgba(255,255,255,1)')
+    gr.addColorStop(1, 'rgba(255,255,255,0)')
+    g.strokeStyle = gr
+    g.lineWidth = size * 0.07
+    g.beginPath()
+    g.moveTo(size * 0.25 + o, size * 0.1)
+    g.quadraticCurveTo(size * 0.62 + o, size * 0.45, size * 0.55 + o, size * 0.92)
+    g.stroke()
+  }
+  return cv
+}
+
+// Thanh phi kiếm nhỏ (mưa kiếm của công pháp)
+export const flyingSword = (): Asset => ({
+  x: -3, y: -16, w: 6, h: 20,
+  draw(g) {
+    stroke(g, [[0, 2], [0, -14]], { w: 1.4, color: mix(C.silk, C.azuriteL, 0.3), press: 'taper', alpha: 1 })
+    stroke(g, [[0, 2], [0, -14]], { w: 0.4, color: C.ink, press: 'even', alpha: 0.6 })
+    stroke(g, [[-2, -1.6], [2, -1.6]], { w: 1, color: C.gold, press: 'even', alpha: 1 })
+    stroke(g, [[0, -1.6], [0, 2.4]], { w: 1.1, color: C.lacquer2, press: 'even', alpha: 1 })
+  },
+})
+
+// Sân trận: giấy + trời theo cảnh + dãy núi xa + mặt đất loang + đá/tùng hai mép. Neo góc trên trái, w × h DU.
+export type Theme = 'wild' | 'forest' | 'fire' | 'ice' | 'storm' | 'sect'
+const SCENE_TONE: Record<Theme, { sky: string; ground: string; far: string }> = {
+  wild: { sky: C.azuriteL, ground: C.malachiteL, far: C.azuriteL },
+  forest: { sky: C.malachiteL, ground: C.malachite, far: C.malachiteD },
+  fire: { sky: '#e0a07a', ground: C.ochre, far: '#8a4a36' },
+  ice: { sky: '#cfe6f0', ground: '#e4eef2', far: '#8fb3c8' },
+  storm: { sky: '#3b3356', ground: '#5d5870', far: '#2a2540' },
+  sect: { sky: C.ochreL, ground: C.paper2, far: C.ink3 },
+}
+export function battlefield(w: number, h: number, theme: Theme): Asset {
+  const t = SCENE_TONE[theme]
+  return {
+    x: 0, y: 0, w, h,
+    draw(g) {
+      const sky = g.createLinearGradient(0, 0, 0, h * 0.5)
+      sky.addColorStop(0, rgba(t.sky, theme === 'storm' ? 0.95 : 0.55))
+      sky.addColorStop(1, rgba(t.sky, 0))
+      g.fillStyle = sky
+      g.fillRect(0, 0, w, h * 0.5)
+      // núi xa
+      const far = farRange(w, h * 0.16, 77, t.far, theme === 'storm' ? 0.7 : 0.45)
+      g.save()
+      g.translate(0, h * 0.3)
+      far.draw(g)
+      g.restore()
+      // mặt đất: dải loang từ giữa xuống, đậm dần
+      const ground: Pt[] = [[-10, h * 0.34], [w * 0.3, h * 0.33], [w * 0.7, h * 0.35], [w + 10, h * 0.33], [w + 10, h + 10], [-10, h + 10]]
+      wash(g, ground, { fill: g2 => { const r = g2.createLinearGradient(0, h * 0.33, 0, h); r.addColorStop(0, rgba(t.ground, 0.25)); r.addColorStop(1, rgba(t.ground, 0.7)); return r }, alpha: 1, jitter: 4, layers: 3, seed: 5 })
+      // vệt đất, cỏ
+      const r = rng(9)
+      for (let i = 0; i < 26; i++) {
+        const x = r() * w, y = h * (0.4 + r() * 0.55), l = 8 + r() * 26
+        stroke(g, [[x, y], [x + l * 0.5, y - 1 + r() * 2], [x + l, y]], { w: 1 + r(), color: mix(t.ground, C.ink, 0.5), press: 'taper', alpha: 0.25 + r() * 0.2, dry: 0.5, seed: i })
+      }
+      // đá hai mép
+      for (const [x, y, rw, rh, s] of [[18, h * 0.58, 70, 46, 1], [w - 16, h * 0.52, 60, 40, 2], [10, h * 0.92, 90, 60, 3], [w - 8, h * 0.96, 80, 56, 4]] as const) {
+        const rock: Pt[] = [[x - rw / 2, y], [x - rw * 0.4, y - rh * 0.6], [x - rw * 0.1, y - rh], [x + rw * 0.25, y - rh * 0.8], [x + rw / 2, y]]
+        wash(g, rock, { fill: g2 => { const r2 = g2.createLinearGradient(0, y - rh, 0, y); r2.addColorStop(0, mix(t.far, C.ink, 0.2)); r2.addColorStop(1, mix(t.far, C.ink, 0.6)); return r2 }, alpha: 0.9, jitter: 2, layers: 2, edge: 1.5, seed: s * 11 })
+        stroke(g, rock.slice(0, 3), { w: 2, color: C.ink, press: 'nail', dry: 0.35, alpha: 0.8, seed: s * 13 })
+      }
+      grain(g, 0.35)
+    },
+  }
+}

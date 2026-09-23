@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { flushSync, onMount } from 'svelte'
   import {
     BUILDINGS, IDS, MAP_HALL, REALMS, RESOURCES, SECTS, TECH_IDS, advance, apply, newGame, questDone, questOf, storage,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { Bag, Button, Card, Sheet, Toasts, type ToastItem } from './ui'
+  import { Bag, Button, Card, Sheet, Toasts, fly, type ToastItem } from './ui'
   import Daily from './Daily.svelte'
   import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
@@ -170,6 +170,20 @@
     select(id, v)
   }
 
+  // Chuyển tab: vết mực loang ra từ chỗ chạm (trình duyệt không hỗ trợ View Transitions thì chuyển ngay)
+  function switchTab(t: Tab, e: MouseEvent) {
+    sfx('tap')
+    const go = () => {
+      tab = t
+      selected = null
+    }
+    if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return go()
+    const root = document.documentElement.style
+    root.setProperty('--vt-x', `${e.clientX}px`)
+    root.setProperty('--vt-y', `${e.clientY}px`)
+    document.startViewTransition(() => flushSync(go))
+  }
+
   function openTarget(t: Target) {
     selected = null
     tab = 'banDo'
@@ -182,10 +196,11 @@
     selected = null
   }
 
-  function claim() {
+  function claim(e: MouseEvent) {
     const q = game && questOf(game)
     if (!q || !act({ type: 'claim' })) return
     gain = { bag: q.reward, t: nowMs() }
+    fly(e.currentTarget as Element, { ...q.reward, ...q.items })
     sfx('reward')
   }
 
@@ -329,11 +344,7 @@
     onclaim={claim}
     onquest={goQuest}
     onbuilder={builder}
-    ontab={t => {
-      sfx('tap')
-      tab = t
-      selected = null
-    }}
+    ontab={switchTab}
     onsettings={() => (settingsOpen = true)}
     ondaily={() => (dailyOpen = true)}
   />
@@ -377,7 +388,19 @@
         </ul>
       {/if}
       {#if away.full}<p class="t-small t-bad mt-3">{L.away.full}</p>{/if}
-      <div class="mt-4"><Button variant="gold" size="lg" wide onclick={() => (awayOpen = false)}>{L.away.enter}</Button></div>
+      <div class="mt-4">
+        <Button
+          variant="gold"
+          size="lg"
+          wide
+          onclick={e => {
+            const from = e.currentTarget as Element
+            const bag = Object.fromEntries(away.gains.map(g => [g.r, g.n]))
+            awayOpen = false
+            requestAnimationFrame(() => fly(from, bag, document.body)) // bay sau khi hộp thoại đóng
+          }}>{L.away.enter}</Button
+        >
+      </div>
     {/if}
   </Sheet>
 {:else}

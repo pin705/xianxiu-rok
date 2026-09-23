@@ -1,8 +1,10 @@
 <script lang="ts">
   // Phát lại trận: luật đã tính xong (tất định), ở đây chỉ diễn lại từng lượt rồi hiện kết quả.
-  import { MAX_ROUNDS, count, type Report } from '@rok/rules'
+  import { ELDERS, MAX_ROUNDS, SECTS, count, type Report, type Skill } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Bag, Button, Card, Medal, Stat } from './ui'
+  import { Battle } from './world/battle'
+  import { cssPerDU, getApp } from './world/stage'
   import { GLYPH, L, LOOK, num, reportName, sfx } from './lib'
 
   let { report, onclose }: { report: Report | null; onclose: () => void } = $props()
@@ -33,14 +35,55 @@
     !f ? [] : at <= 0 ? (side ? f.b : f.a).troops.map(t => t.n) : f.rounds[at - 1].n[side]
   const cast = $derived(f && r > 0 ? f.rounds[r - 1].cast : [false, false])
 
+  // Cảnh trận WebGL: mượn canvas chung của game đặt vào hộp thoại (không tạo thêm context), trả lại khi đóng
+  let host = $state<HTMLDivElement>()
+  let battle: Battle | undefined
+  $effect(() => {
+    const rep = shown
+    if (!rep || !host) return
+    let dead = false
+    let undo = () => {}
+    getApp().then(app => {
+      if (dead) return
+      const k = cssPerDU()
+      const skills: [Skill | undefined, Skill | undefined] = [
+        rep.fights[0]?.a.elder ? ELDERS[rep.fights[0].a.elder].skill : undefined,
+        rep.kind === 'sect' ? SECTS[rep.i]?.elder.skill : undefined,
+      ]
+      const b = new Battle(rep, skills, innerWidth / k, innerHeight / k)
+      b.root.scale.set(k)
+      const shownBefore = app.stage.children.filter(c => c.visible)
+      shownBefore.forEach(c => (c.visible = false))
+      app.stage.addChild(b.root)
+      host!.prepend(app.canvas)
+      const tick = () => b.tick(app.ticker.deltaMS / 1000)
+      app.ticker.add(tick)
+      battle = b
+      undo = () => {
+        app.ticker.remove(tick)
+        b.destroy()
+        shownBefore.forEach(c => (c.visible = true))
+        document.body.prepend(app.canvas)
+        battle = undefined
+      }
+    })
+    return () => {
+      dead = true
+      undo()
+    }
+  })
+  const pace = $derived(fast ? 0.42 : 0.85)
+
   function step() {
     if (!report || !f) return
     if (r < f.rounds.length) {
       r++
+      battle?.round(fi, r, pace)
       sfx('hit')
     } else if (fi < report.fights.length - 1) {
       fi++
       r = 0
+      battle?.wave(fi)
       sfx('thunder')
     } else {
       done = true
@@ -62,49 +105,27 @@
 </script>
 
 <dialog bind:this={dlg} class="replay paper" class:trib={report?.kind === 'trib'} aria-label={L.report.title} onclose={onclose}>
+  <!-- svelte-ignore a11y_autofocus -->
+  <div class="stage" bind:this={host} tabindex="-1" autofocus></div>
   {#if report && f}
-    <div class="field">
-      {#key `${fi}-${r}`}<div class="flash" class:on={report.kind === 'trib' && r > 0}></div>{/key}
-      <header class="row">
-        <Medal glyph={foeGlyph} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={46} />
-        <span class="stack" style:--gap="0"><b class="t-head">{foeName}</b>{#if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span>
-      </header>
-      <ul class="stacks">
-        {#each f.b.troops as t, k (k)}
-          {@const n = counts(1, r)[k]}
-          {@const d = counts(1, r - 1)[k] - n}
-          <li class:gone={!n}>
-            <Medal glyph={report.kind === 'trib' ? GLYPH.thunder : GLYPH.unit[t.type]} tone={report.kind === 'trib' ? 'thunder' : t.type} size={50} pips={t.tier} />
-            <b class="t-num">{num(n)}</b>
-            {#if r > 0 && d > 0}{#key r}<span class="dmg">−{num(d)}</span>{/key}{/if}
-          </li>
-        {/each}
-      </ul>
+    <header class="row foe">
+      <Medal glyph={foeGlyph} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={46} />
+      <span class="stack" style:--gap="0"><b class="t-head">{foeName}</b>{#if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span>
+    </header>
 
-      <div class="mid">
-        <p class="round row center"><Icon name="swords" size={16} />{#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, MAX_ROUNDS)}</p>
-        {#key r}
-          {#if cast[1]}<span class="cast foe">{L.report.foeSkill}</span>{/if}
-          {#if cast[0] && f.a.elder}<span class="cast">{L.elders[f.a.elder].skill}!</span>{/if}
-        {/key}
-      </div>
-
-      <ul class="stacks">
-        {#each f.a.troops as t, k (k)}
-          {@const n = counts(0, r)[k]}
-          {@const d = counts(0, r - 1)[k] - n}
-          <li class:gone={!n}>
-            <Medal glyph={GLYPH.unit[t.type]} tone={t.type} size={50} pips={t.tier} />
-            <b class="t-num">{num(n)}</b>
-            {#if r > 0 && d !== 0}{#key r}<span class="dmg" class:up={d < 0}>{d > 0 ? '−' : '+'}{num(Math.abs(d))}</span>{/key}{/if}
-          </li>
-        {/each}
-      </ul>
-      <header class="row">
-        {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={46} />{/if}
-        <span class="stack" style:--gap="0"><b class="t-head">{f.a.elder ? L.elders[f.a.elder].name : ''}</b><small class="t-small t-gold t-strong">{L.lv(f.a.level)}</small></span>
-      </header>
+    <div class="mid">
+      <p class="round row center"><Icon name="swords" size={16} />{#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, MAX_ROUNDS)}</p>
+      {#key r}
+        {#if cast[1]}<span class="cast foe">{L.report.foeSkill}</span>{/if}
+        {#if cast[0] && f.a.elder}<span class="cast">{L.elders[f.a.elder].skill}!</span>{/if}
+      {/key}
     </div>
+    <p class="sr">{f.a.troops.map((t, k) => `${L.units[t.type]} ${counts(0, r)[k]}`).join(', ')} — {f.b.troops.map((t, k) => `${L.units[t.type]} ${counts(1, r)[k]}`).join(', ')}</p>
+
+    <header class="row ours">
+      {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={46} />{/if}
+      <span class="stack" style:--gap="0"><b class="t-head">{f.a.elder ? L.elders[f.a.elder].name : ''}</b><small class="t-small t-gold t-strong">{L.lv(f.a.level)}</small></span>
+    </header>
 
     {#if done}
       <div class="result">
@@ -120,7 +141,7 @@
               <span class="row"><Portrait look={LOOK[report.gain.elder]} size={36} /><span class="t-strong">{L.report.newElder}: {L.elders[report.gain.elder].name}</span></span>
             {/if}
             <div class="grid">
-              <Button variant="ghost" onclick={() => ((fi = 0), (r = 0), (done = false))}>{L.report.replay}</Button>
+              <Button variant="ghost" onclick={() => ((fi = 0), (r = 0), (done = false), battle?.wave(0))}>{L.report.replay}</Button>
               <Button variant="gold" onclick={() => dlg?.close()}>{L.report.close}</Button>
             </div>
           </div>
@@ -129,7 +150,7 @@
     {:else}
       <div class="row center ctl">
         <Button variant="ghost" size="sm" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</Button>
-        <Button size="sm" onclick={() => ((fi = report.fights.length - 1), (r = report.fights.at(-1)!.rounds.length), (done = true))}>{L.report.skip}</Button>
+        <Button size="sm" onclick={() => ((fi = report.fights.length - 1), (r = report.fights.at(-1)!.rounds.length), (done = true), battle?.jump())}>{L.report.skip}</Button>
       </div>
     {/if}
   {/if}
@@ -137,96 +158,45 @@
 
 <style>
   .replay {
-    width: min(100%, var(--col));
+    width: 100vw;
     height: 100dvh;
-    margin: 0 auto;
-    padding: calc(var(--sp-3) + var(--safe-t)) var(--sp-4) calc(var(--sp-4) + var(--safe-b));
-  }
-  /* sân đấu: vệt mực loang giữa giấy */
-  .replay::before {
-    content: '';
-    position: absolute;
-    inset: 18% -10%;
-    background: radial-gradient(ellipse at center, color-mix(in srgb, var(--ink) 16%, transparent), transparent 65%);
-    pointer-events: none;
-  }
-  .trib::before {
-    background: radial-gradient(ellipse at center, rgb(52 40 110 / 0.35), transparent 65%);
+    margin: 0;
+    padding: 0;
   }
   .replay::backdrop {
     background: var(--lacquer);
   }
-  .field {
-    position: relative;
-    display: grid;
-    grid-template-rows: auto 1fr auto 1fr auto;
-    gap: var(--sp-3);
-    height: calc(100% - 60px);
-  }
-  .flash {
+  .stage {
     position: absolute;
-    inset: -40px;
-    pointer-events: none;
+    inset: 0;
+    outline: none;
   }
-  .flash.on {
-    animation: flash 0.5s var(--ease);
-  }
-  @keyframes flash {
-    from {
-      background: rgb(236 230 255 / 0.7);
-    }
-  }
-  .stacks {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: center;
-    justify-content: center;
-    gap: var(--sp-4) var(--sp-5);
-  }
-  .stacks li {
-    position: relative;
-    display: grid;
-    justify-items: center;
-    gap: var(--sp-2);
-    transition: opacity var(--dur-3), filter var(--dur-3);
-  }
-  .stacks b {
-    font-size: var(--fs-4);
-  }
-  .gone {
-    opacity: 0.35;
-    filter: grayscale(1);
-  }
-  .dmg {
+  /* mọi phần HTML nằm trên canvas */
+  .replay > :not(.stage) {
     position: absolute;
-    top: -10px;
-    right: -20px;
-    font-size: var(--fs-4);
-    font-weight: 900;
-    color: var(--cinnabar);
-    -webkit-text-stroke: 3px var(--paper);
-    paint-order: stroke fill;
-    animation: dmg 0.8s var(--ease) forwards;
+    z-index: 1;
+    left: 50%;
+    width: min(100% - 24px, calc(var(--col) - 24px));
+    translate: -50% 0;
   }
-  .dmg.up {
-    color: var(--malachite);
+  .foe {
+    top: calc(var(--sp-3) + var(--safe-t));
   }
-  @keyframes dmg {
-    from {
-      opacity: 1;
-      transform: translateY(6px) scale(1.35);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(-18px);
-    }
+  .ours {
+    bottom: calc(64px + var(--safe-b));
   }
   .mid {
+    top: 56%;
     display: grid;
     justify-items: center;
-    align-content: center;
     gap: var(--sp-2);
-    min-height: 80px;
+    translate: -50% -50% !important;
+  }
+  .foe b,
+  .ours b,
+  .round {
+    -webkit-text-stroke: 3px var(--paper);
+    paint-order: stroke fill;
   }
   .round {
     font-weight: 800;
@@ -252,11 +222,10 @@
     }
   }
   .ctl {
-    margin-top: var(--sp-3);
+    bottom: calc(var(--sp-4) + var(--safe-b));
   }
   .result {
-    position: absolute;
-    inset: auto var(--sp-3) calc(var(--sp-3) + var(--safe-b));
+    bottom: calc(var(--sp-3) + var(--safe-b));
     animation: rise var(--dur-3) var(--spring);
   }
   @keyframes rise {

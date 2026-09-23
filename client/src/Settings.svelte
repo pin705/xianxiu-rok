@@ -72,7 +72,7 @@
       setMusicOn(on)
       if (on) startMusic()
       else stopMusic()
-    }}><Icon name="sound" size={20} />{L.settings.music}</Toggle
+    }}><Icon name="music" size={20} />{L.settings.music}</Toggle
   >
   <Tabs items={[{ id: 'vi', label: 'Tiếng Việt' }, { id: 'en', label: 'English' }] as const} value={LANG} onchange={setLang} />
 

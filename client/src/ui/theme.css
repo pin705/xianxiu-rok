@@ -186,6 +186,33 @@ dialog::backdrop {
   }
 }
 
+/* ---------- Chuyển tab: vết mực loang từ chỗ chạm (View Transitions; trình duyệt cũ thì chuyển ngay) ---------- */
+
+@property --vt-r {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  -webkit-mask-image: var(--blot-mask);
+  mask-image: var(--blot-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: var(--vt-r) var(--vt-r);
+  mask-size: var(--vt-r) var(--vt-r);
+  -webkit-mask-position: calc(var(--vt-x, 50vw) - var(--vt-r) / 2) calc(var(--vt-y, 100vh) - var(--vt-r) / 2);
+  mask-position: calc(var(--vt-x, 50vw) - var(--vt-r) / 2) calc(var(--vt-y, 100vh) - var(--vt-r) / 2);
+  animation: ink-reveal 0.55s var(--ease) both;
+}
+@keyframes ink-reveal {
+  to {
+    --vt-r: 320vmax;
+  }
+}
+
 /* ---------- Chất liệu ---------- */
 
 .paper {

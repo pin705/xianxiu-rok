@@ -1,6 +1,6 @@
 // Khởi động giao diện: bơm màu khoáng và chất liệu vẽ tay (từ @rok/art) thành biến CSS, chờ font.
 // Gọi một lần trước khi mount App — không có nhấp nháy font, không có khung trống.
-import { PIGMENT, brushBar, goldFrame, inkFrame, lacquerTex, paper, sealMask } from '@rok/art'
+import { PIGMENT, brushBar, goldFrame, inkBlot, inkFrame, lacquerTex, paper, sealMask } from '@rok/art'
 
 const kebab = (k: string) => k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)
 const url = (cv: HTMLCanvasElement | OffscreenCanvas) => `url(${(cv as HTMLCanvasElement).toDataURL()})`
@@ -15,6 +15,7 @@ export async function applyTheme() {
   root.setProperty('--seal-mask', url(sealMask(96)))
   root.setProperty('--stroke-ink', url(brushBar(320, 28)))
   root.setProperty('--stroke-gold', url(brushBar(320, 28, PIGMENT.gold, 13)))
+  root.setProperty('--blot-mask', url(inkBlot(256)))
   // Font: chờ tối đa 2.5 giây rồi vẫn vào game (mạng chậm)
   await Promise.race([
     Promise.all(['700 16px Alegreya', '500 16px Alegreya', 'italic 500 16px Alegreya', '16px Seal'].map(f => document.fonts.load(f, 'Sơn Hà 山'))),

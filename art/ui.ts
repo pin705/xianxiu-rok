@@ -134,3 +134,27 @@ export function washTex(w: number, h: number, color: string, seed = 11) {
   return cv
 }
 
+
+// Vết mực loang (mặt nạ chuyển cảnh): tròn nhoè, mép răng cưa, vài giọt bắn quanh. Trắng = hiện.
+export function inkBlot(size = 256, seed = 17) {
+  const { cv, g } = ctx(size, size)
+  const r = rng(seed)
+  const c = size / 2
+  const k = 48
+  g.fillStyle = '#fff'
+  g.beginPath()
+  for (let i = 0; i <= k; i++) {
+    const a = (i / k) * Math.PI * 2
+    const rr = size * (0.36 + noise2(Math.cos(a) * 2 + 5, Math.sin(a) * 2 + 5, seed) * 0.1)
+    const x = c + Math.cos(a) * rr, y = c + Math.sin(a) * rr
+    i ? g.lineTo(x, y) : g.moveTo(x, y)
+  }
+  g.fill()
+  for (let i = 0; i < 26; i++) {
+    const a = r() * Math.PI * 2, d = size * (0.4 + r() * 0.08)
+    g.beginPath()
+    g.arc(c + Math.cos(a) * d, c + Math.sin(a) * d, size * (0.006 + r() * 0.02), 0, Math.PI * 2)
+    g.fill()
+  }
+  return cv
+}

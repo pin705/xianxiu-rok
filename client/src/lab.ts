@@ -1,5 +1,6 @@
-// Phòng thử art (chỉ bản dev): mở /lab.html để xem hình vẽ tay trên giấy.
-import { bake, building, paper, type Asset, type Kind } from '@rok/art'
+// Phòng thử art (chỉ bản dev): /lab.html — xem hình vẽ tay trên giấy. ?view=icons|faces|buildings (mặc định)
+import { ITEMS, bake, battlefield, beast, building, flyingSword, itemIcon, paper, portrait, soldier, type Asset, type Kind, type Look } from '@rok/art'
+import { LOOK } from './lib'
 
 const W = 390, H = 844, S = 2
 const cv = document.createElement('canvas')
@@ -11,16 +12,34 @@ const out = cv.getContext('2d')!
 out.fillStyle = out.createPattern(paper(256) as HTMLCanvasElement, 'repeat')!
 out.fillRect(0, 0, cv.width, cv.height)
 
-const put = <M,>(a: Asset<M>, x: number, y: number, sc = S) => {
-  const b = bake(a, sc)
-  out.drawImage(b.canvas as HTMLCanvasElement, (x + a.x) * S, (y + a.y) * S, a.w * S, a.h * S)
-  return b.meta
+// đặt asset: neo (0,0) của asset tại (x, y), cỡ hiện `px` theo cạnh dài (mặc định: 1 DU = 1 px)
+const put = <M,>(a: Asset<M>, x: number, y: number, px = Math.max(a.w, a.h)) => {
+  const k = px / Math.max(a.w, a.h)
+  const b = bake(a, k * S)
+  out.drawImage(b.canvas as HTMLCanvasElement, (x + a.x * k) * S, (y + a.y * k) * S, a.w * k * S, a.h * k * S)
 }
 await new FontFace('Seal', 'url(/fonts/seal.woff2)').load().then(f => document.fonts.add(f))
+const view = new URLSearchParams(location.search).get('view') ?? 'buildings'
 const t0 = performance.now()
-const lv = Number(new URLSearchParams(location.search).get('lv') ?? 1)
-const ids: Kind[] = ['chuDien', 'tangKinhCac', 'danPhong', 'tangBaoCac', 'dienVoTruong', 'tuLinhTran', 'khoangMach', 'linhDien']
-const pos: [number, number][] = [[195, 120], [80, 250], [290, 250], [80, 400], [270, 400], [100, 560], [290, 560], [195, 720]]
-ids.forEach((id, i) => put(building(id, lv, '殿阵田矿库武经丹'[i]).art, ...pos[i]))
+if (view === 'icons') {
+  ;[64, 32, 22, 16].forEach((px, row) => ITEMS.forEach((n, i) => put(itemIcon(n), 40 + i * 62, 60 + row * 90, px)))
+} else if (view === 'troops') {
+  put(battlefield(390, 844, 'wild'), 0, 0, 844)
+  ;(['kiem', 'phap', 'the'] as const).forEach((t, i) => {
+    put(soldier(t, false), 60 + i * 60, 620, 60)
+    put(soldier(t, true), 60 + i * 60, 320, 60)
+    put(beast(t), 90 + i * 110, 450, 90)
+  })
+  put(flyingSword(), 340, 620, 40)
+} else if (view === 'faces') {
+  ;(Object.values(LOOK) as Look[]).forEach((l, i) => {
+    put(portrait(l), 20 + (i % 3) * 124, 30 + Math.floor(i / 3) * 130, 110)
+    put(portrait(l), 20 + (i % 3) * 124, 300 + Math.floor(i / 3) * 60, 40)
+  })
+} else {
+  const lv = Number(new URLSearchParams(location.search).get('lv') ?? 1)
+  const ids: Kind[] = ['chuDien', 'tangKinhCac', 'danPhong', 'tangBaoCac', 'dienVoTruong', 'tuLinhTran', 'khoangMach', 'linhDien']
+  const pos: [number, number][] = [[195, 120], [80, 250], [290, 250], [80, 400], [270, 400], [100, 560], [290, 560], [195, 720]]
+  ids.forEach((id, i) => put(building(id, lv, '殿经丹库武阵矿田'[i]).art, ...pos[i]))
+}
 console.log('bake ms', (performance.now() - t0).toFixed(1))
-Object.assign(globalThis, { labReady: true })

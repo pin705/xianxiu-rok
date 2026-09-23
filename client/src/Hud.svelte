@@ -24,10 +24,10 @@
     tab: Tab
     storm?: boolean
     gain: { bag: Partial<Res>; t: number } | null
-    onclaim: () => void
+    onclaim: (e: MouseEvent) => void
     onquest: () => void
     onbuilder: () => void
-    ontab: (t: Tab) => void
+    ontab: (t: Tab, e: MouseEvent) => void
     onsettings: () => void
     ondaily: () => void
   } = $props()
@@ -48,14 +48,9 @@
   const done = $derived(questDone(game))
   const prog = $derived(quest && quest.k !== 'build' && quest.k !== 'hunt' && quest.k !== 'sect' ? questProgress(game, quest) : null)
   const ring = $derived(job ? progress(job, now) : 0)
-  // Huy hiệu trên thanh tab: việc đang chờ người chơi
-  const badge = $derived({
-    tongMon: 0,
-    monHa: !game.heal && count(game.wounded) ? 1 : 0,
-    banDo: game.reports.filter(r => r.id > game.seen).length,
-    tienMinh: 0,
-    baoKho: 0,
-  } satisfies Record<Tab, number>)
+  // Huy hiệu trên thanh tab: số chiến báo chưa đọc; chấm đỏ khi có thương binh chờ chữa
+  const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
+  const hurt = $derived(!game.heal && count(game.wounded) > 0)
 
   // Số chạy mượt khi tăng/giảm
   const powerT = Tween.of(() => power(game), { duration: 700 })
@@ -76,7 +71,7 @@
     <ul class="res">
       {#each RESOURCES as r, i (r)}
         {@const full = game.res[r] >= cap}
-        <li class:full>
+        <li class:full data-res={r}>
           <Icon name={r} size={22} />
           <span class="stack">
             <b class="t-num">{num(Math.round(resT[i].current))}<span class="sr"> {L.res[r]}</span></b>
@@ -111,7 +106,7 @@
       {/if}
       {#if hall >= DAILY_HALL}
         <span class="daily" class:ready={ready > 0}>
-          <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}><Badge n={ready} fresh={ready === 1} /></IconButton>
+          <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}><Badge n={ready} /></IconButton>
         </span>
       {/if}
     </div>
@@ -131,11 +126,11 @@
       {@const on = t.id === tab}
       {@const locked = hall < t.unlock}
       {@const fresh = !locked && !visited.includes(t.id)}
-      <button class:on class:locked disabled={locked} aria-current={on ? 'page' : undefined} onclick={() => !on && ontab(t.id)}>
+      <button class:on class:locked disabled={locked} data-tab={t.id} aria-current={on ? 'page' : undefined} onclick={e => !on && ontab(t.id, e)}>
         <span class="medal">
           {#if on}<Seal glyph={t.glyph} size={44} />{:else}<span class="han">{t.glyph}</span>{/if}
           {#if locked}<span class="lk"><Icon name="lock" size={10} /></span>{/if}
-          {#if !on}<Badge n={badge[t.id]} fresh={fresh && !badge[t.id]} />{/if}
+          {#if !on}<Badge n={t.id === 'banDo' ? unread : 0} dot={t.id === 'monHa' && hurt} {fresh} />{/if}
         </span>
         <span class="tl">{L.tabs[t.id]}</span>
         {#if locked}<small>{t.unlock > 15 ? L.soonTag : L.level(t.unlock)}</small>{/if}

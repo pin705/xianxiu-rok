@@ -10,7 +10,9 @@
 
   let { game, now, act }: { game: State; now: number; act: (a: Action) => State | null } = $props()
 
-  let type: UnitType = $state('kiem')
+  // Mặc định: hệ tuyển được nhiều nhất với tài nguyên đang có — mỗi hệ ăn chủ yếu một loại, luôn chọn một hệ sẽ cạn một loại
+  const afford = (t: UnitType) => Math.min(...RESOURCES.map(r => game.res[r] / UNIT_BASE[t].cost[r]))
+  let type: UnitType = $state(TYPES.reduce((a, t) => (afford(t) > afford(a) ? t : a)))
   let tier: Tier = $state(TIERS.filter(t => tierOpen(game, t)).at(-1) ?? 1)
   const u = $derived(`${type}${tier}` as UnitId)
   const cap = $derived(batch(game))

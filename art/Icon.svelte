@@ -1,33 +1,24 @@
 <script module lang="ts">
   export type Name =
-    | 'linhThach' | 'linhThao' | 'linhKhoang' | 'hammer' | 'lock' | 'check' | 'cross' | 'power' | 'sound' | 'mute' | 'clock'
+    | 'linhThach' | 'linhThao' | 'linhKhoang' | 'hammer' | 'lock' | 'check' | 'cross' | 'power' | 'sound' | 'mute' | 'music' | 'clock'
     | 'arrow' | 'close' | 'scroll' | 'cauldron' | 'flag' | 'gear' | 'heal' | 'bolt' | 'star' | 'people' | 'swords' | 'skull'
     | 'tuKhi' | 'boiNguyen' | 'doKiep' | 'download' | 'upload' | 'back' | 'plus' | 'minus'
 </script>
 
 <script lang="ts">
-  // Icon vẽ tay trong khung 24×24. Dùng được cả trong HTML lẫn lồng trong SVG (x, y).
-  let { name, size = 20, x, y }: { name: Name; size?: number; x?: number; y?: number } = $props()
+  // Icon trong khung 24×24. Vật phẩm (tài nguyên, đan dược) là ảnh vẽ tay bằng bút lông (icons.ts);
+  // biểu tượng thao tác (búa, khoá, đồng hồ…) là nét vector cho sắc ở cỡ nhỏ.
+  import { paintedUrl } from './img'
+  import { isItem, itemIcon } from './icons'
+
+  let { name, size = 20 }: { name: Name; size?: number } = $props()
 </script>
 
-<svg class="icon" viewBox="0 0 24 24" width={size} height={size} {x} {y} aria-hidden="true">
-  {#if name === 'linhThach'}
-    <path d="M12 1.8 19.6 8.2 16.2 21.5H7.8L4.4 8.2Z" fill="#4fa9c9" />
-    <path d="M12 1.8 15.3 8.2 12 21.5 8.7 8.2Z" fill="#a8e4f2" />
-    <path d="M4.4 8.2H19.6M8.7 8.2 12 1.8 15.3 8.2" fill="none" stroke="#e9fbff" stroke-width=".9" stroke-opacity=".8" />
-    <path d="M12 1.8 19.6 8.2 16.2 21.5H7.8L4.4 8.2Z" fill="none" stroke="#1c5d77" stroke-width="1.3" stroke-linejoin="round" />
-  {:else if name === 'linhThao'}
-    <path d="M12 22.5C12.4 17 11.2 12 12.2 6" fill="none" stroke="#2f6b3c" stroke-width="1.7" stroke-linecap="round" />
-    <path d="M12 15.2C8 14.8 4.4 12 4 6.8 8.4 7.4 11 9.8 12 12.8Z" fill="#4f9f57" stroke="#2f6b3c" stroke-width=".9" />
-    <path d="M12.3 12C15.6 11.2 19.2 8.8 20 4.2 16 4.8 13.4 7.4 12.3 10Z" fill="#78c07a" stroke="#2f6b3c" stroke-width=".9" />
-    <circle cx="12.2" cy="4.6" r="2.6" fill="#f4d266" stroke="#b8892f" stroke-width=".8" />
-    <circle cx="11.4" cy="3.9" r=".8" fill="#fff8d6" />
-  {:else if name === 'linhKhoang'}
-    <path d="M2.6 16.8 5.8 8.6 12 5.6 19 7.6 21.4 15.6 15.4 21H7Z" fill="#877d73" stroke="#4d4640" stroke-width="1.2" stroke-linejoin="round" />
-    <path d="M5.8 8.6 12 5.6 19 7.6 12.8 11Z" fill="#a89e93" />
-    <path d="M9.6 13.2 11.8 8.8 14 13.2 11.8 16.6Z" fill="#9b86e2" stroke="#5a48a8" stroke-width=".7" />
-    <path d="M15.2 15.6 16.6 12.4 18 15.6 16.6 17.6Z" fill="#c4b6f5" stroke="#5a48a8" stroke-width=".6" />
-  {:else if name === 'hammer'}
+{#if isItem(name)}
+  <img class="icon" src={paintedUrl(`icon:${name}`, () => itemIcon(name), size)} width={size} height={size} alt="" aria-hidden="true" draggable="false" />
+{:else}
+<svg class="icon" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+  {#if name === 'hammer'}
     <path d="M13.5 3.2 20.8 10.5 17.9 13.4 10.6 6.1Z" fill="currentColor" />
     <path d="M12.6 9.8 3.6 18.8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
   {:else if name === 'lock'}
@@ -47,6 +38,10 @@
     {:else}
       <path d="M15.5 9.5 20.5 14.5M20.5 9.5 15.5 14.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
     {/if}
+  {:else if name === 'music'}
+    <path d="M9 17.5V5.2L19 3V15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+    <ellipse cx="6.6" cy="17.6" rx="3" ry="2.4" fill="currentColor" transform="rotate(-18 6.6 17.6)" />
+    <ellipse cx="16.6" cy="15.2" rx="3" ry="2.4" fill="currentColor" transform="rotate(-18 16.6 15.2)" />
   {:else if name === 'clock'}
     <circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2" />
     <path d="M12 7.2V12L15.2 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -102,16 +97,6 @@
     <circle cx="9" cy="11" r="2" fill="#13232c" />
     <circle cx="15" cy="11" r="2" fill="#13232c" />
     <path d="M10 19V21M14 19V21M12 19V21" stroke="currentColor" stroke-width="1.6" />
-  {:else if name === 'tuKhi' || name === 'boiNguyen' || name === 'doKiep'}
-    {@const c = { tuKhi: ['#7fe0e6', '#1f8a93'], boiNguyen: ['#f7d774', '#a8741c'], doKiep: ['#c7a3f5', '#5b3aa0'] }[name]}
-    <circle cx="12" cy="12" r="10.4" fill={c[0]} opacity=".22" />
-    <circle cx="12" cy="12.6" r="7" fill={c[0]} stroke={c[1]} stroke-width="1.3" />
-    <path d="M8.4 10.2Q10.4 7.4 13.8 8" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".85" />
-    {#if name === 'doKiep'}
-      <path d="M12.8 9.2 10.2 13H12.4L11.4 16.4 14.2 12.2H12Z" fill={c[1]} />
-    {:else if name === 'boiNguyen'}
-      <circle cx="12" cy="13" r="2.2" fill="none" stroke={c[1]} stroke-width="1.1" />
-    {/if}
   {:else if name === 'download' || name === 'upload'}
     <path d="M4 16V20H20V16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
     <path
@@ -124,6 +109,7 @@
     />
   {/if}
 </svg>
+{/if}
 
 <style>
   .icon {

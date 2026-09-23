@@ -51,7 +51,7 @@
                     {/each}
                   {/if}
                 {:else}
-                  <Button size="sm" onclick={() => (using = p)}>{L.baoKho.use}</Button>
+                  <div class="row"><Button size="sm" onclick={() => (using = p)}>{L.baoKho.use}</Button></div>
                 {/if}
               {:else if n}
                 <p class="t-small t-soft t-lore">{L.baoKho.auto}</p>

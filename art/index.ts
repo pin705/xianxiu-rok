@@ -1,7 +1,7 @@
 // Hình vẽ của game. Không phụ thuộc game: chữ, luật, dữ liệu đều do bên dùng truyền vào.
-// brush/noise/palette: bút lông vẽ ra canvas (dùng cho cảnh WebGL lẫn giao diện). Icon, Portrait: SVG cho HTML.
+// brush/noise/palette: bút lông vẽ ra canvas (cảnh WebGL lẫn giao diện). Icon, Portrait: component HTML (vật phẩm, chân dung vẽ tay; biểu tượng thao tác là SVG).
 export { default as Icon, type Name as IconName } from './Icon.svelte'
-export { default as Portrait, type Look } from './Portrait.svelte'
+export { default as Portrait } from './Portrait.svelte'
 export * from './brush'
 export * from './noise'
 export * from './palette'
@@ -10,3 +10,6 @@ export * from './landscape'
 export * from './buildings'
 export * from './fx'
 export * from './ui'
+export * from './figures'
+export * from './icons'
+export * from './img'

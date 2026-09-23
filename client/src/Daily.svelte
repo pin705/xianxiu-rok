@@ -2,7 +2,7 @@
   // Nhiệm vụ ngày: 4 việc quen tay mỗi phiên, xong cả 4 thì mở rương. Làm mới lúc 0h giờ VN.
   import { DAILY, DAILY_BONUS, RESOURCES, dailyDone, dailyReward, nextDay, type Action, type State } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { Bag, Button, Card, Meter, Sheet } from './ui'
+  import { Bag, Button, Card, Meter, Sheet, fly } from './ui'
   import { L, clock, num, sfx } from './lib'
 
   let { game, now, open, onclose, act }: { game: State; now: number; open: boolean; onclose: () => void; act: (a: Action) => State | null } =
@@ -28,7 +28,7 @@
             {#if got}
               <span class="t-good"><Icon name="check" size={22} /></span>
             {:else}
-              <Button variant="gold" size="sm" disabled={!dailyDone(game, i)} onclick={() => act({ type: 'daily', i }) && sfx('reward')}>{L.quest.claim}</Button>
+              <Button variant="gold" size="sm" disabled={!dailyDone(game, i)} onclick={e => act({ type: 'daily', i }) && (sfx('reward'), fly(e.currentTarget as Element, each))}>{L.quest.claim}</Button>
             {/if}
           </div>
         </Card>
@@ -43,7 +43,7 @@
         {#if game.daily.bonus}
           <span class="t-good"><Icon name="check" size={22} /></span>
         {:else}
-          <Button variant="gold" size="sm" disabled={!all} onclick={() => act({ type: 'dailyBonus' }) && sfx('win')}>{L.daily.open}</Button>
+          <Button variant="gold" size="sm" disabled={!all} onclick={e => act({ type: 'dailyBonus' }) && (sfx('win'), fly(e.currentTarget as Element, DAILY_BONUS))}>{L.daily.open}</Button>
         {/if}
       </div>
     </Card>

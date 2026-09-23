@@ -28,20 +28,67 @@
   } = $props()
 
   let dlg = $state<HTMLDialogElement>()
+  let panel = $state<HTMLDivElement>()
   $effect(() => {
     if (!dlg) return
     if (open && !dlg.open) dlg.showModal()
     if (!open && dlg.open) dlg.close()
   })
+
+  // Người chơi đóng (nút ×, chạm nền, Esc, vuốt): cuộn giấy trượt xuống rồi mới đóng hẳn
+  let leaving = false
+  function dismiss(from = 0) {
+    if (!dlg?.open || leaving || !panel) return
+    leaving = true
+    const off = center ? [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.92)' }] : [{ transform: `translateY(${from}px)` }, { transform: 'translateY(105%)' }]
+    panel.animate(off, { duration: 200, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }).finished.finally(() => {
+      leaving = false
+      dlg?.close()
+    })
+  }
+
+  // Vuốt xuống trên trục/đầu bảng để đóng (bảng dưới). Kéo quá 90px hoặc vuốt nhanh thì đóng, không thì bật về.
+  let drag: { y: number; t: number; dy: number } | null = null
+  function down(e: PointerEvent) {
+    const t = e.target as Element
+    if (center || !t.closest('.rod, .head') || t.closest('button, input, textarea')) return
+    drag = { y: e.clientY, t: performance.now(), dy: 0 }
+    try {
+      ;(e.currentTarget as Element).setPointerCapture(e.pointerId)
+    } catch {}
+  }
+  function move(e: PointerEvent) {
+    if (!drag || !panel) return
+    drag.dy = Math.max(0, e.clientY - drag.y)
+    panel.style.transform = `translateY(${drag.dy}px)`
+  }
+  function up() {
+    if (!drag || !panel) return
+    const { dy, t } = drag
+    drag = null
+    if (dy > 90 || dy / (performance.now() - t) > 0.6) return dismiss(dy)
+    panel.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }], { duration: 220, easing: 'cubic-bezier(.3,1.4,.5,1)' })
+    panel.style.transform = ''
+  }
 </script>
 
-<dialog bind:this={dlg} class="sheet" class:modal={center} aria-label={label ?? title} {onclose} onclick={e => e.target === dlg && dlg?.close()}>
+<dialog
+  bind:this={dlg}
+  class="sheet"
+  class:modal={center}
+  aria-label={label ?? title}
+  {onclose}
+  oncancel={e => (e.preventDefault(), dismiss())}
+  onclick={e => e.target === dlg && dismiss()}
+>
   {#if open}
-    <div class="scroll paper">
+    <!-- Vuốt để đóng chỉ là cử chỉ thêm; bàn phím dùng nút × hoặc Esc -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="scroll paper" bind:this={panel} onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
       <div class="rod" aria-hidden="true"></div>
       <!-- svelte-ignore a11y_autofocus -->
       <div class="body inked" tabindex="-1" autofocus>
-        <button class="x" aria-label={L.panel.close} onclick={() => (sfx('tap'), dlg?.close())}><Icon name="close" size={16} /></button>
+        <button class="x" aria-label={L.panel.close} onclick={() => (sfx('tap'), dismiss())}><Icon name="close" size={16} /></button>
         {#if title}
           <header class="head" class:has-art={!!art}>
             {#if art}<div class="art">{@render art()}</div>{/if}
@@ -77,6 +124,10 @@
     padding-top: 9px;
     box-shadow: var(--shadow-3);
     animation: rise 0.34s var(--spring);
+  }
+  .rod,
+  .head {
+    touch-action: none; /* vuốt ở đây là kéo bảng, không cuộn nội dung */
   }
   .modal .scroll {
     animation: pop 0.32s var(--spring);

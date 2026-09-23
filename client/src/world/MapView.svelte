@@ -44,7 +44,7 @@
           <Medal glyph={n.glyph} tone={n.t.kind} size={36} dim={st === 'locked' || st === 'cool'} />
           {#if n.lv}<b class="lv">{n.lv}</b>{/if}
           {#if n.t.kind === 'realm'}<b class="lv">{game.realms[n.t.i]}/5</b>{/if}
-          {#if st === 'locked'}<span class="mark"><Icon name="lock" size={12} /></span>{:else if st === 'done'}<span class="mark ok"><Icon name="check" size={13} /></span>{/if}
+          {#if st === 'locked'}<span class="mark"><Icon name="lock" size={11} /></span>{:else if st === 'done'}<span class="mark ok"><Icon name="check" size={12} /></span>{/if}
         </span>
         <span class="label" style:translate="{dx}px 0">{n.name}</span>
         {#if st === 'cool'}<span class="label t-num" style:translate="{dx}px 0">{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</span>{/if}
@@ -56,7 +56,7 @@
 
 <div class="top row">
   <span class="grow"><Tag icon="flag">{L.map.slots(game.marches.length, marchSlots(game))}</Tag></span>
-  <span class="rep"><Button size="sm" icon="scroll" onclick={onreports}>{L.report.title}</Button><Badge n={unread} fresh={unread === 1} /></span>
+  <span class="rep"><Button size="sm" icon="scroll" onclick={onreports}>{L.report.title}</Button><Badge n={unread} /></span>
 </div>
 
 {#if game.marches.length}
@@ -119,13 +119,20 @@
   }
   .mark {
     position: absolute;
-    inset: 0;
+    right: -4px;
+    bottom: -2px;
     display: grid;
     place-items: center;
-    color: var(--silk);
+    width: 18px;
+    height: 18px;
+    color: var(--gold-l);
+    background: var(--lacquer);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px var(--paper), 0 0 0 2.5px var(--gold-d);
   }
   .ok {
-    color: var(--malachite-l);
+    color: var(--silk);
+    background: var(--malachite);
   }
   .label {
     font-size: var(--fs-2);
