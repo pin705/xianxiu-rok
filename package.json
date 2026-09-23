@@ -3,18 +3,18 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "rules",
-    "art",
-    "client"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w client",
-    "build": "npm run build -w client",
-    "test": "node --test rules/*.test.ts server/*.test.ts client/*.test.ts",
+    "dev": "npm run dev -w @rok/client",
+    "build": "npm run build -w @rok/client",
+    "test": "node --test architecture.test.ts 'packages/*/*.test.ts' 'apps/*/*.test.ts'",
     "check": "tsc && npm run check -ws --if-present",
-    "sim": "node rules/simulate.ts",
-    "e2e": "node client/e2e.ts",
-    "analytics": "node server/analytics.ts"
+    "sim": "node packages/rules/simulate.ts",
+    "e2e": "node apps/client/e2e.ts",
+    "fonts": "npm run fonts -w @rok/client",
+    "analytics": "npm start -w @rok/server"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

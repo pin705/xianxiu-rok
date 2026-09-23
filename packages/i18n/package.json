@@ -1,0 +1,9 @@
+{
+  "name": "@rok/i18n",
+  "private": true,
+  "type": "module",
+  "exports": "./index.ts",
+  "dependencies": {
+    "@rok/rules": "*"
+  }
+}

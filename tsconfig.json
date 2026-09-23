@@ -1,16 +1,9 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "types": ["node"],
-    "strict": true,
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true
+    "erasableSyntaxOnly": true
   },
-  "include": ["rules", "server", "client/render.test.ts", "client/e2e.ts"]
+  "include": ["architecture.test.ts", "packages/rules", "packages/i18n", "apps/server", "apps/client/render.test.ts", "apps/client/e2e.ts"]
 }

@@ -97,14 +97,15 @@ Tiền lệ: Melvor Idle (web, Steam, mobile), Antimatter Dimensions (web, Steam
 
 ```
 rok/
-  rules/     luật game thuần — không I/O, không Date
-             index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
-  art/       bút lông sinh hình vẽ tay (canvas → texture): núi, công trình, mây, bản đồ, chất liệu giao diện; icon/chân dung SVG
-  client/    Vite + Svelte: UI, save trên máy, PWA
-  server/    analytics.ts: máy nhận analytics + retention (P1); server game từ P2
-  mobile/    từ P4 (Capacitor)
-  desktop/   từ P4 (Electron + Steam)
+  apps/client/      @rok/client   Vite + Svelte 5 + PixiJS: UI, cảnh WebGL, save trên máy, PWA
+  apps/server/      @rok/server   analytics (P1); server game từ P2
+  packages/rules/   @rok/rules    luật game thuần — không I/O, không Date, không phụ thuộc gì
+                                  index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
+  packages/art/     @rok/art      bút lông sinh hình vẽ tay (canvas → texture), icon, chân dung
+  packages/i18n/    @rok/i18n     chữ mọi ngôn ngữ, chọn ngôn ngữ, tải theo nhu cầu
+  (P2) packages/protocol · (P4) apps/mobile (Capacitor), apps/desktop (Electron + Steam)
 ```
+Chiều phụ thuộc do `architecture.test.ts` khoá: apps dùng packages, không bao giờ ngược lại; `rules` không phụ thuộc gì.
 
 ### Ba kỹ thuật cốt lõi
 
@@ -113,7 +114,7 @@ rok/
 ```ts
 advance(state, now): State                  // cộng tài nguyên, hoàn tất mọi việc hẹn giờ đã tới hạn, theo đúng thứ tự thời gian
 apply(state, action, now): Result           // mọi thao tác: xây, tuyển, chữa, nghiên cứu, luyện đan, xuất quân, độ kiếp…
-fight(attacker, defender, seed): { win, rounds }   // rules/combat.ts — số còn lại mỗi lượt, đủ để client phát lại
+fight(attacker, defender, seed): { win, rounds }   // packages/rules/combat.ts — số còn lại mỗi lượt, đủ để client phát lại
 ```
 
 P1: client chạy `rules`, lưu trên máy. P2: server chạy **chính** `rules` đó làm trọng tài, client chạy song song để phản hồi tức thì → không phải viết lại. Tài nguyên dùng số nguyên, thời gian là số ms.
@@ -152,7 +153,7 @@ Tài nguyên = đã có + tốc độ × thời gian trôi (chặn bởi sức c
 | Polling ở P2 | Trễ vài giây | Có chat (P3) → WebSocket |
 | State người chơi trong 1 JSONB | Khó query chéo | Bảng xếp hạng cần → tách cột |
 | Analytics bằng bảng SQL | Không có dashboard | Cần funnel phức tạp → dịch vụ ngoài |
-| Phát lại trận bằng HTML | Chưa có hiệu ứng chiêu thức trên WebGL | Cần combat nhiều hiệu ứng → dựng cảnh trận trong `client/src/world/` |
+| Phát lại trận bằng HTML | Chưa có hiệu ứng chiêu thức trên WebGL | Cần combat nhiều hiệu ứng → dựng cảnh trận trong `apps/client/src/world/` |
 | Trận đánh gộp theo nhóm (không có đội hình, vị trí) | Ít chiều sâu chiến thuật hơn RoK | Người chơi đòi → thêm hàng trước/sau |
 | Một hàng đợi cho mỗi việc (xây, tuyển, chữa, nghiên cứu, luyện đan) | Không xếp lịch trước được | Bán "thêm 1 hàng đợi" (P4) |
 
@@ -160,7 +161,7 @@ Tài nguyên = đã có + tốc độ × thời gian trôi (chặn bởi sức c
 
 - Giao diện **dọc trước** cho điện thoại (SLG mới như Whiteout Survival, Last War đều dọc); trên PC: khung dọc + panel bên.
 - Hỗ trợ cả chạm (kéo, pinch) lẫn chuột (kéo, cuộn).
-- Chữ hiển thị nằm trong object `L` (`client/src/lib.ts`) ngay từ đầu; khi dịch thì thêm `en` cùng kiểu. Bảng thuật ngữ: Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core, Nguyên Anh = Nascent Soul.
+- Chữ hiển thị nằm trong package `@rok/i18n` (`packages/i18n/locales/*.ts`, cùng khuôn `Text`), component đọc qua object `L`; thêm ngôn ngữ xem README mục Đa ngôn ngữ. Bảng thuật ngữ: Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core, Nguyên Anh = Nascent Soul.
 
 ## 5. Lộ trình
 
@@ -191,7 +192,7 @@ Tổng ~10–14 tháng full-time. **Phase nào cũng kết thúc bằng một b�
 | 1.3 | Cảnh giới + độ kiếp, Tàng Kinh Các, Đan phòng, bí cảnh, nhiệm vụ chính tuyến (làm tutorial luôn) | 3 tuần | ✅ 45 nhiệm vụ dẫn qua mọi hệ thống |
 | 1.4 | Art pass, âm thanh, luân hồi, endpoint analytics ẩn danh (mầm của server P2), phát hành demo | 2–3 tuần | ✅ trừ: đưa lên itch.io/domain |
 
-Công cụ: `rules/simulate.ts` — bot chơi `rules` 30 ngày ảo, in ra lúc đạt từng cảnh giới → chỉnh nhịp bằng số liệu, không bằng cảm giác.
+Công cụ: `packages/rules/simulate.ts` (`npm run sim`) — bot chơi `rules` 30 ngày ảo, in ra lúc đạt từng cảnh giới → chỉnh nhịp bằng số liệu, không bằng cảm giác.
 
 Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết quả trận; người chơi thường (`npm run sim -- 45 3 --casual`) mỗi phiên chỉ làm 1 lượt và chỉ đánh khi giao diện báo ≥ 80% thắng:
 
@@ -253,7 +254,7 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 
 ## 7. Kinh tế & kiếm tiền
 
-- 3 tài nguyên + 1 premium; mọi con số nằm trong `rules/data.ts`, chỉnh bằng `simulate.ts`.
+- 3 tài nguyên + 1 premium; mọi con số nằm trong `packages/rules/data.ts`, chỉnh bằng `simulate.ts`.
 - Kiếm tiền từ P4, không phá fantasy "phế vật nghịch thiên":
   - Tu Tiên Lệnh (season pass) — khớp với mùa giải.
   - Cosmetic: skin tông môn, pháp tướng, hiệu ứng phi thăng.
@@ -306,22 +307,22 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 
 1. Viết GDD 1 trang.
 2. Sheet số liệu 15 tầng đầu.
-3. ✅ Khởi tạo repo: npm workspaces với `rules/` + `client/`.
-4. ✅ `rules/`: `State`, `advance()`, action xây + nâng cấp, kèm test (`rules/rules.test.ts`).
+3. ✅ Khởi tạo repo: npm workspaces (nay là `apps/*` + `packages/*`, xem README).
+4. ✅ `@rok/rules`: `State`, `advance()`, action xây + nâng cấp, kèm test (`packages/rules/rules.test.ts`).
 5. ✅ Màn hình tông môn theo UX.md: tài nguyên, tạp dịch + gợi ý, 8 công trình, đếm ngược, save trên máy, màn Xuất quan.
 
 ## 13. Phát hành demo (P1)
 
-**Build:** `npm run build` → thư mục tĩnh `client/dist/` (đường dẫn tương đối, chạy được ở gốc domain lẫn thư mục con).
+**Build:** `npm run build` → thư mục tĩnh `apps/client/dist/` (đường dẫn tương đối, chạy được ở gốc domain lẫn thư mục con).
 
-- **Cloudflare Pages:** build command `npm run build`, output `client/dist`.
-- **itch.io:** nén `client/dist/` thành zip, chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
-- **PWA:** có manifest + icon ấn 宗 + service worker (`client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
+- **Cloudflare Pages:** build command `npm run build`, output `apps/client/dist`.
+- **itch.io:** nén `apps/client/dist/` thành zip, chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
+- **PWA:** có manifest + icon ấn 宗 + service worker (`apps/client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
 - **Analytics:** build với `VITE_ANALYTICS_URL=https://<máy chủ>/e` thì client gửi beacon JSON `{id, name, props, v, t}` (id ngẫu nhiên của máy, không có dữ liệu cá nhân) cho các sự kiện `open`, `found`, `hall`, `trib`, `rebirth`. Không đặt biến thì không gửi gì.
-  Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS sau Caddy/nginx (đặt `TRUST_PROXY=1`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
-- **Font:** giấy phép OFL nằm cạnh font trong `client/public/fonts/`.
+  Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`apps/server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS sau Caddy/nginx (đặt `TRUST_PROXY=1`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
+- **Font:** giấy phép OFL nằm cạnh font trong `apps/client/public/fonts/`.
 
-**Kiểm thử trước khi phát hành:** `npm test` (luật, server analytics, và `client/render.test.ts`: vẽ mọi màn hình × 6 trạng thái game × 2 ngôn ngữ bằng SSR của Svelte qua Vite — bắt lỗi vỡ lúc vẽ và chữ hỏng `NaN`/`undefined` mà không cần trình duyệt), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi chơi thử bản build (`npm run build && npm run preview -w client`). CI (`.github/workflows/ci.yml`) chạy đủ 4 bước này ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
+**Kiểm thử trước khi phát hành:** `npm test` (luật, server analytics, và `apps/client/render.test.ts`: vẽ mọi màn hình × 6 trạng thái game × 2 ngôn ngữ bằng SSR của Svelte qua Vite — bắt lỗi vỡ lúc vẽ và chữ hỏng `NaN`/`undefined` mà không cần trình duyệt), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi `npm run build && npm run e2e` (Chrome headless bấm như người chơi trên bản build: lập tông môn, 14 nhiệm vụ đầu chỉ bằng click, hai tab không đè save nhau, console sạch — cần Chrome trên máy, không có thì tự bỏ qua; đặt `CHROME=` nếu Chrome ở chỗ khác) và chơi thử bản build (`npm run preview -w client`). CI (`.github/workflows/ci.yml`) chạy đủ 4 bước này ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
 
 **Việc còn lại để qua cổng P1:** thử trên điện thoại thật (Android tầm trung, iPhone Safari), thuê VPS chạy máy nhận analytics, đăng itch.io + nhóm Facebook/Discord, gom ≥ 300 người thử, đọc D1/D7 ở `/stats`.
 6. Spike PixiJS 100×100 ô trên điện thoại thật.

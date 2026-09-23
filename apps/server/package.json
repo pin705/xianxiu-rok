@@ -1,0 +1,9 @@
+{
+  "name": "@rok/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node analytics.ts",
+    "test": "node --test"
+  }
+}
