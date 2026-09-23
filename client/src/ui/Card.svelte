@@ -33,7 +33,7 @@
       linear-gradient(rgb(255 255 255 / 0.28), transparent 70%),
       var(--paper) var(--paper-tex);
     background-size: auto, 128px;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 38%, transparent), 0 1px 0 rgb(255 255 255 / 0.6), var(--shadow-1);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 38%, transparent), var(--shadow-1);
     clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   }
   .lacquer {

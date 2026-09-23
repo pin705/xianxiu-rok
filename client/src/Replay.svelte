@@ -1,8 +1,8 @@
 <script lang="ts">
   // Phát lại trận: luật đã tính xong (tất định), ở đây chỉ diễn lại từng lượt rồi hiện kết quả.
-  import { MAX_ROUNDS, PILL_IDS, RESOURCES, count, type Report } from '@rok/rules'
+  import { MAX_ROUNDS, count, type Report } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
-  import Unit from './Unit.svelte'
+  import { Bag, Button, Card, Medal, Stat } from './ui'
   import { GLYPH, L, LOOK, num, reportName, sfx } from './lib'
 
   let { report, onclose }: { report: Report | null; onclose: () => void } = $props()
@@ -61,31 +61,28 @@
   const dead = $derived(report ? count(report.dead) : 0)
 </script>
 
-<dialog bind:this={dlg} class="replay" class:trib={report?.kind === 'trib'} aria-label={L.report.title} onclose={onclose}>
+<dialog bind:this={dlg} class="replay paper" class:trib={report?.kind === 'trib'} aria-label={L.report.title} onclose={onclose}>
   {#if report && f}
     <div class="field">
       {#key `${fi}-${r}`}<div class="flash" class:on={report.kind === 'trib' && r > 0}></div>{/key}
-      <header class="side top">
-        <span class="medal"><span class="han">{foeGlyph}</span></span>
-        <span class="who"><b>{foeName}</b>{#if f.b.level > 1}<small>{L.lv(f.b.level)}</small>{/if}</span>
+      <header class="row">
+        <Medal glyph={foeGlyph} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={46} />
+        <span class="stack" style:--gap="0"><b class="t-head">{foeName}</b>{#if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span>
       </header>
       <ul class="stacks">
         {#each f.b.troops as t, k (k)}
           {@const n = counts(1, r)[k]}
           {@const d = counts(1, r - 1)[k] - n}
           <li class:gone={!n}>
-            <Unit type={t.type} tier={t.tier} size={46} glyph={report.kind === 'trib' ? GLYPH.thunder : undefined} />
-            <b>{num(n)}</b>
+            <Medal glyph={report.kind === 'trib' ? GLYPH.thunder : GLYPH.unit[t.type]} tone={report.kind === 'trib' ? 'thunder' : t.type} size={50} pips={t.tier} />
+            <b class="t-num">{num(n)}</b>
             {#if r > 0 && d > 0}{#key r}<span class="dmg">−{num(d)}</span>{/key}{/if}
           </li>
         {/each}
       </ul>
 
       <div class="mid">
-        <p class="round">
-          <Icon name="swords" size={16} />
-          {#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, MAX_ROUNDS)}
-        </p>
+        <p class="round row center"><Icon name="swords" size={16} />{#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, MAX_ROUNDS)}</p>
         {#key r}
           {#if cast[1]}<span class="cast foe">{L.report.foeSkill}</span>{/if}
           {#if cast[0] && f.a.elder}<span class="cast">{L.elders[f.a.elder].skill}!</span>{/if}
@@ -97,51 +94,42 @@
           {@const n = counts(0, r)[k]}
           {@const d = counts(0, r - 1)[k] - n}
           <li class:gone={!n}>
-            <Unit type={t.type} tier={t.tier} size={46} />
-            <b>{num(n)}</b>
+            <Medal glyph={GLYPH.unit[t.type]} tone={t.type} size={50} pips={t.tier} />
+            <b class="t-num">{num(n)}</b>
             {#if r > 0 && d !== 0}{#key r}<span class="dmg" class:up={d < 0}>{d > 0 ? '−' : '+'}{num(Math.abs(d))}</span>{/key}{/if}
           </li>
         {/each}
       </ul>
-      <header class="side">
-        {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={44} />{/if}
-        <span class="who">
-          <b>{f.a.elder ? L.elders[f.a.elder].name : ''}</b>
-          <small>{L.lv(f.a.level)}</small>
-        </span>
+      <header class="row">
+        {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={46} />{/if}
+        <span class="stack" style:--gap="0"><b class="t-head">{f.a.elder ? L.elders[f.a.elder].name : ''}</b><small class="t-small t-gold t-strong">{L.lv(f.a.level)}</small></span>
       </header>
     </div>
 
     {#if done}
-      <div class="result" class:win={report.win}>
-        <h2>{report.kind === 'trib' ? (report.win ? L.report.tribWin : L.report.tribLose) : report.win ? L.report.win : L.report.lose}</h2>
-        {#if retreat}<p class="muted">{L.report.retreat}</p>{/if}
-        <ul>
-          {#if count(report.hurt) - dead}<li><Icon name="heal" size={18} />{L.report.hurt}<b>{num(count(report.hurt) - dead)}</b></li>{/if}
-          {#if dead}<li class="bad"><Icon name="skull" size={18} />{L.report.dead}<b>{num(dead)}</b></li>{/if}
-          {#if RESOURCES.some(x => report.gain.res[x]) || PILL_IDS.some(p => report.gain.items[p])}
-            <li class="gain">
-              {L.report.gain}
-              <span>
-                {#each RESOURCES as x (x)}{#if report.gain.res[x]}<i><Icon name={x} size={16} />{num(report.gain.res[x] ?? 0)}</i>{/if}{/each}
-                {#each PILL_IDS as p (p)}{#if report.gain.items[p]}<i><Icon name={p} size={16} />×{report.gain.items[p]}</i>{/if}{/each}
-              </span>
-            </li>
-          {/if}
-          {#if report.gain.exp && f.a.elder}<li><Icon name="star" size={18} />{L.report.exp} · {L.elders[f.a.elder].name}<b>+{num(report.gain.exp)}</b></li>{/if}
-          {#if report.gain.elder}
-            <li class="elder"><Portrait look={LOOK[report.gain.elder]} size={36} />{L.report.newElder}<b>{L.elders[report.gain.elder].name}</b></li>
-          {/if}
-        </ul>
-        <div class="two">
-          <button class="btn ghost" onclick={() => ((fi = 0), (r = 0), (done = false))}>{L.report.replay}</button>
-          <button class="btn gold" onclick={() => dlg?.close()}>{L.report.close}</button>
-        </div>
+      <div class="result">
+        <Card tone={report.win ? 'glow' : 'paper'}>
+          <div class="stack">
+            <h2 class="t-title center" class:t-bad={!report.win}>{report.kind === 'trib' ? (report.win ? L.report.tribWin : L.report.tribLose) : report.win ? L.report.win : L.report.lose}</h2>
+            {#if retreat}<p class="center t-small t-lore">{L.report.retreat}</p>{/if}
+            {#if count(report.hurt) - dead}<Stat label={L.report.hurt}><Icon name="heal" size={16} />{num(count(report.hurt) - dead)}</Stat>{/if}
+            {#if dead}<Stat label={L.report.dead} tone="bad"><Icon name="skull" size={16} />{num(dead)}</Stat>{/if}
+            {#if report.gain.exp && f.a.elder}<Stat label="{L.report.exp} · {L.elders[f.a.elder].name}" tone="gold">+{num(report.gain.exp)}</Stat>{/if}
+            <Bag res={report.gain.res} items={report.gain.items} />
+            {#if report.gain.elder}
+              <span class="row"><Portrait look={LOOK[report.gain.elder]} size={36} /><span class="t-strong">{L.report.newElder}: {L.elders[report.gain.elder].name}</span></span>
+            {/if}
+            <div class="grid">
+              <Button variant="ghost" onclick={() => ((fi = 0), (r = 0), (done = false))}>{L.report.replay}</Button>
+              <Button variant="gold" onclick={() => dlg?.close()}>{L.report.close}</Button>
+            </div>
+          </div>
+        </Card>
       </div>
     {:else}
-      <div class="ctl">
-        <button class="btn ghost small" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</button>
-        <button class="btn small" onclick={() => ((fi = report.fights.length - 1), (r = report.fights.at(-1)!.rounds.length), (done = true))}>{L.report.skip}</button>
+      <div class="row center ctl">
+        <Button variant="ghost" size="sm" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</Button>
+        <Button size="sm" onclick={() => ((fi = report.fights.length - 1), (r = report.fights.at(-1)!.rounds.length), (done = true))}>{L.report.skip}</Button>
       </div>
     {/if}
   {/if}
@@ -149,103 +137,43 @@
 
 <style>
   .replay {
-    width: min(100%, 480px);
-    max-width: 100%;
+    width: min(100%, var(--col));
     height: 100dvh;
-    max-height: 100dvh;
     margin: 0 auto;
-    padding: calc(12px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom));
-    color: #f6f1e4;
-    background: radial-gradient(ellipse at 50% 45%, #2a3f47, #0d1a20 70%);
-    border: 0;
+    padding: calc(var(--sp-3) + var(--safe-t)) var(--sp-4) calc(var(--sp-4) + var(--safe-b));
   }
-  .replay.trib {
-    background: radial-gradient(ellipse at 50% 40%, #3b2f5c, #110d1f 70%);
+  /* sân đấu: vệt mực loang giữa giấy */
+  .replay::before {
+    content: '';
+    position: absolute;
+    inset: 18% -10%;
+    background: radial-gradient(ellipse at center, color-mix(in srgb, var(--ink) 16%, transparent), transparent 65%);
+    pointer-events: none;
+  }
+  .trib::before {
+    background: radial-gradient(ellipse at center, rgb(52 40 110 / 0.35), transparent 65%);
   }
   .replay::backdrop {
-    background: #0b141a;
+    background: var(--lacquer);
   }
   .field {
     position: relative;
     display: grid;
     grid-template-rows: auto 1fr auto 1fr auto;
-    gap: 10px;
-    height: calc(100% - 64px);
+    gap: var(--sp-3);
+    height: calc(100% - 60px);
   }
   .flash {
     position: absolute;
-    inset: -20px;
+    inset: -40px;
     pointer-events: none;
   }
   .flash.on {
-    animation: flash 0.5s ease-out;
+    animation: flash 0.5s var(--ease);
   }
   @keyframes flash {
-    0% {
-      background: rgb(230 220 255 / 0.55);
-    }
-    100% {
-      background: transparent;
-    }
-  }
-  .side {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .medal {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    background: radial-gradient(circle at 50% 35%, #8a3a2a, #3b1208);
-    border-radius: 50%;
-    box-shadow: inset 0 0 0 2px var(--gold-l);
-  }
-  .trib .medal {
-    background: radial-gradient(circle at 50% 35%, #7d62c9, #2c1d57);
-  }
-  .medal .han {
-    font-size: 26px;
-    color: #fff8e6;
-  }
-  .who {
-    display: grid;
-  }
-  .who b {
-    font-size: 16px;
-  }
-  .who small {
-    font-size: 12px;
-    color: var(--gold-l);
-  }
-  .mid {
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    gap: 8px;
-    min-height: 76px;
-  }
-  .cast {
-    padding: 6px 14px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #2b2210;
-    background: linear-gradient(#f8e3a0, #c9a14a);
-    border-radius: 10px;
-    box-shadow: 0 0 18px rgb(248 227 160 / 0.6);
-    animation: cast 0.8s ease-out;
-  }
-  .cast.foe {
-    color: #fff;
-    background: linear-gradient(#d0543a, #9e2c18);
-    box-shadow: 0 0 18px rgb(208 84 58 / 0.6);
-  }
-  @keyframes cast {
     from {
-      opacity: 0;
-      transform: scale(1.6);
+      background: rgb(236 230 255 / 0.7);
     }
   }
   .stacks {
@@ -253,148 +181,88 @@
     flex-wrap: wrap;
     align-content: center;
     justify-content: center;
-    gap: 18px 22px;
-    padding: 0;
-    list-style: none;
+    gap: var(--sp-4) var(--sp-5);
   }
   .stacks li {
     position: relative;
     display: grid;
     justify-items: center;
-    gap: 6px;
-    transition: opacity 0.4s, filter 0.4s;
+    gap: var(--sp-2);
+    transition: opacity var(--dur-3), filter var(--dur-3);
   }
-  .stacks li.gone {
+  .stacks b {
+    font-size: var(--fs-4);
+  }
+  .gone {
     opacity: 0.35;
     filter: grayscale(1);
   }
-  .stacks b {
-    font-size: 16px;
-    font-variant-numeric: tabular-nums;
-  }
   .dmg {
     position: absolute;
-    top: -8px;
-    right: -18px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #ff8f78;
-    text-shadow: 0 1px 3px #000;
-    pointer-events: none;
-    animation: dmg 0.8s ease-out forwards;
+    top: -10px;
+    right: -20px;
+    font-size: var(--fs-4);
+    font-weight: 900;
+    color: var(--cinnabar);
+    -webkit-text-stroke: 3px var(--paper);
+    paint-order: stroke fill;
+    animation: dmg 0.8s var(--ease) forwards;
   }
   .dmg.up {
-    color: #9be3a5;
+    color: var(--malachite);
   }
   @keyframes dmg {
     from {
       opacity: 1;
-      transform: translateY(6px) scale(1.3);
+      transform: translateY(6px) scale(1.35);
     }
     to {
       opacity: 0;
-      transform: translateY(-16px);
+      transform: translateY(-18px);
     }
   }
+  .mid {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: var(--sp-2);
+    min-height: 80px;
+  }
   .round {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--gold-l);
+    font-weight: 800;
+    color: var(--gold-d);
+  }
+  .cast {
+    padding: 6px 16px;
+    font-size: var(--fs-4);
+    font-weight: 900;
+    color: var(--ink);
+    background: linear-gradient(var(--gold-l), var(--gold));
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+    animation: cast 0.8s var(--spring);
+  }
+  .cast.foe {
+    color: var(--silk);
+    background: linear-gradient(var(--cinnabar-l), var(--cinnabar));
+  }
+  @keyframes cast {
+    from {
+      opacity: 0;
+      transform: scale(1.6);
+    }
   }
   .ctl {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 14px;
+    margin-top: var(--sp-3);
   }
   .result {
     position: absolute;
-    inset: auto 14px calc(16px + env(safe-area-inset-bottom));
-    padding: 20px 16px 16px;
-    background: linear-gradient(#1a2c36, #0f1d25);
-    border: 1px solid var(--cinnabar);
-    border-radius: 18px;
-    box-shadow: 0 -10px 40px rgb(0 0 0 / 0.5);
-    animation: rise 0.35s cubic-bezier(0.3, 1.3, 0.5, 1);
-  }
-  .result.win {
-    border-color: var(--gold);
+    inset: auto var(--sp-3) calc(var(--sp-3) + var(--safe-b));
+    animation: rise var(--dur-3) var(--spring);
   }
   @keyframes rise {
     from {
       opacity: 0;
       transform: translateY(30px);
-    }
-  }
-  .result h2 {
-    font-size: 26px;
-    text-align: center;
-    letter-spacing: 0.08em;
-    color: #ffb4a4;
-  }
-  .result.win h2 {
-    color: var(--gold-l);
-  }
-  .result > p {
-    margin-top: 4px;
-    font-size: 13px;
-    text-align: center;
-  }
-  .result ul {
-    display: grid;
-    gap: 6px;
-    margin-top: 14px;
-    padding: 0;
-    list-style: none;
-  }
-  .result li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
-    background: rgb(255 255 255 / 0.06);
-    border-radius: 10px;
-  }
-  .result li b {
-    margin-left: auto;
-  }
-  .result li.bad {
-    color: #ffb4a4;
-  }
-  .result .gain span {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-left: auto;
-  }
-  .result .gain i {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-style: normal;
-    font-weight: 600;
-  }
-  .result .elder {
-    color: var(--gold-l);
-    background: rgb(201 161 74 / 0.18);
-  }
-  .two {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 16px;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .flash.on,
-    .cast,
-    .dmg,
-    .result {
-      animation: none;
     }
   }
 </style>

@@ -2,7 +2,6 @@ import { mount } from 'svelte'
 import App from './App.svelte'
 import { L, LANG, isMusicOn } from './lib'
 import { startMusic } from './music'
-import './app.css'
 import './ui/theme.css'
 import { applyTheme } from './ui/theme'
 

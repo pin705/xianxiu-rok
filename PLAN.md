@@ -85,7 +85,7 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 |---|---|---|
 | Ngôn ngữ | TypeScript mọi nơi | Luật game viết 1 lần, chạy cả client lẫn server |
 | UI | Svelte 5 + Vite (lý do ở UX.md mục 1) | SLG phần lớn là màn hình UI; HTML/CSS làm UI responsive tốt nhất |
-| Bản đồ, hiệu ứng | SVG ở P1; PixiJS từ P3 | Bản đồ PvE chỉ ~25 điểm, trận ≤ 6 nhóm: SVG + CSS đủ mượt, không thêm thư viện. Bản đồ chung P3 (hàng trăm đội) mới cần WebGL |
+| Cảnh núi, bản đồ, hiệu ứng | PixiJS (WebGL) + hình vẽ tay sinh bằng mã (`@rok/art`) | Texture nướng một lần, chuyển động trên GPU: mượt trên điện thoại, dùng tiếp cho bản đồ chung P3 |
 | Server (từ P2) | Node.js + PostgreSQL, 1 process, 1 VPS | Game theo timer gần như không tốn CPU |
 | Web + PC + mobile | PWA từ P1; Capacitor (iOS/Android) và Electron + steamworks.js (Steam) ở P4 | 1 bản build; PWA đã chạy trên trình duyệt PC và điện thoại |
 
@@ -99,7 +99,7 @@ Tiền lệ: Melvor Idle (web, Steam, mobile), Antimatter Dimensions (web, Steam
 rok/
   rules/     luật game thuần — không I/O, không Date
              index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
-  art/       hình SVG vẽ theo tham số: công trình, icon, chân dung trưởng lão
+  art/       bút lông sinh hình vẽ tay (canvas → texture): núi, công trình, mây, bản đồ, chất liệu giao diện; icon/chân dung SVG
   client/    Vite + Svelte: UI, save trên máy, PWA
   server/    analytics.ts: máy nhận analytics + retention (P1); server game từ P2
   mobile/    từ P4 (Capacitor)
@@ -152,7 +152,7 @@ Tài nguyên = đã có + tốc độ × thời gian trôi (chặn bởi sức c
 | Polling ở P2 | Trễ vài giây | Có chat (P3) → WebSocket |
 | State người chơi trong 1 JSONB | Khó query chéo | Bảng xếp hạng cần → tách cột |
 | Analytics bằng bảng SQL | Không có dashboard | Cần funnel phức tạp → dịch vụ ngoài |
-| Bản đồ PvE + phát lại trận bằng SVG | Vài chục vật thể chuyển động | Bản đồ chung P3 → PixiJS |
+| Phát lại trận bằng HTML | Chưa có hiệu ứng chiêu thức trên WebGL | Cần combat nhiều hiệu ứng → dựng cảnh trận trong `client/src/world/` |
 | Trận đánh gộp theo nhóm (không có đội hình, vị trí) | Ít chiều sâu chiến thuật hơn RoK | Người chơi đòi → thêm hàng trước/sau |
 | Một hàng đợi cho mỗi việc (xây, tuyển, chữa, nghiên cứu, luyện đan) | Không xếp lịch trước được | Bán "thêm 1 hàng đợi" (P4) |
 

@@ -1,14 +1,13 @@
 <script lang="ts">
   // Bảng mục tiêu trên bản đồ: yêu thú, tông môn đối địch, bí cảnh. Xem địch, phần thưởng, chọn đội rồi xuất quân.
   import {
-    BEASTS, BEATS, PILL_IDS, REALMS, RESOURCES, SECTS, TYPES, beastExp, beastLoot, coolKey, enemyOf, marchSlots, marchTime,
+    BEASTS, BEATS, REALMS, SECTS, TYPES, beastExp, beastLoot, coolKey, enemyOf, marchSlots, marchTime,
     might, targetError, tierFor, winChance,
     type Army, type ElderId, type Reward, type State, type Target, type UnitType,
   } from '@rok/rules'
-  import { Icon, Portrait } from '@rok/art'
+  import { Portrait } from '@rok/art'
   import ArmyPick from './Army.svelte'
-  import Sheet from './Sheet.svelte'
-  import Unit from './Unit.svelte'
+  import { Bag, Card, Medal, Section, Sheet, Tag } from './ui'
   import { GLYPH, L, LOOK, clock, num } from './lib'
 
   let {
@@ -66,176 +65,59 @@
   })
 </script>
 
-<Sheet open={!!target} {onclose} label={target ? L.target(target) : ''}>
+<Sheet open={!!target} {onclose} title={target ? L.target(target) : ''} sub={info?.sub} lore={info?.lore || undefined}>
+  {#snippet art()}
+    {#if target && info}<Medal glyph={info.glyph} tone={target.kind} size={62} />{/if}
+  {/snippet}
   {#if target && info}
-    <div class="head">
-      <span class="medal {target.kind}"><span class="han">{info.glyph}</span></span>
-      <div>
-        <h2>{L.target(target)}</h2>
-        <p class="sub">{info.sub}</p>
-      </div>
-      <button class="sheet-x" onclick={onclose} aria-label={L.panel.close}><Icon name="close" size={18} /></button>
-    </div>
-    {#if info.lore}<p class="lore">{info.lore}</p>{/if}
-
     {#if foe}
-      <h3>{L.map.enemy}</h3>
-      <ul class="foe">
-        {#each foe.troops as t, i (i)}
-          <li><Unit type={t.type} tier={t.tier} size={30} /><span>~{num(t.n)} {L.units[t.type]}</span></li>
-        {/each}
-      </ul>
-      {#if info.skill}
-        <p class="skill"><Icon name="bolt" size={14} />{L.lv(info.skill.level)} · {L.skillText(info.skill.skill)}</p>
-      {/if}
-      {@const c = counter(info.type)}
-      <p class="hint"><Icon name="swords" size={14} />{L.map.counter} <b>{L.units[c]}</b> ({L.beats(c).replace(/^\p{Lu}/u, ch => ch.toLowerCase())})</p>
+      <Section title={L.map.enemy}>
+        <ul class="row wrap">
+          {#each foe.troops as t, i (i)}
+            <li class="row" style:--gap="5px"><Medal glyph={GLYPH.unit[t.type]} tone={t.type} size={30} pips={t.tier} /><span class="t-small t-strong">~{num(t.n)} {L.units[t.type]}</span></li>
+          {/each}
+        </ul>
+        {#if info.skill}
+          <Tag icon="bolt" tone="bad">{L.lv(info.skill.level)} · {L.skillText(info.skill.skill)}</Tag>
+        {/if}
+        {@const c = counter(info.type)}
+        <Tag icon="swords" tone="good">{L.map.counter} {L.units[c]} ({L.beats(c).replace(/^\p{Lu}/u, ch => ch.toLowerCase())})</Tag>
+      </Section>
     {/if}
 
-    <h3>{info.rewardLabel}</h3>
-    <ul class="reward">
-      {#each RESOURCES as r (r)}
-        {#if info.reward.res?.[r]}<li><Icon name={r} size={18} />{num(info.reward.res[r] ?? 0)}</li>{/if}
-      {/each}
-      {#each PILL_IDS as p (p)}
-        {#if info.reward.items?.[p]}<li><Icon name={p} size={18} />{L.pills[p].name} ×{info.reward.items[p]}</li>{/if}
-      {/each}
-      {#if info.reward.exp}<li><Icon name="star" size={16} />{L.map.exp(info.reward.exp)}</li>{/if}
+    <Section title={info.rewardLabel}>
+      <Bag res={info.reward.res} items={info.reward.items} exp={info.reward.exp} named />
       {#if info.reward.elder && game.elders[info.reward.elder] === undefined}
-        <li class="elder"><Portrait look={LOOK[info.reward.elder]} size={28} />{L.report.newElder}: {L.elders[info.reward.elder].name}</li>
+        <Card tone="glow">
+          <span class="row"><Portrait look={LOOK[info.reward.elder]} size={34} /><span class="t-small t-strong">{L.report.newElder}: {L.elders[info.reward.elder].name}</span></span>
+        </Card>
       {/if}
-    </ul>
+    </Section>
 
-    {#if err === 'locked'}
-      <p class="state bad"><Icon name="lock" size={16} />{need}</p>
-    {:else if err === 'max_level'}
-      <p class="state good"><Icon name="check" size={16} />{L.map.cleared}</p>
-    {:else if err === 'cooldown'}
-      <p class="state"><Icon name="clock" size={16} />{L.map.respawn(clock((game.cool[coolKey(target)] ?? 0) - now))}</p>
-    {:else if err === 'busy'}
-      <p class="state"><Icon name="flag" size={16} />{L.map.heading}</p>
-    {:else if foe}
-      {@const realm = target.kind === 'realm'}
-      {@const full = !realm && game.marches.length >= marchSlots(game)}
-      {#if full}<p class="state bad"><Icon name="flag" size={16} />{L.map.slotsFull}</p>{/if}
-      <ArmyPick
-        {game}
-        foe={might(foe)}
-        chance={(e, a) => winChance(game, e, a, target!)}
-        cta={realm ? L.map.enter : L.map.go}
-        time={realm ? undefined : clock(marchTime(game, target))}
-        disabled={full}
-        onsubmit={(e, a) => onmarch(target!, e, a)}
-        {onrecruit}
-      />
-    {/if}
+    <div class="mt-3">
+      {#if err === 'locked'}
+        <Tag icon="lock" tone="bad">{need}</Tag>
+      {:else if err === 'max_level'}
+        <Tag icon="check" tone="good">{L.map.cleared}</Tag>
+      {:else if err === 'cooldown'}
+        <Tag icon="clock">{L.map.respawn(clock((game.cool[coolKey(target)] ?? 0) - now))}</Tag>
+      {:else if err === 'busy'}
+        <Tag icon="flag">{L.map.heading}</Tag>
+      {:else if foe}
+        {@const realm = target.kind === 'realm'}
+        {@const full = !realm && game.marches.length >= marchSlots(game)}
+        {#if full}<Tag icon="flag" tone="bad">{L.map.slotsFull}</Tag>{/if}
+        <ArmyPick
+          {game}
+          foe={might(foe)}
+          chance={(e, a) => winChance(game, e, a, target!)}
+          cta={realm ? L.map.enter : L.map.go}
+          time={realm ? undefined : clock(marchTime(game, target))}
+          disabled={full}
+          onsubmit={(e, a) => onmarch(target!, e, a)}
+          {onrecruit}
+        />
+      {/if}
+    </div>
   {/if}
 </Sheet>
-
-<style>
-  .head {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin: 0 -16px;
-    padding: 18px 48px 14px 16px;
-    color: var(--ink);
-    background: linear-gradient(135deg, #e9dfc6, #f6f0e0 60%, #e4d6b6);
-    border-radius: 18px 18px 0 0;
-  }
-  .medal {
-    display: grid;
-    flex: none;
-    place-items: center;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    box-shadow: inset 0 0 0 3px var(--gold-l), 0 3px 8px rgb(0 0 0 / 0.3);
-  }
-  .medal .han {
-    font-size: 34px;
-    color: #fff8e6;
-  }
-  .beast {
-    background: radial-gradient(circle at 50% 35%, #8a6a3a, #3b2a14);
-  }
-  .sect {
-    background: radial-gradient(circle at 50% 35%, #b8412c, #561a0e);
-  }
-  .realm {
-    background: radial-gradient(circle at 50% 35%, #3f9aa0, #123f4a);
-  }
-  h2 {
-    font-size: 20px;
-    line-height: 1.2;
-  }
-  .sub {
-    margin-top: 2px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--azurite);
-  }
-  .lore {
-    margin-top: 12px;
-    font-size: 13px;
-    line-height: 1.5;
-    color: #c9d4d7;
-  }
-  .foe,
-  .reward {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 0;
-    list-style: none;
-  }
-  .foe li,
-  .reward li {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px 4px 4px;
-    font-size: 13px;
-    background: rgb(255 255 255 / 0.06);
-    border-radius: 999px;
-  }
-  .reward li {
-    padding: 6px 10px;
-  }
-  .reward .elder {
-    padding: 3px 10px 3px 3px;
-    color: var(--gold-l);
-    background: rgb(201 161 74 / 0.18);
-  }
-  .skill,
-  .hint {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 8px;
-    font-size: 12.5px;
-    color: #c9d4d7;
-  }
-  .hint b {
-    color: var(--gold-l);
-  }
-  .state {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 16px;
-    padding: 12px;
-    font-size: 14px;
-    background: rgb(255 255 255 / 0.06);
-    border-radius: 12px;
-  }
-  .state.bad {
-    color: #ffb4a4;
-  }
-  .state.good {
-    color: #9be3a5;
-  }
-</style>

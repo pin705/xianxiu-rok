@@ -8,15 +8,15 @@
 
 **Công nghệ**
 
-- **Svelte 5 + SVG vẽ tay** cho cảnh núi và công trình (`art/` = package `@rok/art`). Không cần file ảnh: hình sinh theo tham số, màu đọc từ CSS var nên đổi ngày/đêm chỉ cần đổi biến.
-- **HTML/CSS cho HUD và bảng**: chữ tiếng Việt có dấu, co giãn, trình đọc màn hình đều tốt hơn canvas.
-- **Bản đồ vùng và phát lại trận cũng là SVG** (mốc 1.2): P1 chỉ có ~25 điểm trên bản đồ và ≤ 6 nhóm mỗi trận. PixiJS để dành cho bản đồ chung P3, nơi có hàng trăm đội chuyển động.
-- Không dùng UI kit: game cần bản sắc riêng.
+- **Hình vẽ tay sinh bằng mã** (`art/` = `@rok/art`, không phụ thuộc game): một "bút lông" (`brush.ts`: nét có lực đầu đinh đuôi chuột, mép sần, cuối nét khô tách sợi 飞白, mảng màu loang nhiều lớp, mép sắc tố đậm, hạt giấy) vẽ mọi thứ — núi (`landscape.ts`), công trình lối 界画 (`buildings.ts`), mây, tùng, hạc, bản đồ, và cả chất liệu giao diện (`ui.ts`: khung mực, sơn mài, dấu triện). Nướng một lần ra texture ở đúng độ nét màn hình (~30 ms cho cả bộ công trình).
+- **Cảnh núi và bản đồ chạy WebGL** (PixiJS, `client/src/world/`): texture tĩnh + chuyển động trên GPU (sương trôi, thác, hạc, khói lò, lửa, cột linh khí, đèn đêm, sét độ kiếp). Cuộn bằng lớp cuộn gốc của trình duyệt (quán tính như app thật); biển tên/đồng hồ là HTML dịch cùng camera trong cùng khung hình. Phòng thử art: `/lab.html` (bản dev).
+- **HTML cho HUD và bảng**, dựng từ design system `client/src/ui/` (mục 6): chữ tiếng Việt, co giãn, trình đọc màn hình tốt hơn canvas.
+- Không dùng UI kit bên ngoài: game cần bản sắc riêng.
 
 **Hình ảnh**
 
 - *Thanh lục sơn thủy* (青绿山水, như bức "Thiên Lý Giang Sơn Đồ"): núi lam khoáng chuyển lục, sương trắng ngăn các lớp xa gần.
-- **HUD mực trong suốt viền vàng** nổi trên tranh sáng: tách rõ "thế giới" và "giao diện", đúng ngôn ngữ game mobile.
+- **HUD sơn mài viền vàng, bảng giấy khung mực**: tách rõ "thế giới" (tranh) và "giao diện" (đồ vật trong tông môn), không kính mờ bo tròn kiểu web.
 - **Thời gian thật**: trời đổi theo giờ máy người chơi. Bình minh 5–7h, ngày 7–17h, hoàng hôn 17–19h; ban đêm có trăng sao, cửa sổ và đèn lồng sáng.
 
 ## 2. Nguyên tắc UX
@@ -129,23 +129,31 @@ Chủ điện tầng 15: bảng liệt kê Giữ lại / Làm lại và thưởn
 
 ## 6. Hệ thiết kế
 
-### Màu
+Nguồn màu duy nhất là `PIGMENT` trong `art/palette.ts` (màu khoáng: mực, giấy, 石青, 石绿, 赭石, 朱砂, vàng lá, sơn mài). `client/src/ui/theme.ts` bơm chúng thành biến CSS (`--ink`, `--azurite-d`…) cùng các chất liệu vẽ tay (`--paper-tex`, `--lacquer-tex`, `--frame-ink`, `--seal-mask`, `--stroke-ink`) trước khi mount. `ui/theme.css` giữ token (chữ, khoảng cách, bóng, chuyển động, lớp) và vài tiện ích bố cục (`.stack`, `.row`, `.grid`, `.t-*`).
 
-- Cảnh núi: `--sky1/--sky2`, `--rock-top` (石绿) → `--rock` → `--rock-d` (石青), sương `--mist-c`. Mỗi thời điểm trong ngày (`.dawn`, `.dusk`, `.night` trong `Scene.svelte`) ghi đè các biến này.
-- Vật liệu công trình: `--wall`, `--tile`, `--glaze`, `--stone*`, `--wood*`, `--spirit`… ở `client/src/app.css`; `art/` có bảng mặc định với độ ưu tiên thấp nhất.
-- HUD: nền mực `rgb(13 24 31 / .75)`, viền vàng `--gold` `#C9A14A`, chữ vàng nhạt `--gold-l` `#F1D98F`, linh khí `--spirit-ui` `#6FD3DC`, cảnh báo `--cinnabar` `#C23B22`.
-- Nút: chính lam `#2F6F9A → #1D4E73` viền vàng; thưởng/xác nhận vàng `#F8E3A0 → #C9A14A`; cả hai có "đế" 4px, nhấn thì lún xuống.
+**Quy tắc:** màn hình chỉ ghép component trong `ui/` + tiện ích bố cục; không tự đặt màu, bo góc, bóng. Cần kiểu mới thì thêm vào component/token.
+
+### Chất liệu
+
+- **Giấy xuyến chỉ** (bảng, trang, thẻ): chữ mực; bảng trượt lên như cuộn giấy có trục gỗ sơn mài, khung mực viền tay 双边.
+- **Sơn mài viền vàng** (HUD trên/dưới, biển tên công trình, thông báo): chữ trắng ngà.
+- **Thẻ bài góc vát**: nút, nhãn, thẻ — không bo tròn kiểu web. Nút có đế nổi, nhấn thì lún, luôn phát tiếng gõ.
+- **Dấu son** (印): tab đang mở, số tầng, logo, lập tông môn, chiến báo 胜/败.
+
+### Component (`client/src/ui/`)
+
+Button · IconButton · Sheet (bảng dưới / hộp giữa) · Page · Card · Section (tiêu đề gạch chân nét bút) · Tabs · Stat (dòng sổ sách có chấm dẫn) · Bag (chi phí/phần thưởng, thiếu tô đỏ) · Tag · Meter · Badge · Seal · Medal (huy hiệu chữ Hán theo hệ) · Slider · Stepper · Toggle · Toasts · Plate/Bubble/Hint/Pointer (ghim trên cảnh) · Painting (hình vẽ tay trong HTML).
 
 ### Chữ
 
-- **Be Vietnam Pro** 400/600 cho mọi chữ tiếng Việt.
-- **Ma Shan Zheng** (bút lông) cho chữ Hán: đề từ màn tiêu đề, biển hiệu công trình, huy hiệu tab. Chỉ tải bộ con đúng các chữ có trong code. Thêm chữ thì chạy `npm run fonts -w client`.
-- Cả hai font theo giấy phép OFL, tự host trong `client/public/fonts/`. Khi phát hành nhớ kèm `OFL.txt`.
+- **Alegreya** (serif có nét bút, variable 400–900, có tiếng Việt) cho toàn bộ chữ; số dùng `tabular-nums lining-nums`.
+- **Ma Shan Zheng** (bút lông) cho chữ Hán: đề từ, biển hiệu, dấu son, huy hiệu. Chỉ tải bộ con đúng các chữ có trong code — thêm chữ thì chạy `npm run fonts -w client`.
+- Font OFL, tự host trong `client/public/fonts/` kèm file giấy phép.
 
 ### Ấn triện và biển hiệu
 
 - Mỗi công trình treo **biển hiệu** (匾额) khắc chữ Hán vàng: 殿 阵 田 矿 库 武 经 丹.
-- **Ấn đỏ** là khoảnh khắc nghi lễ: đóng xuống khi lập tông môn; là nhãn tầng trên bảng tên; là huy hiệu tab đang mở.
+- **Ấn đỏ** là khoảnh khắc nghi lễ: đóng xuống khi lập tông môn; là nhãn tầng trên biển tên; là huy hiệu tab đang mở.
 
 ### Chuyển động
 

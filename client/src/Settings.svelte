@@ -2,7 +2,7 @@
   // Cài đặt: âm thanh, xuất/nhập save (Safari có thể xoá dữ liệu web ít mở), chơi lại, thông tin.
   import type { State } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import Sheet from './Sheet.svelte'
+  import { Button, Card, Section, Sheet, Tabs, Toggle } from './ui'
   import { L, LANG, isMusicOn, nowMs, parse, setLang, setMusicOn, wipe } from './lib'
   import { startMusic, stopMusic } from './music'
 
@@ -28,6 +28,7 @@
   let text = $state('')
   let bad = $state(false)
   let confirmReset = $state(false)
+  let file = $state<HTMLInputElement>()
 
   function exportSave() {
     const raw = JSON.stringify(game)
@@ -62,185 +63,83 @@
   }
 </script>
 
-<Sheet {open} {onclose} label={L.settings.title}>
-  <div class="head">
-    <h2><Icon name="gear" size={20} />{L.settings.title}</h2>
-    <button class="sheet-x" onclick={onclose} aria-label={L.panel.close}><Icon name="close" size={18} /></button>
-  </div>
+<Sheet {open} {onclose} title={L.settings.title}>
+  <Toggle checked={!muted} onchange={onmute}><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</Toggle>
+  <Toggle
+    checked={music}
+    onchange={on => {
+      music = on
+      setMusicOn(on)
+      if (on) startMusic()
+      else stopMusic()
+    }}><Icon name="sound" size={20} />{L.settings.music}</Toggle
+  >
+  <Tabs items={[{ id: 'vi', label: 'Tiếng Việt' }, { id: 'en', label: 'English' }] as const} value={LANG} onchange={setLang} />
 
-  <label class="toggle">
-    <span><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</span>
-    <input type="checkbox" checked={!muted} onchange={onmute} />
-  </label>
-  <label class="toggle">
-    <span><Icon name="sound" size={20} />{L.settings.music}</span>
-    <input
-      type="checkbox"
-      checked={music}
-      onchange={() => {
-        music = !music
-        setMusicOn(music)
-        if (music) startMusic()
-        else stopMusic()
-      }}
-    />
-  </label>
-  <div class="lang" role="group" aria-label="Ngôn ngữ / Language">
-    <button class:on={LANG === 'vi'} aria-pressed={LANG === 'vi'} onclick={() => LANG !== 'vi' && setLang('vi')}>Tiếng Việt</button>
-    <button class:on={LANG === 'en'} aria-pressed={LANG === 'en'} onclick={() => LANG !== 'en' && setLang('en')}>English</button>
-  </div>
-
-  <h3>{L.guide.title}</h3>
-  <div class="guide">
-    {#each L.guide.items as [q, a] (q)}
-      <details>
-        <summary>{q}</summary>
-        <p>{a}</p>
-      </details>
-    {/each}
-  </div>
-
-  <h3>{L.settings.save}</h3>
-  <p class="muted note">{L.settings.saveHint}</p>
-  <button class="btn wide" onclick={exportSave}><Icon name="download" size={18} />{L.settings.export}</button>
-
-  <h3>{L.settings.import}</h3>
-  <textarea bind:value={text} rows="3" placeholder={L.settings.importHint} oninput={() => (bad = false)}></textarea>
-  {#if bad}<p class="warn note">{L.settings.importBad}</p>{/if}
-  <div class="two">
-    <label class="btn ghost file">
-      <Icon name="upload" size={18} />.json
-      <input type="file" accept="application/json,.json" onchange={pickFile} />
-    </label>
-    <button class="btn" disabled={!text.trim()} onclick={importSave}>{L.settings.importGo}</button>
-  </div>
-
-  <h3>{L.settings.reset}</h3>
-  {#if confirmReset}
-    <p class="warn note">{L.settings.resetConfirm}</p>
-    <div class="two">
-      <button class="btn ghost" onclick={() => (confirmReset = false)}>{L.panel.close}</button>
-      <button class="btn red" onclick={reset}>{L.settings.reset}</button>
+  <Section title={L.guide.title}>
+    <div class="stack">
+      {#each L.guide.items as [q, a] (q)}
+        <Card>
+          <details>
+            <summary class="t-strong">{q}</summary>
+            <p class="t-small t-soft mt-2">{a}</p>
+          </details>
+        </Card>
+      {/each}
     </div>
-  {:else}
-    <button class="btn ghost wide" onclick={() => (confirmReset = true)}>{L.settings.reset}</button>
-  {/if}
+  </Section>
 
-  <h3>{L.settings.about}</h3>
-  <p class="muted note">{L.settings.version(__VERSION__)}</p>
-  <p class="muted note">{L.settings.credits}</p>
+  <Section title={L.settings.save}>
+    <p class="t-small t-lore">{L.settings.saveHint}</p>
+    <Button wide icon="download" onclick={exportSave}>{L.settings.export}</Button>
+  </Section>
+
+  <Section title={L.settings.import}>
+    <textarea bind:value={text} rows="3" placeholder={L.settings.importHint} oninput={() => (bad = false)}></textarea>
+    {#if bad}<p class="t-small t-bad">{L.settings.importBad}</p>{/if}
+    <input bind:this={file} class="sr" type="file" accept="application/json,.json" onchange={pickFile} />
+    <div class="grid">
+      <Button variant="ghost" icon="upload" onclick={() => file?.click()}>.json</Button>
+      <Button disabled={!text.trim()} onclick={importSave}>{L.settings.importGo}</Button>
+    </div>
+  </Section>
+
+  <Section title={L.settings.reset}>
+    {#if confirmReset}
+      <p class="t-small t-bad t-strong">{L.settings.resetConfirm}</p>
+      <div class="grid">
+        <Button variant="ghost" onclick={() => (confirmReset = false)}>{L.panel.close}</Button>
+        <Button variant="danger" onclick={reset}>{L.settings.reset}</Button>
+      </div>
+    {:else}
+      <Button variant="ghost" wide onclick={() => (confirmReset = true)}>{L.settings.reset}</Button>
+    {/if}
+  </Section>
+
+  <Section title={L.settings.about}>
+    <p class="t-small t-soft">{L.settings.version(__VERSION__)}</p>
+    <p class="t-small t-soft">{L.settings.credits}</p>
+  </Section>
 </Sheet>
 
 <style>
-  .head {
-    position: relative;
-    padding: 18px 0 8px;
-  }
-  h2 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 19px;
-    color: var(--gold-l);
-  }
-  .head .sheet-x {
-    top: 14px;
-    right: 0;
-  }
-  .toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 8px;
-    padding: 12px;
-    background: rgb(255 255 255 / 0.05);
-    border: 1px solid rgb(201 161 74 / 0.35);
-    border-radius: 12px;
-    cursor: pointer;
-  }
-  .toggle span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .toggle input {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--gold);
-  }
-  .lang {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    margin-top: 8px;
-    padding: 4px;
-    background: rgb(0 0 0 / 0.25);
-    border-radius: 12px;
-  }
-  .lang button {
-    min-height: 36px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #b9c6ca;
-    background: none;
-    border: 0;
-    border-radius: 9px;
-    cursor: pointer;
-  }
-  .lang .on {
-    color: #2b2210;
-    background: linear-gradient(#f8e3a0, #c9a14a);
-  }
-  .guide {
-    display: grid;
-    gap: 6px;
-  }
-  details {
-    background: rgb(255 255 255 / 0.05);
-    border: 1px solid rgb(201 161 74 / 0.3);
-    border-radius: 10px;
-  }
-  summary {
-    padding: 10px 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  details p {
-    padding: 0 12px 12px;
-    font-size: 13px;
-    line-height: 1.55;
-    color: #c9d4d7;
-  }
-  .note {
-    margin-bottom: 10px;
-    font-size: 13px;
-    line-height: 1.5;
-  }
   textarea {
     width: 100%;
-    margin-bottom: 8px;
-    padding: 10px;
+    padding: var(--sp-2);
     font: 12px/1.4 ui-monospace, monospace;
-    color: #f6f1e4;
-    background: rgb(0 0 0 / 0.3);
-    border: 1px solid rgb(201 161 74 / 0.4);
-    border-radius: 10px;
+    background: color-mix(in srgb, var(--paper2) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
     resize: vertical;
   }
-  .two {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .file {
-    position: relative;
-    overflow: hidden;
-  }
-  .file input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
+  summary {
     cursor: pointer;
+    list-style: none;
+  }
+  summary::before {
+    content: '▸ ';
+    color: var(--cinnabar);
+  }
+  details[open] summary::before {
+    content: '▾ ';
   }
 </style>

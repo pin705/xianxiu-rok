@@ -2,14 +2,13 @@
   // Màn núi tông môn: cảnh WebGL (home.ts) + lớp cuộn gốc của trình duyệt (quán tính cuộn như app thật)
   // + nút chạm vô hình trên từng công trình (bàn phím, trình đọc màn hình) + lớp HTML biển tên, đồng hồ.
   // Lớp HTML dịch theo camera trong cùng khung hình với WebGL nên không lệch nhau.
-  import { onMount } from 'svelte'
   import { building, type Kind } from '@rok/art'
   import { BUILDINGS, IDS, TRIBS, count, storage, type BuildingId, type State } from '@rok/rules'
   import { Bubble, Hint, Plate, Pointer, Tag } from '../ui'
   import { L, SEAL, clock, progress } from '../lib'
   import { Home, type Phase } from './home'
   import { HOME, SLOT } from './layout'
-  import { cssPerDU, getApp } from './stage'
+  import View from './View.svelte'
 
   type Burst = { id: BuildingId; level: number; t: number }
   let {
@@ -36,49 +35,15 @@
     scroller?: HTMLDivElement
   } = $props()
 
-  let k = $state(cssPerDU())
-  let overlay = $state<HTMLDivElement>()
   let scene = $state.raw<Home>()
 
   const hour = $derived(new Date(now).getHours())
   const phase: Phase = $derived(hour >= 5 && hour < 7 ? 'dawn' : hour >= 7 && hour < 17 ? 'day' : hour >= 17 && hour < 19 ? 'dusk' : 'night')
   const tops = $derived(Object.fromEntries(IDS.map(id => [id, building(id as Kind, Math.max(1, game.levels[id]), '').top])) as Record<BuildingId, number>)
 
-  onMount(() => {
-    let dead = false
-    let off = () => {}
-    const resize = () => (k = cssPerDU())
-    addEventListener('resize', resize)
-    getApp().then(app => {
-      if (dead) return
-      if (!app.canvas.isConnected) document.body.prepend(app.canvas)
-      const s = new Home({ still })
-      app.stage.addChild(s.root)
-      scene = s
-      const tick = () => {
-        const kk = cssPerDU()
-        const top = scroller?.scrollTop ?? 0
-        s.root.scale.set(kk)
-        s.root.position.set((innerWidth - 400 * kk) / 2, -top)
-        if (overlay) overlay.style.transform = `translate3d(0, ${-top}px, 0)`
-        s.tick(app.ticker.deltaMS / 1000, top / kk)
-      }
-      app.ticker.add(tick)
-      off = () => {
-        app.ticker.remove(tick)
-        s.destroy()
-      }
-    })
-    return () => {
-      dead = true
-      removeEventListener('resize', resize)
-      off()
-    }
-  })
-
   $effect(() => scene?.set({ game, seal: SEAL, selected, storm, phase }))
   $effect(() => {
-    if (scene) scene.root.visible = !hidden
+    if (import.meta.env.DEV && scene && !still) Object.assign(globalThis, { rokHome: scene })
   })
   // Pháo hoa lên tầng: mỗi burst một lần
   const seen = new Set<number>()
@@ -103,11 +68,10 @@
     if (id === 'chuDien' && TRIBS[game.trib]?.hall === game.levels.chuDien && game.tribCool <= now) return 'bolt'
     return null
   }
-  const at = (x: number, y: number) => `left:${x * k}px;top:${y * k}px`
 </script>
 
-<div class="scroller" class:off={still || hidden} bind:this={scroller}>
-  <div class="space" style:width="{400 * k}px" style:height="{HOME.h * k}px">
+<View make={() => new Home({ still })} height={HOME.h} {hidden} start={still ? 0 : 0.3} bind:scroller bind:scene={scene as never}>
+  {#snippet hits(k)}
     {#if !still}
       {#each IDS as id (id)}
         {@const [x, y, w] = SLOT[id]}
@@ -121,12 +85,10 @@
         ></button>
       {/each}
     {/if}
-  </div>
-</div>
-
-{#if !still}
-  <div class="overlay" class:off={hidden} aria-hidden="true">
-    <div class="layer" bind:this={overlay} style:width="{400 * k}px">
+  {/snippet}
+  {#snippet pins(k)}
+    {#if !still}
+      {@const at = (x: number, y: number) => `left:${x * k}px;top:${y * k}px`}
       {#each IDS as id (id)}
         {@const [x, y, w] = SLOT[id]}
         {@const lv = game.levels[id]}
@@ -163,53 +125,13 @@
           <span class="pin" style={at(x, y - h - 6)}><b class="lvup">{L.level(b.level)}</b></span>
         {/each}
       {/each}
-    </div>
-  </div>
-{/if}
+    {/if}
+  {/snippet}
+</View>
 
 <style>
-  /* Lớp cuộn trong suốt phủ cả màn hình: nhận cử chỉ, cuộn có quán tính của hệ điều hành */
-  .scroller {
-    position: fixed;
-    inset: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .space {
-    position: relative;
-    margin: 0 auto;
-  }
-  .hit {
-    position: absolute;
-    border-radius: 12px;
-  }
-  .hit:focus-visible {
-    outline: 2px dashed var(--gold-l);
-  }
-  .off {
-    visibility: hidden;
-  }
-  .overlay {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-overlay);
-    overflow: hidden;
-    pointer-events: none;
-  }
-  .layer {
-    position: relative;
-    height: 100%;
-    margin: 0 auto;
-    will-change: transform;
-  }
-  .pin {
-    position: absolute;
-    translate: -50% -50%;
-    white-space: nowrap;
-  }
   .up {
-    translate: -50% -100%;
+    translate: -50% -100% !important;
   }
   .lvup {
     display: block;

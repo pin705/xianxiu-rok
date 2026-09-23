@@ -122,7 +122,7 @@ export class Home {
     this.sky.width = 3000
     this.sky.height = HOME.h + 800
     this.root.addChild(this.world, this.sky)
-    this.sun = soft(glowT, '#fff2d0', 120)
+    this.sun = soft(glowT, '#f7cf9a', 64)
     this.sun.position.set(318, 150)
     this.moon = soft(glowT, '#f2efe2', 60)
     this.moon.position.set(86, 140)
@@ -168,7 +168,9 @@ export class Home {
     })
 
     // Núi chính sau Chủ điện + sương lưng chừng
-    this.land.addChild(sprite(painted('peak:main', () => peak(236, 228, 31, 0.02)), 205, 392))
+    this.land.addChild(sprite(painted('peak:l', () => peak(220, 130, 33, -0.1)), 96, 400))
+    this.land.addChild(sprite(painted('peak:r', () => peak(230, 150, 35, 0.12)), 318, 404))
+    this.land.addChild(sprite(painted('peak:main', () => peak(300, 190, 31, 0.03)), 205, 396))
     this.mist(262, 70, 3, 0.85, 700)
 
     // Các tầng núi, xen sương; vách thác ở phải
@@ -198,6 +200,7 @@ export class Home {
     byLedge(3)
     this.mist(...MISTS[2])
     byLedge(4)
+    byLedge(6)
     this.mist(...MISTS[3])
     byLedge(5)
     this.mist(...MISTS[4])

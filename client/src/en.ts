@@ -368,7 +368,7 @@ export const en: Text = {
     resetConfirm: 'Erase all progress and start over? This cannot be undone.',
     about: 'About',
     version: (v: string) => `Version ${v} · offline test build`,
-    credits: 'Fonts: Be Vietnam Pro, Ma Shan Zheng — SIL Open Font License.',
+    credits: 'Fonts: Alegreya, Ma Shan Zheng — SIL Open Font License. Hand-painted art is generated in code.',
     open: 'Settings',
   },
 

@@ -4,11 +4,9 @@
     RESOURCES, TIER, TIERS, TYPES, UNIT_BASE, batch, tierOpen, trainCost, trainError, trainTime, unitOf,
     type Action, type State, type Tier, type UnitId, type UnitType,
   } from '@rok/rules'
-  import { Icon } from '@rok/art'
-  import Cost from './Cost.svelte'
+  import { Bag, Button, Card, Medal, Section, Slider, Stat, Tag } from './ui'
   import JobRow from './JobRow.svelte'
-  import Unit from './Unit.svelte'
-  import { L, clock, num, sfx } from './lib'
+  import { GLYPH, L, clock, num, sfx } from './lib'
 
   let { game, now, act }: { game: State; now: number; act: (a: Action) => State | null } = $props()
 
@@ -33,115 +31,47 @@
 
 {#if game.train}
   {@const t = unitOf(game.train.unit)}
-  <JobRow {game} {now} kind="train" label={L.train.doing(game.train.n, `${L.units[t.type]} ${L.tiers[t.tier]}`)} {act} />
+  <div class="mt-3"><JobRow {game} {now} kind="train" label={L.train.doing(game.train.n, `${L.units[t.type]} ${L.tiers[t.tier]}`)} {act} /></div>
 {/if}
 
-<h3>{L.train.pick}</h3>
-<div class="types">
-  {#each TYPES as t (t)}
-    <button class="type" class:on={type === t} onclick={() => ((type = t), (n = 0))} aria-pressed={type === t}>
-      <Unit type={t} size={38} />
-      <b>{L.units[t]}</b>
-      <small>{L.beats(t)}</small>
-    </button>
-  {/each}
-</div>
+<Section title={L.train.pick}>
+  <div class="grid" style:--cols="3">
+    {#each TYPES as t (t)}
+      <Card selected={type === t} onclick={() => ((type = t), (n = 0))} label={L.units[t]}>
+        <span class="stack center" style:--gap="3px">
+          <span class="row center"><Medal glyph={GLYPH.unit[t]} tone={t} size={38} /></span>
+          <b class="t-small">{L.units[t]}</b>
+          <small class="t-tiny t-soft">{L.beats(t)}</small>
+        </span>
+      </Card>
+    {/each}
+  </div>
+</Section>
 
-<h3>{L.train.tier}</h3>
-<div class="tiers">
-  {#each TIERS as k (k)}
-    {@const open = tierOpen(game, k)}
-    <button class="tier" class:on={tier === k} disabled={!open} onclick={() => ((tier = k), (n = 0))} aria-pressed={tier === k}>
-      <b>{L.tiers[k]}</b>
-      {#if !open}<small><Icon name="lock" size={10} /> {L.train.tierLocked(TIER[k].unlock)}</small>{/if}
-    </button>
-  {/each}
-</div>
+<Section title={L.train.tier}>
+  <div class="grid" style:--cols="3">
+    {#each TIERS as k (k)}
+      {@const open = tierOpen(game, k)}
+      <Card selected={tier === k} disabled={!open} onclick={() => ((tier = k), (n = 0))} label={L.tiers[k]}>
+        <span class="stack center" style:--gap="3px">
+          <b class="t-small">{L.tiers[k]}</b>
+          {#if !open}<Tag icon="lock" size="sm">{L.train.tierLocked(TIER[k].unlock)}</Tag>{/if}
+        </span>
+      </Card>
+    {/each}
+  </div>
+  <div class="grid" style:--cols="2">
+    <Stat label={L.stat.atk}>{stat('atk')}</Stat>
+    <Stat label={L.stat.def}>{stat('def')}</Stat>
+    <Stat label={L.stat.hp}>{stat('hp')}</Stat>
+    <Stat label={L.train.home}>{num(game.troops[u])}</Stat>
+  </div>
+</Section>
 
-<p class="stats">
-  <span>{L.stat.atk} <b>{stat('atk')}</b></span>
-  <span>{L.stat.def} <b>{stat('def')}</b></span>
-  <span>{L.stat.hp} <b>{stat('hp')}</b></span>
-  <span class="muted">{L.train.home}: <b>{num(game.troops[u])}</b></span>
-</p>
-
-<h3>{L.train.count} · {num(count)}/{num(cap)}</h3>
-<div class="count">
-  <input type="range" min="1" max={cap} value={count} oninput={e => (n = +e.currentTarget.value)} aria-label={L.train.count} />
-  <button class="btn ghost small" onclick={() => (n = most)}>{L.train.max}</button>
-</div>
-
-<Cost have={game.res} cost={trainCost(u, count)} />
-<button class="btn wide go" disabled={!!err} onclick={go}>
-  <span>{L.train.go} {num(count)}</span>
-  <span class="t"><Icon name="clock" size={15} />{clock(trainTime(game, u, count))}</span>
-</button>
-{#if err === 'busy'}<p class="muted note">{L.err.busy}</p>{/if}
-
-<style>
-  .types {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-  .type,
-  .tier {
-    display: grid;
-    justify-items: center;
-    gap: 4px;
-    padding: 10px 4px;
-    color: inherit;
-    background: rgb(255 255 255 / 0.05);
-    border: 1px solid rgb(201 161 74 / 0.3);
-    border-radius: 12px;
-    cursor: pointer;
-  }
-  .type.on,
-  .tier.on {
-    background: rgb(201 161 74 / 0.18);
-    border-color: var(--gold-l);
-  }
-  .type b,
-  .tier b {
-    font-size: 13px;
-  }
-  .type small,
-  .tier small {
-    font-size: 10.5px;
-    color: #b9c6ca;
-  }
-  .tiers {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-  .tier:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
-  .stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 14px;
-    margin-top: 12px;
-    font-size: 13px;
-  }
-  .count {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  input[type='range'] {
-    flex: 1;
-    accent-color: var(--gold);
-  }
-  .go {
-    margin-top: 14px;
-  }
-  .note {
-    margin-top: 8px;
-    font-size: 13px;
-    text-align: center;
-  }
-</style>
+<Section title="{L.train.count} · {num(count)}/{num(cap)}">
+  {#snippet aside()}<Button variant="ghost" size="sm" onclick={() => (n = most)}>{L.train.max}</Button>{/snippet}
+  <Slider value={count} min={1} max={cap} label={L.train.count} onchange={v => (n = v)} />
+  <Bag res={trainCost(u, count)} have={game.res} />
+  <Button wide size="lg" trail={clock(trainTime(game, u, count))} trailIcon="clock" disabled={!!err} onclick={go}>{L.train.go} {num(count)}</Button>
+  {#if err === 'busy'}<p class="center t-small t-soft">{L.err.busy}</p>{/if}
+</Section>

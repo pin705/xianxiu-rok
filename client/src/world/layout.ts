@@ -23,6 +23,7 @@ export const LEDGES: [number, number, number, number, number][] = [
   [168, 514, 316, 92, 5],
   [142, 616, 206, 86, 13],
   [122, 718, 232, 96, 17],
+  [330, 626, 128, 70, 19],
 ]
 
 // Dải sương giữa các tầng: y, độ cao, tốc độ trôi (DU/giây), độ đậm

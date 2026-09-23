@@ -35,11 +35,12 @@
   })
 </script>
 
-<dialog bind:this={dlg} class="sheet" class:center aria-label={label ?? title} {onclose} onclick={e => e.target === dlg && dlg?.close()}>
+<dialog bind:this={dlg} class="sheet" class:modal={center} aria-label={label ?? title} {onclose} onclick={e => e.target === dlg && dlg?.close()}>
   {#if open}
     <div class="scroll paper">
       <div class="rod" aria-hidden="true"></div>
-      <div class="body inked">
+      <!-- svelte-ignore a11y_autofocus -->
+      <div class="body inked" tabindex="-1" autofocus>
         <button class="x" aria-label={L.panel.close} onclick={() => (sfx('tap'), dlg?.close())}><Icon name="close" size={16} /></button>
         {#if title}
           <header class="head" class:has-art={!!art}>
@@ -63,7 +64,7 @@
     margin: auto auto 0;
     overscroll-behavior: contain;
   }
-  .center {
+  .modal {
     width: min(100% - 24px, 420px);
     margin: auto;
   }
@@ -77,7 +78,7 @@
     box-shadow: var(--shadow-3);
     animation: rise 0.34s var(--spring);
   }
-  .center .scroll {
+  .modal .scroll {
     animation: pop 0.32s var(--spring);
   }
   /* trục gỗ sơn mài, hai đầu bịt đồng */
@@ -111,6 +112,9 @@
   .rod::after {
     right: -4px;
   }
+  .body:focus {
+    outline: none;
+  }
   .body {
     position: relative;
     max-height: min(86dvh, 780px);
@@ -118,7 +122,7 @@
     overflow-y: auto;
     overscroll-behavior: contain;
   }
-  .center .body {
+  .modal .body {
     padding-bottom: var(--sp-4);
   }
   .x {

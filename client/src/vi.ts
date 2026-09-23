@@ -365,7 +365,7 @@ export const vi = {
     resetConfirm: 'Xoá toàn bộ tiến độ và chơi lại từ đầu? Không thể hoàn tác.',
     about: 'Thông tin',
     version: (v: string) => `Phiên bản ${v} · bản thử nghiệm offline`,
-    credits: 'Font Be Vietnam Pro, Ma Shan Zheng — giấy phép SIL OFL.',
+    credits: 'Font Alegreya, Ma Shan Zheng — giấy phép SIL OFL. Hình vẽ tay sinh bằng mã.',
     open: 'Cài đặt',
   },
 

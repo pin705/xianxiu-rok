@@ -2,13 +2,14 @@
   import { onMount } from 'svelte'
   import {
     BUILDINGS, IDS, MAP_HALL, REALMS, RESOURCES, SECTS, TECH_IDS, advance, apply, newGame, questDone, questOf, storage,
-    type Action, type Army, type Bag, type BuildingId, type ElderId, type Report, type State, type Target,
+    type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
+  import { Bag, Button, Card, Sheet, Toasts, type ToastItem } from './ui'
   import Daily from './Daily.svelte'
   import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
-  import Map from './Map.svelte'
+  import MapView from './world/MapView.svelte'
   import Panel from './Panel.svelte'
   import Replay from './Replay.svelte'
   import Reports from './Reports.svelte'
@@ -40,11 +41,11 @@
   let settingsOpen = $state(false)
   let dailyOpen = $state(false)
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
-  let gain: { bag: Partial<Bag>; t: number } | null = $state(null)
-  let toasts: { id: number; text: string; bad?: boolean; report?: Report }[] = $state([])
+  let gain: { bag: Partial<Res>; t: number } | null = $state(null)
+  let toasts: ToastItem[] = $state([])
+  let awayOpen = $state(false)
   let muted = $state(isMuted())
   let world = $state<HTMLDivElement>()
-  let sheet = $state<HTMLDialogElement>()
 
   // Mũi tên chỉ đường: công trình của nhiệm vụ, khi tạp dịch rảnh và chưa mở bảng
   const guide = $derived.by(() => {
@@ -68,8 +69,9 @@
   let tid = 0
   function toast(text: string, opt: { bad?: boolean; report?: Report } = {}) {
     const id = ++tid
-    toasts = [...toasts.slice(-2), { id, text, ...opt }]
-    setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), opt.report ? 6000 : 2600)
+    const r = opt.report
+    toasts = [...toasts.slice(-2), { id, text, bad: opt.bad, ...(r && { action: L.report.replay, onaction: () => (replay = r) }) }]
+    setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), r ? 6000 : 2600)
   }
 
   // So state trước/sau để mừng việc vừa xong — dù xong theo giờ hay nhờ Tụ Khí Đan.
@@ -129,8 +131,7 @@
   // Vào game: cuộn tới giữa núi, rồi mở Xuất quan nếu vắng lâu
   $effect(() => {
     if (screen !== 'game' || !world) return
-    world.scrollTop = (world.scrollHeight - world.clientHeight) * 0.3
-    if (away) sheet?.showModal()
+    if (away) awayOpen = true
   })
 
   // Mọi thao tác đi qua đây: áp luật, lưu, báo lỗi nếu có. quiet: độ kiếp tự diễn phần mừng sau khi sét đánh xong
@@ -286,22 +287,25 @@
 
 {#snippet crashed(error: unknown)}
   <div class="crash" role="alert">
-    <p class="han">{L.gameHan}</p>
-    <h2>{L.crash.title}</h2>
-    <p>{L.crash.body}</p>
-    <button class="btn gold wide" onclick={() => location.reload()}>{L.crash.reload}</button>
-    <button
-      class="btn ghost wide"
-      onclick={() => {
-        const a = document.createElement('a')
-        a.href = URL.createObjectURL(new Blob([rawSave() ?? ''], { type: 'application/json' }))
-        a.download = 'son-ha-tien-tong-save.json'
-        a.click()
-      }}>{L.settings.export}</button
-    >
-    <!-- Lối thoát cuối: save hỏng tới mức tải lại vẫn vỡ thì chơi lại (đã có nút xuất save ở trên để giữ bản sao) -->
-    <button class="btn ghost wide" onclick={() => confirm(L.settings.resetConfirm) && (wipe(), location.reload())}>{L.settings.reset}</button>
-    <small>{String(error)}</small>
+    <Card>
+      <div class="stack center" style:--gap="var(--sp-3)">
+        <p class="han crash-han">{L.gameHan}</p>
+        <h2 class="t-title">{L.crash.title}</h2>
+        <p class="t-lore">{L.crash.body}</p>
+        <Button variant="gold" wide onclick={() => location.reload()}>{L.crash.reload}</Button>
+        <Button
+          variant="ghost"
+          wide
+          onclick={() => {
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(new Blob([rawSave() ?? ''], { type: 'application/json' }))
+            a.download = 'son-ha-tien-tong-save.json'
+            a.click()
+          }}>{L.settings.export}</Button
+        >
+        <small class="t-tiny t-faint t-ellipsis">{String(error)}</small>
+      </div>
+    </Card>
   </div>
 {/snippet}
 
@@ -312,7 +316,7 @@
   {#if tab === 'monHa'}
     <Disciples {game} {now} {act} onfocus={focus} />
   {:else if tab === 'banDo'}
-    <Map {game} {now} onpick={t => (target = t)} onreports={openReports} />
+    <MapView {game} {now} onpick={t => (target = t)} onreports={openReports} />
   {:else if tab === 'baoKho'}
     <Vault {game} {now} {act} onfocus={focus} />
   {/if}
@@ -357,45 +361,25 @@
     toast={t => toast(t)}
   />
 
-  <div class="toasts" class:low={tab === 'tongMon'} aria-live="polite">
-    {#each toasts as t (t.id)}
-      {#if t.report}
-        <button class="toast" class:bad={t.bad} onclick={() => (replay = t.report!)}>
-          <Icon name="swords" size={16} />{t.text}<small>{L.report.replay}</small>
-        </button>
-      {:else}
-        <p class="toast" class:bad={t.bad}>{t.text}</p>
-      {/if}
-    {/each}
-  </div>
+  <Toasts list={toasts} top="calc({tab === 'tongMon' ? 236 : 150}px + var(--safe-t))" />
 
-  <dialog bind:this={sheet} class="away" aria-labelledby="away-title">
+  <Sheet open={awayOpen && !!away} onclose={() => (awayOpen = false)} center title={L.away.title} sub={away ? L.away.for(L.ago(away.ms)) : ''}>
     {#if away}
-      <h2 id="away-title">{L.away.title}</h2>
-      <p>{L.away.for(L.ago(away.ms))}</p>
       {#if away.gains.length}
-        <h3>{L.away.got}</h3>
-        <ul>
-          {#each away.gains as g (g.r)}
-            <li><Icon name={g.r} size={24} /><b>+{num(g.n)}</b> {L.res[g.r]}</li>
-          {/each}
-        </ul>
+        <p class="t-small t-strong t-soft mt-2">{L.away.got}</p>
+        <Bag res={Object.fromEntries(away.gains.map(g => [g.r, g.n]))} />
       {/if}
       {#if away.done.length || away.techs.length || away.misc.length}
-        <h3>{L.away.done}</h3>
-        <ul>
-          {#each away.done as d (d.id)}
-            <li><Icon name="check" size={18} />{L.b[d.id].name} · {L.level(d.level)}</li>
-          {/each}
-          {#each [...away.techs, ...away.misc] as m (m)}
-            <li><Icon name="check" size={18} />{m}</li>
-          {/each}
+        <p class="t-small t-strong t-soft mt-3">{L.away.done}</p>
+        <ul class="stack mt-2" style:--gap="4px">
+          {#each away.done as d (d.id)}<li class="row t-good"><Icon name="check" size={16} /><span class="t-strong">{L.b[d.id].name} · {L.level(d.level)}</span></li>{/each}
+          {#each [...away.techs, ...away.misc] as m (m)}<li class="row t-good"><Icon name="check" size={16} /><span class="t-strong">{m}</span></li>{/each}
         </ul>
       {/if}
-      {#if away.full}<p class="warn">{L.away.full}</p>{/if}
-      <form method="dialog"><button class="btn gold wide enter">{L.away.enter}</button></form>
+      {#if away.full}<p class="t-small t-bad mt-3">{L.away.full}</p>{/if}
+      <div class="mt-4"><Button variant="gold" size="lg" wide onclick={() => (awayOpen = false)}>{L.away.enter}</Button></div>
     {/if}
-  </dialog>
+  </Sheet>
 {:else}
   <Home game={game ?? preview} {now} still />
   <Title mode={game ? 'splash' : 'first'} onstart={found} ondone={() => (screen = 'game')} />
@@ -403,172 +387,19 @@
 </svelte:boundary>
 
 <style>
-  .world {
-    position: fixed;
-    inset: 0;
-    max-width: 480px;
-    margin: 0 auto;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-    box-shadow: 0 0 40px rgb(0 0 0 / 0.25);
-  }
-  .world::-webkit-scrollbar {
-    display: none;
-  }
-  .hidden {
-    visibility: hidden;
-  }
-  .still {
-    overflow: hidden;
-  }
-
   .crash {
     position: fixed;
     inset: 0;
-    z-index: 50;
+    z-index: var(--z-toast);
     display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: 14px;
-    max-width: 480px;
+    place-items: center;
+    max-width: var(--col);
     margin: 0 auto;
-    padding: 24px;
-    color: #f6f1e4;
-    text-align: center;
-    background: #0f1d25;
+    padding: var(--sp-5);
+    background: var(--lacquer);
   }
-  .crash .han {
+  .crash-han {
     font-size: 40px;
-    color: var(--gold-l);
-  }
-  .crash small {
-    max-width: 100%;
-    overflow: hidden;
-    font-size: 11px;
-    color: #7f8f95;
-    text-overflow: ellipsis;
-  }
-  .toasts {
-    position: fixed;
-    top: calc(172px + env(safe-area-inset-top));
-    left: 50%;
-    z-index: 20;
-    display: grid;
-    justify-items: center;
-    gap: 6px;
-    width: min(100% - 32px, 420px);
-    translate: -50% 0;
-    pointer-events: none;
-  }
-  .toasts.low {
-    top: calc(212px + env(safe-area-inset-top)); /* dưới thanh nhiệm vụ */
-  }
-  .toast {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    max-width: 100%;
-    padding: 8px 14px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #f6f1e4;
-    background: rgb(13 24 31 / 0.92);
-    border: 1px solid var(--gold);
-    border-radius: 12px;
-    box-shadow: 0 6px 16px rgb(0 0 0 / 0.3);
-    animation: toast 0.3s ease-out;
-    pointer-events: auto;
-  }
-  button.toast {
-    cursor: pointer;
-  }
-  .toast small {
-    margin-left: 4px;
-    padding: 2px 8px;
-    color: #2b2210;
-    background: var(--gold-l);
-    border-radius: 6px;
-  }
-  .toast.bad {
-    border-color: var(--cinnabar);
-  }
-  @keyframes toast {
-    from {
-      opacity: 0;
-      transform: translateY(-8px);
-    }
-  }
-
-  .away {
-    width: min(100% - 32px, 400px);
-    margin: auto; /* app.css reset margin về 0 cho mọi thẻ, phải trả lại để dialog căn giữa */
-    padding: 24px 20px 20px;
-    color: #f6f1e4;
-    background: linear-gradient(#1a2c36, #0f1d25);
-    border: 1px solid var(--gold);
-    border-radius: 18px;
-    box-shadow: 0 20px 50px rgb(0 0 0 / 0.5);
-  }
-  .away[open] {
-    animation: pop 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
-  }
-  @keyframes pop {
-    from {
-      opacity: 0;
-      transform: scale(0.85);
-    }
-  }
-  .away::backdrop {
-    background: rgb(8 16 22 / 0.55);
-  }
-  .away h2 {
-    font: 30px/1.1 var(--font);
-    font-weight: 600;
-    text-align: center;
-    color: var(--gold-l);
-    letter-spacing: 0.06em;
-  }
-  .away > p {
-    margin-top: 6px;
-    text-align: center;
-    color: #c9d4d7;
-  }
-  .away h3 {
-    margin-top: 18px;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--gold-l);
-  }
-  .away ul {
-    display: grid;
-    gap: 6px;
-    margin-top: 8px;
-    padding: 0;
-    list-style: none;
-  }
-  .away li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    background: rgb(255 255 255 / 0.06);
-    border-radius: 10px;
-  }
-  .away li b {
-    font-size: 17px;
-    color: #9be3a5;
-  }
-  .away li :global(svg[width='18']) {
-    color: #9be3a5;
-  }
-  .warn {
-    margin-top: 14px;
-    font-size: 13px;
-  }
-  .enter {
-    margin-top: 20px;
+    color: var(--cinnabar);
   }
 </style>

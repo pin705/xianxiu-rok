@@ -36,10 +36,10 @@ async function load(lang: 'vi' | 'en') {
   })
   vite.moduleGraph.invalidateAll()
   for (const name of [
-    'Scene',
+    'world/Home',
     'Hud',
     'Panel',
-    'Map',
+    'world/MapView',
     'Target',
     'Disciples',
     'Vault',
@@ -50,12 +50,13 @@ async function load(lang: 'vi' | 'en') {
     'Daily',
     'Title',
   ])
-    C[name] = (await vite.ssrLoadModule(`/src/${name}.svelte`)).default
+    C[name.replace('world/', '')] = (await vite.ssrLoadModule(`/src/${name}.svelte`)).default
   L = (await vite.ssrLoadModule('/src/lib.ts')).L
   render = (await vite.ssrLoadModule('svelte/server')).render // nạp lại cùng lượt: runtime phải trùng bản với component
   assert.equal((await vite.ssrLoadModule('/src/lib.ts')).LANG, lang)
 }
 before(async () => {
+  Object.assign(globalThis, { innerWidth: 390, innerHeight: 844, devicePixelRatio: 2 }) // component đọc khổ màn lúc vẽ: giả điện thoại
   vite = await createServer({
     root,
     configFile: `${root}vite.config.ts`,
@@ -204,9 +205,9 @@ test('màn tiêu đề, núi và HUD ở mọi trạng thái', async () => {
     for (const f of L.naming.first) for (const l of L.naming.last) assert.ok(`${f} ${l}`.length <= 20, `tên gợi ý quá dài (tối đa 20): ${f} ${l}`)
     for (const [label, s] of STATES) {
       const now = s.time + 5000
-      paint('Scene', { game: s, now, still: false, onselect: noop }, label)
-      paint('Scene', { game: s, now, still: true }, `${label}, làm nền`)
-      paint('Scene', { game: s, now, storm: true }, `${label}, đang độ kiếp`)
+      paint('Home', { game: s, now, still: false, onselect: noop }, label)
+      paint('Home', { game: s, now, still: true }, `${label}, làm nền`)
+      paint('Home', { game: s, now, storm: true }, `${label}, đang độ kiếp`)
       for (const tab of ['tongMon', 'monHa', 'banDo', 'baoKho'])
         paint(
           'Hud',
@@ -279,7 +280,7 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
     await load(lang)
     for (const [label, s] of STATES) {
       const now = s.time + 5000
-      paint('Map', { game: s, now, onpick: noop, onreports: noop }, label)
+      paint('MapView', { game: s, now, onpick: noop, onreports: noop }, label)
       paint('Reports', { game: s, open: true, onclose: noop, onopen: noop }, label)
       const targets: Target[] = [
         ...BEASTS.map((_, i) => ({ kind: 'beast', i }) as Target),

@@ -88,10 +88,10 @@ export function ledge(w: number, h: number, seed = 1): Asset {
       // 3. 披麻皴: nét dài mảnh, lượn theo sườn
       for (let k = 0; k < sides.length - 1; k++) {
         const a = sides[k], b = sides[k + 1]
-        const lines = 2 + Math.floor(rn() * 3)
+        const lines = 1 + Math.floor(rn() * 2)
         for (let i = 0; i < lines; i++) {
           const t = (i + 0.6) / (lines + 0.4)
-          const stop = 0.45 + rn() * 0.35
+          const stop = 0.3 + rn() * 0.25
           const pts: Pt[] = [0, 0.3, 0.62, 1].map(v => {
             const u = v * stop
             const ia = Math.min(a.length - 1, u * (a.length - 1))
@@ -101,13 +101,12 @@ export function ledge(w: number, h: number, seed = 1): Asset {
             const y = lerp(lerp(pa[1], pa1[1], f), lerp(pb[1], pb1[1], f), t)
             return [x + j(2.5), y + 4] as Pt
           })
-          stroke(g, pts, { w: 0.9, color: C.ink, press: 'nail', alpha: 0.38 + rn() * 0.2, dry: 0.35, seed: seed + 100 + k * 9 + i })
+          stroke(g, pts, { w: 0.9, color: C.ink, press: 'nail', alpha: 0.3 + rn() * 0.15, dry: 0.45, seed: seed + 100 + k * 9 + i })
         }
       }
       // 4. gân núi và sườn: nét mực có lực, nhấc bút giữa chừng
       rid.forEach((r, k) => {
-        stroke(g, r.slice(0, 4), { w: 1.9, color: C.ink, press: 'nail', dry: 0.35, ink: 0.3, alpha: 0.85, seed: seed + 60 + k })
-        stroke(g, r.slice(3), { w: 1.2, color: C.ink, press: 'fade', dry: 0.55, alpha: 0.55, seed: seed + 70 + k })
+        stroke(g, r.slice(0, 3), { w: 1.8, color: C.ink, press: 'nail', dry: 0.4, ink: 0.4, alpha: 0.8, seed: seed + 60 + k })
       })
       stroke(g, left.slice(0, 4), { w: 2.4, color: C.ink, press: 'nail', dry: 0.3, ink: 0.3, seed: seed + 3 })
       stroke(g, right.slice(0, 4), { w: 2.2, color: C.ink, press: 'nail', dry: 0.3, ink: 0.3, seed: seed + 4 })
@@ -143,7 +142,7 @@ export function peak(w: number, h: number, seed = 1, sx = 0): Asset {
       for (let k = 0; k < ridges; k++) {
         const t = (k + 0.5) / ridges
         const x1 = lerp(-w * 0.4, w * 0.4, t) + j(w * 0.08)
-        rid.push([top, [lerp(top[0], x1, 0.2) + j(4), -h * 0.78], [lerp(top[0], x1, 0.5) + j(6), -h * 0.48], [lerp(top[0], x1, 0.8) + j(6), -h * 0.2], [x1, 0]])
+        rid.push([[lerp(top[0], x1, 0.12), -h * 0.9], [lerp(top[0], x1, 0.25) + j(4), -h * 0.74], [lerp(top[0], x1, 0.5) + j(6), -h * 0.48], [lerp(top[0], x1, 0.8) + j(6), -h * 0.2], [x1, 0]])
       }
       const sides = [left, ...rid, right]
       wash(g, [...left, ...right.slice().reverse()], { fill: g2 => vgrad(g2, -h, 0, [[0, C.ochreL], [0.6, C.ochre], [1, C.ochre]]), alpha: 0.55, jitter: 3, layers: 3, seed })
@@ -163,7 +162,7 @@ export function peak(w: number, h: number, seed = 1, sx = 0): Asset {
           stroke(g, pts, { w: 0.9, color: C.ink, press: 'nail', alpha: 0.35 + rn() * 0.2, dry: 0.35, seed: seed + 100 + k * 5 + i })
         }
       }
-      rid.forEach((r, k) => stroke(g, r.slice(0, 4), { w: 1.7, color: C.ink, press: 'nail', dry: 0.4, ink: 0.35, alpha: 0.8, seed: seed + 60 + k }))
+      rid.forEach((r, k) => stroke(g, r.slice(0, 3), { w: 1.6, color: C.ink, press: 'nail', dry: 0.4, ink: 0.35, alpha: 0.8, seed: seed + 60 + k }))
       stroke(g, left.slice(0, 4), { w: 2.2, color: C.ink, press: 'nail', dry: 0.3, ink: 0.3, seed: seed + 3 })
       stroke(g, right.slice(0, 4), { w: 2, color: C.ink, press: 'nail', dry: 0.3, ink: 0.3, seed: seed + 4 })
       rid.forEach((r, k) => moss(g, r[1][0], r[1][1], 3, 1.1, seed + 300 + k))
@@ -191,6 +190,51 @@ export function rock(w: number, h: number, seed = 1): Asset {
     },
   }
 }
+
+// ---------- Bản đồ vùng: tranh thủy mặc trên giấy ----------
+// peaks: [x, y chân, rộng, cao]; pines: [x, y]; river: các điểm dòng sông. Toạ độ DU của bản đồ (w × h).
+export function mapTerrain(w: number, h: number, peaks: number[][], pines: number[][], river: Pt[]): Asset {
+  return {
+    x: 0, y: 0, w, h,
+    draw(g) {
+      // sông: dải lam nhạt loang, hai bờ nét mực mảnh đứt quãng
+      stroke(g, river, { w: 26, color: C.azuriteL, press: 'even', alpha: 0.35, rough: 0.5, wobble: 3, seed: 5 })
+      stroke(g, river, { w: 14, color: C.azuriteL, press: 'even', alpha: 0.3, rough: 0.4, seed: 6 })
+      const bank = (dx: number, seed: number) => {
+        for (let i = 0; i < river.length - 1; i += 2) {
+          const seg = river.slice(i, i + 3).map(([x, y]) => [x + dx, y] as Pt)
+          if (seg.length > 1) stroke(g, seg, { w: 1, color: C.ink2, press: 'taper', alpha: 0.45, dry: 0.4, seed: seed + i })
+        }
+      }
+      bank(-13, 10)
+      bank(13, 40)
+      // núi mực nhạt: xa (trên) nhạt hơn gần (dưới)
+      const sorted = peaks.slice().sort((a, b) => a[1] - b[1])
+      sorted.forEach(([x, y, pw, ph], i) => {
+        const far = 1 - y / h
+        const rn = rng(100 + i)
+        const top: Pt = [x + (rn() - 0.5) * pw * 0.2, y - ph]
+        const pts: Pt[] = [[x - pw / 2, y], [x - pw * 0.28, y - ph * 0.45], [top[0] - pw * 0.08, y - ph * 0.85], top, [top[0] + pw * 0.1, y - ph * 0.8], [x + pw * 0.3, y - ph * 0.4], [x + pw / 2, y]]
+        const tone = mixInk(far)
+        wash(g, pts, { fill: g2 => vgrad(g2, y - ph, y, [[0, tone], [1, 'rgba(90,110,112,0)']]), alpha: 0.75 - far * 0.25, jitter: 2, layers: 3, edge: 1.5, seed: 200 + i })
+        wash(g, [top, pts[4], [x + pw * 0.05, y - ph * 0.35], pts[2]], { fill: C.malachite, alpha: 0.2 * (1 - far), jitter: 1.5, layers: 2, seed: 300 + i })
+        stroke(g, pts.slice(1, 4), { w: 1.4, color: C.ink, press: 'nail', alpha: 0.55 - far * 0.25, dry: 0.4, seed: 400 + i })
+        stroke(g, pts.slice(3, 6), { w: 1.2, color: C.ink, press: 'nail', alpha: 0.45 - far * 0.2, dry: 0.5, seed: 500 + i })
+        stroke(g, [top, [top[0] - 4, y - ph * 0.6], [top[0] - 10, y - ph * 0.3]], { w: 0.9, color: C.ink, press: 'nail', alpha: 0.3, dry: 0.5, seed: 600 + i })
+        moss(g, top[0], top[1] + 4, 3, 0.9, 700 + i)
+      })
+      pines.forEach(([x, y], i) => {
+        g.save()
+        g.translate(x, y)
+        g.globalAlpha = 0.8
+        pine(0.42, 800 + i).draw(g)
+        g.restore()
+      })
+      grain(g, 0.3)
+    },
+  }
+}
+const mixInk = (far: number) => (far > 0.6 ? '#8fa3a6' : far > 0.3 ? '#6f8a8e' : '#4f6b70')
 
 // Gradient dọc tiện dùng: các điểm dừng (0..1) giữa y0, y1
 export function vgrad(g: G, y0: number, y1: number, stops: [number, string][]) {
