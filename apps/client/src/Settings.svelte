@@ -77,7 +77,7 @@
   >
   <!-- tên mỗi ngôn ngữ viết bằng chính ngôn ngữ đó: người đọc không hiểu ngôn ngữ đang hiện vẫn tìm được tiếng mình -->
   <label class="lang row">
-    <Icon name="scroll" size={20} />
+    <Icon name="globe" size={20} />
     <select aria-label="Language" value={LANG} onchange={e => setLang(e.currentTarget.value as Locale)}>
       {#each LOCALE_IDS as id (id)}<option value={id}>{LOCALES[id].name}</option>{/each}
     </select>
@@ -88,7 +88,7 @@
       {#each L.guide.items as [q, a] (q)}
         <Card>
           <details>
-            <summary class="t-strong">{q}</summary>
+            <summary class="row t-strong"><span class="chev"><Icon name="arrow" size={14} /></span>{q}</summary>
             <p class="t-small t-soft mt-2">{a}</p>
           </details>
         </Card>
@@ -130,33 +130,49 @@
 </Sheet>
 
 <style>
+  .lang {
+    min-height: 50px;
+    padding: 0 var(--sp-1);
+    background: var(--img-dots) left bottom / 12px 6px repeat-x;
+  }
+  /* ô chọn ngôn ngữ: nền giấy nhạt, gạch chân mực vẽ tay */
   .lang select {
     flex: 1;
     min-height: 40px;
-    padding: 0 var(--sp-2);
+    padding: 0 10px 4px;
     font: inherit;
+    font-weight: 700;
     color: inherit;
     background: transparent;
-    border: 1px solid currentColor;
-    border-radius: 8px;
+    border: 0 solid transparent;
+    border-image: var(--sk-field);
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
   }
   textarea {
     width: 100%;
-    padding: var(--sp-2);
+    padding: 12px 14px;
     font: 12px/1.4 ui-monospace, monospace;
-    background: color-mix(in srgb, var(--paper2) 60%, transparent);
-    border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
+    background: transparent;
+    border: 0 solid transparent;
+    border-image: var(--sk-card-plain);
     resize: vertical;
   }
   summary {
+    --gap: 6px;
     cursor: pointer;
     list-style: none;
   }
-  summary::before {
-    content: '▸ ';
-    color: var(--cinnabar);
+  summary::-webkit-details-marker {
+    display: none;
   }
-  details[open] summary::before {
-    content: '▾ ';
+  .chev {
+    display: grid;
+    color: var(--cinnabar);
+    transition: rotate var(--dur-2) var(--ease);
+  }
+  details[open] .chev {
+    rotate: 90deg;
   }
 </style>

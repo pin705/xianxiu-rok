@@ -1,7 +1,7 @@
 <script lang="ts">
   // Phát lại trận: luật đã tính xong (tất định), ở đây chỉ diễn lại từng lượt rồi hiện kết quả.
   import { ELDERS, MAX_ROUNDS, SECTS, count, type Report, type Skill } from '@rok/rules'
-  import { Icon, Portrait, type Emblem } from '@rok/art'
+  import { Icon, Portrait, paintedUrl, portraitRing, type Emblem } from '@rok/art'
   import { Bag, Button, Card, Medal, Stat } from './ui'
   import { Battle } from './world/battle'
   import { cssPerDU, getApp } from './world/stage'
@@ -122,8 +122,8 @@
     {#key r}
       {#if cast[0] && f.a.elder}
         <div class="cutin" style:--d="{pace * 1.7}s" aria-live="polite">
-          <span class="band lacquer"></span>
-          <span class="who"><Portrait look={LOOK[f.a.elder]} size={88} /></span>
+          <span class="band"></span>
+          <span class="who" style:--ring="url({paintedUrl('ring', portraitRing, 100)})"><Portrait look={LOOK[f.a.elder]} size={88} /></span>
           <span class="stack name" style:--gap="0"><small class="t-strong">{L.elders[f.a.elder].name}</small><b class="skill">{L.elders[f.a.elder].skill}</b></span>
         </div>
       {/if}
@@ -243,30 +243,36 @@
     flex-direction: row-reverse;
     text-align: right;
   }
+  /* dải chiêu thức: một nét mực quét ngang cả màn (địch: mực son), hai đầu bút khô tước sợi */
   .band {
     position: absolute;
-    inset: 12px 0;
+    inset: 8px -12px;
     z-index: -1;
-    border-block: 3px solid var(--gold);
-    box-shadow: var(--shadow-2);
+    border: 0 solid transparent;
+    border-image: var(--sk-toast);
+    filter: drop-shadow(0 6px 10px rgb(20 14 10 / 0.4));
     rotate: -3deg;
-    scale: 1.1 1;
     animation: band-in var(--d) var(--ease) both;
   }
   .foe .band {
-    background: var(--cinnabar) var(--lacquer-tex);
-    background-size: 96px;
-    border-color: var(--gold-l);
+    border-image: var(--sk-toast-bad);
     rotate: 3deg;
     animation-name: band-in-r;
   }
+  /* chân dung trong khung vàng vẽ tay */
   .who {
+    position: relative;
     display: grid;
-    padding: 3px;
-    border-radius: 50%;
-    background: linear-gradient(var(--gold-l), var(--gold-d));
-    box-shadow: var(--shadow-2);
+    place-items: center;
+    filter: drop-shadow(0 4px 8px rgb(20 14 10 / 0.45));
     animation: slide-in var(--d) var(--spring) both;
+  }
+  .who::after {
+    content: '';
+    position: absolute;
+    inset: -8%;
+    background: var(--ring) center / 100% 100% no-repeat;
+    pointer-events: none;
   }
   .foe .who {
     animation-name: slide-in-r;

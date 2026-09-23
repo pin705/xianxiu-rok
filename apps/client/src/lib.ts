@@ -1,6 +1,6 @@
 import { BEAST_EMBLEMS, REALM_EMBLEMS, SECT_EMBLEMS, UNIT_EMBLEMS, type Emblem, type Look, type TabIcon } from '@rok/art'
 import { DEFAULT_NAME, migrate, type BuildingId, type ElderId, type Report, type State, type UnitType } from '@rok/rules'
-import { LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
+import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
 // Lưu trên máy (trình duyệt chặn storage thì vẫn chơi được, chỉ không lưu)
 const read = (k: string) => {
@@ -19,7 +19,8 @@ const write = (k: string, v: string) => {
 // Ngôn ngữ: chọn một lần lúc nạp trang (đổi thì tải lại), chỉ tải bộ chữ của ngôn ngữ đó
 const nav = globalThis.navigator
 export const LANG: Locale = pick(read('rok.lang'), nav?.languages?.length ? nav.languages : [nav?.language ?? ''])
-export const L: Text = await loadText(LANG)
+// không tải được (offline mà bộ chữ chưa từng được cất): dùng bộ mặc định thay vì trắng màn hình
+export const L: Text = await loadText(LANG).catch(() => loadText(FALLBACK))
 export const DIR = LOCALES[LANG].dir
 export function setLang(l: Locale) {
   write('rok.lang', l)

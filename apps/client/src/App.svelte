@@ -180,11 +180,12 @@
       tab = t
       selected = null
     }
-    if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return go()
+    // trang đang ẩn thì trình duyệt bỏ qua hiệu ứng (ready bị từ chối): chuyển thẳng
+    if (!document.startViewTransition || document.hidden || matchMedia('(prefers-reduced-motion: reduce)').matches) return go()
     const root = document.documentElement.style
     root.setProperty('--vt-x', `${e.clientX}px`)
     root.setProperty('--vt-y', `${e.clientY}px`)
-    document.startViewTransition(() => flushSync(go))
+    document.startViewTransition(() => flushSync(go)).ready.catch(() => {})
   }
 
   function openTarget(t: Target) {

@@ -134,12 +134,13 @@
     text-align: center;
     font-weight: 700;
   }
+  /* ô số: nền giấy nhạt, gạch chân mực vẽ tay */
   .cell {
     display: grid;
     justify-items: center;
-    padding: 5px 0;
-    background: color-mix(in srgb, var(--paper2) 70%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 15%, transparent);
+    padding: 5px 0 8px;
+    border: 0 solid transparent;
+    border-image: var(--sk-field);
   }
   .zero b {
     color: var(--text-faint);

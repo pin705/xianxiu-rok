@@ -1,7 +1,7 @@
 // Chơi thật trên bản build: Chrome headless (qua CDP, không cần thư viện) bấm như người chơi.
 // Chạy: npm run build && npm run e2e   (Chrome ở chỗ khác thì đặt CHROME=/đường/dẫn)
 // Kiểm: lập tông môn → 14 nhiệm vụ đầu chỉ bằng click (xây, tuyển, săn, luyện đan, bí cảnh), 2 tab không đè save nhau,
-// console không có lỗi. Đồng hồ trang được tua (Date.now) để khỏi chờ thật.
+// mất mạng vẫn chơi và đổi ngôn ngữ được (service worker), console không có lỗi. Đồng hồ trang được tua (Date.now) để khỏi chờ thật.
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -61,7 +61,12 @@ async function tab() {
     if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description ?? expression)
     return r.result.result.value
   }
-  return { js }
+  // chờ tới khi biểu thức đúng (khởi động có vẽ da giao diện + chờ font, nhanh chậm tuỳ máy)
+  const until = async (expression: string, ms = 15000) => {
+    for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(200)) if (await js(expression).catch(() => false)) return true
+    return false
+  }
+  return { js, until }
 }
 
 const closeAll = `document.querySelectorAll('dialog[open]').forEach(d => [...d.querySelectorAll('button')].find(b => b.matches('.x') || b.innerText.trim() === 'Đóng')?.click())`
@@ -77,12 +82,11 @@ try {
   while (!(await fetch(URL).then(r => r.ok, () => false))) await sleep(200)
   const a = await tab()
   await a.js(`localStorage.setItem('rok.lang', 'vi'); location.reload()`)
-  await sleep(1500)
   for (const sel of ['button.cover', '.skip button', 'form button[type=submit]']) {
+    assert.ok(await a.until(`!!document.querySelector('${sel}')`), `màn mở đầu thiếu ${sel}`)
     await a.js(`document.querySelector('${sel}').click()`)
-    await sleep(500)
   }
-  await sleep(2500)
+  assert.ok(await a.until(`!!document.querySelector('button.quest')`), 'lập tông môn xong không vào game')
   for (let i = 0; i < 80 && (await a.js(save)).quest < 14; i++) {
     await a.js(closeAll)
     await a.js(`document.querySelector('button.quest') || [...document.querySelectorAll('button')].find(b => b.innerText.includes('Tông môn'))?.click()`)
@@ -105,6 +109,16 @@ try {
   await a.js(`dispatchEvent(new Event('pagehide'))`)
   assert.equal((await a.js(save)).name, 'Tab hai', 'tab cũ lưu đè save của tab mới')
   console.log('✓ hai tab không đè save nhau')
+
+  // Mất mạng: tắt máy chủ, tải lại — game phải lên từ cache của service worker, cả khi đổi sang ngôn ngữ chưa từng mở
+  server.kill()
+  await sleep(500)
+  for (const lang of ['vi', 'en']) {
+    await a.js(`localStorage.setItem('rok.lang', '${lang}'); location.reload()`)
+    await sleep(500)
+    assert.ok(await a.until(`!!document.querySelector('button.quest, p.quest')`), `offline (${lang}): game không lên`)
+  }
+  console.log('✓ chơi offline, đổi ngôn ngữ offline')
 
   assert.deepEqual(errors, [], 'console có lỗi')
   console.log('✓ console sạch')

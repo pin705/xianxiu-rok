@@ -1,5 +1,6 @@
 import { mount } from 'svelte'
 import App from './App.svelte'
+import { LOCALE_IDS, loadText } from '@rok/i18n'
 import { DIR, L, LANG, isMusicOn } from './lib'
 import { startMusic } from './music'
 import './fonts.css'
@@ -26,4 +27,6 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator)
       const mine = performance.getEntriesByType('resource').map(e => e.name).filter(u => u.startsWith(location.origin))
       return c.addAll([location.href.split('#')[0], ...mine])
     })
+    // tải sẵn bộ chữ các ngôn ngữ khác (vài KB mỗi bộ) để service worker cất: offline vẫn đổi được ngôn ngữ
+    .then(() => Promise.all(LOCALE_IDS.map(loadText)))
     .catch(() => {})

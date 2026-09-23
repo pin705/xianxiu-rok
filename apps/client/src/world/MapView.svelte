@@ -105,35 +105,35 @@
       transform: scale(1.4);
     }
   }
+  /* cấp: giọt son viền vàng; dấu khoá / đã chinh phục: đĩa sơn mài, đĩa vàng vẽ tay */
   .lv {
     position: absolute;
-    top: -6px;
-    right: -10px;
-    min-width: 18px;
-    padding: 0 4px;
+    top: -7px;
+    right: -12px;
+    min-width: 20px;
+    padding: 0 5px 1px;
     font-size: 10px;
-    line-height: 16px;
+    font-weight: 800;
+    line-height: 17px;
     text-align: center;
     color: var(--silk);
-    background: var(--cinnabar);
-    box-shadow: 0 0 0 1.5px var(--paper);
+    border: 0 solid transparent;
+    border-image: var(--sk-badge);
   }
   .mark {
     position: absolute;
-    right: -4px;
-    bottom: -2px;
+    right: -5px;
+    bottom: -3px;
     display: grid;
     place-items: center;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     color: var(--gold-l);
-    background: var(--lacquer);
-    border-radius: 50%;
-    box-shadow: 0 0 0 1.5px var(--paper), 0 0 0 2.5px var(--gold-d);
+    background: var(--img-disc) center / 100% 100% no-repeat;
   }
   .ok {
-    color: var(--silk);
-    background: var(--malachite);
+    color: var(--ink);
+    background-image: var(--img-disc-gold);
   }
   .label {
     font-size: var(--fs-2);

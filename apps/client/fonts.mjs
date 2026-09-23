@@ -19,7 +19,7 @@ const UA = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Appl
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
 mkdirSync(`${OUT}/public/fonts`, { recursive: true })
-for (const f of readdirSync(`${OUT}/public/fonts`)) if (/\.woff2$/.test(f) && f !== 'seal.woff2') rmSync(`${OUT}/public/fonts/${f}`)
+for (const f of readdirSync(`${OUT}/public/fonts`)) if (/\.woff2$/.test(f)) rmSync(`${OUT}/public/fonts/${f}`)
 let css = '/* Sinh bởi fonts.mjs — đừng sửa tay. */\n'
 let files = 0
 for (const fam of FAMILIES) {

@@ -74,6 +74,26 @@ if (view === 'chrome') {
   el(`width:54px;height:30px;background:url(${url(switchSkin(S, false))}) 0 0/100% 100%;position:relative`, `<span style="position:absolute;left:2px;top:2px;width:26px;height:26px;background:url(${url(knobSkin(S))}) 0 0/100% 100%"></span>`)
   el(`width:54px;height:30px;background:url(${url(switchSkin(S, true))}) 0 0/100% 100%;position:relative`, `<span style="position:absolute;right:2px;top:2px;width:26px;height:26px;background:url(${url(knobSkin(S))}) 0 0/100% 100%"></span>`)
   el(`width:200px;height:20px;display:flex;align-items:baseline;gap:6px`, `Thể lực<span style="flex:1;height:6px;background:url(${url(dotsSkin(S))}) 0 0/12px 6px repeat-x"></span><b>+320</b>`)
+} else if (view === 'appicon') {
+  // icon ứng dụng: nền sơn mài vân gỗ tràn viền (an toàn cho icon maskable), huy hiệu tông môn vàng ở giữa
+  const px = Number(new URLSearchParams(location.search).get('px') ?? 512)
+  const ic = document.createElement('canvas')
+  ic.width = ic.height = px
+  ic.id = 'icon'
+  const g = ic.getContext('2d')!
+  const pk = plankSkin(px / 390, 7)
+  g.drawImage(pk.cv as HTMLCanvasElement, 30 * (px / 390), 30 * (px / 390), 330 * (px / 390), 60 * (px / 390), 0, 0, px, px)
+  const vg = g.createRadialGradient(px / 2, px * 0.42, px * 0.1, px / 2, px / 2, px * 0.72)
+  vg.addColorStop(0, 'rgba(255,220,160,0.18)')
+  vg.addColorStop(1, 'rgba(0,0,0,0.45)')
+  g.fillStyle = vg
+  g.fillRect(0, 0, px, px)
+  const m = medal('crest', 'gold')
+  const k = (px * 0.74) / m.w
+  const b = bake(m, k)
+  g.drawImage(b.canvas as HTMLCanvasElement, (px - m.w * k) / 2, (px - m.h * k) / 2)
+  document.body.innerHTML = ''
+  document.body.append(ic)
 } else if (view === 'medals') {
   const list: [Emblem, MedalTone][] = [
     ...BEAST_EMBLEMS.map(e => [e, 'beast'] as [Emblem, MedalTone]),

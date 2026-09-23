@@ -133,14 +133,14 @@
     font-style: italic;
     color: var(--gold-l);
   }
+  /* dải mực quét ngang, chỉ vàng: như nét bút mời chạm */
   .tap {
     margin-top: var(--sp-5);
-    padding: 10px 28px;
+    padding: 13px 40px 14px;
     font-weight: 700;
     letter-spacing: 0.06em;
-    background: rgb(20 14 10 / 0.5);
-    box-shadow: inset 0 0 0 1px var(--gold);
-    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+    border: 0 solid transparent;
+    border-image: var(--sk-toast);
     animation: breathe 1.8s var(--ease) infinite;
   }
   @keyframes breathe {

@@ -223,8 +223,11 @@
   .to {
     color: var(--good);
   }
+  /* đợt lôi kiếp: dải mực tím loang nhạt */
   .wave {
-    padding: var(--sp-2);
-    background: linear-gradient(90deg, rgb(138 115 207 / 0.22), transparent);
+    padding: var(--sp-2) 12px;
+    border: 0 solid transparent;
+    border-image: var(--sk-card-plain);
+    background: linear-gradient(90deg, rgb(138 115 207 / 0.18), transparent) padding-box;
   }
 </style>

@@ -23,12 +23,15 @@ const fetchAndKeep = req =>
     return res
   })
 
+// ignoreVary: nhiều host gửi `Vary: Origin`; script module và font gửi kèm Origin còn bản đã cất thì không → khớp trượt, offline trắng màn
+const hit = req => caches.match(req, { ignoreVary: true })
+
 self.addEventListener('fetch', e => {
   const req = e.request
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return
   e.respondWith(
     req.mode === 'navigate'
-      ? fetchAndKeep(req).catch(() => caches.match(req).then(hit => hit || caches.match('./')))
-      : caches.match(req).then(hit => hit || fetchAndKeep(req)),
+      ? fetchAndKeep(req).catch(() => hit(req).then(r => r || hit('./')))
+      : hit(req).then(r => r || fetchAndKeep(req)),
   )
 })

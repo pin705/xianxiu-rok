@@ -1,5 +1,6 @@
 // Hình vẽ của game. Không phụ thuộc game: chữ, luật, dữ liệu đều do bên dùng truyền vào.
-// brush/noise/palette: bút lông vẽ ra canvas (cảnh WebGL lẫn giao diện). Icon, Portrait: component HTML (vật phẩm, chân dung vẽ tay; biểu tượng thao tác là SVG).
+// brush/noise/palette: bút lông vẽ ra canvas (cảnh WebGL lẫn giao diện). chrome: da giao diện 9 mảnh; emblems: huy hiệu, icon tab;
+// actions: icon thao tác nét bút. Icon, Portrait: component HTML (mọi hình đều vẽ tay).
 export { default as Icon, type Name as IconName } from './Icon.svelte'
 export { default as Portrait } from './Portrait.svelte'
 export * from './brush'
