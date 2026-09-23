@@ -281,9 +281,14 @@ export const DAILY_BONUS: Partial<Record<PillId, number>> = { tuKhi: 1, boiNguye
 // ---------- Luân hồi ----------
 
 // Chủ điện tầng 15: luân hồi tự nguyện. Giữ trưởng lão, công pháp, đan dược; mất công trình, tài nguyên, đệ tử, bản đồ.
-// Mỗi lần luân hồi: sản lượng +20%, xây nhanh hơn 10%.
+// Mỗi lần luân hồi: sản lượng +20%, xây nhanh hơn 10%, và "căn cơ": kiếp sau khởi đầu với mọi công trình cao hơn 2 tầng
+// (tối đa tầng 5 — vẫn phải tự độ kiếp Trúc Cơ). Căn cơ mới là thưởng chính: nhịp game bị giới hạn bởi số lần phải xây
+// (một tạp dịch, vài phiên mỗi ngày) chứ không bởi thời gian mỗi lần xây — bot đo: chỉ bớt thời gian xây thì kiếp sau
+// nhanh hơn chưa tới 15%.
 export const REBIRTH_PROD = 0.2
 export const REBIRTH_BUILD = 0.1
+export const REBIRTH_HEAD = 2
+export const REBIRTH_HEAD_MAX = 5
 
 // ---------- Nhiệm vụ chính tuyến ----------
 

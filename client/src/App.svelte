@@ -18,7 +18,7 @@
   import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
   import Vault from './Vault.svelte'
-  import { L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, track, type Tab } from './lib'
+  import { L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, track, watchSave, wipe, type Tab } from './lib'
 
   const saved = load(nowMs())
   const start = saved && advance(saved, nowMs())
@@ -109,6 +109,7 @@
     const leave = () => game && save(game) // Safari iOS có lúc bỏ qua visibilitychange khi tắt app
     document.addEventListener('visibilitychange', hide)
     addEventListener('pagehide', leave)
+    const unwatch = watchSave(s => (s ? (game = s) : location.reload()))
     if (import.meta.env.DEV)
       Object.assign((globalThis as any).rok, {
         get: () => game,
@@ -121,6 +122,7 @@
       clearInterval(tick)
       document.removeEventListener('visibilitychange', hide)
       removeEventListener('pagehide', leave)
+      unwatch()
     }
   })
 
@@ -297,6 +299,8 @@
         a.click()
       }}>{L.settings.export}</button
     >
+    <!-- Lối thoát cuối: save hỏng tới mức tải lại vẫn vỡ thì chơi lại (đã có nút xuất save ở trên để giữ bản sao) -->
+    <button class="btn ghost wide" onclick={() => confirm(L.settings.resetConfirm) && (wipe(), location.reload())}>{L.settings.reset}</button>
     <small>{String(error)}</small>
   </div>
 {/snippet}

@@ -249,12 +249,18 @@ test('bí cảnh: qua tầng lấy thưởng, tầng cuối thu nhận trưởng
 test('luân hồi: giữ trưởng lão + công pháp, làm lại tông môn, mạnh hơn', () => {
   const s = { ...rich(15), tech: { tuLinh: 3 }, elders: { thanhPhong: 5000, nhuYen: 100 } }
   const r = run(s, { type: 'rebirth' })
-  assert.equal(r.levels.chuDien, 1)
   assert.equal(r.rebirths, 1)
   assert.deepEqual(r.tech, s.tech)
   assert.deepEqual(r.elders, s.elders)
-  assert.ok(buildTime(r, 'chuDien', 2) < buildTime(newGame(T0), 'chuDien', 2))
+  assert.ok(buildTime(r, 'chuDien', 3) < buildTime(newGame(T0), 'chuDien', 3))
   assert.equal(err(rich(14), { type: 'rebirth' }), 'locked')
+  // Căn cơ: kiếp 2 khởi đầu ở tầng 3 (công trình chưa mở ở tầng 3 vẫn là 0), kiếp 3 trở đi ở tầng 5 — vẫn phải độ kiếp
+  assert.equal(r.levels.chuDien, 3)
+  assert.equal(r.levels.tuLinhTran, 3)
+  assert.equal(r.levels.tangKinhCac, 0)
+  const r3 = run({ ...r, levels: rich(15).levels, res: rich(15).res }, { type: 'rebirth' })
+  assert.deepEqual(new Set(Object.values(r3.levels)), new Set([5]))
+  assert.equal(upgradeError(r3, 'chuDien'), 'trib')
 })
 
 test('nhiệm vụ ngày: đếm tiến độ, nhận thưởng từng việc, rương khi đủ 4, sang ngày mới thì làm lại', () => {
@@ -307,6 +313,31 @@ test('nhiệm vụ luyện đan xong ngay khi bắt đầu luyện (không chặ
   const i = QUESTS.findIndex(q => q.k === 'brew')
   const s = run({ ...rich(5), quest: i }, { type: 'brew', pill: 'tuKhi', n: 1 })
   assert.equal(questDone(s), true)
+})
+
+test('save nhập vào: đủ khuôn thì nhận nguyên vẹn, thiếu hay sai trường thì từ chối (không để game vỡ lúc vẽ)', () => {
+  // state đã chơi qua nhiều hệ thống, qua JSON như khi lưu/nhập
+  let s: State = { ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 500 }, elders: { thanhPhong: 0, thachKien: 0 } }
+  s = run(s, { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: { kiem1: 100 } })
+  s = run(s, { type: 'realm', i: 0, elder: 'thachKien', army: { kiem1: 50 } })
+  s = run(s, { type: 'train', unit: 'the1', n: 20 })
+  const round = JSON.parse(JSON.stringify(s))
+  assert.deepEqual(migrate(round), round)
+  const broken = (f: (x: any) => void) => {
+    const x = JSON.parse(JSON.stringify(s))
+    f(x)
+    return migrate(x)
+  }
+  assert.equal(broken(x => delete x.troops), null)
+  assert.equal(broken(x => (x.troops.kiem1 = -5)), null)
+  assert.equal(broken(x => (x.res.linhThach = 'nhiều')), null)
+  assert.equal(broken(x => (x.levels.chuDien = 99)), null)
+  assert.equal(broken(x => (x.marches[0].elder = 'kẻ lạ')), null)
+  assert.equal(broken(x => (x.reports = {})), null)
+  assert.equal(broken(x => (x.elders = { hacker: 1 })), null)
+  assert.equal(broken(x => (x.sects = [])), null)
+  assert.equal(broken(x => (x.queue = [{ building: 'x' }])), null)
+  assert.equal(migrate({ v: 2 }), null, 'bản 2 thiếu trường cũng không làm vỡ')
 })
 
 test('mọi nhiệm vụ đều làm được: đích đến có thật trong dữ liệu', () => {

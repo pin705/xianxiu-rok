@@ -3,6 +3,7 @@
 //   npm run sim                    → 30 ngày, bot giỏi: "xem trước" đúng kết quả trận (luật tất định)
 //   npm run sim -- 45 6            → 45 ngày, 6 phiên/ngày
 //   npm run sim -- 45 3 --casual   → người chơi thường: mỗi phiên 1 lượt, chỉ đánh khi giao diện báo ≥ 80% thắng
+//   npm run sim -- 60 4 --rebirth  → luân hồi khi xong kiếp đầu, xem kiếp sau nhanh hơn bao nhiêu
 import {
   BEASTS, ELDER_IDS, IDS, MAX_LEVEL, PILL_IDS, QUESTS, REALMS, SECTS, TECH_IDS, TRIBS, TYPES, UNITS,
   apply, advance, batch, cost, count, elderLevel, enemyOf, fight, newGame, sideOf, tierOpen, unitOf, winChance,
@@ -11,6 +12,9 @@ import {
 
 const DAY = 86_400_000
 const casual = process.argv.includes('--casual')
+const reborn = process.argv.includes('--rebirth') // tới tầng 15 và đã hạ hết bản đồ thì luân hồi, đo kiếp sau
+// Sẵn sàng luân hồi: ngừng xuất quân, đợi các đội về (luật đòi mọi đội về hết)
+const ready = () => reborn && s.levels.chuDien === MAX_LEVEL && s.beast === BEASTS.length && s.sects.every(Boolean)
 const [daysArg, perDayArg] = process.argv.slice(2).filter(a => !a.startsWith('--'))
 const days = Number(daysArg ?? 30)
 const perDay = Number(perDayArg ?? 4)
@@ -95,7 +99,7 @@ function fightAll() {
     }
   }
   // Xuất quân: tông môn chưa hạ trước, rồi yêu thú cấp cao nhất đánh thắng được
-  for (const e of idleElders(s)) {
+  for (const e of ready() ? [] : idleElders(s)) {
     if (!count(s.troops)) break
     const army = home(s)
     const targets: Target[] = [
@@ -132,12 +136,19 @@ function turn() {
 }
 
 let lastHall = s.levels.chuDien, lastBeast = 0, lastQuest = 0
+let peak = 0, lifeStart = 0
 const seenElders = new Set(ELDER_IDS.filter(e => s.elders[e] !== undefined))
 for (let d = 0; d < days; d++) {
   for (const h of SESSIONS) {
     for (const extra of casual ? [0] : [0, 5 * 60_000]) {
       s = advance(s, d * DAY + h * 3_600_000 + extra)
       turn()
+      peak = Math.max(peak, s.levels.chuDien)
+      if (ready() && tryDo({ type: 'rebirth' })) {
+        note(`LUÂN HỒI lần ${s.rebirths} — kiếp vừa rồi dài ${((s.time - lifeStart) / DAY).toFixed(1)} ngày`)
+        lifeStart = s.time
+        lastHall = s.levels.chuDien
+      }
       if (s.levels.chuDien !== lastHall) note(`Chủ điện tầng ${(lastHall = s.levels.chuDien)}`)
       if (s.beast !== lastBeast) note(`hạ yêu thú cấp ${(lastBeast = s.beast)}`)
       if (s.quest !== lastQuest && s.quest === QUESTS.length) note('XONG CHUỖI NHIỆM VỤ')
@@ -159,7 +170,7 @@ console.log(`Trưởng lão: ${ELDER_IDS.filter(e => s.elders[e] !== undefined).
 console.log(`Công pháp: ${TECH_IDS.map(t => s.tech[t] ?? 0).join('')}  · thắng ${s.stats.won} thua ${s.stats.lost} · tài nguyên ${JSON.stringify(s.res)}`)
 
 // Chốt chặn cho CI: đổi số liệu mà bot không còn tới được Chủ điện tầng 15 là nhịp game đã gãy
-if (s.levels.chuDien < MAX_LEVEL) {
+if (Math.max(peak, s.levels.chuDien) < MAX_LEVEL) {
   console.error(`\nLỖI NHỊP: sau ${days} ngày bot mới tới Chủ điện tầng ${s.levels.chuDien}/${MAX_LEVEL}`)
   process.exitCode = 1
 }

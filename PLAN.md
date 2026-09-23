@@ -61,7 +61,7 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 | Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | P3: kiếp vân công khai trên bản đồ |
 | PvP | Đánh thành | — | P2: bất đồng bộ; P3: trên bản đồ |
 | Tiên minh | Liên minh | — (tab khóa "sắp có") | P3 |
-| Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
+| Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; kiếp sau khởi đầu với công trình tầng 3 rồi tầng 5 ("căn cơ"), mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
 | Chat | Chat | — | P3 |
 | Nhiệm vụ ngày | Nhiệm vụ hằng ngày | ✅ 4 việc (xây 2 lần, tuyển 50, thắng 3 trận, luyện 1 mẻ đan) + rương; làm mới 0h giờ VN; mở ở tầng 3 | Nhiệm vụ tuần, sự kiện |
 | Âm thanh | — | ✅ Hiệu ứng + nhạc nền cổ phong sinh bằng WebAudio (đàn tranh, sáo trúc, trầm nền), bật/tắt riêng | Nhạc theo cảnh (bản đồ, trận) |
@@ -203,6 +203,15 @@ Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết qu�
 
 (đã tính nhiệm vụ ngày; bot dồn Chủ điện nhưng giữ 3 công trình tài nguyên ≥ tầng 2 như chuỗi nhiệm vụ dạy)
 
+**Luân hồi** (`npm run sim -- 60 4 --rebirth` và `npm run sim -- 90 3 --casual --rebirth`, tính từ đầu kiếp tới lúc luân hồi, gồm cả dọn hết bản đồ):
+
+| | Kiếp 1 | Kiếp 2 | Kiếp 3 trở đi |
+|---|---|---|---|
+| Bot giỏi, 4 phiên/ngày | 12,8 ngày | 9 ngày | ~5,5 ngày |
+| Người chơi thường, 3 phiên/ngày | 23,3 ngày | 15,2 ngày | ~8,5 ngày |
+
+Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (một tạp dịch, vài phiên/ngày) chứ không bởi thời gian mỗi lần xây — công trình 2 giờ hay 1 giờ 12 phút đều nằm chờ tới phiên sau. Thưởng luân hồi chỉ bớt thời gian xây (kể cả −40%) làm kiếp sau nhanh hơn chưa tới 15%; "căn cơ" (bỏ qua các lần xây đầu) mới tạo khác biệt. Cùng lý do, món "thêm 1 hàng đợi xây" dự kiến bán ở P4 sẽ rất mạnh (Chủ điện 15: bot từ ngày 11 xuống ngày 9, người chơi thường từ ngày 19 xuống ngày 14) — cần trần cẩn thận.
+
 **Cổng P1** (tham khảo): ≥ 300 người thử; D1 ≥ 30%, D7 ≥ 10%; người đã luân hồi vẫn chơi tiếp. Không đạt → sửa lõi, chưa làm online.
 
 ### P2 — Online (1.5–2 tháng)
@@ -312,7 +321,7 @@ Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết qu�
   Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS sau Caddy/nginx (đặt `TRUST_PROXY=1`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
 - **Font:** giấy phép OFL nằm cạnh font trong `client/public/fonts/`.
 
-**Kiểm thử trước khi phát hành:** `npm test` (luật), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi chơi thử bản build (`npm run build && npm run preview -w client`). CI (`.github/workflows/ci.yml`) chạy đủ 4 bước này ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
+**Kiểm thử trước khi phát hành:** `npm test` (luật, server analytics, và `client/render.test.ts`: vẽ mọi màn hình × 6 trạng thái game × 2 ngôn ngữ bằng SSR của Svelte qua Vite — bắt lỗi vỡ lúc vẽ và chữ hỏng `NaN`/`undefined` mà không cần trình duyệt), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi chơi thử bản build (`npm run build && npm run preview -w client`). CI (`.github/workflows/ci.yml`) chạy đủ 4 bước này ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
 
 **Việc còn lại để qua cổng P1:** thử trên điện thoại thật (Android tầm trung, iPhone Safari), thuê VPS chạy máy nhận analytics, đăng itch.io + nhóm Facebook/Discord, gom ≥ 300 người thử, đọc D1/D7 ở `/stats`.
 6. Spike PixiJS 100×100 ô trên điện thoại thật.

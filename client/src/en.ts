@@ -1,5 +1,5 @@
 import {
-  BEATS,
+  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TRIB_COOLDOWN, rebirthLevels,
   type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
@@ -31,7 +31,7 @@ export const en: Text = {
     hint: 'The name is carved on your sect seal and shown to every fellow cultivator.',
     reroll: 'More ideas',
     found: 'Found the sect',
-    tooShort: 'Names need 2 to 16 characters',
+    tooShort: 'Names need 2 to 20 characters',
     first: ['Azure Cloud', 'Mystic Heaven', 'Falling Mist', 'Purple Star', 'Boundless', 'Primordial', 'Jade Chime', 'Emerald Sky', 'Frost Peak', 'Cloud Dream', 'Soaring Sky', 'Heaven Sword'],
     last: ['Sect', 'School', 'Palace', 'Hall'],
   },
@@ -303,8 +303,9 @@ export const en: Text = {
     keep: 'Keep',
     keepList: ['Elders and their levels', 'Mastered techniques', 'Pills in the Treasury'],
     lose: 'Reset',
-    loseList: ['Buildings, resources', 'Disciples, wounded', 'Map and quests'],
-    gain: (n: number) => `Life ${n + 1}: output +${n * 20}%, building ${n * 10}% faster`,
+    loseList: ['Buildings (a foundation remains), resources', 'Disciples, wounded', 'Map and quests'],
+    gain: (n: number) =>
+      `Life ${n + 1}: start with buildings at level ${rebirthLevels(n).chuDien}, output +${pct(n * REBIRTH_PROD)}, building ${pct(n * REBIRTH_BUILD)} faster`,
     go: 'Reincarnate',
     confirm: 'Reincarnate for sure? This cannot be undone.',
     marching: 'Wait for every march to return.',
@@ -385,6 +386,19 @@ export const en: Text = {
     enter: 'Enter the sect',
   },
   unlocked: (what: string) => `Unlocked: ${what}`,
+  guide: {
+    title: 'Guide',
+    items: [
+      ['How do I play?', 'Upgrade buildings for more resources, recruit disciples, fight beasts and secret realms, then go do something else. Timers keep running while the game is closed — come back to collect. 5–10 minutes per session is enough.'],
+      ['Counters', `Sword beats Spell, Spell beats Body, Body beats Sword: hitting the type you counter deals +${pct(ADV - 1)} damage, hitting your counter deals ${pct(1 - DISADV)} less. Target sheets say "Best with", and the estimated win chance already accounts for counters.`],
+      ['Elders', `Every army needs a leading elder. Each elder level gives the whole army +${pct(ELDER_STEP)} attack and HP; their active technique fires on rounds 3, 6 and 9. Recruit more elders by conquering rival sects and clearing floor 5 of the secret realms.`],
+      ['Wounded', 'Every battle leaves wounded. They wait in the Alchemy Room to be healed; when it runs out of beds, new wounded die — heal before fighting again, or upgrade the Alchemy Room.'],
+      ['Tribulation', `At Main Hall levels 5 and 10 you must survive three lightning waves, one type each, and survivors carry on — bring all three types. A Tribulation Pill weakens the lightning by ${pct(DO_KIEP)}. Failing only means waiting ${TRIB_COOLDOWN / 60_000} minutes before trying again.`],
+      ['Full storage', 'Resources stop growing when storage is full: upgrade the Treasure Pavilion. Quest rewards and loot still arrive above capacity.'],
+      ['Daily tasks, reincarnation', 'Daily tasks reset at midnight, Vietnam time. At Main Hall level 15 you can reincarnate: keep elders, techniques and pills; the next life starts with higher-level buildings, produces more and builds faster — each life is much shorter than the last.'],
+      ['Keep your save', 'Your save lives only on this device. Tap "Export save" below now and then to keep a copy.'],
+    ] as [string, string][],
+  },
   daily: {
     title: 'Daily tasks',
     reset: (t: string) => `Resets in ${t} (midnight, Vietnam time)`,

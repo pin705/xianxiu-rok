@@ -86,7 +86,7 @@ export function suggestNames(n: number) {
 export const reportName = (r: Report) => (r.kind === 'trib' ? L.trib.title : L.target({ kind: r.kind, i: r.i }))
 
 // Đồng hồ game. Bản dev có thể tua: rok.warp(60) → nhanh 60 phút (nhớ qua lần tải lại trong phiên).
-let warp = import.meta.env.DEV ? Number(sessionStorage.getItem('rok.warp') ?? 0) : 0
+let warp = import.meta.env.DEV ? Number(globalThis.sessionStorage?.getItem('rok.warp') ?? 0) : 0 // ngoài trình duyệt (test render) không có sessionStorage
 export const nowMs = () => Date.now() + warp
 if (import.meta.env.DEV)
   Object.assign(globalThis, {
@@ -118,6 +118,17 @@ export const save = (s: State) => frozen || write(KEY, JSON.stringify(s))
 export const visitedTabs = (): string[] => (read('rok.tabs') ?? 'tongMon').split(',')
 export const visitTab = (id: string) => write('rok.tabs', [...new Set([...visitedTabs(), id])].join(','))
 export const rawSave = () => read(KEY)
+// Tab khác vừa lưu (s) hoặc xoá save (null). Không nhận thì lần lưu sau của tab này đè mất tiến độ bên kia.
+export function watchSave(fn: (s: State | null) => void) {
+  const on = (e: StorageEvent) => {
+    if (e.key !== KEY) return
+    const s = e.newValue ? parse(e.newValue) : null
+    if (!s) frozen = true // save bị xoá hoặc của bản game mới hơn: khoá ghi để người gọi tải lại mà không đè
+    fn(s)
+  }
+  addEventListener('storage', on)
+  return () => removeEventListener('storage', on)
+}
 export const wipe = () => {
   frozen = true
   try {

@@ -121,7 +121,7 @@ Chủ điện tầng 5 (và 10) hiện bong bóng sét. Bảng Chủ điện tha
 
 ### 5.7 Luân hồi (đã làm)
 
-Chủ điện tầng 15: bảng liệt kê Giữ lại / Làm lại và thưởng của kiếp sau → xác nhận 2 bước → chữ 轮回 xoay vào, "KIẾP THỨ 2" → về tầng 1, chuỗi nhiệm vụ chạy lại (nhận thưởng lần nữa).
+Chủ điện tầng 15: bảng liệt kê Giữ lại / Làm lại và thưởng của kiếp sau (khởi đầu với công trình tầng mấy, sản lượng, tốc độ xây) → xác nhận 2 bước → chữ 轮回 xoay vào, "KIẾP THỨ 2" → về tầng 1, chuỗi nhiệm vụ chạy lại (nhận thưởng lần nữa).
 
 ### 5.8 Sau này
 
@@ -180,7 +180,7 @@ Chủ điện tầng 15: bảng liệt kê Giữ lại / Làm lại và thưởn
 
 ## 9. Việc UI tiếp theo
 
-Đã xong: Cài đặt (xuất/nhập save, chơi lại), Môn hạ, Diễn võ trường, Đan phòng, Tàng Kinh Các, Bản đồ + Phát lại, Độ kiếp, Luân hồi, Bảo khố, PWA (manifest, icon ấn 宗, chơi offline), màn lỗi có nút xuất save.
+Đã xong: Cài đặt (xuất/nhập save, chơi lại, Cẩm nang 8 mục gập mở — số liệu lấy thẳng từ `rules` nên đổi cân bằng là chữ tự đúng), Môn hạ, Diễn võ trường, Đan phòng, Tàng Kinh Các, Bản đồ + Phát lại, Độ kiếp, Luân hồi, Bảo khố, PWA (manifest, icon ấn 宗, chơi offline), màn lỗi có nút xuất save.
 
 1. Bản tiếng Anh (`en` cùng kiểu `vi` trong `lib.ts`) + chọn theo ngôn ngữ máy.
 2. Thử trên điện thoại thật: cỡ chữ nhỏ nhất, vùng chạm của nút trên bản đồ, hiệu năng cảnh núi khi nhiều hoạt ảnh.

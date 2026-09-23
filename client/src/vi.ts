@@ -1,5 +1,5 @@
 import {
-  BEATS,
+  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TRIB_COOLDOWN, rebirthLevels,
   type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
@@ -27,7 +27,7 @@ export const vi = {
     hint: 'Tên sẽ khắc lên ấn tông môn và hiện với mọi đạo hữu.',
     reroll: 'Gợi ý khác',
     found: 'Lập tông môn',
-    tooShort: 'Tên cần từ 2 đến 16 ký tự',
+    tooShort: 'Tên cần từ 2 đến 20 ký tự',
     first: ['Thanh Vân', 'Huyền Thiên', 'Lạc Hà', 'Tử Vi', 'Vô Cực', 'Thái Sơ', 'Linh Lung', 'Bích Lạc', 'Hàn Sơn', 'Vân Mộng', 'Lăng Tiêu', 'Thiên Kiếm'],
     last: ['Tông', 'Môn', 'Phái', 'Cung'],
   },
@@ -299,9 +299,10 @@ export const vi = {
     keep: 'Giữ lại',
     keepList: ['Trưởng lão và cấp của họ', 'Công pháp đã lĩnh ngộ', 'Đan dược trong Bảo khố'],
     lose: 'Làm lại',
-    loseList: ['Công trình, tài nguyên', 'Đệ tử, thương binh', 'Bản đồ và nhiệm vụ'],
+    loseList: ['Công trình (còn lại căn cơ), tài nguyên', 'Đệ tử, thương binh', 'Bản đồ và nhiệm vụ'],
     // n: số lần đã luân hồi (tính cả lần sắp làm)
-    gain: (n: number) => `Kiếp thứ ${n + 1}: sản lượng +${n * 20}%, xây nhanh hơn ${n * 10}%`,
+    gain: (n: number) =>
+      `Kiếp thứ ${n + 1}: khởi đầu với công trình tầng ${rebirthLevels(n).chuDien}, sản lượng +${pct(n * REBIRTH_PROD)}, xây nhanh hơn ${pct(n * REBIRTH_BUILD)}`,
     go: 'Luân hồi',
     confirm: 'Chắc chắn luân hồi? Không thể hoàn tác.',
     marching: 'Đợi mọi đội xuất quân trở về.',
@@ -382,6 +383,19 @@ export const vi = {
     enter: 'Vào tông môn',
   },
   unlocked: (what: string) => `Mở khóa: ${what}`,
+  guide: {
+    title: 'Cẩm nang',
+    items: [
+      ['Chơi thế nào?', 'Nâng công trình để có thêm tài nguyên, tuyển đệ tử, đánh yêu thú và bí cảnh, rồi đi làm việc khác. Đồng hồ vẫn chạy khi bạn tắt game — quay lại nhận thành quả. Mỗi phiên 5–10 phút là đủ.'],
+      ['Hệ khắc', `Kiếm tu khắc Pháp tu, Pháp tu khắc Thể tu, Thể tu khắc Kiếm tu: đánh hệ mình khắc thêm ${pct(ADV - 1)} sát thương, đánh hệ khắc mình bớt ${pct(1 - DISADV)}. Bảng mục tiêu ghi "Nên dùng", và tỉ lệ thắng ước lượng đã tính hệ khắc.`],
+      ['Trưởng lão', `Mỗi đội cần một trưởng lão dẫn. Mỗi cấp trưởng lão cho cả đội +${pct(ELDER_STEP)} công và máu; công pháp chủ động bung ra ở lượt 3, 6, 9. Thu nhận thêm trưởng lão khi công phá tông môn đối địch và qua tầng 5 các bí cảnh.`],
+      ['Thương binh', 'Đánh trận nào cũng có thương binh. Họ nằm ở Đan phòng chờ chữa; Đan phòng hết chỗ thì thương binh mới tử trận — chữa trước khi đánh tiếp, hoặc nâng Đan phòng.'],
+      ['Độ kiếp', `Chủ điện tầng 5 và 10 phải vượt ba đợt lôi kiếp, mỗi đợt một hệ, người sống sót đi tiếp — hãy mang đủ ba hệ. Độ Kiếp Đan làm sét yếu đi ${pct(DO_KIEP)}. Thất bại chỉ phải chờ ${TRIB_COOLDOWN / 60_000} phút rồi thử lại.`],
+      ['Kho đầy', 'Tài nguyên ngừng sinh khi kho đầy: nâng Tàng Bảo Các. Thưởng nhiệm vụ và chiến lợi phẩm vẫn nhận được dù vượt sức chứa.'],
+      ['Nhiệm vụ ngày, luân hồi', 'Nhiệm vụ ngày làm mới lúc 0h giờ Việt Nam. Tới Chủ điện tầng 15 có thể luân hồi: giữ trưởng lão, công pháp, đan dược; kiếp sau khởi đầu với công trình tầng cao hơn (căn cơ), sinh tài nguyên nhiều hơn và xây nhanh hơn — mỗi kiếp ngắn hơn hẳn kiếp trước.'],
+      ['Giữ save', 'Save chỉ nằm trên máy này. Thỉnh thoảng bấm "Xuất save" ở dưới để giữ một bản sao.'],
+    ] as [string, string][],
+  },
   daily: {
     title: 'Nhiệm vụ ngày',
     reset: (t: string) => `Làm mới sau ${t} (0h giờ Việt Nam)`,

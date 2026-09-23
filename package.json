@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "npm run dev -w client",
     "build": "npm run build -w client",
-    "test": "node --test rules/*.test.ts server/*.test.ts",
+    "test": "node --test rules/*.test.ts server/*.test.ts client/*.test.ts",
     "check": "tsc && npm run check -ws --if-present",
     "sim": "node rules/simulate.ts",
     "analytics": "node server/analytics.ts"

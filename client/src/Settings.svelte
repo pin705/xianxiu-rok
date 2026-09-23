@@ -90,6 +90,16 @@
     <button class:on={LANG === 'en'} aria-pressed={LANG === 'en'} onclick={() => LANG !== 'en' && setLang('en')}>English</button>
   </div>
 
+  <h3>{L.guide.title}</h3>
+  <div class="guide">
+    {#each L.guide.items as [q, a] (q)}
+      <details>
+        <summary>{q}</summary>
+        <p>{a}</p>
+      </details>
+    {/each}
+  </div>
+
   <h3>{L.settings.save}</h3>
   <p class="muted note">{L.settings.saveHint}</p>
   <button class="btn wide" onclick={exportSave}><Icon name="download" size={18} />{L.settings.export}</button>
@@ -180,6 +190,27 @@
   .lang .on {
     color: #2b2210;
     background: linear-gradient(#f8e3a0, #c9a14a);
+  }
+  .guide {
+    display: grid;
+    gap: 6px;
+  }
+  details {
+    background: rgb(255 255 255 / 0.05);
+    border: 1px solid rgb(201 161 74 / 0.3);
+    border-radius: 10px;
+  }
+  summary {
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  details p {
+    padding: 0 12px 12px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #c9d4d7;
   }
   .note {
     margin-bottom: 10px;

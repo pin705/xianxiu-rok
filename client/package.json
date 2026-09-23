@@ -11,8 +11,9 @@
     "fonts": "node fonts.mjs"
   },
   "dependencies": {
+    "@rok/art": "*",
     "@rok/rules": "*",
-    "@rok/art": "*"
+    "pixi.js": "^8.21.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.0",

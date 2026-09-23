@@ -3,7 +3,7 @@ import {
   BASE_CAP, BASE_RATE, BATCH_BASE, BATCH_STEP, BEASTS, BEAST_COOLDOWN, BEAST_EXP, BEAST_LOOT, BEAST_STR, BEATS, BOI_NGUYEN_EXP,
   BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, HEAL_COST,
   HEAL_TIME, HOME, HOSPITAL_BASE, HOSPITAL_STEP, LOSS_EXP, MAIN_SHARE, MAP_HALL, MARCH_MIN, MARCH_SLOTS, MARCH_SPEED,
-  MAX_CUT, MAX_LEVEL, PILLS, QUESTS, QUEUE_SIZE, REALMS, REBIRTH_BUILD, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
+  MAX_CUT, MAX_LEVEL, PILLS, QUESTS, QUEUE_SIZE, REALMS, REBIRTH_BUILD, REBIRTH_HEAD, REBIRTH_HEAD_MAX, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
   SECT_SHARE, SPEEDUP, START, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TRIBS, TRIB_COOLDOWN,
   TRIB_EXP, TYPES, UNITS, UNIT_BASE,
   type Bag, type Bonus, type BuildingId, type DailyId, type ElderId, type PillId, type Quest, type Res, type Reward, type Skill,
@@ -530,6 +530,12 @@ export function tribError(s: State): Err | null {
   return afford(s.res, cost('chuDien', tr.hall + 1)) ? null : 'not_enough'
 }
 
+// Căn cơ của kiếp thứ n + 1 (n = số lần đã luân hồi): Chủ điện và mọi công trình đã mở ở tầng đó
+export function rebirthLevels(n: number) {
+  const hall = Math.min(REBIRTH_HEAD_MAX, 1 + REBIRTH_HEAD * n)
+  return Object.fromEntries(IDS.map(id => [id, BUILDINGS[id].unlock <= hall ? hall : 0])) as Record<BuildingId, number>
+}
+
 export const jobOf = (s: State, k: JobKind) => (k === 'build' ? s.queue[0] ?? null : s[k])
 
 // Ba đợt lôi kiếp nối nhau; đệ tử còn đứng được đi tiếp sang đợt sau.
@@ -673,8 +679,9 @@ export function apply(s: State, a: Action, now: number): Result {
       if (state.levels.chuDien < MAX_LEVEL) return no('locked')
       if (state.marches.length) return no('busy')
       const fresh = newGame(t, state.name)
+      const levels = rebirthLevels(state.rebirths + 1)
       return ok({
-        ...fresh, tech: state.tech, study: state.study, items: state.items, brew: state.brew, elders: state.elders,
+        ...fresh, levels, tech: state.tech, study: state.study, items: state.items, brew: state.brew, elders: state.elders,
         rebirths: state.rebirths + 1, stats: state.stats, seed: state.seed, nextId: state.nextId, seen: state.nextId - 1,
         daily: state.daily, // cùng ngày: không nhận lại thưởng ngày
       })
@@ -724,6 +731,42 @@ const V2_QUESTS: [BuildingId, number][] = [
   ['linhDien', 2], ['khoangMach', 2], ['chuDien', 3], ['tangBaoCac', 2], ['chuDien', 4], ['tangKinhCac', 1], ['danPhong', 1], ['chuDien', 5],
 ]
 export function migrate(raw: unknown): State | null {
+  try {
+    const s = upgrade(raw)
+    return s && valid(s) ? s : null
+  } catch {
+    return null // khuôn lạ tới mức nâng bản cũng vỡ
+  }
+}
+
+// Save từ ngoài vào (nhập tay, file, bản sửa tay) có thể thiếu hay sai trường. Kiểm đủ khuôn trước khi chơi:
+// thiếu là từ chối (người chơi được báo "save không hợp lệ"), không để game vỡ lúc vẽ rồi kẹt vòng lặp lỗi.
+const num = (x: unknown) => typeof x === 'number' && Number.isFinite(x)
+const obj = (x: unknown): x is Record<string, any> => !!x && typeof x === 'object' && !Array.isArray(x)
+const isBag = (x: unknown) => obj(x) && RESOURCES.every(r => num(x[r]))
+const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >= 0)
+const isTimed = (j: unknown) => j === null || (obj(j) && num(j.startAt) && num(j.finishAt))
+function valid(s: any): s is State {
+  return (
+    s.v === 3 && typeof s.name === 'string' && num(s.quest) && num(s.time) && isBag(s.res) && isBag(s.carry) &&
+    obj(s.levels) && IDS.every(id => num(s.levels[id]) && s.levels[id] >= 0 && s.levels[id] <= MAX_LEVEL) &&
+    Array.isArray(s.queue) && s.queue.every((j: any) => isTimed(j) && j && IDS.includes(j.building) && num(j.level)) &&
+    isTroops(s.troops) && isTroops(s.wounded) &&
+    [s.train, s.heal, s.study, s.brew].every(isTimed) &&
+    obj(s.tech) && obj(s.items) && obj(s.elders) && Object.keys(s.elders).every(e => e in ELDERS && num(s.elders[e])) &&
+    Array.isArray(s.marches) &&
+    s.marches.every((m: any) => obj(m) && m.elder in ELDERS && obj(m.army) && obj(m.target) && ['beast', 'sect'].includes(m.target.kind) &&
+      num(m.target.i) && num(m.seed) && num(m.startAt) && num(m.arriveAt) && num(m.returnAt)) &&
+    Array.isArray(s.reports) && s.reports.every((r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead)) &&
+    num(s.seen) && num(s.beast) && obj(s.cool) &&
+    Array.isArray(s.sects) && s.sects.length === SECTS.length && Array.isArray(s.realms) && s.realms.length === REALMS.length &&
+    num(s.trib) && num(s.tribCool) && num(s.rebirths) && num(s.seed) && num(s.nextId) &&
+    obj(s.stats) && ['trained', 'healed', 'brewed', 'won', 'lost'].every(k => num(s.stats[k])) &&
+    obj(s.daily) && num(s.daily.day) && obj(s.daily.n) && Array.isArray(s.daily.got) && s.daily.got.length === DAILY.length
+  )
+}
+
+function upgrade(raw: unknown) {
   let s = raw as any
   if (!s || typeof s !== 'object') return null
   if (s.v === 1) s = { ...s, v: 2, name: DEFAULT_NAME, quest: 0 }
@@ -738,7 +781,7 @@ export function migrate(raw: unknown): State | null {
       trib: TRIBS.filter(t => t.hall < levels.chuDien).length, // bản cũ chưa có độ kiếp: coi như đã vượt
     }
   }
-  if (s.v !== 3 || typeof s.time !== 'number' || !s.levels || !s.res) return null
+  if (s.v !== 3 || typeof s.time !== 'number') return null
   if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save bản 3 làm trước khi có nhiệm vụ ngày
-  return s as State
+  return s
 }

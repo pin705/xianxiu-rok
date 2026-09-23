@@ -31,7 +31,7 @@
   function found(e: SubmitEvent) {
     e.preventDefault()
     const n = name.trim().replace(/\s+/g, ' ')
-    if (n.length < 2 || n.length > 16) {
+    if (n.length < 2 || n.length > 20) {
       error = L.naming.tooShort
       return
     }
@@ -67,7 +67,7 @@
       <form class="card" class:gone={step === 'stamp'} onsubmit={found}>
         <h2>{L.naming.title}</h2>
         <p class="hint">{L.naming.hint}</p>
-        <input bind:value={name} maxlength="16" aria-label={L.naming.title} oninput={() => (error = '')} />
+        <input bind:value={name} maxlength="20" aria-label={L.naming.title} oninput={() => (error = '')} />
         <div class="ideas">
           {#each ideas as idea (idea)}
             <button type="button" class="idea" onclick={() => (name = idea)}>{idea}</button>
