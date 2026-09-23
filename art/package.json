@@ -1,0 +1,16 @@
+{
+  "name": "@rok/art",
+  "private": true,
+  "type": "module",
+  "exports": "./index.ts",
+  "scripts": {
+    "check": "svelte-check"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.7.6"
+  }
+}

@@ -1,5 +1,5 @@
 import {
-  BASE_CAP, BUILDINGS, CAP_GROWTH, COST_GROWTH, MAX_LEVEL, QUEUE_SIZE, RESOURCES, START, TIME_GROWTH,
+  BASE_CAP, BUILDINGS, CAP_GROWTH, COST_GROWTH, MAX_LEVEL, QUESTS, QUEUE_SIZE, RESOURCES, START, TIME_GROWTH,
   type Bag, type BuildingId, type Res,
 } from './data.ts'
 
@@ -11,7 +11,9 @@ export * from './data.ts'
 export type Job = { building: BuildingId; level: number; finishAt: number }
 
 export type State = {
-  v: 1                               // phiên bản save
+  v: 2                               // phiên bản save
+  name: string                       // tên tông môn
+  quest: number                      // chỉ số nhiệm vụ hiện tại trong QUESTS
   time: number                       // tài nguyên đã tính tới mốc này
   res: Bag
   carry: Bag                         // phần lẻ chưa đủ 1 đơn vị (đơn vị × ms), để kết quả không phụ thuộc số lần gọi advance
@@ -19,8 +21,8 @@ export type State = {
   queue: Job[]
 }
 
-export type Action = { type: 'upgrade'; building: BuildingId }
-export type Err = 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough'
+export type Action = { type: 'upgrade'; building: BuildingId } | { type: 'claim' }
+export type Err = 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done'
 export type Result = { ok: true; state: State } | { ok: false; error: Err }
 
 const HOUR = 3_600_000
@@ -34,10 +36,13 @@ function grow(base: number, factor: number, times: number) {
   return Math.round(v)
 }
 
-export function newGame(now: number): State {
+export const DEFAULT_NAME = 'Thanh Vân Tông'
+
+export function newGame(now: number, name = DEFAULT_NAME): State {
   const levels = Object.fromEntries(IDS.map(id => [id, 0])) as Record<BuildingId, number>
   levels.chuDien = 1
-  return { v: 1, time: now, res: { ...START }, carry: bag(() => 0), levels, queue: [] }
+  const clean = name.trim().replace(/\s+/g, ' ').slice(0, 20) || DEFAULT_NAME
+  return { v: 2, name: clean, quest: 0, time: now, res: { ...START }, carry: bag(() => 0), levels, queue: [] }
 }
 
 export const cost = (b: BuildingId, level: number) => bag(r => grow(BUILDINGS[b].cost[r], COST_GROWTH, level - 1))
@@ -46,6 +51,15 @@ export const capAt = (vaultLevel: number) => grow(BASE_CAP, CAP_GROWTH, vaultLev
 export const storage = (s: State) => capAt(s.levels.tangBaoCac)
 export const rate = (s: State, r: Res) =>
   IDS.reduce((sum, id) => (BUILDINGS[id].makes === r ? sum + (BUILDINGS[id].rate ?? 0) * s.levels[id] : sum), 0)
+export const power = (s: State) =>
+  IDS.reduce((sum, id) => sum + (BUILDINGS[id].power * s.levels[id] * (s.levels[id] + 1)) / 2, 0)
+
+// Nhiệm vụ hiện tại (undefined khi đã hết chuỗi) và đã đủ điều kiện nhận thưởng chưa
+export const questOf = (s: State) => QUESTS[s.quest]
+export const questDone = (s: State) => {
+  const q = QUESTS[s.quest]
+  return !!q && s.levels[q.building] >= q.level
+}
 
 function accrue(s: State, t: number): State {
   const dt = t - s.time
@@ -94,10 +108,19 @@ export function upgradeError(s: State, b: BuildingId): Err | null {
 
 export function apply(s: State, a: Action, now: number): Result {
   const state = advance(s, now)
-  const error = upgradeError(state, a.building)
-  if (error) return { ok: false, error }
-  const level = state.levels[a.building] + 1
-  const c = cost(a.building, level)
-  const job = { building: a.building, level, finishAt: state.time + buildTime(a.building, level) }
-  return { ok: true, state: { ...state, res: bag(r => state.res[r] - c[r]), queue: [...state.queue, job] } }
+  switch (a.type) {
+    case 'upgrade': {
+      const error = upgradeError(state, a.building)
+      if (error) return { ok: false, error }
+      const level = state.levels[a.building] + 1
+      const c = cost(a.building, level)
+      const job = { building: a.building, level, finishAt: state.time + buildTime(a.building, level) }
+      return { ok: true, state: { ...state, res: bag(r => state.res[r] - c[r]), queue: [...state.queue, job] } }
+    }
+    case 'claim': {
+      const q = QUESTS[state.quest]
+      if (!q || !questDone(state)) return { ok: false, error: 'not_done' }
+      return { ok: true, state: { ...state, quest: state.quest + 1, res: bag(r => state.res[r] + (q.reward[r] ?? 0)) } }
+    }
+  }
 }

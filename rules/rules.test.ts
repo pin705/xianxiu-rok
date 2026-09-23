@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { advance, apply, buildTime, cost, newGame, storage, type BuildingId, type State } from './index.ts'
+import { QUESTS, advance, apply, buildTime, cost, newGame, storage, type BuildingId, type State } from './index.ts'
 
 const T0 = 1_000_000
 const HOUR = 3_600_000
@@ -42,6 +42,16 @@ test('đầy kho thì ngừng sản xuất', () => {
 test('đồng hồ lùi không đổi gì', () => {
   const s = advance(up(newGame(T0), 'tuLinhTran'), T0 + HOUR)
   assert.deepEqual(advance(s, T0), s)
+})
+
+test('nhiệm vụ: chưa xong thì không nhận được; xong thì nhận thưởng và sang nhiệm vụ sau', () => {
+  const s = newGame(T0)
+  assert.deepEqual(apply(s, { type: 'claim' }, T0), { ok: false, error: 'not_done' })
+  const built = advance(up(s, 'tuLinhTran'), T0 + buildTime('tuLinhTran', 1))
+  const r = apply(built, { type: 'claim' }, built.time)
+  assert.ok(r.ok)
+  assert.equal(r.state.quest, 1)
+  assert.equal(r.state.res.linhThao, built.res.linhThao + (QUESTS[0].reward.linhThao ?? 0))
 })
 
 test('chặn đúng lý do', () => {

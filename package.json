@@ -4,13 +4,14 @@
   "type": "module",
   "workspaces": [
     "rules",
+    "art",
     "client"
   ],
   "scripts": {
     "dev": "npm run dev -w client",
     "build": "npm run build -w client",
     "test": "node --test rules/*.test.ts",
-    "check": "tsc && npm run check -w client"
+    "check": "tsc && npm run check -ws --if-present"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

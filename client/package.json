@@ -10,7 +10,8 @@
     "fonts": "node fonts.mjs"
   },
   "dependencies": {
-    "@rok/rules": "*"
+    "@rok/rules": "*",
+    "@rok/art": "*"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
