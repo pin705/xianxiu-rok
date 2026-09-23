@@ -148,7 +148,9 @@ Button · IconButton · Sheet (bảng dưới / hộp giữa, vuốt để đón
 
 - Bảng dưới vuốt trục/đầu bảng xuống để đóng; đóng bằng × / chạm nền / Esc thì cuộn giấy trượt xuống rồi mới tắt.
 - Chuyển tab: vết mực loang ra từ chỗ chạm (View Transitions; trình duyệt chưa hỗ trợ thì chuyển ngay).
-- Nhận thưởng (nhiệm vụ, nhiệm vụ ngày, Xuất quan): icon bay theo đường cong vào đúng ô tài nguyên / tab Bảo khố, ô đích nảy lên (`ui/fly.ts`).
+- Nhận thưởng (nhiệm vụ, nhiệm vụ ngày, Xuất quan): icon bay theo đường cong vào đúng ô tài nguyên / tab Bảo khố, ô đích nảy lên (`ui/fly.ts`). Nhiệm vụ vừa xong được giữ lại một nhịp để ấn 成 đóng lên, rồi nhiệm vụ mới trượt vào.
+- Chạm công trình: nén xuống rồi bật lên (chân đứng yên), bụi toả hai bên.
+- Nút vàng thỉnh thoảng có vệt sáng lướt qua mặt kim; thông báo hiện ra như một nét bút quét từ trái sang.
 
 ### Chữ
 
@@ -163,14 +165,15 @@ Button · IconButton · Sheet (bảng dưới / hộp giữa, vuốt để đón
 
 ### Chuyển động
 
-- **Nền (luôn chạy, chậm)**: sương trôi, mây, hạc bay, thác chảy, linh khí bay lên, khói lò đan, cờ bay, đệ tử luyện kiếm.
+- **Nền (luôn chạy, chậm)**: sương trôi, mây, hạc bay, đàn chim nhỏ, thác chảy, linh khí bay lên, khói lò đan, cờ bay, đệ tử luyện kiếm; đệ tử lên xuống bậc đá nối các tầng; cánh mai rơi; bướm và tia nắng xiên ban ngày; đèn đá, cửa sổ lên đèn và đom đóm ban đêm; Tụ Linh Trận hút linh khí xoáy vào tâm trận; công trình sản xuất nhả vật phẩm vẽ tay bay lên (kho đầy thì thôi); đang xây có tia lửa búa và bụi đá. Mép cảnh tối dần như khung tranh. Bản đồ: ánh nước trôi xuôi dòng sông, bóng mây lướt chậm, hạc bay ngang; quân hành quân nhún bước, tung bụi.
 - **Phản hồi (nhanh, gọn)**: nhấn nút lún xuống, bảng trượt lên, số chạy (Tween), "+N" bay lên.
-- **Khoảnh khắc lớn**: xây xong (tia vàng + chuông), lập tông môn (ấn đóng), sau này là đột phá cảnh giới.
-- Bật giảm chuyển động (`prefers-reduced-motion`) thì tắt hết hiệu ứng nền và hiệu ứng lớn.
+- **Khoảnh khắc lớn**: lên tầng (cột sáng vàng, sóng vòng, tia vàng rơi theo trọng lực, loé sáng); lập tông môn (ấn đóng); **độ kiếp**: trời chuyển dần sang kiếp vân — xoáy mây tím hai lớp quay hút vào mắt bão, chớp trong mây, mưa xiên, mỗi đợt sét phân nhánh đánh xuống mái Chủ điện (loé trắng, rung cảnh, đợt cuối lớn nhất); đột phá thành công thì cột sáng vàng cao tận trời kèm hào quang toả tia.
+- **Trận đánh**: kiếm khí có bóng mờ bám theo, hoả cầu lõi trắng, thể tu dậm nứt đất; trúng đòn thì mực văng (son khi quân ta trúng), tia lửa toé, đội bị bật lùi, rung màn; đòn nặng giật zoom camera; quân ngã tan thành mực. Công pháp xuất chiêu: dải sơn mài quét ngang màn với chân dung trưởng lão và tên chiêu viết lớn (địch: dải son). Độ kiếp sang đợt mới: triện 劫 loang ra. Hết trận: ấn 胜 / 败 đập xuống kèm vệt mực, rồi bảng kết quả trồi lên.
+- Bật giảm chuyển động (`prefers-reduced-motion`) thì tắt hết hiệu ứng nền, rung và giảm loé sáng.
 
 ### Âm thanh (WebAudio, không cần file)
 
-`tap` tiếng gõ khẽ · `build` hai tiếng mõ · `done` chuông (bồi âm lệch) · `reward` chuỗi ngũ cung · `march` trống trận · `hit` tiếng va chạm (nhiễu lọc) · `win` / `lose` · `thunder` sấm (nhiễu trầm + rung) · `err` tiếng trầm ngắn. Bật/tắt trong Cài đặt (nút ⚙ trên HUD), nhớ lựa chọn trên máy. Rung chỉ sau lần chạm đầu tiên.
+`tap` tiếng gõ khẽ · `build` hai tiếng mõ · `done` chuông (bồi âm lệch) · `reward` chuỗi ngũ cung · `march` trống trận · `hit` tiếng va chạm (nhiễu lọc) · `win` / `lose` · `thunder` sấm (nhiễu trầm + rung) · `err` tiếng trầm ngắn · `stamp` ấn gỗ dập xuống giấy · `whoosh` gió vút khi xuất chiêu (nhiễu lọc quét). Bật/tắt trong Cài đặt (nút ⚙ trên HUD), nhớ lựa chọn trên máy. Rung chỉ sau lần chạm đầu tiên.
 
 **Nhạc nền** (`client/src/music.ts`, bật/tắt riêng): cổ phong sinh bằng máy — đàn tranh gảy giai điệu đi ngẫu nhiên trên ngũ cung Rê, đầu đoạn vuốt dây; sáo trúc thổi nốt dài có rung và tiếng hơi; trầm nền Rê–La; vang dựng từ nhiễu. 66 nhịp/phút, không đoạn nào lặp y hệt. Bắt đầu ở lần chạm đầu tiên, tắt tiếng khi ẩn tab. Mức đo bằng OfflineAudioContext: đỉnh ~0,13, RMS ~0,02 — dưới chuông "xong" để hiệu ứng vẫn nổi.
 

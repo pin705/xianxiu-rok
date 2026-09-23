@@ -1,7 +1,8 @@
-// Bản đồ vùng trên WebGL: giấy + địa hình vẽ tay (một texture), sương trôi ở rìa xa,
-// đường tới các nơi đã mở (nét đứt mực), đường hành quân (nét son chạy), cờ quân nội suy theo giờ.
+// Bản đồ vùng trên WebGL: giấy + địa hình vẽ tay (một texture), sương trôi ở rìa xa, ánh nước trôi theo sông,
+// bóng mây lướt qua, hạc bay ngang; đường tới các nơi đã mở (nét đứt mực), đường hành quân (nét son chạy),
+// cờ quân nội suy theo giờ, nhún bước và tung bụi.
 import { Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
-import { PIGMENT as C, building, mapTerrain, mistTex, paper, type Pt } from '@rok/art'
+import { PIGMENT as C, building, crane, glowTex, mapTerrain, mistTex, paper, puffTex, sparkTex, type Pt } from '@rok/art'
 import { HOME, place, type March, type State, type Target } from '@rok/rules'
 import { painted, texOf } from './stage'
 import type { Scene } from './View.svelte'
@@ -15,6 +16,12 @@ const PEAKS = [
 ]
 const PINES = [[40, 880], [352, 862], [130, 640], [270, 700], [20, 520], [205, 440], [370, 540], [100, 360], [300, 350], [150, 180]]
 const RIVER: Pt[] = [[262, 0], [248, 90], [290, 170], [280, 250], [200, 340], [200, 460], [300, 560], [300, 660], [220, 760], [240, 860], [320, 950], [320, 1000]]
+
+// Điểm trên dòng sông ở quãng k (0 đầu nguồn … 1 cuối), nội suy thẳng giữa các điểm
+const riverAt = (k: number): Pt => {
+  const f = Math.max(0, Math.min(0.9999, k)) * (RIVER.length - 1), i = Math.floor(f), u = f - i
+  return [RIVER[i][0] + (RIVER[i + 1][0] - RIVER[i][0]) * u, RIVER[i][1] + (RIVER[i + 1][1] - RIVER[i][1]) * u]
+}
 
 // Đường cong từ tông môn tới mục tiêu (dùng chung cho nét đường và vị trí cờ quân)
 const ctrl = (x: number, y: number) => [(HOME.x + x) / 2 + (x < HOME.x ? 30 : -30), (HOME.y + y) / 2] as const
@@ -52,6 +59,8 @@ export class MapScene implements Scene {
   private lines = new Graphics()
   private troops = new Container()
   private marches: March[] = []
+  private dust = new Container()
+  private dustAt = 0
   private now = 0
   private t = 0
 
@@ -66,6 +75,23 @@ export class MapScene implements Scene {
     const terrain = new Sprite(t.tex)
     terrain.scale.set(1 / t.scale)
     this.body.addChild(terrain, this.routes, this.lines)
+    // ánh nước: đốm sáng trôi xuôi dòng, lấp lánh
+    const sparkT = texOf('spark', () => sparkTex(24))
+    for (let i = 0; i < 22; i++) {
+      const g = new Sprite(sparkT)
+      g.anchor.set(0.5)
+      g.blendMode = 'add'
+      g.tint = i % 3 ? 0xe8f4ff : hex(C.azuriteL)
+      g.width = g.height = 4 + (i % 3) * 2
+      const off = i / 22, side = ((i * 7) % 5) - 2
+      this.body.addChild(g)
+      this.tickers.push(() => {
+        const k = (off + this.t * 0.012) % 1
+        const [x, y] = riverAt(k)
+        g.position.set(x + side * 1.6 + Math.sin(this.t * 1.3 + i) * 1.2, y)
+        g.alpha = Math.max(0, Math.sin(this.t * 2.2 + i * 1.7)) * 0.8
+      })
+    }
     // sương che vùng xa phía trên
     const fog = new TilingSprite({ texture: texOf('mist:0', () => mistTex(512, 96, 1)), width: 1400, height: 160 })
     fog.position.set(-500, -110)
@@ -79,7 +105,37 @@ export class MapScene implements Scene {
     hs.anchor.set(home.anchor[0], home.anchor[1])
     hs.scale.set(0.5 / home.scale)
     hs.position.set(HOME.x, HOME.y)
-    this.body.addChild(hs, this.troops)
+    this.body.addChild(hs, this.dust, this.troops)
+    // bóng mây lướt chậm qua bản đồ (nhìn từ trên cao xuống)
+    const glowT = texOf('glow', () => glowTex(64))
+    for (const [x0, y0, w, sp] of [[60, 250, 260, 5], [300, 620, 300, -4], [120, 860, 240, 3]] as const) {
+      const sh = new Sprite(glowT)
+      sh.anchor.set(0.5)
+      sh.tint = hex(C.ink)
+      sh.width = w
+      sh.height = w * 0.55
+      sh.alpha = 0.07
+      this.body.addChild(sh)
+      this.tickers.push(() => sh.position.set(((x0 + this.t * sp + 700) % 700) - 150, y0 + Math.sin(this.t / 9 + x0) * 20))
+    }
+    // hạc bay ngang, thưa
+    const wings = [painted('crane:up', () => crane(true)), painted('crane:down', () => crane(false))]
+    const flock = new Container()
+    const birds = [[0, 0, 0.8], [26, 10, 0.62]].map(([dx, dy, sc]) => {
+      const b = new Sprite(wings[0].tex)
+      b.anchor.set(wings[0].anchor[0], wings[0].anchor[1])
+      b.scale.set(sc / wings[0].scale)
+      b.position.set(dx, dy)
+      flock.addChild(b)
+      return b
+    })
+    this.body.addChild(flock)
+    this.tickers.push(() => {
+      const k = ((this.t + 6) % 50) / 30
+      flock.visible = k < 1
+      flock.position.set(460 - k * 560, 520 - k * 140 + Math.sin(this.t * 0.8) * 5)
+      birds.forEach((b, i) => (b.texture = wings[Math.floor(this.t * 2.2 + i * 0.5) % 2].tex))
+    })
   }
   private tickers: ((dt: number) => void)[] = []
 
@@ -112,9 +168,25 @@ export class MapScene implements Scene {
       const p = place(m.target)
       dashed(this.lines, p.x, p.y, 5, 5, (this.t * 12) % 10)
       const [x, y] = along(p.x, p.y, marchK(m, this.now))
-      this.troops.children[i]?.position.set(x, y)
+      this.troops.children[i]?.position.set(x, y - Math.abs(Math.sin(this.t * 6 + i)) * 1.5)
+      if (this.t > this.dustAt) this.puff(x, y + 6)
     })
+    if (this.t > this.dustAt) this.dustAt = this.t + 0.35
     if (this.marches.length) this.lines.stroke({ width: 2, color: hex(C.cinnabar), alpha: 0.75 })
+    // bụi sau bước quân: bung ra, mờ dần
+    for (const d of [...this.dust.children] as Sprite[]) {
+      const e = this.t - (d as Sprite & { t0: number }).t0
+      if (e > 1.2) d.destroy()
+      else (d.width = d.height = 5 + e * 10), (d.alpha = 0.4 * (1 - e / 1.2))
+    }
+  }
+
+  private puff(x: number, y: number) {
+    const d = Object.assign(new Sprite(texOf('puff', () => puffTex())), { t0: this.t })
+    d.anchor.set(0.5)
+    d.tint = hex(C.ochre)
+    d.position.set(x + (Math.random() - 0.5) * 4, y)
+    this.dust.addChild(d)
   }
 
   destroy() {
