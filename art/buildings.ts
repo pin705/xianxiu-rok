@@ -98,7 +98,7 @@ function kit(g: G, tier: number, seed: number, fx: Fx[]) {
       wash(g, rect(x0, y - h + 2.6, w, 3), { sharp: true, fill: C.ink, alpha: 0.16, jitter: 0.4, layers: 1, seed: seed + 12 })
     },
     // Mái cong: mép dưới võng, hai đầu đao vểnh; ngói là các nét toả từ nóc xuống
-    roof(cx: number, y: number, w: number, h: number, color = roofColor, dark = roofDark) {
+    roof(cx: number, y: number, w: number, h: number, color: string = roofColor, dark: string = roofDark) {
       const a = w / 2, e = h * 0.38
       const eave = [
         ...quad([cx - a, y - e], [cx - a * 0.78, y - h * 0.02], [cx - a * 0.58, y], 6),
@@ -384,3 +384,31 @@ export function building(id: Kind, level: number, glyph: string): Building {
 function quadPts(x0: number, y0: number, x1: number, y1: number, n: number, sag = 11): Pt[] {
   return quad([x0, y0], [(x0 + x1) / 2, (y0 + y1) / 2 + sag], [x1, y1], n)
 }
+
+// Giàn tre khi đang xây — neo ở chân công trình, phủ khung w × h
+export const scaffold = (w: number, h: number): Asset => ({
+  x: -w / 2 - 4, y: -h - 4, w: w + 8, h: h + 8,
+  draw(g) {
+    const pole = { color: C.ochre, press: 'even' as const, alpha: 0.95, rough: 0.3 }
+    for (const k of [-0.45, -0.15, 0.15, 0.45]) stroke(g, [[k * w * 0.95, 1], [k * w * 0.95 + 0.6, -h * 0.95]], { ...pole, w: 1.3 })
+    for (const k of [0.3, 0.62, 0.92]) stroke(g, [[-w * 0.47, -h * k], [w * 0.47, -h * k + 0.8]], { ...pole, w: 1.1 })
+    stroke(g, [[-w * 0.43, -h * 0.3], [-w * 0.14, -h * 0.62]], { ...pole, w: 0.9 })
+    stroke(g, [[w * 0.14, -h * 0.3], [w * 0.43, -h * 0.62]], { ...pole, w: 0.9 })
+    // dây buộc
+    for (const k of [-0.45, -0.15, 0.15, 0.45]) for (const q of [0.3, 0.62]) blot(g, k * w * 0.95, -h * q, 0.8, C.ink2, 0.8, Math.round(k * 100 + q * 10))
+  },
+})
+
+// Nền đất chưa xây: vòng nét đứt mảnh — neo ở chân
+export const plot = (w: number): Asset => ({
+  x: -w / 2 - 4, y: -10, w: w + 8, h: 18,
+  draw(g) {
+    const n = Math.round(w / 5)
+    for (let i = 0; i < n; i++) {
+      const a0 = (i / n) * Math.PI * 2, a1 = a0 + (Math.PI * 2) / n * 0.55
+      const p = (a: number): Pt => [Math.cos(a) * (w / 2 - 4), -1 + Math.sin(a) * 6.5]
+      stroke(g, [p(a0), p((a0 + a1) / 2), p(a1)], { w: 1, color: C.silk, press: 'taper', alpha: 0.95 })
+    }
+    wash(g, ellipse(0, -1, w / 2 - 5, 5.5, 16), { fill: C.silk, alpha: 0.18, jitter: 0.8, layers: 2, seed: 4 })
+  },
+})

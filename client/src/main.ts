@@ -3,12 +3,15 @@ import App from './App.svelte'
 import { L, LANG, isMusicOn } from './lib'
 import { startMusic } from './music'
 import './app.css'
+import './ui/theme.css'
+import { applyTheme } from './ui/theme'
 
 document.documentElement.lang = LANG
 document.title = L.game
 // Trình duyệt chỉ cho phát tiếng sau lần chạm đầu tiên
 addEventListener('pointerdown', () => isMusicOn() && startMusic(), { once: true })
 
+await applyTheme()
 mount(App, { target: document.getElementById('app')! })
 
 // PWA: chơi offline sau lần tải đầu. Bản dev không đăng ký để khỏi dính cache cũ.

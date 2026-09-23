@@ -13,7 +13,7 @@
   import Replay from './Replay.svelte'
   import Reports from './Reports.svelte'
   import Result, { type Outcome } from './Result.svelte'
-  import Scene from './Scene.svelte'
+  import Home from './world/Home.svelte'
   import Settings from './Settings.svelte'
   import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
@@ -308,9 +308,7 @@
 <svelte:boundary failed={crashed} onerror={e => console.error(e)}>
 {#if screen === 'game' && game}
   {@const shown = storm ? { ...game, levels: { ...game.levels, chuDien: storm } } : game}
-  <div class="world" class:hidden={tab !== 'tongMon'} bind:this={world}>
-    <Scene game={shown} {now} {selected} {guide} {bursts} storm={!!storm} onselect={id => select(id)} />
-  </div>
+  <Home bind:scroller={world} game={shown} {now} {selected} {guide} {bursts} storm={!!storm} hidden={tab !== 'tongMon'} onselect={id => select(id)} />
   {#if tab === 'monHa'}
     <Disciples {game} {now} {act} onfocus={focus} />
   {:else if tab === 'banDo'}
@@ -399,7 +397,7 @@
     {/if}
   </dialog>
 {:else}
-  <div class="world still"><Scene game={game ?? preview} {now} still /></div>
+  <Home game={game ?? preview} {now} still />
   <Title mode={game ? 'splash' : 'first'} onstart={found} ondone={() => (screen = 'game')} />
 {/if}
 </svelte:boundary>

@@ -103,6 +103,9 @@
     {#each nodes as n (n.name + n.t.kind)}
       {@const st = status(n)}
       {@const hot = n.t.kind === 'beast' && n.t.i === next && st === 'open'}
+      {@const half = n.name.length * 3 + 4}
+      {@const side = n.x < half ? 'start' : 400 - n.x < half ? 'end' : 'middle'}
+      {@const lx = side === 'start' ? -20 : side === 'end' ? 20 : 0}
       <g
         class="node {n.t.kind} {st}"
         class:hot
@@ -134,9 +137,10 @@
         {:else if st === 'done'}
           <g transform="translate(-7 -7)" class="ok"><Icon name="check" size={14} /></g>
         {/if}
-        <text class="label" y="31" text-anchor="middle">{n.name}</text>
+        <!-- nút sát mép: nhãn dài canh theo mép nút, không tràn khỏi bản đồ -->
+        <text class="label" x={lx} y="31" text-anchor={side}>{n.name}</text>
         {#if st === 'cool'}
-          <text class="label timer" y="43" text-anchor="middle">{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</text>
+          <text class="label timer" x={lx} y="43" text-anchor={side}>{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</text>
         {/if}
       </g>
     {/each}

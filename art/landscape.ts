@@ -126,6 +126,72 @@ export function ledge(w: number, h: number, seed = 1): Asset {
   }
 }
 
+// ---------- Đỉnh núi nhọn (núi sau Chủ điện, vách thác) ----------
+// Neo: giữa chân (chân tan vào sương). sx: đỉnh lệch khỏi tâm (−0.5..0.5 bề ngang).
+export function peak(w: number, h: number, seed = 1, sx = 0): Asset {
+  return {
+    x: -w / 2 - 8, y: -h - 8, w: w + 16, h: h + 12,
+    draw(g) {
+      const rn = rng(seed)
+      const j = (k: number) => (rn() - 0.5) * k
+      const top: Pt = [sx * w, -h]
+      // sườn lõm: dốc gắt gần đỉnh, thoải dần xuống chân
+      const left: Pt[] = [top, [top[0] - w * 0.08 + j(4), -h * 0.78], [top[0] - w * 0.2 + j(6), -h * 0.52], [-w * 0.36 + j(6), -h * 0.24], [-w / 2, 0]]
+      const right: Pt[] = [top, [top[0] + w * 0.07 + j(4), -h * 0.8], [top[0] + w * 0.22 + j(6), -h * 0.5], [w * 0.38 + j(6), -h * 0.22], [w / 2, 0]]
+      const ridges = Math.max(2, Math.round(w / 70))
+      const rid: Pt[][] = []
+      for (let k = 0; k < ridges; k++) {
+        const t = (k + 0.5) / ridges
+        const x1 = lerp(-w * 0.4, w * 0.4, t) + j(w * 0.08)
+        rid.push([top, [lerp(top[0], x1, 0.2) + j(4), -h * 0.78], [lerp(top[0], x1, 0.5) + j(6), -h * 0.48], [lerp(top[0], x1, 0.8) + j(6), -h * 0.2], [x1, 0]])
+      }
+      const sides = [left, ...rid, right]
+      wash(g, [...left, ...right.slice().reverse()], { fill: g2 => vgrad(g2, -h, 0, [[0, C.ochreL], [0.6, C.ochre], [1, C.ochre]]), alpha: 0.55, jitter: 3, layers: 3, seed })
+      for (let k = 0; k < sides.length - 1; k++) {
+        const a = sides[k], b = sides[k + 1]
+        wash(g, [...a, ...b.slice().reverse()], {
+          fill: g2 => vgrad(g2, -h, -h * 0.1, [[0, C.azurite], [0.5, C.azuriteL], [1, 'rgba(120,166,194,0)']]),
+          alpha: 0.6 + rn() * 0.3, jitter: 2.5, edge: 2, layers: 3, seed: seed + 10 + k,
+        })
+        const shade = a.map(([x, y], i) => [lerp(x, b[i][0], 0.3), y] as Pt)
+        wash(g, [...a, ...shade.slice().reverse()], { fill: g2 => vgrad(g2, -h, 0, [[0, C.indigo], [0.8, 'rgba(52,70,94,0)']]), alpha: 0.4, jitter: 1.5, layers: 2, seed: seed + 30 + k })
+        wash(g, [a[0], a[1], [lerp(a[1][0], b[1][0], 0.5), a[1][1] + 4], b[1]], { fill: C.malachite, alpha: 0.65, jitter: 1.5, layers: 2, seed: seed + 50 + k })
+        // 披麻皴
+        for (let i = 0; i < 3; i++) {
+          const t = (i + 0.7) / 3.6
+          const pts = [1, 2, 3].map(q => [lerp(a[q][0], b[q][0], t) + j(3), lerp(a[q][1], b[q][1], t)] as Pt)
+          stroke(g, pts, { w: 0.9, color: C.ink, press: 'nail', alpha: 0.35 + rn() * 0.2, dry: 0.35, seed: seed + 100 + k * 5 + i })
+        }
+      }
+      rid.forEach((r, k) => stroke(g, r.slice(0, 4), { w: 1.7, color: C.ink, press: 'nail', dry: 0.4, ink: 0.35, alpha: 0.8, seed: seed + 60 + k }))
+      stroke(g, left.slice(0, 4), { w: 2.2, color: C.ink, press: 'nail', dry: 0.3, ink: 0.3, seed: seed + 3 })
+      stroke(g, right.slice(0, 4), { w: 2, color: C.ink, press: 'nail', dry: 0.3, ink: 0.3, seed: seed + 4 })
+      rid.forEach((r, k) => moss(g, r[1][0], r[1][1], 3, 1.1, seed + 300 + k))
+      moss(g, top[0], top[1] + 3, 4, 1.2, seed + 310)
+      grain(g, 0.5)
+      dissolve(g, -w, w, -h * 0.4, 4)
+    },
+  }
+}
+
+// Khối đá tiền cảnh: mực đậm, ít màu (gần mắt thì tối) — neo ở chân
+export function rock(w: number, h: number, seed = 1): Asset {
+  return {
+    x: -w / 2 - 6, y: -h - 6, w: w + 12, h: h + 10,
+    draw(g) {
+      const rn = rng(seed)
+      const j = (k: number) => (rn() - 0.5) * k
+      const pts: Pt[] = [[-w / 2, 2], [-w * 0.44 + j(4), -h * 0.5], [-w * 0.26 + j(4), -h * 0.9], [j(6), -h], [w * 0.28 + j(4), -h * 0.82], [w * 0.46 + j(4), -h * 0.4], [w / 2, 2]]
+      wash(g, pts, { fill: g2 => vgrad(g2, -h, 2, [[0, C.indigo], [1, C.ink]]), alpha: 0.92, jitter: 2, layers: 3, edge: 2, seed })
+      wash(g, [pts[2], pts[3], pts[4], [w * 0.1, -h * 0.55], [-w * 0.15, -h * 0.6]], { fill: C.malachiteD, alpha: 0.5, jitter: 1.5, layers: 2, seed: seed + 1 })
+      stroke(g, pts.slice(0, 4), { w: 2.6, color: C.ink, press: 'nail', dry: 0.3, seed: seed + 2 })
+      stroke(g, pts.slice(3), { w: 2.2, color: C.ink, press: 'nail', dry: 0.35, seed: seed + 3 })
+      for (let i = 0; i < 6; i++) moss(g, lerp(-w * 0.3, w * 0.3, rn()), -h * (0.6 + rn() * 0.35), 3, 1.4, seed + 10 + i)
+      grain(g, 0.4)
+    },
+  }
+}
+
 // Gradient dọc tiện dùng: các điểm dừng (0..1) giữa y0, y1
 export function vgrad(g: G, y0: number, y1: number, stops: [number, string][]) {
   const gr = g.createLinearGradient(0, y0, 0, y1)

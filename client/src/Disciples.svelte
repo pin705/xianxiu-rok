@@ -150,10 +150,8 @@
     min-width: 0;
   }
   .info b {
-    overflow: hidden;
     font-size: 13.5px;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    line-height: 1.2; /* tên dài (Mộc Thanh Phong) xuống dòng, không cắt */
   }
   .info small {
     font-size: 11px;
