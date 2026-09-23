@@ -2,11 +2,11 @@
 // (sương trôi, thác chảy, hạc bay, khói, lửa, linh khí, đèn đêm) do GPU diễn mỗi khung hình.
 import { Container, Graphics, Sprite, TilingSprite, type Texture } from 'pixi.js'
 import {
-  PIGMENT as C, bamboo, beamTex, blossom, building, cloud, crane, disciple, fallTex, farRange, flag, glowTex, ledge, mistTex, mix, paper,
-  peak, pine, plot, puffTex, rainTex, rayTex, ringTex, rng, rock, scaffold, sparkTex, stairway, stoneLantern, tierOf, vortexTex,
+  PIGMENT as C, bamboo, beamTex, bird, blossom, building, butterfly, cloud, crane, disciple, fallTex, farRange, flag, glowTex, ledge, mistTex, mix, paper,
+  itemIcon, peak, petalTex, pine, plot, puffTex, rainTex, rayTex, ringTex, rng, rock, scaffold, sparkTex, stairway, stoneLantern, tierOf, vortexTex,
   type Fx, type Kind, type Pt,
 } from '@rok/art'
-import { BUILDINGS, IDS, type BuildingId, type State } from '@rok/rules'
+import { BUILDINGS, IDS, storage, type BuildingId, type State } from '@rok/rules'
 import { DECOR, HOME, LEDGES, MISTS, PINES, SLOT, STAIRS } from './layout'
 import { painted, texOf, type Painted } from './stage'
 
@@ -20,6 +20,7 @@ export type HomeView = {
 }
 
 const hex = (c: string) => parseInt(c.slice(1), 16)
+const lerp = (a: number, b: number, k: number) => a + (b - a) * k
 const sprite = (p: Painted, x = 0, y = 0) => {
   const s = new Sprite(p.tex)
   s.anchor.set(p.anchor[0], p.anchor[1])
@@ -105,6 +106,7 @@ function skyTex(p: Phase | 'storm') {
 }
 
 type Anim = (t: number, dt: number) => void
+const MAKERS = IDS.filter(id => BUILDINGS[id].makes)
 // Hiệu ứng thoáng qua (pháo hoa, sét…): tự huỷ sau dur giây
 type Play = { t0: number; dur: number; c: Container; step: (e: number) => void }
 
@@ -134,13 +136,22 @@ export class Home {
   private bLayer = new Container()
   private ring: Sprite
   private scene = new Container() // mọi thứ rung khi sét đánh
-  private stormFx = new Container()
+  private vortex = new Container() // xoáy kiếp vân: sau núi, không nhuộm theo giờ
+  private stormFx = new Container() // sét: trước công trình
   private rain: TilingSprite[] = []
   private flash = new Graphics()
   private flashA = 0
   private shakeA = 0
   private plays: Play[] = []
   private lamps: Sprite[] = []
+  private fair: Container[] = [] // mây lành, hạc: tan khi trời kiếp
+  private day: Container[] = [] // tia nắng, bướm: chỉ ban ngày, trời yên
+  private night: Container[] = [] // đom đóm: chỉ khi tối
+  private dust = new Container() // bụi dưới chân công trình (nhuộm theo giờ)
+  private over = new Container() // vật phẩm bay lên (không nhuộm)
+  private picked: BuildingId | null = null
+  private makeAt = 3
+  private maker = 0
   private anims: Anim[] = []
   private t = 0 // đồng hồ cảnh (đứng yên khi giảm chuyển động)
   private rt = 0 // đồng hồ thật, cho hiệu ứng thoáng qua
@@ -178,7 +189,8 @@ export class Home {
     this.root.addChild(this.sun, this.moon, this.stars)
     this.land = new Container()
     this.scene.addChild(this.land)
-    this.root.addChild(this.scene)
+    this.vortex.visible = false
+    this.root.addChild(this.vortex, this.scene)
     for (let i = 0; i < 36; i++) {
       const s = soft(sparkT, '#ffffff', 3 + (i % 3) * 2, 0.8)
       s.position.set(((i * 97) % 440) - 20, 20 + ((i * 53) % 300))
@@ -199,6 +211,7 @@ export class Home {
     for (const [x, y, w, seed, sp] of [[70, 230, 96, 1, 6], [330, 280, 76, 4, -5], [210, 170, 60, 9, 4]] as const) {
       const c = sprite(painted(`cloud:${w}:${seed}`, () => cloud(w, seed)), x, y)
       this.land.addChild(c)
+      this.fair.push(c)
       this.anims.push(t => (c.x = x + Math.sin(t / 18 + seed) * 16 + sp * Math.sin(t / 40)))
     }
     // Hạc bay ngang trời
@@ -211,6 +224,7 @@ export class Home {
       return { b, i }
     })
     this.land.addChild(flock)
+    this.fair.push(flock)
     this.anims.push(t => {
       const k = (t % 34) / 34
       flock.position.set(470 - k * 560, 170 - k * 50 + Math.sin(t * 0.8) * 4)
@@ -228,7 +242,11 @@ export class Home {
       const [x, y, w, h, seed] = LEDGES[i]
       this.land.addChild(sprite(painted(`ledge:${i}`, () => ledge(w, h, seed)), x, y))
       for (const [px, py, s, ps] of PINES) if (Math.abs(py - y) < 8) this.land.addChild(sprite(painted(`pine:${ps}`, () => pine(s, ps)), px, py))
-      for (const [path, sw, after] of STAIRS) if (after === i) this.land.addChild(sprite(painted(`stair:${path[0]}`, () => stairway(path, sw, i + 1))))
+      for (const [path, sw, after] of STAIRS)
+        if (after === i) {
+          this.land.addChild(sprite(painted(`stair:${path[0]}`, () => stairway(path, sw, i + 1))))
+          if (i !== 2) this.walker(path, i)
+        }
     }
     byLedge(0)
     this.mist(...MISTS[0])
@@ -257,12 +275,14 @@ export class Home {
     this.mist(...MISTS[4])
     this.mist(...MISTS[5])
 
+    this.life(sparkT)
+
     // Công trình
     this.ring = new Sprite(texOf('ring', () => ringTex(160, 48, 2.5)))
     this.ring.anchor.set(0.5)
     this.ring.tint = hex(C.goldL)
     this.ring.visible = false
-    this.land.addChild(this.ring, this.bLayer)
+    this.land.addChild(this.ring, this.bLayer, this.dust)
     this.bLayer.sortableChildren = true
     for (const id of IDS) {
       const [x, y] = SLOT[id]
@@ -313,7 +333,7 @@ export class Home {
     this.stormFx.visible = false
 
     // Linh khí bay lên
-    this.scene.addChild(this.glow)
+    this.scene.addChild(this.glow, this.over)
     for (let i = 0; i < 18; i++) {
       const m = soft(sparkT, C.spirit, 5, 0)
       const x0 = 40 + ((i * 71) % 320), y0 = 480 + ((i * 37) % 320), dur = 7 + (i % 5), off = (i * 1.7) % dur
@@ -324,9 +344,115 @@ export class Home {
         m.alpha = Math.sin(k * Math.PI) * 0.9
       })
     }
-    this.flash.rect(-1300, -400, 3000, 2000).fill({ color: 0xf3edff })
+    this.flash.rect(-1300, -400, 3000, 2000).fill({ color: 0xffffff })
     this.flash.alpha = 0
     this.root.addChild(this.flash)
+    // nướng sẵn kiếp vân lúc rảnh để khi độ kiếp không bị khựng
+    if (!this.still) (globalThis.requestIdleCallback ?? setTimeout)(() => this.root.destroyed || this.vortex.children.length || this.buildStorm())
+  }
+
+  // Đệ tử lên xuống bậc đá: nhún theo bước, nhỏ dần khi lên cao, hiện ra từ sương ở chân bậc
+  private walker(path: readonly (readonly [number, number])[], seed: number) {
+    const seg = path.slice(1).map((p, i) => Math.hypot(p[0] - path[i][0], p[1] - path[i][1]))
+    const len = seg.reduce((a, b) => a + b, 0)
+    const at = (d: number): Pt => {
+      for (let i = 0; i < seg.length; d -= seg[i], i++)
+        if (d <= seg[i] || i === seg.length - 1) {
+          const k = Math.min(1, d / seg[i])
+          return [lerp(path[i][0], path[i + 1][0], k), lerp(path[i][1], path[i + 1][1], k)]
+        }
+      return path[0]
+    }
+    const p = painted(`walker:${seed % 2}`, () => disciple(seed % 2 === 0))
+    const s = sprite(p)
+    s.tint = hex(seed % 2 ? C.silk : mix(C.azuriteL, C.silk, 0.55))
+    this.land.addChild(s)
+    const trip = len / 5, rest = 3, cycle = 2 * (trip + rest), off = seed * 7.3
+    this.anims.push(t => {
+      const c = (t + off) % cycle
+      const up = c < trip + rest
+      const k = Math.min(1, (up ? c : c - trip - rest) / trip)
+      const d = (up ? k : 1 - k) * len
+      const [x, y] = at(d)
+      s.position.set(x + 2, y - (k < 1 ? Math.abs(Math.sin(t * 7)) * 0.9 : 0))
+      const sc = lerp(0.85, 0.66, d / len) / p.scale
+      s.scale.set(up ? sc : -sc, sc)
+      s.alpha = Math.min(1, d / 14)
+    })
+  }
+
+  // Sinh khí của núi: tia nắng qua sương, bướm quanh mai, cánh mai rơi, đàn chim nhỏ; đêm thì đom đóm
+  private life(sparkT: Texture) {
+    // tia nắng xiên từ phía mặt trời
+    const rayT = texOf('ray', () => rayTex())
+    const rays = new Container()
+    for (const [a, w, ph] of [[0.62, 120, 0], [0.78, 80, 2], [0.95, 140, 4], [1.12, 70, 1]] as const) {
+      const r = new Sprite(rayT)
+      r.anchor.set(0.5, 0)
+      r.position.set(330, 120)
+      r.rotation = a
+      r.width = w
+      r.height = 760
+      r.tint = 0xfff0cc
+      r.blendMode = 'add'
+      rays.addChild(r)
+      this.anims.push(t => (r.alpha = 0.1 + 0.06 * Math.sin(t * 0.35 + ph)))
+    }
+    this.land.addChild(rays)
+    this.day.push(rays)
+    // đàn chim nhỏ bay ngang, thưa
+    const wing = [painted('bird:up', () => bird(true)), painted('bird:down', () => bird(false))]
+    const flock = new Container()
+    const birds = [[0, 0], [11, -5], [20, 3], [-9, 6], [28, -2]].map(([dx, dy], i) => {
+      const b = sprite(wing[0], dx, dy)
+      b.scale.set((0.7 - i * 0.05) / wing[0].scale)
+      flock.addChild(b)
+      return b
+    })
+    this.land.addChild(flock)
+    this.fair.push(flock)
+    this.anims.push(t => {
+      const k = ((t + 12) % 46) / 26
+      flock.visible = k < 1
+      flock.position.set(-60 + k * 520, 262 - k * 30 + Math.sin(t * 0.9) * 5)
+      birds.forEach((b, i) => (b.texture = wing[Math.floor(t * 5 + i * 0.7) % 2].tex))
+    })
+    // quanh mỗi cây mai: cánh hoa rơi, cây chẵn có bướm (ban ngày)
+    const petalT = texOf('petal', () => petalTex(16))
+    const fly = [painted('fly:open', () => butterfly(true)), painted('fly:shut', () => butterfly(false))]
+    DECOR.filter(d => d[0] === 'blossom').forEach(([, bx, by, bs], n) => {
+      for (let i = 0; i < 3; i++) {
+        const pt = new Sprite(petalT)
+        pt.anchor.set(0.5)
+        pt.scale.set(0.34)
+        this.land.addChild(pt)
+        const dur = 5 + i * 1.3, off = n * 2.1 + i * 1.9, x0 = bx + (i - 1) * 9 * bs, y0 = by - 30 * bs
+        this.anims.push(t => {
+          const k = ((t + off) % dur) / dur
+          pt.position.set(x0 + Math.sin(t * 1.7 + i) * 6 + k * 14, y0 + k * 44)
+          pt.rotation = t * 2 + i
+          pt.alpha = Math.sin(k * Math.PI)
+        })
+      }
+      if (n % 2) return
+      const b = sprite(fly[0])
+      b.scale.set(0.7 / fly[0].scale)
+      this.land.addChild(b)
+      this.day.push(b)
+      this.anims.push(t => {
+        const u = t * 0.6 + n
+        b.position.set(bx + Math.sin(u) * 22 + Math.sin(u * 2.3) * 6, by - 26 + Math.sin(u * 1.4) * 10)
+        b.texture = fly[Math.floor(t * 11) % 2].tex
+      })
+    })
+    // đom đóm quanh các tầng thấp, chỉ hiện khi tối
+    for (let i = 0; i < 16; i++) {
+      const f = soft(sparkT, '#e9f7a0', 5, 0)
+      const x0 = 20 + ((i * 89) % 360), y0 = 430 + ((i * 131) % 380)
+      this.glow.addChild(f)
+      this.night.push(f)
+      this.anims.push(t => f.position.set(x0 + Math.sin(t * 0.5 + i) * 14, y0 + Math.sin(t * 0.7 + i * 2) * 8))
+    }
   }
 
   // Dải sương ghép liền trôi ngang
@@ -345,12 +471,14 @@ export class Home {
     this.mood = MOOD[v.phase]
     this.sky.texture = skyTex(v.phase)
     if (v.storm && !this.storm.n) {
-      if (!this.stormFx.children.length) this.buildStorm()
+      if (!this.vortex.children.length) this.buildStorm()
       Object.assign(this.storm, { at: this.rt, struck: 0 })
     }
     this.storm.n = v.storm
     const g = v.game
     for (const id of IDS) this.place(id, g)
+    if (v.selected && v.selected !== this.picked && !this.still) this.poke(v.selected)
+    this.picked = v.selected
     const sel = v.selected && this.slots.get(v.selected)
     this.ring.visible = !!sel && !this.still
     if (sel && v.selected) {
@@ -400,12 +528,56 @@ export class Home {
     slot.body = sprite(p)
     slot.root.addChildAt(slot.body, 0)
     this.effects(slot, p.meta as Fx[])
+    if (id === 'tuLinhTran') this.qi(slot, w)
     if (job) {
       slot.root.addChild(sprite(painted(`scaffold:${w}:${b.top}`, () => scaffold(w * 0.9, b.top * 0.95))))
       const worker = sprite(painted('worker', () => disciple(false)), w * 0.36, -1)
       worker.tint = hex(C.ochreL)
       slot.root.addChild(worker)
       slot.anims.push(t => (worker.rotation = Math.sin(t * 12) * 0.12))
+      // tia lửa mỗi nhát búa (chu kỳ theo nhịp tay thợ) + bụi đá bốc lên ở chân giàn
+      const sparkT = texOf('spark', () => sparkTex(24))
+      const hand = [w * 0.36 - 5, -9]
+      for (let i = 0; i < 4; i++) {
+        const sp = soft(sparkT, i % 2 ? '#ffd27a' : '#fff4d6', 4, 0)
+        const vx = (i - 1.5) * 9, vy = -16 - (i % 2) * 8
+        slot.glow.addChild(sp)
+        slot.anims.push(t => {
+          const k = ((t * 12) / (Math.PI * 2) + 0.25) % 1 // 0 lúc búa chạm
+          sp.position.set(hand[0] + vx * k, hand[1] + vy * k + 60 * k * k)
+          sp.alpha = k < 0.45 ? 1 - k / 0.45 : 0
+        })
+      }
+      const puffT = texOf('puff', () => puffTex())
+      for (let i = 0; i < 3; i++) {
+        const d = new Sprite(puffT)
+        d.anchor.set(0.5)
+        d.tint = hex(mix(C.paper2, C.ochre, 0.35))
+        slot.fx.addChild(d)
+        const x0 = (i - 1) * w * 0.28
+        slot.anims.push(t => {
+          const k = ((t + i * 0.9) % 2.7) / 2.7
+          d.position.set(x0 + k * 6, -2 - k * 14)
+          d.width = d.height = 8 + k * 14
+          d.alpha = Math.sin(k * Math.PI) * 0.45
+        })
+      }
+    }
+  }
+
+  // Tụ Linh Trận hút linh khí: hạt sáng xoáy dần vào tâm trận rồi bốc lên theo cột sáng
+  private qi(slot: Slot, w: number) {
+    const sparkT = texOf('spark', () => sparkTex(24))
+    for (let i = 0; i < 14; i++) {
+      const m = soft(sparkT, C.spirit, 6, 0)
+      slot.glow.addChild(m)
+      const a0 = (i / 14) * Math.PI * 2, dur = 2.4 + (i % 4) * 0.5, off = i * 0.37
+      slot.anims.push(t => {
+        const k = ((t + off) % dur) / dur
+        const r = w * 0.75 * (1 - k), a = a0 + k * 4
+        m.position.set(Math.cos(a) * r, -6 + Math.sin(a) * r * 0.32 - k ** 3 * 26)
+        m.alpha = Math.sin(k * Math.PI) * 0.9
+      })
     }
   }
 
@@ -484,7 +656,7 @@ export class Home {
   // chớp loé trong mây; sét đánh theo lịch trong tick()
   private buildStorm() {
     const [x, y] = SLOT.chuDien
-    const eye: Pt = [x, y - 196]
+    const eye: Pt = [x, y - 150]
     this.storm.eye = eye
     const glowT = texOf('glow', () => glowTex(64))
     const disk = new Container()
@@ -505,11 +677,11 @@ export class Home {
     core.position.set(...eye)
     const flick = soft(glowT, '#b9a4ff', 90, 0)
     flick.scale.y *= 0.45
-    this.stormFx.addChild(disk, halo, core, flick)
+    this.vortex.addChild(disk, halo, core, flick)
     const r = rng(77)
     let next = 0, fl = 0
     this.anims.push((t, dt) => {
-      if (!this.stormFx.visible) return
+      if (!this.vortex.visible) return
       layers[0].rotation += dt * 0.32
       layers[1].rotation += dt * 0.75
       const f = this.storm.flare
@@ -584,7 +756,8 @@ export class Home {
     rays.forEach(r => r.position.set(0, mid))
     const pillar = add(new Sprite(texOf('beam', () => beamTex())), 0.5, 1)
     pillar.height = big ? 760 : 260
-    const halo = soft(glowT, C.goldL, w * (big ? 2.4 : 1.5), 0)
+    pillar.tint = hex(C.gold)
+    const halo = soft(glowT, C.gold, w * (big ? 2.4 : 1.5), 0)
     halo.position.set(0, mid)
     const ring = add(new Sprite(texOf('ring', () => ringTex(160, 48, 2.5))))
     c.addChild(...rays, pillar, halo, ring)
@@ -619,6 +792,67 @@ export class Home {
     if (big) this.shakeA = 6
   }
 
+  // Chạm công trình: nén xuống rồi bật lên (chân đứng yên), bụi toả hai bên
+  private poke(id: BuildingId) {
+    const slot = this.slots.get(id)
+    if (!slot) return
+    const [x, y, w] = SLOT[id]
+    const c = new Container()
+    c.position.set(x, y)
+    const puffT = texOf('puff', () => puffTex())
+    const puffs = Array.from({ length: 6 }, (_, i) => {
+      const d = new Sprite(puffT)
+      d.anchor.set(0.5)
+      d.tint = hex(mix(C.paper2, C.ochre, 0.3))
+      c.addChild(d)
+      return { d, dir: i % 2 ? 1 : -1, sp: 0.6 + (i >> 1) * 0.25 }
+    })
+    const dur = 0.7
+    this.play(
+      c,
+      dur,
+      e => {
+        const b = Math.sin(e * 26) * Math.exp(-e * 6) * (1 - e / dur)
+        slot.root.scale.set(1 + b * 0.05, 1 - b * 0.08)
+        for (const p of puffs) {
+          const k = e / dur
+          p.d.position.set(p.dir * w * (0.25 + k * 0.3 * p.sp), -2 - k * 6 * p.sp)
+          p.d.width = p.d.height = 6 + k * 16
+          p.d.alpha = Math.sin(Math.min(1, k * 1.2) * Math.PI) * 0.55
+        }
+      },
+      this.dust,
+    )
+  }
+
+  // Công trình sản xuất nhả vật phẩm vẽ tay bay lên (kho đầy thì thôi)
+  private make(id: BuildingId) {
+    const slot = this.slots.get(id)
+    const r = BUILDINGS[id].makes
+    if (!slot || !r) return
+    const [x, y] = SLOT[id]
+    const p = painted(`item:${r}`, () => itemIcon(r))
+    const c = new Container()
+    c.position.set(x + (Math.random() - 0.5) * 30, y - slot.top - 2)
+    const halo = soft(texOf('glow', () => glowTex(64)), C.goldL, 30, 0)
+    const icon = sprite(p)
+    c.addChild(halo, icon)
+    const base = 0.72 / p.scale
+    this.play(
+      c,
+      1.8,
+      e => {
+        const pop = e < 0.25 ? Math.sin((e / 0.25) * Math.PI * 0.75) / Math.sin(Math.PI * 0.75) : 1
+        icon.scale.set(base * Math.min(1.15, pop))
+        icon.y = halo.y = -e * 22
+        const a = e < 0.15 ? e / 0.15 : Math.max(0, 1 - (e - 1) / 0.8)
+        icon.alpha = a
+        halo.alpha = a * 0.5
+      },
+      this.over,
+    )
+  }
+
   private play(c: Container, dur: number, step: (e: number) => void, layer: Container = this.glow) {
     layer.addChild(c)
     this.plays.push({ t0: this.rt, dur, c, step })
@@ -647,8 +881,9 @@ export class Home {
     this.sun.alpha = m.sun * (1 - k)
     this.moon.alpha = m.moon * (1 - k)
     this.stars.alpha = m.stars * (1 - k)
-    this.stormFx.visible = k > 0.01
-    this.stormFx.alpha = k
+    for (const f of this.fair) f.alpha = 1 - k
+    this.stormFx.visible = this.vortex.visible = k > 0.01
+    this.stormFx.alpha = this.vortex.alpha = k
     this.rain.forEach((r, i) => {
       r.visible = k > 0.01
       r.alpha = k * (i ? 0.35 : 0.6)
@@ -657,15 +892,24 @@ export class Home {
     })
     if (st.n) while (st.struck < st.n && this.rt - st.at >= 0.7 + st.struck * 1.2) this.strike(++st.struck === st.n)
     st.flare *= Math.exp(-dt * 4)
+    if (this.view && !this.still && !st.n && !this.reduced && this.rt > this.makeAt) {
+      this.makeAt = this.rt + 1.7
+      const g = this.view.game, cap = storage(g)
+      const ids = MAKERS.filter(id => g.levels[id] > 0 && g.res[BUILDINGS[id].makes!] < cap)
+      if (ids.length) this.make(ids[this.maker++ % ids.length])
+    }
     // đèn theo giờ, chập chờn nhẹ
     this.lightsLevel += (m.lights + (sm.lights - m.lights) * k - this.lightsLevel) * Math.min(1, dt * 2)
     let i = 0
     for (const s of this.slots.values()) for (const l of s.lights) l.alpha = this.lightsLevel * (0.75 + 0.2 * Math.sin(t * 3 + i++))
     for (const l of this.lamps) l.alpha = this.lightsLevel * (0.7 + 0.25 * Math.sin(t * 4.3 + l.x))
+    const dark = Math.min(1, this.lightsLevel * 1.4)
+    for (const d of this.day) (d.alpha = (1 - dark) * (1 - k)), (d.visible = d.alpha > 0.02)
+    for (const n of this.night) n.alpha = dark * (1 - k) * Math.max(0, Math.sin(t * 1.9 + n.x))
     // hiệu ứng thoáng qua, loé sáng, rung
     this.plays = this.plays.filter(p => {
       const e = this.rt - p.t0
-      if (e >= p.dur) return void p.c.destroy({ children: true }), false
+      if (e >= p.dur) return void (p.step(p.dur), p.c.destroy({ children: true })), false
       p.step(e)
       return true
     })

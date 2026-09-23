@@ -78,6 +78,7 @@
 </div>
 {#if pins}
   <div class="overlay" class:off={hidden} aria-hidden="true">
+    <div class="vignette"></div>
     <div class="layer" bind:this={layer} style:width="{400 * k}px">{@render pins(k)}</div>
   </div>
 {/if}
@@ -103,6 +104,12 @@
     z-index: var(--z-overlay);
     overflow: hidden;
     pointer-events: none;
+  }
+  /* tối dần ra mép như khung tranh, kéo mắt vào giữa cảnh */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 70% at 50% 48%, transparent 58%, color-mix(in srgb, var(--ink) 26%, transparent) 100%);
   }
   .layer {
     position: relative;

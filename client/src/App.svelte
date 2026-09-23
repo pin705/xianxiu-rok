@@ -1,7 +1,7 @@
 <script lang="ts">
   import { flushSync, onMount } from 'svelte'
   import {
-    BUILDINGS, IDS, MAP_HALL, REALMS, RESOURCES, SECTS, TECH_IDS, advance, apply, newGame, questDone, questOf, storage,
+    BUILDINGS, IDS, MAP_HALL, REALMS, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, advance, apply, cost, newGame, questDone, questOf, storage, storeNeed,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
@@ -51,8 +51,11 @@
   const guide = $derived.by(() => {
     const q = game && questOf(game)
     if (!game || selected || game.queue.length || q?.k !== 'build' || questDone(game)) return null
-    return q.id as BuildingId
+    return questBuilding(game, q.id as BuildingId)
   })
+  // Công trình nhiệm vụ cần xây — trừ khi kho không đủ chỗ cho chi phí: khi đó phải nâng Tàng Bảo Các trước
+  const questBuilding = (s: State, id: BuildingId) =>
+    storeNeed(s, cost(id, Math.min(s.levels[id] + 1, MAX_LEVEL))) ? 'tangBaoCac' : id
 
   // Chủ điện lên tầng n: báo những gì vừa mở (UX.md mục 4 — mở dần theo tầng)
   function unlocks(n: number) {
@@ -207,7 +210,7 @@
   function goQuest() {
     const q = game && questOf(game)
     if (!game || !q) return
-    if (q.k === 'build') focus(q.id as BuildingId, 'upgrade')
+    if (q.k === 'build') focus(questBuilding(game, q.id as BuildingId), 'upgrade')
     if (q.k === 'train') focus('dienVoTruong', 'train')
     if (q.k === 'tech') focus('tangKinhCac', 'library')
     if (q.k === 'brew') focus('danPhong', 'alchemy')

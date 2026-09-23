@@ -188,7 +188,7 @@ export function beast(type: Troop, tint: string = C.ochre): Asset {
   const P = {
     kiem: { body: [-4, -11, 12, 5.5], head: [11, -16, 4.6, 3.8], snout: 6, ear: 3.4, leg: 9, tail: 'brush' },
     phap: { body: [-2, -10, 10, 4.5], head: [10.5, -14.5, 4, 3.4], snout: 6, ear: 4, leg: 7.5, tail: 'fan' },
-    the: { body: [-5, -12, 14, 8], head: [11, -13, 5.5, 4.8], snout: 3, ear: 2.4, leg: 6.5, tail: 'stub' },
+    the: { body: [-5, -12, 14, 8.5], head: [11.5, -13.5, 5.8, 5.2], snout: 2.6, ear: 2.4, leg: 6.5, tail: 'stub' },
   }[type]
   return {
     x: -32, y: -30, w: 60, h: 32,
@@ -200,7 +200,10 @@ export function beast(type: Troop, tint: string = C.ochre): Asset {
       blot(g, 1, 0.6, bw * 1.3, C.ink, 0.18, 4, 0.22)
       const oval = (x: number, y: number, rx: number, ry: number, k = 14): Pt[] => Array.from({ length: k }, (_, i) => [x + Math.cos((i / k) * Math.PI * 2) * rx, y + Math.sin((i / k) * Math.PI * 2) * ry])
       const legs = (xs: number[], near: boolean) =>
-        xs.forEach(x => stroke(g, [[x, by + bh * 0.2], [x + 0.4, (by + bh * 0.2) / 2], [x + 1, -0.3]], { ...ink, w: type === 'the' ? 3.8 : 2.8, color: near ? dark : mix(dark, C.ink, 0.4), press: 'nail' }))
+        xs.forEach(x => {
+          stroke(g, [[x, by + bh * 0.2], [x + 0.4, (by + bh * 0.2) / 2], [x + 1, -0.3]], { ...ink, w: type === 'the' ? 4.8 : 2.8, color: near ? dark : mix(dark, C.ink, 0.4), press: type === 'the' ? 'even' : 'nail' })
+          if (type === 'the') blot(g, x + 1.8, -0.6, 2.2, near ? dark : mix(dark, C.ink, 0.4), 1, 30 + x, 0.55) // bàn chân gấu
+        })
       // chân phía xa (tối hơn), đuôi
       legs([bx - bw * 0.55, bx + bw * 0.6], false)
       if (P.tail === 'brush') wash(g, [[bx - bw * 0.9, by - 1], [bx - bw - 7, by + 2], [bx - bw - 10, by + 7], [bx - bw - 4, by + 4], [bx - bw * 0.8, by + 2]], { fill: fur, alpha: 1, jitter: 0.4, layers: 2, seed: 3 })
@@ -208,21 +211,35 @@ export function beast(type: Troop, tint: string = C.ochre): Asset {
         wash(g, [[bx - bw * 0.7, by - 1], [bx + dx + 3, by + dy + 4], [bx + dx, by + dy], [bx + dx - 4, by + dy + 3], [bx - bw * 0.8, by + 2]], { fill: g2 => { const r = g2.createLinearGradient(bx, by, bx + dx, by + dy); r.addColorStop(0, fur); r.addColorStop(1, light); return r }, alpha: 1, jitter: 0.3, layers: 2, seed: sd })
       // thân
       wash(g, oval(bx, by, bw, bh), { fill: g2 => { const r = g2.createLinearGradient(0, by - bh, 0, by + bh); r.addColorStop(0, fur); r.addColorStop(1, dark); return r }, alpha: 1, jitter: 0.4, layers: 3, seed: 8 })
-      if (type === 'the') wash(g, oval(bx - bw * 0.25, by - bh * 0.55, bw * 0.55, bh * 0.45), { fill: fur, alpha: 1, jitter: 0.3, layers: 2, seed: 9 }) // lưng gù
+      if (type === 'the') wash(g, oval(bx + bw * 0.3, by - bh * 0.55, bw * 0.55, bh * 0.5), { fill: fur, alpha: 1, jitter: 0.3, layers: 2, seed: 9 }) // u vai gấu
       // cổ nối thân với đầu, rồi đầu, mõm, tai
       wash(g, [[bx + bw * 0.55, by - bh * 0.85], [hx - hw * 0.5, hy - hh * 0.7], [hx - hw * 0.2, hy + hh * 0.9], [bx + bw * 0.9, by + bh * 0.2]], { fill: fur, alpha: 1, jitter: 0.3, layers: 2, seed: 16 })
+      if (type === 'the')
+        for (const dx of [-hw * 0.55, hw * 0.25]) {
+          blot(g, hx + dx, hy - hh * 0.95, 2.4, dark, 1, 12 + dx, 1)
+          blot(g, hx + dx + 0.2, hy - hh * 1.0, 1, light, 0.7, 13 + dx, 1)
+          stroke(g, oval(hx + dx, hy - hh * 0.95, 2.4, 2.4, 12).slice(5, 12), { ...ink, w: 0.8, press: 'even', alpha: 0.8 })
+        }
       wash(g, oval(hx, hy, hw, hh), { fill: fur, alpha: 1, jitter: 0.3, layers: 2, seed: 10 })
-      wash(g, [[hx + hw * 0.4, hy - hh * 0.5], [hx + hw + P.snout, hy + hh * 0.2], [hx + hw + P.snout - 1, hy + hh * 0.6], [hx + hw * 0.3, hy + hh * 0.8]], { fill: light, alpha: 1, jitter: 0.2, layers: 2, seed: 11 })
-      for (const dx of [-hw * 0.35, hw * 0.25]) wash(g, [[hx + dx - 1.6, hy - hh * 0.7], [hx + dx + 0.6, hy - hh - P.ear], [hx + dx + 2, hy - hh * 0.6]], { fill: dark, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: 12 + dx })
-      blot(g, hx + hw + P.snout - 0.6, hy + hh * 0.3, 1, C.ink, 1, 14, 1)
+      if (type === 'the') {
+        // gấu: mõm tròn ngắn sáng màu, mũi đen
+        wash(g, oval(hx + hw * 0.85, hy + hh * 0.3, 3.4, 2.6), { fill: light, alpha: 1, jitter: 0.2, layers: 2, seed: 11 })
+        blot(g, hx + hw * 0.85 + 3, hy + hh * 0.05, 1.3, C.ink, 1, 14, 0.8)
+      } else {
+        wash(g, [[hx + hw * 0.4, hy - hh * 0.5], [hx + hw + P.snout, hy + hh * 0.2], [hx + hw + P.snout - 1, hy + hh * 0.6], [hx + hw * 0.3, hy + hh * 0.8]], { fill: light, alpha: 1, jitter: 0.2, layers: 2, seed: 11 })
+        for (const dx of [-hw * 0.35, hw * 0.25]) wash(g, [[hx + dx - 1.6, hy - hh * 0.7], [hx + dx + 0.6, hy - hh - P.ear], [hx + dx + 2, hy - hh * 0.6]], { fill: dark, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: 12 + dx })
+        blot(g, hx + hw + P.snout - 0.6, hy + hh * 0.3, 1, C.ink, 1, 14, 1)
+      }
       // viền mực: lưng, bụng, đầu
       stroke(g, oval(bx, by, bw, bh, 20).slice(10, 21), { ...ink, w: 1.3, press: 'nail', dry: 0.3 })
       stroke(g, oval(bx, by, bw, bh, 20).slice(1, 9), { ...ink, w: 0.9, press: 'taper', alpha: 0.7 })
-      stroke(g, [[hx - hw * 0.8, hy - hh * 0.2], [hx - hw * 0.3, hy - hh], [hx + hw * 0.5, hy - hh * 0.8], [hx + hw + P.snout, hy + hh * 0.2]], { ...ink, w: 1.1, press: 'taper' })
-      // lông: nét khô ngắn dọc lưng
+      if (type !== 'the') stroke(g, [[hx - hw * 0.8, hy - hh * 0.2], [hx - hw * 0.3, hy - hh], [hx + hw * 0.5, hy - hh * 0.8], [hx + hw + P.snout, hy + hh * 0.2]], { ...ink, w: 1.1, press: 'taper' })
+      else stroke(g, oval(hx, hy, hw, hh, 16).slice(9, 16), { ...ink, w: 1.1, press: 'taper' })
+      // lông: nét khô ngắn dọc lưng (gấu: bờm xù ở bụng)
       for (let i = 0; i < 7; i++) {
         const x = bx - bw * 0.7 + (i / 6) * bw * 1.4
-        stroke(g, [[x, by - bh * 0.95], [x + 1.6, by - bh * 0.55]], { w: 0.8, color: C.ink, press: 'taper', alpha: 0.45 })
+        if (type === 'the') stroke(g, [[x, by + bh * 0.8], [x - 0.8, by + bh * 1.15]], { w: 1, color: dark, press: 'taper', alpha: 0.8 })
+        else stroke(g, [[x, by - bh * 0.95], [x + 1.6, by - bh * 0.55]], { w: 0.8, color: C.ink, press: 'taper', alpha: 0.45 })
       }
       // chân phía gần, mắt sáng
       legs([bx - bw * 0.3, bx + bw * 0.8], true)

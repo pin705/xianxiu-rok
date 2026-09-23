@@ -87,6 +87,7 @@ export const vi = {
     requires: 'Yêu cầu',
     hall: (n: number) => `Chủ điện tầng ${n}`,
     goTo: 'Đi tới',
+    store: (cap: string, n: number) => `Kho chỉ chứa ${cap} mỗi loại, tài nguyên ngừng sinh khi đầy — chờ bao lâu cũng không đủ. Nâng Tàng Bảo Các lên tầng ${n}.`,
     cost: 'Chi phí',
     have: (n: string) => `có ${n}`,
     build: 'Xây dựng',

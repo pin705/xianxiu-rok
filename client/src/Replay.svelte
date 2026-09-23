@@ -2,7 +2,7 @@
   // Phát lại trận: luật đã tính xong (tất định), ở đây chỉ diễn lại từng lượt rồi hiện kết quả.
   import { ELDERS, MAX_ROUNDS, SECTS, count, type Report, type Skill } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
-  import { Bag, Button, Card, Medal, Stat } from './ui'
+  import { Bag, Button, Card, Medal, Seal, Stat } from './ui'
   import { Battle } from './world/battle'
   import { cssPerDU, getApp } from './world/stage'
   import { GLYPH, L, LOOK, num, reportName, sfx } from './lib'
@@ -59,6 +59,7 @@
       const tick = () => b.tick(app.ticker.deltaMS / 1000)
       app.ticker.add(tick)
       battle = b
+      if (import.meta.env.DEV) Object.assign(globalThis, { rokBattle: b })
       undo = () => {
         app.ticker.remove(tick)
         b.destroy()
@@ -85,10 +86,13 @@
       r = 0
       battle?.wave(fi)
       sfx('thunder')
-    } else {
-      done = true
-      sfx(report.win ? 'win' : 'lose')
-    }
+    } else finish()
+  }
+  // Hết trận: dấu 胜/败 đóng xuống (rung cảnh đúng lúc dấu chạm giấy), rồi bảng kết quả trồi lên
+  function finish() {
+    done = true
+    sfx(report?.win ? 'win' : 'lose')
+    setTimeout(() => battle?.slam(), 240)
   }
   $effect(() => {
     if (!report || done) return
@@ -115,11 +119,30 @@
 
     <div class="mid">
       <p class="round row center"><Icon name="swords" size={16} />{#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, MAX_ROUNDS)}</p>
-      {#key r}
-        {#if cast[1]}<span class="cast foe">{L.report.foeSkill}</span>{/if}
-        {#if cast[0] && f.a.elder}<span class="cast">{L.elders[f.a.elder].skill}!</span>{/if}
-      {/key}
     </div>
+    <!-- Công pháp xuất chiêu: dải sơn mài quét ngang, chân dung trưởng lão, tên chiêu viết lớn -->
+    {#key r}
+      {#if cast[0] && f.a.elder}
+        <div class="cutin" style:--d="{pace * 1.7}s" aria-live="polite">
+          <span class="band lacquer"></span>
+          <span class="who"><Portrait look={LOOK[f.a.elder]} size={88} /></span>
+          <span class="stack name" style:--gap="0"><small class="t-strong">{L.elders[f.a.elder].name}</small><b class="skill">{L.elders[f.a.elder].skill}</b></span>
+        </div>
+      {/if}
+      {#if cast[1]}
+        <div class="cutin foe" style:--d="{pace * 1.7}s" aria-live="polite">
+          <span class="band"></span>
+          <span class="who"><Medal glyph={foeGlyph} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={72} /></span>
+          <span class="stack name" style:--gap="0"><small class="t-strong">{foeName}</small><b class="skill">{L.report.foeSkill}</b></span>
+        </div>
+      {/if}
+    {/key}
+    <!-- Độ kiếp sang đợt mới: triện 劫 và tên đợt loang ra như mực -->
+    {#key fi}
+      {#if report.kind === 'trib' && fi > 0 && !done}
+        <div class="wave stack center"><Seal glyph="劫" size={76} tone="ink" tilt /><b class="t-title">{L.report.wave(fi + 1)}</b></div>
+      {/if}
+    {/key}
     <p class="sr">{f.a.troops.map((t, k) => `${L.units[t.type]} ${counts(0, r)[k]}`).join(', ')} — {f.b.troops.map((t, k) => `${L.units[t.type]} ${counts(1, r)[k]}`).join(', ')}</p>
 
     <header class="row ours">
@@ -128,6 +151,7 @@
     </header>
 
     {#if done}
+      <div class="verdict" class:lose={!report.win}><span class="splat"></span><Seal glyph={report.win ? '胜' : '败'} size={128} tone={report.win ? 'red' : 'ink'} tilt /></div>
       <div class="result">
         <Card tone={report.win ? 'glow' : 'paper'}>
           <div class="stack">
@@ -150,7 +174,7 @@
     {:else}
       <div class="row center ctl">
         <Button variant="ghost" size="sm" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</Button>
-        <Button size="sm" onclick={() => ((fi = report.fights.length - 1), (r = report.fights.at(-1)!.rounds.length), (done = true), battle?.jump())}>{L.report.skip}</Button>
+        <Button size="sm" onclick={() => ((fi = report.fights.length - 1), (r = report.fights.at(-1)!.rounds.length), battle?.jump(), finish())}>{L.report.skip}</Button>
       </div>
     {/if}
   {/if}
@@ -202,31 +226,147 @@
     font-weight: 800;
     color: var(--gold-d);
   }
-  .cast {
-    padding: 6px 16px;
-    font-size: var(--fs-4);
-    font-weight: 900;
-    color: var(--ink);
-    background: linear-gradient(var(--gold-l), var(--gold));
-    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
-    animation: cast 0.8s var(--spring);
+  /* ---- Xuất chiêu: dải xiên quét ngang cả màn ---- */
+  .cutin {
+    top: 64%;
+    left: 0 !important;
+    width: 100% !important;
+    height: 104px;
+    translate: 0 -50% !important;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding-inline: max(var(--sp-4), calc(50% - var(--col) / 2 + var(--sp-4)));
+    pointer-events: none;
+    animation: cut-out var(--d) linear forwards;
   }
-  .cast.foe {
+  .cutin.foe {
+    top: 30%;
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  .band {
+    position: absolute;
+    inset: 12px 0;
+    z-index: -1;
+    border-block: 3px solid var(--gold);
+    box-shadow: var(--shadow-2);
+    rotate: -3deg;
+    scale: 1.1 1;
+    animation: band-in var(--d) var(--ease) both;
+  }
+  .foe .band {
+    background: var(--cinnabar) var(--lacquer-tex);
+    background-size: 96px;
+    border-color: var(--gold-l);
+    rotate: 3deg;
+    animation-name: band-in-r;
+  }
+  .who {
+    display: grid;
+    padding: 3px;
+    border-radius: 50%;
+    background: linear-gradient(var(--gold-l), var(--gold-d));
+    box-shadow: var(--shadow-2);
+    animation: slide-in var(--d) var(--spring) both;
+  }
+  .foe .who {
+    animation-name: slide-in-r;
+  }
+  .name {
     color: var(--silk);
-    background: linear-gradient(var(--cinnabar-l), var(--cinnabar));
+    text-shadow: var(--text-shadow-inv);
+    animation: slide-in-r var(--d) var(--spring) both;
   }
-  @keyframes cast {
-    from {
-      opacity: 0;
-      transform: scale(1.6);
-    }
+  .foe .name {
+    animation-name: slide-in;
+  }
+  .skill {
+    padding-bottom: 6px;
+    font-size: min(var(--fs-7), 7.4vw);
+    white-space: nowrap;
+    font-style: italic;
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--gold-l);
+    background: var(--stroke-gold) left bottom / 100% 12px no-repeat;
+  }
+  @keyframes band-in {
+    0% { clip-path: inset(0 100% 0 0); }
+    16%, 82% { clip-path: inset(0 0 0 0); }
+    100% { clip-path: inset(0 0 0 100%); }
+  }
+  @keyframes band-in-r {
+    0% { clip-path: inset(0 0 0 100%); }
+    16%, 82% { clip-path: inset(0 0 0 0); }
+    100% { clip-path: inset(0 100% 0 0); }
+  }
+  @keyframes slide-in {
+    0%, 8% { opacity: 0; translate: -70px 0; }
+    30%, 100% { opacity: 1; translate: 0 0; }
+  }
+  @keyframes slide-in-r {
+    0%, 12% { opacity: 0; translate: 70px 0; }
+    34%, 100% { opacity: 1; translate: 0 0; }
+  }
+  @keyframes cut-out {
+    0%, 84% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* ---- Đợt kiếp mới ---- */
+  .wave {
+    top: 42%;
+    justify-items: center;
+    color: var(--silk);
+    text-shadow: 0 2px 10px rgb(0 0 0 / 0.6);
+    pointer-events: none;
+    animation: wave 1.6s var(--ease) forwards;
+  }
+  @keyframes wave {
+    0% { opacity: 0; scale: 1.25; filter: blur(6px); }
+    18%, 70% { opacity: 1; scale: 1; filter: blur(0); }
+    100% { opacity: 0; scale: 0.96; }
+  }
+
+  /* ---- Dấu thắng/bại đóng xuống ---- */
+  .verdict {
+    top: 20%;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    animation: slam 0.5s cubic-bezier(0.5, 0, 0.75, 0) both;
+  }
+  .verdict > :global(*) {
+    grid-area: 1 / 1;
+  }
+  .splat {
+    width: 260px;
+    height: 260px;
+    background: var(--cinnabar);
+    -webkit-mask: var(--blot-mask) center / contain no-repeat;
+    mask: var(--blot-mask) center / contain no-repeat;
+    opacity: 0.22;
+    animation: splat 0.7s var(--ease) 0.24s both;
+  }
+  .lose .splat {
+    background: var(--ink);
+  }
+  @keyframes slam {
+    0% { opacity: 0; scale: 2.8; rotate: -14deg; }
+    48% { opacity: 1; scale: 0.9; rotate: 0deg; }
+    70% { scale: 1.04; }
+    100% { opacity: 1; scale: 1; }
+  }
+  @keyframes splat {
+    from { scale: 0.2; opacity: 0.5; }
   }
   .ctl {
     bottom: calc(var(--sp-4) + var(--safe-b));
   }
   .result {
     bottom: calc(var(--sp-3) + var(--safe-b));
-    animation: rise var(--dur-3) var(--spring);
+    animation: rise var(--dur-3) var(--spring) 0.55s both;
   }
   @keyframes rise {
     from {

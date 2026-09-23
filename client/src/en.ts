@@ -91,6 +91,7 @@ export const en: Text = {
     requires: 'Requires',
     hall: (n: number) => `Main Hall level ${n}`,
     goTo: 'Go',
+    store: (cap: string, n: number) => `Storage holds only ${cap} of each, and resources stop growing when full — waiting will never be enough. Upgrade the Treasure Pavilion to level ${n}.`,
     cost: 'Cost',
     have: (n: string) => `have ${n}`,
     build: 'Build',

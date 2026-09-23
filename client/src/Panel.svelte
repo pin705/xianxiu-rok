@@ -3,7 +3,7 @@
   // Chủ điện ở tầng 5, 10: thay nâng cấp bằng độ kiếp. Tầng 15: luân hồi.
   import {
     BUILDINGS, MAX_LEVEL, TECH_ROWS, TRIBS, batch, buildTime, capAt, cost, hospital, marchSlots, might, mob, rate, tribError,
-    upgradeError, winChance,
+    storage, storeNeed, upgradeError, winChance,
     type Action, type Army, type BuildingId, type ElderId, type State,
   } from '@rok/rules'
   import { Icon, building, type Kind } from '@rok/art'
@@ -53,6 +53,15 @@
   const waveMight = (str: number, tier: 1 | 2 | 3, type: 'kiem' | 'phap' | 'the') => might(mob(str, tier, [[type, 1]]))
   const withLevel = (b: BuildingId, lv: number) => ({ ...game, levels: { ...game.levels, [b]: lv } })
 </script>
+
+<!-- chi phí vượt sức chứa kho: nói thẳng và chỉ đường, không để người chơi chờ mãi -->
+{#snippet store(c: Parameters<typeof storeNeed>[1])}
+  {@const n = storeNeed(game, c)}
+  {#if n && id !== 'tangBaoCac'}
+    <p class="t-small t-bad mt-2">{L.panel.store(num(storage(game)), n)}</p>
+    <Button variant="quiet" size="sm" onclick={() => onselect('tangBaoCac', 'upgrade')}>{L.panel.goTo}: {L.b.tangBaoCac.name}</Button>
+  {/if}
+{/snippet}
 
 <Sheet open={!!id} {onclose} title={id ? L.b[id].name : ''} sub={id ? (game.levels[id] ? L.level(game.levels[id]) : L.panel.notBuilt) : ''} lore={id ? L.b[id].lore : ''}>
   {#snippet art()}
@@ -135,6 +144,7 @@
         </Section>
         <Section title={L.trib.need}>
           <Bag res={cost('chuDien', tr.hall + 1)} have={game.res} />
+          {@render store(cost('chuDien', tr.hall + 1))}
           {#if terr === 'cooldown'}<p class="t-small t-bad">{L.trib.wait(clock(game.tribCool - now))}</p>{/if}
           {#if game.items.doKiep}
             <Toggle checked={pill} onchange={v => (pill = v)}><Icon name="doKiep" size={22} />{L.trib.pill} · {game.items.doKiep}</Toggle>
@@ -191,6 +201,7 @@
             </div>
           {/if}
           <Bag res={c} have={game.res} />
+          {@render store(c)}
         </Section>
         <div class="mt-4">
           <Button wide size="lg" icon="hammer" trail={clock(buildTime(game, id, next))} trailIcon="clock" disabled={!!err} onclick={() => onupgrade(id)}>

@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   BASE_RATE, BEASTS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
-  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage,
+  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed,
   techTime, trainCost, trainTime, upgradeError, winChance,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
@@ -348,4 +348,15 @@ test('mọi nhiệm vụ đều làm được: đích đến có thật trong d�
   assert.equal(questDone(newGame(T0)), false)
   assert.ok(power(rich(5)) > power(newGame(T0)))
   assert.ok(hospital(rich(5)) > HOSPITAL_BASE)
+})
+
+test('kho không đủ chỗ cho chi phí: chỉ ra tầng Tàng Bảo Các cần nâng (sản lượng dừng khi đầy, chờ mãi không đủ)', () => {
+  const s = newGame(0, 'x')
+  const c = cost('chuDien', 11)
+  const need = storeNeed(s, c)
+  assert.ok(need > s.levels.tangBaoCac)
+  assert.ok(storage({ ...s, levels: { ...s.levels, tangBaoCac: need } }) >= c.linhThach)
+  assert.ok(storage({ ...s, levels: { ...s.levels, tangBaoCac: need - 1 } }) < c.linhThach)
+  assert.equal(storeNeed(s, cost('chuDien', 3)), 0, 'kho đủ chỗ')
+  assert.equal(storeNeed({ ...s, res: { linhThach: 2e4, linhThao: 2e4, linhKhoang: 2e4 } }, c), 0, 'đã có đủ (thưởng vượt kho)')
 })

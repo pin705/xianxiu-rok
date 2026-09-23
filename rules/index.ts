@@ -192,6 +192,15 @@ export const buildTime = (s: State, b: BuildingId, level: number) =>
   Math.round(grow(BUILDINGS[b].time, TIME_GROWTH, level - 1) * cut(s, 'build')) * 1000
 export const capAt = (vaultLevel: number) => grow(BASE_CAP, CAP_GROWTH, vaultLevel)
 export const storage = (s: State) => Math.round(capAt(s.levels.tangBaoCac) * (1 + bonus(s, 'storage')))
+// Tầng Tàng Bảo Các cần để kho chứa nổi chi phí c (0: đã đủ tiền hoặc kho đủ chỗ).
+// Sản lượng dừng khi kho đầy: chi phí vượt sức chứa thì chờ bao lâu cũng không đủ, chỉ còn thưởng/chiến lợi phẩm vượt kho.
+export function storeNeed(s: State, c: Bag) {
+  const most = Math.max(...RESOURCES.map(r => c[r]))
+  if (afford(s.res, c) || most <= storage(s)) return 0
+  let l = s.levels.tangBaoCac
+  while (l < MAX_LEVEL && storage({ ...s, levels: { ...s.levels, tangBaoCac: l } }) < most) l++
+  return l
+}
 export const baseRate = (s: State, r: Res) =>
   IDS.reduce((sum, id) => (BUILDINGS[id].makes === r ? sum + (BUILDINGS[id].rate ?? 0) * s.levels[id] : sum), BASE_RATE)
 export const rate = (s: State, r: Res) => Math.round(baseRate(s, r) * (1 + bonus(s, 'prod') + bonus(s, `prod.${r}`)))

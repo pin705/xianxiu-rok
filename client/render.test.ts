@@ -270,6 +270,9 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
     assert.ok(panel(trib5, 'chuDien').includes(L.trib.title), 'Chủ điện tầng 5 phải hiện độ kiếp')
     assert.ok(panel(late, 'chuDien').includes(L.rebirth.title), 'Chủ điện tầng 15 phải hiện luân hồi')
     assert.ok(panel(late, 'chuDien').includes(L.rebirth.gain(late.rebirths + 1)), 'luân hồi phải nói rõ thưởng kiếp sau (căn cơ)')
+    const poor: State = { ...trib10, res: { linhThach: 500, linhThao: 500, linhKhoang: 500 }, levels: { ...trib10.levels, tangBaoCac: 2 } }
+    assert.ok(panel(poor, 'chuDien').includes(L.b.tangBaoCac.name), 'chi phí vượt sức chứa: phải chỉ đường tới Tàng Bảo Các')
+    assert.ok(!panel(trib10, 'chuDien').includes(L.panel.store('', 0).slice(0, 12)), 'đủ tiền thì không nhắc kho')
     assert.ok(panel(mid, 'dienVoTruong').includes(L.train.pick), 'Diễn võ trường mở sẵn thẻ tuyển')
     assert.ok(panel(mid, 'dienVoTruong', 'upgrade').includes(L.panel.upgrade))
   }
