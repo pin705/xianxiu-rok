@@ -60,6 +60,7 @@ const vi = {
     cost: 'Chi phí',
     have: (n: string) => `có ${n}`,
     build: 'Xây dựng',
+    notBuilt: 'Chưa xây',
     upgrade: 'Nâng cấp',
     upgrading: (n: number) => (n === 1 ? 'Đang xây' : `Đang nâng lên tầng ${n}`),
     busy: 'Tạp dịch đang bận việc khác',

@@ -13,6 +13,7 @@
     selected = null,
     guide = null,
     bursts = [],
+    still = false,
     onselect,
   }: {
     game: State
@@ -20,6 +21,7 @@
     selected?: BuildingId | null
     guide?: BuildingId | null
     bursts?: Burst[]
+    still?: boolean // chỉ làm nền (màn tiêu đề): ẩn nhãn, bong bóng
     onselect?: (id: BuildingId) => void
   } = $props()
 
@@ -71,15 +73,6 @@
     [142, 566, 214, 70],
     [120, 668, 240, 76],
   ]
-  // Bậc đá nối các tầng, chìm dần vào sương
-  const STEPS = [
-    'M198 266 L206 304',
-    'M104 366 L116 400',
-    'M300 372 L290 406',
-    'M150 468 L144 504',
-    'M236 468 L244 506',
-    'M152 570 L160 606',
-  ]
 </script>
 
 {#snippet Pine(x: number, y: number, s: number)}
@@ -107,7 +100,7 @@
   </g>
 {/snippet}
 
-<svg class="scene {phase}" viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" aria-label={game.name}>
+<svg class="scene {phase}" class:still viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" aria-label={game.name}>
   <defs>
     <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" style="stop-color: var(--sky1)" />
@@ -164,6 +157,8 @@
     <circle cx="92" cy="123" r="2.2" fill="#dcd8c8" />
   </g>
 
+  <!-- Cả núi dời xuống 50 để Chủ điện không nằm dưới HUD -->
+  <g transform="translate(0 50)">
   <!-- Núi xa -->
   <path
     d="M0 330C30 300 55 262 80 270C105 278 118 236 146 226C176 216 190 262 214 256C238 250 256 206 284 200C312 194 330 240 352 236C374 232 390 214 400 216V560H0Z"
@@ -217,10 +212,6 @@
   <!-- Suối dưới chân núi -->
   <path d="M400 700C360 712 330 730 300 752C272 772 250 800 236 860H264C276 806 300 780 326 762C352 744 380 728 400 722Z" fill="url(#waterG)" />
   <path class="ripple" d="M392 712C360 724 330 744 306 764C284 782 266 810 252 852" stroke="#fff" stroke-opacity=".6" stroke-width="1.2" fill="none" stroke-dasharray="4 10" />
-  {#each STEPS as d}
-    <path {d} stroke="var(--stone-l)" stroke-width="7" stroke-linecap="round" fill="none" />
-    <path {d} stroke="var(--stone-d)" stroke-width="7" stroke-dasharray="1 2.6" fill="none" opacity=".55" />
-  {/each}
   {@render Pine(262, 252, 1)}
   {@render Pine(30, 356, 0.9)}
   {@render Pine(366, 458, 0.8)}
@@ -308,7 +299,7 @@
         {/if}
 
         {#if full}
-          <g class="fullTag" transform="translate(0 {-h - 12})">
+          <g class="fullTag" transform="translate(0 {-Math.min(h, 58) - 10})">
             <rect x="-17" y="-8" width="34" height="16" rx="8" />
             <text y="3.6" text-anchor="middle">{L.full}</text>
           </g>
@@ -356,6 +347,7 @@
       {/each}
     </g>
   {/each}
+  </g>
 
   <!-- Tiền cảnh + linh khí -->
   <path d="M0 780C24 770 46 776 64 792C80 806 88 830 92 860H0Z" fill="var(--fore)" />
@@ -722,6 +714,18 @@
     50% {
       transform: translateY(-7px);
     }
+  }
+
+  .still .plate,
+  .still .buildBubble,
+  .still .lockTag,
+  .still .fullTag,
+  .still .pulse,
+  .still .timer {
+    display: none;
+  }
+  .still .bld {
+    pointer-events: none;
   }
 
   /* Pháo hoa khi lên tầng */

@@ -395,7 +395,7 @@
   .builder {
     position: absolute;
     right: 14px;
-    bottom: calc(96px + env(safe-area-inset-bottom));
+    bottom: calc(110px + env(safe-area-inset-bottom));
     display: grid;
     place-items: center;
     width: 62px;
