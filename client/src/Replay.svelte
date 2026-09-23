@@ -80,7 +80,7 @@
     if (r < f.rounds.length) {
       r++
       battle?.round(fi, r, pace)
-      sfx('hit')
+      sfx(f.rounds[r - 1].cast.some(Boolean) ? 'whoosh' : 'hit')
     } else if (fi < report.fights.length - 1) {
       fi++
       r = 0
@@ -92,7 +92,7 @@
   function finish() {
     done = true
     sfx(report?.win ? 'win' : 'lose')
-    setTimeout(() => battle?.slam(), 240)
+    setTimeout(() => (battle?.slam(), sfx('stamp')), 240)
   }
   $effect(() => {
     if (!report || done) return

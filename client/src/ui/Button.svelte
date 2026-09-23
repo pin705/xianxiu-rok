@@ -117,6 +117,27 @@
   .face > :global(*) {
     position: relative;
   }
+  /* nút vàng: thỉnh thoảng một vệt sáng lướt qua mặt kim */
+  .gold .face::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.5) 48%, transparent 58%) 130% 0 / 260% 100% no-repeat;
+    animation: sheen 4.5s var(--ease) 1.2s infinite;
+    pointer-events: none;
+  }
+  .gold:disabled .face::after {
+    display: none;
+  }
+  @keyframes sheen {
+    0%,
+    72% {
+      background-position: 130% 0;
+    }
+    100% {
+      background-position: -30% 0;
+    }
+  }
   .label {
     text-shadow: var(--label-shadow, 0 1px 1px rgb(0 0 0 / 0.35));
   }

@@ -4,7 +4,7 @@
   import { DAILY_HALL, RESOURCES, count, dailyReady, power, questDone, questOf, questProgress, storage, type Bag as Res, type State } from '@rok/rules'
   import { Icon, Portrait, type Look } from '@rok/art'
   import { Badge, Bag, IconButton, Meter, Seal, Tag } from './ui'
-  import { L, TABS, clock, num, progress, visitTab, visitedTabs, type Tab } from './lib'
+  import { L, TABS, clock, num, progress, sfx, visitTab, visitedTabs, type Tab } from './lib'
 
   let {
     game,
@@ -44,9 +44,20 @@
   const hall = $derived(game.levels.chuDien)
   const cap = $derived(storage(game))
   const job = $derived(game.queue[0])
-  const quest = $derived(questOf(game))
-  const done = $derived(questDone(game))
-  const prog = $derived(quest && quest.k !== 'build' && quest.k !== 'hunt' && quest.k !== 'sect' ? questProgress(game, quest) : null)
+  const live = $derived(questOf(game))
+  const liveProg = $derived(live && live.k !== 'build' && live.k !== 'hunt' && live.k !== 'sect' ? questProgress(game, live) : null)
+  // Nhận thưởng: giữ nhiệm vụ vừa xong thêm một nhịp để dấu 成 đóng lên, rồi nhiệm vụ mới trượt vào
+  let held = $state<{ quest: typeof live; prog: typeof liveProg } | null>(null)
+  const quest = $derived(held ? held.quest : live)
+  const prog = $derived(held ? held.prog : liveProg)
+  const done = $derived(!!held || questDone(game))
+  function claim(e: MouseEvent) {
+    if (held) return
+    held = { quest: live, prog: liveProg }
+    onclaim(e)
+    sfx('stamp')
+    setTimeout(() => (held = null), 750)
+  }
   const ring = $derived(job ? progress(job, now) : 0)
   // Huy hiệu trên thanh tab: số chiến báo chưa đọc; chấm đỏ khi có thương binh chờ chữa
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
@@ -89,13 +100,15 @@
   {#if tab === 'tongMon' && !storm}
     <div class="side">
       {#if quest}
-        <button class="quest paper" class:done onclick={done ? onclaim : onquest}>
+        <button class="quest paper" class:done class:enter={!held} onclick={done ? claim : onquest}>
           <span class="stack grow" style:--gap="3px">
             <small class="row">{L.quest.title}{#if prog}<b class="t-num">{num(Math.min(prog[0], prog[1]))}/{num(prog[1])}</b>{/if}</small>
             <b class="qt">{L.quest.text(quest)}</b>
             <Bag res={quest.reward} items={quest.items} size="sm" />
           </span>
-          {#if done}
+          {#if held}
+            <span class="stamp"><Seal glyph="成" size={46} tilt /></span>
+          {:else if done}
             <span class="claim"><Tag tone="gold" icon="star">{L.quest.claim}</Tag></span>
           {:else}
             <span class="go"><Icon name="arrow" size={16} /></span>
@@ -294,6 +307,22 @@
   .claim {
     pointer-events: none;
     animation: glow 1.4s var(--ease) infinite;
+  }
+  .stamp {
+    display: grid;
+    padding-inline: var(--sp-3);
+    animation: stamp 0.4s cubic-bezier(0.5, 0, 0.75, 0) both;
+  }
+  @keyframes stamp {
+    0% { opacity: 0; scale: 2.6; rotate: -16deg; }
+    60% { opacity: 1; scale: 0.92; rotate: 0deg; }
+    100% { opacity: 1; scale: 1; }
+  }
+  .enter {
+    animation: enter var(--dur-3) var(--spring);
+  }
+  @keyframes enter {
+    from { opacity: 0; translate: -14px 0; }
   }
   .go {
     display: grid;

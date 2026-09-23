@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-  // Thông báo ngắn: thẻ sơn mài viền vàng trượt xuống; có nút phụ (vd. "Xem lại" chiến báo).
+  // Thông báo ngắn: thẻ sơn mài viền vàng quét ra như một nét bút; có nút phụ (vd. "Xem lại" chiến báo).
   import { Icon } from '@rok/art'
 
   let { list, top }: { list: ToastItem[]; top: string } = $props()
@@ -45,7 +45,11 @@
     pointer-events: auto;
     box-shadow: inset 0 0 0 1.5px var(--gold), inset 0 0 0 3px rgb(0 0 0 / 0.4), var(--shadow-2);
     clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
-    animation: drop var(--dur-3) var(--spring);
+    -webkit-mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
+    mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
+    animation:
+      drop var(--dur-3) var(--spring),
+      wipe 0.45s var(--ease) forwards;
   }
   .bad {
     box-shadow: inset 0 0 0 1.5px var(--cinnabar-l), inset 0 0 0 3px rgb(0 0 0 / 0.4), var(--shadow-2);
@@ -56,6 +60,12 @@
     font-style: normal;
     color: var(--ink);
     background: var(--gold-l);
+  }
+  @keyframes wipe {
+    to {
+      -webkit-mask-position: 0 0;
+      mask-position: 0 0;
+    }
   }
   @keyframes drop {
     from {

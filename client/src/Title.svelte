@@ -46,7 +46,7 @@
   {#if step === 'title'}
     <button class="cover" onclick={tapTitle} aria-label={L.tapToStart}>
       <span class="logo">
-        <span class="han">{L.gameHan}</span>
+        <span class="han">{#each [...L.gameHan] as ch, i (i)}<span class="ch" style:--i={i}>{ch}</span>{/each}</span>
         <span class="stampin"><Seal glyph="宗" size={46} tilt /></span>
       </span>
       <span class="name">{L.game}</span>
@@ -130,8 +130,22 @@
     writing-mode: vertical-rl;
     text-shadow: 0 0 22px rgb(247 242 230 / 0.95);
   }
+  .ch {
+    -webkit-mask: linear-gradient(#000 45%, transparent 55%) 0 100% / 100% 260% no-repeat;
+    mask: linear-gradient(#000 45%, transparent 55%) 0 100% / 100% 260% no-repeat;
+    animation: write 0.7s var(--ease) calc(0.3s + var(--i) * 0.32s) both;
+  }
+  @keyframes write {
+    from {
+      filter: blur(3px);
+    }
+    to {
+      -webkit-mask-position: 0 0;
+      mask-position: 0 0;
+    }
+  }
   .stampin {
-    animation: slam 0.5s 1.1s var(--spring) both;
+    animation: slam 0.5s 1.4s var(--spring) both;
   }
   .name {
     font-size: var(--fs-6);

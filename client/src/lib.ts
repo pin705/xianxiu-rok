@@ -166,11 +166,12 @@ export function setMuted(m: boolean) {
   write('rok.mute', m ? '1' : '0')
 }
 
-export type Sfx = 'tap' | 'build' | 'done' | 'reward' | 'march' | 'hit' | 'win' | 'lose' | 'thunder' | 'err'
+export type Sfx = 'tap' | 'build' | 'done' | 'reward' | 'march' | 'hit' | 'win' | 'lose' | 'thunder' | 'err' | 'stamp' | 'whoosh'
 export function sfx(kind: Sfx) {
   const buzz = (p: number | number[]) => navigator.userActivation?.hasBeenActive && navigator.vibrate?.(p)
   if (kind === 'done' || kind === 'reward' || kind === 'win') buzz(18)
   if (kind === 'thunder') buzz([40, 30, 80])
+  if (kind === 'stamp') buzz(24)
   if (muted) return
   try {
     const ac = audio()
@@ -186,8 +187,8 @@ export function sfx(kind: Sfx) {
       o.start(at)
       o.stop(at + dur)
     }
-    // Tiếng ồn trắng qua bộ lọc: sấm, tiếng va chạm
-    const noise = (at: number, dur: number, freq: number, vol: number) => {
+    // Tiếng ồn trắng qua bộ lọc: sấm, tiếng va chạm. to: lọc quét tới tần số này (tiếng gió vút)
+    const noise = (at: number, dur: number, freq: number, vol: number, to?: number) => {
       const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate)
       const d = buf.getChannelData(0)
       for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) ** 2
@@ -195,8 +196,9 @@ export function sfx(kind: Sfx) {
       const f = ac.createBiquadFilter()
       const g = ac.createGain()
       src.buffer = buf
-      f.type = 'lowpass'
-      f.frequency.value = freq
+      f.type = to ? 'bandpass' : 'lowpass'
+      f.frequency.setValueAtTime(freq, at)
+      if (to) f.frequency.exponentialRampToValueAtTime(to, at + dur)
       g.gain.value = vol
       src.connect(f).connect(g).connect(ac.destination)
       src.start(at)
@@ -214,5 +216,10 @@ export function sfx(kind: Sfx) {
     if (kind === 'win') [392, 523, 659, 784, 1047].forEach((f, i) => note(f, t + i * 0.1, 0.6, 'triangle', 0.06))
     if (kind === 'lose') [392, 330, 262].forEach((f, i) => note(f, t + i * 0.22, 0.5, 'sine', 0.07))
     if (kind === 'thunder') noise(t, 1.4, 420, 0.5)
+    if (kind === 'stamp') {
+      noise(t, 0.16, 380, 0.5) // ấn gỗ dập xuống giấy: tiếng thịch trầm
+      note(92, t, 0.14, 'sine', 0.22)
+    }
+    if (kind === 'whoosh') noise(t, 0.38, 500, 0.35, 3200)
   } catch {}
 }
