@@ -12,5 +12,5 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["rules", "server", "client/render.test.ts"]
+  "include": ["rules", "server", "client/render.test.ts", "client/e2e.ts"]
 }

@@ -72,7 +72,7 @@ HUD
 | 15 | Luân hồi |
 | (P3) | Tiên minh |
 
-Diễn võ trường tầng 5 mở đệ tử Nội môn, tầng 10 mở Chân truyền. Mỗi lần Chủ điện lên tầng, thông báo "Mở khóa: …" liệt kê những gì vừa mở.
+Diễn võ trường tầng 5 mở đệ tử Nội môn, tầng 10 mở Chân truyền. Bảng tuyển mặc định chọn hệ tuyển được nhiều nhất với tài nguyên đang có: mỗi hệ ăn chủ yếu một loại (Kiếm tu → Linh khoáng), người mới cứ bấm hệ mặc định từng cạn khoáng còn hai loại kia đầy kho. Mỗi lần Chủ điện lên tầng, thông báo "Mở khóa: …" liệt kê những gì vừa mở.
 
 ## 5. Luồng chính
 
@@ -109,7 +109,7 @@ Hình công trình trên nền trời · tên · tầng · lời dẫn → sản
 
 ### 5.5 Bản đồ và xuất quân (đã làm)
 
-Chạm yêu thú → Bảng mục tiêu (quân địch theo hệ, "Nên dùng Thể tu (khắc Kiếm tu)", chiến lợi phẩm) → chọn trưởng lão + kéo số đệ tử, xem lực chiến Ta/Địch và **tỉ lệ thắng ước lượng** (Áp đảo ≥ 80% / Ngang ngửa / Yếu thế < 35%: đánh thử 9 lần với mầm khác mầm thật, tính đủ hệ khắc và công pháp — lực chiến thô từng hiện "áp đảo" cho đội bị khắc hệ mà thua 1/4 số trận) → **Xuất quân** → lá cờ chạy trên đường nét đứt, danh sách đội ở dưới → tới nơi thì có thông báo "Thắng · Hắc Lang [Xem lại]" → đội về mang chiến lợi phẩm, thương binh vào Đan phòng.
+Chạm yêu thú → Bảng mục tiêu (quân địch theo hệ, "Nên dùng Thể tu (khắc Kiếm tu)", chiến lợi phẩm) → chọn trưởng lão + kéo số đệ tử, xem lực chiến Ta/Địch và **tỉ lệ thắng ước lượng** (Áp đảo ≥ 80% / Ngang ngửa / Yếu thế < 35%: đánh thử 9 lần với mầm khác mầm thật, tính đủ hệ khắc và công pháp — lực chiến thô từng hiện "áp đảo" cho đội bị khắc hệ mà thua 1/4 số trận); Yếu thế mà vẫn còn quân thì có nút **Tuyển đệ tử** ngay dưới → **Xuất quân** → lá cờ chạy trên đường nét đứt, danh sách đội ở dưới → tới nơi thì có thông báo "Thắng · Hắc Lang [Xem lại]" → đội về mang chiến lợi phẩm, thương binh vào Đan phòng.
 
 - Yêu thú cấp tiếp theo có vòng sáng nhấp nháy; hạ rồi thì hang hiện đồng hồ "có lại sau".
 - Bí cảnh đánh ngay tại chỗ (không hành quân), mở màn Phát lại luôn.

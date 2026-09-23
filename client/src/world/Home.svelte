@@ -17,7 +17,7 @@
     selected = null,
     guide = null,
     bursts = [],
-    storm = false,
+    storm = 0,
     still = false,
     hidden = false,
     onselect,
@@ -28,7 +28,7 @@
     selected?: BuildingId | null
     guide?: BuildingId | null
     bursts?: Burst[]
-    storm?: boolean
+    storm?: number // độ kiếp: số đợt sét
     still?: boolean // chỉ làm nền (màn tiêu đề)
     hidden?: boolean // đang ở tab khác: dừng vẽ, giữ vị trí cuộn
     onselect?: (id: BuildingId) => void

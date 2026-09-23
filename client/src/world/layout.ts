@@ -40,6 +40,28 @@ export const PINES: [number, number, number, number][] = [
   [268, 306, 1, 2],
   [24, 410, 0.9, 5],
   [368, 516, 0.8, 8],
-  [240, 612, 0.9, 11],
   [14, 716, 1, 14],
+]
+
+// Bậc đá nối các tầng (từ chân lên đỉnh), vẽ ngay sau tầng núi mà nó leo lên: [đường đi, bề ngang, sau tầng số]
+export const STAIRS: [[number, number][], number, number][] = [
+  [[[200, 404], [199, 372], [201, 342], [200, 318]], 18, 0], // chính đạo lên Chủ điện
+  [[[126, 506], [134, 470], [127, 440], [129, 416]], 13, 1],
+  [[[276, 508], [270, 474], [279, 446], [279, 422]], 13, 2],
+  [[[150, 606], [158, 574], [149, 544], [150, 518]], 14, 3],
+  [[[216, 708], [207, 676], [214, 646], [211, 620]], 14, 4],
+]
+
+// Cây cảnh, đèn đá — xếp cùng lớp công trình theo y (gần thì vẽ sau): [loại, x, y chân, cỡ, seed]
+export const DECOR: ['blossom' | 'lantern' | 'bamboo', number, number, number, number][] = [
+  ['blossom', 126, 309, 0.95, 3],
+  ['lantern', 184, 317, 0.9, 1],
+  ['lantern', 216, 317, 0.9, 2],
+  ['blossom', 158, 410, 0.8, 7],
+  ['bamboo', 376, 417, 0.8, 4],
+  ['blossom', 22, 512, 1, 11],
+  ['lantern', 136, 516, 0.8, 3],
+  ['lantern', 165, 516, 0.8, 4],
+  ['blossom', 232, 612, 0.9, 13],
+  ['bamboo', 244, 717, 0.85, 8],
 ]

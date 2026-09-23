@@ -2,11 +2,12 @@
 // (sương trôi, thác chảy, hạc bay, khói, lửa, linh khí, đèn đêm) do GPU diễn mỗi khung hình.
 import { Container, Graphics, Sprite, TilingSprite, type Texture } from 'pixi.js'
 import {
-  PIGMENT as C, beamTex, boltTex, building, cloud, crane, disciple, fallTex, farRange, flag, glowTex, ledge, mistTex, mix, paper,
-  peak, pine, plot, puffTex, ringTex, rock, scaffold, sparkTex, tierOf, type Fx, type Kind,
+  PIGMENT as C, bamboo, beamTex, blossom, building, cloud, crane, disciple, fallTex, farRange, flag, glowTex, ledge, mistTex, mix, paper,
+  peak, pine, plot, puffTex, rainTex, rayTex, ringTex, rng, rock, scaffold, sparkTex, stairway, stoneLantern, tierOf, vortexTex,
+  type Fx, type Kind, type Pt,
 } from '@rok/art'
 import { BUILDINGS, IDS, type BuildingId, type State } from '@rok/rules'
-import { HOME, LEDGES, MISTS, PINES, SLOT } from './layout'
+import { DECOR, HOME, LEDGES, MISTS, PINES, SLOT, STAIRS } from './layout'
 import { painted, texOf, type Painted } from './stage'
 
 export type Phase = 'dawn' | 'day' | 'dusk' | 'night'
@@ -14,7 +15,7 @@ export type HomeView = {
   game: State
   seal: Record<BuildingId, string>
   selected: BuildingId | null
-  storm: boolean
+  storm: number // độ kiếp: số đợt sét sẽ đánh (0 = trời yên)
   phase: Phase
 }
 
@@ -34,6 +35,38 @@ const soft = (tex: Texture, color: string, size: number, alpha = 1) => {
   s.alpha = alpha
   s.blendMode = 'add'
   return s
+}
+// Trộn hai màu 0xRRGGBB
+const lerpC = (a: number, b: number, k: number) => {
+  const ch = (s: number) => Math.round(((a >> s) & 255) + (((b >> s) & 255) - ((a >> s) & 255)) * k)
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0)
+}
+
+// Tia sét phân nhánh: chia đôi đoạn thẳng nhiều lần, lệch ngẫu nhiên; vẽ ba lớp (quầng tím, thân sáng, lõi trắng)
+function lightning(g: Graphics, a: Pt, b: Pt, seed: number, size = 1) {
+  const r = rng(seed)
+  const jag = (p0: Pt, p1: Pt, rough: number, depth: number) => {
+    let pts: Pt[] = [p0, p1]
+    let off = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) * rough
+    for (let d = 0; d < depth; d++, off /= 2)
+      pts = pts.flatMap((p, i): Pt[] => {
+        if (!i) return [p]
+        const q = pts[i - 1], nx = q[1] - p[1], ny = p[0] - q[0], l = Math.hypot(nx, ny) || 1, k = (r() - 0.5) * off
+        return [[(p[0] + q[0]) / 2 + (nx / l) * k, (p[1] + q[1]) / 2 + (ny / l) * k], p]
+      })
+    return pts
+  }
+  const main = jag(a, b, 0.28, 6)
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]), dir = Math.atan2(b[1] - a[1], b[0] - a[0])
+  const paths: [Pt[], number][] = [[main, 1]]
+  for (let i = 0; i < 4; i++) {
+    const k = 0.12 + r() * 0.6, from = main[Math.floor(k * (main.length - 1))]
+    const l = len * (0.18 + r() * 0.25) * (1 - k * 0.5), an = dir + (r() < 0.5 ? -1 : 1) * (0.45 + r() * 0.6)
+    paths.push([jag(from, [from[0] + Math.cos(an) * l, from[1] + Math.sin(an) * l], 0.35, 4), 0.45])
+  }
+  g.clear()
+  for (const [w, color, alpha] of [[10, 0x8d6bff, 0.2], [3.6, 0xcbb8ff, 0.7], [1.4, 0xffffff, 1]] as const)
+    for (const [pts, s] of paths) g.poly(pts.flat(), false).stroke({ width: w * s * size, color, alpha, cap: 'round', join: 'round' })
 }
 
 // Bầu trời là giấy; trên đó quệt một lớp màu theo giờ
@@ -72,6 +105,8 @@ function skyTex(p: Phase | 'storm') {
 }
 
 type Anim = (t: number, dt: number) => void
+// Hiệu ứng thoáng qua (pháo hoa, sét…): tự huỷ sau dur giây
+type Play = { t0: number; dur: number; c: Container; step: (e: number) => void }
 
 type Slot = {
   root: Container
@@ -91,18 +126,27 @@ export class Home {
   private glow = new Container() // đèn + linh khí (cộng sáng, không nhuộm màu theo giờ)
   private far: Container[] = []
   private sky = new Sprite()
+  private stormSky = new Sprite()
   private sun: Sprite
   private moon: Sprite
   private stars = new Container()
   private slots = new Map<BuildingId, Slot>()
   private bLayer = new Container()
   private ring: Sprite
+  private scene = new Container() // mọi thứ rung khi sét đánh
   private stormFx = new Container()
+  private rain: TilingSprite[] = []
   private flash = new Graphics()
-  private bursts: { c: Container; t0: number; parts: { s: Sprite; vx: number; vy: number }[] }[] = []
+  private flashA = 0
+  private shakeA = 0
+  private plays: Play[] = []
+  private lamps: Sprite[] = []
   private anims: Anim[] = []
-  private t = 0
+  private t = 0 // đồng hồ cảnh (đứng yên khi giảm chuyển động)
+  private rt = 0 // đồng hồ thật, cho hiệu ứng thoáng qua
   private mood = MOOD.day
+  private stormK = 0 // 0 trời yên … 1 kiếp vân phủ kín
+  private storm = { n: 0, at: 0, struck: 0, eye: [0, 0] as Pt, flare: 0 }
   private lightsLevel = 0
   private view?: HomeView
   private still: boolean
@@ -121,14 +165,20 @@ export class Home {
     this.sky.position.set(-1300, -400)
     this.sky.width = 3000
     this.sky.height = HOME.h + 800
-    this.root.addChild(this.world, this.sky)
+    this.stormSky.texture = skyTex('storm')
+    this.stormSky.position.set(-1300, -400)
+    this.stormSky.width = 3000
+    this.stormSky.height = HOME.h + 800
+    this.stormSky.alpha = 0
+    this.root.addChild(this.world, this.sky, this.stormSky)
     this.sun = soft(glowT, '#f7cf9a', 64)
     this.sun.position.set(318, 150)
     this.moon = soft(glowT, '#f2efe2', 60)
     this.moon.position.set(86, 140)
     this.root.addChild(this.sun, this.moon, this.stars)
     this.land = new Container()
-    this.root.addChild(this.land)
+    this.scene.addChild(this.land)
+    this.root.addChild(this.scene)
     for (let i = 0; i < 36; i++) {
       const s = soft(sparkT, '#ffffff', 3 + (i % 3) * 2, 0.8)
       s.position.set(((i * 97) % 440) - 20, 20 + ((i * 53) % 300))
@@ -178,6 +228,7 @@ export class Home {
       const [x, y, w, h, seed] = LEDGES[i]
       this.land.addChild(sprite(painted(`ledge:${i}`, () => ledge(w, h, seed)), x, y))
       for (const [px, py, s, ps] of PINES) if (Math.abs(py - y) < 8) this.land.addChild(sprite(painted(`pine:${ps}`, () => pine(s, ps)), px, py))
+      for (const [path, sw, after] of STAIRS) if (after === i) this.land.addChild(sprite(painted(`stair:${path[0]}`, () => stairway(path, sw, i + 1))))
     }
     byLedge(0)
     this.mist(...MISTS[0])
@@ -226,7 +277,22 @@ export class Home {
       this.glow.addChild(glow)
       this.slots.set(id, { root, key: '', fx, glow, anims: [], lights: [], top: 0 })
     }
-    this.land.addChild(this.stormFx)
+    for (const [kind, x, y, s, seed] of DECOR) {
+      const p =
+        kind === 'blossom' ? painted(`blossom:${s}:${seed}`, () => blossom(s, seed))
+        : kind === 'bamboo' ? painted(`bamboo:${s}:${seed}`, () => bamboo(s, seed))
+        : painted(`lantern:${s}`, () => stoneLantern(s))
+      const d = sprite(p, x, y)
+      d.zIndex = y - 0.5
+      this.bLayer.addChild(d)
+      if (kind === 'lantern') {
+        const [lx, ly] = p.meta as [number, number]
+        const l = soft(glowT, '#ffc86b', 26 * s, 0)
+        l.position.set(x + lx, y + ly)
+        this.glow.addChild(l)
+        this.lamps.push(l)
+      }
+    }
 
     // Tiền cảnh: đá mực và tùng lớn sát mép dưới
     this.land.addChild(sprite(painted('rock:l', () => rock(110, 70, 41)), 36, 880))
@@ -234,8 +300,20 @@ export class Home {
     this.land.addChild(sprite(painted('pine:fg1', () => pine(1.9, 45)), 40, 850))
     this.land.addChild(sprite(painted('pine:fg2', () => pine(1.5, 47)), 368, 872))
 
+    // Kiếp vân, mưa (không nhuộm theo giờ), rồi lớp cộng sáng
+    const rainT = texOf('rain', () => rainTex(128))
+    this.rain = [0.9, 0.55].map(sc => {
+      const r = new TilingSprite({ texture: rainT, width: 1400, height: HOME.h + 800 })
+      r.position.set(-500, -400)
+      r.tileScale.set(sc)
+      r.visible = false
+      return r
+    })
+    this.scene.addChild(this.stormFx, ...this.rain)
+    this.stormFx.visible = false
+
     // Linh khí bay lên
-    this.root.addChild(this.glow)
+    this.scene.addChild(this.glow)
     for (let i = 0; i < 18; i++) {
       const m = soft(sparkT, C.spirit, 5, 0)
       const x0 = 40 + ((i * 71) % 320), y0 = 480 + ((i * 37) % 320), dur = 7 + (i % 5), off = (i * 1.7) % dur
@@ -264,13 +342,13 @@ export class Home {
   // Cập nhật theo state game: hình công trình theo tầng, đang xây, chưa mở, đang chọn, trời theo giờ
   set(v: HomeView) {
     this.view = v
-    const moodKey = v.storm ? 'storm' : v.phase
-    this.mood = MOOD[moodKey]
-    this.sky.texture = skyTex(moodKey)
-    this.world.tint = this.land.tint = this.mood.tint
-    this.sun.alpha = this.mood.sun
-    this.moon.alpha = this.mood.moon
-    this.stars.alpha = this.mood.stars
+    this.mood = MOOD[v.phase]
+    this.sky.texture = skyTex(v.phase)
+    if (v.storm && !this.storm.n) {
+      if (!this.stormFx.children.length) this.buildStorm()
+      Object.assign(this.storm, { at: this.rt, struck: 0 })
+    }
+    this.storm.n = v.storm
     const g = v.game
     for (const id of IDS) this.place(id, g)
     const sel = v.selected && this.slots.get(v.selected)
@@ -281,8 +359,6 @@ export class Home {
       this.ring.width = w + 12
       this.ring.height = 18
     }
-    this.stormFx.visible = v.storm
-    if (v.storm && !this.stormFx.children.length) this.buildStorm()
   }
 
   private place(id: BuildingId, g: State) {
@@ -404,94 +480,200 @@ export class Home {
     }
   }
 
-  // Kiếp vân tụ trên Chủ điện, sét đánh ba lần
+  // Kiếp vân: xoáy mây hai lớp ép dẹt (nhìn từ dưới lên), lớp trong quay nhanh hơn nên mây như bị hút vào mắt bão;
+  // chớp loé trong mây; sét đánh theo lịch trong tick()
   private buildStorm() {
     const [x, y] = SLOT.chuDien
-    const clouds: Sprite[] = []
-    for (const [dx, dy, w, seed] of [[-50, -110, 120, 61], [44, -118, 130, 63], [0, -128, 110, 67]] as const) {
-      const c = sprite(painted(`storm:${seed}`, () => cloud(w, seed, true)), x + dx, y + dy)
-      clouds.push(c)
-      this.stormFx.addChild(c)
-    }
-    const boltT = [1, 2, 3].map(s => texOf(`bolt:${s}`, () => boltTex(64, 256, s)))
-    const bolts = boltT.map((t, i) => {
-      const b = new Sprite(t)
-      b.anchor.set(0.5, 0)
-      b.width = 44
-      b.height = 130
-      b.position.set(x - 20 + i * 20, y - 118)
-      b.blendMode = 'add'
-      b.alpha = 0
-      this.stormFx.addChild(b)
-      return b
+    const eye: Pt = [x, y - 196]
+    this.storm.eye = eye
+    const glowT = texOf('glow', () => glowTex(64))
+    const disk = new Container()
+    disk.position.set(...eye)
+    disk.scale.y = 0.4
+    const layers = ([[256, 5, 3, 1.6, 460], [192, 11, 2, 2.3, 230]] as const).map(([px, seed, arms, tw, size]) => {
+      const s = new Sprite(texOf(`vortex:${seed}`, () => vortexTex(px, seed, arms, tw)))
+      s.anchor.set(0.5)
+      s.width = s.height = size
+      disk.addChild(s)
+      return s
     })
-    const t0 = this.t
-    this.anims.push(t => {
+    const halo = soft(glowT, '#9b82ff', 150, 0.5)
+    halo.scale.y *= 0.5
+    halo.position.set(...eye)
+    const core = soft(glowT, '#f1ebff', 34, 0.9)
+    core.scale.y *= 0.6
+    core.position.set(...eye)
+    const flick = soft(glowT, '#b9a4ff', 90, 0)
+    flick.scale.y *= 0.45
+    this.stormFx.addChild(disk, halo, core, flick)
+    const r = rng(77)
+    let next = 0, fl = 0
+    this.anims.push((t, dt) => {
       if (!this.stormFx.visible) return
-      clouds.forEach((c, i) => (c.x = x + [-50, 44, 0][i] + Math.sin(t * 1.4 + i) * 6))
-      const e = t - t0
-      let fl = 0
-      bolts.forEach((b, i) => {
-        const k = e - 0.7 - i * 1.2
-        const on = k > 0 && k < 0.25 ? (k < 0.06 || (k > 0.12 && k < 0.2) ? 1 : 0.3) : 0
-        b.alpha = on
-        fl = Math.max(fl, on)
-      })
-      this.flash.alpha = fl * 0.35
+      layers[0].rotation += dt * 0.32
+      layers[1].rotation += dt * 0.75
+      const f = this.storm.flare
+      halo.alpha = 0.45 + 0.12 * Math.sin(t * 2.4) + f * 0.5
+      core.alpha = 0.75 + 0.2 * Math.sin(t * 5.3) + f
+      // chớp trong mây: loé ngắn ở chỗ ngẫu nhiên giữa các đợt sét
+      if (t > next) {
+        flick.position.set(eye[0] + (r() - 0.5) * 300, eye[1] + (r() - 0.5) * 80)
+        fl = 0.5 + r() * 0.5
+        next = t + 0.25 + r() * 0.9
+      }
+      flick.alpha = fl
+      fl *= Math.exp(-dt * 14)
     })
   }
 
-  // Pháo hoa khi lên tầng: vòng sóng + tia vàng
+  // Một đợt sét từ mắt bão xuống mái Chủ điện: chớp — tắt — chớp lại theo nhánh khác, loé trắng, rung cảnh
+  private strike(big: boolean) {
+    const [x, y] = SLOT.chuDien
+    const hit: Pt = [x + (Math.random() - 0.5) * 30, y - this.topOf('chuDien') * 0.8]
+    const glowT = texOf('glow', () => glowTex(64))
+    const sparkT = texOf('spark', () => sparkTex(24))
+    const c = new Container()
+    const g = new Graphics()
+    g.blendMode = 'add'
+    const seed = Math.floor(Math.random() * 1e6)
+    lightning(g, this.storm.eye, hit, seed, big ? 1.5 : 1)
+    const bloom = soft(glowT, '#e6dcff', big ? 150 : 100, 0)
+    bloom.position.set(...hit)
+    const parts = Array.from({ length: big ? 22 : 12 }, (_, i) => {
+      const s = soft(sparkT, i % 3 ? '#cbb8ff' : '#ffffff', 5 + (i % 4) * 2, 0)
+      const a = -Math.PI * (0.1 + Math.random() * 0.8), v = 60 + Math.random() * (big ? 120 : 70)
+      c.addChild(s)
+      return { s, vx: Math.cos(a) * v, vy: Math.sin(a) * v }
+    })
+    c.addChild(g, bloom)
+    let re = false
+    this.play(
+      c,
+      0.9,
+      e => {
+        if (!re && e > 0.12) (re = true), lightning(g, this.storm.eye, hit, seed + 1, big ? 1.5 : 1)
+        g.alpha = e < 0.07 ? 1 : e < 0.12 ? 0.12 : e < 0.26 ? 0.95 : Math.max(0, 1 - (e - 0.26) / 0.25)
+        bloom.alpha = Math.max(0, 1 - e / 0.5)
+        bloom.scale.set(((big ? 150 : 100) / 64) * (0.6 + e))
+        for (const p of parts) {
+          p.s.position.set(hit[0] + p.vx * e, hit[1] + p.vy * e + 160 * e * e)
+          p.s.alpha = Math.max(0, 1 - e / 0.8)
+        }
+      },
+      this.stormFx,
+    )
+    this.flashAt(big ? 0.6 : 0.38, 0xf3edff)
+    this.shakeA = big ? 9 : 5
+    this.storm.flare = 1
+  }
+
+  // Lên tầng: cột sáng vàng, sóng vòng, tia vàng rơi theo trọng lực, loé sáng.
+  // Chủ điện (đột phá cảnh giới sau độ kiếp) thì lớn gấp bội, thêm hào quang toả tia.
   burst(id: BuildingId) {
     const slot = this.slots.get(id)
     if (!slot) return
-    const [x, y] = SLOT[id]
-    const c = new Container()
-    c.position.set(x, y - slot.top / 2)
-    const ring = new Sprite(texOf('ring', () => ringTex(160, 48, 2.5)))
-    ring.anchor.set(0.5)
-    ring.tint = hex(C.goldL)
-    ring.blendMode = 'add'
-    c.addChild(ring)
+    const big = id === 'chuDien'
+    const [x, y, w] = SLOT[id]
+    const mid = -slot.top * 0.5
+    const glowT = texOf('glow', () => glowTex(64))
     const sparkT = texOf('spark', () => sparkTex(24))
-    const parts = Array.from({ length: 16 }, (_, i) => {
-      const s = soft(sparkT, C.goldL, 8, 1)
-      const a = (i / 16) * Math.PI * 2
+    const add = (s: Sprite, ax = 0.5, ay = 0.5) => (s.anchor.set(ax, ay), (s.tint = hex(C.goldL)), (s.blendMode = 'add'), s)
+    const c = new Container()
+    c.position.set(x, y)
+    const rays = big ? Array.from({ length: 12 }, () => add(new Sprite(texOf('ray', () => rayTex())), 0.5, 1)) : []
+    rays.forEach(r => r.position.set(0, mid))
+    const pillar = add(new Sprite(texOf('beam', () => beamTex())), 0.5, 1)
+    pillar.height = big ? 760 : 260
+    const halo = soft(glowT, C.goldL, w * (big ? 2.4 : 1.5), 0)
+    halo.position.set(0, mid)
+    const ring = add(new Sprite(texOf('ring', () => ringTex(160, 48, 2.5))))
+    c.addChild(...rays, pillar, halo, ring)
+    const r = rng(Math.floor(this.rt * 1000) + 1)
+    const parts = Array.from({ length: big ? 60 : 24 }, () => {
+      const s = soft(sparkT, r() < 0.3 ? '#ffffff' : C.goldL, 5 + r() * 6, 0)
+      const a = -Math.PI / 2 + (r() - 0.5) * 2.4, v = (big ? 130 : 80) * (0.45 + r())
       c.addChild(s)
-      return { s, vx: Math.cos(a) * 60, vy: Math.sin(a) * 60 - 20 }
+      return { s, x: (r() - 0.5) * w * 0.5, y: mid * (0.4 + r()), vx: Math.cos(a) * v, vy: Math.sin(a) * v }
     })
-    this.glow.addChild(c)
-    this.bursts.push({ c, t0: this.t, parts })
+    const dur = big ? 2.8 : 1.6
+    this.play(c, dur, e => {
+      const k = e / dur
+      pillar.width = (big ? 80 : 34) * Math.min(1, e / 0.12) * (1 - k * 0.75)
+      pillar.alpha = Math.min(1, e / 0.08) * (1 - k) ** 1.6
+      halo.alpha = Math.min(1, e / 0.1) * Math.max(0, 1 - e / (dur * 0.6))
+      ring.width = 24 + e * (big ? 460 : 240)
+      ring.height = ring.width * 0.3
+      ring.alpha = Math.max(0, 1 - e / (big ? 1.3 : 0.9))
+      rays.forEach((ry, i) => {
+        ry.rotation = (i / rays.length) * Math.PI * 2 + e * 0.3
+        ry.width = 34
+        ry.height = 150 + e * 70
+        ry.alpha = Math.sin(Math.min(1, k * 1.3) * Math.PI) * 0.6
+      })
+      for (const p of parts) {
+        p.s.position.set(p.x + p.vx * e, p.y + p.vy * e + 110 * e * e)
+        p.s.alpha = Math.min(1, e / 0.05) * Math.max(0, 1 - e / (dur * 0.85))
+      }
+    })
+    this.flashAt(big ? 0.65 : 0.22, 0xfff0c4)
+    if (big) this.shakeA = 6
+  }
+
+  private play(c: Container, dur: number, step: (e: number) => void, layer: Container = this.glow) {
+    layer.addChild(c)
+    this.plays.push({ t0: this.rt, dur, c, step })
+    step(0)
+  }
+  private flashAt(a: number, color: number) {
+    if (this.reduced) a *= 0.4
+    this.flash.tint = color
+    this.flashA = Math.max(this.flashA, a)
   }
 
   // Mỗi khung hình. cam: DU đang cuộn tới (để thị sai núi xa)
   tick(dt: number, cam: number) {
+    this.rt += dt
     if (!this.reduced) this.t += dt
     const t = this.t
     for (const a of this.anims) a(t, this.reduced ? 0 : dt)
     for (const s of this.slots.values()) for (const a of s.anims) a(t, dt)
     this.far.forEach((f, i) => (f.y = cam * (0.5 - i * 0.2)))
+    // trời chuyển dần sang kiếp vân và trở lại
+    const st = this.storm
+    this.stormK += ((st.n ? 1 : 0) - this.stormK) * Math.min(1, dt * 2.2)
+    const k = this.stormK, m = this.mood, sm = MOOD.storm
+    this.world.tint = this.land.tint = lerpC(m.tint, sm.tint, k)
+    this.stormSky.alpha = k
+    this.sun.alpha = m.sun * (1 - k)
+    this.moon.alpha = m.moon * (1 - k)
+    this.stars.alpha = m.stars * (1 - k)
+    this.stormFx.visible = k > 0.01
+    this.stormFx.alpha = k
+    this.rain.forEach((r, i) => {
+      r.visible = k > 0.01
+      r.alpha = k * (i ? 0.35 : 0.6)
+      r.tilePosition.x -= dt * (i ? 50 : 110)
+      r.tilePosition.y += dt * (i ? 240 : 420)
+    })
+    if (st.n) while (st.struck < st.n && this.rt - st.at >= 0.7 + st.struck * 1.2) this.strike(++st.struck === st.n)
+    st.flare *= Math.exp(-dt * 4)
     // đèn theo giờ, chập chờn nhẹ
-    this.lightsLevel += (this.mood.lights - this.lightsLevel) * Math.min(1, dt * 2)
+    this.lightsLevel += (m.lights + (sm.lights - m.lights) * k - this.lightsLevel) * Math.min(1, dt * 2)
     let i = 0
     for (const s of this.slots.values()) for (const l of s.lights) l.alpha = this.lightsLevel * (0.75 + 0.2 * Math.sin(t * 3 + i++))
-    // pháo hoa
-    this.bursts = this.bursts.filter(b => {
-      const e = t - b.t0
-      if (e > 1.4) {
-        b.c.destroy({ children: true })
-        return false
-      }
-      const ring = b.c.children[0] as Sprite
-      ring.width = 30 + e * 220
-      ring.height = ring.width * 0.32
-      ring.alpha = Math.max(0, 1 - e / 0.9)
-      for (const p of b.parts) {
-        p.s.position.set(p.vx * e, p.vy * e + 40 * e * e)
-        p.s.alpha = Math.max(0, 1 - e / 1.2)
-      }
+    for (const l of this.lamps) l.alpha = this.lightsLevel * (0.7 + 0.25 * Math.sin(t * 4.3 + l.x))
+    // hiệu ứng thoáng qua, loé sáng, rung
+    this.plays = this.plays.filter(p => {
+      const e = this.rt - p.t0
+      if (e >= p.dur) return void p.c.destroy({ children: true }), false
+      p.step(e)
       return true
     })
+    this.flash.alpha = this.flashA
+    this.flashA *= Math.exp(-dt * 5)
+    const sh = this.reduced ? 0 : this.shakeA
+    this.scene.position.set((Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh)
+    this.shakeA *= Math.exp(-dt * 7)
     if (this.ring.visible) this.ring.alpha = 0.65 + 0.35 * Math.sin(t * 4.5)
   }
 

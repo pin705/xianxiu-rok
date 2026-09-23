@@ -36,7 +36,7 @@
   let target: Target | null = $state(null)
   let replay: Report | null = $state(null)
   let outcome: Outcome | null = $state(null) // kết quả độ kiếp / luân hồi
-  let storm = $state<number | null>(null) // đang độ kiếp: tầng Chủ điện trước khi đột phá (giấu kết quả tới khi sét đánh xong)
+  let storm = $state<{ hall: number; strikes: number } | null>(null) // đang độ kiếp: tầng Chủ điện trước khi đột phá (giấu kết quả tới khi sét đánh xong), số đợt sét
   let reportsOpen = $state(false)
   let settingsOpen = $state(false)
   let dailyOpen = $state(false)
@@ -252,7 +252,7 @@
     selected = null
     tab = 'tongMon'
     requestAnimationFrame(() => world?.querySelector('[data-b="chuDien"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
-    storm = from
+    storm = from === null ? null : { hall: from, strikes: r.fights.length }
     r.fights.forEach((_, i) => setTimeout(() => sfx('thunder'), 700 + i * 1200))
     setTimeout(() => {
       storm = null
@@ -326,8 +326,8 @@
 
 <svelte:boundary failed={crashed} onerror={e => console.error(e)}>
 {#if screen === 'game' && game}
-  {@const shown = storm ? { ...game, levels: { ...game.levels, chuDien: storm } } : game}
-  <Home bind:scroller={world} game={shown} {now} {selected} {guide} {bursts} storm={!!storm} hidden={tab !== 'tongMon'} onselect={id => select(id)} />
+  {@const shown = storm ? { ...game, levels: { ...game.levels, chuDien: storm.hall } } : game}
+  <Home bind:scroller={world} game={shown} {now} {selected} {guide} {bursts} storm={storm?.strikes ?? 0} hidden={tab !== 'tongMon'} onselect={id => select(id)} />
   {#if tab === 'monHa'}
     <Disciples {game} {now} {act} onfocus={focus} />
   {:else if tab === 'banDo'}

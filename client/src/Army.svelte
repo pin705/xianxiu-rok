@@ -106,6 +106,10 @@
 <p class="center t-small t-strong mt-2" class:t-good={verdict === 'strong'} class:t-gold={verdict === 'even'} class:t-bad={verdict === 'weak'}>
   {L.army.verdict[verdict]} · {L.army.chance(Math.round(p * 100))}
 </p>
+<!-- yếu thế mà vẫn còn quân: chỉ đường đi tuyển thêm (không quân thì nút đã có ở trên) -->
+{#if verdict === 'weak' && home.length && onrecruit}
+  <div class="row center mt-2"><Button variant="ghost" size="sm" icon="people" onclick={onrecruit}>{L.army.recruit}</Button></div>
+{/if}
 
 <div class="mt-3">
   <Button wide size="lg" icon="flag" trail={time} trailIcon="clock" disabled={disabled || !lead || !count(army)} onclick={() => lead && onsubmit(lead, army)}>{cta}</Button>

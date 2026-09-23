@@ -319,3 +319,155 @@ export function battlefield(w: number, h: number, theme: Theme): Asset {
     },
   }
 }
+
+// ---------- VFX: kiếp vân, tia nắng, mưa, mực văng, nứt đất, bướm, chim, cánh hoa ----------
+
+// Kiếp vân nhìn từ trên xuống (cảnh ép dẹt theo chiều dọc để thành đĩa nghiêng): các nhánh mây đen xoắn ốc về tâm,
+// Xoáy kiếp vân nhìn từ dưới lên: nhánh mây xoắn ốc log quanh mắt bão, mép tan, lõi rỗng (cảnh ép dẹt + quay).
+// Mây đặc thì mực tím sẫm, mép mây hắt ánh tím từ mắt bão.
+export function vortexTex(size = 256, seed = 5, arms = 3, twist = 1.6) {
+  const cv = canvas(size, size)
+  const g = cv.getContext('2d') as G
+  const img = g.createImageData(size, size)
+  const c = size / 2
+  const sm = (a: number, b: number, x: number) => {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+  }
+  const dark = [20, 14, 38], mid = [62, 48, 104], rim = [182, 160, 240]
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      const dx = (x + 0.5 - c) / c, dy = (y + 0.5 - c) / c
+      const r = Math.hypot(dx, dy)
+      if (r >= 1) continue
+      const lr = Math.log(r + 0.02)
+      const phi = Math.atan2(dy, dx) - lr * twist // càng vào trong càng xoắn
+      const u = (phi / (Math.PI * 2)) * 6 // chu kỳ 6 ô noise mỗi vòng: liền mạch quanh tâm
+      const warp = fbm(u, lr * 2.2, seed, 3, 6)
+      const arm = 0.5 + 0.5 * Math.cos(phi * arms + (warp - 0.5) * 6)
+      const cl = fbm(u * 2, lr * 5, seed + 7, 4, 12)
+      const d = Math.max(0, Math.min(1, (arm * 0.6 + cl * 0.8 - 0.36) * 2.4)) * sm(1, 0.62, r) * sm(0.07, 0.3, r)
+      if (d <= 0) continue
+      const lit = (1 - d) * sm(0.75, 0.15, r) * 0.85 // mép mỏng gần mắt bão sáng lên
+      const i = (y * size + x) * 4
+      for (let k = 0; k < 3; k++) {
+        const base = mid[k] + (dark[k] - mid[k]) * d
+        img.data[i + k] = base + (rim[k] - base) * lit
+      }
+      img.data[i + 3] = Math.min(255, d * 330)
+    }
+  g.putImageData(img, 0, 0)
+  return cv
+}
+
+// Tia nắng: dải sáng mờ hai mép, tan hai đầu (tô màu bằng tint)
+export function rayTex(w = 64, h = 256) {
+  const cv = canvas(w, h)
+  const g = cv.getContext('2d') as G
+  const img = g.createImageData(w, h)
+  for (let i = 0; i < w * h; i++) {
+    const x = i % w, y = (i / w) | 0
+    const across = Math.exp(-(((x / (w - 1) - 0.5) / 0.28) ** 2))
+    const along = Math.sin((y / (h - 1)) * Math.PI) ** 0.8 * (1 - (y / h) * 0.4)
+    img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = 255
+    img.data[i * 4 + 3] = Math.round(across * along * 200)
+  }
+  g.putImageData(img, 0, 0)
+  return cv
+}
+
+// Mưa xiên ghép liền
+export function rainTex(size = 128, seed = 9) {
+  const cv = canvas(size, size)
+  const g = cv.getContext('2d') as G
+  const r = rng(seed)
+  g.strokeStyle = 'rgba(230,236,255,0.55)'
+  g.lineCap = 'round'
+  for (let i = 0; i < 70; i++) {
+    const x = r() * size, y = r() * size, l = 6 + r() * 10
+    g.lineWidth = 0.6 + r() * 0.8
+    for (const ox of [-size, 0, size])
+      for (const oy of [-size, 0, size]) {
+        g.beginPath()
+        g.moveTo(x + ox, y + oy)
+        g.lineTo(x + ox - l * 0.3, y + oy + l)
+        g.stroke()
+      }
+  }
+  return cv
+}
+
+// Mực văng: một vệt loang giữa, tia bắn và giọt quanh (đen — tô màu bằng tint)
+export function splashTex(size = 128, seed = 3) {
+  const cv = canvas(size, size)
+  const g = cv.getContext('2d') as G
+  const c = size / 2
+  const r = rng(seed)
+  blot(g, c, c, size * 0.2, '#ffffff', 1, seed, 0.95)
+  for (let i = 0; i < 9; i++) {
+    const a = r() * Math.PI * 2, l = size * (0.22 + r() * 0.22)
+    stroke(g, [[c + Math.cos(a) * size * 0.1, c + Math.sin(a) * size * 0.1], [c + Math.cos(a) * l, c + Math.sin(a) * l]], { w: size * (0.03 + r() * 0.04), color: '#ffffff', press: 'nail', alpha: 1, seed: seed + i })
+  }
+  for (let i = 0; i < 16; i++) {
+    const a = r() * Math.PI * 2, d = size * (0.25 + r() * 0.2)
+    blot(g, c + Math.cos(a) * d, c + Math.sin(a) * d, size * (0.01 + r() * 0.025), '#ffffff', 1, seed + 50 + i, 1)
+  }
+  return cv
+}
+
+// Vết nứt đất toả tia (thể tu dậm đất)
+export function crackTex(size = 128, seed = 4) {
+  const cv = canvas(size, size)
+  const g = cv.getContext('2d') as G
+  const c = size / 2
+  const r = rng(seed)
+  for (let i = 0; i < 7; i++) {
+    let a = (i / 7) * Math.PI * 2 + r() * 0.4, x = c, y = c
+    const pts: Pt[] = [[x, y]]
+    for (let k = 0; k < 4; k++) {
+      a += (r() - 0.5) * 0.7
+      const l = size * (0.08 + r() * 0.06)
+      x += Math.cos(a) * l
+      y += Math.sin(a) * l
+      pts.push([x, y])
+    }
+    stroke(g, pts, { w: size * 0.03, color: '#ffffff', press: 'nail', alpha: 1, seed: seed + i })
+  }
+  return cv
+}
+
+// Bướm (hai khung: cánh mở/khép), neo ở thân
+export const butterfly = (open: boolean, tone = '#f2b8c6'): Asset => ({
+  x: -7, y: -6, w: 14, h: 12,
+  draw(g) {
+    const w = open ? 6 : 2.2
+    for (const s of [-1, 1]) {
+      const up: Pt[] = [[0, -0.5], [s * w * 0.9, -4.5], [s * w, -1.5], [s * 1, 0.4]]
+      const lo: Pt[] = [[0, 0.5], [s * w * 0.75, 3.8], [s * w * 0.4, 4.6], [s * 0.6, 1]]
+      wash(g, up, { fill: tone, alpha: 1, jitter: 0.1, layers: 1, seed: 3 + s })
+      wash(g, lo, { fill: mix(tone, C.silk, 0.4), alpha: 1, jitter: 0.1, layers: 1, seed: 5 + s })
+      stroke(g, [...up, up[0]], { w: 0.4, color: C.ink, press: 'even', alpha: 0.7 })
+      blot(g, s * w * 0.6, -2.5, 0.5, C.ink, 0.8, 7 + s, 1)
+    }
+    stroke(g, [[0, -2.5], [0, 2.8]], { w: 0.8, color: C.ink, press: 'taper', alpha: 0.9 })
+  },
+})
+
+// Chim nhỏ bay xa: nét "v" mực, hai khung
+export const bird = (up: boolean): Asset => ({
+  x: -6, y: -4, w: 12, h: 8,
+  draw(g) {
+    const y = up ? -2.8 : 1.4
+    stroke(g, [[-5, y], [-2.4, y * 0.3], [0, 0.6]], { w: 1, color: C.ink, press: 'nail', alpha: 0.85 })
+    stroke(g, [[5, y], [2.4, y * 0.3], [0, 0.6]], { w: 1, color: C.ink, press: 'nail', alpha: 0.85 })
+  },
+})
+
+// Cánh hoa mai rơi
+export function petalTex(size = 16) {
+  const cv = canvas(size, size)
+  const g = cv.getContext('2d') as G
+  blot(g, size / 2, size / 2, size * 0.36, '#f2b8c6', 1, 2, 0.6, 0.6)
+  blot(g, size / 2 - 1, size / 2 - 1, size * 0.14, '#fbe3e8', 1, 3, 0.8)
+  return cv
+}

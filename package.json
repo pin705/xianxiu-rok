@@ -13,6 +13,7 @@
     "test": "node --test rules/*.test.ts server/*.test.ts client/*.test.ts",
     "check": "tsc && npm run check -ws --if-present",
     "sim": "node rules/simulate.ts",
+    "e2e": "node client/e2e.ts",
     "analytics": "node server/analytics.ts"
   },
   "devDependencies": {
