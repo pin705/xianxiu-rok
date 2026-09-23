@@ -122,7 +122,7 @@
   .scroll {
     position: relative;
     border: 0 solid transparent;
-    border-image: var(--sk-scroll-frame);
+    border-image: var(--sk-scroll);
     filter: drop-shadow(0 10px 24px rgb(20 14 10 / 0.45));
     animation: rise 0.34s var(--spring);
   }

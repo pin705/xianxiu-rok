@@ -14,6 +14,7 @@ export type Skin = {
   h: number
   slice: readonly [number, number, number, number] // trên, phải, dưới, trái (px CSS)
   outset?: number // phần vẽ tràn ra ngoài hộp (bóng, mép xơ), px CSS
+  repeat?: 'stretch' | 'round' // mép giãn (mặc định) hay lặp ghép liền
 }
 
 type P = [number, number]
@@ -87,12 +88,12 @@ function deckle(x0: number, y0: number, x1: number, y1: number, amp: number, see
 }
 
 // Nét kẻ tay: hơi võng, đầu nét nhấn, vượt góc một chút như người kẻ bằng bút lông
-function rule(g: G, a: Pt, b: Pt, w: number, color: string, seed: number, alpha = 0.85, over = 1) {
+function rule(g: G, a: Pt, b: Pt, w: number, color: string, seed: number, alpha = 0.85, over = 1, sag = 1) {
   const r = rng(seed)
   const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len
   const o0 = (0.6 + r() * 1.4) * over, o1 = (0.3 + r() * 1.2) * over
   const A: Pt = [a[0] - ux * o0, a[1] - uy * o0], B: Pt = [b[0] + ux * o1, b[1] + uy * o1]
-  const bow = (r() - 0.5) * Math.min(1.6, len * 0.012)
+  const bow = (r() - 0.5) * Math.min(1.6, len * 0.012) * sag
   const M: Pt = [(A[0] + B[0]) / 2 - uy * bow, (A[1] + B[1]) / 2 + ux * bow]
   stroke(g, [A, M, B], {
     w, color, alpha, rough: 0.45, dry: 0.1, seed, wobble: 0.15,
@@ -182,8 +183,10 @@ function silkTile(tone: string, s: number) {
   return cv
 }
 
+// Ảnh nhỏ (144 × 144) dùng với border-image-repeat: round — mép giữa dài 96px = 2 chu kỳ lụa nên lặp ghép liền,
+// nét kẻ thẳng không võng; lòng để trống (bảng dùng nền giấy ghép, không giãn hạt giấy).
 export function scrollSkin(s: number, silk: string = mix(C.azuriteL, C.paper2, 0.55)): Skin {
-  const W = 360, H = 480, band = 11, sl = 24
+  const W = 144, H = 144, band = 11, sl = 24
   const { cv, g } = surface(W, H, s)
   // lụa
   const pat = g.createPattern(silkTile(silk, s) as CanvasImageSource, 'repeat')!
@@ -212,17 +215,17 @@ export function scrollSkin(s: number, silk: string = mix(C.azuriteL, C.paper2, 0
   // khung mực đôi viền tay trong giấy + mây cuộn son ở góc
   const a = band + 6.5, b = band + 10
   const box = (i: number, w: number, al: number, sd: number) => {
-    rule(g, [i, i], [W - i, i], w, C.ink, sd, al)
-    rule(g, [W - i, i], [W - i, H - i], w * 1.35, C.ink, sd + 1, al)
-    rule(g, [W - i, H - i], [i, H - i], w * 1.35, C.ink, sd + 2, al)
-    rule(g, [i, H - i], [i, i], w, C.ink, sd + 3, al)
+    rule(g, [i, i], [W - i, i], w, C.ink, sd, al, 0.8, 0)
+    rule(g, [W - i, i], [W - i, H - i], w * 1.35, C.ink, sd + 1, al, 0.8, 0)
+    rule(g, [W - i, H - i], [i, H - i], w * 1.35, C.ink, sd + 2, al, 0.8, 0)
+    rule(g, [i, H - i], [i, i], w, C.ink, sd + 3, al, 0.8, 0)
   }
   box(a, 1.5, 0.8, 21)
   box(b, 0.6, 0.55, 31)
   for (const [x, y, rot] of [[b + 3.5, b + 3.5, Math.PI * 1.25], [W - b - 3.5, b + 3.5, -Math.PI * 0.25], [W - b - 3.5, H - b - 3.5, Math.PI * 0.25], [b + 3.5, H - b - 3.5, Math.PI * 0.75]] as const)
     curl(g, x, y, 2.4, rot, C.cinnabar, 0.9, 41 + x + y, 0.85)
   grain(g, 0.18)
-  return { cv, w: W, h: H, slice: [sl, sl, sl, sl] }
+  return { cv, w: W, h: H, slice: [sl, sl, sl, sl], repeat: 'round' }
 }
 
 // Trục cuộn gỗ sơn mài, hai đầu bịt đồng chạm hoa
@@ -264,7 +267,7 @@ export function rodSkin(s: number): Skin {
 
 export type CardTone = 'paper' | 'glow' | 'selected' | 'lacquer' | 'plain'
 export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
-  const W = 240, H = 132, sl = 14, pad = 3
+  const W = 180, H = 100, sl = 14, pad = 3
   const { cv, g } = surface(W, H, s)
   const base = { paper: mix(C.paper, '#ffffff', 0.4), plain: mix(C.paper, '#ffffff', 0.4), glow: mix(C.goldL, C.paper, 0.45), selected: mix(C.paper, '#ffffff', 0.4), lacquer: C.lacquer }[tone]
   const edge = deckle(pad, pad, W - pad, H - pad - 0.5, tone === 'lacquer' ? 0.5 : 1.3, seed)
@@ -308,7 +311,7 @@ export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
 // ---------- Ván sơn mài viền vàng (thanh HUD, thanh tab, biển) ----------
 
 export function plankSkin(s: number, seed = 5): Skin {
-  const W = 390, H = 120, sl = 18
+  const W = 260, H = 96, sl = 18
   const { cv, g } = surface(W, H, s)
   const img = g.createImageData(Math.ceil(W * s), Math.ceil(H * s))
   const n = parseInt(C.lacquer.slice(1), 16)
@@ -332,7 +335,7 @@ export function plankSkin(s: number, seed = 5): Skin {
   g.putImageData(img, 0, 0)
   g.restore()
   // vệt sáng sơn mài quét ngang
-  for (let k = 0; k < 3; k++) stroke(g, [[20 + k * 110, 4 + k * 1.5], [90 + k * 110, 3 + k], [160 + k * 110, 5]], { w: 3, color: '#ffffff', alpha: 0.07, press: 'swell', dry: 0.7, seed: seed + k })
+  for (let k = 0; k < 2; k++) stroke(g, [[20 + k * 110, 4 + k * 1.5], [70 + k * 110, 3 + k], [120 + k * 110, 5]], { w: 3, color: '#ffffff', alpha: 0.07, press: 'swell', dry: 0.7, seed: seed + k })
   // chỉ vàng đôi viền tay
   const box = (i: number, w: number, color: string, al: number, sd: number) => {
     rule(g, [i, i], [W - i, i], w, color, sd, al, 0.4)
@@ -516,7 +519,7 @@ export function lacquerSkin(s: number, seed = 23, ends: 'round' | 'notch' = 'rou
 
 // Thông báo: dải mực quét ngang, hai đầu bút khô tước sợi, chỉ vàng bên trong
 export function toastSkin(s: number, bad = false, seed = 25): Skin {
-  const W = 320, H = 48
+  const W = 260, H = 48
   const { cv, g } = surface(W, H, s)
   const tone = bad ? mix(C.cinnabar, C.lacquer, 0.55) : C.lacquer
   for (let k = 0; k < 3; k++)

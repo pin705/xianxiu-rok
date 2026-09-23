@@ -25,7 +25,7 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     border: 0 solid transparent;
-    border-image: var(--sk-scroll-frame);
+    border-image: var(--sk-scroll);
     box-shadow: 0 0 40px rgb(20 14 10 / 0.35);
   }
   h2 {

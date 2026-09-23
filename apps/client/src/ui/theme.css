@@ -190,9 +190,11 @@ dialog::backdrop {
   background: var(--lacquer) var(--lacquer-tex);
   background-size: 96px;
 }
-/* Da vẽ tay: cuộn tranh bồi lụa (bảng lớn), thẻ giấy mép xơ, ván sơn mài viền vàng.
+/* Da vẽ tay: cuộn tranh bồi lụa (bảng lớn — khung lụa + giấy ghép), thẻ giấy mép xơ, ván sơn mài viền vàng.
    border-width 0: da vẽ đè lên vùng đệm, bố cục do padding quyết định. */
 .scroll-skin {
+  background: var(--paper) var(--paper-tex);
+  background-size: 128px;
   border: 0 solid transparent;
   border-image: var(--sk-scroll);
 }
