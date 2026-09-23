@@ -1,14 +1,15 @@
 <script lang="ts">
   // Màn tiêu đề. 'first': tiêu đề → lời dẫn → đặt tên. 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
   import { onMount } from 'svelte'
-  import { L, sfx, suggestName } from './lib'
+  import { L, sfx, suggestNames } from './lib'
 
   let { mode, onstart, ondone }: { mode: 'first' | 'splash'; onstart: (name: string) => void; ondone: () => void } = $props()
 
   let step: 'title' | 'intro' | 'name' | 'stamp' = $state('title')
   let line = $state(0)
-  let name = $state(suggestName())
-  let ideas = $state([suggestName(), suggestName(), suggestName()])
+  const [first, ...rest] = suggestNames(4)
+  let name = $state(first)
+  let ideas = $state(rest)
   let error = $state('')
 
   onMount(() => {
@@ -58,7 +59,7 @@
           <span class="ln">{text}</span>
         {/each}
       </span>
-      <span class="tap">{L.tapToStart}</span>
+      <span class="tap">{L.tapToContinue}</span>
     </button>
     <button class="skip" onclick={() => (step = 'name')}>{L.skip}</button>
   {:else}
@@ -71,7 +72,7 @@
           {#each ideas as idea (idea)}
             <button type="button" class="idea" onclick={() => (name = idea)}>{idea}</button>
           {/each}
-          <button type="button" class="idea more" onclick={() => (ideas = [suggestName(), suggestName(), suggestName()])}>{L.naming.reroll}</button>
+          <button type="button" class="idea more" onclick={() => (ideas = suggestNames(3))}>{L.naming.reroll}</button>
         </div>
         {#if error}<p class="err">{error}</p>{/if}
         <button class="found">{L.naming.found}</button>

@@ -1,27 +1,31 @@
 <script lang="ts">
   import { Tween } from 'svelte/motion'
-  import { RESOURCES, buildTime, power, questDone, questOf, storage, type Bag, type State } from '@rok/rules'
+  import { PILL_IDS, RESOURCES, count, power, questDone, questOf, questProgress, storage, type Bag, type State } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { L, TABS, clock, num } from './lib'
+  import { L, TABS, clock, num, type Tab } from './lib'
 
   let {
     game,
     now,
-    muted,
+    tab,
+    storm = false,
     gain,
     onclaim,
     onquest,
     onbuilder,
-    onmute,
+    ontab,
+    onsettings,
   }: {
     game: State
     now: number
-    muted: boolean
+    tab: Tab
+    storm?: boolean
     gain: { bag: Partial<Bag>; t: number } | null
     onclaim: () => void
     onquest: () => void
     onbuilder: () => void
-    onmute: () => void
+    ontab: (t: Tab) => void
+    onsettings: () => void
   } = $props()
 
   const hall = $derived(game.levels.chuDien)
@@ -29,7 +33,16 @@
   const job = $derived(game.queue[0])
   const quest = $derived(questOf(game))
   const done = $derived(questDone(game))
-  const progress = $derived(job ? Math.min(1, 1 - (job.finishAt - now) / buildTime(job.building, job.level)) : 0)
+  const prog = $derived(quest && quest.k !== 'build' && quest.k !== 'hunt' && quest.k !== 'sect' ? questProgress(game, quest) : null)
+  const progress = $derived(job ? Math.min(1, (now - job.startAt) / (job.finishAt - job.startAt)) : 0)
+  // Huy hiệu trên thanh tab: việc đang chờ người chơi
+  const badge = $derived({
+    tongMon: 0,
+    monHa: !game.heal && count(game.wounded) ? 1 : 0,
+    banDo: game.reports.filter(r => r.id > game.seen).length,
+    tienMinh: 0,
+    baoKho: 0,
+  } satisfies Record<Tab, number>)
 
   // Số chạy mượt khi tăng/giảm
   const powerT = Tween.of(() => power(game), { duration: 700 })
@@ -71,8 +84,8 @@
           <span class="sr">{L.power}</span>
           <span>{num(Math.round(powerT.current))}</span>
         </div>
-        <button class="mute" onclick={onmute} aria-label={muted ? L.sound.off : L.sound.on}>
-          <Icon name={muted ? 'mute' : 'sound'} size={18} />
+        <button class="mute" onclick={onsettings} aria-label={L.settings.open}>
+          <Icon name="gear" size={18} />
         </button>
       </div>
       <ul class="res">
@@ -91,48 +104,56 @@
       </ul>
     </header>
 
-    {#if quest}
-      <button class="quest" class:done onclick={done ? onclaim : onquest}>
-        <span class="qbody">
-          <small>{L.quest.title}</small>
-          <b>{L.quest.text(quest)}</b>
-          <span class="qreward">
-            {#each RESOURCES as r (r)}
-              {#if quest.reward[r]}<span><Icon name={r} size={15} />{num(quest.reward[r] ?? 0)}</span>{/if}
-            {/each}
+    {#if tab === 'tongMon' && !storm}
+      {#if quest}
+        <button class="quest" class:done onclick={done ? onclaim : onquest}>
+          <span class="qbody">
+            <small>{L.quest.title}{#if prog}<span class="qprog">{num(Math.min(prog[0], prog[1]))}/{num(prog[1])}</span>{/if}</small>
+            <b>{L.quest.text(quest)}</b>
+            <span class="qreward">
+              {#each RESOURCES as r (r)}
+                {#if quest.reward[r]}<span><Icon name={r} size={15} />{num(quest.reward[r] ?? 0)}</span>{/if}
+              {/each}
+              {#each PILL_IDS as p (p)}
+                {#if quest.items?.[p]}<span><Icon name={p} size={15} />{quest.items[p]}</span>{/if}
+              {/each}
+            </span>
           </span>
-        </span>
-        {#if done}
-          <span class="claim">{L.quest.claim}</span>
-        {:else}
-          <span class="go"><Icon name="arrow" size={16} /></span>
-        {/if}
-      </button>
-    {:else}
-      <p class="quest over">{L.quest.allDone}</p>
+          {#if done}
+            <span class="claim">{L.quest.claim}</span>
+          {:else}
+            <span class="go"><Icon name="arrow" size={16} /></span>
+          {/if}
+        </button>
+      {:else}
+        <p class="quest over">{L.quest.allDone}</p>
+      {/if}
     {/if}
   </div>
 
-  <button class="builder" class:idle={!job} onclick={onbuilder} aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}">
-    <svg class="ring" viewBox="0 0 60 60" aria-hidden="true">
-      <circle class="rbg" cx="30" cy="30" r="26" />
-      <circle class="rfg" cx="30" cy="30" r="26" stroke-dasharray="{progress * 163.4} 163.4" />
-    </svg>
-    <Icon name="hammer" size={24} />
-    <span class="btime">{job ? clock(job.finishAt - now) : L.builder.idle}</span>
-  </button>
+  {#if tab === 'tongMon'}
+    <button class="builder" class:idle={!job} onclick={onbuilder} aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}">
+      <svg class="ring" viewBox="0 0 60 60" aria-hidden="true">
+        <circle class="rbg" cx="30" cy="30" r="26" />
+        <circle class="rfg" cx="30" cy="30" r="26" stroke-dasharray="{progress * 163.4} 163.4" />
+      </svg>
+      <Icon name="hammer" size={24} />
+      <span class="btime">{job ? clock(job.finishAt - now) : L.builder.idle}</span>
+    </button>
+  {/if}
 
   <nav class="tabs">
     {#each TABS as t (t.id)}
-      {@const on = t.id === 'tongMon'}
+      {@const on = t.id === tab}
       {@const locked = hall < t.unlock}
-      <button class:on class:locked disabled={!on} aria-current={on ? 'page' : undefined}>
+      <button class:on class:locked disabled={locked} aria-current={on ? 'page' : undefined} onclick={() => !on && ontab(t.id)}>
         <span class="medal">
           <span class="glyph" aria-hidden="true">{t.glyph}</span>
           {#if locked}<span class="lk"><Icon name="lock" size={10} /></span>{/if}
+          {#if badge[t.id] && !on}<span class="dot">{badge[t.id] > 1 ? badge[t.id] : ''}</span>{/if}
         </span>
         <span class="tl">{L.tabs[t.id]}</span>
-        {#if !on}<small>{locked ? L.level(t.unlock) : L.soonTag}</small>{/if}
+        {#if locked}<small>{t.unlock > 15 ? L.soonTag : L.level(t.unlock)}</small>{/if}
       </button>
     {/each}
   </nav>
@@ -342,11 +363,17 @@
     gap: 2px;
   }
   .qbody small {
+    display: flex;
+    gap: 8px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--gold-l);
+  }
+  .qprog {
+    letter-spacing: 0.02em;
+    color: #fff;
   }
   .qbody b {
     font-size: 13.5px;
@@ -520,6 +547,22 @@
   .tabs small {
     font-size: 9.5px;
     color: #93a1a6;
+  }
+  .dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    display: grid;
+    place-items: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--cinnabar);
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px #0e1a21;
   }
 
   @media (prefers-reduced-motion: reduce) {

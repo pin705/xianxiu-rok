@@ -11,7 +11,8 @@
     "dev": "npm run dev -w client",
     "build": "npm run build -w client",
     "test": "node --test rules/*.test.ts",
-    "check": "tsc && npm run check -ws --if-present"
+    "check": "tsc && npm run check -ws --if-present",
+    "sim": "node rules/simulate.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

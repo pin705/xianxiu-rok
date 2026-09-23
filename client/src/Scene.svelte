@@ -2,7 +2,7 @@
   // Ngọn núi của tông môn: tranh thanh lục sơn thủy sống, công trình đặt trên các tầng núi.
   // Trời đổi theo giờ thật của máy người chơi.
   import { fade } from 'svelte/transition'
-  import { BUILDINGS, IDS, buildTime, storage, type BuildingId, type State } from '@rok/rules'
+  import { BUILDINGS, IDS, TRIBS, count, storage, type BuildingId, type State } from '@rok/rules'
   import { Art, Defs, Icon } from '@rok/art'
   import { L, SEAL, clock } from './lib'
 
@@ -14,6 +14,7 @@
     guide = null,
     bursts = [],
     still = false,
+    storm = false,
     onselect,
   }: {
     game: State
@@ -22,8 +23,27 @@
     guide?: BuildingId | null
     bursts?: Burst[]
     still?: boolean // chỉ làm nền (màn tiêu đề): ẩn nhãn, bong bóng
+    storm?: boolean // độ kiếp: trời tối, kiếp vân, sét đánh xuống Chủ điện
     onselect?: (id: BuildingId) => void
   } = $props()
+
+  // Việc của công trình chức năng (hiện đồng hồ) và gợi ý khi đang rảnh (UX: màn nào cũng trả lời "làm gì tiếp?")
+  function work(id: BuildingId) {
+    if (id === 'dienVoTruong') return game.train
+    if (id === 'tangKinhCac') return game.study
+    if (id === 'danPhong') return game.heal ?? game.brew
+    return null
+  }
+  const WORK_ICON = { dienVoTruong: 'people', tangKinhCac: 'scroll', danPhong: 'cauldron' } as const
+  function idle(id: BuildingId): 'people' | 'scroll' | 'cauldron' | 'heal' | 'bolt' | null {
+    if (game.levels[id] === 0) return null
+    if (id === 'dienVoTruong' && !game.train) return 'people'
+    if (id === 'tangKinhCac' && !game.study) return 'scroll'
+    if (id === 'danPhong' && !game.heal && count(game.wounded)) return 'heal'
+    if (id === 'danPhong' && !game.brew) return 'cauldron'
+    if (id === 'chuDien' && TRIBS[game.trib]?.hall === game.levels.chuDien && game.tribCool <= now) return 'bolt'
+    return null
+  }
 
   // Chân công trình trên núi (hệ toạ độ 400 × 860) và bề ngang của nó
   const SLOT: Record<BuildingId, [number, number, number]> = {
@@ -100,7 +120,7 @@
   </g>
 {/snippet}
 
-<svg class="scene {phase}" class:still viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" aria-label={game.name}>
+<svg class="scene {phase}" class:still class:storm viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" aria-label={game.name}>
   <defs>
     <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" style="stop-color: var(--sky1)" />
@@ -273,7 +293,7 @@
         {/if}
 
         {#if job}
-          {@const p = Math.min(1, 1 - (job.finishAt - now) / buildTime(id, job.level))}
+          {@const p = Math.min(1, (now - job.startAt) / (job.finishAt - job.startAt))}
           <g class="scaffold">
             {#each [-0.45, -0.15, 0.15, 0.45] as k}<path d="M{k * w * 0.95} 0V{-h * 0.95}" />{/each}
             {#each [0.3, 0.62, 0.92] as k}<path d="M{-w * 0.46} {-h * k}H{w * 0.46}" />{/each}
@@ -295,6 +315,34 @@
             <text x="7" y="3.6" text-anchor="middle">{clock(job.finishAt - now)}</text>
             <rect x="-11" y="6" width="36" height="2.2" rx="1.1" class="track" />
             <rect x="-11" y="6" width={36 * p} height="2.2" rx="1.1" class="fill" />
+          </g>
+        {/if}
+
+        {#if !job && work(id)}
+          {@const wj = work(id)!}
+          {@const p = Math.min(1, (now - wj.startAt) / (wj.finishAt - wj.startAt))}
+          <g class="timer work" transform="translate(0 {-h - 18})">
+            <rect x="-32" y="-11" width="64" height="22" rx="11" />
+            <circle cx="-21" r="7.5" class="tbg" />
+            <Icon name={game.heal && id === 'danPhong' ? 'heal' : WORK_ICON[id as keyof typeof WORK_ICON]} size={10} x={-26} y={-5} />
+            <text x="7" y="3.6" text-anchor="middle">{clock(wj.finishAt - now)}</text>
+            <rect x="-11" y="6" width="36" height="2.2" rx="1.1" class="track" />
+            <rect x="-11" y="6" width={36 * p} height="2.2" rx="1.1" class="fill" />
+          </g>
+        {:else if !job && idle(id)}
+          <g transform="translate({w * 0.3} {-h * 0.72})">
+            <g class="buildBubble hint"><circle r="11" /><Icon name={idle(id)!} size={13} x={-6.5} y={-6.5} /></g>
+          </g>
+        {/if}
+
+        {#if storm && id === 'chuDien'}
+          <g class="kiepvan" transform="translate(0 {-h - 36})">
+            {#each [0, 1, 2] as i}
+              <path class="bolt" style="animation-delay: {0.7 + i * 1.2}s" d="M{-14 + i * 14} 4l-7 16h8l-9 20 20 -26h-9l7 -10Z" />
+            {/each}
+            <ellipse cx="-34" rx="46" ry="14" />
+            <ellipse cx="30" cy="-4" rx="52" ry="16" />
+            <ellipse cx="0" cy="-12" rx="40" ry="14" />
           </g>
         {/if}
 
@@ -399,6 +447,14 @@
     --win: #f0c56a;
     --glow-o: 0.6;
     --veil-o: 0.1;
+  }
+  .storm {
+    --sky1: #1a1430 !important;
+    --sky2: #3a3350 !important;
+    --far: #2b2744 !important;
+    --sun-o: 0 !important;
+    --veil-o: 0.45 !important;
+    --glow-o: 1 !important;
   }
   .night {
     --sky1: #0d1a2e;
@@ -713,6 +769,42 @@
   @keyframes point {
     50% {
       transform: translateY(-7px);
+    }
+  }
+
+  .hint circle {
+    fill: #fff;
+    stroke: var(--gold);
+  }
+  .kiepvan ellipse {
+    fill: #241d3a;
+    opacity: 0.92;
+    animation: churn 3s ease-in-out infinite alternate;
+  }
+  @keyframes churn {
+    to {
+      transform: translateX(6px) scale(1.04);
+    }
+  }
+  .bolt {
+    fill: #f3edff;
+    stroke: #b9a4ff;
+    stroke-width: 1.2;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px #c8b6ff);
+    animation: strike 1.2s ease-out forwards;
+  }
+  @keyframes strike {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    6%,
+    18% {
+      opacity: 1;
+    }
+    12% {
+      opacity: 0.3;
     }
   }
 

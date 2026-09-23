@@ -1,51 +1,99 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import {
-    IDS, RESOURCES, advance, apply, newGame, questDone, questOf, storage, type Bag, type BuildingId, type State,
+    IDS, RESOURCES, TECH_IDS, advance, apply, newGame, questDone, questOf, storage,
+    type Action, type Army, type Bag, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
+  import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
+  import Map from './Map.svelte'
   import Panel from './Panel.svelte'
+  import Replay from './Replay.svelte'
+  import Reports from './Reports.svelte'
+  import Result, { type Outcome } from './Result.svelte'
   import Scene from './Scene.svelte'
+  import Settings from './Settings.svelte'
+  import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
-  import { L, isMuted, load, num, save, setMuted, sfx } from './lib'
+  import Vault from './Vault.svelte'
+  import { L, isMuted, load, nowMs, num, reportName, save, setMuted, sfx, type Tab } from './lib'
 
-  const saved = load(Date.now())
-  const start = saved && advance(saved, Date.now())
+  const saved = load(nowMs())
+  const start = saved && advance(saved, nowMs())
   const away = saved && start ? summarize(saved, start) : null
-  const preview = newGame(Date.now()) // cảnh nền cho người mới ở màn tiêu đề
+  const preview = newGame(nowMs()) // cảnh nền cho người mới ở màn tiêu đề
 
   let game: State | null = $state.raw(start)
-  let now = $state(Date.now())
+  let now = $state(nowMs())
   let screen: 'title' | 'game' = $state('title')
+  let tab: Tab = $state('tongMon')
   let selected: BuildingId | null = $state(null)
+  let view: string | null = $state(null) // thẻ mở sẵn trong bảng công trình
+  let target: Target | null = $state(null)
+  let replay: Report | null = $state(null)
+  let outcome: Outcome | null = $state(null) // kết quả độ kiếp / luân hồi
+  let storm = $state(false)
+  let reportsOpen = $state(false)
+  let settingsOpen = $state(false)
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
   let gain: { bag: Partial<Bag>; t: number } | null = $state(null)
+  let toasts: { id: number; text: string; bad?: boolean; report?: Report }[] = $state([])
   let muted = $state(isMuted())
   let world = $state<HTMLDivElement>()
   let sheet = $state<HTMLDialogElement>()
 
   // Mũi tên chỉ đường: công trình của nhiệm vụ, khi tạp dịch rảnh và chưa mở bảng
   const guide = $derived.by(() => {
-    if (!game || selected || game.queue.length || questDone(game)) return null
-    return questOf(game)?.building ?? null
+    const q = game && questOf(game)
+    if (!game || selected || game.queue.length || q?.k !== 'build' || questDone(game)) return null
+    return q.id as BuildingId
   })
+
+  let tid = 0
+  function toast(text: string, opt: { bad?: boolean; report?: Report } = {}) {
+    const id = ++tid
+    toasts = [...toasts.slice(-2), { id, text, ...opt }]
+    setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), opt.report ? 6000 : 2600)
+  }
 
   onMount(() => {
     const tick = setInterval(() => {
-      now = Date.now()
+      now = nowMs()
       if (!game) return
       const next = advance(game, now)
+      if (next === game || next.time === game.time) return
       for (const id of IDS) {
         if (next.levels[id] > game.levels[id]) {
           bursts = [...bursts, { id, level: next.levels[id], t: now }]
           sfx('done')
         }
       }
+      // Chiến báo mới từ các đội đang xuất quân
+      for (const r of next.reports.filter(r => r.id >= game!.nextId)) toast(L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
+      if (next.stats.trained > game.stats.trained) toast(L.away.trained(next.stats.trained - game.stats.trained))
+      if (next.stats.healed > game.stats.healed) toast(L.away.healed(next.stats.healed - game.stats.healed))
+      if (next.stats.brewed > game.stats.brewed) toast(L.away.brewed(next.stats.brewed - game.stats.brewed))
+      for (const t of TECH_IDS) if ((next.tech[t] ?? 0) > (game.tech[t] ?? 0)) toast(L.away.tech(L.techs[t], next.tech[t]!))
+      const events = next.nextId !== game.nextId || next.stats !== game.stats || next.tech !== game.tech || next.levels !== game.levels
       game = next
+      if (events) save(next)
       if (bursts.length && now - bursts[0].t > 2000) bursts = bursts.filter(b => now - b.t < 2000)
     }, 250)
-    return () => clearInterval(tick)
+    const hide = () => document.hidden && game && save(game)
+    document.addEventListener('visibilitychange', hide)
+    if (import.meta.env.DEV)
+      Object.assign((globalThis as any).rok, {
+        get: () => game,
+        set: (s: State) => {
+          game = s
+          save(s)
+        },
+      })
+    return () => {
+      clearInterval(tick)
+      document.removeEventListener('visibilitychange', hide)
+    }
   })
 
   // Vào game: cuộn tới giữa núi, rồi mở Xuất quan nếu vắng lâu
@@ -55,77 +103,209 @@
     if (away) sheet?.showModal()
   })
 
+  // Mọi thao tác đi qua đây: áp luật, lưu, báo lỗi nếu có
+  function act(a: Action): State | null {
+    if (!game) return null
+    const r = apply(game, a, nowMs())
+    if (!r.ok) {
+      sfx('err')
+      toast(L.err[r.error], { bad: true })
+      return null
+    }
+    game = r.state
+    save(game)
+    return game
+  }
+
   function found(name: string) {
-    game = newGame(Date.now(), name)
+    game = newGame(nowMs(), name)
     save(game)
     screen = 'game'
   }
 
-  function select(id: BuildingId) {
+  function select(id: BuildingId, v: string | null = null) {
     sfx('tap')
+    view = v
     selected = id
   }
 
-  // Từ HUD (nhiệm vụ, tạp dịch): cuộn tới công trình rồi mở bảng
-  function focus(id: BuildingId) {
-    world?.querySelector(`[data-b="${id}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    select(id)
+  // Từ HUD, nhiệm vụ, trang khác: về núi, cuộn tới công trình rồi mở bảng
+  function focus(id: BuildingId, v: string | null = null) {
+    tab = 'tongMon'
+    target = null
+    requestAnimationFrame(() => world?.querySelector(`[data-b="${id}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
+    select(id, v)
+  }
+
+  function openTarget(t: Target) {
+    selected = null
+    tab = 'banDo'
+    target = t
   }
 
   function upgrade(id: BuildingId) {
-    if (!game) return
-    const r = apply(game, { type: 'upgrade', building: id }, Date.now())
-    if (!r.ok) return // bảng đã hiện lý do
-    game = r.state
-    save(game)
+    if (!act({ type: 'upgrade', building: id })) return
     sfx('build')
     selected = null
   }
 
   function claim() {
-    if (!game) return
-    const q = questOf(game)
-    const r = apply(game, { type: 'claim' }, Date.now())
-    if (!r.ok || !q) return
-    game = r.state
-    save(game)
-    gain = { bag: q.reward, t: Date.now() }
+    const q = game && questOf(game)
+    if (!q || !act({ type: 'claim' })) return
+    gain = { bag: q.reward, t: nowMs() }
     sfx('reward')
+  }
+
+  function goQuest() {
+    const q = game && questOf(game)
+    if (!game || !q) return
+    if (q.k === 'build') focus(q.id as BuildingId)
+    if (q.k === 'train') focus('dienVoTruong', 'train')
+    if (q.k === 'tech') focus('tangKinhCac', 'library')
+    if (q.k === 'brew') focus('danPhong', 'alchemy')
+    if (q.k === 'hunt') openTarget({ kind: 'beast', i: Math.min(game.beast, q.n - 1) })
+    if (q.k === 'sect') openTarget({ kind: 'sect', i: Number(q.id) })
+    if (q.k === 'realm') openTarget({ kind: 'realm', i: Number(q.id) })
   }
 
   function builder() {
     if (!game) return
     const job = game.queue[0]
-    focus(job?.building ?? guide ?? questOf(game)?.building ?? 'chuDien')
+    focus(job?.building ?? guide ?? 'chuDien')
+  }
+
+  // Trận đánh ngay (bí cảnh, độ kiếp) người chơi xem tận mắt: không tính là chiến báo chưa đọc
+  function fightNow(a: Action) {
+    const fresh = !!game && game.reports.every(r => r.id <= game!.seen)
+    const s = act(a)
+    return s && fresh ? (act({ type: 'seen' }) ?? s) : s
+  }
+
+  function march(t: Target, elder: ElderId, army: Army) {
+    if (t.kind === 'realm') {
+      const s = fightNow({ type: 'realm', i: t.i, elder, army })
+      if (!s) return
+      target = null
+      replay = s.reports.at(-1)!
+      return
+    }
+    if (!act({ type: 'march', target: t, elder, army })) return
+    sfx('march')
+    target = null
+  }
+
+  // Độ kiếp: về núi, trời tối, ba đợt sét đánh xuống Chủ điện, rồi hiện kết quả
+  function trib(elder: ElderId, army: Army, pill: boolean) {
+    const s = fightNow({ type: 'trib', elder, army, pill })
+    if (!s) return
+    const r = s.reports.at(-1)!
+    selected = null
+    tab = 'tongMon'
+    requestAnimationFrame(() => world?.querySelector('[data-b="chuDien"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
+    storm = true
+    r.fights.forEach((_, i) => setTimeout(() => sfx('thunder'), 700 + i * 1200))
+    setTimeout(() => {
+      storm = false
+      outcome = { kind: 'trib', report: r }
+      sfx(r.win ? 'win' : 'lose')
+    }, 800 + r.fights.length * 1200)
+  }
+
+  function rebirth() {
+    const s = act({ type: 'rebirth' })
+    if (!s) return
+    selected = null
+    tab = 'tongMon'
+    outcome = { kind: 'rebirth', n: s.rebirths }
+    sfx('done')
+  }
+
+  function openReports() {
+    reportsOpen = true
+    if (game && game.seen < game.nextId - 1) act({ type: 'seen' })
   }
 
   function summarize(before: State, after: State) {
     const ms = after.time - before.time
     if (ms < 60_000) return null
+    const d = (k: keyof State['stats']) => after.stats[k] - before.stats[k]
     return {
       ms,
       gains: RESOURCES.filter(r => after.res[r] > before.res[r]).map(r => ({ r, n: after.res[r] - before.res[r] })),
       done: IDS.filter(id => after.levels[id] > before.levels[id]).map(id => ({ id, level: after.levels[id] })),
+      techs: TECH_IDS.filter(t => (after.tech[t] ?? 0) > (before.tech[t] ?? 0)).map(t => L.away.tech(L.techs[t], after.tech[t]!)),
+      misc: [
+        d('trained') && L.away.trained(d('trained')),
+        d('healed') && L.away.healed(d('healed')),
+        d('brewed') && L.away.brewed(d('brewed')),
+        (d('won') || d('lost')) && L.away.battles(d('won'), d('lost')),
+      ].filter(Boolean) as string[],
       full: RESOURCES.some(r => after.res[r] >= storage(after)),
     }
   }
 </script>
 
 {#if screen === 'game' && game}
-  <div class="world" bind:this={world}>
-    <Scene {game} {now} {selected} {guide} {bursts} onselect={select} />
+  <div class="world" class:hidden={tab !== 'tongMon'} bind:this={world}>
+    <Scene {game} {now} {selected} {guide} {bursts} {storm} onselect={id => select(id)} />
   </div>
+  {#if tab === 'monHa'}
+    <Disciples {game} {now} {act} onfocus={focus} />
+  {:else if tab === 'banDo'}
+    <Map {game} {now} onpick={t => (target = t)} onreports={openReports} />
+  {:else if tab === 'baoKho'}
+    <Vault {game} {now} {act} onfocus={focus} />
+  {/if}
   <Hud
     {game}
     {now}
-    {muted}
+    {tab}
+    {storm}
     {gain}
     onclaim={claim}
-    onquest={() => { const q = game && questOf(game); if (q) focus(q.building) }}
+    onquest={goQuest}
     onbuilder={builder}
-    onmute={() => { muted = !muted; setMuted(muted) }}
+    ontab={t => {
+      sfx('tap')
+      tab = t
+      selected = null
+    }}
+    onsettings={() => (settingsOpen = true)}
   />
-  <Panel {game} {now} id={selected} onupgrade={upgrade} onclose={() => (selected = null)} onselect={focus} />
+  <Panel {game} {now} id={selected} {view} {act} onupgrade={upgrade} onclose={() => (selected = null)} onselect={focus} ontrib={trib} onrebirth={rebirth} />
+  <TargetSheet {game} {now} {target} onclose={() => (target = null)} onmarch={march} onrecruit={() => focus('dienVoTruong', 'train')} />
+  <Reports {game} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
+  <Replay report={replay} onclose={() => (replay = null)} />
+  <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
+  <Settings
+    {game}
+    open={settingsOpen}
+    {muted}
+    onclose={() => (settingsOpen = false)}
+    onmute={() => {
+      muted = !muted
+      setMuted(muted)
+    }}
+    onload={s => {
+      game = s
+      save(s)
+      settingsOpen = false
+      toast(L.settings.imported)
+    }}
+    toast={t => toast(t)}
+  />
+
+  <div class="toasts" class:low={tab === 'tongMon'} aria-live="polite">
+    {#each toasts as t (t.id)}
+      {#if t.report}
+        <button class="toast" class:bad={t.bad} onclick={() => (replay = t.report!)}>
+          <Icon name="swords" size={16} />{t.text}<small>{L.report.replay}</small>
+        </button>
+      {:else}
+        <p class="toast" class:bad={t.bad}>{t.text}</p>
+      {/if}
+    {/each}
+  </div>
 
   <dialog bind:this={sheet} class="away" aria-labelledby="away-title">
     {#if away}
@@ -139,16 +319,19 @@
           {/each}
         </ul>
       {/if}
-      {#if away.done.length}
+      {#if away.done.length || away.techs.length || away.misc.length}
         <h3>{L.away.done}</h3>
         <ul>
           {#each away.done as d (d.id)}
             <li><Icon name="check" size={18} />{L.b[d.id].name} · {L.level(d.level)}</li>
           {/each}
+          {#each [...away.techs, ...away.misc] as m (m)}
+            <li><Icon name="check" size={18} />{m}</li>
+          {/each}
         </ul>
       {/if}
       {#if away.full}<p class="warn">{L.away.full}</p>{/if}
-      <form method="dialog"><button class="enter">{L.away.enter}</button></form>
+      <form method="dialog"><button class="btn gold wide enter">{L.away.enter}</button></form>
     {/if}
   </dialog>
 {:else}
@@ -171,8 +354,62 @@
   .world::-webkit-scrollbar {
     display: none;
   }
+  .hidden {
+    visibility: hidden;
+  }
   .still {
     overflow: hidden;
+  }
+
+  .toasts {
+    position: fixed;
+    top: calc(172px + env(safe-area-inset-top));
+    left: 50%;
+    z-index: 20;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    width: min(100% - 32px, 420px);
+    translate: -50% 0;
+    pointer-events: none;
+  }
+  .toasts.low {
+    top: calc(212px + env(safe-area-inset-top)); /* dưới thanh nhiệm vụ */
+  }
+  .toast {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 8px 14px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #f6f1e4;
+    background: rgb(13 24 31 / 0.92);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgb(0 0 0 / 0.3);
+    animation: toast 0.3s ease-out;
+    pointer-events: auto;
+  }
+  button.toast {
+    cursor: pointer;
+  }
+  .toast small {
+    margin-left: 4px;
+    padding: 2px 8px;
+    color: #2b2210;
+    background: var(--gold-l);
+    border-radius: 6px;
+  }
+  .toast.bad {
+    border-color: var(--cinnabar);
+  }
+  @keyframes toast {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
   }
 
   .away {
@@ -241,23 +478,8 @@
   .warn {
     margin-top: 14px;
     font-size: 13px;
-    color: #ffb4a4;
   }
   .enter {
-    width: 100%;
-    min-height: 50px;
     margin-top: 20px;
-    font-size: 17px;
-    font-weight: 700;
-    color: #2b2210;
-    background: linear-gradient(#f8e3a0, #c9a14a);
-    border: 0;
-    border-radius: 14px;
-    box-shadow: 0 4px 0 #7c5f22;
-    cursor: pointer;
-  }
-  .enter:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #7c5f22;
   }
 </style>
