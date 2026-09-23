@@ -161,7 +161,7 @@ Tài nguyên = đã có + tốc độ × thời gian trôi (chặn bởi sức c
 
 - Giao diện **dọc trước** cho điện thoại (SLG mới như Whiteout Survival, Last War đều dọc); trên PC: khung dọc + panel bên.
 - Hỗ trợ cả chạm (kéo, pinch) lẫn chuột (kéo, cuộn).
-- Chữ hiển thị nằm trong package `@rok/i18n` (`packages/i18n/locales/*.ts`, cùng khuôn `Text`), component đọc qua object `L`; thêm ngôn ngữ xem README mục Đa ngôn ngữ. Bảng thuật ngữ: Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core, Nguyên Anh = Nascent Soul.
+- Chữ hiển thị nằm trong package `@rok/i18n` (`packages/i18n/locales/*.ts`, cùng khuôn `Text`), component đọc qua object `L`; thêm ngôn ngữ xem [README](../README.md) mục Đa ngôn ngữ. Bảng thuật ngữ: Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core, Nguyên Anh = Nascent Soul.
 
 ## 5. Lộ trình
 
@@ -317,12 +317,12 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 
 - **Cloudflare Pages:** build command `npm run build`, output `apps/client/dist`.
 - **itch.io:** nén `apps/client/dist/` thành zip, chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
-- **PWA:** có manifest + icon ấn 宗 + service worker (`apps/client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
+- **PWA:** có manifest + icon huy hiệu vẽ tay + service worker (`apps/client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
 - **Analytics:** build với `VITE_ANALYTICS_URL=https://<máy chủ>/e` thì client gửi beacon JSON `{id, name, props, v, t}` (id ngẫu nhiên của máy, không có dữ liệu cá nhân) cho các sự kiện `open`, `found`, `hall`, `trib`, `rebirth`. Không đặt biến thì không gửi gì.
   Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`apps/server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS sau Caddy/nginx (đặt `TRUST_PROXY=1`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
 - **Font:** giấy phép OFL nằm cạnh font trong `apps/client/public/fonts/`.
 
-**Kiểm thử trước khi phát hành:** `npm test` (luật, server analytics, và `apps/client/render.test.ts`: vẽ mọi màn hình × 6 trạng thái game × 2 ngôn ngữ bằng SSR của Svelte qua Vite — bắt lỗi vỡ lúc vẽ và chữ hỏng `NaN`/`undefined` mà không cần trình duyệt), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi `npm run build && npm run e2e` (Chrome headless bấm như người chơi trên bản build: lập tông môn, 14 nhiệm vụ đầu chỉ bằng click, hai tab không đè save nhau, tắt máy chủ vẫn chơi và đổi ngôn ngữ được, console sạch — cần Chrome trên máy, không có thì tự bỏ qua; đặt `CHROME=` nếu Chrome ở chỗ khác) và chơi thử bản build (`npm run preview -w client`). CI (`.github/workflows/ci.yml`) chạy đủ 4 bước này ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
+**Kiểm thử trước khi phát hành:** `npm test` (luật, server analytics, và `apps/client/render.test.ts`: vẽ mọi màn hình × 6 trạng thái game × 2 ngôn ngữ bằng SSR của Svelte qua Vite — bắt lỗi vỡ lúc vẽ và chữ hỏng `NaN`/`undefined` mà không cần trình duyệt), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi `npm run build && npm run e2e` (Chrome headless bấm như người chơi trên bản build: lập tông môn, 14 nhiệm vụ đầu chỉ bằng click, hai tab không đè save nhau, tắt máy chủ vẫn chơi và đổi ngôn ngữ được, console sạch — cần Chrome trên máy, không có thì tự bỏ qua; đặt `CHROME=` nếu Chrome ở chỗ khác) và chơi thử bản build (`npm run preview -w @rok/client`). CI (`.github/workflows/ci.yml`) chạy tất cả các bước này, kể cả e2e bằng Chrome có sẵn trên máy ảo, ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
 
 **Việc còn lại để qua cổng P1:** thử trên điện thoại thật (Android tầm trung, iPhone Safari), thuê VPS chạy máy nhận analytics, đăng itch.io + nhóm Facebook/Discord, gom ≥ 300 người thử, đọc D1/D7 ở `/stats`.
 6. Spike PixiJS 100×100 ô trên điện thoại thật.

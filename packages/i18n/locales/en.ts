@@ -8,6 +8,8 @@ import type { Text } from './vi.ts'
 // English text. Same shape as vi.ts (type Text) — TypeScript flags any missing key.
 // Glossary (PLAN.md §4): Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core.
 const pct = (v: number) => `${Math.round(v * 100)}%`
+const perks = (n: number) =>
+  `start with buildings at level ${rebirthLevels(n).chuDien}, output +${pct(n * REBIRTH_PROD)}, building ${pct(n * REBIRTH_BUILD)} faster`
 const units = { kiem: 'Sword Cultivators', phap: 'Spell Cultivators', the: 'Body Cultivators' } satisfies Record<UnitType, string>
 const short = { kiem: 'Sword', phap: 'Spell', the: 'Body' } satisfies Record<UnitType, string>
 const tiers = { 1: 'Outer', 2: 'Inner', 3: 'Core' } satisfies Record<Tier, string>
@@ -303,8 +305,8 @@ export const en: Text = {
     keepList: ['Elders and their levels', 'Mastered techniques', 'Pills in the Treasury'],
     lose: 'Reset',
     loseList: ['Buildings (a foundation remains), resources', 'Disciples, wounded', 'Map and quests'],
-    gain: (n: number) =>
-      `Life ${n + 1}: start with buildings at level ${rebirthLevels(n).chuDien}, output +${pct(n * REBIRTH_PROD)}, building ${pct(n * REBIRTH_BUILD)} faster`,
+    gain: (n: number) => `Life ${n + 1}: ${perks(n)}`,
+    perks: (n: number) => perks(n).replace(/^./, c => c.toUpperCase()),
     go: 'Reincarnate',
     confirm: 'Reincarnate for sure? This cannot be undone.',
     marching: 'Wait for every march to return.',

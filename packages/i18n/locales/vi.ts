@@ -6,6 +6,8 @@ import {
 
 // Chữ hiển thị tiếng Việt. Bản tiếng Anh ở en.ts, cùng khuôn (kiểu Text).
 const pct = (v: number) => `${Math.round(v * 100)}%`
+const perks = (n: number) =>
+  `khởi đầu với công trình tầng ${rebirthLevels(n).chuDien}, sản lượng +${pct(n * REBIRTH_PROD)}, xây nhanh hơn ${pct(n * REBIRTH_BUILD)}`
 const units = { kiem: 'Kiếm tu', phap: 'Pháp tu', the: 'Thể tu' } satisfies Record<UnitType, string>
 const tiers = { 1: 'Ngoại môn', 2: 'Nội môn', 3: 'Chân truyền' } satisfies Record<Tier, string>
 const res = { linhThach: 'Linh thạch', linhThao: 'Linh thảo', linhKhoang: 'Linh khoáng' } satisfies Record<Res, string>
@@ -300,8 +302,9 @@ export const vi = {
     lose: 'Làm lại',
     loseList: ['Công trình (còn lại căn cơ), tài nguyên', 'Đệ tử, thương binh', 'Bản đồ và nhiệm vụ'],
     // n: số lần đã luân hồi (tính cả lần sắp làm)
-    gain: (n: number) =>
-      `Kiếp thứ ${n + 1}: khởi đầu với công trình tầng ${rebirthLevels(n).chuDien}, sản lượng +${pct(n * REBIRTH_PROD)}, xây nhanh hơn ${pct(n * REBIRTH_BUILD)}`,
+    gain: (n: number) => `Kiếp thứ ${n + 1}: ${perks(n)}`,
+    // chỉ phần thưởng — màn kết quả đã có tiêu đề "Kiếp thứ n" (done)
+    perks: (n: number) => perks(n).replace(/^./, c => c.toUpperCase()),
     go: 'Luân hồi',
     confirm: 'Chắc chắn luân hồi? Không thể hoàn tác.',
     marching: 'Đợi mọi đội xuất quân trở về.',

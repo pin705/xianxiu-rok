@@ -17,7 +17,7 @@ const URL = 'http://localhost:4178/'
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 const profile = mkdtempSync(join(tmpdir(), 'rok-e2e-'))
 const server = spawn('npx', ['vite', 'preview', '--port', '4178', '--strictPort'], { cwd: import.meta.dirname, stdio: 'ignore' })
-const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=9334', `--user-data-dir=${profile}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' })
+const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=9334', `--user-data-dir=${profile}`, '--no-first-run', ...(process.env.CI ? ['--no-sandbox'] : []), 'about:blank'], { stdio: 'ignore' })
 const errors: string[] = []
 
 async function tab() {

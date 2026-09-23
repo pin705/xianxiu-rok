@@ -21,7 +21,7 @@
     {#if outcome?.kind === 'rebirth'}
       <span class="big spin"><Medal emblem="rebirth" tone="gold" size={116} /></span>
       <h2 class="t-title">{L.rebirth.done(outcome.n)}</h2>
-      <p class="t-lore">{L.rebirth.gain(outcome.n)}</p>
+      <p class="t-lore">{L.rebirth.perks(outcome.n)}</p>
       <Button variant="gold" wide size="lg" onclick={onclose}>{L.rebirth.start}</Button>
     {:else if outcome?.report.win}
       <span class="big"><Medal emblem="lotus" tone="jade" size={116} /></span>

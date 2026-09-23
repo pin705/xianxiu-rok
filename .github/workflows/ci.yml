@@ -14,3 +14,6 @@ jobs:
       - run: npm run check
       - run: npm run sim # bot phải tới Chủ điện tầng 15 trong 30 ngày, không thì báo lỗi
       - run: npm run build
+      - run: npm run e2e # Chrome có sẵn trên máy ảo ubuntu: chơi thật 14 nhiệm vụ, 2 tab, offline
+        env:
+          CHROME: /usr/bin/google-chrome

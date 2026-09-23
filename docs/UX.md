@@ -184,7 +184,7 @@ Button · IconButton · Sheet (cuộn tranh: bảng dưới / hộp giữa, vu�
 
 - Hán Việt cho thế giới (Xuất quan, Tạp dịch, Thế lực); tiếng Việt thường cho thao tác (Xây dựng, Nâng cấp, Nhận thưởng).
 - Báo lỗi kèm lối đi: "Chủ điện tầng 4 ✗ [Đi tới]".
-- Chữ nằm trong `packages/i18n/locales/*.ts` (object `L` qua `apps/client/src/lib.ts`); thêm ngôn ngữ xem README mục Đa ngôn ngữ.
+- Chữ nằm trong `packages/i18n/locales/*.ts` (object `L` qua `apps/client/src/lib.ts`); thêm ngôn ngữ xem [README](../README.md) mục Đa ngôn ngữ.
 
 ## 7. Đa nền tảng
 

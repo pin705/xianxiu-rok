@@ -51,6 +51,20 @@
     for (const b of bursts) if (scene && !seen.has(b.t)) (seen.add(b.t), scene.burst(b.id))
   })
 
+  // Bong bóng đồng hồ nằm trên nóc; nóc nào ngang tầm biển tên công trình bên cạnh (tầng núi so le) thì nhấc
+  // bong bóng lên trên biển tên đó. Bề ngang biển tên ước theo độ dài tên (~7px mỗi chữ), bong bóng ~84 DU.
+  function bubbleY(id: BuildingId, h: number) {
+    const [x, y] = SLOT[id]
+    let by = y - h - 14
+    for (let pass = 0; pass < 3; pass++)
+      for (const o of IDS) {
+        const [ox, oy] = SLOT[o]
+        const py = oy + 13
+        if (o !== id && Math.abs(ox - x) < L.b[o].name.length * 3.6 + 26 + 42 && by > py - 30 && by < py + 26) by = py - 30
+      }
+    return by
+  }
+
   // Việc của công trình chức năng và gợi ý khi rảnh (UX: màn nào cũng trả lời "làm gì tiếp?")
   function work(id: BuildingId) {
     if (id === 'dienVoTruong') return game.train
@@ -99,15 +113,16 @@
         {@const makes = BUILDINGS[id].makes}
         {@const full = !!makes && lv > 0 && game.res[makes] >= storage(game)}
         {@const hint = !job && !wj ? idle(id) : null}
+        {@const by = bubbleY(id, h)}
         {#if locked}
           <span class="pin" style={at(x, y - h * 0.4)}><Tag icon="lock" size="sm">{L.level(BUILDINGS[id].unlock)}</Tag></span>
         {:else}
           <span class="pin" style={at(x, y + 13)}><Plate name={L.b[id].name} level={lv} dim={!lv} /></span>
         {/if}
         {#if job}
-          <span class="pin" style={at(x, y - h - 14)}><Bubble icon="hammer" time={clock(job.finishAt - now)} value={progress(job, now)} /></span>
+          <span class="pin" style={at(x, by)}><Bubble icon="hammer" time={clock(job.finishAt - now)} value={progress(job, now)} /></span>
         {:else if wj}
-          <span class="pin" style={at(x, y - h - 14)}>
+          <span class="pin" style={at(x, by)}>
             <Bubble icon={game.heal && id === 'danPhong' ? 'heal' : WORK_ICON[id as keyof typeof WORK_ICON]} time={clock(wj.finishAt - now)} value={progress(wj, now)} />
           </span>
         {:else if hint}
@@ -116,10 +131,11 @@
           <span class="pin" style={at(x, y - h * 0.5)}><Hint icon="hammer" /></span>
         {/if}
         {#if full}
-          <span class="pin" style={at(x, y - Math.min(h, 58) - 6)}><Tag tone="bad" size="sm">{L.full}</Tag></span>
+          <!-- có bong bóng đồng hồ thì nhãn "Đầy" nằm ngay trên bong bóng, không đè nhau -->
+          <span class="pin" style={job || wj ? at(x, by - 26) : at(x, y - Math.min(h, 58) - 6)}><Tag tone="bad" size="sm">{L.full}</Tag></span>
         {/if}
         {#if guide === id}
-          <span class="pin up" style={at(x, y - h - (job ? 40 : 18))}><Pointer /></span>
+          <span class="pin up" style={at(x, job || wj ? by - 26 : y - h - 18)}><Pointer /></span>
         {/if}
         {#each bursts.filter(b => b.id === id) as b (b.t)}
           <span class="pin" style={at(x, y - h - 6)}><b class="lvup">{L.level(b.level)}</b></span>

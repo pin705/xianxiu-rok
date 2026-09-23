@@ -327,16 +327,10 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       },
       'độ kiếp thất bại',
     )
-    paint(
-      'Result',
-      {
-        outcome: { kind: 'rebirth', n: 3 },
-        game: late,
-        onclose: noop,
-        onreplay: noop,
-      },
-      'luân hồi',
-    )
+    const reborn = render(C.Result, { props: { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop } }).body
+    paint('Result', { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop }, 'luân hồi')
+    assert.equal(reborn.split(L.rebirth.done(3)).length - 1, 1, 'màn luân hồi: tên kiếp chỉ hiện một lần')
+    assert.ok(reborn.includes(L.rebirth.perks(3)), 'màn luân hồi: nói rõ thưởng kiếp này')
   }
 })
 

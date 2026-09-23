@@ -137,11 +137,24 @@ export function curl(g: G, x: number, y: number, r: number, rot: number, color: 
   stroke(g, pts.reverse(), { w, color, press: 'rise', alpha, rough: 0.3, seed })
 }
 
-// Lấp đầy bằng giấy (hạt giấy giữ đúng cỡ px thật, không phóng theo s)
-function paperFill(g: G, s: number, tone: string, seed = 7) {
-  const pat = g.createPattern(paper(256, tone, seed) as CanvasImageSource, 'repeat')!
+// Lấp một hình bằng giấy (hạt giấy giữ đúng cỡ px thật, không phóng theo s). Mọi da dùng chung một ô giấy;
+// giấy màu khác (trắng hơn, ánh vàng) là một lớp màu phủ mỏng lên trên — khỏi sinh thêm ô giấy (tốn nhất khi khởi động).
+function fillPaper(g: G, s: number, pts: readonly Pt[], tone: string = C.paper, shadow?: () => void) {
+  const pat = g.createPattern(paper(256) as CanvasImageSource, 'repeat')!
   pat.setTransform(new DOMMatrix().scale(1 / s))
-  return pat
+  g.save()
+  shadow?.()
+  g.fillStyle = pat
+  path(g, pts)
+  g.fill()
+  g.restore()
+  if (tone === C.paper) return
+  g.save()
+  g.globalAlpha = 0.6
+  g.fillStyle = tone
+  path(g, pts)
+  g.fill()
+  g.restore()
 }
 
 // Ố vàng dọc mép (giấy cũ): 4 dải chuyển màu từ mép vào, góc chồng lên nên đậm hơn
@@ -204,9 +217,7 @@ export function scrollSkin(s: number, silk: string = mix(C.azuriteL, C.paper2, 0
   outline(g, rounded(band - 1, band - 1, W - band + 1, H - band + 1, 1.2, 7, 0.1), 0.9, C.goldD, 7, 0.75, 0.2)
   // giấy
   const inner = rounded(band, band, W - band, H - band, 1, 9, 0.12)
-  g.fillStyle = paperFill(g, s, C.paper)
-  path(g, inner)
-  g.fill()
+  fillPaper(g, s, inner)
   g.save()
   path(g, inner)
   g.clip()
@@ -272,14 +283,19 @@ export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
   const base = { paper: mix(C.paper, '#ffffff', 0.4), plain: mix(C.paper, '#ffffff', 0.4), glow: mix(C.goldL, C.paper, 0.45), selected: mix(C.paper, '#ffffff', 0.4), lacquer: C.lacquer }[tone]
   const edge = deckle(pad, pad, W - pad, H - pad - 0.5, tone === 'lacquer' ? 0.5 : 1.3, seed)
   // bóng: giấy hơi nhấc khỏi mặt bảng
-  g.save()
-  g.shadowColor = rgba(C.ink, 0.28)
-  g.shadowBlur = 3.5 * s
-  g.shadowOffsetY = 1.4 * s
-  g.fillStyle = tone === 'lacquer' ? base : paperFill(g, s, base, seed)
-  path(g, edge)
-  g.fill()
-  g.restore()
+  const lift = () => {
+    g.shadowColor = rgba(C.ink, 0.28)
+    g.shadowBlur = 3.5 * s
+    g.shadowOffsetY = 1.4 * s
+  }
+  if (tone === 'lacquer') {
+    g.save()
+    lift()
+    g.fillStyle = base
+    path(g, edge)
+    g.fill()
+    g.restore()
+  } else fillPaper(g, s, edge, base, lift)
   g.save()
   path(g, edge)
   g.clip()
@@ -313,14 +329,14 @@ export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
 export function plankSkin(s: number, seed = 5): Skin {
   const W = 260, H = 96, sl = 18
   const { cv, g } = surface(W, H, s)
-  const img = g.createImageData(Math.ceil(W * s), Math.ceil(H * s))
+  const wood = canvas(W, H)
+  const wg = wood.getContext('2d') as G
+  const img = wg.createImageData(W, H)
   const n = parseInt(C.lacquer.slice(1), 16)
   const R = n >> 16, Gc = (n >> 8) & 255, B = n & 255
-  const pw = Math.ceil(W * s), ph = Math.ceil(H * s)
-  for (let i = 0; i < pw * ph; i++) {
-    const x = i % pw, y = (i / pw) | 0
+  for (let i = 0; i < W * H; i++) {
+    const u = i % W, v = (i / W) | 0
     // vân gỗ ngang uốn nhẹ + mắt gỗ + sáng trên tối dưới
-    const u = x / s, v = y / s
     const bend = noise2(u / 60, v / 30, seed) * 6
     const grainV = noise2(u / 42, (v + bend) / 1.8, seed + 1) * 0.6 + noise2(u / 9, (v + bend) / 0.9, seed + 2) * 0.4
     const shade = 1.12 - (v / H) * 0.3
@@ -330,10 +346,9 @@ export function plankSkin(s: number, seed = 5): Skin {
     img.data[i * 4 + 2] = B * k
     img.data[i * 4 + 3] = 255
   }
-  g.save()
-  g.setTransform(1, 0, 0, 1, 0, 0)
-  g.putImageData(img, 0, 0)
-  g.restore()
+  wg.putImageData(img, 0, 0)
+  g.imageSmoothingQuality = 'high'
+  g.drawImage(wood as CanvasImageSource, 0, 0, W, H)
   // vệt sáng sơn mài quét ngang
   for (let k = 0; k < 2; k++) stroke(g, [[20 + k * 110, 4 + k * 1.5], [70 + k * 110, 3 + k], [120 + k * 110, 5]], { w: 3, color: '#ffffff', alpha: 0.07, press: 'swell', dry: 0.7, seed: seed + k })
   // chỉ vàng đôi viền tay
@@ -546,15 +561,11 @@ export function switchSkin(s: number, on: boolean, seed = 27): Skin {
 export function knobSkin(s: number, seed = 29): Skin {
   const W = 26, H = 26
   const { cv, g } = surface(W, H, s)
-  g.save()
-  g.shadowColor = rgba(C.ink, 0.4)
-  g.shadowBlur = 2 * s
-  g.shadowOffsetY = 1 * s
-  g.fillStyle = paperFill(g, s, mix(C.paper, '#ffffff', 0.5))
-  g.beginPath()
-  g.arc(W / 2, H / 2, 10, 0, Math.PI * 2)
-  g.fill()
-  g.restore()
+  fillPaper(g, s, rounded(3, 3, W - 3, H - 3, 10, seed, 0.2), mix(C.paper, '#ffffff', 0.5), () => {
+    g.shadowColor = rgba(C.ink, 0.4)
+    g.shadowBlur = 2 * s
+    g.shadowOffsetY = 1 * s
+  })
   ring(g, W / 2, H / 2, 9.4, 1.6, C.ink, seed, 0.85)
   return { cv, w: W, h: H, slice: [0, 0, 0, 0] }
 }
@@ -589,14 +600,20 @@ export function discSkin(s: number, tone: DiscTone, seed = 33): Skin {
   const { cv, g } = surface(W, H, s)
   const base = { lacquer: C.lacquer, paper: mix(C.paper, '#ffffff', 0.45), azure: C.azuriteD, gold: C.gold }[tone]
   const disc = rounded(c - r, c - r, c + r, c + r, r, seed, 0.3)
-  g.save()
-  g.shadowColor = rgba(C.ink, 0.45)
-  g.shadowBlur = 3 * s
-  g.shadowOffsetY = 1.6 * s
-  g.fillStyle = tone === 'paper' ? paperFill(g, s, base, seed) : base
-  path(g, disc)
-  g.fill()
-  g.restore()
+  const lift = () => {
+    g.shadowColor = rgba(C.ink, 0.45)
+    g.shadowBlur = 3 * s
+    g.shadowOffsetY = 1.6 * s
+  }
+  if (tone === 'paper') fillPaper(g, s, disc, base, lift)
+  else {
+    g.save()
+    lift()
+    g.fillStyle = base
+    path(g, disc)
+    g.fill()
+    g.restore()
+  }
   g.save()
   path(g, disc)
   g.clip()

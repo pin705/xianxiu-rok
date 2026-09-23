@@ -16,8 +16,8 @@ npm run analytics  # máy nhận analytics (cần STATS_TOKEN)
 
 Mọi lệnh chạy ở gốc repo. Lệnh của riêng một package: `npm run <lệnh> -w @rok/client`.
 
-- [PLAN.md](PLAN.md) — tầm nhìn, hệ thống, kỹ thuật, lộ trình, cách phát hành (mục 13).
-- [UX.md](UX.md) — luồng màn hình, hệ thiết kế.
+- [docs/PLAN.md](docs/PLAN.md) — tầm nhìn, hệ thống, kỹ thuật, lộ trình, cách phát hành (mục 13).
+- [docs/UX.md](docs/UX.md) — luồng màn hình, hệ thiết kế.
 
 ## Cấu trúc repo (npm workspaces, không cần Nx/Turbo)
 
