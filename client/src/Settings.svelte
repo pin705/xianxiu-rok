@@ -3,7 +3,7 @@
   import type { State } from '@rok/rules'
   import { Icon } from '@rok/art'
   import Sheet from './Sheet.svelte'
-  import { L, nowMs, parse, wipe } from './lib'
+  import { L, LANG, nowMs, parse, setLang, wipe } from './lib'
 
   let {
     game,
@@ -70,6 +70,10 @@
     <span><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</span>
     <input type="checkbox" checked={!muted} onchange={onmute} />
   </label>
+  <div class="lang" role="group" aria-label="Ngôn ngữ / Language">
+    <button class:on={LANG === 'vi'} aria-pressed={LANG === 'vi'} onclick={() => LANG !== 'vi' && setLang('vi')}>Tiếng Việt</button>
+    <button class:on={LANG === 'en'} aria-pressed={LANG === 'en'} onclick={() => LANG !== 'en' && setLang('en')}>English</button>
+  </div>
 
   <h3>{L.settings.save}</h3>
   <p class="muted note">{L.settings.saveHint}</p>
@@ -138,6 +142,29 @@
     width: 20px;
     height: 20px;
     accent-color: var(--gold);
+  }
+  .lang {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px;
+    background: rgb(0 0 0 / 0.25);
+    border-radius: 12px;
+  }
+  .lang button {
+    min-height: 36px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #b9c6ca;
+    background: none;
+    border: 0;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .lang .on {
+    color: #2b2210;
+    background: linear-gradient(#f8e3a0, #c9a14a);
   }
   .note {
     margin-bottom: 10px;

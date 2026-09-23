@@ -3,7 +3,7 @@
   // Chủ điện ở tầng 5, 10: thay nâng cấp bằng độ kiếp. Tầng 15: luân hồi.
   import {
     BUILDINGS, MAX_LEVEL, TECH_ROWS, TRIBS, batch, buildTime, capAt, cost, hospital, marchSlots, might, mob, rate, tribError,
-    upgradeError,
+    upgradeError, winChance,
     type Action, type Army, type BuildingId, type ElderId, type State,
   } from '@rok/rules'
   import { Art, Defs, Icon } from '@rok/art'
@@ -175,6 +175,7 @@
         <ArmyPick
           {game}
           foe={tr.waves.reduce((s, w) => s + waveMight(w.str, tr.tier, w.type), 0)}
+          chance={(e, a) => winChance(game, e, a, 'trib', pill && !!game.items.doKiep)}
           cta={L.trib.go}
           disabled={!!terr}
           onsubmit={(e, a) => ontrib(e, a, pill && !!game.items.doKiep)}
@@ -189,7 +190,7 @@
             <div><h4>{L.rebirth.keep}</h4><ul>{#each L.rebirth.keepList as x (x)}<li class="ok">{x}</li>{/each}</ul></div>
             <div><h4>{L.rebirth.lose}</h4><ul>{#each L.rebirth.loseList as x (x)}<li>{x}</li>{/each}</ul></div>
           </div>
-          <p class="gain"><Icon name="star" size={16} />{L.rebirth.gain(game.rebirths)}</p>
+          <p class="gain"><Icon name="star" size={16} />{L.rebirth.gain(game.rebirths + 1)}</p>
           {#if game.marches.length}<p class="warn note">{L.rebirth.marching}</p>{/if}
           {#if sure}
             <p class="warn note">{L.rebirth.confirm}</p>

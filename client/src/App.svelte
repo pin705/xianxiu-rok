@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import {
-    IDS, RESOURCES, TECH_IDS, advance, apply, newGame, questDone, questOf, storage,
+    BUILDINGS, IDS, MAP_HALL, REALMS, RESOURCES, SECTS, TECH_IDS, advance, apply, newGame, questDone, questOf, storage,
     type Action, type Army, type Bag, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
@@ -17,11 +17,12 @@
   import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
   import Vault from './Vault.svelte'
-  import { L, isMuted, load, nowMs, num, reportName, save, setMuted, sfx, type Tab } from './lib'
+  import { L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, track, type Tab } from './lib'
 
   const saved = load(nowMs())
   const start = saved && advance(saved, nowMs())
   const away = saved && start ? summarize(saved, start) : null
+  if (start) save(start) // mở rồi tắt ngay thì lần sau không hiện lại Xuất quan cũ
   const preview = newGame(nowMs()) // cảnh nền cho người mới ở màn tiêu đề
 
   let game: State | null = $state.raw(start)
@@ -33,7 +34,7 @@
   let target: Target | null = $state(null)
   let replay: Report | null = $state(null)
   let outcome: Outcome | null = $state(null) // kết quả độ kiếp / luân hồi
-  let storm = $state(false)
+  let storm = $state<number | null>(null) // đang độ kiếp: tầng Chủ điện trước khi đột phá (giấu kết quả tới khi sét đánh xong)
   let reportsOpen = $state(false)
   let settingsOpen = $state(false)
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
@@ -50,11 +51,43 @@
     return q.id as BuildingId
   })
 
+  // Chủ điện lên tầng n: báo những gì vừa mở (UX.md mục 4 — mở dần theo tầng)
+  function unlocks(n: number) {
+    const opened = [
+      ...IDS.filter(id => id !== 'chuDien' && BUILDINGS[id].unlock === n).map(id => L.b[id].name),
+      ...TABS.filter(t => t.unlock === n).map(t => L.tabs[t.id]),
+      ...(n === MAP_HALL ? [L.map.title] : []),
+      ...SECTS.flatMap((d, i) => (d.hall === n ? [L.sects[i].name] : [])),
+      ...REALMS.flatMap((d, i) => (d.hall === n ? [L.realms[i].name] : [])),
+    ]
+    if (opened.length) toast(L.unlocked([...new Set(opened)].join(', ')))
+  }
+
   let tid = 0
   function toast(text: string, opt: { bad?: boolean; report?: Report } = {}) {
     const id = ++tid
     toasts = [...toasts.slice(-2), { id, text, ...opt }]
     setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), opt.report ? 6000 : 2600)
+  }
+
+  // So state trước/sau để mừng việc vừa xong — dù xong theo giờ hay nhờ Tụ Khí Đan.
+  // reports: báo chiến báo mới (trận ở bí cảnh/độ kiếp người chơi đang xem tận mắt thì không cần)
+  function notice(prev: State, next: State, reports: boolean) {
+    for (const id of IDS) {
+      if (next.levels[id] > prev.levels[id]) {
+        bursts = [...bursts, { id, level: next.levels[id], t: nowMs() }]
+        sfx('done')
+        if (id === 'chuDien') {
+          track('hall', { n: next.levels[id], rebirths: next.rebirths })
+          unlocks(next.levels[id])
+        }
+      }
+    }
+    if (reports) for (const r of next.reports.filter(r => r.id >= prev.nextId)) toast(L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
+    if (next.stats.trained > prev.stats.trained) toast(L.away.trained(next.stats.trained - prev.stats.trained))
+    if (next.stats.healed > prev.stats.healed) toast(L.away.healed(next.stats.healed - prev.stats.healed))
+    if (next.stats.brewed > prev.stats.brewed) toast(L.away.brewed(next.stats.brewed - prev.stats.brewed))
+    for (const t of TECH_IDS) if ((next.tech[t] ?? 0) > (prev.tech[t] ?? 0)) toast(L.away.tech(L.techs[t], next.tech[t]!))
   }
 
   onMount(() => {
@@ -63,23 +96,13 @@
       if (!game) return
       const next = advance(game, now)
       if (next === game || next.time === game.time) return
-      for (const id of IDS) {
-        if (next.levels[id] > game.levels[id]) {
-          bursts = [...bursts, { id, level: next.levels[id], t: now }]
-          sfx('done')
-        }
-      }
-      // Chiến báo mới từ các đội đang xuất quân
-      for (const r of next.reports.filter(r => r.id >= game!.nextId)) toast(L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
-      if (next.stats.trained > game.stats.trained) toast(L.away.trained(next.stats.trained - game.stats.trained))
-      if (next.stats.healed > game.stats.healed) toast(L.away.healed(next.stats.healed - game.stats.healed))
-      if (next.stats.brewed > game.stats.brewed) toast(L.away.brewed(next.stats.brewed - game.stats.brewed))
-      for (const t of TECH_IDS) if ((next.tech[t] ?? 0) > (game.tech[t] ?? 0)) toast(L.away.tech(L.techs[t], next.tech[t]!))
+      notice(game, next, true)
       const events = next.nextId !== game.nextId || next.stats !== game.stats || next.tech !== game.tech || next.levels !== game.levels
       game = next
       if (events) save(next)
       if (bursts.length && now - bursts[0].t > 2000) bursts = bursts.filter(b => now - b.t < 2000)
     }, 250)
+    if (game) track('open', { hall: game.levels.chuDien, rebirths: game.rebirths, away: away ? Math.round(away.ms / 60_000) : 0 })
     const hide = () => document.hidden && game && save(game)
     document.addEventListener('visibilitychange', hide)
     if (import.meta.env.DEV)
@@ -103,8 +126,8 @@
     if (away) sheet?.showModal()
   })
 
-  // Mọi thao tác đi qua đây: áp luật, lưu, báo lỗi nếu có
-  function act(a: Action): State | null {
+  // Mọi thao tác đi qua đây: áp luật, lưu, báo lỗi nếu có. quiet: độ kiếp tự diễn phần mừng sau khi sét đánh xong
+  function act(a: Action, quiet = false): State | null {
     if (!game) return null
     const r = apply(game, a, nowMs())
     if (!r.ok) {
@@ -112,6 +135,7 @@
       toast(L.err[r.error], { bad: true })
       return null
     }
+    if (!quiet) notice(game, r.state, false)
     game = r.state
     save(game)
     return game
@@ -121,6 +145,7 @@
     game = newGame(nowMs(), name)
     save(game)
     screen = 'game'
+    track('found')
   }
 
   function select(id: BuildingId, v: string | null = null) {
@@ -159,7 +184,7 @@
   function goQuest() {
     const q = game && questOf(game)
     if (!game || !q) return
-    if (q.k === 'build') focus(q.id as BuildingId)
+    if (q.k === 'build') focus(q.id as BuildingId, 'upgrade')
     if (q.k === 'train') focus('dienVoTruong', 'train')
     if (q.k === 'tech') focus('tangKinhCac', 'library')
     if (q.k === 'brew') focus('danPhong', 'alchemy')
@@ -171,13 +196,13 @@
   function builder() {
     if (!game) return
     const job = game.queue[0]
-    focus(job?.building ?? guide ?? 'chuDien')
+    focus(job?.building ?? guide ?? 'chuDien', 'upgrade')
   }
 
   // Trận đánh ngay (bí cảnh, độ kiếp) người chơi xem tận mắt: không tính là chiến báo chưa đọc
   function fightNow(a: Action) {
     const fresh = !!game && game.reports.every(r => r.id <= game!.seen)
-    const s = act(a)
+    const s = act(a, a.type === 'trib')
     return s && fresh ? (act({ type: 'seen' }) ?? s) : s
   }
 
@@ -196,18 +221,24 @@
 
   // Độ kiếp: về núi, trời tối, ba đợt sét đánh xuống Chủ điện, rồi hiện kết quả
   function trib(elder: ElderId, army: Army, pill: boolean) {
+    const from = game?.levels.chuDien ?? null
     const s = fightNow({ type: 'trib', elder, army, pill })
     if (!s) return
     const r = s.reports.at(-1)!
+    track('trib', { win: r.win, hall: s.levels.chuDien })
     selected = null
     tab = 'tongMon'
     requestAnimationFrame(() => world?.querySelector('[data-b="chuDien"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
-    storm = true
+    storm = from
     r.fights.forEach((_, i) => setTimeout(() => sfx('thunder'), 700 + i * 1200))
     setTimeout(() => {
-      storm = false
+      storm = null
       outcome = { kind: 'trib', report: r }
       sfx(r.win ? 'win' : 'lose')
+      if (r.win) {
+        bursts = [...bursts, { id: 'chuDien', level: s.levels.chuDien, t: nowMs() }]
+        unlocks(s.levels.chuDien)
+      }
     }, 800 + r.fights.length * 1200)
   }
 
@@ -218,6 +249,7 @@
     tab = 'tongMon'
     outcome = { kind: 'rebirth', n: s.rebirths }
     sfx('done')
+    track('rebirth', { n: s.rebirths })
   }
 
   function openReports() {
@@ -245,9 +277,30 @@
   }
 </script>
 
+{#snippet crashed(error: unknown)}
+  <div class="crash" role="alert">
+    <p class="han">{L.gameHan}</p>
+    <h2>{L.crash.title}</h2>
+    <p>{L.crash.body}</p>
+    <button class="btn gold wide" onclick={() => location.reload()}>{L.crash.reload}</button>
+    <button
+      class="btn ghost wide"
+      onclick={() => {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(new Blob([rawSave() ?? ''], { type: 'application/json' }))
+        a.download = 'son-ha-tien-tong-save.json'
+        a.click()
+      }}>{L.settings.export}</button
+    >
+    <small>{String(error)}</small>
+  </div>
+{/snippet}
+
+<svelte:boundary failed={crashed} onerror={e => console.error(e)}>
 {#if screen === 'game' && game}
+  {@const shown = storm ? { ...game, levels: { ...game.levels, chuDien: storm } } : game}
   <div class="world" class:hidden={tab !== 'tongMon'} bind:this={world}>
-    <Scene {game} {now} {selected} {guide} {bursts} {storm} onselect={id => select(id)} />
+    <Scene game={shown} {now} {selected} {guide} {bursts} storm={!!storm} onselect={id => select(id)} />
   </div>
   {#if tab === 'monHa'}
     <Disciples {game} {now} {act} onfocus={focus} />
@@ -257,10 +310,10 @@
     <Vault {game} {now} {act} onfocus={focus} />
   {/if}
   <Hud
-    {game}
+    game={shown}
     {now}
     {tab}
-    {storm}
+    storm={!!storm}
     {gain}
     onclaim={claim}
     onquest={goQuest}
@@ -338,6 +391,7 @@
   <div class="world still"><Scene game={game ?? preview} {now} still /></div>
   <Title mode={game ? 'splash' : 'first'} onstart={found} ondone={() => (screen = 'game')} />
 {/if}
+</svelte:boundary>
 
 <style>
   .world {
@@ -361,6 +415,32 @@
     overflow: hidden;
   }
 
+  .crash {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 14px;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px;
+    color: #f6f1e4;
+    text-align: center;
+    background: #0f1d25;
+  }
+  .crash .han {
+    font-size: 40px;
+    color: var(--gold-l);
+  }
+  .crash small {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 11px;
+    color: #7f8f95;
+    text-overflow: ellipsis;
+  }
   .toasts {
     position: fixed;
     top: calc(172px + env(safe-area-inset-top));

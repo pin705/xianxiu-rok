@@ -113,6 +113,7 @@
         onclick={() => onpick(n.t)}
         onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onpick(n.t))}
       >
+        <circle class="tap" r="24" />
         {#if hot}<circle class="halo" r="24" />{/if}
         <circle class="disc" r="17" />
         <text class="han glyph" y="7" text-anchor="middle">{n.glyph}</text>
@@ -133,9 +134,9 @@
         {:else if st === 'done'}
           <g transform="translate(-7 -7)" class="ok"><Icon name="check" size={14} /></g>
         {/if}
-        <text class="label" y="30" text-anchor="middle">{n.name}</text>
+        <text class="label" y="31" text-anchor="middle">{n.name}</text>
         {#if st === 'cool'}
-          <text class="label timer" y="41" text-anchor="middle">{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</text>
+          <text class="label timer" y="43" text-anchor="middle">{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</text>
         {/if}
       </g>
     {/each}
@@ -154,7 +155,7 @@
   </svg>
 </div>
 
-<div class="bar">
+<div class="mapbar">
   <h2>{L.map.title}</h2>
   <span class="chip">{L.map.slots(game.marches.length, marchSlots(game))}</span>
   <button class="btn small" onclick={onreports}>
@@ -207,6 +208,9 @@
     cursor: pointer;
     outline: none;
   }
+  .tap {
+    fill: transparent; /* vùng chạm ~45px cho ngón tay, lớn hơn huy hiệu */
+  }
   .disc {
     stroke: var(--gold-l);
     stroke-width: 2.2;
@@ -234,14 +238,14 @@
     fill: #fff;
   }
   .label {
-    font: 600 9px var(--font);
+    font: 600 10px var(--font);
     fill: var(--ink);
     stroke: #f6efdc;
     stroke-width: 3px;
     paint-order: stroke;
   }
   .timer {
-    font-size: 8.5px;
+    font-size: 9.5px;
     fill: var(--azurite);
   }
   .locked .disc,
@@ -293,7 +297,7 @@
     }
   }
 
-  .bar {
+  .mapbar {
     position: fixed;
     top: calc(124px + env(safe-area-inset-top));
     left: 50%;
@@ -306,10 +310,10 @@
     translate: -50% 0;
     pointer-events: none;
   }
-  .bar > * {
+  .mapbar > * {
     pointer-events: auto;
   }
-  .bar h2 {
+  .mapbar h2 {
     padding: 4px 12px;
     font-size: 15px;
     color: #f6f1e4;
@@ -317,11 +321,11 @@
     border: 1px solid rgb(201 161 74 / 0.55);
     border-radius: 10px;
   }
-  .bar .chip {
+  .mapbar .chip {
     color: #f6f1e4;
     background: rgb(13 24 31 / 0.75);
   }
-  .bar .btn {
+  .mapbar .btn {
     position: relative;
     margin-left: auto;
   }

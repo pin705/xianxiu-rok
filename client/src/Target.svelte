@@ -2,7 +2,7 @@
   // Bảng mục tiêu trên bản đồ: yêu thú, tông môn đối địch, bí cảnh. Xem địch, phần thưởng, chọn đội rồi xuất quân.
   import {
     BEASTS, BEATS, PILL_IDS, REALMS, RESOURCES, SECTS, TYPES, beastExp, beastLoot, coolKey, enemyOf, marchSlots, marchTime,
-    might, targetError, tierFor,
+    might, targetError, tierFor, winChance,
     type Army, type ElderId, type Reward, type State, type Target, type UnitType,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
@@ -89,7 +89,7 @@
         <p class="skill"><Icon name="bolt" size={14} />{L.lv(info.skill.level)} · {L.skillText(info.skill.skill)}</p>
       {/if}
       {@const c = counter(info.type)}
-      <p class="hint"><Icon name="swords" size={14} />{L.map.counter} <b>{L.units[c]}</b> ({L.beats(c).replace('Khắc', 'khắc')})</p>
+      <p class="hint"><Icon name="swords" size={14} />{L.map.counter} <b>{L.units[c]}</b> ({L.beats(c).replace(/^\p{Lu}/u, ch => ch.toLowerCase())})</p>
     {/if}
 
     <h3>{info.rewardLabel}</h3>
@@ -121,6 +121,7 @@
       <ArmyPick
         {game}
         foe={might(foe)}
+        chance={(e, a) => winChance(game, e, a, target!)}
         cta={realm ? L.map.enter : L.map.go}
         time={realm ? undefined : clock(marchTime(game, target))}
         disabled={full}

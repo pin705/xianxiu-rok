@@ -2,7 +2,7 @@
   import { Tween } from 'svelte/motion'
   import { PILL_IDS, RESOURCES, count, power, questDone, questOf, questProgress, storage, type Bag, type State } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { L, TABS, clock, num, type Tab } from './lib'
+  import { L, TABS, clock, num, progress, type Tab } from './lib'
 
   let {
     game,
@@ -34,7 +34,7 @@
   const quest = $derived(questOf(game))
   const done = $derived(questDone(game))
   const prog = $derived(quest && quest.k !== 'build' && quest.k !== 'hunt' && quest.k !== 'sect' ? questProgress(game, quest) : null)
-  const progress = $derived(job ? Math.min(1, (now - job.startAt) / (job.finishAt - job.startAt)) : 0)
+  const ring = $derived(job ? progress(job, now) : 0)
   // Huy hiệu trên thanh tab: việc đang chờ người chơi
   const badge = $derived({
     tongMon: 0,
@@ -135,7 +135,7 @@
     <button class="builder" class:idle={!job} onclick={onbuilder} aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}">
       <svg class="ring" viewBox="0 0 60 60" aria-hidden="true">
         <circle class="rbg" cx="30" cy="30" r="26" />
-        <circle class="rfg" cx="30" cy="30" r="26" stroke-dasharray="{progress * 163.4} 163.4" />
+        <circle class="rfg" cx="30" cy="30" r="26" stroke-dasharray="{ring * 163.4} 163.4" />
       </svg>
       <Icon name="hammer" size={24} />
       <span class="btime">{job ? clock(job.finishAt - now) : L.builder.idle}</span>

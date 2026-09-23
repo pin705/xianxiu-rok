@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {
   BEASTS, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
   elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, power, questDone, sideOf, storage,
-  techTime, trainCost, trainTime, upgradeError,
+  techTime, trainCost, trainTime, upgradeError, winChance,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
 
@@ -171,6 +171,7 @@ test('công pháp tăng sản lượng; luyện đan và dùng Tụ Khí Đan r�
   const long = up({ ...rich(11, 10), items: { tuKhi: 1 } }, 'chuDien')
   assert.equal(run(long, { type: 'speed', job: 'build', n: 1 }).queue[0].finishAt, long.queue[0].finishAt - SPEEDUP)
   assert.equal(err(s, { type: 'speed', job: 'train', n: 1 }), 'empty')
+  assert.equal(err({ ...s, brew: { pill: 'tuKhi', n: 1, startAt: s.time, finishAt: s.time + 1e6 } }, { type: 'speed', job: 'brew', n: 1 }), 'bad')
   assert.equal(err(s, { type: 'brew', pill: 'doKiep', n: 1 }), null)
   assert.equal(err({ ...s, levels: { ...s.levels, danPhong: PILLS.doKiep.unlock - 1 } }, { type: 'brew', pill: 'doKiep', n: 1 }), 'locked')
 })
@@ -204,6 +205,27 @@ test('trưởng lão: kinh nghiệm → cấp, cấp càng cao đội càng mạ
   assert.equal(fed.items.boiNguyen, 0)
   assert.ok(fed.elders.thanhPhong! > 0)
   assert.equal(err(s, { type: 'feed', elder: 'nhuYen', n: 1 }), 'locked')
+})
+
+test('tỉ lệ thắng ước lượng: tính hệ khắc, đông áp đảo thì chắc thắng, ít thì chắc thua', () => {
+  const s = rich(5)
+  const t = { kind: 'beast', i: 4 } as const // Kim Nhãn Điêu: hệ Kiếm
+  assert.equal(winChance(s, 'thanhPhong', { the1: 400 }, t), 1)
+  assert.equal(winChance(s, 'thanhPhong', { kiem1: 3 }, t), 0)
+  // Cùng lực chiến thô, đội khắc hệ (Thể khắc Kiếm) có cửa hơn đội bị khắc (Pháp bị Kiếm khắc)
+  assert.equal(winChance(s, 'thanhPhong', { the1: 60 }, t), 1)
+  assert.equal(winChance(s, 'thanhPhong', { phap1: 60 }, t), 0)
+  assert.equal(winChance(s, 'thanhPhong', { kiem1: 900, phap1: 900, the1: 900 }, 'trib'), 1)
+  assert.equal(winChance(s, 'thanhPhong', {}, t), 0)
+})
+
+test('thua không có kinh nghiệm (không cày cấp được bằng cách gửi 1 đệ tử)', () => {
+  const s = { ...rich(15), troops: { ...rich(15).troops, kiem1: 1 }, realms: [0, 0, 4] }
+  const r = run(s, { type: 'realm', i: 2, elder: 'thanhPhong', army: { kiem1: 1 } })
+  assert.equal(r.reports.at(-1)!.win, false)
+  assert.equal(r.elders.thanhPhong, s.elders.thanhPhong)
+  const t = run({ ...rich(5), troops: { ...rich(5).troops, kiem1: 1 } }, { type: 'trib', elder: 'thanhPhong', army: { kiem1: 1 }, pill: false })
+  assert.equal(t.elders.thanhPhong, 0)
 })
 
 test('bí cảnh: qua tầng lấy thưởng, tầng cuối thu nhận trưởng lão', () => {

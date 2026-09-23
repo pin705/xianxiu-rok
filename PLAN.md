@@ -2,7 +2,9 @@
 
 > Tên game: chưa đặt. Tài liệu sống — sửa khi quyết định thay đổi. Game flow và UI/UX: [UX.md](UX.md).
 >
-> Lệnh: `npm run dev` (chạy game) · `npm test` · `npm run check` (kiểm tra kiểu) · `npm run build`
+> Lệnh: `npm run dev` (chạy game) · `npm test` · `npm run check` (kiểm tra kiểu) · `npm run sim` (bot chơi 30 ngày, in nhịp) · `npm run build`
+>
+> **Trạng thái (23/09/2026): P1 đã đủ tính năng** — xem mục 5 › P1 và mục 13. Việc còn lại để qua cổng P1 là phát hành demo và đo người thật.
 
 ## 0. Giả định (sửa nếu sai)
 
@@ -48,18 +50,18 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 
 | Hệ thống | Tương đương RoK | P1 (offline) | Sau đó |
 |---|---|---|---|
-| Chủ điện (cấp = cảnh giới chưởng môn) | Tòa thị chính | Luyện Khí → Kim Đan (tầng 1–15) | Nguyên Anh, Hóa Thần (tới tầng 25) |
-| Công trình | Thành phố | 8 (xem dưới) | Hộ sơn đại trận, Luyện khí phòng (P2) |
-| Tài nguyên | Lương, gỗ, đá, vàng | Linh thạch, Linh thảo, Linh khoáng | Tiên ngọc — premium (P4) |
-| Đệ tử | Lính | 3 hệ × 3 bậc | Bậc 4–5 |
-| Trưởng lão | Tướng | 6 người, 1 công pháp chủ động + 2 bị động | Thêm người, cây thiên phú, ngũ hành |
-| Tàng Kinh Các | Học viện | ~20 nút | Mở rộng theo mùa |
-| Đan phòng | Bệnh viện | Chữa thương + 3 loại đan | Luyện đan theo công thức |
-| Bản đồ | Bản đồ vương quốc | Vùng PvE riêng: yêu thú Lv1–15, tông môn NPC, 3 bí cảnh | P3: giới chung |
-| Độ kiếp | — | Trận PvE với lôi kiếp (dùng lại combat) | P3: kiếp vân công khai trên bản đồ |
+| Chủ điện (cấp = cảnh giới chưởng môn) | Tòa thị chính | ✅ Luyện Khí → Kim Đan (tầng 1–15); số đội xuất quân 1/2/3 theo cảnh giới | Nguyên Anh, Hóa Thần (tới tầng 25) |
+| Công trình | Thành phố | ✅ 8 (xem dưới) | Hộ sơn đại trận, Luyện khí phòng (P2) |
+| Tài nguyên | Lương, gỗ, đá, vàng | ✅ Linh thạch, Linh thảo, Linh khoáng | Tiên ngọc — premium (P4) |
+| Đệ tử | Lính | ✅ 3 hệ × 3 bậc (Ngoại môn / Nội môn ở Diễn võ trường 5 / Chân truyền ở 10) | Bậc 4–5 |
+| Trưởng lão | Tướng | ✅ 6 người, 1 công pháp chủ động + 2 bị động (mở ở cấp 5, 12), cấp 1–30 | Thêm người, cây thiên phú, ngũ hành |
+| Tàng Kinh Các | Học viện | ✅ 20 công pháp, 5 hàng mở theo tầng 1/3/6/9/12 | Mở rộng theo mùa |
+| Đan phòng | Bệnh viện | ✅ Chữa thương (chỗ nằm có hạn, dư thì tử trận) + 3 đan: Tụ Khí (tăng tốc), Bồi Nguyên (kinh nghiệm), Độ Kiếp | Luyện đan theo công thức |
+| Bản đồ | Bản đồ vương quốc | ✅ Vùng PvE riêng: 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, 3 bí cảnh × 5 tầng | P3: giới chung |
+| Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | P3: kiếp vân công khai trên bản đồ |
 | PvP | Đánh thành | — | P2: bất đồng bộ; P3: trên bản đồ |
-| Tiên minh | Liên minh | — | P3 |
-| Mùa, luân hồi | KvK | Luân hồi tự nguyện ở tầng 15 | P3: gắn với mùa |
+| Tiên minh | Liên minh | — (tab khóa "sắp có") | P3 |
+| Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
 | Chat | Chat | — | P3 |
 
 5 cảnh giới × 5 tầng = 25 cấp, như 25 cấp Tòa thị chính của RoK. Qua mỗi cảnh giới mới (tầng 5→6, 10→11, 15→16) phải độ kiếp.
@@ -81,7 +83,7 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 |---|---|---|
 | Ngôn ngữ | TypeScript mọi nơi | Luật game viết 1 lần, chạy cả client lẫn server |
 | UI | Svelte 5 + Vite (lý do ở UX.md mục 1) | SLG phần lớn là màn hình UI; HTML/CSS làm UI responsive tốt nhất |
-| Bản đồ, hiệu ứng | PixiJS | 2D WebGL nhẹ, chạy tốt trên điện thoại |
+| Bản đồ, hiệu ứng | SVG ở P1; PixiJS từ P3 | Bản đồ PvE chỉ ~25 điểm, trận ≤ 6 nhóm: SVG + CSS đủ mượt, không thêm thư viện. Bản đồ chung P3 (hàng trăm đội) mới cần WebGL |
 | Server (từ P2) | Node.js + PostgreSQL, 1 process, 1 VPS | Game theo timer gần như không tốn CPU |
 | Web + PC + mobile | PWA từ P1; Capacitor (iOS/Android) và Electron + steamworks.js (Steam) ở P4 | 1 bản build; PWA đã chạy trên trình duyệt PC và điện thoại |
 
@@ -93,8 +95,10 @@ Tiền lệ: Melvor Idle (web, Steam, mobile), Antimatter Dimensions (web, Steam
 
 ```
 rok/
-  rules/     luật game thuần (index.ts) + số liệu (data.ts, sau này sinh từ sheet) — không I/O, không Date
-  client/    Vite + Svelte: UI; PixiJS thêm khi làm bản đồ
+  rules/     luật game thuần — không I/O, không Date
+             index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
+  art/       hình SVG vẽ theo tham số: công trình, icon, chân dung trưởng lão
+  client/    Vite + Svelte: UI, save trên máy, PWA
   server/    từ P2
   mobile/    từ P4 (Capacitor)
   desktop/   từ P4 (Electron + Steam)
@@ -105,9 +109,9 @@ rok/
 **1. Luật game là hàm thuần**
 
 ```ts
-advance(state, now): State           // cộng tài nguyên, hoàn tất mọi timer đã tới hạn
-apply(state, action, now): State     // mọi thao tác: xây, tuyển, tu luyện, xuất quân…
-battle(attacker, defender, seed): { winner, losses, log }
+advance(state, now): State                  // cộng tài nguyên, hoàn tất mọi việc hẹn giờ đã tới hạn, theo đúng thứ tự thời gian
+apply(state, action, now): Result           // mọi thao tác: xây, tuyển, chữa, nghiên cứu, luyện đan, xuất quân, độ kiếp…
+fight(attacker, defender, seed): { win, rounds }   // rules/combat.ts — số còn lại mỗi lượt, đủ để client phát lại
 ```
 
 P1: client chạy `rules`, lưu trên máy. P2: server chạy **chính** `rules` đó làm trọng tài, client chạy song song để phản hồi tức thì → không phải viết lại. Tài nguyên dùng số nguyên, thời gian là số ms.
@@ -146,6 +150,9 @@ Tài nguyên = đã có + tốc độ × thời gian trôi (chặn bởi sức c
 | Polling ở P2 | Trễ vài giây | Có chat (P3) → WebSocket |
 | State người chơi trong 1 JSONB | Khó query chéo | Bảng xếp hạng cần → tách cột |
 | Analytics bằng bảng SQL | Không có dashboard | Cần funnel phức tạp → dịch vụ ngoài |
+| Bản đồ PvE + phát lại trận bằng SVG | Vài chục vật thể chuyển động | Bản đồ chung P3 → PixiJS |
+| Trận đánh gộp theo nhóm (không có đội hình, vị trí) | Ít chiều sâu chiến thuật hơn RoK | Người chơi đòi → thêm hàng trước/sau |
+| Một hàng đợi cho mỗi việc (xây, tuyển, chữa, nghiên cứu, luyện đan) | Không xếp lịch trước được | Bán "thêm 1 hàng đợi" (P4) |
 
 ### Đa nền tảng
 
@@ -175,14 +182,23 @@ Tổng ~10–14 tháng full-time. **Phase nào cũng kết thúc bằng một b�
 
 ### P1 — Lõi offline trên web (~3 tháng)
 
-| Mốc | Nội dung | Thời gian |
-|---|---|---|
-| 1.1 | Tông môn: xây/nâng, tài nguyên, hàng đợi, tiến trình offline, save trên máy + xuất/nhập. UI xấu cũng được | 2–3 tuần |
-| 1.2 | Đệ tử, trưởng lão, combat + màn phát lại, bản đồ PvE: yêu thú, tông môn NPC | 3–4 tuần |
-| 1.3 | Cảnh giới + độ kiếp, Tàng Kinh Các, Đan phòng, bí cảnh, nhiệm vụ chính tuyến (làm tutorial luôn) | 3 tuần |
-| 1.4 | Art pass, âm thanh, luân hồi, endpoint analytics ẩn danh (mầm của server P2), phát hành demo | 2–3 tuần |
+| Mốc | Nội dung | Thời gian | Trạng thái |
+|---|---|---|---|
+| 1.1 | Tông môn: xây/nâng, tài nguyên, hàng đợi, tiến trình offline, save trên máy + xuất/nhập. UI xấu cũng được | 2–3 tuần | ✅ |
+| 1.2 | Đệ tử, trưởng lão, combat + màn phát lại, bản đồ PvE: yêu thú, tông môn NPC | 3–4 tuần | ✅ |
+| 1.3 | Cảnh giới + độ kiếp, Tàng Kinh Các, Đan phòng, bí cảnh, nhiệm vụ chính tuyến (làm tutorial luôn) | 3 tuần | ✅ 45 nhiệm vụ dẫn qua mọi hệ thống |
+| 1.4 | Art pass, âm thanh, luân hồi, endpoint analytics ẩn danh (mầm của server P2), phát hành demo | 2–3 tuần | ✅ trừ: server nhận analytics, đưa lên itch.io/domain |
 
 Công cụ: `rules/simulate.ts` — bot chơi `rules` 30 ngày ảo, in ra lúc đạt từng cảnh giới → chỉnh nhịp bằng số liệu, không bằng cảm giác.
+
+Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết quả trận; người chơi thường (`npm run sim -- 45 3 --casual`) mỗi phiên chỉ làm 1 lượt và chỉ đánh khi giao diện báo ≥ 80% thắng:
+
+| | Bot giỏi, 4 phiên/ngày | Bot giỏi, 2 phiên/ngày | Người chơi thường, 3 phiên/ngày |
+|---|---|---|---|
+| Chủ điện tầng 5 | ngày 2 | ngày 3 | ngày 3 |
+| Độ kiếp → Trúc Cơ | ngày 3 (152 đệ tử) | ngày 5 | ngày 6 (181 đệ tử) |
+| Độ kiếp → Kim Đan | ngày 7 (463 đệ tử, trưởng lão cấp 15) | ngày 14 | ngày 12 (410 đệ tử) |
+| Chủ điện tầng 15 | ngày 12 | ngày 22 | ngày 19, không thua trận nào |
 
 **Cổng P1** (tham khảo): ≥ 300 người thử; D1 ≥ 30%, D7 ≥ 10%; người đã luân hồi vẫn chơi tiếp. Không đạt → sửa lõi, chưa làm online.
 
@@ -281,4 +297,18 @@ Công cụ: `rules/simulate.ts` — bot chơi `rules` 30 ngày ảo, in ra lúc 
 3. ✅ Khởi tạo repo: npm workspaces với `rules/` + `client/`.
 4. ✅ `rules/`: `State`, `advance()`, action xây + nâng cấp, kèm test (`rules/rules.test.ts`).
 5. ✅ Màn hình tông môn theo UX.md: tài nguyên, tạp dịch + gợi ý, 8 công trình, đếm ngược, save trên máy, màn Xuất quan.
+
+## 13. Phát hành demo (P1)
+
+**Build:** `npm run build` → thư mục tĩnh `client/dist/` (đường dẫn tương đối, chạy được ở gốc domain lẫn thư mục con).
+
+- **Cloudflare Pages:** build command `npm run build`, output `client/dist`.
+- **itch.io:** nén `client/dist/` thành zip, chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
+- **PWA:** có manifest + icon ấn 宗 + service worker (`client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
+- **Analytics:** build với `VITE_ANALYTICS_URL=https://…` thì client gửi beacon JSON `{id, name, props, v, t}` (id ngẫu nhiên của máy, không có dữ liệu cá nhân) cho các sự kiện `open`, `found`, `hall`, `trib`, `rebirth`. Không đặt biến thì không gửi gì. Việc còn lại: một endpoint nhận và ghi vào bảng `analytics` (mầm của server P2).
+- **Font:** giấy phép OFL nằm cạnh font trong `client/public/fonts/`.
+
+**Kiểm thử trước khi phát hành:** `npm test` (luật), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi chơi thử bản build (`npm run build && npm run preview -w client`). CI (`.github/workflows/ci.yml`) chạy đủ 4 bước này ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
+
+**Việc còn lại để qua cổng P1:** thử trên điện thoại thật (Android tầm trung, iPhone Safari), bản tiếng Anh (thêm `en` cùng kiểu với `vi` trong `client/src/lib.ts`), endpoint analytics, đăng itch.io + nhóm Facebook/Discord, gom ≥ 300 người thử.
 6. Spike PixiJS 100×100 ô trên điện thoại thật.

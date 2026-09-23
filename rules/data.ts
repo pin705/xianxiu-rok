@@ -84,7 +84,7 @@ export const SKILL_EVERY = 3   // trưởng lão thi triển công pháp ở lư
 export const ELDER_STEP = 0.04
 export const ELDER_MAX = 30
 export const EXP_BASE = 50     // tổng kinh nghiệm để đạt cấp n: EXP_BASE × n × (n − 1)
-export const LOSS_EXP = 1 / 3  // thua vẫn được 1/3 kinh nghiệm
+export const LOSS_EXP = 0      // thua không có kinh nghiệm: bí cảnh đánh tức thì, cho kinh nghiệm khi thua là cày cấp bằng cách gửi 1 đệ tử
 
 export type Bonus =
   | 'prod' | 'prod.linhThach' | 'prod.linhThao' | 'prod.linhKhoang' | 'storage' | 'build' | 'train' | 'march'
@@ -144,10 +144,12 @@ export const MAX_CUT = 0.6
 
 // ---------- Đan phòng ----------
 
+// Luyện lâu hơn thời gian đan tiết kiệm được: đan là tiện lợi, không phải cỗ máy tăng tốc (luyện liên tục 2 phút/viên
+// từng biến hàng đợi xây nhanh gấp 8). Đan chủ yếu đến từ nhiệm vụ, bí cảnh, tông môn.
 const pills = {
-  tuKhi: { unlock: 1, cost: b(150, 300, 50), time: 120 },      // bớt 15 phút một việc đang chờ
-  boiNguyen: { unlock: 3, cost: b(300, 800, 300), time: 300 }, // +kinh nghiệm cho trưởng lão
-  doKiep: { unlock: 5, cost: b(1500, 3000, 1500), time: 900 }, // lôi kiếp yếu đi khi độ kiếp
+  tuKhi: { unlock: 1, cost: b(300, 600, 150), time: 1200 },      // bớt 15 phút một việc đang chờ
+  boiNguyen: { unlock: 3, cost: b(600, 1500, 600), time: 1800 }, // +kinh nghiệm cho trưởng lão
+  doKiep: { unlock: 5, cost: b(1500, 3000, 1500), time: 900 },   // lôi kiếp yếu đi khi độ kiếp
 } satisfies Record<string, { unlock: number; cost: Bag; time: number }>
 export type PillId = keyof typeof pills
 export const PILLS: Record<PillId, { unlock: number; cost: Bag; time: number }> = pills
@@ -251,7 +253,7 @@ export const REALMS: RealmDef[] = [
 // Chủ điện tầng 5 → 6 (Trúc Cơ) và 10 → 11 (Kim Đan) không xây được mà phải vượt 3 đợt lôi kiếp.
 // Đệ tử sống sót đi tiếp sang đợt sau. Thành công thì lên tầng ngay; thất bại chỉ phải chờ rồi thử lại.
 export const TRIBS: { hall: number; tier: Tier; waves: { type: UnitType; str: number }[] }[] = [
-  { hall: 5, tier: 1, waves: [{ type: 'kiem', str: 40 }, { type: 'phap', str: 55 }, { type: 'the', str: 70 }] },
+  { hall: 5, tier: 1, waves: [{ type: 'kiem', str: 80 }, { type: 'phap', str: 100 }, { type: 'the', str: 120 }] },
   { hall: 10, tier: 2, waves: [{ type: 'kiem', str: 250 }, { type: 'phap', str: 320 }, { type: 'the', str: 400 }] },
 ]
 export const TRIB_COOLDOWN = 10 * 60_000

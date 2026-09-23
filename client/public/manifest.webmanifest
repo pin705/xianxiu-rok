@@ -1,0 +1,17 @@
+{
+  "name": "Sơn Hà Tiên Tông",
+  "short_name": "Tiên Tông",
+  "description": "Dựng tông môn, tranh linh mạch, phi thăng — game tu tiên chiến lược nhẹ nhàng, mỗi phiên 5–10 phút.",
+  "lang": "vi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1d25",
+  "theme_color": "#b9d2d8",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

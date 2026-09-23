@@ -513,6 +513,42 @@ export function tribError(s: State): Err | null {
 
 export const jobOf = (s: State, k: JobKind) => (k === 'build' ? s.queue[0] ?? null : s[k])
 
+// Ba đợt lôi kiếp nối nhau; đệ tử còn đứng được đi tiếp sang đợt sau.
+function tribulation(s: State, elder: ElderId, army: Army, pill: boolean, seed: number) {
+  const tr = TRIBS[s.trib]
+  const weaken = (1 - Math.min(MAX_CUT, lead(s, elder, 'trib'))) * (pill ? 1 - DO_KIEP : 1)
+  const lv = elderLevel(s.elders[elder])
+  let me = sideOf(s, elder, army)
+  let win = true
+  const fights: Report['fights'] = []
+  for (const w of tr.waves) {
+    const foe = mob(w.str, tr.tier, [[w.type, 1]], 1, undefined, weaken)
+    const f = fight(me, foe, seed)
+    seed = nextSeed(seed)
+    fights.push({ a: snap(me, elder, lv), b: snap(foe), rounds: f.rounds })
+    const left = f.rounds.at(-1)?.n[0]
+    if (left) me = { ...me, troops: me.troops.map((x, i) => ({ ...x, n: left[i] })) }
+    if (!f.win) {
+      win = false
+      break
+    }
+  }
+  return { win, fights, left: me.troops.map(x => x.n), seed }
+}
+
+// Tỉ lệ thắng ước lượng để hiện cho người chơi: đánh thử với 9 mầm cố định, khác mầm thật (không lộ đúng kết quả).
+// Tính đủ hệ khắc, công pháp trưởng lão, lôi kiếp — lực chiến thô thì không (đội bị khắc hệ hiện "áp đảo" mà thua 1/4).
+export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'trib', pill = false) {
+  if (!count(army) || s.elders[elder] === undefined) return 0
+  if (t === 'trib' && !TRIBS[s.trib]) return 0
+  let won = 0
+  for (let k = 1; k <= 9; k++) {
+    const seed = Math.imul(k, 0x9e3779b1) >>> 0
+    if (t === 'trib' ? tribulation(s, elder, army, pill, seed).win : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win) won++
+  }
+  return won / 9
+}
+
 // ---------- Thao tác ----------
 
 export function apply(s: State, a: Action, now: number): Result {
@@ -582,26 +618,9 @@ export function apply(s: State, a: Action, now: number): Result {
       if (a.pill && !state.items.doKiep) return no('no_item')
       const k = state.trib
       const tr = TRIBS[k]
-      const weaken = (1 - Math.min(MAX_CUT, lead(state, a.elder, 'trib'))) * (a.pill ? 1 - DO_KIEP : 1)
+      const { win, fights, left, seed } = tribulation(state, a.elder, a.army, a.pill, state.seed)
       const ids = UNITS.filter(u => (a.army[u] ?? 0) > 0)
-      let me = sideOf(state, a.elder, a.army)
-      let seed = state.seed
-      let win = true
-      const fights: Report['fights'] = []
-      const lv = elderLevel(state.elders[a.elder])
-      for (const w of tr.waves) {
-        const foe = mob(w.str, tr.tier, [[w.type, 1]], 1, undefined, weaken)
-        const f = fight(me, foe, seed)
-        seed = nextSeed(seed)
-        fights.push({ a: snap(me, a.elder, lv), b: snap(foe), rounds: f.rounds })
-        const left = f.rounds.at(-1)?.n[0]
-        if (left) me = { ...me, troops: me.troops.map((x, i) => ({ ...x, n: left[i] })) }
-        if (!f.win) {
-          win = false
-          break
-        }
-      }
-      const hurt = Object.fromEntries(ids.map((u, i) => [u, a.army[u]! - me.troops[i].n])) as Army
+      const hurt = Object.fromEntries(ids.map((u, i) => [u, a.army[u]! - left[i]])) as Army
       let st: State = { ...state, seed, troops: minus(state.troops, hurt), items: a.pill ? { ...state.items, doKiep: state.items.doKiep! - 1 } : state.items }
       const adm = admit(st, hurt)
       st = adm.state
@@ -613,6 +632,7 @@ export function apply(s: State, a: Action, now: number): Result {
       return ok(pushReport(st, { at: t, kind: 'trib', i: k, win, fights, hurt, dead: adm.dead, gain: { res: {}, items: {}, exp } }))
     }
     case 'speed': {
+      if (a.job === 'brew') return no('bad') // đan không rút ngắn việc luyện đan: có giảm thời gian từ công pháp là thành vòng lặp đẻ đan
       if (!Number.isInteger(a.n) || a.n < 1 || a.n > (state.items.tuKhi ?? 0)) return no('no_item')
       const job = jobOf(state, a.job)
       if (!job) return no('empty')

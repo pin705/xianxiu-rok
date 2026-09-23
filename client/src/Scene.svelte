@@ -4,7 +4,7 @@
   import { fade } from 'svelte/transition'
   import { BUILDINGS, IDS, TRIBS, count, storage, type BuildingId, type State } from '@rok/rules'
   import { Art, Defs, Icon } from '@rok/art'
-  import { L, SEAL, clock } from './lib'
+  import { L, SEAL, clock, progress } from './lib'
 
   type Burst = { id: BuildingId; level: number; t: number }
   let {
@@ -293,7 +293,7 @@
         {/if}
 
         {#if job}
-          {@const p = Math.min(1, (now - job.startAt) / (job.finishAt - job.startAt))}
+          {@const p = progress(job, now)}
           <g class="scaffold">
             {#each [-0.45, -0.15, 0.15, 0.45] as k}<path d="M{k * w * 0.95} 0V{-h * 0.95}" />{/each}
             {#each [0.3, 0.62, 0.92] as k}<path d="M{-w * 0.46} {-h * k}H{w * 0.46}" />{/each}
@@ -320,7 +320,7 @@
 
         {#if !job && work(id)}
           {@const wj = work(id)!}
-          {@const p = Math.min(1, (now - wj.startAt) / (wj.finishAt - wj.startAt))}
+          {@const p = progress(wj, now)}
           <g class="timer work" transform="translate(0 {-h - 18})">
             <rect x="-32" y="-11" width="64" height="22" rx="11" />
             <circle cx="-21" r="7.5" class="tbg" />

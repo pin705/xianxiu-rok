@@ -25,8 +25,8 @@
   {#if outcome?.kind === 'rebirth'}
     <div class="rays"></div>
     <p class="han big spin">{GLYPH.rebirth}</p>
-    <h2>{L.rebirth.done(outcome.n - 1)}</h2>
-    <p class="sub">{L.rebirth.gain(outcome.n - 1)}</p>
+    <h2>{L.rebirth.done(outcome.n)}</h2>
+    <p class="sub">{L.rebirth.gain(outcome.n)}</p>
     <button class="btn gold wide" onclick={() => dlg?.close()}>{L.rebirth.start}</button>
   {:else if outcome?.report.win}
     <div class="rays"></div>

@@ -10,7 +10,7 @@
 
 - **Svelte 5 + SVG vẽ tay** cho cảnh núi và công trình (`art/` = package `@rok/art`). Không cần file ảnh: hình sinh theo tham số, màu đọc từ CSS var nên đổi ngày/đêm chỉ cần đổi biến.
 - **HTML/CSS cho HUD và bảng**: chữ tiếng Việt có dấu, co giãn, trình đọc màn hình đều tốt hơn canvas.
-- **PixiJS chỉ dùng cho bản đồ thế giới và phát lại trận đánh** (mốc 1.2), nơi có hàng trăm vật thể chuyển động.
+- **Bản đồ vùng và phát lại trận cũng là SVG** (mốc 1.2): P1 chỉ có ~25 điểm trên bản đồ và ≤ 6 nhóm mỗi trận. PixiJS để dành cho bản đồ chung P3, nơi có hàng trăm đội chuyển động.
 - Không dùng UI kit: game cần bản sắc riêng.
 
 **Hình ảnh**
@@ -40,12 +40,20 @@ Khởi động
 ├─ Lần đầu:  Tiêu đề (thư pháp 山河仙宗) → Lời dẫn 3 dòng → Đặt tên tông môn → đóng ấn → Núi
 └─ Quay lại: Tiêu đề (tự qua sau 1.6 giây) → Xuất quan (nếu vắng > 1 phút) → Núi
 
-Núi (cuộn dọc nếu màn hình thấp)
-├─ chạm công trình → Bảng công trình (trượt từ dưới lên)
+宗 Tông môn — Núi (cuộn dọc nếu màn hình thấp)
+├─ chạm công trình → Bảng công trình: thẻ Nâng cấp + thẻ chức năng
+│    Diễn võ trường: Tuyển đệ tử · Đan phòng: Chữa thương, Luyện đan · Tàng Kinh Các: Công pháp
+│    Chủ điện tầng 5, 10: Độ kiếp (thay nâng cấp) · tầng 15: Luân hồi
+徒 Môn hạ (tầng 2) — trưởng lão (chạm → chi tiết, dùng Bồi Nguyên Đan) · bảng đệ tử 3 hệ × 3 bậc · thương binh
+图 Bản đồ (tầng 3) — chạm yêu thú / tông môn / bí cảnh → Bảng mục tiêu: địch, hệ nên dùng, thưởng, chọn đội → Xuất quân
+│    Chiến báo → Phát lại trận
+宝 Bảo khố (tầng 3) — đan dược (dùng ngay), sản lượng, thành tích
+盟 Tiên minh — khóa "sắp có" (P3)
 HUD
-├─ Trên: chân dung chưởng môn · tên · cảnh giới · Thế lực · âm thanh · 3 tài nguyên · Nhiệm vụ
+├─ Trên: chân dung chưởng môn · tên · cảnh giới · Thế lực · ⚙ Cài đặt · 3 tài nguyên · Nhiệm vụ (chỉ ở tab Tông môn)
 ├─ Góc phải dưới: Tạp dịch (vòng tiến độ + đồng hồ; rảnh thì nhấp nháy)
-└─ Thanh dưới 5 tab: 宗 Tông môn · 徒 Môn hạ (tầng 2) · 图 Bản đồ (tầng 3) · 盟 Tiên minh (tầng 6) · 宝 Bảo khố (tầng 3)
+├─ Thông báo ngắn: công trình xong, đệ tử nhập môn, chiến báo mới (chạm để xem lại), mở khóa
+└─ Thanh dưới 5 tab, có chấm đỏ: Môn hạ (thương binh chưa chữa), Bản đồ (chiến báo chưa đọc)
 ```
 
 ## 4. Mở khóa theo tầng Chủ điện
@@ -54,11 +62,16 @@ HUD
 |---|---|
 | 1 | Tụ Linh Trận, Linh điền, Khoáng mạch |
 | 2 | Tàng Bảo Các, Diễn võ trường, tab Môn hạ |
-| 3 | Bản đồ, Bảo khố |
-| 4 | Tàng Kinh Các, Đan phòng |
-| 5 → 6 | Độ kiếp lần đầu → **Trúc Cơ** |
-| 6+ | (P3) Tiên minh |
-| 10 → 11 | Độ kiếp → **Kim Đan** |
+| 3 | Bản đồ, Bảo khố, Đan phòng (đánh nhau là có thương binh), Hắc Phong Trại, Thanh Mộc Bí Cảnh |
+| 4 | Tàng Kinh Các |
+| 5 → 6 | Độ kiếp lần đầu → **Trúc Cơ**, 2 đội xuất quân, Huyết Sát Môn |
+| 7, 8 | Xích Viêm Bí Cảnh, Vạn Độc Cốc |
+| 10 → 11 | Độ kiếp → **Kim Đan**, 3 đội xuất quân, Thiên Ma Giáo, Huyền Băng Bí Cảnh |
+| 13 | Cửu U Điện |
+| 15 | Luân hồi |
+| (P3) | Tiên minh |
+
+Diễn võ trường tầng 5 mở đệ tử Nội môn, tầng 10 mở Chân truyền. Mỗi lần Chủ điện lên tầng, thông báo "Mở khóa: …" liệt kê những gì vừa mở.
 
 ## 5. Luồng chính
 
@@ -93,10 +106,24 @@ Tiêu đề → Xuất quan → nhận thưởng nhiệm vụ → chạm Tạp d
 
 Hình công trình trên nền trời · tên · tầng · lời dẫn → sản lượng/sức chứa hiện tại **→** tầng sau · thế lực tăng thêm → yêu cầu (✓/✗, nút "Đi tới") và chi phí (thiếu thì đỏ, ghi "có X") → nút **Nâng cấp** kèm thời gian. Đang xây thì hiện thanh tiến độ.
 
-### 5.5 Sau này
+### 5.5 Bản đồ và xuất quân (đã làm)
 
-- **Bản đồ + xuất quân** (mốc 1.2): chạm yêu thú → chọn đội → quân đi → trận tự động → phát lại → chiến báo.
-- **Độ kiếp** (mốc 1.3): trời tối trên núi, kiếp vân tụ trên Chủ điện, 3 đợt lôi kiếp → màn đột phá "TRÚC CƠ".
+Chạm yêu thú → Bảng mục tiêu (quân địch theo hệ, "Nên dùng Thể tu (khắc Kiếm tu)", chiến lợi phẩm) → chọn trưởng lão + kéo số đệ tử, xem lực chiến Ta/Địch và **tỉ lệ thắng ước lượng** (Áp đảo ≥ 80% / Ngang ngửa / Yếu thế < 35%: đánh thử 9 lần với mầm khác mầm thật, tính đủ hệ khắc và công pháp — lực chiến thô từng hiện "áp đảo" cho đội bị khắc hệ mà thua 1/4 số trận) → **Xuất quân** → lá cờ chạy trên đường nét đứt, danh sách đội ở dưới → tới nơi thì có thông báo "Thắng · Hắc Lang [Xem lại]" → đội về mang chiến lợi phẩm, thương binh vào Đan phòng.
+
+- Yêu thú cấp tiếp theo có vòng sáng nhấp nháy; hạ rồi thì hang hiện đồng hồ "có lại sau".
+- Bí cảnh đánh ngay tại chỗ (không hành quân), mở màn Phát lại luôn.
+- **Phát lại trận:** địch trên, ta dưới; mỗi lượt số đệ tử giảm, "−12" bay lên; lượt 3, 6, 9 hiện tên công pháp trưởng lão. Có Tốc độ ×2 và Xem kết quả. Kết quả: thương binh, tử trận (Đan phòng hết chỗ), thu được, kinh nghiệm, trưởng lão mới.
+
+### 5.6 Độ kiếp (đã làm)
+
+Chủ điện tầng 5 (và 10) hiện bong bóng sét. Bảng Chủ điện thay nút nâng cấp bằng: lời dẫn, 3 đợt lôi kiếp (hệ + lực chiến), chi phí, tùy chọn Độ Kiếp Đan, chọn đội → **Độ kiếp** → về núi, trời tím sẫm, kiếp vân tụ trên Chủ điện, 3 tia sét (mỗi đợt một tia, có tiếng sấm, rung) → màn **ĐỘT PHÁ** với chữ Hán lớn 筑基 / 金丹 và hào quang; hoặc **Độ kiếp thất bại** kèm lối đi (chữa thương, tuyển thêm, luyện đan) và thử lại sau 10 phút. Chủ điện chỉ đổi hình sau khi sét đánh xong.
+
+### 5.7 Luân hồi (đã làm)
+
+Chủ điện tầng 15: bảng liệt kê Giữ lại / Làm lại và thưởng của kiếp sau → xác nhận 2 bước → chữ 轮回 xoay vào, "KIẾP THỨ 2" → về tầng 1, chuỗi nhiệm vụ chạy lại (nhận thưởng lần nữa).
+
+### 5.8 Sau này
+
 - **P3**: kiếp vân của người khác hiện trên bản đồ chung.
 
 ## 6. Hệ thiết kế
@@ -128,7 +155,7 @@ Hình công trình trên nền trời · tên · tầng · lời dẫn → sản
 
 ### Âm thanh (WebAudio, không cần file)
 
-`tap` tiếng gõ khẽ · `build` hai tiếng mõ · `done` chuông (bồi âm lệch) · `reward` chuỗi ngũ cung. Có nút tắt/bật trên HUD, nhớ lựa chọn trên máy.
+`tap` tiếng gõ khẽ · `build` hai tiếng mõ · `done` chuông (bồi âm lệch) · `reward` chuỗi ngũ cung · `march` trống trận · `hit` tiếng va chạm (nhiễu lọc) · `win` / `lose` · `thunder` sấm (nhiễu trầm + rung) · `err` tiếng trầm ngắn. Bật/tắt trong Cài đặt (nút ⚙ trên HUD), nhớ lựa chọn trên máy. Rung chỉ sau lần chạm đầu tiên.
 
 ### Giọng văn
 
@@ -150,7 +177,8 @@ Hình công trình trên nền trời · tên · tầng · lời dẫn → sản
 
 ## 9. Việc UI tiếp theo
 
-1. Cài đặt: xuất/nhập save (Safari có thể xóa dữ liệu web ít mở).
-2. Tab Môn hạ + tuyển đệ tử tại Diễn võ trường.
-3. Độ kiếp ở tầng 5 (kiếp vân trên Chủ điện).
-4. PWA: manifest + icon ấn 宗.
+Đã xong: Cài đặt (xuất/nhập save, chơi lại), Môn hạ, Diễn võ trường, Đan phòng, Tàng Kinh Các, Bản đồ + Phát lại, Độ kiếp, Luân hồi, Bảo khố, PWA (manifest, icon ấn 宗, chơi offline), màn lỗi có nút xuất save.
+
+1. Bản tiếng Anh (`en` cùng kiểu `vi` trong `lib.ts`) + chọn theo ngôn ngữ máy.
+2. Thử trên điện thoại thật: cỡ chữ nhỏ nhất, vùng chạm của nút trên bản đồ, hiệu năng cảnh núi khi nhiều hoạt ảnh.
+3. Nhiệm vụ ngày (P1 → P2) khi có dữ liệu retention.

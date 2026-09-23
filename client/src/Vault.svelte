@@ -11,7 +11,7 @@
     $props()
 
   let using = $state<PillId | null>(null)
-  const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'brew']
+  const JOBS: JobKind[] = ['build', 'train', 'heal', 'study'] // luyện đan không rút ngắn bằng đan được
   const jobs = $derived(JOBS.filter(k => jobOf(game, k)))
   const elders = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined && elderLevel(game.elders[e]) < ELDER_MAX))
   const stats = $derived([

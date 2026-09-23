@@ -1,8 +1,8 @@
 <script lang="ts">
-  // Chọn đội: trưởng lão dẫn đội + số đệ tử mỗi loại. So lực chiến với địch trước khi đánh.
+  // Chọn đội: trưởng lão dẫn đội + số đệ tử mỗi loại. Trước khi đánh: lực chiến hai bên + tỉ lệ thắng ước lượng.
   import {
     ELDER_IDS, UNITS, count, elderLevel, might, sideOf, unitOf,
-    type Army, type ElderId, type Side, type State, type UnitId,
+    type Army, type ElderId, type State, type UnitId,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import Unit from './Unit.svelte'
@@ -11,6 +11,7 @@
   let {
     game,
     foe,
+    chance,
     cta,
     time,
     disabled = false,
@@ -19,6 +20,7 @@
   }: {
     game: State
     foe: number // lực chiến địch
+    chance: (elder: ElderId, army: Army) => number // tỉ lệ thắng ước lượng (rules.winChance)
     cta: string
     time?: string
     disabled?: boolean
@@ -40,8 +42,9 @@
     Object.fromEntries(home.map(u => [u, Math.min(game.troops[u], touched ? (picks[u] ?? 0) : game.troops[u])])) as Army,
   )
   const ours = $derived(lead ? might(sideOf(game, lead, army)) : 0)
-  const ratio = $derived(foe ? ours / foe : 1)
-  const verdict = $derived(ratio >= 1.3 ? 'strong' : ratio >= 0.85 ? 'even' : 'weak')
+  // Nhận định dựa trên đánh thử (tính hệ khắc, công pháp), không dựa lực chiến thô
+  const p = $derived(lead ? chance(lead, army) : 0)
+  const verdict = $derived(p >= 0.8 ? 'strong' : p >= 0.35 ? 'even' : 'weak')
 
   function set(u: UnitId, n: number) {
     if (!touched) picks = { ...army }
@@ -97,10 +100,10 @@
 
 <div class="vs">
   <span class="side"><small>{L.army.ours}</small><b>{num(ours)}</b></span>
-  <span class="meter"><i style:width="{Math.min(100, (ratio / (ratio + 1)) * 100)}%"></i></span>
+  <span class="meter"><i style:width="{p * 100}%"></i></span>
   <span class="side r"><small>{L.army.theirs}</small><b>{num(foe)}</b></span>
 </div>
-<p class="verdict {verdict}"><Icon name="power" size={13} />{L.army.might}: {L.army.verdict[verdict]}</p>
+<p class="verdict {verdict}"><Icon name="power" size={13} />{L.army.verdict[verdict]} · {L.army.chance(Math.round(p * 100))}</p>
 
 <button class="btn wide go" disabled={disabled || !lead || !count(army)} onclick={() => lead && onsubmit(lead, army)}>
   <Icon name="flag" size={18} /><span>{cta}</span>

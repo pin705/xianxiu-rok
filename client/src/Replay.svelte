@@ -1,6 +1,6 @@
 <script lang="ts">
   // Phát lại trận: luật đã tính xong (tất định), ở đây chỉ diễn lại từng lượt rồi hiện kết quả.
-  import { PILL_IDS, RESOURCES, count, type Report } from '@rok/rules'
+  import { MAX_ROUNDS, PILL_IDS, RESOURCES, count, type Report } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import Unit from './Unit.svelte'
   import { GLYPH, L, LOOK, num, reportName, sfx } from './lib'
@@ -68,7 +68,6 @@
       <header class="side top">
         <span class="medal"><span class="han">{foeGlyph}</span></span>
         <span class="who"><b>{foeName}</b>{#if f.b.level > 1}<small>{L.lv(f.b.level)}</small>{/if}</span>
-        {#if cast[1]}{#key r}<span class="cast foe">{L.report.foeSkill}</span>{/key}{/if}
       </header>
       <ul class="stacks">
         {#each f.b.troops as t, k (k)}
@@ -82,10 +81,16 @@
         {/each}
       </ul>
 
-      <p class="round">
-        <Icon name="swords" size={16} />
-        {#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, f.rounds.length)}
-      </p>
+      <div class="mid">
+        <p class="round">
+          <Icon name="swords" size={16} />
+          {#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, MAX_ROUNDS)}
+        </p>
+        {#key r}
+          {#if cast[1]}<span class="cast foe">{L.report.foeSkill}</span>{/if}
+          {#if cast[0] && f.a.elder}<span class="cast">{L.elders[f.a.elder].skill}!</span>{/if}
+        {/key}
+      </div>
 
       <ul class="stacks">
         {#each f.a.troops as t, k (k)}
@@ -104,7 +109,6 @@
           <b>{f.a.elder ? L.elders[f.a.elder].name : ''}</b>
           <small>{L.lv(f.a.level)}</small>
         </span>
-        {#if cast[0] && f.a.elder}{#key r}<span class="cast">{L.elders[f.a.elder].skill}!</span>{/key}{/if}
       </header>
     </div>
 
@@ -216,10 +220,15 @@
     font-size: 12px;
     color: var(--gold-l);
   }
+  .mid {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 8px;
+    min-height: 76px;
+  }
   .cast {
-    position: absolute;
-    right: 0;
-    padding: 6px 12px;
+    padding: 6px 14px;
     font-size: 15px;
     font-weight: 700;
     color: #2b2210;
