@@ -36,8 +36,9 @@
     {#each nodes as n (n.name + n.t.kind)}
       {@const st = status(n)}
       {@const hot = n.t.kind === 'beast' && n.t.i === next && st === 'open'}
-      <!-- nút sát mép: dịch nhãn dài vào trong cho khỏi tràn khỏi màn (ước ~7px mỗi chữ) -->
-      {@const half = n.name.length * 3.6}
+      <!-- nút sát mép: nhãn dài xuống tối đa 2 dòng (rộng 100px) rồi dịch vào trong, khỏi tràn màn và đè nhãn bên cạnh (ước ~7px mỗi chữ) -->
+      {@const edge = Math.min(n.x, 400 - n.x) * k < n.name.length * 3.6 + 6}
+      {@const half = edge ? Math.min(n.name.length * 3.6, 50) : n.name.length * 3.6}
       {@const dx = Math.max(0, half - n.x * k + 6) - Math.max(0, half - (400 - n.x) * k + 6)}
       <span class="pin node {st}" class:hot style="left:{n.x * k}px;top:{(n.y + MAP.top) * k}px">
         <span class="disc">
@@ -46,7 +47,7 @@
           {#if n.t.kind === 'realm'}<b class="lv">{game.realms[n.t.i]}/5</b>{/if}
           {#if st === 'locked'}<span class="mark"><Icon name="lock" size={11} /></span>{:else if st === 'done'}<span class="mark ok"><Icon name="check" size={12} /></span>{/if}
         </span>
-        <span class="label" style:translate="{dx}px 0">{n.name}</span>
+        <span class="label" class:wrap={edge} style:translate="{dx}px 0">{n.name}</span>
         {#if st === 'cool'}<span class="label t-num" style:translate="{dx}px 0">{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</span>{/if}
       </span>
     {/each}
@@ -140,6 +141,12 @@
     color: var(--ink);
     -webkit-text-stroke: 3px var(--paper);
     paint-order: stroke fill;
+  }
+  .label.wrap {
+    width: 100px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
   }
   .locked .label {
     opacity: 0.6;

@@ -8,8 +8,8 @@
 
 **Công nghệ**
 
-- **Hình vẽ tay sinh bằng mã** (`art/` = `@rok/art`, không phụ thuộc game): một "bút lông" (`brush.ts`: nét có lực đầu đinh đuôi chuột, mép sần, cuối nét khô tách sợi 飞白, mảng màu loang nhiều lớp, mép sắc tố đậm, hạt giấy) vẽ mọi thứ — núi (`landscape.ts`), công trình lối 界画 (`buildings.ts`), mây, tùng, hạc, bản đồ, và cả chất liệu giao diện (`ui.ts`: khung mực, sơn mài, dấu triện). Nướng một lần ra texture ở đúng độ nét màn hình (~30 ms cho cả bộ công trình).
-- **Cảnh núi và bản đồ chạy WebGL** (PixiJS, `client/src/world/`): texture tĩnh + chuyển động trên GPU (sương trôi, thác, hạc, khói lò, lửa, cột linh khí, đèn đêm, sét độ kiếp). Cuộn bằng lớp cuộn gốc của trình duyệt (quán tính như app thật); biển tên/đồng hồ là HTML dịch cùng camera trong cùng khung hình. Phòng thử art: `/lab.html` (bản dev).
+- **Hình vẽ tay sinh bằng mã** (`art/` = `@rok/art`, không phụ thuộc game): một "bút lông" (`brush.ts`: nét có lực đầu đinh đuôi chuột, mép sần, cuối nét khô tách sợi 飞白, mảng màu loang nhiều lớp, mép sắc tố đậm, hạt giấy) vẽ mọi thứ — núi (`landscape.ts`), công trình lối 界画 (`buildings.ts`), mây, tùng, hạc, bản đồ, icon vật phẩm (`icons.ts`), chân dung trưởng lão, quân lính và yêu thú (`figures.ts`), sân trận, và cả chất liệu giao diện (`ui.ts`: khung mực, sơn mài, dấu triện, vết mực chuyển cảnh). Nướng một lần ra texture ở đúng độ nét màn hình (~30 ms cho cả bộ công trình); icon/chân dung trong HTML qua `paintedUrl` (`img.ts`).
+- **Cảnh núi, bản đồ và trận đánh chạy WebGL** (PixiJS, `client/src/world/`): texture tĩnh + chuyển động trên GPU (sương trôi, thác, hạc, khói lò, lửa, cột linh khí, đèn đêm, sét độ kiếp). Cuộn bằng lớp cuộn gốc của trình duyệt (quán tính như app thật); biển tên/đồng hồ là HTML dịch cùng camera trong cùng khung hình (`View.svelte`). Phát lại trận (`battle.ts`) mượn chung canvas: hai đội vẽ tay xông lên mỗi lượt, kiếm khí / hoả cầu / sóng chấn / vuốt / sét, chớp sáng, rung màn, quân ngã theo thương vong; công pháp có hiệu ứng riêng (mưa kiếm, khiên vàng, hồi sinh, độc vụ); sân theo cảnh (hoang dã, rừng, hoả sơn, băng nguyên, kiếp vân). Phòng thử art: `/lab.html?view=buildings|icons|faces|troops` (bản dev).
 - **HTML cho HUD và bảng**, dựng từ design system `client/src/ui/` (mục 6): chữ tiếng Việt, co giãn, trình đọc màn hình tốt hơn canvas.
 - Không dùng UI kit bên ngoài: game cần bản sắc riêng.
 
@@ -142,7 +142,13 @@ Nguồn màu duy nhất là `PIGMENT` trong `art/palette.ts` (màu khoáng: mự
 
 ### Component (`client/src/ui/`)
 
-Button · IconButton · Sheet (bảng dưới / hộp giữa) · Page · Card · Section (tiêu đề gạch chân nét bút) · Tabs · Stat (dòng sổ sách có chấm dẫn) · Bag (chi phí/phần thưởng, thiếu tô đỏ) · Tag · Meter · Badge · Seal · Medal (huy hiệu chữ Hán theo hệ) · Slider · Stepper · Toggle · Toasts · Plate/Bubble/Hint/Pointer (ghim trên cảnh) · Painting (hình vẽ tay trong HTML).
+Button · IconButton · Sheet (bảng dưới / hộp giữa, vuốt để đóng) · Page · Card · Section (tiêu đề gạch chân nét bút) · Tabs · Stat (dòng sổ sách có chấm dẫn) · Bag (chi phí/phần thưởng, thiếu tô đỏ) · Tag · Meter · Badge · Seal · Medal (huy hiệu chữ Hán theo hệ) · Slider · Stepper · Toggle · Toasts · Plate/Bubble/Hint/Pointer (ghim trên cảnh) · Painting (hình vẽ tay trong HTML).
+
+### Cảm giác chạm
+
+- Bảng dưới vuốt trục/đầu bảng xuống để đóng; đóng bằng × / chạm nền / Esc thì cuộn giấy trượt xuống rồi mới tắt.
+- Chuyển tab: vết mực loang ra từ chỗ chạm (View Transitions; trình duyệt chưa hỗ trợ thì chuyển ngay).
+- Nhận thưởng (nhiệm vụ, nhiệm vụ ngày, Xuất quan): icon bay theo đường cong vào đúng ô tài nguyên / tab Bảo khố, ô đích nảy lên (`ui/fly.ts`).
 
 ### Chữ
 
