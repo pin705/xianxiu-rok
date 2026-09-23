@@ -3,7 +3,8 @@
   import type { State } from '@rok/rules'
   import { Icon } from '@rok/art'
   import Sheet from './Sheet.svelte'
-  import { L, LANG, nowMs, parse, setLang, wipe } from './lib'
+  import { L, LANG, isMusicOn, nowMs, parse, setLang, setMusicOn, wipe } from './lib'
+  import { startMusic, stopMusic } from './music'
 
   let {
     game,
@@ -23,6 +24,7 @@
     toast: (t: string) => void
   } = $props()
 
+  let music = $state(isMusicOn())
   let text = $state('')
   let bad = $state(false)
   let confirmReset = $state(false)
@@ -69,6 +71,19 @@
   <label class="toggle">
     <span><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</span>
     <input type="checkbox" checked={!muted} onchange={onmute} />
+  </label>
+  <label class="toggle">
+    <span><Icon name="sound" size={20} />{L.settings.music}</span>
+    <input
+      type="checkbox"
+      checked={music}
+      onchange={() => {
+        music = !music
+        setMusicOn(music)
+        if (music) startMusic()
+        else stopMusic()
+      }}
+    />
   </label>
   <div class="lang" role="group" aria-label="Ngôn ngữ / Language">
     <button class:on={LANG === 'vi'} aria-pressed={LANG === 'vi'} onclick={() => LANG !== 'vi' && setLang('vi')}>Tiếng Việt</button>

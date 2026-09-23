@@ -114,6 +114,9 @@ export function parse(raw: string): State | null {
 // Sau khi xoá thì khoá ghi: trang sắp tải lại, sự kiện rời trang không được lưu đè save cũ.
 let frozen = false
 export const save = (s: State) => frozen || write(KEY, JSON.stringify(s))
+// Tab đã từng mở (để đánh dấu "!" trên tab vừa mở khóa mà người chơi chưa ghé)
+export const visitedTabs = (): string[] => (read('rok.tabs') ?? 'tongMon').split(',')
+export const visitTab = (id: string) => write('rok.tabs', [...new Set([...visitedTabs(), id])].join(','))
 export const rawSave = () => read(KEY)
 export const wipe = () => {
   frozen = true
@@ -137,7 +140,15 @@ export function track(name: string, props: Record<string, number | string | bool
 
 // Âm thanh tổng hợp bằng WebAudio — không cần file. Chỉ phát sau lần chạm đầu tiên (luật trình duyệt).
 let ctx: AudioContext | undefined
+// Một AudioContext cho cả hiệu ứng lẫn nhạc nền (music.ts). Tạo lúc cần — chỉ chạy được sau lần chạm đầu tiên.
+export const audio = () => (ctx ??= new AudioContext())
 let muted = read('rok.mute') === '1'
+let musicOn = read('rok.music') !== '0' // nhạc nền bật sẵn, nhỏ
+export const isMusicOn = () => musicOn
+export function setMusicOn(on: boolean) {
+  musicOn = on
+  write('rok.music', on ? '1' : '0')
+}
 export const isMuted = () => muted
 export function setMuted(m: boolean) {
   muted = m
@@ -151,8 +162,7 @@ export function sfx(kind: Sfx) {
   if (kind === 'thunder') buzz([40, 30, 80])
   if (muted) return
   try {
-    ctx ??= new AudioContext()
-    const ac = ctx
+    const ac = audio()
     const t = ac.currentTime + 0.01
     const note = (f: number, at: number, dur: number, type: OscillatorType, vol: number) => {
       const o = ac.createOscillator()

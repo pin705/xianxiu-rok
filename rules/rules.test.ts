@@ -1,8 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  BEASTS, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
-  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, power, questDone, sideOf, storage,
+  BASE_RATE, BEASTS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
+  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage,
   techTime, trainCost, trainTime, upgradeError, winChance,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
@@ -42,7 +42,16 @@ test('sản lượng tính từ lúc xây xong và không phụ thuộc số l�
   for (let t = T0; t <= end; t += 250) stepped = advance(stepped, t)
   const once = advance(s, end)
   assert.deepEqual(stepped, once)
-  assert.equal(once.res.linhThach, 1000 + Math.floor((600 * (HOUR - buildTime(s, 'tuLinhTran', 1))) / HOUR))
+  // trước khi xây xong chỉ có linh khí tự nhiên, sau đó cộng thêm sản lượng của trận
+  const bt = buildTime(s, 'tuLinhTran', 1)
+  assert.equal(once.res.linhThach, 1000 + Math.floor((BASE_RATE * bt + (BASE_RATE + 600) * (HOUR - bt)) / HOUR))
+})
+
+test('không bao giờ kẹt vì tiêu sạch: linh khí tự nhiên đủ xây lại công trình tài nguyên', () => {
+  const broke = { ...newGame(T0), res: { linhThach: 0, linhThao: 0, linhKhoang: 0 } }
+  assert.equal(err(broke, { type: 'upgrade', building: 'linhDien' }), 'not_enough')
+  const later = advance(broke, T0 + 2 * HOUR)
+  assert.equal(err(later, { type: 'upgrade', building: 'linhDien' }), null)
 })
 
 test('đầy kho thì ngừng sản xuất', () => {
@@ -248,6 +257,33 @@ test('luân hồi: giữ trưởng lão + công pháp, làm lại tông môn, m�
   assert.equal(err(rich(14), { type: 'rebirth' }), 'locked')
 })
 
+test('nhiệm vụ ngày: đếm tiến độ, nhận thưởng từng việc, rương khi đủ 4, sang ngày mới thì làm lại', () => {
+  let s = { ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 2000 } }
+  assert.equal(err(s, { type: 'daily', i: 0 }), 'not_done')
+  s = up(s, 'tuLinhTran')
+  s = advance(s, s.time + buildTime(s, 'tuLinhTran', 6))
+  s = up(s, 'linhDien')
+  s = run(s, { type: 'train', unit: 'kiem1', n: 60 })
+  s = run(s, { type: 'brew', pill: 'tuKhi', n: 1 })
+  for (let k = 0; k < 3; k++) s = run({ ...s, realms: [0, 0, 0] }, { type: 'realm', i: 0, elder: 'thanhPhong', army: { kiem1: s.troops.kiem1 } })
+  assert.deepEqual(s.daily.n, { build: 2, train: 60, win: 3, brew: 1 })
+  assert.equal(err(s, { type: 'dailyBonus' }), 'not_done')
+  const before = s.res.linhThach
+  for (let i = 0; i < 4; i++) s = run(s, { type: 'daily', i })
+  assert.equal(s.res.linhThach, before + 4 * DAILY_RES * 6)
+  assert.equal(err(s, { type: 'daily', i: 0 }), 'max_level')
+  s = run(s, { type: 'dailyBonus' })
+  assert.equal(s.items.boiNguyen, 1)
+  assert.equal(err(s, { type: 'dailyBonus' }), 'max_level')
+  // 0h giờ VN hôm sau: làm lại từ đầu
+  const fresh = advance(s, nextDay(s.time))
+  assert.deepEqual(fresh.daily.n, { build: 0, train: 0, win: 0, brew: 0 })
+  assert.equal(fresh.daily.bonus, false)
+  assert.equal(advance(s, nextDay(s.time) - 1).daily.bonus, true)
+  // Chưa tới tầng 3 thì khoá
+  assert.equal(err(rich(2), { type: 'daily', i: 0 }), 'locked')
+})
+
 test('save bản 2 đọc được, giữ tiến độ và đúng nhiệm vụ', () => {
   const v2 = {
     v: 2, name: 'Lạc Hà Tông', quest: 4, time: T0, res: { linhThach: 5, linhThao: 6, linhKhoang: 7 },
@@ -265,6 +301,12 @@ test('save bản 2 đọc được, giữ tiến độ và đúng nhiệm vụ',
   assert.equal(migrate('rác'), null)
   // Bản cũ đã lên quá tầng độ kiếp thì coi như đã vượt
   assert.equal(migrate({ ...v2, levels: { ...v2.levels, chuDien: 12 } })!.trib, 2)
+})
+
+test('nhiệm vụ luyện đan xong ngay khi bắt đầu luyện (không chặn hướng dẫn 20 phút)', () => {
+  const i = QUESTS.findIndex(q => q.k === 'brew')
+  const s = run({ ...rich(5), quest: i }, { type: 'brew', pill: 'tuKhi', n: 1 })
+  assert.equal(questDone(s), true)
 })
 
 test('mọi nhiệm vụ đều làm được: đích đến có thật trong dữ liệu', () => {

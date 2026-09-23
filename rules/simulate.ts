@@ -37,6 +37,9 @@ const wins = (st: State, e: ElderId, army: Army, t: Target | 'trib', pill = fals
 
 function build() {
   const hall = s.levels.chuDien
+  // Như chuỗi nhiệm vụ dạy: có đủ 3 công trình tài nguyên (tầng 2) rồi mới dồn Chủ điện
+  for (const id of ['tuLinhTran', 'linhDien', 'khoangMach'] as const)
+    if (s.levels[id] < Math.min(hall - 1, 2) && tryDo({ type: 'upgrade', building: id })) return true
   if (tryDo({ type: 'upgrade', building: 'chuDien' })) return true
   // Kho sắp không đủ chứa chi phí Chủ điện tầng sau → nâng Tàng Bảo Các trước
   const want = IDS.filter(id => id !== 'chuDien').sort((a, b) => s.levels[a] - s.levels[b] || cost(a, s.levels[a] + 1).linhThach - cost(b, s.levels[b] + 1).linhThach)
@@ -114,6 +117,8 @@ function turn() {
   for (let guard = 0; guard < 60; guard++) {
     let acted = false
     if (tryDo({ type: 'claim' })) acted = true
+    for (let i = 0; i < 4; i++) if (tryDo({ type: 'daily', i })) acted = true
+    if (tryDo({ type: 'dailyBonus' })) acted = true
     if (count(s.wounded) && tryDo({ type: 'heal' })) acted = true
     if (build()) acted = true
     if (!s.study) for (const t of [...TECH_IDS].sort((a, b) => (s.tech[a] ?? 0) - (s.tech[b] ?? 0))) if (tryDo({ type: 'study', tech: t })) { acted = true; break }

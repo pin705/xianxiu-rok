@@ -1,12 +1,12 @@
 import { fight, type Round, type Side, type Troop } from './combat.ts'
 import {
-  BASE_CAP, BATCH_BASE, BATCH_STEP, BEASTS, BEAST_COOLDOWN, BEAST_EXP, BEAST_LOOT, BEAST_STR, BEATS, BOI_NGUYEN_EXP,
-  BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, HEAL_COST,
+  BASE_CAP, BASE_RATE, BATCH_BASE, BATCH_STEP, BEASTS, BEAST_COOLDOWN, BEAST_EXP, BEAST_LOOT, BEAST_STR, BEATS, BOI_NGUYEN_EXP,
+  BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, HEAL_COST,
   HEAL_TIME, HOME, HOSPITAL_BASE, HOSPITAL_STEP, LOSS_EXP, MAIN_SHARE, MAP_HALL, MARCH_MIN, MARCH_SLOTS, MARCH_SPEED,
   MAX_CUT, MAX_LEVEL, PILLS, QUESTS, QUEUE_SIZE, REALMS, REBIRTH_BUILD, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
   SECT_SHARE, SPEEDUP, START, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TRIBS, TRIB_COOLDOWN,
   TRIB_EXP, TYPES, UNITS, UNIT_BASE,
-  type Bag, type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Reward, type Skill,
+  type Bag, type Bonus, type BuildingId, type DailyId, type ElderId, type PillId, type Quest, type Res, type Reward, type Skill,
   type TechId, type Tier, type UnitId, type UnitType,
 } from './data.ts'
 
@@ -54,6 +54,7 @@ export type Report = {
   gain: Gain
 }
 export type Stats = { trained: number; healed: number; brewed: number; won: number; lost: number }
+export type Daily = { day: number; n: Record<DailyId, number>; got: boolean[]; bonus: boolean }
 
 export type State = {
   v: 3                               // phiên bản save
@@ -86,6 +87,7 @@ export type State = {
   seed: number                       // mầm ngẫu nhiên cho trận kế tiếp
   nextId: number
   stats: Stats
+  daily: Daily                       // nhiệm vụ ngày: tiến độ hôm nay, việc đã nhận thưởng
 }
 
 export type Action =
@@ -102,6 +104,8 @@ export type Action =
   | { type: 'feed'; elder: ElderId; n: number }
   | { type: 'seen' }
   | { type: 'rebirth' }
+  | { type: 'daily'; i: number }
+  | { type: 'dailyBonus' }
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew'
 export type Err =
   | 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done' | 'locked' | 'cooldown'
@@ -141,9 +145,23 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
     troops: troops(() => 0), wounded: troops(() => 0), train: null, heal: null, study: null, brew: null,
     tech: {}, items: {}, elders: { [FIRST_ELDER]: 0 }, marches: [], reports: [], seen: 0,
     beast: 0, cool: {}, sects: SECTS.map(() => false), realms: REALMS.map(() => 0), trib: 0, tribCool: 0, rebirths: 0,
-    seed: now >>> 0 || 1, nextId: 1, stats: { trained: 0, healed: 0, brewed: 0, won: 0, lost: 0 },
+    seed: now >>> 0 || 1, nextId: 1, stats: { trained: 0, healed: 0, brewed: 0, won: 0, lost: 0 }, daily: freshDaily(now),
   }
 }
+
+// ---------- Nhiệm vụ ngày ----------
+
+const DAY = 86_400_000
+export const dayOf = (t: number) => Math.floor((t + DAY_OFFSET) / DAY)
+export const nextDay = (t: number) => (dayOf(t) + 1) * DAY - DAY_OFFSET // lúc làm mới kế tiếp
+const freshDaily = (t: number): Daily => ({ day: dayOf(t), n: { build: 0, train: 0, win: 0, brew: 0 }, got: DAILY.map(() => false), bonus: false })
+const rollDay = (s: State, t: number): State => (dayOf(t) > s.daily.day ? { ...s, daily: freshDaily(t) } : s)
+const bump = (s: State, id: DailyId, k = 1): State => ({ ...s, daily: { ...s.daily, n: { ...s.daily.n, [id]: s.daily.n[id] + k } } })
+export const dailyDone = (s: State, i: number) => s.daily.n[DAILY[i].id] >= DAILY[i].n
+export const dailyReward = (s: State) => DAILY_RES * s.levels.chuDien
+// Số việc làm xong mà chưa nhận thưởng (kể cả rương) — để hiện huy hiệu
+export const dailyReady = (s: State) =>
+  s.levels.chuDien < DAILY_HALL ? 0 : DAILY.filter((_, i) => dailyDone(s, i) && !s.daily.got[i]).length + (s.daily.got.every(Boolean) && !s.daily.bonus ? 1 : 0)
 
 // ---------- Chỉ số ----------
 
@@ -175,7 +193,7 @@ export const buildTime = (s: State, b: BuildingId, level: number) =>
 export const capAt = (vaultLevel: number) => grow(BASE_CAP, CAP_GROWTH, vaultLevel)
 export const storage = (s: State) => Math.round(capAt(s.levels.tangBaoCac) * (1 + bonus(s, 'storage')))
 export const baseRate = (s: State, r: Res) =>
-  IDS.reduce((sum, id) => (BUILDINGS[id].makes === r ? sum + (BUILDINGS[id].rate ?? 0) * s.levels[id] : sum), 0)
+  IDS.reduce((sum, id) => (BUILDINGS[id].makes === r ? sum + (BUILDINGS[id].rate ?? 0) * s.levels[id] : sum), BASE_RATE)
 export const rate = (s: State, r: Res) => Math.round(baseRate(s, r) * (1 + bonus(s, 'prod') + bonus(s, `prod.${r}`)))
 
 export const unitOf = (u: UnitId) => ({ type: u.slice(0, -1) as UnitType, tier: Number(u.slice(-1)) as Tier })
@@ -382,6 +400,7 @@ function battle(s: State, t: Target, elder: ElderId, army: Army, seed: number, a
       st = { ...st, realms: st.realms.map((x, k) => (k === t.i ? x + 1 : x)) }
     }
   }
+  if (f.win) st = bump(st, 'win')
   st = pushReport(st, {
     at, kind: t.kind, i: t.i, f: floor, win: f.win, hurt, dead: {}, gain: g,
     fights: [{ a: snap(me, elder, elderLevel(s.elders[elder])), b: snap(foe, undefined, foeLevel), rounds: f.rounds }],
@@ -459,8 +478,8 @@ function due(s: State, now: number): Ev[] {
 // sản lượng trước lúc xong tính theo chỉ số cũ, sau đó theo chỉ số mới.
 export function advance(s: State, now: number): State {
   let st = s
-  for (const [at, run] of due(s, now)) st = run(accrue(st, at))
-  return accrue(st, now)
+  for (const [at, run] of due(s, now)) st = run(rollDay(accrue(st, at), at))
+  return rollDay(accrue(st, now), now)
 }
 
 // ---------- Kiểm tra ----------
@@ -564,7 +583,7 @@ export function apply(s: State, a: Action, now: number): Result {
       if (e) return no(e)
       const level = state.levels[a.building] + 1
       const job = { building: a.building, level, startAt: t, finishAt: t + buildTime(state, a.building, level) }
-      return ok({ ...state, res: pay(cost(a.building, level)), queue: [...state.queue, job] })
+      return ok(bump({ ...state, res: pay(cost(a.building, level)), queue: [...state.queue, job] }, 'build'))
     }
     case 'claim': {
       const q = QUESTS[state.quest]
@@ -574,7 +593,7 @@ export function apply(s: State, a: Action, now: number): Result {
     case 'train': {
       const e = trainError(state, a.unit, a.n)
       if (e) return no(e)
-      return ok({ ...state, res: pay(trainCost(a.unit, a.n)), train: { unit: a.unit, n: a.n, startAt: t, finishAt: t + trainTime(state, a.unit, a.n) } })
+      return ok(bump({ ...state, res: pay(trainCost(a.unit, a.n)), train: { unit: a.unit, n: a.n, startAt: t, finishAt: t + trainTime(state, a.unit, a.n) } }, 'train', a.n))
     }
     case 'heal': {
       const e = healError(state)
@@ -591,7 +610,7 @@ export function apply(s: State, a: Action, now: number): Result {
     case 'brew': {
       const e = brewError(state, a.pill, a.n)
       if (e) return no(e)
-      return ok({ ...state, res: pay(brewCost(state, a.pill, a.n)), brew: { pill: a.pill, n: a.n, startAt: t, finishAt: t + brewTime(state, a.pill, a.n) } })
+      return ok(bump({ ...state, res: pay(brewCost(state, a.pill, a.n)), brew: { pill: a.pill, n: a.n, startAt: t, finishAt: t + brewTime(state, a.pill, a.n) } }, 'brew'))
     }
     case 'march': {
       if (a.target?.kind !== 'beast' && a.target?.kind !== 'sect') return no('bad')
@@ -627,7 +646,7 @@ export function apply(s: State, a: Action, now: number): Result {
       const exp = Math.round(TRIB_EXP[k] * (1 + lead(state, a.elder, 'exp')) * (win ? 1 : LOSS_EXP))
       st = giveExp(st, a.elder, exp)
       st = win
-        ? { ...st, trib: k + 1, res: bag(r => st.res[r] - cost('chuDien', tr.hall + 1)[r]), levels: { ...st.levels, chuDien: tr.hall + 1 } }
+        ? bump({ ...st, trib: k + 1, res: bag(r => st.res[r] - cost('chuDien', tr.hall + 1)[r]), levels: { ...st.levels, chuDien: tr.hall + 1 } }, 'win')
         : { ...st, tribCool: t + TRIB_COOLDOWN }
       return ok(pushReport(st, { at: t, kind: 'trib', i: k, win, fights, hurt, dead: adm.dead, gain: { res: {}, items: {}, exp } }))
     }
@@ -657,7 +676,21 @@ export function apply(s: State, a: Action, now: number): Result {
       return ok({
         ...fresh, tech: state.tech, study: state.study, items: state.items, brew: state.brew, elders: state.elders,
         rebirths: state.rebirths + 1, stats: state.stats, seed: state.seed, nextId: state.nextId, seen: state.nextId - 1,
+        daily: state.daily, // cùng ngày: không nhận lại thưởng ngày
       })
+    }
+    case 'daily': {
+      if (state.levels.chuDien < DAILY_HALL || !DAILY[a.i]) return no('locked')
+      if (state.daily.got[a.i]) return no('max_level')
+      if (!dailyDone(state, a.i)) return no('not_done')
+      const n = dailyReward(state)
+      return ok({ ...state, res: bag(r => state.res[r] + n), daily: { ...state.daily, got: state.daily.got.map((x, k) => x || k === a.i) } })
+    }
+    case 'dailyBonus': {
+      if (state.levels.chuDien < DAILY_HALL) return no('locked')
+      if (state.daily.bonus) return no('max_level')
+      if (!state.daily.got.every(Boolean)) return no('not_done')
+      return ok({ ...state, items: addItems(state.items, DAILY_BONUS), daily: { ...state.daily, bonus: true } })
     }
   }
 }
@@ -673,7 +706,7 @@ export function questProgress(s: State, q: Quest): [number, number] {
     case 'sect': return [s.sects[Number(q.id)] ? 1 : 0, 1]
     case 'realm': return [s.realms[Number(q.id)], q.n]
     case 'tech': return [techSum(s), q.n]
-    case 'brew': return [s.stats.brewed, q.n]
+    case 'brew': return [s.stats.brewed + (s.brew?.n ?? 0), q.n] // tính cả mẻ đang luyện: không bắt người mới chờ 20 phút giữa hướng dẫn
   }
 }
 export const questDone = (s: State) => {
@@ -706,5 +739,6 @@ export function migrate(raw: unknown): State | null {
     }
   }
   if (s.v !== 3 || typeof s.time !== 'number' || !s.levels || !s.res) return null
+  if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save bản 3 làm trước khi có nhiệm vụ ngày
   return s as State
 }

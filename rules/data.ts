@@ -12,6 +12,9 @@ export const MAX_LEVEL = 15
 export const QUEUE_SIZE = 1
 export const START: Bag = b(1000, 1000, 1000)
 export const BASE_CAP = 2000   // sức chứa mỗi loại khi chưa có Tàng Bảo Các
+// Linh khí tự nhiên của núi: mỗi loại 60/giờ dù chưa có công trình nào. Không có nó, người dồn hết tài nguyên nâng
+// Chủ điện trước khi xây Linh điền/Khoáng mạch sẽ kẹt vĩnh viễn (xây hai nhà đó cần chính thảo/khoáng đã cạn).
+export const BASE_RATE = 60
 export const CAP_GROWTH = 1.3  // mỗi tầng Tàng Bảo Các
 export const COST_GROWTH = 1.6 // mỗi tầng công trình
 export const TIME_GROWTH = 1.7
@@ -258,6 +261,22 @@ export const TRIBS: { hall: number; tier: Tier; waves: { type: UnitType; str: nu
 ]
 export const TRIB_COOLDOWN = 10 * 60_000
 export const TRIB_EXP = [300, 1500]
+
+// ---------- Nhiệm vụ ngày ----------
+
+// Làm mới lúc 0h giờ Việt Nam (UTC+7), cố định như giờ máy chủ — không theo múi giờ máy người chơi (chỉnh giờ máy
+// không làm mới được). Mở khi Chủ điện tầng 3 (lúc đã có Đan phòng và bản đồ để làm đủ 4 việc).
+export const DAY_OFFSET = 7 * 3_600_000
+export const DAILY_HALL = 3
+export type DailyId = 'build' | 'train' | 'win' | 'brew'
+export const DAILY: { id: DailyId; n: number }[] = [
+  { id: 'build', n: 2 }, // bắt đầu 2 lần xây/nâng
+  { id: 'train', n: 50 }, // tuyển 50 đệ tử
+  { id: 'win', n: 3 }, // thắng 3 trận
+  { id: 'brew', n: 1 }, // luyện 1 mẻ đan
+]
+export const DAILY_RES = 150 // mỗi việc: DAILY_RES × tầng Chủ điện, mỗi loại tài nguyên
+export const DAILY_BONUS: Partial<Record<PillId, number>> = { tuKhi: 1, boiNguyen: 1 } // rương khi xong cả 4
 
 // ---------- Luân hồi ----------
 

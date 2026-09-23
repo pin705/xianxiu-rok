@@ -350,7 +350,8 @@ export const en: Text = {
 
   settings: {
     title: 'Settings',
-    sound: 'Sound',
+    sound: 'Sound effects',
+    music: 'Music',
     save: 'Save data',
     saveHint: 'Your save lives only on this device. Browsers (Safari especially) may clear data of rarely opened sites — export your save regularly.',
     export: 'Export save',
@@ -384,6 +385,19 @@ export const en: Text = {
     enter: 'Enter the sect',
   },
   unlocked: (what: string) => `Unlocked: ${what}`,
+  daily: {
+    title: 'Daily tasks',
+    reset: (t: string) => `Resets in ${t} (midnight, Vietnam time)`,
+    task: {
+      build: (n: number) => `Start ${n} building upgrades`,
+      train: (n: number) => `Recruit ${n} disciples`,
+      win: (n: number) => `Win ${n} battles`,
+      brew: (n: number) => `Brew ${n} batch of pills`,
+    } as Record<'build' | 'train' | 'win' | 'brew', (n: number) => string>,
+    bonus: 'Daily chest',
+    open: 'Open',
+    button: 'Daily tasks',
+  },
   crash: {
     title: 'The sect ran into trouble',
     body: 'Your progress is saved on this device. Reload to keep playing; if it keeps failing, export your save and send it to the developer.',

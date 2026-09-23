@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Tween } from 'svelte/motion'
-  import { PILL_IDS, RESOURCES, count, power, questDone, questOf, questProgress, storage, type Bag, type State } from '@rok/rules'
+  import { DAILY_HALL, PILL_IDS, RESOURCES, count, dailyReady, power, questDone, questOf, questProgress, storage, type Bag, type State } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { L, TABS, clock, num, progress, type Tab } from './lib'
+  import { L, TABS, clock, num, progress, visitTab, visitedTabs, type Tab } from './lib'
 
   let {
     game,
@@ -15,6 +15,7 @@
     onbuilder,
     ontab,
     onsettings,
+    ondaily,
   }: {
     game: State
     now: number
@@ -26,7 +27,15 @@
     onbuilder: () => void
     ontab: (t: Tab) => void
     onsettings: () => void
+    ondaily: () => void
   } = $props()
+  const ready = $derived(dailyReady(game))
+  let visited = $state(visitedTabs())
+  // Ghé tab bằng cách nào cũng tính (bấm tab, hay nhiệm vụ dẫn sang bản đồ)
+  $effect(() => {
+    visitTab(tab)
+    visited = visitedTabs()
+  })
 
   const hall = $derived(game.levels.chuDien)
   const cap = $derived(storage(game))
@@ -131,6 +140,13 @@
     {/if}
   </div>
 
+  {#if tab === 'tongMon' && !storm && hall >= DAILY_HALL}
+    <button class="daily" class:ready={ready > 0} onclick={ondaily} aria-label="{L.daily.button}{ready ? ` (${ready})` : ''}">
+      <Icon name="scroll" size={26} />
+      {#if ready}<span class="dot">{ready}</span>{/if}
+    </button>
+  {/if}
+
   {#if tab === 'tongMon'}
     <button class="builder" class:idle={!job} onclick={onbuilder} aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}">
       <svg class="ring" viewBox="0 0 60 60" aria-hidden="true">
@@ -146,11 +162,19 @@
     {#each TABS as t (t.id)}
       {@const on = t.id === tab}
       {@const locked = hall < t.unlock}
-      <button class:on class:locked disabled={locked} aria-current={on ? 'page' : undefined} onclick={() => !on && ontab(t.id)}>
+      {@const fresh = !locked && !visited.includes(t.id)}
+      <button
+        class:on
+        class:locked
+        disabled={locked}
+        aria-current={on ? 'page' : undefined}
+        onclick={() => !on && ontab(t.id)}
+      >
         <span class="medal">
           <span class="glyph" aria-hidden="true">{t.glyph}</span>
           {#if locked}<span class="lk"><Icon name="lock" size={10} /></span>{/if}
-          {#if badge[t.id] && !on}<span class="dot">{badge[t.id] > 1 ? badge[t.id] : ''}</span>{/if}
+          {#if badge[t.id] && !on}<span class="dot">{badge[t.id] > 1 ? badge[t.id] : ''}</span>
+          {:else if fresh && !on}<span class="dot new">!</span>{/if}
         </span>
         <span class="tl">{L.tabs[t.id]}</span>
         {#if locked}<small>{t.unlock > 15 ? L.soonTag : L.level(t.unlock)}</small>{/if}
@@ -438,6 +462,30 @@
   .builder.idle {
     animation: glow 1.6s ease-in-out infinite;
   }
+  .daily {
+    position: absolute;
+    left: 14px;
+    bottom: calc(110px + env(safe-area-inset-bottom));
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    background: radial-gradient(circle at 50% 35%, #4a3a22, #1f170c);
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 3px 10px rgb(0 0 0 / 0.4), inset 0 0 0 2px rgb(201 161 74 / 0.75);
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .daily.ready {
+    animation: glow 1.6s ease-in-out infinite;
+  }
+  .daily .dot {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
   .ring {
     position: absolute;
     inset: 0;
@@ -547,6 +595,11 @@
   .tabs small {
     font-size: 9.5px;
     color: #93a1a6;
+  }
+  .dot.new {
+    color: #2b2210;
+    background: var(--gold-l);
+    animation: glow 1.4s ease-in-out infinite;
   }
   .dot {
     position: absolute;

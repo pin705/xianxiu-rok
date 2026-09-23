@@ -5,6 +5,7 @@
     type Action, type Army, type Bag, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
+  import Daily from './Daily.svelte'
   import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
   import Map from './Map.svelte'
@@ -37,6 +38,7 @@
   let storm = $state<number | null>(null) // đang độ kiếp: tầng Chủ điện trước khi đột phá (giấu kết quả tới khi sét đánh xong)
   let reportsOpen = $state(false)
   let settingsOpen = $state(false)
+  let dailyOpen = $state(false)
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
   let gain: { bag: Partial<Bag>; t: number } | null = $state(null)
   let toasts: { id: number; text: string; bad?: boolean; report?: Report }[] = $state([])
@@ -104,7 +106,9 @@
     }, 250)
     if (game) track('open', { hall: game.levels.chuDien, rebirths: game.rebirths, away: away ? Math.round(away.ms / 60_000) : 0 })
     const hide = () => document.hidden && game && save(game)
+    const leave = () => game && save(game) // Safari iOS có lúc bỏ qua visibilitychange khi tắt app
     document.addEventListener('visibilitychange', hide)
+    addEventListener('pagehide', leave)
     if (import.meta.env.DEV)
       Object.assign((globalThis as any).rok, {
         get: () => game,
@@ -116,6 +120,7 @@
     return () => {
       clearInterval(tick)
       document.removeEventListener('visibilitychange', hide)
+      removeEventListener('pagehide', leave)
     }
   })
 
@@ -324,7 +329,9 @@
       selected = null
     }}
     onsettings={() => (settingsOpen = true)}
+    ondaily={() => (dailyOpen = true)}
   />
+  <Daily {game} {now} open={dailyOpen} onclose={() => (dailyOpen = false)} {act} />
   <Panel {game} {now} id={selected} {view} {act} onupgrade={upgrade} onclose={() => (selected = null)} onselect={focus} ontrib={trib} onrebirth={rebirth} />
   <TargetSheet {game} {now} {target} onclose={() => (target = null)} onmarch={march} onrecruit={() => focus('dienVoTruong', 'train')} />
   <Reports {game} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />

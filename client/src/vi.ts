@@ -347,7 +347,8 @@ export const vi = {
 
   settings: {
     title: 'Cài đặt',
-    sound: 'Âm thanh',
+    sound: 'Hiệu ứng âm thanh',
+    music: 'Nhạc nền',
     save: 'Dữ liệu',
     saveHint: 'Save chỉ nằm trên máy này. Trình duyệt (nhất là Safari) có thể xoá dữ liệu của trang ít mở — hãy xuất save định kỳ.',
     export: 'Xuất save',
@@ -381,6 +382,19 @@ export const vi = {
     enter: 'Vào tông môn',
   },
   unlocked: (what: string) => `Mở khóa: ${what}`,
+  daily: {
+    title: 'Nhiệm vụ ngày',
+    reset: (t: string) => `Làm mới sau ${t} (0h giờ Việt Nam)`,
+    task: {
+      build: (n: number) => `Xây hoặc nâng công trình ${n} lần`,
+      train: (n: number) => `Tuyển ${n} đệ tử`,
+      win: (n: number) => `Thắng ${n} trận`,
+      brew: (n: number) => `Luyện ${n} mẻ đan`,
+    } as Record<'build' | 'train' | 'win' | 'brew', (n: number) => string>,
+    bonus: 'Rương thưởng ngày',
+    open: 'Mở rương',
+    button: 'Nhiệm vụ ngày',
+  },
   crash: {
     title: 'Tông môn gặp sự cố',
     body: 'Tiến độ đã được lưu trên máy. Tải lại để chơi tiếp; nếu vẫn lỗi, hãy xuất save và gửi cho nhà phát triển.',

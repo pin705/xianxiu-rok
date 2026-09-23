@@ -63,6 +63,8 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 | Tiên minh | Liên minh | — (tab khóa "sắp có") | P3 |
 | Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
 | Chat | Chat | — | P3 |
+| Nhiệm vụ ngày | Nhiệm vụ hằng ngày | ✅ 4 việc (xây 2 lần, tuyển 50, thắng 3 trận, luyện 1 mẻ đan) + rương; làm mới 0h giờ VN; mở ở tầng 3 | Nhiệm vụ tuần, sự kiện |
+| Âm thanh | — | ✅ Hiệu ứng + nhạc nền cổ phong sinh bằng WebAudio (đàn tranh, sáo trúc, trầm nền), bật/tắt riêng | Nhạc theo cảnh (bản đồ, trận) |
 
 5 cảnh giới × 5 tầng = 25 cấp, như 25 cấp Tòa thị chính của RoK. Qua mỗi cảnh giới mới (tầng 5→6, 10→11, 15→16) phải độ kiếp.
 
@@ -99,7 +101,7 @@ rok/
              index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
   art/       hình SVG vẽ theo tham số: công trình, icon, chân dung trưởng lão
   client/    Vite + Svelte: UI, save trên máy, PWA
-  server/    từ P2
+  server/    analytics.ts: máy nhận analytics + retention (P1); server game từ P2
   mobile/    từ P4 (Capacitor)
   desktop/   từ P4 (Electron + Steam)
 ```
@@ -187,7 +189,7 @@ Tổng ~10–14 tháng full-time. **Phase nào cũng kết thúc bằng một b�
 | 1.1 | Tông môn: xây/nâng, tài nguyên, hàng đợi, tiến trình offline, save trên máy + xuất/nhập. UI xấu cũng được | 2–3 tuần | ✅ |
 | 1.2 | Đệ tử, trưởng lão, combat + màn phát lại, bản đồ PvE: yêu thú, tông môn NPC | 3–4 tuần | ✅ |
 | 1.3 | Cảnh giới + độ kiếp, Tàng Kinh Các, Đan phòng, bí cảnh, nhiệm vụ chính tuyến (làm tutorial luôn) | 3 tuần | ✅ 45 nhiệm vụ dẫn qua mọi hệ thống |
-| 1.4 | Art pass, âm thanh, luân hồi, endpoint analytics ẩn danh (mầm của server P2), phát hành demo | 2–3 tuần | ✅ trừ: server nhận analytics, đưa lên itch.io/domain |
+| 1.4 | Art pass, âm thanh, luân hồi, endpoint analytics ẩn danh (mầm của server P2), phát hành demo | 2–3 tuần | ✅ trừ: đưa lên itch.io/domain |
 
 Công cụ: `rules/simulate.ts` — bot chơi `rules` 30 ngày ảo, in ra lúc đạt từng cảnh giới → chỉnh nhịp bằng số liệu, không bằng cảm giác.
 
@@ -195,10 +197,11 @@ Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết qu�
 
 | | Bot giỏi, 4 phiên/ngày | Bot giỏi, 2 phiên/ngày | Người chơi thường, 3 phiên/ngày |
 |---|---|---|---|
-| Chủ điện tầng 5 | ngày 2 | ngày 3 | ngày 3 |
-| Độ kiếp → Trúc Cơ | ngày 3 (152 đệ tử) | ngày 5 | ngày 6 (181 đệ tử) |
-| Độ kiếp → Kim Đan | ngày 7 (463 đệ tử, trưởng lão cấp 15) | ngày 14 | ngày 12 (410 đệ tử) |
-| Chủ điện tầng 15 | ngày 12 | ngày 22 | ngày 19, không thua trận nào |
+| Độ kiếp → Trúc Cơ | ngày 3 | ngày 5 | ngày 7 |
+| Độ kiếp → Kim Đan | ngày 6 | ngày 10 | ngày 12 |
+| Chủ điện tầng 15 | ngày 11 | ngày 19 | ngày 19, không thua trận nào |
+
+(đã tính nhiệm vụ ngày; bot dồn Chủ điện nhưng giữ 3 công trình tài nguyên ≥ tầng 2 như chuỗi nhiệm vụ dạy)
 
 **Cổng P1** (tham khảo): ≥ 300 người thử; D1 ≥ 30%, D7 ≥ 10%; người đã luân hồi vẫn chơi tiếp. Không đạt → sửa lõi, chưa làm online.
 
@@ -305,10 +308,11 @@ Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết qu�
 - **Cloudflare Pages:** build command `npm run build`, output `client/dist`.
 - **itch.io:** nén `client/dist/` thành zip, chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
 - **PWA:** có manifest + icon ấn 宗 + service worker (`client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
-- **Analytics:** build với `VITE_ANALYTICS_URL=https://…` thì client gửi beacon JSON `{id, name, props, v, t}` (id ngẫu nhiên của máy, không có dữ liệu cá nhân) cho các sự kiện `open`, `found`, `hall`, `trib`, `rebirth`. Không đặt biến thì không gửi gì. Việc còn lại: một endpoint nhận và ghi vào bảng `analytics` (mầm của server P2).
+- **Analytics:** build với `VITE_ANALYTICS_URL=https://<máy chủ>/e` thì client gửi beacon JSON `{id, name, props, v, t}` (id ngẫu nhiên của máy, không có dữ liệu cá nhân) cho các sự kiện `open`, `found`, `hall`, `trib`, `rebirth`. Không đặt biến thì không gửi gì.
+  Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS sau Caddy/nginx (đặt `TRUST_PROXY=1`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
 - **Font:** giấy phép OFL nằm cạnh font trong `client/public/fonts/`.
 
 **Kiểm thử trước khi phát hành:** `npm test` (luật), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi chơi thử bản build (`npm run build && npm run preview -w client`). CI (`.github/workflows/ci.yml`) chạy đủ 4 bước này ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
 
-**Việc còn lại để qua cổng P1:** thử trên điện thoại thật (Android tầm trung, iPhone Safari), bản tiếng Anh (thêm `en` cùng kiểu với `vi` trong `client/src/lib.ts`), endpoint analytics, đăng itch.io + nhóm Facebook/Discord, gom ≥ 300 người thử.
+**Việc còn lại để qua cổng P1:** thử trên điện thoại thật (Android tầm trung, iPhone Safari), thuê VPS chạy máy nhận analytics, đăng itch.io + nhóm Facebook/Discord, gom ≥ 300 người thử, đọc D1/D7 ở `/stats`.
 6. Spike PixiJS 100×100 ô trên điện thoại thật.

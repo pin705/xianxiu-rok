@@ -52,8 +52,9 @@ Khởi động
 HUD
 ├─ Trên: chân dung chưởng môn · tên · cảnh giới · Thế lực · ⚙ Cài đặt · 3 tài nguyên · Nhiệm vụ (chỉ ở tab Tông môn)
 ├─ Góc phải dưới: Tạp dịch (vòng tiến độ + đồng hồ; rảnh thì nhấp nháy)
+├─ Góc trái dưới (tầng 3+): Nhiệm vụ ngày — 4 việc + rương, chấm đỏ đếm việc chờ nhận thưởng, làm mới 0h giờ VN
 ├─ Thông báo ngắn: công trình xong, đệ tử nhập môn, chiến báo mới (chạm để xem lại), mở khóa
-└─ Thanh dưới 5 tab, có chấm đỏ: Môn hạ (thương binh chưa chữa), Bản đồ (chiến báo chưa đọc)
+└─ Thanh dưới 5 tab, có chấm đỏ: Môn hạ (thương binh chưa chữa), Bản đồ (chiến báo chưa đọc); tab vừa mở khóa mà chưa ghé có "!" vàng nhấp nháy
 ```
 
 ## 4. Mở khóa theo tầng Chủ điện
@@ -156,6 +157,8 @@ Chủ điện tầng 15: bảng liệt kê Giữ lại / Làm lại và thưởn
 ### Âm thanh (WebAudio, không cần file)
 
 `tap` tiếng gõ khẽ · `build` hai tiếng mõ · `done` chuông (bồi âm lệch) · `reward` chuỗi ngũ cung · `march` trống trận · `hit` tiếng va chạm (nhiễu lọc) · `win` / `lose` · `thunder` sấm (nhiễu trầm + rung) · `err` tiếng trầm ngắn. Bật/tắt trong Cài đặt (nút ⚙ trên HUD), nhớ lựa chọn trên máy. Rung chỉ sau lần chạm đầu tiên.
+
+**Nhạc nền** (`client/src/music.ts`, bật/tắt riêng): cổ phong sinh bằng máy — đàn tranh gảy giai điệu đi ngẫu nhiên trên ngũ cung Rê, đầu đoạn vuốt dây; sáo trúc thổi nốt dài có rung và tiếng hơi; trầm nền Rê–La; vang dựng từ nhiễu. 66 nhịp/phút, không đoạn nào lặp y hệt. Bắt đầu ở lần chạm đầu tiên, tắt tiếng khi ẩn tab. Mức đo bằng OfflineAudioContext: đỉnh ~0,13, RMS ~0,02 — dưới chuông "xong" để hiệu ứng vẫn nổi.
 
 ### Giọng văn
 
