@@ -368,10 +368,12 @@
 </svg>
 
 <style>
+  /* Cao hơn khung nhìn thì cuộn dọc được; thấp hơn thì phủ kín. Màu vật liệu ban ngày ở app.css */
   .scene {
     display: block;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
+    aspect-ratio: 400 / 860;
     /* Ban ngày */
     --sky1: #b9d2d8;
     --sky2: #eef3ee;
@@ -392,35 +394,6 @@
     --water: #4f98a8;
     --water-l: #a4d6dc;
     --fore: #173341;
-    --wall: #f2eee4;
-    --tile: #34434f;
-    --glaze: #2d6d63;
-    --gold: #c9a14a;
-    --gold-l: #f1d98f;
-    --gold-d: #8f6d2a;
-    --plaque: #1d3b52;
-    --door: #3a2f2a;
-    --stone: #c7c1b3;
-    --stone-l: #ddd8cc;
-    --stone-d: #9a9486;
-    --bronze: #9a7440;
-    --bronze-d: #5f4524;
-    --wood: #9b7348;
-    --wood-d: #6b4a2b;
-    --steel: #c9d2d6;
-    --skin: #f0d6bd;
-    --robe: #f3f1ea;
-    --spirit: #74d1d8;
-    --cave: #1b2328;
-    --ore: #8f7fcf;
-    --crystal: #8fd0ea;
-    --field: #8fbf6a;
-    --field-l: #a9cf7c;
-    --field-d: #4e7c3c;
-    --straw: #c9a36b;
-    --bark: #4a3a2e;
-    --pine: #2b5a4a;
-    --pine-l: #3c7560;
   }
   .dawn {
     --sky1: #e7bfa8;

@@ -272,6 +272,44 @@
 </g>
 
 <style>
+  /* Bảng màu mặc định (ban ngày). :where → specificity 0, nên bên dùng định nghĩa lại ở đâu cũng thắng. */
+  :global(:where(:root)) {
+    --ink: #17232a;
+    --azurite: #1d4e73;
+    --cinnabar: #c23b22;
+    --seal: 'Noto Serif CJK SC', 'Songti SC', serif;
+    --wall: #f2eee4;
+    --win: #36566c;
+    --glow-o: 0;
+    --tile: #34434f;
+    --glaze: #2d6d63;
+    --gold: #c9a14a;
+    --gold-l: #f1d98f;
+    --gold-d: #8f6d2a;
+    --plaque: #1d3b52;
+    --door: #3a2f2a;
+    --stone: #c7c1b3;
+    --stone-l: #ddd8cc;
+    --stone-d: #9a9486;
+    --bronze: #9a7440;
+    --bronze-d: #5f4524;
+    --wood: #9b7348;
+    --wood-d: #6b4a2b;
+    --steel: #c9d2d6;
+    --skin: #f0d6bd;
+    --robe: #f3f1ea;
+    --spirit: #74d1d8;
+    --cave: #1b2328;
+    --ore: #8f7fcf;
+    --crystal: #8fd0ea;
+    --field: #8fbf6a;
+    --field-l: #a9cf7c;
+    --field-d: #4e7c3c;
+    --straw: #c9a36b;
+    --rock-top: #5f9e84;
+    --rock: #2f6a73;
+    --rock-d: #1d4e73;
+  }
   .win {
     fill: var(--win);
   }
