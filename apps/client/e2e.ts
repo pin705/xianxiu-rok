@@ -209,9 +209,9 @@ try {
   const before = await a.js(truth)
   expectDrops = true
   game!.kill('SIGKILL')
-  assert.ok(await a.until(`!!document.querySelector('.strip')`, 8000), 'mất server mà không báo đang nối lại')
+  assert.ok(await a.until(`!!document.querySelector('[data-conn]')`, 8000), 'mất server mà không báo đang nối lại')
   await startGame()
-  assert.ok(await a.until(`!document.querySelector('.strip, [role=alertdialog]')`, 25000), `server lên lại mà client không tự nối — ${await seen()}`)
+  assert.ok(await a.until(`!document.querySelector('[data-conn]')`, 25000), `server lên lại mà client không tự nối — ${await seen()}`)
   const after = await a.js(truth)
   assert.deepEqual(after.queue, before.queue, 'thao tác đã ack mất sau khi server sập')
   assert.equal(after.quest, before.quest)
@@ -224,7 +224,7 @@ try {
   for (const [lang, text] of [['vi', 'Không có mạng'], ['en', 'No connection']]) {
     await a.js(`localStorage.setItem('rok.lang', '${lang}'); location.reload()`)
     await sleep(500)
-    assert.ok(await a.until(`document.querySelector('[role=alertdialog]')?.innerText.includes('${text}')`, 20000), `offline (${lang}): không hiện màn mất mạng`)
+    assert.ok(await a.until(`document.querySelector('[data-conn=offline]')?.innerText.includes('${text}')`, 20000), `offline (${lang}): không hiện màn mất mạng — ${await seen()}`)
   }
   console.log('✓ mất mạng: mở được từ bộ nhớ, báo rõ, đổi ngôn ngữ được')
   console.log('✓ console sạch')

@@ -3,6 +3,15 @@ on: [push, pull_request]
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env: { POSTGRES_USER: rok, POSTGRES_PASSWORD: rok, POSTGRES_DB: rok }
+        ports: ['5439:5432']
+        options: --health-cmd "pg_isready -U rok" --health-interval 2s --health-retries 30
+    env:
+      CI: '1' # test tích hợp server và e2e bắt buộc chạy (thiếu Postgres là báo lỗi, không lặng lẽ bỏ qua)
+      DATABASE_URL: postgres://rok:rok@127.0.0.1:5439/rok
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -10,10 +19,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: npm test # luật, gói tin, i18n, ranh giới package, server với Postgres thật (database tạm), vẽ mọi màn hình
       - run: npm run check
       - run: npm run sim # bot phải tới Chủ điện tầng 15 trong 30 ngày, không thì báo lỗi
       - run: npm run build
-      - run: npm run e2e # Chrome có sẵn trên máy ảo ubuntu: chơi thật 14 nhiệm vụ, 2 tab, offline
+      - run: npm run e2e # Chrome có sẵn trên máy ảo ubuntu: chơi thật bản online với server game + Postgres
         env:
           CHROME: /usr/bin/google-chrome

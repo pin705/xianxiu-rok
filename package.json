@@ -16,7 +16,8 @@
     "fonts": "npm run fonts -w @rok/client",
     "package": "npm run build && rm -f release.zip && cd apps/client/dist && zip -qr ../../../release.zip . && echo 'release.zip: tải lên itch.io (HTML, chơi trên trình duyệt)'",
     "server": "npm run dev -w @rok/server",
-    "db": "docker compose -f apps/server/deploy/compose.dev.yml up -d --wait"
+    "db": "docker compose -f apps/server/deploy/compose.dev.yml up -d --wait",
+    "load": "node apps/server/load.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

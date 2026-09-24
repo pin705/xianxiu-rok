@@ -18,10 +18,10 @@
 </script>
 
 {#if status === 'reconnecting' && late}
-  <div class="strip" role="status">{L.net.reconnecting}</div>
+  <div class="conn" data-conn="reconnecting" role="status">{L.net.reconnecting}</div>
 {/if}
 {#if modal}
-  <div class="veil" role="alertdialog" aria-live="assertive" aria-label={L.net[status as 'offline']}>
+  <div class="veil" data-conn={status} role="alertdialog" aria-live="assertive" aria-label={L.net[status as 'offline']}>
     <Card>
       <div class="stack center" style:--gap="var(--sp-3)">
         <Medal emblem="crest" tone={status === 'update' ? 'gold' : 'red'} size={64} />
@@ -35,7 +35,7 @@
 {/if}
 
 <style>
-  .strip {
+  .conn {
     position: fixed;
     top: calc(var(--safe-t) + 6px);
     left: 50%;

@@ -34,7 +34,7 @@ export async function buildServer(c: Config) {
 
   await app.register(cookie)
   await app.register(cors, { origin: c.ORIGINS.length ? c.ORIGINS : false, credentials: true })
-  await app.register(rateLimit, { global: c.LIMITS, max: 60, timeWindow: '1 minute' })
+  if (c.LIMITS) await app.register(rateLimit, { max: 60, timeWindow: '1 minute' }) // LIMITS=off (load test): không giới hạn gì
   await app.register(underPressure, { maxEventLoopDelay: 1_000, retryAfter: 10 }) // event loop nghẽn: trả 503 thay vì chết dần
   if (dev) {
     await app.register(swagger, { openapi: { info: { title: 'Sơn Hà Tiên Tông API', version: '1' } }, transform: jsonSchemaTransform })
