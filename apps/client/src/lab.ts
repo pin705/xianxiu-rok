@@ -254,7 +254,7 @@ if (view === 'chrome') {
     let k = 1
     const rand = () => ((k = (Math.imul(k, 1103515245) + 12345) >>> 0) / 4294967296)
     for (let i = 0; i < 120; i++) taken.push(R.spawn(a, taken, rand)!)
-    const seats = taken.map((p, i) => ({ pid: i + 1, name: `Tông ${i + 1}`, x: p.x, y: p.y, hall: 5 + (i % 15), power: 5000 + i * 300, npc: i % 4 === 0, shield: i % 7 === 0 }))
+    const seats = taken.map((p, i) => ({ pid: i + 1, name: `Tông ${i + 1}`, x: p.x, y: p.y, hall: 5 + (i % 15), power: 5000 + i * 300, npc: i % 4 === 0, shield: i % 7 === 0, ...(i % 5 === 1 && { cloud: 1_000_000 + 300_000 }) })) // vài tông môn đang độ kiếp
     const vein = a.points.find(p => p.kind === 'vein')!
     const now = 1_000_000
     const marches = [0, 1, 2].map(i => {

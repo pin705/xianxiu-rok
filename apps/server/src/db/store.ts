@@ -1,6 +1,6 @@
 // Truy vấn của game. Logic game đọc state trong RAM (world actor); DB chỉ là nơi lưu bền.
 import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
-import type { State } from '@rok/rules'
+import { JOIN_DAYS, type State } from '@rok/rules'
 import type { Seen } from '@rok/protocol'
 import type { Database } from './index.ts'
 import { accounts, chat, chatReports, events, inbox, players, reports, sessions, worlds } from './schema.ts'
@@ -43,7 +43,8 @@ export async function createGuest(
         await tx.execute(sql`select pg_advisory_xact_lock(hashtext('rok:world'))`) // hai khách cùng lúc không mở hai giới
         const [open] = await tx.execute<{ id: number }>(sql`
           select w.id from ${worlds} w
-          where w.status = 'open' and (select count(*) from ${players} p where p.world_id = w.id and p.account_id is not null) < ${g.cap}
+          where w.status = 'open' and w.opens_at > now() - make_interval(days => ${JOIN_DAYS})
+            and (select count(*) from ${players} p where p.world_id = w.id and p.account_id is not null) < ${g.cap}
           order by w.id limit 1`)
         world = open?.id ?? (await tx.insert(worlds).values({ seed: g.seed }).returning({ id: worlds.id }))[0].id
       }
@@ -117,6 +118,7 @@ export type Batch = {
   online: number
   sync: boolean
   state?: object // phần chung của giới, khi đổi
+  season?: { seed: number; season: number; opensAt: Date } // hết mùa: bản đồ mới, mùa mới, mở lại từ lúc này
   players: { id: number; state: State; name: string; power: number; hall: number; tower: number; rebirths: number; pvp: number; weekNo: number; weekPts: number; seen?: Seen }[]
   reports: { pid: number; id: number; at: number; kind: string; win: boolean; body: object }[]
   events: { pid: number; name: string; day: number; at: number; props: object }[]
@@ -135,7 +137,7 @@ export async function flushWorld(db: Database, b: Batch) {
     const q: Promise<unknown>[] = [
       tx
         .update(worlds)
-        .set({ leaseUntil: sql`now() + interval '15 seconds'`, online: b.online, updatedAt: sql`now()`, ...(b.state && { state: b.state }) })
+        .set({ leaseUntil: sql`now() + interval '15 seconds'`, online: b.online, updatedAt: sql`now()`, ...(b.state && { state: b.state }), ...b.season })
         .where(and(eq(worlds.id, b.world), eq(worlds.owner, b.node), eq(worlds.epoch, b.epoch)))
         .returning({ id: worlds.id }),
     ]

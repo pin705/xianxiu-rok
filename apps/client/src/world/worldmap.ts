@@ -3,7 +3,7 @@
 // nội suy theo giờ server. Camera do WorldView điều khiển; cảnh chỉ vẽ theo camera được đưa vào.
 import { Container, Graphics, Sprite, Texture } from 'pixi.js'
 import { MAP_W, atlas, regionOf, tide, type Atlas, type MapMarch, type MapSnap, type Pos } from '@rok/rules/world'
-import { SECT_EMBLEMS, WORLD_TILE, bake, marchToken, medal, worldPiece, type Emblem, type MedalTone } from '@rok/art'
+import { SECT_EMBLEMS, WORLD_TILE, bake, marchToken, medal, vortexTex, worldPiece, type Emblem, type MedalTone } from '@rok/art'
 import type { BakeJob } from './bake.worker'
 import { DPR, painted, texOf } from './stage'
 
@@ -116,6 +116,7 @@ export class WorldScene {
   private sized: [Container, number, number][] = []
   private tokens = new Container()
   private marches: MapMarch[] = []
+  private clouds: [Sprite, number][] = [] // kiếp vân trên tông môn đang độ kiếp: xoáy, lúc giáng
   private roadZ = 0
   private overviewTex: Texture | null = null
   private dead = false
@@ -137,6 +138,7 @@ export class WorldScene {
   setData(snap: MapSnap, rel: (pid: number) => Rel, phase: number, now: number) {
     this.marks.removeChildren().forEach(c => c.destroy())
     this.sized = []
+    this.clouds = []
     const add = (p: Pos, emblem: Emblem, tone: MedalTone, size = 1, alpha = 1, minZ = 0) => {
       const t = markTex(emblem, tone)
       const s = new Sprite(t.tex)
@@ -168,6 +170,15 @@ export class WorldScene {
         this.sized.push([ring, ((r === 'me' ? 1.3 : 1) * MARK * 1.25) / 96, 0])
         this.marks.addChild(ring)
       }
+      if (s.cloud && s.cloud > now) {
+        const c = new Sprite(texOf('wvortex', () => vortexTex(128, 7, 3, 1.6)))
+        c.anchor.set(0.5)
+        c.position.copyFrom(m.position)
+        c.alpha = 0.85
+        this.sized.push([c, (MARK * 2.4) / 128, 0])
+        this.marks.addChildAt(c, this.marks.getChildIndex(m)) // dưới huy hiệu: vẫn đọc được là ai
+        this.clouds.push([c, s.cloud])
+      }
     }
     this.marches = snap.marches
     this.roadZ = 0 // vẽ lại đường theo độ phóng mới
@@ -198,6 +209,10 @@ export class WorldScene {
     for (const [c, k, minZ] of this.sized) {
       c.visible = cam.z >= minZ
       c.scale.set((k * lod) / cam.z)
+    }
+    for (const [c, at] of this.clouds) {
+      c.visible = at > now
+      c.rotation = -now / 2500
     }
     if (Math.abs(this.roadZ - cam.z) / cam.z > 0.15) this.drawRoads(cam.z)
     this.drawTokens(cam.z, now, lod)

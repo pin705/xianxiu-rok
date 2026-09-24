@@ -127,6 +127,7 @@ export type State = {
   mail: Mail[]
   seat: { x: number; y: number } | null // chỗ trên bản đồ giới (server xếp lúc vào giới lần đầu)
   blocks: number[]                   // người chơi đã chặn (ẩn chat của họ)
+  ascended: number[]                 // các mùa đã phi thăng (danh hiệu)
 }
 
 export type Action =
@@ -211,7 +212,7 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
     tech: {}, items: {}, elders: { [FIRST_ELDER]: 0 }, talents: {}, gear: {}, buffs: [], marches: [], reports: [], seen: 0,
     beast: 0, cool: {}, sects: SECTS.map(() => false), realms: REALMS.map(() => 0), tower: 0, trib: 0, tribCool: 0, rebirths: 0,
     seed: now >>> 0 || 1, nextId: 1, stats: { trained: 0, healed: 0, brewed: 0, won: 0, lost: 0 }, daily: freshDaily(now), weekly: freshWeekly(now),
-    ev: freshEv(now), shield: now + NEWBIE_SHIELD, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [], seat: null, blocks: [],
+    ev: freshEv(now), shield: now + NEWBIE_SHIELD, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [], seat: null, blocks: [], ascended: [],
   }
 }
 
@@ -699,6 +700,27 @@ export function forgeError(s: State, g: GearId): Err | null {
   return afford(s.res, gearCost(g, level)) ? null : 'not_enough'
 }
 
+// Luân hồi n kiếp: công trình về căn cơ, tài nguyên / đệ tử / hàng đợi / tiến độ bản đồ / nhiệm vụ chính / độ kiếp làm lại.
+// Giữ: trưởng lão, thiên phú, công pháp, pháp bảo, đan (và việc đang luyện), tháp, danh hiệu, thư, nhiệm vụ ngày / tuần / sự kiện
+function reborn(s: State, t: number, n: number): State {
+  const fresh = newGame(t, s.name)
+  return {
+    ...fresh, levels: rebirthLevels(s.rebirths + n), tech: s.tech, study: s.study, items: s.items, brew: s.brew, elders: s.elders,
+    talents: s.talents, gear: s.gear, forge: s.forge, guard: s.guard,
+    rebirths: s.rebirths + n, stats: s.stats, seed: s.seed, nextId: s.nextId, seen: s.nextId - 1,
+    daily: s.daily, // cùng ngày: không nhận lại thưởng ngày
+    weekly: s.weekly, ev: s.ev, mail: s.mail, blocks: s.blocks, ascended: s.ascended,
+    tower: s.tower, // kỷ lục tháp giữ qua luân hồi (thưởng chỉ lần đầu nên không cày lại được)
+  }
+}
+
+// Hết mùa (server, cho mọi người trong giới): luân hồi n kiếp (phi thăng: n = ASCEND, ghi danh hiệu mùa `season`); hành quân huỷ,
+// chỗ trên bản đồ bỏ trống (server xếp lại trên bản đồ mùa mới), khiên tân thủ mới
+export function seasonEnd(s: State, t: number, n: number, season?: number): State {
+  const st = reborn(advance(s, t), t, n)
+  return season === undefined ? st : { ...st, ascended: [...st.ascended, season] }
+}
+
 export function tribError(s: State): Err | null {
   const tr = TRIBS[s.trib]
   if (!tr || s.levels.chuDien !== tr.hall) return 'locked'
@@ -979,17 +1001,9 @@ export function apply(s: State, raw: Action, now: number): Result {
       return ok({ ...state, seen: state.nextId - 1 })
     case 'rebirth': {
       if (state.levels.chuDien < REBIRTH_HALL) return no('locked')
+      if (state.seat) return no('locked') // trong giới: luân hồi khi hết mùa (seasonEnd)
       if (state.marches.length) return no('busy')
-      const fresh = newGame(t, state.name)
-      const levels = rebirthLevels(state.rebirths + 1)
-      return ok({
-        ...fresh, levels, tech: state.tech, study: state.study, items: state.items, brew: state.brew, elders: state.elders,
-        talents: state.talents, gear: state.gear, forge: state.forge,
-        rebirths: state.rebirths + 1, stats: state.stats, seed: state.seed, nextId: state.nextId, seen: state.nextId - 1,
-        daily: state.daily, // cùng ngày: không nhận lại thưởng ngày
-        weekly: state.weekly,
-        tower: state.tower, // kỷ lục tháp giữ qua luân hồi (thưởng chỉ lần đầu nên không cày lại được)
-      })
+      return ok(reborn(state, t, 1))
     }
     case 'daily': {
       if (state.levels.chuDien < DAILY_HALL || !DAILY[a.i]) return no('locked')
@@ -1176,7 +1190,7 @@ function valid(s: any): s is State {
     Array.isArray(s.foes) && s.foes.every((f: any) => obj(f) && num(f.pid) && typeof f.name === 'string' && num(f.at)) &&
     Array.isArray(s.mail) && s.mail.every((m: any) => obj(m) && num(m.id) && num(m.at) && typeof m.k === 'string') &&
     (s.seat === null || (obj(s.seat) && num(s.seat.x) && num(s.seat.y))) &&
-    Array.isArray(s.blocks) && s.blocks.every(num)
+    Array.isArray(s.blocks) && s.blocks.every(num) && Array.isArray(s.ascended) && s.ascended.every(num)
   )
 }
 
@@ -1212,5 +1226,6 @@ function upgrade(raw: unknown) {
   if (s.shield === undefined) s = { ...s, shield: 0, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [] }
   if (s.seat === undefined) s = { ...s, seat: null } // … bản đồ giới
   if (!s.blocks) s = { ...s, blocks: [] } // … chat
+  if (!s.ascended) s = { ...s, ascended: [] } // … mùa giải
   return s
 }

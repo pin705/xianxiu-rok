@@ -4,7 +4,7 @@
 >
 > Lệnh: `npm run dev` (chạy game) · `npm test` · `npm run check` (kiểm tra kiểu) · `npm run sim` (bot chơi 30 ngày, in nhịp) · `npm run build`
 >
-> **Trạng thái (24/09/2026): game đã chạy online** — server trọng tài production (mục 4 › Kiến trúc online), client chỉ còn chế độ online, tiến độ lưu trên PostgreSQL. P2 xong phần mã; P3 đã có giới chung (bản đồ 150×150, tông môn NPC, linh mạch/mỏ/yêu vương/cổng, kết trận, viện binh, tiên minh, chat) — còn độ kiếp công khai, mùa, chợ (mục 5 › P3). P1 offline đã đủ tính năng (mục 13).
+> **Trạng thái (24/09/2026): game đã chạy online** — server trọng tài production (mục 4 › Kiến trúc online), client chỉ còn chế độ online, tiến độ lưu trên PostgreSQL. P2 xong phần mã; P3 đã có giới chung (bản đồ 150×150, tông môn NPC, linh mạch/mỏ/yêu vương/cổng, kết trận, viện binh, tiên minh, chat) — còn mùa, chợ (mục 5 › P3). P1 offline đã đủ tính năng (mục 13).
 
 ## 0. Giả định (sửa nếu sai)
 
@@ -62,7 +62,7 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 | Thương hội | Chợ đổi tài nguyên | ✅ Ở Tàng Bảo Các: đổi tài nguyên dư lấy loại thiếu, nhận về 60% (+1% mỗi tầng Tàng Bảo Các, tối đa 75%) — cứu kho lệch, vẫn đắt hơn xây công trình tài nguyên | Chợ giữa người chơi (P3) |
 | Thư, xếp hạng, sự kiện tuần | — | — | ✅ Thư có quà (nhận đúng một lần; admin gửi qua inbox), xếp hạng giới (lực chiến, cảnh giới, tháp, tranh đoạt, sự kiện tuần), sự kiện tuần 6 chủ đề xoay vòng, 5 mốc quà (mốc 5: trưởng lão Tô Mị Nương), top 10 giới nhận thư |
 | Thông Thiên Tháp | — | ✅ Tháp thử thách không giới hạn tầng, mở ở tầng 10, đánh ngay như bí cảnh; mỗi tầng địch mạnh hơn 10% và đổi hệ chính; thưởng lần đầu mỗi tầng (tầng 5: Tụ Khí, tầng 10: Độ Kiếp + Bồi Nguyên); kỷ lục giữ qua luân hồi. Sim: bot giỏi tầng 39 sau 30 ngày, người chơi thường tầng 38 sau 45 ngày | Bảng xếp hạng tháp (P2) |
-| Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | ✅ Kiếp tầng 15, 20 (mỗi đợt thêm một hành) · P3: kiếp vân công khai trên bản đồ |
+| Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | ✅ Kiếp tầng 15, 20 (mỗi đợt thêm một hành) · ✅ P3: kiếp vân công khai — tụ 5/8/10/12 phút trên núi và trên bản đồ giới rồi mới giáng; đồng minh viện binh là hộ pháp (−6 % mỗi đội, +¼ kinh nghiệm độ kiếp), bị cướp trúng lúc tụ là phá kiếp (+8 % mỗi lần), tối đa 3 mỗi loại; thất bại hoàn chi phí |
 | PvP | Đánh thành | — | ✅ P2: cướp bất đồng bộ trong giới (từ tầng 6; kho bảo hộ 30 %, cướp 30 % phần vượt theo sức mang; khiên 8 giờ khi thủ thua, đi cướp thì mất khiên, tân thủ 72 giờ; báo thù 24 giờ; điểm kiểu Elo; Hộ Sơn Đại Trận + trưởng lão trấn thủ) · P3: trên bản đồ |
 | Tiên minh | Liên minh | — (tab khóa "sắp có") | ✅ P3: lập (tầng 10, 20k mỗi loại), vào, rời, 3 chức vị, bố cáo, giúp tăng tốc (10 lần/việc), kết trận (8 đội, chờ 5/10/30 phút), viện binh đồn trú nhà đồng minh, linh mạch buff sản lượng cả minh (trần 30 %) |
 | Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; kiếp sau khởi đầu với công trình tầng 3 rồi tầng 5 ("căn cơ"), mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
@@ -254,7 +254,7 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 - Mùa 6–8 tuần, phi thăng / luân hồi. Khi mở P3: mọi người chơi P2 luân hồi vào mùa 1 kèm quà bù.
 - **Cổng:** chạy trọn 1 mùa với ≥ 100 người hoạt động mỗi giới.
 
-Đã chạy (phần mã): bản đồ giới sinh từ seed (vùng lồi Voronoi, 3 vòng, đường đi Dijkstra qua cổng đang mở), 32 phân đà NPC tự chơi (giữ mạch vùng mình, chỉ phản kích), hành quân thời gian thực tới điểm (chiếm / khai mỏ / đánh yêu vương theo pool + slice / đồn trú, gọi về), kết trận, viện binh, linh triều (8 giờ một lần, 2 giờ, +15 % sản lượng), thời tiết, ngày đêm, biên niên giới. Client: cảnh WebGL chung với núi, địa hình nướng trong worker (3 mức chi tiết, LRU), ghim tên, kéo quán tính, chụm, con lăn, phím. Còn lại: độ kiếp công khai, mùa 49 ngày + phi thăng, chợ.
+Đã chạy (phần mã): bản đồ giới sinh từ seed (vùng lồi Voronoi, 3 vòng, đường đi Dijkstra qua cổng đang mở), 32 phân đà NPC tự chơi (giữ mạch vùng mình, chỉ phản kích), hành quân thời gian thực tới điểm (chiếm / khai mỏ / đánh yêu vương theo pool + slice / đồn trú, gọi về), kết trận, viện binh, linh triều (8 giờ một lần, 2 giờ, +15 % sản lượng), thời tiết, ngày đêm, biên niên giới, độ kiếp công khai (kiếp vân, hộ pháp, phá kiếp). Client: cảnh WebGL chung với núi, địa hình nướng trong worker (3 mức chi tiết, LRU), ghim tên, kéo quán tính, chụm, con lăn, phím. Còn lại: mùa 49 ngày + phi thăng, chợ.
 
 ### P4 — Ra mắt đa nền tảng (2–3 tháng)
 

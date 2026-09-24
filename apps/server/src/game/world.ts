@@ -10,8 +10,8 @@ import {
   type Action, type ElderId, type Mail, type Report, type State,
 } from '@rok/rules'
 import {
-  WORLD_ACTIONS, advanceAll, allyInfo, allyOf, allyRows, worldBuffs, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
-  spawn, worldAct,
+  SEASON_DAYS, WORLD_ACTIONS, advanceAll, allyInfo, allyOf, allyRows, endSeason, worldBuffs, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
+  seasonBoard, sideKey, spawn, worldAct,
   type Chron, type MapCtx, type World as Shared, type WorldAction, type WorldResult,
 } from '@rok/rules/world'
 import { turn } from '@rok/rules/bot'
@@ -20,7 +20,7 @@ import { loadText } from '@rok/i18n'
 const vi = await loadText('vi') // tên phân đà NPC (tên tông môn là dữ liệu của giới, mọi người thấy cùng một tên)
 import {
   diff, view,
-  type Ack, type Bye, type Channel, type ChatMsg, type ClientToServer, type Push, type Query, type SayErr, type Seen, type ServerToClient, type Snap, type WorldInfo,
+  type Ack, type Bye, type Channel, type ChatMsg, type ClientToServer, type Fame, type Push, type Query, type SayErr, type Seen, type ServerToClient, type Snap, type WorldInfo,
 } from '@rok/protocol'
 import { mask, clean as tidy } from '../lib/filter.ts'
 import type { Database } from '../db/index.ts'
@@ -61,7 +61,7 @@ const seed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước mọi thao 
 
 export class World {
   readonly id: number
-  readonly info: WorldInfo
+  info: WorldInfo
   epoch: number
   warp: number
   readOnly = false
@@ -91,8 +91,10 @@ export class World {
   // lệnh inbox đã áp vào RAM (chờ commit đánh dấu xong): không áp lại dù lần đọc sau còn thấy.
   // ponytail: giữ mãi (lệnh admin hiếm); dọn theo tuổi nếu dùng inbox cho việc thường xuyên.
   private readonly applied = new Set<number>()
-  private readonly seed: number
-  private readonly opened: number
+  private seed: number
+  private opened: number
+  private seasonDirty = false // hết mùa: seed, số mùa, lúc mở đổi — ghi cột của worlds trong commit kế
+  private fame: Fame[] // bảng phong thần: top các mùa trước
   private readonly npc = new Set<number>() // tông môn NPC (không tài khoản): tự chơi, chỉ phản kích kẻ đã đánh mình
   private npcAt = 0
   private npcsMade: boolean
@@ -115,11 +117,12 @@ export class World {
     this.opened = c.opensAt.getTime()
     this.info = { id: c.id, name: c.name, season: c.season, map: c.seed, opened: this.opened }
     for (const r of rows) this.adopt(r)
-    const st = (c.state ?? {}) as { week?: number; npcs?: boolean; chron?: Chron[]; world?: Shared }
+    const st = (c.state ?? {}) as { week?: number; npcs?: boolean; chron?: Chron[]; world?: Shared; fame?: Fame[] }
     this.shared = { ...freshWorld(), ...st.world } // blob cũ thiếu trường mới: lấy mặc định
     this.week = st.week ?? weekOf(this.now())
     this.npcsMade = !!st.npcs
     this.chron = st.chron ?? []
+    this.fame = st.fame ?? []
     this.armRaid()
   }
 
@@ -397,6 +400,11 @@ export class World {
       return this.deliver(() => ack(key ? (this.chats.get(key) ?? []) : []))
     }
     if (q.k === 'allies') return this.deliver(() => ack(allyRows(this.shared, this.ps)))
+    if (q.k === 'season') {
+      const rows = seasonBoard(this.shared, this.ps, this.map(now), now)
+      const side = sideKey(this.shared, pid), k = rows.findIndex(r => r.side === side)
+      return this.deliver(() => ack({ rows: rows.slice(0, 20).map(({ name, pts }) => ({ name, pts })), me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts }, fame: this.fame }))
+    }
     if (q.k === 'ally') return this.deliver(() => ack(allyInfo(this.shared, this.ps, pid, p => !!this.slots.get(p)?.conns.size)))
     if (q.k === 'map') {
       const now = this.now()
@@ -504,8 +512,40 @@ export class World {
     this.arm()
   }
 
+  // Hết mùa: phi thăng / luân hồi cho mọi người (rules/world.ts endSeason), bản đồ mới (seed mới), xếp chỗ lại, phân đà NPC làm lại,
+  // giữ tiên minh. Làm trong actor như mọi việc khác và ghi trong một commit; client được mời nối lại để nhận bản đồ mới.
+  private seasonEnd(now: number) {
+    const season = this.info.season
+    const r = endSeason(this.ps, this.shared, this.map(now), now, season, this.npc)
+    this.fame = [{ season, at: now, top: r.top.slice(0, 3).map(x => ({ name: x.name, pts: x.pts })) }, ...this.fame].slice(0, 10)
+    this.seed = randomInt(1, 2 ** 31)
+    this.opened = now
+    this.info = { ...this.info, season: season + 1, map: this.seed, opened: now }
+    this.seasonDirty = true
+    this.share(r.world)
+    this.chron = []
+    const a = atlas(this.seed), taken: { x: number; y: number }[] = []
+    for (const [pid, slot] of this.slots) {
+      const s = r.changed.get(pid) ?? this.ps.get(pid)
+      const seat = s && spawn(a, taken, Math.random)
+      if (!s || !seat) continue
+      taken.push(seat)
+      this.commit(slot, this.npc.has(pid) ? npcState(now, slot.name, seat) : { ...s, seat })
+    }
+    this.record(now, 'season', [season + 1])
+    this.env.log.info({ world: this.id, season: season + 1, top: this.fame[0].top }, 'season ended')
+    this.deliver(() => {
+      for (const slot of this.slots.values())
+        for (const c of slot.conns) {
+          c.emit('bye', { reason: 'season' })
+          c.disconnect(true)
+        }
+    }, true)
+  }
+
   // Sự kiện của cả giới: lật tuần sự kiện, rồi mọi trận cướp đã tới nơi (một trận đổi state của cả hai bên)
   private worldStep(now: number) {
+    if (dayIn(this.opened, now) >= SEASON_DAYS) this.seasonEnd(now)
     if (weekOf(now) > this.week) this.rollWeek(now)
     try {
       const map = this.map(now)
@@ -710,14 +750,16 @@ export class World {
         ...(seenIds.has(id) && slot.seen ? { seen: slot.seen } : {}),
       }
     })
-    const worldState = this.worldDirty ? { week: this.week, npcs: this.npcsMade, chron: this.chron, world: this.shared } : undefined
+    const worldState = this.worldDirty ? { week: this.week, npcs: this.npcsMade, chron: this.chron, world: this.shared, fame: this.fame } : undefined
+    const season = this.seasonDirty ? { seed: this.seed, season: this.info.season, opensAt: new Date(this.opened) } : undefined
+    this.seasonDirty = false
     this.worldDirty = false
     this.committing = true
     this.inflight = p
     const stop = commitSeconds.startTimer()
     try {
       await store.flushWorld(this.env.db, {
-        world: this.id, epoch: this.epoch, node: this.env.node, online: this.online, sync: this.env.sync, state: worldState,
+        world: this.id, epoch: this.epoch, node: this.env.node, online: this.online, sync: this.env.sync, state: worldState, season,
         players, reports: p.reports, events: p.events, inboxDone: p.inboxDone, chat: p.chat,
       })
       stop()
@@ -734,6 +776,7 @@ export class World {
       this.env.log.warn({ err: e, world: this.id }, 'commit failed, retrying')
       for (const id of ids) this.dirty.add(id) // lần sau ghi state MỚI NHẤT của họ
       if (worldState) this.worldDirty = true
+      if (season) this.seasonDirty = true
       for (const id of seenIds) this.seenDirty.add(id)
       this.pending = {
         reports: [...p.reports, ...this.pending.reports], events: [...p.events, ...this.pending.events],

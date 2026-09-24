@@ -152,6 +152,9 @@ const failTrib = run(
   { type: 'trib', elder: 'thanhPhong', army: { kiem1: 3 }, pill: false },
 )
 const trib10: State = { ...mid, levels: levels(mid, 10), trib: 1, marches: [] }
+// có chỗ trên bản đồ giới: kiếp vân đang tụ (server giải lúc giáng), đã bị phá kiếp một lần
+const clouded = run({ ...trib10, seat: { x: 10, y: 10 }, res: rich, troops: { ...trib10.troops, kiem2: 200 } }, { type: 'trib', elder: 'thanhPhong', army: { kiem2: 200 }, pill: false })
+const cloud: State = { ...clouded, marches: clouded.marches.map(m => ({ ...m, foil: 1 })) }
 const late: State = {
   ...mid,
   levels: levels(mid, 15),
@@ -208,6 +211,7 @@ const STATES: [string, State][] = [
   ['chờ độ kiếp 5', trib5],
   ['sau độ kiếp', afterTrib],
   ['chờ độ kiếp 10', trib10],
+  ['kiếp vân đang tụ', cloud],
   ['tầng 15', late],
   ['chờ độ kiếp 20', high20],
   ['tầng 25', top],
@@ -313,6 +317,9 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
       }).body
     assert.ok(panel(trib5, 'chuDien').includes(L.trib.title), 'Chủ điện tầng 5 phải hiện độ kiếp')
     assert.ok(panel(late, 'chuDien').includes(L.rebirth.title), 'Chủ điện tầng 15 phải hiện luân hồi')
+    const gathering = panel(cloud, 'chuDien')
+    assert.ok(gathering.includes(L.trib.gathering('').slice(0, 14)) && gathering.includes(L.trib.foiled(1)), 'kiếp vân đang tụ: đếm ngược, số lần bị phá kiếp')
+    assert.ok(!gathering.includes(L.trib.need), 'đã trả chi phí lúc tụ: không hỏi tài nguyên nữa')
     assert.ok(panel(mid, 'tangBaoCac').includes(L.trade.tab), 'Tàng Bảo Các có thẻ Thương hội')
     assert.ok(panel(late, 'chuDien').includes(L.rebirth.gain(late.rebirths + 1)), 'luân hồi phải nói rõ thưởng kiếp sau (căn cơ)')
     const poor: State = { ...trib10, res: { linhThach: 500, linhThao: 500, linhKhoang: 500 }, levels: { ...trib10.levels, tangBaoCac: 2 } }

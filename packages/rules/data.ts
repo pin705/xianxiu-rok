@@ -376,6 +376,18 @@ export const PHA_KIEP = 0.08
 export const TRIB_AID = 3
 export const HO_PHAP_EXP = 0.25
 
+// ---------- Mùa giải (SEASON_DAYS, PHASES ở atlas.ts) ----------
+// Điểm mùa theo phe (tiên minh; người đi một mình là một phe): mỗi giờ giữ linh mạch cấp 1/2/3, trận nhãn, Thiên Môn;
+// hạ yêu vương cấp 2/3 thì chia theo sát thương. Người mới vào giới tới ngày JOIN_DAYS.
+// Hết mùa: minh đứng đầu (người từ tầng ASCEND_HALL) và ai tới tầng cao nhất được phi thăng (+ASCEND luân hồi, danh hiệu); còn lại +1
+export const SEASON_VEIN = [1, 2, 4]
+export const SEASON_GATE = 3
+export const SEASON_HEAVEN = 12
+export const SEASON_BOSS = [0, 0, 60, 200]
+export const JOIN_DAYS = 21
+export const ASCEND_HALL = 16
+export const ASCEND = 2
+
 // ---------- Nhiệm vụ ngày ----------
 
 // Làm mới lúc 0h giờ Việt Nam (UTC+7), cố định như giờ máy chủ — không theo múi giờ máy người chơi (chỉnh giờ máy

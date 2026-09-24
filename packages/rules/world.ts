@@ -6,13 +6,14 @@ import {
   CARRY, ELDER_IDS, ELO_K, EVENT_TOP, FOES_MAX, GUARD_STEP, MAIL_MAX, MATCH_PICK, MATCH_POOL, PROTECT, PVP_FLOOR, PVP_HALL,
   RAID_SHARE, RESOURCES, REVENGE_TIME, SHIELD_TIME, TIER, UNITS, BEATS, BOSSES, GARRISON_MAX, MINE_RATE, MINE_RESPAWN, MINE_STOCK, TIDE_MINE,
   TIDE_PROD, TYPES, VEIN_BUFF, VEIN_CAP, RALLY_MAX, RALLY_WAIT, REINFORCE_MAX, HO_PHAP, HO_PHAP_EXP, PHA_KIEP, TRIB_AID, TRIB_EXP, might,
+  ASCEND, ASCEND_HALL, MAX_LEVEL, SEASON_BOSS, SEASON_GATE, SEASON_HEAVEN, SEASON_VEIN,
   admit, advance, armyError, bump, elderLevel, evBump, fight, lead, marchSlots, marchTime, minus, mob, pickArmy, power, pushReport, sideOf,
-  snap, storage, unitOf, cutOf, hasten, jobOf, giveExp, tribEnd,
+  snap, storage, unitOf, cutOf, hasten, jobOf, giveExp, tribEnd, seasonEnd,
   type Buff, type Reward,
   type JobKind,
   type Army, type Bag, type ElderId, type Err, type Mail, type March, type Report, type Side, type State,
 } from './index.ts'
-import { TILE_TIME, regionOf, route, tide, type Atlas, type PointKind, type Pos } from './atlas.ts'
+import { TILE_TIME, regionOf, route, tide, type Atlas, type Point, type PointKind, type Pos } from './atlas.ts'
 
 export * from './atlas.ts'
 
@@ -37,8 +38,9 @@ export type Alliance = { id: number; name: string; tag: string; members: Record<
 export type Spot = { own?: number; since?: number; left?: number; until?: number; hp?: number; dmg?: Record<number, number> }
 // Kết trận: người trong minh góp đội, mọi đội tới điểm i cùng lúc `at` rồi đánh như một bên
 export type Rally = { id: number; ally: number; by: number; i: number; task: 'take' | 'hit'; at: number }
-export type World = { allies: Record<number, Alliance>; nextAlly: number; spots: Record<number, Spot>; rallies: Record<number, Rally>; nextRally: number }
-export const freshWorld = (): World => ({ allies: {}, nextAlly: 1, spots: {}, rallies: {}, nextRally: 1 })
+// pts: điểm mùa đã chốt theo phe (sideKey) — phần đang giữ tính thêm ở seasonPts
+export type World = { allies: Record<number, Alliance>; nextAlly: number; spots: Record<number, Spot>; rallies: Record<number, Rally>; nextRally: number; pts: Record<number, number> }
+export const freshWorld = (): World => ({ allies: {}, nextAlly: 1, spots: {}, rallies: {}, nextRally: 1, pts: {} })
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
 
 export type WorldAction =
@@ -542,6 +544,49 @@ export function bossSlice(a: Atlas, i: number): Side | null {
   return mob(boss.str / boss.slices, boss.tier, [[type, 0.5], [BEATS[type], 0.3], [BEATS[BEATS[type]], 0.2]], 1 + p.lv * 10)
 }
 const setSpot = (w: World, i: number, sp: Spot): World => ({ ...w, spots: { ...w.spots, [i]: sp } })
+
+// ---------- Điểm mùa ----------
+export const seasonRate = (p: Point) => (p.kind === 'vein' ? (SEASON_VEIN[p.lv - 1] ?? 0) : p.kind === 'gate' ? SEASON_GATE : p.kind === 'heaven' ? SEASON_HEAVEN : 0)
+const bank = (w: World, side: number, pts: number): World => (pts > 0 ? { ...w, pts: { ...w.pts, [side]: (w.pts[side] ?? 0) + pts } } : w)
+// Đặt lại điểm i lúc at; đổi phe giữ thì chốt điểm mùa cho phe cũ theo số giờ đã giữ
+function hold(w: World, map: MapCtx | undefined, i: number, sp: Spot, at: number): World {
+  const old = w.spots[i]
+  const next = setSpot(w, i, sp)
+  if (!map || old?.own === undefined || old.own === sp.own) return next
+  return bank(next, old.own, ((at - (old.since ?? at)) / HOUR) * seasonRate(map.atlas.points[i]))
+}
+// Điểm mùa lúc now: đã chốt + phần đang giữ
+export function seasonPts(w: World, map: MapCtx, now: number): Record<number, number> {
+  const pts = { ...w.pts }
+  for (const [k, sp] of Object.entries(w.spots))
+    if (sp.own !== undefined && sp.since !== undefined) pts[sp.own] = (pts[sp.own] ?? 0) + (Math.max(0, now - sp.since) / HOUR) * seasonRate(map.atlas.points[Number(k)])
+  return pts
+}
+export type SeasonRow = { side: number; name: string; pts: number } // side > 0: tiên minh; < 0: người đi một mình
+export function seasonBoard(w: World, ps: Players, map: MapCtx, now: number): SeasonRow[] {
+  const name = (side: number) => (side > 0 ? w.allies[side] && `[${w.allies[side].tag}] ${w.allies[side].name}` : ps.get(-side)?.name)
+  return Object.entries(seasonPts(w, map, now))
+    .map(([k, pts]) => ({ side: Number(k), name: name(Number(k)) ?? '', pts: Math.floor(pts) }))
+    .filter(r => r.name && r.pts > 0)
+    .sort((a, b) => b.pts - a.pts || a.side - b.side)
+}
+
+// Hết mùa cho cả giới (trừ skip: NPC, server làm mới riêng): minh đứng đầu (người từ ASCEND_HALL) và ai ở tầng cao nhất phi thăng,
+// còn lại luân hồi một kiếp; ai cũng nhận thư kết quả. Phần chung làm mới, giữ tiên minh (bỏ các việc đang nhờ giúp).
+export function endSeason(ps: Players, w: World, map: MapCtx, now: number, season: number, skip: Set<number>): { changed: Players; world: World; top: SeasonRow[] } {
+  const top = seasonBoard(w, ps, map, now)
+  const first = top.find(r => r.side > 0)?.side
+  const rank = new Map(top.map((r, k) => [r.side, k + 1]))
+  const changed: Players = new Map()
+  for (const [pid, s] of ps) {
+    if (skip.has(pid)) continue
+    const side = sideKey(w, pid)
+    const up = (side === first && s.levels.chuDien >= ASCEND_HALL) || s.levels.chuDien >= MAX_LEVEL
+    changed.set(pid, mail(seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined), { at: now, k: 'season', a: [season, rank.get(side) ?? 0, up ? 1 : 0] }))
+  }
+  const allies = Object.fromEntries(Object.entries(w.allies).map(([k, a]) => [k, { ...a, helps: [] }]))
+  return { changed, world: { ...freshWorld(), allies, nextAlly: w.nextAlly, nextRally: w.nextRally }, top }
+}
 const carryOf = (army: Army) => UNITS.reduce((sum, u) => sum + (army[u] ?? 0) * CARRY * TIER[unitOf(u).tier].stat, 0)
 const withMarch = (s: State, m: March): State => ({ ...s, marches: s.marches.map(x => (x.id === m.id ? m : x)) })
 const travel = (m: March) => m.arriveAt - m.startAt
@@ -552,6 +597,7 @@ function goAct(ps: Players, w: World, pid: number, a: Extract<WorldAction, { typ
   const p = map?.atlas.points[a.i]
   if (!map || !p) return no('gone')
   if (TASK_OF[p.kind] !== a.task) return no('bad')
+  if ((p.kind === 'gate' && p.lv > map.phase) || (p.kind === 'heaven' && map.phase < 3)) return no('locked') // trận nhãn mở theo pha mùa
   if (!s.seat) return no('far')
   const r = route(map.atlas, s.seat, p, map.phase)
   if (!r) return no('far')
@@ -581,7 +627,7 @@ function recallAct(ps: Players, w: World, pid: number, mid: number, now: number,
   if (m.stay) {
     const next = withMarch(s, { ...m, stay: false, back: m.army, hurt: m.hurt ?? {}, gain: { res: {}, items: {}, exp: 0 }, returnAt: t + travel(m) })
     const left = garrison(new Map([...ps, [pid, next]]), i).filter(([id]) => sideKey(w, id) === w.spots[i]?.own)
-    return { ok: true, changed: new Map([[pid, next]]), world: left.length ? w : setSpot(w, i, {}) }
+    return { ok: true, changed: new Map([[pid, next]]), world: left.length ? w : hold(w, map, i, {}, t) }
   }
   const mine = m.mine!
   const got = Math.floor((mine.amount * (t - m.arriveAt)) / Math.max(1, mine.end - m.arriveAt))
@@ -669,7 +715,9 @@ function spotArrive(ps: Players, w: World, map: MapCtx, group: Party, at: number
       }
       changed.set(who, mail(st, { at, k: 'boss', a: [p.lv, n + 1, Math.round(share * 100)], gift }))
     })
-    return { changed, world: setSpot(w, i, { until: at + boss.respawn }) }
+    let dead = setSpot(w, i, { until: at + boss.respawn })
+    for (const [id2, d] of Object.entries(dmgs)) dead = bank(dead, sideKey(w, Number(id2)), ((SEASON_BOSS[p.lv] ?? 0) * d) / sum)
+    return { changed, world: dead }
   }
 
   // take: điểm trống hoặc của phe mình → đóng quân (tới khi đầy); của phe khác → đánh cả quân đang đóng
@@ -686,7 +734,7 @@ function spotArrive(ps: Players, w: World, map: MapCtx, group: Party, at: number
   if (!foes.length) {
     if (gar.length >= GARRISON_MAX) return back()
     station(group)
-    return { changed, world: setSpot(w, i, sp.own === me ? sp : { own: me, since: at }) }
+    return { changed, world: sp.own === me ? w : hold(w, map, i, { own: me, since: at }, at) }
   }
   const { side: def, at: offs } = combine(foes.map(([id2, x]) => sideOf(ps.get(id2)!, x.elder, armyOf(x))))
   const f = fight(mine, def, m.seed)
@@ -712,7 +760,7 @@ function spotArrive(ps: Players, w: World, map: MapCtx, group: Party, at: number
     ds = withMarch(ds, f.win ? { ...x, stay: false, back: d.left, hurt, gain: empty, report: ds.nextId - 1, returnAt: at + travel(x) } : { ...x, army: d.left, hurt })
     changed.set(id2, ds)
   })
-  return { changed, world: f.win ? setSpot(w, i, { own: me, since: at }) : w }
+  return { changed, world: f.win ? hold(w, map, i, { own: me, since: at }, at) : w }
 }
 
 // Mở kết trận / góp đội: chỉ trong minh; mọi đội tới đích đúng lúc `at` (đội ở gần đi chậm lại cho khớp)

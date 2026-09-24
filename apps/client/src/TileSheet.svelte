@@ -85,6 +85,7 @@
           <Tag icon="power">{num(seat.power)}</Tag>
           {#if seat.npc}<Tag tone="plain">{L.world.npc}</Tag>{/if}
           {#if seat.shield}<Tag icon="shield" tone="good">{L.world.shielded}</Tag>{/if}
+          {#if seat.cloud && seat.cloud > now}<Tag icon="bolt" tone="red">{L.trib.gathering(clock(seat.cloud - now))}</Tag>{/if}
         </span>
         {#if seat.pid !== me}
           <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : L.err.far}</small>

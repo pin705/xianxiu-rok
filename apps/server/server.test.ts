@@ -360,8 +360,9 @@ test('bản đồ giới: đi chiếm linh mạch trong vùng mình, đóng quâ
   const map0 = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { spots: { i: number; own?: string }[] }
   const vein = a.points.find(p => p.kind === 'vein' && p.region === regionOf(a, state.seat) && !map0.spots.some(s => s.i === p.i && s.own))
   assert.ok(vein, 'vùng nào cũng có linh mạch')
-  await api(n, '/dev/state', { state: { ...state, troops: { ...state.troops, kiem2: 300 } } }, A.token)
-  const ack = await c.act({ type: 'go', i: vein!.i, task: 'take', elder: 'thanhPhong', army: { kiem2: 300 } })
+  // phân đà NPC cùng vùng cũng đi giữ mạch trống (có khi tới trước): mang đủ quân để thắng chắc đội đóng của chúng
+  await api(n, '/dev/state', { state: { ...state, troops: { ...state.troops, kiem2: 3000 } } }, A.token)
+  const ack = await c.act({ type: 'go', i: vein!.i, task: 'take', elder: 'thanhPhong', army: { kiem2: 3000 } })
   assert.ok(ack.ok, JSON.stringify(ack))
   const m = ack.p!.marches!.at(-1)!
   const now0 = welcome.now

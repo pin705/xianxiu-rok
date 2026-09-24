@@ -531,3 +531,68 @@ test('độ kiếp công khai: kiếp vân tụ trước (trả chi phí, đội
   const foiled = strike(pv, freshWorld(), 2)
   assert.ok(wave(foiled) > wave(plain), `phá kiếp: thương vong ${wave(foiled)} phải nhiều hơn ${wave(plain)}`)
 })
+
+test('mùa: điểm mùa theo giờ giữ điểm (chốt khi đổi phe), cổng / Thiên Môn chỉ chiếm được khi đã mở; hết mùa phi thăng minh đầu, còn lại luân hồi', async () => {
+  const { atlas, advanceAll, freshWorld, seasonBoard, seasonPts, seasonRate, endSeason } = await import('./world.ts')
+  const { ASCEND, ASCEND_HALL, rebirthLevels } = await import('./index.ts')
+  const a = atlas(777)
+  const map = { atlas: a, phase: 1 }
+  const vein = a.points.find(p => p.kind === 'vein' && p.region === 0)!
+  const heaven = a.points.find(p => p.kind === 'heaven')!
+  const near = { x: a.regions[0].cx, y: a.regions[0].cy }
+  const ps = world({ ...sect('A', ASCEND_HALL, { kiem3: 400 }), seat: near }, { ...sect('B', 10, { kiem3: 1500 }), seat: near }, { ...sect('C', 10), seat: near })
+  let w = freshWorld()
+  const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {
+    const r = worldAct(ps, pid, x, at, 5 + pid, map, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  const step = (at: number) => {
+    const r = advanceAll(ps, w, at, map)
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+  }
+  assert.equal(act(1, { type: 'go', i: heaven.i, task: 'take', elder: 'thanhPhong', army: { kiem3: 10 } }), 'locked', 'Thiên Môn mở ở pha Phi thăng')
+  act(1, { type: 'allyFound', name: 'Vạn Kiếm', tag: 'VK' })
+  act(3, { type: 'allyJoin', id: 1 })
+  act(1, { type: 'go', i: vein.i, task: 'take', elder: 'thanhPhong', army: { kiem3: 400 } })
+  const m = ps.get(1)!.marches[0]
+  step(m.arriveAt)
+  // giữ 10 giờ: điểm đang giữ tính dần, chưa chốt
+  const t10 = m.arriveAt + 10 * HOUR
+  assert.equal(Math.round(seasonPts(w, map, t10)[1]), 10 * seasonRate(vein))
+  assert.deepEqual(w.pts, {})
+  // B đánh bật: chốt phần của minh A, B bắt đầu tính
+  act(2, { type: 'go', i: vein.i, task: 'take', elder: 'thanhPhong', army: { kiem3: 1500 } }, t10 - HOUR)
+  const mb = ps.get(2)!.marches[0]
+  step(mb.arriveAt)
+  assert.equal(w.spots[vein.i].own, -2)
+  const banked = w.pts[1]
+  assert.ok(Math.abs(banked - ((mb.arriveAt - m.arriveAt) / HOUR) * seasonRate(vein)) < 1e-9)
+  const board = seasonBoard(w, ps, map, mb.arriveAt + HOUR)
+  assert.deepEqual(board.map(r => r.name), ['[VK] Vạn Kiếm', 'B'])
+
+  // hết mùa: minh đầu (A ở tầng ≥ ASCEND_HALL) phi thăng, C cùng minh nhưng tầng thấp và B một mình thì luân hồi một kiếp
+  const end = endSeason(ps, w, map, mb.arriveAt + HOUR, 1, new Set())
+  const [A, B, C] = [1, 2, 3].map(k => end.changed.get(k)!)
+  assert.equal(A.rebirths, ASCEND)
+  assert.deepEqual(A.ascended, [1])
+  assert.deepEqual(A.levels, rebirthLevels(ASCEND))
+  assert.equal(B.rebirths, 1)
+  assert.equal(C.rebirths, 1)
+  assert.deepEqual(C.ascended, [])
+  for (const s of [A, B, C]) {
+    assert.equal(s.marches.length, 0, 'hành quân huỷ')
+    assert.equal(s.seat, null, 'server xếp chỗ lại trên bản đồ mùa mới')
+    assert.equal(s.mail.at(-1)!.k, 'season')
+  }
+  assert.deepEqual(A.mail.at(-1)!.a, [1, 1, 1])
+  assert.deepEqual(end.world.spots, {})
+  assert.deepEqual(end.world.pts, {})
+  assert.equal(end.world.allies[1].name, 'Vạn Kiếm', 'tiên minh giữ qua mùa')
+  assert.deepEqual(end.top.map(r => r.side), [1, -2])
+  // trong giới thì luân hồi chỉ diễn ra khi hết mùa
+  assert.equal(apply({ ...ps.get(1)!, levels: { ...ps.get(1)!.levels, chuDien: 16 }, marches: [] }, { type: 'rebirth' }, T0).ok, false)
+})
