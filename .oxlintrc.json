@@ -26,16 +26,8 @@
       ],
       "rules": { "max-lines": "off", "max-lines-per-function": "off" }
     },
-    // Mức trần của các file lớn hiện có: chỉ được nhỏ đi. Thêm tính năng mà vượt trần thì tách file
-    // (gợi ý: home.ts → sky/water/buildings, battle.ts → skills).
-    {
-      "files": ["apps/client/src/world/home.ts"],
-      "rules": { "max-lines": ["error", { "max": 1100, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
-      "files": ["apps/client/src/world/battle.ts"],
-      "rules": { "max-lines": ["error", { "max": 800, "skipBlankLines": true, "skipComments": true }] }
-    },
+    // createNet và bot.turn là closure giữ state dùng chung, hàm con bên trong đều ngắn; rule đếm cả hàm con nên hai hàm
+    // này có trần riêng (chỉ được nhỏ đi — thêm việc thì tách thành hàm con ở ngoài hoặc file mới).
     {
       "files": ["apps/client/src/net.ts"],
       "rules": { "max-lines-per-function": ["error", { "max": 340, "skipBlankLines": true, "skipComments": true }] }
