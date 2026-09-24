@@ -80,7 +80,10 @@
     {pick}
     {ally}
     onclose={() => (pick = null)}
-    onraid={pid => ((pick = null), onraid(pid))}
+    onraid={pid => {
+      pick = null
+      onraid(pid)
+    }}
     {send}
   />
 {:else}

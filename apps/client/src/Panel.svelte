@@ -36,7 +36,7 @@
     type UnitType,
   } from '@rok/rules'
   import { Icon, building, tierOf, type Kind } from '@rok/art'
-  import { Bag, Button, Card, Medal, Painting, Section, Sheet, Stat, Tabs, Tag, Toggle } from './ui'
+  import { Bag, Button, Card, Confirm, Medal, Painting, Section, Sheet, Stat, Tabs, Tag, Toggle } from './ui'
   import Alchemy from './Alchemy.svelte'
   import ArmyPick from './Army.svelte'
   import Forge from './Forge.svelte'
@@ -83,7 +83,6 @@
   const fn = $derived(id && game.levels[id] > 0 ? FN[id] : undefined)
   const tab = $derived(picked?.id === id ? picked.tab : fn ? (view ?? fn[0]) : 'upgrade')
   let pill = $state(true)
-  let sure = $state(false)
   const waveMight = (str: number, tier: Tier, type: UnitType) => might(mob(str, tier, [[type, 1]]))
   const withLevel = (b: BuildingId, lv: number) => ({ ...game, levels: { ...game.levels, [b]: lv } })
 </script>
@@ -310,19 +309,11 @@
             <p class="t-small t-soft">{L.rebirth.season}</p>
           {:else}
             {#if game.marches.length}<p class="t-small t-bad">{L.rebirth.marching}</p>{/if}
-            {#if sure}
-              <p class="t-small t-bad t-strong">{L.rebirth.confirm}</p>
-              <div class="grid">
-                <Button variant="ghost" onclick={() => (sure = false)}>{L.panel.close}</Button>
-                <Button variant="danger" disabled={busy} onclick={() => ((sure = false), onrebirth())}
-                  >{L.rebirth.go}</Button
-                >
-              </div>
-            {:else}
-              <Button variant="gold" wide disabled={!!game.marches.length} onclick={() => (sure = true)}
-                >{L.rebirth.go}</Button
-              >
-            {/if}
+            <Confirm warn={L.rebirth.confirm} label={L.rebirth.go} disabled={busy} onconfirm={onrebirth}>
+              {#snippet trigger(ask)}
+                <Button variant="gold" wide disabled={!!game.marches.length} onclick={ask}>{L.rebirth.go}</Button>
+              {/snippet}
+            </Confirm>
           {/if}
         </Section>
       {/if}

@@ -76,9 +76,11 @@
                     <Button
                       variant="gold"
                       size="sm"
-                      onclick={e =>
-                        act({ type: 'mail', id: m.id }) &&
-                        (sfx('reward'), fly(e.currentTarget as Element, m.gift?.res ?? {}))}>{L.mail.claim}</Button
+                      onclick={e => {
+                        if (!act({ type: 'mail', id: m.id })) return
+                        sfx('reward')
+                        fly(e.currentTarget as Element, m.gift?.res ?? {})
+                      }}>{L.mail.claim}</Button
                     >
                   {/if}
                 </div>

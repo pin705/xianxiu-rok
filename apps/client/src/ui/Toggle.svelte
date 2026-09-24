@@ -9,7 +9,15 @@
 
 <label class="toggle">
   <span class="row">{@render children()}</span>
-  <input type="checkbox" role="switch" {checked} onchange={e => (sfx('tap'), onchange(e.currentTarget.checked))} />
+  <input
+    type="checkbox"
+    role="switch"
+    {checked}
+    onchange={e => {
+      sfx('tap')
+      onchange(e.currentTarget.checked)
+    }}
+  />
 </label>
 
 <style>

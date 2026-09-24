@@ -21,7 +21,16 @@
   } = $props()
 </script>
 
-<button class="ib {tone}" style:--s="{size}px" aria-label={label} title={label} onclick={() => (sfx('tap'), onclick())}>
+<button
+  class="ib {tone}"
+  style:--s="{size}px"
+  aria-label={label}
+  title={label}
+  onclick={() => {
+    sfx('tap')
+    onclick()
+  }}
+>
   <Icon name={icon} size={Math.round(size * 0.48)} />
   {#if children}{@render children()}{/if}
 </button>

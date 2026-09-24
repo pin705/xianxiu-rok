@@ -61,7 +61,14 @@
 <Section title={L.train.pick}>
   <div class="grid" style:--cols="3">
     {#each TYPES as t (t)}
-      <Card selected={type === t} onclick={() => ((type = t), (n = 0))} label={L.units[t]}>
+      <Card
+        selected={type === t}
+        onclick={() => {
+          type = t
+          n = 0
+        }}
+        label={L.units[t]}
+      >
         <span class="stack center" style:--gap="3px">
           <span class="row center"><Medal emblem={EMBLEM.unit[t]} tone={t} size={38} /></span>
           <b class="t-small">{L.units[t]}</b>
@@ -76,7 +83,15 @@
   <div class="grid" style:--cols="3">
     {#each TIERS as k (k)}
       {@const open = tierOpen(game, k)}
-      <Card selected={tier === k} disabled={!open} onclick={() => ((tier = k), (n = 0))} label={L.tiers[k]}>
+      <Card
+        selected={tier === k}
+        disabled={!open}
+        onclick={() => {
+          tier = k
+          n = 0
+        }}
+        label={L.tiers[k]}
+      >
         <span class="stack center" style:--gap="3px">
           <b class="t-small">{L.tiers[k]}</b>
           {#if !open}<Tag icon="lock" size="sm">{L.train.tierLocked(TIER[k].unlock)}</Tag>{/if}

@@ -8,7 +8,7 @@ import {
   type Look,
   type TabIcon,
 } from '@rok/art'
-import type { ElderId, Element, Report, UnitType } from '@rok/rules'
+import type { ElderId, Element, March, Report, UnitType } from '@rok/rules'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
 import { read, write } from './storage'
@@ -178,6 +178,13 @@ export function reportName(r: Report) {
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE
 // Trận PvP nhìn từ bên thủ: đẩy lui được, hay bị cướp
 export const defended = (r: Report) => (r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''))
+// Đội đang làm gì: tụ kiếp vân, đóng quân, khai mỏ, đang đi tới, đang về
+export function marchDoing(m: Pick<March, 'target' | 'stay' | 'mine' | 'arriveAt'>, now: number) {
+  if (m.target.kind === 'trib') return L.trib.gather
+  if (m.stay) return L.world.stay
+  if (m.mine && m.mine.end > now) return L.world.gathering
+  return now < m.arriveAt ? L.map.out : L.map.back
+}
 export const marchName = (m: { target: { kind: string; i: number }; foe?: string; spot?: string }) =>
   m.foe ?? (m.target.kind === 'spot' ? spotName(m.spot) : L.target(m.target as Parameters<typeof L.target>[0]))
 

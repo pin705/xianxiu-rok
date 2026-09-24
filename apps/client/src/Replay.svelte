@@ -92,6 +92,21 @@
       sfx('thunder')
     } else finish()
   }
+  // Xem lại từ đầu
+  function again() {
+    fi = 0
+    r = 0
+    done = false
+    battle?.wave(0)
+  }
+  // Bỏ qua: tới lượt cuối của đợt cuối
+  function skip() {
+    if (!report) return
+    fi = report.fights.length - 1
+    r = report.fights.at(-1)!.rounds.length
+    battle?.jump()
+    finish()
+  }
   // Hết trận: huy hiệu thắng/bại vẽ tay đập xuống như ấn (rung cảnh đúng lúc chạm giấy), rồi bảng kết quả trồi lên
   function finish() {
     done = true
@@ -233,9 +248,7 @@
               >
             {/if}
             <div class="grid">
-              <Button variant="ghost" onclick={() => ((fi = 0), (r = 0), (done = false), battle?.wave(0))}
-                >{L.report.replay}</Button
-              >
+              <Button variant="ghost" onclick={again}>{L.report.replay}</Button>
               <Button variant="gold" onclick={() => dlg?.close()}>{L.report.close}</Button>
             </div>
             {#if revenge && onrevenge}<Button variant="danger" wide icon="swords" onclick={() => onrevenge(report.i)}
@@ -247,15 +260,7 @@
     {:else}
       <div class="row center ctl">
         <Button variant="ghost" size="sm" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</Button>
-        <Button
-          size="sm"
-          onclick={() => (
-            (fi = report.fights.length - 1),
-            (r = report.fights.at(-1)!.rounds.length),
-            battle?.jump(),
-            finish()
-          )}>{L.report.skip}</Button
-        >
+        <Button size="sm" onclick={skip}>{L.report.skip}</Button>
       </div>
     {/if}
   {/if}

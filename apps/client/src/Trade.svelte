@@ -45,7 +45,11 @@
 {/snippet}
 
 <p class="t-small t-soft mt-3">{L.trade.hint}</p>
-{@render pick(L.trade.give, give, take, r => ((from = r), (n = 0), r === take && (to = give)))}
+{@render pick(L.trade.give, give, take, r => {
+  from = r
+  n = 0
+  if (r === take) to = give
+})}
 {@render pick(L.trade.get, take, give, r => (to = r))}
 
 <Section title="{L.trade.amount} · {num(amount)}">

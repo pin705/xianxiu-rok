@@ -115,7 +115,10 @@
   class:dock
   aria-label={label ?? title}
   {onclose}
-  oncancel={e => (e.preventDefault(), dismiss())}
+  oncancel={e => {
+    e.preventDefault()
+    dismiss()
+  }}
   onclick={e => e.target === dlg && dismiss()}
 >
   {#if open}
@@ -132,8 +135,13 @@
       <div class="rod" aria-hidden="true"></div>
       <!-- svelte-ignore a11y_autofocus -->
       <div class="body" tabindex="-1" autofocus>
-        <button class="x" aria-label={L.panel.close} onclick={() => (sfx('tap'), dismiss())}
-          ><Icon name="close" size={16} /></button
+        <button
+          class="x"
+          aria-label={L.panel.close}
+          onclick={() => {
+            sfx('tap')
+            dismiss()
+          }}><Icon name="close" size={16} /></button
         >
         {#if title}
           <header class="head" class:has-art={!!art}>

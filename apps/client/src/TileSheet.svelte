@@ -22,7 +22,7 @@
   import { landAt } from '@rok/art'
   import ArmyPick from './Army.svelte'
   import { Button, Card, Medal, Section, Sheet, Tag } from './ui'
-  import { EMBLEM, L, clock, num, sfx, spotName } from './lib'
+  import { EMBLEM, L, clock, marchDoing, num, sfx, spotName } from './lib'
   import type { Pick } from './world/worldmap'
   import { useGame } from './game'
 
@@ -179,15 +179,7 @@
       <div class="mt-3">
         <Card tone="silk">
           <div class="row">
-            <span class="grow t-small"
-              >{mine.stay
-                ? L.world.stay
-                : mine.mine && mine.mine.end > now
-                  ? L.world.gathering
-                  : now < mine.arriveAt
-                    ? L.map.out
-                    : L.map.back}</span
-            >
+            <span class="grow t-small">{marchDoing(mine, now)}</span>
             {#if mine.stay || (mine.mine && mine.mine.end > now)}<Button
                 size="sm"
                 variant="ghost"

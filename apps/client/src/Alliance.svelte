@@ -6,7 +6,7 @@
   import type { Ack } from '@rok/protocol'
   import type { Snippet } from 'svelte'
   import { Icon } from '@rok/art'
-  import { Button, Card, Medal, Page, Section, Tag } from './ui'
+  import { Button, Card, Confirm, Medal, Page, Section, Tag } from './ui'
   import { L, clock, num, sfx } from './lib'
   import { useGame } from './game'
 
@@ -29,7 +29,6 @@
   let name = $state('')
   let tag = $state('')
   let editing = $state<string | null>(null)
-  let sure = $state(false)
   let pick = $state<number | null>(null)
   const myRole = $derived<Role | -1>(ally && me !== null ? (ally.members[me] ?? -1) : -1)
   const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge']
@@ -72,7 +71,13 @@
     </Section>
     <Section title={L.ally.found}>
       <p class="t-small t-soft">{L.ally.foundHint}</p>
-      <form class="stack" onsubmit={e => (e.preventDefault(), go({ type: 'allyFound', name, tag }, 'reward'))}>
+      <form
+        class="stack"
+        onsubmit={e => {
+          e.preventDefault()
+          go({ type: 'allyFound', name, tag }, 'reward')
+        }}
+      >
         <input bind:value={name} maxlength="20" placeholder={L.ally.name} aria-label={L.ally.name} />
         <input
           bind:value={tag}
@@ -210,15 +215,11 @@
     {#if chat}<Section title={L.chat.ally}>{@render chat()}</Section>{/if}
 
     <div class="mt-4">
-      {#if sure}
-        <p class="t-small t-bad t-strong">{L.ally.leaveSure}</p>
-        <div class="grid">
-          <Button variant="ghost" onclick={() => (sure = false)}>{L.panel.close}</Button>
-          <Button variant="danger" onclick={() => ((sure = false), go({ type: 'allyLeave' }))}>{L.ally.leave}</Button>
-        </div>
-      {:else}
-        <Button variant="quiet" wide onclick={() => (sure = true)}><Icon name="back" size={16} />{L.ally.leave}</Button>
-      {/if}
+      <Confirm warn={L.ally.leaveSure} label={L.ally.leave} onconfirm={() => go({ type: 'allyLeave' })}>
+        {#snippet trigger(ask)}
+          <Button variant="quiet" wide onclick={ask}><Icon name="back" size={16} />{L.ally.leave}</Button>
+        {/snippet}
+      </Confirm>
     </div>
   {/if}
 </Page>

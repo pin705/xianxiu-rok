@@ -16,6 +16,12 @@
   let busy = $state(false)
   let code = $state<{ code: string; until: number } | null>(null)
   let out = $state<'one' | 'all' | 'remove' | null>(null) // đang hỏi lại trước khi đăng xuất / xoá
+  // lời nhắc lúc hỏi lại: xoá tài khoản, khách (chưa gắn email thì mất tông môn), đăng xuất mọi nơi / máy này
+  const outHint = $derived.by(() => {
+    if (out === 'remove') return `${L.account.removeHint} ${L.account.removeSure}`
+    if (!info?.email) return L.account.guestOut
+    return out === 'all' ? L.account.logoutAll : L.account.logout
+  })
   let pushed = $state(typeof Notification !== 'undefined' && Notification.permission === 'granted')
 
   onMount(() => void account.info().then(r => r.ok && (info = r.data)))
@@ -132,13 +138,7 @@
 
     {#if out}
       <p class="t-small t-bad t-strong">
-        {out === 'remove'
-          ? `${L.account.removeHint} ${L.account.removeSure}`
-          : !info.email
-            ? L.account.guestOut
-            : out === 'all'
-              ? L.account.logoutAll
-              : L.account.logout}
+        {outHint}
       </p>
       {#if out === 'remove' && info.email}<input
           type="password"
@@ -148,7 +148,13 @@
           aria-label={L.account.old}
         />{/if}
       <div class="grid">
-        <Button variant="ghost" onclick={() => ((out = null), (pass = ''))}>{L.panel.close}</Button>
+        <Button
+          variant="ghost"
+          onclick={() => {
+            out = null
+            pass = ''
+          }}>{L.panel.close}</Button
+        >
         <Button variant="danger" disabled={out === 'remove' && !!info.email && !pass} onclick={leave}
           >{out === 'remove' ? L.account.remove : out === 'all' ? L.account.logoutAll : L.account.logout}</Button
         >

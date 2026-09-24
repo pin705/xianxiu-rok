@@ -12,6 +12,7 @@
     "packages/protocol",
     "apps/server",
     "apps/client/render.test.ts",
+    "apps/client/markup.test.ts",
     "apps/client/net.test.ts",
     "apps/client/e2e.ts",
     "apps/client/play.ts"

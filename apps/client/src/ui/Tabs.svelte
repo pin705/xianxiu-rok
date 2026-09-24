@@ -12,7 +12,11 @@
       role="tab"
       aria-selected={it.id === value}
       class:on={it.id === value}
-      onclick={() => it.id !== value && (sfx('tap'), onchange(it.id))}>{it.label}</button
+      onclick={() => {
+        if (it.id === value) return
+        sfx('tap')
+        onchange(it.id)
+      }}>{it.label}</button
     >
   {/each}
 </div>

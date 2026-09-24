@@ -28,7 +28,10 @@
     {disabled}
     aria-label={label}
     aria-pressed={selected || undefined}
-    onclick={() => (sfx('tap'), onclick())}
+    onclick={() => {
+      sfx('tap')
+      onclick()
+    }}
   >
     {@render children()}
   </button>

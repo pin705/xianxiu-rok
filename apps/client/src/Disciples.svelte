@@ -141,7 +141,10 @@
 
 <Sheet
   open={!!open}
-  onclose={() => ((open = null), (picking = false))}
+  onclose={() => {
+    open = null
+    picking = false
+  }}
   title={open ? L.elders[open].name : ''}
   sub={open
     ? `${L.elders[open].title} · ${L.units[ELDERS[open].type]} · ${L.el[ELDERS[open].el]} (${L.overcomes(ELDERS[open].el)})`

@@ -62,7 +62,10 @@
   <Tabs
     items={channels.map(id => ({ id, label: L.chat[id] }))}
     value={ch}
-    onchange={c => ((ch = c as Channel), (pick = null))}
+    onchange={c => {
+      ch = c as Channel
+      pick = null
+    }}
   />
   {#if ch === 'world' && game.levels.chuDien < 3}<p class="t-small t-soft mt-2">{L.chat.locked}</p>{/if}
   <ol class="log stack" style:--gap="4px">
@@ -77,13 +80,19 @@
             <Button
               size="sm"
               variant="ghost"
-              onclick={() => (act({ type: 'block', pid: m.pid, on: true }), (pick = null))}>{L.chat.block}</Button
+              onclick={() => {
+                act({ type: 'block', pid: m.pid, on: true })
+                pick = null
+              }}>{L.chat.block}</Button
             >
             <Button
               size="sm"
               variant="quiet"
-              onclick={async () => (await api?.report(m.id)) && ((pick = null), toast(L.chat.reported))}
-              >{L.chat.report}</Button
+              onclick={async () => {
+                if (!(await api?.report(m.id))) return
+                pick = null
+                toast(L.chat.reported)
+              }}>{L.chat.report}</Button
             >
           </div>
         {/if}

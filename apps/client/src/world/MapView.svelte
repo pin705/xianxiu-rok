@@ -16,7 +16,7 @@
   } from '@rok/rules'
   import { Icon, Portrait, type Emblem } from '@rok/art'
   import { Badge, Button, Card, Medal, Tag } from '../ui'
-  import { EMBLEM, L, LOOK, clock, marchName } from '../lib'
+  import { EMBLEM, L, LOOK, clock, marchDoing, marchName } from '../lib'
   import { MAP, MAP_H, MapScene } from './map'
   import View from './View.svelte'
   import { useGame } from '../game'
@@ -156,21 +156,16 @@
           <span class="row">
             <Portrait look={LOOK[m.elder]} size={30} />
             <span class="grow stack" style:--gap="0"
-              ><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft"
-                >{m.target.kind === 'trib'
-                  ? L.trib.gather
-                  : m.stay
-                    ? L.world.stay
-                    : m.mine && m.mine.end > now
-                      ? L.world.gathering
-                      : out
-                        ? L.map.out
-                        : L.map.back}</small
-              ></span
+              ><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft">{marchDoing(m, now)}</small></span
             >
             {#if held && onrecall}
-              <Button size="sm" variant="ghost" onclick={e => (e.stopPropagation(), onrecall(m.id))}
-                >{L.world.recall}</Button
+              <Button
+                size="sm"
+                variant="ghost"
+                onclick={e => {
+                  e.stopPropagation()
+                  onrecall(m.id)
+                }}>{L.world.recall}</Button
               >
             {:else}
               <b class="t-num t-gold"
