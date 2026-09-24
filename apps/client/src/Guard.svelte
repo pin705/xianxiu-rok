@@ -27,7 +27,9 @@
   <Card>
     <Stat label={L.army.might}>{num(might(defense(game)))}</Stat>
     <Stat label={L.monHa.home}>{num(count(game.troops))}</Stat>
-    <Stat label={L.pvp.wall(game.levels.hoSonDaiTran)} tone="good">{L.pvp.wallBonus(`${Math.round(GUARD_STEP * game.levels.hoSonDaiTran * 100)}%`)}</Stat>
+    <Stat label={L.pvp.wall(game.levels.hoSonDaiTran)} tone="good"
+      >{L.pvp.wallBonus(`${Math.round(GUARD_STEP * game.levels.hoSonDaiTran * 100)}%`)}</Stat
+    >
     <Stat label={L.pvp.pts(game.pvp.pts)}>{L.pvp.record(game.pvp.win, game.pvp.loss)}</Stat>
   </Card>
 </Section>
@@ -42,10 +44,18 @@
     </li>
     {#each elders as e (e)}
       <li>
-        <Card selected={game.guard === e} onclick={() => act({ type: 'guard', elder: e }) && sfx('tap')} label={L.elders[e].name}>
+        <Card
+          selected={game.guard === e}
+          onclick={() => act({ type: 'guard', elder: e }) && sfx('tap')}
+          label={L.elders[e].name}
+        >
           <span class="row" style:--gap="6px">
             <Portrait look={LOOK[e]} size={30} dim={away(e)} />
-            <span class="stack" style:--gap="0"><small class="t-small t-strong t-ellipsis">{L.elders[e].name}</small><small class="t-tiny t-soft">{L.lv(elderLevel(game.elders[e]))}{away(e) ? ` · ${L.monHa.out}` : ''}</small></span>
+            <span class="stack" style:--gap="0"
+              ><small class="t-small t-strong t-ellipsis">{L.elders[e].name}</small><small class="t-tiny t-soft"
+                >{L.lv(elderLevel(game.elders[e]))}{away(e) ? ` · ${L.monHa.out}` : ''}</small
+              ></span
+            >
           </span>
         </Card>
       </li>

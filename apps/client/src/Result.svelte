@@ -10,15 +10,21 @@
   import { Button, Medal, Painting, Sheet, Tag } from './ui'
   import { L } from './lib'
 
-  let { outcome, game, onclose, onreplay }: { outcome: Outcome | null; game: State; onclose: () => void; onreplay: (r: Report) => void } =
-    $props()
+  let {
+    outcome,
+    game,
+    onclose,
+    onreplay,
+  }: { outcome: Outcome | null; game: State; onclose: () => void; onreplay: (r: Report) => void } = $props()
   const hall = $derived(game.levels.chuDien)
   const glory = $derived(outcome?.kind === 'rebirth' || !!(outcome?.kind === 'trib' && outcome.report.win))
 </script>
 
 <Sheet open={!!outcome} {onclose} center label={L.trib.title}>
   <div class="moment center stack" class:glory>
-    {#if glory}<div class="rays" aria-hidden="true"><Painting key="radiance" make={() => radiance()} w={440} h={440} /></div>{/if}
+    {#if glory}<div class="rays" aria-hidden="true">
+        <Painting key="radiance" make={() => radiance()} w={440} h={440} />
+      </div>{/if}
     {#if outcome?.kind === 'rebirth'}
       <span class="big spin"><Medal emblem="rebirth" tone="gold" size={116} /></span>
       <h2 class="t-title">{L.rebirth.done(outcome.n)}</h2>
@@ -30,7 +36,9 @@
       <p class="t-lore">{L.trib.reached(L.realmName(hall), hall)}</p>
       <span class="row center"><Tag icon="flag" tone="good">{L.trib.opens(marchSlots(game))}</Tag></span>
       <div class="grid">
-        <Button variant="ghost" onclick={() => outcome?.kind === 'trib' && onreplay(outcome.report)}>{L.trib.detail}</Button>
+        <Button variant="ghost" onclick={() => outcome?.kind === 'trib' && onreplay(outcome.report)}
+          >{L.trib.detail}</Button
+        >
         <Button variant="gold" onclick={onclose}>{L.trib.next}</Button>
       </div>
     {:else if outcome}
@@ -38,7 +46,9 @@
       <h2 class="t-title t-bad">{L.trib.fail}</h2>
       <p class="t-lore">{L.trib.failHint}</p>
       <div class="grid">
-        <Button variant="ghost" onclick={() => outcome?.kind === 'trib' && onreplay(outcome.report)}>{L.trib.detail}</Button>
+        <Button variant="ghost" onclick={() => outcome?.kind === 'trib' && onreplay(outcome.report)}
+          >{L.trib.detail}</Button
+        >
         <Button onclick={onclose}>{L.trib.next}</Button>
       </div>
     {/if}

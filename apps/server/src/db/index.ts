@@ -8,7 +8,13 @@ export type Database = PostgresJsDatabase<typeof schema>
 export type Db = { db: Database; client: postgres.Sql }
 
 export function createDb(url: string, max = 10): Db {
-  const client = postgres(url, { max, idle_timeout: 60, connect_timeout: 10, onnotice: () => {}, connection: { application_name: 'rok' } })
+  const client = postgres(url, {
+    max,
+    idle_timeout: 60,
+    connect_timeout: 10,
+    onnotice: () => {},
+    connection: { application_name: 'rok' },
+  })
   return { db: drizzle(client, { schema, casing: 'snake_case' }), client }
 }
 

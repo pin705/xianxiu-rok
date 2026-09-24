@@ -10,7 +10,16 @@
   let { look, size = 48, dim = false }: { look: Look; size?: number; dim?: boolean } = $props()
 </script>
 
-<img class="portrait" class:dim src={paintedUrl(`face:${JSON.stringify(look)}`, () => portrait(look), size)} width={size} height={size} alt="" aria-hidden="true" draggable="false" />
+<img
+  class="portrait"
+  class:dim
+  src={paintedUrl(`face:${JSON.stringify(look)}`, () => portrait(look), size)}
+  width={size}
+  height={size}
+  alt=""
+  aria-hidden="true"
+  draggable="false"
+/>
 
 <style>
   .portrait {

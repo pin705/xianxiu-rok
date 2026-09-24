@@ -17,7 +17,8 @@ function same(a: unknown, b: unknown, path: string): string[] {
   if (typeof b === 'string') return b.trim() || !(a as string).trim() ? [] : [`${path}: bản gốc có chữ mà bản này rỗng`]
   if (typeof b === 'function') return (a as Function).length === b.length ? [] : [`${path}: số tham số khác`]
   if (Array.isArray(a)) {
-    if (!Array.isArray(b) || a.length !== b.length) return [`${path}: mảng dài ${a.length} ≠ ${(b as unknown[]).length}`]
+    if (!Array.isArray(b) || a.length !== b.length)
+      return [`${path}: mảng dài ${a.length} ≠ ${(b as unknown[]).length}`]
     return a.flatMap((x, i) => same(x, b[i], `${path}[${i}]`))
   }
   if (a && typeof a === 'object') {

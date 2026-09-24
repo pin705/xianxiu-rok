@@ -7,10 +7,28 @@ import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { z } from 'zod'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
-import { CODE_TTL, COOKIE, checkPass, cleanCode, cleanEmail, cookieOptions, hashPass, hashToken, newCode, newToken } from '../lib/auth.ts'
+import {
+  CODE_TTL,
+  COOKIE,
+  checkPass,
+  cleanCode,
+  cleanEmail,
+  cookieOptions,
+  hashPass,
+  hashToken,
+  newCode,
+  newToken,
+} from '../lib/auth.ts'
 import { ErrorReply, requireSession } from './auth.ts'
 
-export type AccountOptions = { db: Database; secure: boolean; path: string; limits: boolean; pushKey: string | null; localPush: boolean }
+export type AccountOptions = {
+  db: Database
+  secure: boolean
+  path: string
+  limits: boolean
+  pushKey: string | null
+  localPush: boolean
+}
 
 // Dịch vụ push của các trình duyệt (Chrome/Edge qua FCM, Firefox, Safari, Windows)
 const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com']
@@ -18,7 +36,12 @@ const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.app
 const Email = z.string().max(254).transform(cleanEmail).pipe(z.email())
 const Pass = z.string().min(8).max(128)
 const Ok = z.object({ ok: z.boolean() })
-const Signed = z.object({ token: z.string(), pid: z.number().nullable(), world: z.number().nullable(), path: z.string() })
+const Signed = z.object({
+  token: z.string(),
+  pid: z.number().nullable(),
+  world: z.number().nullable(),
+  path: z.string(),
+})
 const errors = { 400: ErrorReply, 401: ErrorReply, 403: ErrorReply, 409: ErrorReply, 429: ErrorReply }
 
 export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, o) => {
@@ -38,54 +61,80 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
   const refuse = (reply: FastifyReply, a: store.Login | null) =>
     a?.banned ? reply.code(403).send({ error: 'banned' }) : reply.code(401).send({ error: 'wrong' })
 
-  app.post('/login', { config: strict, schema: { body: z.object({ email: Email, pass: Pass }), response: { 200: Signed, ...errors } } }, async (req, reply) => {
-    const { email, pass } = req.body
-    const tries = o.limits ? await perEmail.get(email) : null
-    if (tries && tries.consumedPoints >= 5) return reply.code(429).send({ error: 'rate' })
-    const a = await store.accountByEmail(o.db, email)
-    const good = await checkPass(pass, a?.pass ?? null) // email lạ vẫn băm: thời gian như nhau
-    if (!a || !good || a.deleted || a.banned) {
-      if (o.limits) await perEmail.consume(email).catch(() => {})
-      return refuse(reply, a && good ? a : null)
-    }
-    return signIn(req, reply, a.account)
-  })
+  app.post(
+    '/login',
+    { config: strict, schema: { body: z.object({ email: Email, pass: Pass }), response: { 200: Signed, ...errors } } },
+    async (req, reply) => {
+      const { email, pass } = req.body
+      const tries = o.limits ? await perEmail.get(email) : null
+      if (tries && tries.consumedPoints >= 5) return reply.code(429).send({ error: 'rate' })
+      const a = await store.accountByEmail(o.db, email)
+      const good = await checkPass(pass, a?.pass ?? null) // email lạ vẫn băm: thời gian như nhau
+      if (!a || !good || a.deleted || a.banned) {
+        if (o.limits) await perEmail.consume(email).catch(() => {})
+        return refuse(reply, a && good ? a : null)
+      }
+      return signIn(req, reply, a.account)
+    },
+  )
 
-  app.post('/login/code', { config: strict, schema: { body: z.object({ code: z.string().max(32) }), response: { 200: Signed, ...errors } } }, async (req, reply) => {
-    const id = await store.takeCode(o.db, hashToken(cleanCode(req.body.code)))
-    const a = id ? await store.accountOf(o.db, id) : null
-    if (!a || a.deleted || a.banned) return refuse(reply, a)
-    return signIn(req, reply, a.account)
-  })
+  app.post(
+    '/login/code',
+    { config: strict, schema: { body: z.object({ code: z.string().max(32) }), response: { 200: Signed, ...errors } } },
+    async (req, reply) => {
+      const id = await store.takeCode(o.db, hashToken(cleanCode(req.body.code)))
+      const a = id ? await store.accountOf(o.db, id) : null
+      if (!a || a.deleted || a.banned) return refuse(reply, a)
+      return signIn(req, reply, a.account)
+    },
+  )
 
-  app.get('/account', { schema: { response: { 200: z.object({ email: z.string().nullable(), push: z.string().nullable() }), ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    return { email: (await store.accountOf(o.db, s.account))?.email ?? null, push: o.pushKey }
-  })
+  app.get(
+    '/account',
+    {
+      schema: { response: { 200: z.object({ email: z.string().nullable(), push: z.string().nullable() }), ...errors } },
+    },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      return { email: (await store.accountOf(o.db, s.account))?.email ?? null, push: o.pushKey }
+    },
+  )
 
-  app.post('/account/link', { config: strict, schema: { body: z.object({ email: Email, pass: Pass }), response: { 200: Ok, ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    try {
-      if (!(await store.linkEmail(o.db, s.account, req.body.email, await hashPass(req.body.pass)))) return reply.code(409).send({ error: 'linked' })
-    } catch (e) {
-      if (e instanceof store.EmailTaken) return reply.code(409).send({ error: 'email_taken' })
-      throw e
-    }
-    return { ok: true }
-  })
+  app.post(
+    '/account/link',
+    { config: strict, schema: { body: z.object({ email: Email, pass: Pass }), response: { 200: Ok, ...errors } } },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      try {
+        if (!(await store.linkEmail(o.db, s.account, req.body.email, await hashPass(req.body.pass))))
+          return reply.code(409).send({ error: 'linked' })
+      } catch (e) {
+        if (e instanceof store.EmailTaken) return reply.code(409).send({ error: 'email_taken' })
+        throw e
+      }
+      return { ok: true }
+    },
+  )
 
   // Đổi mật khẩu: phải đúng mật khẩu cũ; mọi phiên khác bị đăng xuất (máy lạ đang giữ phiên mất quyền ngay)
-  app.post('/account/password', { config: strict, schema: { body: z.object({ old: z.string().max(128), pass: Pass }), response: { 200: Ok, ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    const a = await store.accountOf(o.db, s.account)
-    if (!a?.pass || !(await checkPass(req.body.old, a.pass))) return reply.code(401).send({ error: 'wrong' })
-    await store.setPass(o.db, s.account, await hashPass(req.body.pass))
-    await store.dropSessions(o.db, s.account, hashToken(s.token))
-    return { ok: true }
-  })
+  app.post(
+    '/account/password',
+    {
+      config: strict,
+      schema: { body: z.object({ old: z.string().max(128), pass: Pass }), response: { 200: Ok, ...errors } },
+    },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      const a = await store.accountOf(o.db, s.account)
+      if (!a?.pass || !(await checkPass(req.body.old, a.pass))) return reply.code(401).send({ error: 'wrong' })
+      await store.setPass(o.db, s.account, await hashPass(req.body.pass))
+      await store.dropSessions(o.db, s.account, hashToken(s.token))
+      return { ok: true }
+    },
+  )
 
   app.post('/account/logout-all', { schema: { response: { 200: Ok, ...errors } } }, async (req, reply) => {
     const s = await requireSession(o.db, req, reply)
@@ -96,25 +145,37 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
   })
 
   // Mã chuyển máy: mở game ở máy khác (hoặc sau khi trình duyệt xoá dữ liệu) mà không cần email
-  app.post('/account/code', { config: strict, schema: { response: { 200: z.object({ code: z.string(), until: z.number() }), ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    const code = newCode(), until = Date.now() + CODE_TTL
-    await store.putCode(o.db, s.account, hashToken(code), new Date(until))
-    return { code, until }
-  })
+  app.post(
+    '/account/code',
+    { config: strict, schema: { response: { 200: z.object({ code: z.string(), until: z.number() }), ...errors } } },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      const code = newCode(),
+        until = Date.now() + CODE_TTL
+      await store.putCode(o.db, s.account, hashToken(code), new Date(until))
+      return { code, until }
+    },
+  )
 
   // Xoá tài khoản: có mật khẩu thì phải nhập lại; tông môn được chủ giới gỡ khỏi giới và tiên minh rồi xoá hẳn (inbox)
-  app.post('/account/delete', { config: strict, schema: { body: z.object({ pass: z.string().max(128).optional() }), response: { 200: Ok, ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    const a = await store.accountOf(o.db, s.account)
-    if (a?.pass && !(await checkPass(req.body.pass ?? '', a.pass))) return reply.code(401).send({ error: 'wrong' })
-    await store.markDeleted(o.db, s.account, s.pid, s.world)
-    req.log.info({ account: s.account, pid: s.pid }, 'account deleted')
-    reply.clearCookie(COOKIE, { path: '/' })
-    return { ok: true }
-  })
+  app.post(
+    '/account/delete',
+    {
+      config: strict,
+      schema: { body: z.object({ pass: z.string().max(128).optional() }), response: { 200: Ok, ...errors } },
+    },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      const a = await store.accountOf(o.db, s.account)
+      if (a?.pass && !(await checkPass(req.body.pass ?? '', a.pass))) return reply.code(401).send({ error: 'wrong' })
+      await store.markDeleted(o.db, s.account, s.pid, s.world)
+      req.log.info({ account: s.account, pid: s.pid }, 'account deleted')
+      reply.clearCookie(COOKIE, { path: '/' })
+      return { ok: true }
+    },
+  )
 
   // Web Push (chỉ khi server có khoá VAPID): trình duyệt đăng ký / huỷ; GET /account trả khoá công khai.
   // Endpoint chỉ nhận dịch vụ push thật (https): server sẽ gửi request tới đó — URL tuỳ ý là lỗ SSRF vào mạng nội bộ
@@ -123,7 +184,10 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     if (o.localPush && url.hostname === '127.0.0.1') return true // test, dev
     return url.protocol === 'https:' && PUSH_HOSTS.some(h => url.hostname === h || url.hostname.endsWith(`.${h}`))
   }
-  const Sub = z.object({ endpoint: z.url().max(1024).refine(pushHost), keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }) })
+  const Sub = z.object({
+    endpoint: z.url().max(1024).refine(pushHost),
+    keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }),
+  })
   app.post('/push/sub', { schema: { body: Sub, response: { 200: Ok, ...errors } } }, async (req, reply) => {
     const s = await requireSession(o.db, req, reply)
     if (!s) return reply
@@ -131,10 +195,14 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     await store.addPushSub(o.db, s.account, { endpoint: req.body.endpoint, ...req.body.keys })
     return { ok: true }
   })
-  app.post('/push/unsub', { schema: { body: z.object({ endpoint: z.string().max(1024) }), response: { 200: Ok, ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    await store.dropPushSub(o.db, req.body.endpoint, s.account)
-    return { ok: true }
-  })
+  app.post(
+    '/push/unsub',
+    { schema: { body: z.object({ endpoint: z.string().max(1024) }), response: { 200: Ok, ...errors } } },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      await store.dropPushSub(o.db, req.body.endpoint, s.account)
+      return { ok: true }
+    },
+  )
 }

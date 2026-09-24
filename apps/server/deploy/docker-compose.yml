@@ -12,8 +12,22 @@ services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
-    environment: { POSTGRES_USER: rok, POSTGRES_PASSWORD: '${DB_PASSWORD:?đặt DB_PASSWORD trong .env}', POSTGRES_DB: rok }
-    command: [postgres, -c, wal_compression=lz4, -c, default_toast_compression=lz4, -c, max_wal_size=8GB, -c, checkpoint_timeout=15min, -c, shared_buffers=1GB]
+    environment:
+      { POSTGRES_USER: rok, POSTGRES_PASSWORD: '${DB_PASSWORD:?đặt DB_PASSWORD trong .env}', POSTGRES_DB: rok }
+    command:
+      [
+        postgres,
+        -c,
+        wal_compression=lz4,
+        -c,
+        default_toast_compression=lz4,
+        -c,
+        max_wal_size=8GB,
+        -c,
+        checkpoint_timeout=15min,
+        -c,
+        shared_buffers=1GB,
+      ]
     volumes: [db:/var/lib/postgresql/data]
     healthcheck: { test: pg_isready -U rok, interval: 2s, retries: 30 }
   n1:
@@ -47,7 +61,8 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     depends_on: { db: { condition: service_healthy } }
-    environment: { PGHOST: db, PGUSER: rok, PGPASSWORD: '${DB_PASSWORD}', PGDATABASE: rok, KEEP: '${BACKUP_KEEP_DAYS:-14}' }
+    environment:
+      { PGHOST: db, PGUSER: rok, PGPASSWORD: '${DB_PASSWORD}', PGDATABASE: rok, KEEP: '${BACKUP_KEEP_DAYS:-14}' }
     volumes: [backups:/backups]
     entrypoint:
       - sh

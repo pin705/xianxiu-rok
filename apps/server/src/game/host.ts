@@ -58,7 +58,10 @@ export class Host {
         }
       }, 2_000),
     )
-    if (rebalance) this.timers.push(setInterval(() => void this.rebalance().catch(err => this.env.log.warn({ err }, 'rebalance failed')), 5_000))
+    if (rebalance)
+      this.timers.push(
+        setInterval(() => void this.rebalance().catch(err => this.env.log.warn({ err }, 'rebalance failed')), 5_000),
+      )
     for (const t of this.timers) t.unref()
   }
 

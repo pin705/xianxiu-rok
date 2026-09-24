@@ -71,7 +71,9 @@
     sending = true
     const err = await onlogin(step === 'code' ? { code } : { email, pass })
     sending = false
-    if (err) return void (error = step === 'code' && err === 'wrong' ? L.account.err.code : (L.account.err[err] ?? L.account.err.server))
+    if (err)
+      return void (error =
+        step === 'code' && err === 'wrong' ? L.account.err.code : (L.account.err[err] ?? L.account.err.server))
     sfx('done')
     ondone()
   }
@@ -99,13 +101,44 @@
       <form class="card scroll-skin stack center" onsubmit={login}>
         <h2 class="t-title">{step === 'code' ? L.account.enterCode : L.account.login}</h2>
         {#if step === 'code'}
-          <input bind:value={code} maxlength="12" autocomplete="one-time-code" autocapitalize="characters" aria-label={L.account.codeLabel} placeholder={L.account.codeLabel} oninput={() => (error = '')} />
+          <input
+            bind:value={code}
+            maxlength="12"
+            autocomplete="one-time-code"
+            autocapitalize="characters"
+            aria-label={L.account.codeLabel}
+            placeholder={L.account.codeLabel}
+            oninput={() => (error = '')}
+          />
         {:else}
-          <input type="email" bind:value={email} autocomplete="email" aria-label={L.account.email} placeholder={L.account.email} oninput={() => (error = '')} />
-          <input type="password" bind:value={pass} autocomplete="current-password" aria-label={L.account.pass} placeholder={L.account.pass} oninput={() => (error = '')} />
+          <input
+            type="email"
+            bind:value={email}
+            autocomplete="email"
+            aria-label={L.account.email}
+            placeholder={L.account.email}
+            oninput={() => (error = '')}
+          />
+          <input
+            type="password"
+            bind:value={pass}
+            autocomplete="current-password"
+            aria-label={L.account.pass}
+            placeholder={L.account.pass}
+            oninput={() => (error = '')}
+          />
         {/if}
         {#if error}<p class="t-small t-bad">{error}</p>{/if}
-        <Button variant="gold" size="lg" wide type="submit" silent disabled={sending || (step === 'code' ? code.replace(/[^0-9a-z]/gi, '').length !== 8 : !email.includes('@') || pass.length < 8)}>{sending ? L.net.connecting : L.account.go}</Button>
+        <Button
+          variant="gold"
+          size="lg"
+          wide
+          type="submit"
+          silent
+          disabled={sending ||
+            (step === 'code' ? code.replace(/[^0-9a-z]/gi, '').length !== 8 : !email.includes('@') || pass.length < 8)}
+          >{sending ? L.net.connecting : L.account.go}</Button
+        >
         <Button variant="quiet" size="sm" onclick={to('name')}>{L.account.back}</Button>
       </form>
     </div>
@@ -122,7 +155,9 @@
           <Button variant="quiet" size="sm" onclick={() => (ideas = suggestNames(3))}>{L.naming.reroll}</Button>
         </div>
         {#if error}<p class="t-small t-bad">{error}</p>{/if}
-        <Button variant="gold" size="lg" wide type="submit" silent disabled={sending}>{sending ? L.net.connecting : L.naming.found}</Button>
+        <Button variant="gold" size="lg" wide type="submit" silent disabled={sending}
+          >{sending ? L.net.connecting : L.naming.found}</Button
+        >
         {#if onlogin}
           <div class="row wrap center">
             <Button variant="quiet" size="sm" onclick={to('email')}>{L.account.have} {L.account.login}</Button>
@@ -240,7 +275,9 @@
     padding: 30px 28px;
     box-shadow: var(--shadow-3);
     animation: ink 0.5s var(--ease) both;
-    transition: opacity var(--dur-3), transform var(--dur-3);
+    transition:
+      opacity var(--dur-3),
+      transform var(--dur-3);
   }
   .gone {
     opacity: 0;

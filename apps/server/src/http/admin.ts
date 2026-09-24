@@ -28,15 +28,30 @@ export const adminRoutes: FastifyPluginAsyncZod<{ db: Database; token: string }>
   })
   app.get('/stats', async () => store.stats(o.db))
   // cấm chat: ghi DB (nguồn thật) + báo chủ giới qua inbox để có hiệu lực ngay
-  app.post('/mute', { schema: { body: z.object({ world: z.number().int().positive(), pid: z.number().int().positive(), minutes: z.number().int().min(0).max(525_600) }) } }, async req => {
-    const until = req.body.minutes ? Date.now() + req.body.minutes * 60_000 : 0
-    await store.setMute(o.db, req.body.pid, until ? new Date(until) : null)
-    await store.addInbox(o.db, req.body.world, 'mute', { pid: req.body.pid, until })
-    return { ok: true }
-  })
+  app.post(
+    '/mute',
+    {
+      schema: {
+        body: z.object({
+          world: z.number().int().positive(),
+          pid: z.number().int().positive(),
+          minutes: z.number().int().min(0).max(525_600),
+        }),
+      },
+    },
+    async req => {
+      const until = req.body.minutes ? Date.now() + req.body.minutes * 60_000 : 0
+      await store.setMute(o.db, req.body.pid, until ? new Date(until) : null)
+      await store.addInbox(o.db, req.body.world, 'mute', { pid: req.body.pid, until })
+      return { ok: true }
+    },
+  )
   app.post('/mail', { schema: { body: Mail } }, async req => {
     const { world, pid, title, body, gift } = req.body
-    const [row] = await store.addInbox(o.db, world, 'mail', { pid, mail: { k: 'admin', a: [title, body], ...(gift && { gift }) } })
+    const [row] = await store.addInbox(o.db, world, 'mail', {
+      pid,
+      mail: { k: 'admin', a: [title, body], ...(gift && { gift }) },
+    })
     return { id: row.id }
   })
 }

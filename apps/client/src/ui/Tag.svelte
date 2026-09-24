@@ -3,7 +3,17 @@
   import type { Snippet } from 'svelte'
   import { Icon, type IconName } from '@rok/art'
 
-  let { icon, tone = 'plain', size = 'md', children }: { icon?: IconName; tone?: 'plain' | 'good' | 'bad' | 'gold' | 'red'; size?: 'sm' | 'md'; children: Snippet } = $props()
+  let {
+    icon,
+    tone = 'plain',
+    size = 'md',
+    children,
+  }: {
+    icon?: IconName
+    tone?: 'plain' | 'good' | 'bad' | 'gold' | 'red'
+    size?: 'sm' | 'md'
+    children: Snippet
+  } = $props()
 </script>
 
 <span class="tag {tone} {size}">

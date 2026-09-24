@@ -2,5 +2,9 @@
   "name": "@rok/rules",
   "private": true,
   "type": "module",
-  "exports": { ".": "./index.ts", "./world": "./world.ts", "./bot": "./bot.ts" }
+  "exports": {
+    ".": "./index.ts",
+    "./world": "./world.ts",
+    "./bot": "./bot.ts"
+  }
 }

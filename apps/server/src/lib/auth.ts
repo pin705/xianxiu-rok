@@ -6,7 +6,13 @@ import { hasBad } from './filter.ts'
 export const COOKIE = 'rok'
 export const newToken = () => randomBytes(32).toString('base64url')
 export const hashToken = (token: string) => createHash('sha256').update(token).digest()
-export const cookieOptions = (secure: boolean): CookieSerializeOptions => ({ path: '/', httpOnly: true, sameSite: 'lax', secure, maxAge: 180 * 86400 })
+export const cookieOptions = (secure: boolean): CookieSerializeOptions => ({
+  path: '/',
+  httpOnly: true,
+  sameSite: 'lax',
+  secure,
+  maxAge: 180 * 86400,
+})
 
 // Lấy token phiên từ header Cookie (bắt tay Socket.IO cùng origin mang theo cookie HttpOnly)
 export function tokenFromCookie(header: string | undefined) {

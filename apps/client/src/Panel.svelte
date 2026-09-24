@@ -2,9 +2,40 @@
   // Bảng công trình: mở khi chạm vào công trình trên núi. Công trình có chức năng thì thêm thẻ (tuyển, luyện đan, công pháp).
   // Chủ điện ở tầng 5, 10, 15, 20: thay nâng cấp bằng độ kiếp. Từ tầng 15: luân hồi.
   import {
-    BUILDINGS, DO_KIEP, GUARD_STEP, HO_PHAP, MAX_LEVEL, PHA_CANH, PHA_KIEP, TRIB_CLOUD, REBIRTH_HALL, TECH_ROWS, TRIBS, batch, buildTime, capAt, cost, gearCap, hospital, marchSlots, might, mob, rate,
-    storage, storeNeed, tribError, tribPill, upgradeError, winChance,
-    type Action, type Army, type BuildingId, type ElderId, type State, type Tier, type UnitType,
+    BUILDINGS,
+    DO_KIEP,
+    GUARD_STEP,
+    HO_PHAP,
+    MAX_LEVEL,
+    PHA_CANH,
+    PHA_KIEP,
+    TRIB_CLOUD,
+    REBIRTH_HALL,
+    TECH_ROWS,
+    TRIBS,
+    batch,
+    buildTime,
+    capAt,
+    cost,
+    gearCap,
+    hospital,
+    marchSlots,
+    might,
+    mob,
+    rate,
+    storage,
+    storeNeed,
+    tribError,
+    tribPill,
+    upgradeError,
+    winChance,
+    type Action,
+    type Army,
+    type BuildingId,
+    type ElderId,
+    type State,
+    type Tier,
+    type UnitType,
   } from '@rok/rules'
   import { Icon, building, tierOf, type Kind } from '@rok/art'
   import { Bag, Button, Card, Medal, Painting, Section, Sheet, Stat, Tabs, Tag, Toggle } from './ui'
@@ -67,15 +98,25 @@
   {@const n = storeNeed(game, c)}
   {#if n && id !== 'tangBaoCac'}
     <p class="t-small t-bad mt-2">{L.panel.store(num(storage(game)), n)}</p>
-    <Button variant="quiet" size="sm" onclick={() => onselect('tangBaoCac', 'upgrade')}>{L.panel.goTo}: {L.b.tangBaoCac.name}</Button>
+    <Button variant="quiet" size="sm" onclick={() => onselect('tangBaoCac', 'upgrade')}
+      >{L.panel.goTo}: {L.b.tangBaoCac.name}</Button
+    >
   {/if}
 {/snippet}
 
-<Sheet open={!!id} {onclose} title={id ? L.b[id].name : ''} sub={id ? (game.levels[id] ? L.level(game.levels[id]) : L.panel.notBuilt) : ''} lore={id ? L.b[id].lore : ''}>
+<Sheet
+  open={!!id}
+  {onclose}
+  title={id ? L.b[id].name : ''}
+  sub={id ? (game.levels[id] ? L.level(game.levels[id]) : L.panel.notBuilt) : ''}
+  lore={id ? L.b[id].lore : ''}
+>
   {#snippet art()}
     {#if id}
       {@const lv = Math.max(1, game.levels[id])}
-      <span class="art"><Painting key="panel:{id}:{tierOf(lv)}" make={() => building(id as Kind, lv).art} w={118} h={104} /></span>
+      <span class="art"
+        ><Painting key="panel:{id}:{tierOf(lv)}" make={() => building(id as Kind, lv).art} w={118} h={104} /></span
+      >
     {/if}
   {/snippet}
   {#if id}
@@ -92,7 +133,10 @@
 
     {#if fn}
       <Tabs
-        items={[{ id: fn[0], label: fn[1] }, { id: 'upgrade', label: L.panel.upgrade }]}
+        items={[
+          { id: fn[0], label: fn[1] },
+          { id: 'upgrade', label: L.panel.upgrade },
+        ]}
         value={tab}
         onchange={t => (picked = { id, tab: t })}
       />
@@ -119,22 +163,38 @@
       <Card>
         {#if d.makes}
           <Stat label={L.panel.output} tone="good">
-            <Icon name={d.makes} size={16} />{num(rate(game, d.makes))}{#if lv < MAX_LEVEL}<span class="to">→ {num(rate(withLevel(id, next), d.makes))}</span>{/if}<small class="t-soft">{L.panel.perHour}</small>
+            <Icon name={d.makes} size={16} />{num(rate(game, d.makes))}{#if lv < MAX_LEVEL}<span class="to"
+                >→ {num(rate(withLevel(id, next), d.makes))}</span
+              >{/if}<small class="t-soft">{L.panel.perHour}</small>
           </Stat>
         {:else if id === 'tangBaoCac'}
-          <Stat label={L.panel.capacity}>{num(capAt(lv))}{#if lv < MAX_LEVEL}<span class="to">→ {num(capAt(next))}</span>{/if}</Stat>
+          <Stat label={L.panel.capacity}
+            >{num(capAt(lv))}{#if lv < MAX_LEVEL}<span class="to">→ {num(capAt(next))}</span>{/if}</Stat
+          >
         {:else if id === 'dienVoTruong'}
-          <Stat label={L.panel.batch}>{num(batch(game))}{#if lv < MAX_LEVEL}<span class="to">→ {num(batch(withLevel(id, next)))}</span>{/if}</Stat>
+          <Stat label={L.panel.batch}
+            >{num(batch(game))}{#if lv < MAX_LEVEL}<span class="to">→ {num(batch(withLevel(id, next)))}</span
+              >{/if}</Stat
+          >
         {:else if id === 'danPhong'}
-          <Stat label={L.panel.hospital}>{num(hospital(game))}{#if lv < MAX_LEVEL}<span class="to">→ {num(hospital(withLevel(id, next)))}</span>{/if}</Stat>
+          <Stat label={L.panel.hospital}
+            >{num(hospital(game))}{#if lv < MAX_LEVEL}<span class="to">→ {num(hospital(withLevel(id, next)))}</span
+              >{/if}</Stat
+          >
         {:else if id === 'tangKinhCac'}
           <Stat label={L.panel.rows}>{TECH_ROWS.filter(r => r <= lv).length}/{TECH_ROWS.length}</Stat>
         {:else if id === 'chuDien'}
           <Stat label={L.panel.slots}>{marchSlots(game)}</Stat>
         {:else if id === 'hoSonDaiTran'}
-          <Stat label={L.pvp.wall(lv)}>+{Math.round(GUARD_STEP * lv * 100)}%{#if lv < MAX_LEVEL}<span class="to">→ +{Math.round(GUARD_STEP * next * 100)}%</span>{/if}</Stat>
+          <Stat label={L.pvp.wall(lv)}
+            >+{Math.round(GUARD_STEP * lv * 100)}%{#if lv < MAX_LEVEL}<span class="to"
+                >→ +{Math.round(GUARD_STEP * next * 100)}%</span
+              >{/if}</Stat
+          >
         {:else if id === 'luyenKhiPhong'}
-          <Stat label={L.panel.gearCap}>{gearCap(game)}{#if lv < MAX_LEVEL}<span class="to">→ {gearCap(withLevel(id, next))}</span>{/if}</Stat>
+          <Stat label={L.panel.gearCap}
+            >{gearCap(game)}{#if lv < MAX_LEVEL}<span class="to">→ {gearCap(withLevel(id, next))}</span>{/if}</Stat
+          >
         {/if}
         {#if lv < MAX_LEVEL}
           <Stat label={L.power} tone="good"><Icon name="power" size={14} />+{num(d.power * next)}</Stat>
@@ -150,14 +210,20 @@
         {@const cloud = game.marches.find(m => m.target.kind === 'trib')}
         <Section title={L.trib.title}>
           <p class="t-small t-lore">{L.trib.lore(L.realmName(tr.hall + 1))}</p>
-          {#if game.seat}<p class="t-small t-soft">{L.trib.public(clock(TRIB_CLOUD[game.trib]), HO_PHAP, PHA_KIEP)}</p>{/if}
+          {#if game.seat}<p class="t-small t-soft">
+              {L.trib.public(clock(TRIB_CLOUD[game.trib]), HO_PHAP, PHA_KIEP)}
+            </p>{/if}
           <ul class="stack">
             {#each tr.waves as w, i (i)}
               <li class="wave row">
                 <Medal emblem="thunder" tone="thunder" size={34} pips={tr.tier} />
                 <span class="stack" style:--gap="0">
                   <b>{L.report.wave(i + 1)}</b>
-                  <small class="t-small t-soft">{L.units[w.type]}{#if w.el} · {L.trib.element(L.el[w.el])}{/if} · {L.army.might} {num(waveMight(w.str, tr.tier, w.type))}</small>
+                  <small class="t-small t-soft"
+                    >{L.units[w.type]}{#if w.el}
+                      · {L.trib.element(L.el[w.el])}{/if} · {L.army.might}
+                    {num(waveMight(w.str, tr.tier, w.type))}</small
+                  >
                 </span>
               </li>
             {/each}
@@ -165,27 +231,33 @@
         </Section>
         {#if cloud}
           <Card tone="silk">
-            <p class="t-small t-strong"><Icon name="bolt" size={16} /> {L.trib.gathering(clock(Math.max(0, cloud.arriveAt - now)))}</p>
+            <p class="t-small t-strong">
+              <Icon name="bolt" size={16} />
+              {L.trib.gathering(clock(Math.max(0, cloud.arriveAt - now)))}
+            </p>
             {#if cloud.foil}<p class="t-small t-bad">{L.trib.foiled(cloud.foil)}</p>{/if}
           </Card>
         {:else}
-        <Section title={L.trib.need}>
-          <Bag res={cost('chuDien', tr.hall + 1)} have={game.res} />
-          {@render store(cost('chuDien', tr.hall + 1))}
-          {#if terr === 'cooldown'}<p class="t-small t-bad">{L.trib.wait(clock(game.tribCool - now))}</p>{/if}
-          {#if tp}
-            <Toggle checked={pill} onchange={v => (pill = v)}><Icon name={tp} size={22} />{L.trib.pill(L.pills[tp].name, tp === 'phaCanh' ? PHA_CANH : DO_KIEP)} · {game.items[tp]}</Toggle>
-          {/if}
-        </Section>
-        <ArmyPick
-          {game}
-          foe={tr.waves.reduce((s, w) => s + waveMight(w.str, tr.tier, w.type), 0)}
-          chance={(e, a) => winChance(game, e, a, 'trib', pill && !!tp)}
-          cta={L.trib.go}
-          disabled={!!terr || busy}
-          onsubmit={(e, a) => ontrib(e, a, pill && !!tp)}
-          onrecruit={() => onselect('dienVoTruong', 'train')}
-        />
+          <Section title={L.trib.need}>
+            <Bag res={cost('chuDien', tr.hall + 1)} have={game.res} />
+            {@render store(cost('chuDien', tr.hall + 1))}
+            {#if terr === 'cooldown'}<p class="t-small t-bad">{L.trib.wait(clock(game.tribCool - now))}</p>{/if}
+            {#if tp}
+              <Toggle checked={pill} onchange={v => (pill = v)}
+                ><Icon name={tp} size={22} />{L.trib.pill(L.pills[tp].name, tp === 'phaCanh' ? PHA_CANH : DO_KIEP)} · {game
+                  .items[tp]}</Toggle
+              >
+            {/if}
+          </Section>
+          <ArmyPick
+            {game}
+            foe={tr.waves.reduce((s, w) => s + waveMight(w.str, tr.tier, w.type), 0)}
+            chance={(e, a) => winChance(game, e, a, 'trib', pill && !!tp)}
+            cta={L.trib.go}
+            disabled={!!terr || busy}
+            onsubmit={(e, a) => ontrib(e, a, pill && !!tp)}
+            onrecruit={() => onselect('dienVoTruong', 'train')}
+          />
         {/if}
       {:else if err === 'max_level'}
         <p class="mt-3 center t-gold t-strong">{L.panel.maxed}</p>
@@ -194,8 +266,12 @@
           {#if need || err === 'queue_full'}
             <div class="row wrap">
               {#if need}
-                <Tag icon={hall >= need ? 'check' : 'cross'} tone={hall >= need ? 'good' : 'bad'}>{L.panel.hall(need)}</Tag>
-                {#if hall < need}<Button variant="quiet" size="sm" onclick={() => onselect('chuDien')}>{L.panel.goTo}</Button>{/if}
+                <Tag icon={hall >= need ? 'check' : 'cross'} tone={hall >= need ? 'good' : 'bad'}
+                  >{L.panel.hall(need)}</Tag
+                >
+                {#if hall < need}<Button variant="quiet" size="sm" onclick={() => onselect('chuDien')}
+                    >{L.panel.goTo}</Button
+                  >{/if}
               {/if}
               {#if err === 'queue_full'}<Tag icon="cross" tone="bad">{L.panel.busy}</Tag>{/if}
             </div>
@@ -204,7 +280,15 @@
           {@render store(c)}
         </Section>
         <div class="mt-4">
-          <Button wide size="lg" icon="hammer" trail={clock(buildTime(game, id, next))} trailIcon="clock" disabled={!!err} onclick={() => onupgrade(id)}>
+          <Button
+            wide
+            size="lg"
+            icon="hammer"
+            trail={clock(buildTime(game, id, next))}
+            trailIcon="clock"
+            disabled={!!err}
+            onclick={() => onupgrade(id)}
+          >
             {lv ? L.panel.upgrade : L.panel.build}
           </Button>
         </div>
@@ -216,27 +300,35 @@
           <div class="grid">
             <Card>
               <b class="t-small t-good">{L.rebirth.keep}</b>
-              <ul class="stack t-small" style:--gap="2px">{#each L.rebirth.keepList as x (x)}<li>· {x}</li>{/each}</ul>
+              <ul class="stack t-small" style:--gap="2px">
+                {#each L.rebirth.keepList as x (x)}<li>· {x}</li>{/each}
+              </ul>
             </Card>
             <Card>
               <b class="t-small t-bad">{L.rebirth.lose}</b>
-              <ul class="stack t-small" style:--gap="2px">{#each L.rebirth.loseList as x (x)}<li>· {x}</li>{/each}</ul>
+              <ul class="stack t-small" style:--gap="2px">
+                {#each L.rebirth.loseList as x (x)}<li>· {x}</li>{/each}
+              </ul>
             </Card>
           </div>
           <Tag icon="star" tone="gold">{L.rebirth.gain(game.rebirths + 1)}</Tag>
           {#if game.seat}
             <p class="t-small t-soft">{L.rebirth.season}</p>
           {:else}
-          {#if game.marches.length}<p class="t-small t-bad">{L.rebirth.marching}</p>{/if}
-          {#if sure}
-            <p class="t-small t-bad t-strong">{L.rebirth.confirm}</p>
-            <div class="grid">
-              <Button variant="ghost" onclick={() => (sure = false)}>{L.panel.close}</Button>
-              <Button variant="danger" disabled={busy} onclick={() => ((sure = false), onrebirth())}>{L.rebirth.go}</Button>
-            </div>
-          {:else}
-            <Button variant="gold" wide disabled={!!game.marches.length} onclick={() => (sure = true)}>{L.rebirth.go}</Button>
-          {/if}
+            {#if game.marches.length}<p class="t-small t-bad">{L.rebirth.marching}</p>{/if}
+            {#if sure}
+              <p class="t-small t-bad t-strong">{L.rebirth.confirm}</p>
+              <div class="grid">
+                <Button variant="ghost" onclick={() => (sure = false)}>{L.panel.close}</Button>
+                <Button variant="danger" disabled={busy} onclick={() => ((sure = false), onrebirth())}
+                  >{L.rebirth.go}</Button
+                >
+              </div>
+            {:else}
+              <Button variant="gold" wide disabled={!!game.marches.length} onclick={() => (sure = true)}
+                >{L.rebirth.go}</Button
+              >
+            {/if}
           {/if}
         </Section>
       {/if}

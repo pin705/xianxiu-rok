@@ -11,11 +11,25 @@
     selected = false,
     label,
     children,
-  }: { tone?: 'paper' | 'silk' | 'glow'; onclick?: () => void; disabled?: boolean; selected?: boolean; label?: string; children: Snippet } = $props()
+  }: {
+    tone?: 'paper' | 'silk' | 'glow'
+    onclick?: () => void
+    disabled?: boolean
+    selected?: boolean
+    label?: string
+    children: Snippet
+  } = $props()
 </script>
 
 {#if onclick}
-  <button class="card {tone}" class:selected {disabled} aria-label={label} aria-pressed={selected || undefined} onclick={() => (sfx('tap'), onclick())}>
+  <button
+    class="card {tone}"
+    class:selected
+    {disabled}
+    aria-label={label}
+    aria-pressed={selected || undefined}
+    onclick={() => (sfx('tap'), onclick())}
+  >
     {@render children()}
   </button>
 {:else}

@@ -8,7 +8,15 @@
 
 <div class="page paper">
   <header class="row between">
-    <h2 class="row"><img src={paintedUrl(`tab:${icon}`, () => tabIcon(icon), 38)} width="38" height="38" alt="" draggable="false" />{title}</h2>
+    <h2 class="row">
+      <img
+        src={paintedUrl(`tab:${icon}`, () => tabIcon(icon), 38)}
+        width="38"
+        height="38"
+        alt=""
+        draggable="false"
+      />{title}
+    </h2>
     {#if aside}<div class="row t-small t-soft">{@render aside()}</div>{/if}
   </header>
   {@render children()}

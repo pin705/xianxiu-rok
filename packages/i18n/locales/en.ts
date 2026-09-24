@@ -1,9 +1,62 @@
 import {
-  ADV, BEATS, CURE, DISADV, DO_KIEP, ELDER_STEP, EL_ADV, EL_DISADV, FOCUS, FOCUS_TIME, OVERCOMES, PHA_CANH, REBIRTH_BUILD, REBIRTH_HALL, REBIRTH_PROD,
-  TALENT_EVERY, TALENT_MAX, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIBS, TRIB_COOLDOWN, WEEKEND, rebirthLevels,
-  ASCEND, ASCEND_HALL, MAX_LEVEL, MARKET_BAND, MARKET_BUYS, MARKET_TAX, MARKET_TTL, ALLY_COST, ALLY_HALL, ALLY_HELPS, ALLY_MAX, EVENT_PTS, EVENT_TOP, NEWBIE_SHIELD, PROTECT, PVP_HALL, RAID_SHARE, REVENGE_TIME, SHIELD_TIME,
-  type Bonus, type BuildingId, type ElderId, type Element, type EventId, type GearId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
-  type UnitId, type UnitType,
+  ADV,
+  BEATS,
+  CURE,
+  DISADV,
+  DO_KIEP,
+  ELDER_STEP,
+  EL_ADV,
+  EL_DISADV,
+  FOCUS,
+  FOCUS_TIME,
+  OVERCOMES,
+  PHA_CANH,
+  REBIRTH_BUILD,
+  REBIRTH_HALL,
+  REBIRTH_PROD,
+  TALENT_EVERY,
+  TALENT_MAX,
+  TOWER,
+  TRADE_KEEP,
+  TRADE_KEEP_MAX,
+  TRIBS,
+  TRIB_COOLDOWN,
+  WEEKEND,
+  rebirthLevels,
+  ASCEND,
+  ASCEND_HALL,
+  MAX_LEVEL,
+  MARKET_BAND,
+  MARKET_BUYS,
+  MARKET_TAX,
+  MARKET_TTL,
+  ALLY_COST,
+  ALLY_HALL,
+  ALLY_HELPS,
+  ALLY_MAX,
+  EVENT_PTS,
+  EVENT_TOP,
+  NEWBIE_SHIELD,
+  PROTECT,
+  PVP_HALL,
+  RAID_SHARE,
+  REVENGE_TIME,
+  SHIELD_TIME,
+  type Bonus,
+  type BuildingId,
+  type ElderId,
+  type Element,
+  type EventId,
+  type GearId,
+  type PillId,
+  type Quest,
+  type Res,
+  type Skill,
+  type Target,
+  type TechId,
+  type Tier,
+  type UnitId,
+  type UnitType,
 } from '@rok/rules'
 import type { Text } from './vi.ts'
 
@@ -12,15 +65,23 @@ import type { Text } from './vi.ts'
 // Nguyên Anh = Nascent Soul, Hóa Thần = Deity Transformation.
 const pct = (v: number) => `${Math.round(v * 100)}%`
 // hàng trên chợ: tài nguyên hoặc đan (khoá lạ vẫn hiện được)
-const goodName = (g: string): string => (en.res as Record<string, string>)[g] ?? (en.pills as Record<string, { name: string }>)[g]?.name ?? g
+const goodName = (g: string): string =>
+  (en.res as Record<string, string>)[g] ?? (en.pills as Record<string, { name: string }>)[g]?.name ?? g
 const perks = (n: number) =>
   `start with buildings at level ${rebirthLevels(n).chuDien}, output +${pct(n * REBIRTH_PROD)}, building ${pct(n * REBIRTH_BUILD)} faster`
-const units = { kiem: 'Sword Cultivators', phap: 'Spell Cultivators', the: 'Body Cultivators' } satisfies Record<UnitType, string>
+const units = { kiem: 'Sword Cultivators', phap: 'Spell Cultivators', the: 'Body Cultivators' } satisfies Record<
+  UnitType,
+  string
+>
 const short = { kiem: 'Sword', phap: 'Spell', the: 'Body' } satisfies Record<UnitType, string>
 const tiers = { 1: 'Outer', 2: 'Inner', 3: 'Core', 4: 'Elite', 5: 'Saint' } satisfies Record<Tier, string>
 const el = { kim: 'Metal', moc: 'Wood', thuy: 'Water', hoa: 'Fire', tho: 'Earth' } satisfies Record<Element, string>
-const and = (xs: (string | number)[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`)
-const res = { linhThach: 'Spirit Stone', linhThao: 'Spirit Herb', linhKhoang: 'Spirit Ore' } satisfies Record<Res, string>
+const and = (xs: (string | number)[]) =>
+  xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`
+const res = { linhThach: 'Spirit Stone', linhThao: 'Spirit Herb', linhKhoang: 'Spirit Ore' } satisfies Record<
+  Res,
+  string
+>
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 export const en: Text = {
@@ -42,11 +103,27 @@ export const en: Text = {
     tooShort: 'Names need 2 to 20 characters',
     taken: 'Another sect in this realm already uses that name',
     bad: 'Names may only use letters, digits and spaces',
-    first: ['Azure Cloud', 'Mystic Heaven', 'Falling Mist', 'Purple Star', 'Boundless', 'Primordial', 'Jade Chime', 'Emerald Sky', 'Frost Peak', 'Cloud Dream', 'Soaring Sky', 'Heaven Sword'],
+    first: [
+      'Azure Cloud',
+      'Mystic Heaven',
+      'Falling Mist',
+      'Purple Star',
+      'Boundless',
+      'Primordial',
+      'Jade Chime',
+      'Emerald Sky',
+      'Frost Peak',
+      'Cloud Dream',
+      'Soaring Sky',
+      'Heaven Sword',
+    ],
     last: ['Sect', 'School', 'Palace', 'Hall'],
   },
 
-  realmName: (level: number) => ['Qi Refining', 'Foundation', 'Golden Core', 'Nascent Soul', 'Deity Transformation'][Math.min(5, Math.ceil(level / 5)) - 1],
+  realmName: (level: number) =>
+    ['Qi Refining', 'Foundation', 'Golden Core', 'Nascent Soul', 'Deity Transformation'][
+      Math.min(5, Math.ceil(level / 5)) - 1
+    ],
   realm: (level: number) => `${en.realmName(level)} · level ${level}`,
   level: (n: number) => `Level ${n}`,
   lv: (n: number) => `Lv ${n}`,
@@ -55,16 +132,28 @@ export const en: Text = {
   sound: { on: 'Mute', off: 'Unmute' },
   res,
   b: {
-    chuDien: { name: 'Main Hall', lore: 'Where the sect master meditates. Its level is your realm — no building can rise higher.' },
+    chuDien: {
+      name: 'Main Hall',
+      lore: 'Where the sect master meditates. Its level is your realm — no building can rise higher.',
+    },
     tuLinhTran: { name: 'Spirit Array', lore: 'An array that gathers the qi of heaven and earth into spirit stones.' },
     linhDien: { name: 'Spirit Field', lore: 'Terraces of spirit herbs, watered by mountain springs.' },
     khoangMach: { name: 'Ore Vein', lore: 'A vein deep in the cliff, yielding spirit ore.' },
     tangBaoCac: { name: 'Treasure Pavilion', lore: 'The sect treasury. The higher it rises, the more it holds.' },
-    dienVoTruong: { name: 'Training Grounds', lore: 'Where disciples drill at dawn. Higher levels recruit more per batch.' },
+    dienVoTruong: {
+      name: 'Training Grounds',
+      lore: 'Where disciples drill at dawn. Higher levels recruit more per batch.',
+    },
     danPhong: { name: 'Alchemy Room', lore: 'A furnace that never goes out. Heals the wounded and brews pills.' },
     tangKinhCac: { name: 'Scripture Pavilion', lore: 'Keeper of the techniques of every sect master before you.' },
-    hoSonDaiTran: { name: 'Mountain Guard Array', lore: 'A great array ringing the mountain. Raiders must break it first — the higher it rises, the firmer your home guard.' },
-    luyenKhiPhong: { name: 'Artifact Forge', lore: 'A refining furnace that forges artifacts for your elders. The higher it rises, the finer the artifacts.' },
+    hoSonDaiTran: {
+      name: 'Mountain Guard Array',
+      lore: 'A great array ringing the mountain. Raiders must break it first — the higher it rises, the firmer your home guard.',
+    },
+    luyenKhiPhong: {
+      name: 'Artifact Forge',
+      lore: 'A refining furnace that forges artifacts for your elders. The higher it rises, the finer the artifacts.',
+    },
   } satisfies Record<BuildingId, { name: string; lore: string }>,
   soonTag: 'soon',
 
@@ -75,17 +164,26 @@ export const en: Text = {
       switch (q.k) {
         case 'build': {
           const b = q.id as BuildingId
-          if (b === 'chuDien' && TRIBS.some(t => t.hall + 1 === q.n)) return `Tribulation — break through to ${en.realmName(q.n)}`
+          if (b === 'chuDien' && TRIBS.some(t => t.hall + 1 === q.n))
+            return `Tribulation — break through to ${en.realmName(q.n)}`
           return q.n === 1 ? `Build the ${en.b[b].name}` : `Upgrade the ${en.b[b].name} to level ${q.n}`
         }
-        case 'train': return `Have ${q.n} disciples`
-        case 'hunt': return `Defeat the ${en.beasts[q.n - 1]} (beast lv ${q.n})`
-        case 'sect': return `Conquer the ${en.sects[id].name}`
-        case 'realm': return q.n === 1 ? `Explore the ${en.realms[id].name}` : `Clear floor ${q.n} of the ${en.realms[id].name}`
-        case 'tech': return q.n === 1 ? 'Master a technique' : `Master ${q.n} technique levels in total`
-        case 'brew': return `Brew ${plural(q.n, 'pill')}`
-        case 'tower': return `Clear floor ${q.n} of the ${en.tower.name}`
-        case 'forge': return q.n === 1 ? 'Forge an artifact' : `Forge ${q.n} artifact levels in total`
+        case 'train':
+          return `Have ${q.n} disciples`
+        case 'hunt':
+          return `Defeat the ${en.beasts[q.n - 1]} (beast lv ${q.n})`
+        case 'sect':
+          return `Conquer the ${en.sects[id].name}`
+        case 'realm':
+          return q.n === 1 ? `Explore the ${en.realms[id].name}` : `Clear floor ${q.n} of the ${en.realms[id].name}`
+        case 'tech':
+          return q.n === 1 ? 'Master a technique' : `Master ${q.n} technique levels in total`
+        case 'brew':
+          return `Brew ${plural(q.n, 'pill')}`
+        case 'tower':
+          return `Clear floor ${q.n} of the ${en.tower.name}`
+        case 'forge':
+          return q.n === 1 ? 'Forge an artifact' : `Forge ${q.n} artifact levels in total`
       }
     },
     reward: 'Reward',
@@ -93,7 +191,11 @@ export const en: Text = {
     allDone: `Quest chain complete. From Main Hall level ${REBIRTH_HALL} you can reincarnate to grow stronger.`,
   },
   builder: { idle: 'Idle', label: 'Builder' },
-  activity: { title: 'In progress', empty: 'Nothing is running.', march: (elder: string, target: string) => `${elder} → ${target}` },
+  activity: {
+    title: 'In progress',
+    empty: 'Nothing is running.',
+    march: (elder: string, target: string) => `${elder} → ${target}`,
+  },
 
   panel: {
     output: 'Output',
@@ -107,7 +209,8 @@ export const en: Text = {
     requires: 'Requires',
     hall: (n: number) => `Main Hall level ${n}`,
     goTo: 'Go',
-    store: (cap: string, n: number) => `Storage holds only ${cap} of each, and resources stop growing when full — waiting will never be enough. Upgrade the Treasure Pavilion to level ${n}.`,
+    store: (cap: string, n: number) =>
+      `Storage holds only ${cap} of each, and resources stop growing when full — waiting will never be enough. Upgrade the Treasure Pavilion to level ${n}.`,
     cost: 'Cost',
     have: (n: string) => `have ${n}`,
     build: 'Build',
@@ -130,18 +233,90 @@ export const en: Text = {
   beats: (t: UnitType) => `Beats ${short[BEATS[t]]}`,
   stat: { atk: 'Atk', def: 'Def', hp: 'HP' },
   elders: {
-    thanhPhong: { name: 'Mu Qingfeng', title: 'Grand Elder', lore: 'The only one who stayed when the sect fell. His sword has never left his hand.', skill: 'Ten Thousand Swords', passives: ['Sword Intent', 'Clear Sword Heart'] },
-    thachKien: { name: 'Shi Jian', title: 'Guardian', lore: 'Former chief of Black Wind Stronghold. Lost one fight, sworn to you for life.', skill: 'Adamant Body', passives: ['Bronze Skin', 'Unmoving Mountain'] },
-    nhuYen: { name: 'Liu Ruyan', title: 'Teaching Elder', lore: 'Sealed for a century in the Verdant Wood Realm. The fire in her hands never cooled.', skill: 'Skyburning Flame', passives: ['Dharma Form', 'Insight'] },
-    loiChan: { name: 'Lei Zhen', title: 'Law Elder', lore: 'A swordsman held captive in Myriad Poison Valley. His blade carries thunder.', skill: 'Nine Heavens Thunder', passives: ['Thunder Blade', 'Lightning Ward'] },
-    vanHac: { name: 'Daoist Yunhe', title: 'Alchemist', lore: 'An old alchemist hermit of the Crimson Flame Realm. Has saved more lives than he has taken.', skill: 'Spring Revival', passives: ['Nurture Life', 'Gather Wealth'] },
-    hanBang: { name: 'Frost Fairy Hanbing', title: 'Supreme Elder', lore: 'Awoke in the Dark Ice wastes. Where she walks, mist turns to ice.', skill: 'Thousand-Li Frost', passives: ['Frost Aegis', 'Ice Heart'] },
-    bachVoNhai: { name: 'Bai Wuya', title: 'Sword Immortal', lore: 'A white-robed swordsman who sat a century in the Thunder Pool, honing his blade on lightning.', skill: 'One Sword Splits Heaven', passives: ['Sword Bones', 'Boundless Intent'] },
-    macSau: { name: 'Mo Chou', title: 'Hermit', lore: 'A hermit guarding the thirtieth floor of the Heaven-Piercing Tower. No one has ever seen her smile.', skill: 'Sorrow Clouds Veil the Moon', passives: ['Earth Dharma Form', 'Earthen Aegis'] },
-    hoacThienCuong: { name: 'Huo Tiangang', title: 'Mountain Warden', lore: 'A body cultivator tempered in the flames of Chaos. His flesh is harder than forged iron.', skill: 'Blazing Golden Body', passives: ['Iron Bones', 'Solar Might'] },
-    toMiNuong: { name: 'Su Meiniang', title: 'Guest Elder', lore: 'A spell cultivator who roams every realm and stays only with sects lively enough for her.', skill: 'Spring Water Revival', passives: ['Gentle Water', 'Treasure Gathering'] },
-    diepCoThanh: { name: 'Ye Gucheng', title: 'Swordsman', lore: 'Climbed alone to the forty-fifth floor of the Heaven-Piercing Tower, then stayed to wait for a worthy rival.', skill: 'Immortal from Beyond Heaven', passives: ['Lone Sword', 'Sword Insight'] },
-    huyenMinh: { name: 'Ancestor Xuanming', title: 'Patriarch', lore: 'Asleep at the bottom of the abyss at the heart of the world. When he wakes, heaven and earth freeze.', skill: 'Dark Frost Prison', passives: ['Dark Water Armor', 'Defy Tribulation'] },
+    thanhPhong: {
+      name: 'Mu Qingfeng',
+      title: 'Grand Elder',
+      lore: 'The only one who stayed when the sect fell. His sword has never left his hand.',
+      skill: 'Ten Thousand Swords',
+      passives: ['Sword Intent', 'Clear Sword Heart'],
+    },
+    thachKien: {
+      name: 'Shi Jian',
+      title: 'Guardian',
+      lore: 'Former chief of Black Wind Stronghold. Lost one fight, sworn to you for life.',
+      skill: 'Adamant Body',
+      passives: ['Bronze Skin', 'Unmoving Mountain'],
+    },
+    nhuYen: {
+      name: 'Liu Ruyan',
+      title: 'Teaching Elder',
+      lore: 'Sealed for a century in the Verdant Wood Realm. The fire in her hands never cooled.',
+      skill: 'Skyburning Flame',
+      passives: ['Dharma Form', 'Insight'],
+    },
+    loiChan: {
+      name: 'Lei Zhen',
+      title: 'Law Elder',
+      lore: 'A swordsman held captive in Myriad Poison Valley. His blade carries thunder.',
+      skill: 'Nine Heavens Thunder',
+      passives: ['Thunder Blade', 'Lightning Ward'],
+    },
+    vanHac: {
+      name: 'Daoist Yunhe',
+      title: 'Alchemist',
+      lore: 'An old alchemist hermit of the Crimson Flame Realm. Has saved more lives than he has taken.',
+      skill: 'Spring Revival',
+      passives: ['Nurture Life', 'Gather Wealth'],
+    },
+    hanBang: {
+      name: 'Frost Fairy Hanbing',
+      title: 'Supreme Elder',
+      lore: 'Awoke in the Dark Ice wastes. Where she walks, mist turns to ice.',
+      skill: 'Thousand-Li Frost',
+      passives: ['Frost Aegis', 'Ice Heart'],
+    },
+    bachVoNhai: {
+      name: 'Bai Wuya',
+      title: 'Sword Immortal',
+      lore: 'A white-robed swordsman who sat a century in the Thunder Pool, honing his blade on lightning.',
+      skill: 'One Sword Splits Heaven',
+      passives: ['Sword Bones', 'Boundless Intent'],
+    },
+    macSau: {
+      name: 'Mo Chou',
+      title: 'Hermit',
+      lore: 'A hermit guarding the thirtieth floor of the Heaven-Piercing Tower. No one has ever seen her smile.',
+      skill: 'Sorrow Clouds Veil the Moon',
+      passives: ['Earth Dharma Form', 'Earthen Aegis'],
+    },
+    hoacThienCuong: {
+      name: 'Huo Tiangang',
+      title: 'Mountain Warden',
+      lore: 'A body cultivator tempered in the flames of Chaos. His flesh is harder than forged iron.',
+      skill: 'Blazing Golden Body',
+      passives: ['Iron Bones', 'Solar Might'],
+    },
+    toMiNuong: {
+      name: 'Su Meiniang',
+      title: 'Guest Elder',
+      lore: 'A spell cultivator who roams every realm and stays only with sects lively enough for her.',
+      skill: 'Spring Water Revival',
+      passives: ['Gentle Water', 'Treasure Gathering'],
+    },
+    diepCoThanh: {
+      name: 'Ye Gucheng',
+      title: 'Swordsman',
+      lore: 'Climbed alone to the forty-fifth floor of the Heaven-Piercing Tower, then stayed to wait for a worthy rival.',
+      skill: 'Immortal from Beyond Heaven',
+      passives: ['Lone Sword', 'Sword Insight'],
+    },
+    huyenMinh: {
+      name: 'Ancestor Xuanming',
+      title: 'Patriarch',
+      lore: 'Asleep at the bottom of the abyss at the heart of the world. When he wakes, heaven and earth freeze.',
+      skill: 'Dark Frost Prison',
+      passives: ['Dark Water Armor', 'Defy Tribulation'],
+    },
   } satisfies Record<ElderId, { name: string; title: string; lore: string; skill: string; passives: [string, string] }>,
   unlockHint: {
     thanhPhong: '',
@@ -171,45 +346,119 @@ export const en: Text = {
   },
   bonus(key: Bonus, v: number) {
     const name: Record<string, string> = {
-      prod: 'All resources', 'prod.linhThach': res.linhThach, 'prod.linhThao': res.linhThao, 'prod.linhKhoang': res.linhKhoang,
-      storage: 'Capacity', build: 'Build time', train: 'Recruit time', march: 'March time', heal: 'Healing cost',
-      brew: 'Brewing cost', hospital: 'Beds', loot: 'Loot', exp: 'Experience', trib: 'Tribulation strength',
-      atk: 'Army attack', def: 'Army defense', hp: 'Army HP',
-      'atk.kiem': `${short.kiem} attack`, 'atk.phap': `${short.phap} attack`, 'atk.the': `${short.the} attack`,
-      'hp.kiem': `${short.kiem} HP`, 'hp.phap': `${short.phap} HP`, 'hp.the': `${short.the} HP`,
-      skill: 'Technique power', forge: 'Forging time',
+      prod: 'All resources',
+      'prod.linhThach': res.linhThach,
+      'prod.linhThao': res.linhThao,
+      'prod.linhKhoang': res.linhKhoang,
+      storage: 'Capacity',
+      build: 'Build time',
+      train: 'Recruit time',
+      march: 'March time',
+      heal: 'Healing cost',
+      brew: 'Brewing cost',
+      hospital: 'Beds',
+      loot: 'Loot',
+      exp: 'Experience',
+      trib: 'Tribulation strength',
+      atk: 'Army attack',
+      def: 'Army defense',
+      hp: 'Army HP',
+      'atk.kiem': `${short.kiem} attack`,
+      'atk.phap': `${short.phap} attack`,
+      'atk.the': `${short.the} attack`,
+      'hp.kiem': `${short.kiem} HP`,
+      'hp.phap': `${short.phap} HP`,
+      'hp.the': `${short.the} HP`,
+      skill: 'Technique power',
+      forge: 'Forging time',
     }
     const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
   },
   techs: {
-    tuLinh: 'Spirit Gathering', duongThao: 'Herb Nurturing', khaiSon: 'Mountain Splitting', kiemTam: 'Sword Heart',
-    phapTam: 'Spell Heart', kimCuong: 'Diamond Body', loBan: "Lu Ban's Craft", thanHanh: 'Divine Stride',
-    canKhon: 'Cosmos Pouch', luyenBinh: 'Troop Tempering', hoiXuan: 'Spring Rejuvenation', tranCo: 'Array Foundation',
-    danDao: 'Alchemy Canon', tuBao: 'Treasure Gathering', linhMach: 'Spirit Veins', truongSinh: 'Longevity',
-    vanKiem: 'Myriad Swords Array', hoMach: 'Vein Guarding', thienDien: 'Heavenly Deduction', doKiepTam: 'Tribulation Heart',
-    thietQuyen: 'Iron Fist', kiemThe: 'Sword Body', phapThan: 'Dharma Body', luyenKhi: 'Refining Secrets',
-    thaiAt: 'Taiyi Canon', thienMa: 'Heavenly Demon War Art', hoSon: 'Mountain Guard', bachChien: 'Hundred Battles Canon',
+    tuLinh: 'Spirit Gathering',
+    duongThao: 'Herb Nurturing',
+    khaiSon: 'Mountain Splitting',
+    kiemTam: 'Sword Heart',
+    phapTam: 'Spell Heart',
+    kimCuong: 'Diamond Body',
+    loBan: "Lu Ban's Craft",
+    thanHanh: 'Divine Stride',
+    canKhon: 'Cosmos Pouch',
+    luyenBinh: 'Troop Tempering',
+    hoiXuan: 'Spring Rejuvenation',
+    tranCo: 'Array Foundation',
+    danDao: 'Alchemy Canon',
+    tuBao: 'Treasure Gathering',
+    linhMach: 'Spirit Veins',
+    truongSinh: 'Longevity',
+    vanKiem: 'Myriad Swords Array',
+    hoMach: 'Vein Guarding',
+    thienDien: 'Heavenly Deduction',
+    doKiepTam: 'Tribulation Heart',
+    thietQuyen: 'Iron Fist',
+    kiemThe: 'Sword Body',
+    phapThan: 'Dharma Body',
+    luyenKhi: 'Refining Secrets',
+    thaiAt: 'Taiyi Canon',
+    thienMa: 'Heavenly Demon War Art',
+    hoSon: 'Mountain Guard',
+    bachChien: 'Hundred Battles Canon',
   } satisfies Record<TechId, string>,
   pills: {
     tuKhi: { name: 'Qi Pill', desc: 'Cuts 15 minutes off one timer: building, recruiting, healing or research.' },
     boiNguyen: { name: 'Origin Pill', desc: 'One elder gains 400 experience.' },
     doKiep: { name: 'Tribulation Pill', desc: `Taken before a tribulation: the lightning is ${pct(DO_KIEP)} weaker.` },
     hoiXuan: { name: 'Rejuvenation Pill', desc: `Heals ${CURE} wounded at once, highest tier first.` },
-    ngungThan: { name: 'Focus Pill', desc: `Every army gets +${pct(FOCUS)} attack for ${FOCUS_TIME / 3_600_000} hours. Taking another extends it.` },
+    ngungThan: {
+      name: 'Focus Pill',
+      desc: `Every army gets +${pct(FOCUS)} attack for ${FOCUS_TIME / 3_600_000} hours. Taking another extends it.`,
+    },
     daiTuKhi: { name: 'Great Qi Pill', desc: 'Cuts 2 hours off one timer. Brewed from 6 Qi Pills.' },
-    phaCanh: { name: 'Breakthrough Pill', desc: `The lightning is ${pct(PHA_CANH)} weaker; used instead of a Tribulation Pill. Brewed from 2 Tribulation Pills.` },
-    taiTuy: { name: 'Marrow Cleansing Pill', desc: "Refunds all of one elder's talent points so they can be spent again." },
+    phaCanh: {
+      name: 'Breakthrough Pill',
+      desc: `The lightning is ${pct(PHA_CANH)} weaker; used instead of a Tribulation Pill. Brewed from 2 Tribulation Pills.`,
+    },
+    taiTuy: {
+      name: 'Marrow Cleansing Pill',
+      desc: "Refunds all of one elder's talent points so they can be spent again.",
+    },
   } satisfies Record<PillId, { name: string; desc: string }>,
   gear: {
-    thanhSuong: 'Frostgleam Sword', xichViem: 'Crimson Flame Fan', kimCang: 'Vajra Bracelet', huyenVu: 'Black Tortoise Armor', hoTam: 'Heart-Guard Mirror',
-    thienLoi: 'Thunder Hammer', tuBao: 'Treasure Bowl', ngocGian: 'Dao Insight Jade Slip', tiLoi: 'Thunder-Ward Pearl',
+    thanhSuong: 'Frostgleam Sword',
+    xichViem: 'Crimson Flame Fan',
+    kimCang: 'Vajra Bracelet',
+    huyenVu: 'Black Tortoise Armor',
+    hoTam: 'Heart-Guard Mirror',
+    thienLoi: 'Thunder Hammer',
+    tuBao: 'Treasure Bowl',
+    ngocGian: 'Dao Insight Jade Slip',
+    tiLoi: 'Thunder-Ward Pearl',
   } satisfies Record<GearId, string>,
 
   // ---------- Map ----------
-  beasts: ['Black Wolf', 'Green Serpent', 'Ironback Bear', 'Crimson Fox', 'Golden-eyed Eagle', 'White Ape', 'Wind Wolf King', 'Fire Leopard', 'Rockhide Rhino', 'Nine-tailed Fox', 'Thunder Hawk', 'Dark Tortoise', 'White Tiger', 'Ice Phoenix', 'Flood Dragon'],
+  beasts: [
+    'Black Wolf',
+    'Green Serpent',
+    'Ironback Bear',
+    'Crimson Fox',
+    'Golden-eyed Eagle',
+    'White Ape',
+    'Wind Wolf King',
+    'Fire Leopard',
+    'Rockhide Rhino',
+    'Nine-tailed Fox',
+    'Thunder Hawk',
+    'Dark Tortoise',
+    'White Tiger',
+    'Ice Phoenix',
+    'Flood Dragon',
+  ],
   sects: [
-    { name: 'Black Wind Stronghold', lore: 'A bandit camp at the foot of the mountain. Its chief is a stubborn body cultivator.' },
+    {
+      name: 'Black Wind Stronghold',
+      lore: 'A bandit camp at the foot of the mountain. Its chief is a stubborn body cultivator.',
+    },
     { name: 'Blood Slaughter Sect', lore: 'A demonic sect that tempers swords in blood and preys on small sects.' },
     { name: 'Myriad Poison Valley', lore: 'A valley of toxic miasma. Rumor says a swordsman is imprisoned inside.' },
     { name: 'Heavenly Demon Cult', lore: 'A demonic cult rising in the north, with ruthless swordplay.' },
@@ -219,11 +468,29 @@ export const en: Text = {
     { name: 'Verdant Wood Realm', lore: 'A thousand-year-old forest where tree spirits guard a seal.' },
     { name: 'Crimson Flame Realm', lore: 'An underground volcano where lava flows like rivers.' },
     { name: 'Dark Ice Realm', lore: 'Eternal ice fields and winds that cut like blades.' },
-    { name: 'Thunder Pool Realm', lore: 'A lake beneath a storm that never clears, struck by lightning without pause.' },
-    { name: 'Chaos Realm', lore: 'A rift back to the time before heaven and earth parted, where the five elements turn over.' },
+    {
+      name: 'Thunder Pool Realm',
+      lore: 'A lake beneath a storm that never clears, struck by lightning without pause.',
+    },
+    {
+      name: 'Chaos Realm',
+      lore: 'A rift back to the time before heaven and earth parted, where the five elements turn over.',
+    },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : t.kind === 'pvp' ? en.pvp.kind : t.kind === 'spot' ? en.world.point.vein : t.kind === 'trib' ? en.trib.cloud : en.realms[t.i].name
+    return t.kind === 'beast'
+      ? en.beasts[t.i]
+      : t.kind === 'sect'
+        ? en.sects[t.i].name
+        : t.kind === 'tower'
+          ? en.tower.name
+          : t.kind === 'pvp'
+            ? en.pvp.kind
+            : t.kind === 'spot'
+              ? en.world.point.vein
+              : t.kind === 'trib'
+                ? en.trib.cloud
+                : en.realms[t.i].name
   },
   weekend: {
     title: 'Weekend event',
@@ -246,7 +513,8 @@ export const en: Text = {
     amount: 'Amount',
     price: 'Lot price (spirit stones)',
     net: (n: string) => `If it sells you receive ${n} spirit stones (after tax)`,
-    left: (buys: number, cap: string) => `Today: ${buys} purchases left · you can list ${cap} more spirit stones' worth`,
+    left: (buys: number, cap: string) =>
+      `Today: ${buys} purchases left · you can list ${cap} more spirit stones' worth`,
     expires: (t: string) => `${t} left`,
   },
   trade: {
@@ -254,7 +522,8 @@ export const en: Text = {
     give: 'Give',
     get: 'Receive',
     amount: 'Amount',
-    rate: (keep: string) => `The traders keep a cut: you receive ${keep} — upgrade the Treasure Pavilion for better rates`,
+    rate: (keep: string) =>
+      `The traders keep a cut: you receive ${keep} — upgrade the Treasure Pavilion for better rates`,
     go: (n: string, r: string) => `Trade for ${n} ${r}`,
     hint: 'When storage is lopsided (one resource short, others full), trade the surplus. For steady income, upgrading resource buildings is still better.',
     done: (n: string, r: string) => `Received ${n} ${r}`,
@@ -370,12 +639,40 @@ export const en: Text = {
     ],
     day: (n: number, total: number) => `Day ${n + 1}/${total}`,
     regions: [
-      'Northern Abyss', 'Cold Mountain', 'Snow Ridge', 'Ice River', 'Frost Wind', 'Western Sands', 'Azure Hills', 'Cloud Dream', 'Setting Sun', 'Eastern Sea', 'Red Earth', 'Qilin',
-      'Heaven Gate', 'Phoenix', 'Jade Sea', 'Southern Border', 'White Tiger', 'Black Tortoise', 'Vermilion Bird', 'Blue Waves', 'Blazing Land', 'Myriad Poison', 'Long Sands',
-      'Sea Eye', 'Glaze',
+      'Northern Abyss',
+      'Cold Mountain',
+      'Snow Ridge',
+      'Ice River',
+      'Frost Wind',
+      'Western Sands',
+      'Azure Hills',
+      'Cloud Dream',
+      'Setting Sun',
+      'Eastern Sea',
+      'Red Earth',
+      'Qilin',
+      'Heaven Gate',
+      'Phoenix',
+      'Jade Sea',
+      'Southern Border',
+      'White Tiger',
+      'Black Tortoise',
+      'Vermilion Bird',
+      'Blue Waves',
+      'Blazing Land',
+      'Myriad Poison',
+      'Long Sands',
+      'Sea Eye',
+      'Glaze',
     ],
     ring: ['Outer ring', 'Middle ring', 'Heart of the world'],
-    point: { vein: 'Spirit vein', mine: 'Spirit stone mine', boss: 'Demon king', gate: 'Array eye', heaven: 'Heaven Gate' },
+    point: {
+      vein: 'Spirit vein',
+      mine: 'Spirit stone mine',
+      boss: 'Demon king',
+      gate: 'Array eye',
+      heaven: 'Heaven Gate',
+    },
     gateOpens: (phase: string) => `Opens in the ${phase} phase`,
     you: 'Your sect',
     npc: 'Branch',
@@ -482,7 +779,14 @@ export const en: Text = {
     unblock: 'Unblock',
     report: 'Report this message',
     reported: 'Reported — thank you',
-    err: { rate: 'Slow down a little', dup: 'You just sent that', muted: 'You are muted', locked: 'You cannot use this channel yet', bad: 'Invalid message', unavailable: 'The server is busy' } as Record<string, string>,
+    err: {
+      rate: 'Slow down a little',
+      dup: 'You just sent that',
+      muted: 'You are muted',
+      locked: 'You cannot use this channel yet',
+      bad: 'Invalid message',
+      unavailable: 'The server is busy',
+    } as Record<string, string>,
     locked: 'The world channel opens at Main Hall level 3',
   },
   mail: {
@@ -492,26 +796,55 @@ export const en: Text = {
     claim: 'Claim gift',
     got: 'Claimed',
     msg: {
-      eventTop: (rank: number, theme: string) => [`Weekly event rank ${rank}`, `Your sect placed ${rank} in this world's "${theme}" event. Your prize is attached.`],
+      eventTop: (rank: number, theme: string) => [
+        `Weekly event rank ${rank}`,
+        `Your sect placed ${rank} in this world's "${theme}" event. Your prize is attached.`,
+      ],
       admin: (title: string, body: string) => [title, body],
       gift: () => ['A gift from the world elders', 'A small gift for you, fellow cultivator. Claim it below.'],
-      boss: (lv: number, rank: number, pct: number) => [`Demon king lv ${lv} slain`, `Your sect placed ${rank} (${pct}% of the damage) in slaying the demon king. Your reward is attached.`],
+      boss: (lv: number, rank: number, pct: number) => [
+        `Demon king lv ${lv} slain`,
+        `Your sect placed ${rank} (${pct}% of the damage) in slaying the demon king. Your reward is attached.`,
+      ],
       comp: () => ['Compensation', 'The server hit a problem. Our apologies — here is something to make up for it.'],
       season: (n: number, rank: number, up: number) =>
         up
-          ? [`Ascended · season ${n}`, `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. Your sect ascends: ${ASCEND} lives of foundation at once and the Ascended title.`]
-          : [`Season ${n} is over`, `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. The whole world is reborn once: buildings return to their foundation; elders, techniques, artifacts and pills stay. A new season has begun.`],
-      sold: (g: string, n: number, net: number) => ['Sold on the market', `Someone bought ${n} ${goodName(g)}; you receive ${net} spirit stones (after tax).`],
-      unsold: (g: string, n: number) => ['Market listing expired', `Nobody bought ${n} ${goodName(g)} — your goods are returned below.`],
+          ? [
+              `Ascended · season ${n}`,
+              `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. Your sect ascends: ${ASCEND} lives of foundation at once and the Ascended title.`,
+            ]
+          : [
+              `Season ${n} is over`,
+              `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. The whole world is reborn once: buildings return to their foundation; elders, techniques, artifacts and pills stay. A new season has begun.`,
+            ],
+      sold: (g: string, n: number, net: number) => [
+        'Sold on the market',
+        `Someone bought ${n} ${goodName(g)}; you receive ${net} spirit stones (after tax).`,
+      ],
+      unsold: (g: string, n: number) => [
+        'Market listing expired',
+        `Nobody bought ${n} ${goodName(g)} — your goods are returned below.`,
+      ],
       unknown: () => ['System mail', 'You have new mail. Update the game to read all of it.'],
     } as Record<string, (...a: any[]) => [string, string]>,
   },
   event: {
     title: 'Weekly event',
-    theme: { win: 'Conquest', train: 'Recruitment', brew: 'Alchemy', build: 'Construction', raid: 'Plunder', forge: 'Forging' } satisfies Record<EventId, string>,
+    theme: {
+      win: 'Conquest',
+      train: 'Recruitment',
+      brew: 'Alchemy',
+      build: 'Construction',
+      raid: 'Plunder',
+      forge: 'Forging',
+    } satisfies Record<EventId, string>,
     how: {
-      win: `+${EVENT_PTS.win} points per battle won`, train: `+${EVENT_PTS.train} point per 5 disciples recruited`, brew: `+${EVENT_PTS.brew} points per batch brewed`,
-      build: `+${EVENT_PTS.build} points per build or upgrade`, raid: `+${EVENT_PTS.raid} points per successful raid`, forge: `+${EVENT_PTS.forge} points per forging`,
+      win: `+${EVENT_PTS.win} points per battle won`,
+      train: `+${EVENT_PTS.train} point per 5 disciples recruited`,
+      brew: `+${EVENT_PTS.brew} points per batch brewed`,
+      build: `+${EVENT_PTS.build} points per build or upgrade`,
+      raid: `+${EVENT_PTS.raid} points per successful raid`,
+      forge: `+${EVENT_PTS.forge} points per forging`,
     } satisfies Record<EventId, string>,
     pts: (n: number) => `${n} points`,
     goal: (n: number) => `Milestone ${n}`,
@@ -531,7 +864,8 @@ export const en: Text = {
     pts: (n: string) => `${n} pts`,
   },
   account: {
-    guest: 'Guest account: your sect lives in this browser. Link an email to play from other devices and keep your sect if the browser clears its data.',
+    guest:
+      'Guest account: your sect lives in this browser. Link an email to play from other devices and keep your sect if the browser clears its data.',
     linked: (email: string) => `Linked to ${email}`,
     email: 'Email',
     pass: 'Password (8+ characters)',
@@ -541,12 +875,14 @@ export const en: Text = {
     change: 'Change password',
     changed: 'Password changed — other devices were signed out',
     code: 'Transfer code',
-    codeHint: 'On the other device: open the game, choose "Enter transfer code" and type this code. One use, expires in 15 minutes.',
+    codeHint:
+      'On the other device: open the game, choose "Enter transfer code" and type this code. One use, expires in 15 minutes.',
     makeCode: 'Create code',
     codeLeft: (t: string) => `Valid for ${t}`,
     logout: 'Sign out',
     logoutAll: 'Sign out everywhere',
-    guestOut: 'No email linked: once you sign out you cannot get back into this sect. Link an email or create a transfer code first.',
+    guestOut:
+      'No email linked: once you sign out you cannot get back into this sect. Link an email or create a transfer code first.',
     remove: 'Delete account',
     removeHint: 'Permanently deletes your sect and all its data and leaves your alliance. This cannot be undone.',
     removeSure: 'Delete forever?',
@@ -616,7 +952,8 @@ export const en: Text = {
   },
   trib: {
     title: 'Tribulation',
-    lore: (realm: string) => `The Main Hall has reached its peak. To break through to ${realm} you must survive three waves of heavenly lightning — survivors carry on to the next wave.`,
+    lore: (realm: string) =>
+      `The Main Hall has reached its peak. To break through to ${realm} you must survive three waves of heavenly lightning — survivors carry on to the next wave.`,
     waves: 'Three lightning waves',
     pill: (name: string, v: number) => `Take a ${name} (lightning −${pct(v)})`,
     element: (e: string) => `${e} element`,
@@ -653,7 +990,8 @@ export const en: Text = {
     count: (n: number) => `Reincarnated ${n} times`,
     done: (n: number) => `Life ${n + 1}`,
     start: 'Begin the new life',
-    season: 'In a world, rebirth happens when the season ends: everyone starts a new life together, and the top alliance ascends.',
+    season:
+      'In a world, rebirth happens when the season ends: everyone starts a new life together, and the top alliance ascends.',
   },
 
   // ---------- Pages ----------
@@ -691,16 +1029,31 @@ export const en: Text = {
     pickWash: 'Reset whose talents?',
     rates: 'Output',
     stats: 'Records',
-    stat: { won: 'Battles won', lost: 'Battles lost', trained: 'Disciples recruited', healed: 'Wounded healed', brewed: 'Pills brewed', rebirths: 'Reincarnations' },
+    stat: {
+      won: 'Battles won',
+      lost: 'Battles lost',
+      trained: 'Disciples recruited',
+      healed: 'Wounded healed',
+      brewed: 'Pills brewed',
+      rebirths: 'Reincarnations',
+    },
   },
-  jobs: { build: 'Building', train: 'Recruiting', heal: 'Healing', study: 'Research', brew: 'Brewing', forge: 'Forging' },
+  jobs: {
+    build: 'Building',
+    train: 'Recruiting',
+    heal: 'Healing',
+    study: 'Research',
+    brew: 'Brewing',
+    forge: 'Forging',
+  },
 
   settings: {
     title: 'Settings',
     sound: 'Sound effects',
     music: 'Music',
     account: 'Account',
-    accountHint: (name: string) => `${name} is stored on the server: switching devices or clearing browser data keeps your progress when you sign in again.`,
+    accountHint: (name: string) =>
+      `${name} is stored on the server: switching devices or clearing browser data keeps your progress when you sign in again.`,
     about: 'About',
     version: (v: string) => `Version ${v}`,
     credits: 'Fonts: Alegreya, Ma Shan Zheng — SIL Open Font License. Hand-painted art is generated in code.',
@@ -724,18 +1077,54 @@ export const en: Text = {
   guide: {
     title: 'Guide',
     items: [
-      ['How do I play?', 'Upgrade buildings for more resources, recruit disciples, fight beasts and secret realms, then go do something else. Timers keep running while the game is closed — come back to collect. 5–10 minutes per session is enough.'],
-      ['Counters', `Sword beats Spell, Spell beats Body, Body beats Sword: hitting the type you counter deals +${pct(ADV - 1)} damage, hitting your counter deals ${pct(1 - DISADV)} less. Target sheets say "Best with", and the estimated win chance already accounts for counters.`],
-      ['Elders', `Every army needs a leading elder. Each elder level gives the whole army +${pct(ELDER_STEP)} attack and HP; their active technique fires on rounds 3, 6 and 9. Recruit more elders by conquering rival sects and clearing floor 5 of the secret realms.`],
-      ['Wounded', 'Every battle leaves wounded. They wait in the Alchemy Room to be healed; when it runs out of beds, new wounded die — heal before fighting again, or upgrade the Alchemy Room.'],
-      ['Tribulation', `At Main Hall levels ${and(TRIBS.map(t => t.hall))} you must survive three lightning waves, one type each, and survivors carry on — bring all three types. A Tribulation Pill weakens the lightning by ${pct(DO_KIEP)}. Failing only means waiting ${TRIB_COOLDOWN / 60_000} minutes before trying again.`],
-      ['Five elements', `Every elder carries an element. From Nascent Soul on, tribulations and the new secret realms have one too: Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire beats Metal. An army led by an elder whose element beats the enemy's strikes ${pct(EL_ADV - 1)} harder; the other way round, ${pct(1 - EL_DISADV)} weaker.`],
-      ['Artifacts and talents', `The Artifact Forge makes artifacts; each elder wears one. Every ${TALENT_EVERY} elder levels grant a talent point: Might, Body or Dao (technique power). A Marrow Cleansing Pill lets you spend them again.`],
-      ['Full or lopsided storage', `Resources stop growing when storage is full: upgrade the Treasure Pavilion. Quest rewards and loot still arrive above capacity. If one resource runs short while others are full, trade the surplus at the Trading house in the Treasure Pavilion — you receive ${pct(TRADE_KEEP)} to ${pct(TRADE_KEEP_MAX)} depending on its level.`],
-      ['Heaven-Piercing Tower', `Opens at Main Hall level ${TOWER.hall}, at the top of the map. The tower has no last floor: each floor is stronger and changes its main type, so switch your army to the counter. Rewards come only on the first clear of each floor (every tenth floor gives a Tribulation Pill); your record carries over reincarnation.`],
-      ['Daily and weekly tasks, reincarnation', 'Daily tasks reset at midnight, Vietnam time; weekly tasks on Monday at midnight. At Main Hall level 15 you can reincarnate: keep elders, techniques and pills; the next life starts with higher-level buildings, produces more and builds faster — each life is much shorter than the last.'],
-      ['Raids', `From Main Hall level ${PVP_HALL}: find rivals from the map bar, scout them, then send a raid for their resources. Storage always keeps ${pct(PROTECT)} of its capacity safe; losing a defense grants a ${SHIELD_TIME / 3_600_000}-hour shield; raiding drops your own. The Mountain Guard Array and a guarding elder make your home guard sturdier. If you are raided you can take revenge within ${REVENGE_TIME / 3_600_000} hours. Tap your portrait for the rankings.`],
-      ['Progress', 'Progress is saved on the server after every action. If the connection drops the game reconnects by itself; anything not yet saved is reported.'],
+      [
+        'How do I play?',
+        'Upgrade buildings for more resources, recruit disciples, fight beasts and secret realms, then go do something else. Timers keep running while the game is closed — come back to collect. 5–10 minutes per session is enough.',
+      ],
+      [
+        'Counters',
+        `Sword beats Spell, Spell beats Body, Body beats Sword: hitting the type you counter deals +${pct(ADV - 1)} damage, hitting your counter deals ${pct(1 - DISADV)} less. Target sheets say "Best with", and the estimated win chance already accounts for counters.`,
+      ],
+      [
+        'Elders',
+        `Every army needs a leading elder. Each elder level gives the whole army +${pct(ELDER_STEP)} attack and HP; their active technique fires on rounds 3, 6 and 9. Recruit more elders by conquering rival sects and clearing floor 5 of the secret realms.`,
+      ],
+      [
+        'Wounded',
+        'Every battle leaves wounded. They wait in the Alchemy Room to be healed; when it runs out of beds, new wounded die — heal before fighting again, or upgrade the Alchemy Room.',
+      ],
+      [
+        'Tribulation',
+        `At Main Hall levels ${and(TRIBS.map(t => t.hall))} you must survive three lightning waves, one type each, and survivors carry on — bring all three types. A Tribulation Pill weakens the lightning by ${pct(DO_KIEP)}. Failing only means waiting ${TRIB_COOLDOWN / 60_000} minutes before trying again.`,
+      ],
+      [
+        'Five elements',
+        `Every elder carries an element. From Nascent Soul on, tribulations and the new secret realms have one too: Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire beats Metal. An army led by an elder whose element beats the enemy's strikes ${pct(EL_ADV - 1)} harder; the other way round, ${pct(1 - EL_DISADV)} weaker.`,
+      ],
+      [
+        'Artifacts and talents',
+        `The Artifact Forge makes artifacts; each elder wears one. Every ${TALENT_EVERY} elder levels grant a talent point: Might, Body or Dao (technique power). A Marrow Cleansing Pill lets you spend them again.`,
+      ],
+      [
+        'Full or lopsided storage',
+        `Resources stop growing when storage is full: upgrade the Treasure Pavilion. Quest rewards and loot still arrive above capacity. If one resource runs short while others are full, trade the surplus at the Trading house in the Treasure Pavilion — you receive ${pct(TRADE_KEEP)} to ${pct(TRADE_KEEP_MAX)} depending on its level.`,
+      ],
+      [
+        'Heaven-Piercing Tower',
+        `Opens at Main Hall level ${TOWER.hall}, at the top of the map. The tower has no last floor: each floor is stronger and changes its main type, so switch your army to the counter. Rewards come only on the first clear of each floor (every tenth floor gives a Tribulation Pill); your record carries over reincarnation.`,
+      ],
+      [
+        'Daily and weekly tasks, reincarnation',
+        'Daily tasks reset at midnight, Vietnam time; weekly tasks on Monday at midnight. At Main Hall level 15 you can reincarnate: keep elders, techniques and pills; the next life starts with higher-level buildings, produces more and builds faster — each life is much shorter than the last.',
+      ],
+      [
+        'Raids',
+        `From Main Hall level ${PVP_HALL}: find rivals from the map bar, scout them, then send a raid for their resources. Storage always keeps ${pct(PROTECT)} of its capacity safe; losing a defense grants a ${SHIELD_TIME / 3_600_000}-hour shield; raiding drops your own. The Mountain Guard Array and a guarding elder make your home guard sturdier. If you are raided you can take revenge within ${REVENGE_TIME / 3_600_000} hours. Tap your portrait for the rankings.`,
+      ],
+      [
+        'Progress',
+        'Progress is saved on the server after every action. If the connection drops the game reconnects by itself; anything not yet saved is reported.',
+      ],
     ] as [string, string][],
   },
   daily: {
@@ -815,8 +1204,11 @@ export const en: Text = {
     p1Gone: 'The online version starts fresh — saves from the offline test build cannot be carried over.',
   },
   ago(ms: number) {
-    const m = Math.floor(ms / 60_000), h = Math.floor(m / 60), d = Math.floor(h / 24)
-    const pair = (a: number, ua: string, b: number, ub: string) => (b ? `${plural(a, ua)} ${plural(b, ub)}` : plural(a, ua))
+    const m = Math.floor(ms / 60_000),
+      h = Math.floor(m / 60),
+      d = Math.floor(h / 24)
+    const pair = (a: number, ua: string, b: number, ub: string) =>
+      b ? `${plural(a, ua)} ${plural(b, ub)}` : plural(a, ua)
     return d ? pair(d, 'day', h % 24, 'hour') : h ? pair(h, 'hour', m % 60, 'minute') : plural(m, 'minute')
   },
 }

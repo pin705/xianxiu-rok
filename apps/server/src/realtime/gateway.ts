@@ -21,12 +21,29 @@ const Handshake = z.object({
   build: z.string().max(64),
   lang: z.string().max(16),
 })
-const Query = z.discriminatedUnion('k', [z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }), z.object({ k: z.literal('rivals'), pid: z.number().int().positive().optional() }), z.object({ k: z.literal('map') }), z.object({ k: z.literal('allies') }), z.object({ k: z.literal('ally') }), z.object({ k: z.literal('chat'), ch: z.enum(['world', 'ally']) }), z.object({ k: z.literal('season') }), z.object({ k: z.literal('market'), good: z.enum(GOODS as [Good, ...Good[]]).optional() })])
+const Query = z.discriminatedUnion('k', [
+  z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }),
+  z.object({ k: z.literal('rivals'), pid: z.number().int().positive().optional() }),
+  z.object({ k: z.literal('map') }),
+  z.object({ k: z.literal('allies') }),
+  z.object({ k: z.literal('ally') }),
+  z.object({ k: z.literal('chat'), ch: z.enum(['world', 'ally']) }),
+  z.object({ k: z.literal('season') }),
+  z.object({ k: z.literal('market'), good: z.enum(GOODS as [Good, ...Good[]]).optional() }),
+])
 const Say = z.object({ ch: z.enum(['world', 'ally']), text: z.string().max(400) })
 const Report = z.object({ id: z.number().int().positive() })
 const ActionShape = z.object({ type: z.string().max(32) }).loose() // khung; từng trường do rules.parseAction kiểm
 
-export type RealtimeOptions = { db: Database; host: Host; path: string; origins: string[]; protocol: string; limits: boolean; log: FastifyBaseLogger }
+export type RealtimeOptions = {
+  db: Database
+  host: Host
+  path: string
+  origins: string[]
+  protocol: string
+  limits: boolean
+  log: FastifyBaseLogger
+}
 
 export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
   const io = new Server<ClientToServer, ServerToClient, Record<string, never>, SocketData>(http, {
@@ -104,10 +121,12 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
       if (typeof ack !== 'function' || !(await allowed())) return
       const parsed = Query.safeParse(q)
       if (!parsed.success) return ack(null)
-      await world()?.query(socket, parsed.data, ack).catch(err => {
-        o.log.warn({ err }, 'query failed')
-        ack(null)
-      })
+      await world()
+        ?.query(socket, parsed.data, ack)
+        .catch(err => {
+          o.log.warn({ err }, 'query failed')
+          ack(null)
+        })
     })
     socket.on('say', async (m, ack) => {
       if (typeof ack !== 'function') return
@@ -122,7 +141,11 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
       if (typeof ack !== 'function' || !(await allowed())) return
       const p = Report.safeParse(m)
       if (!p.success) return ack(false)
-      ack((await world()?.report(socket, p.data.id).catch(() => false)) ?? false)
+      ack(
+        (await world()
+          ?.report(socket, p.data.id)
+          .catch(() => false)) ?? false,
+      )
     })
     socket.on('sync', async ack => {
       if (typeof ack === 'function' && (await allowed())) world()?.sync(socket, ack)

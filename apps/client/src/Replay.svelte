@@ -14,7 +14,9 @@
     now = 0,
   }: { report: Report | null; onclose: () => void; onrevenge?: (pid: number) => void; now?: number } = $props()
   // bị cướp mà thua, còn trong hạn báo thù
-  const revenge = $derived(!!report && report.kind === 'pvp' && report.def && !report.win && now < report.at + REVENGE_TIME)
+  const revenge = $derived(
+    !!report && report.kind === 'pvp' && report.def && !report.win && now < report.at + REVENGE_TIME,
+  )
 
   let dlg = $state<HTMLDialogElement>()
   $effect(() => {
@@ -55,7 +57,11 @@
       const k = cssPerDU()
       const skills: [Skill | undefined, Skill | undefined] = [
         rep.fights[0]?.a.elder ? ELDERS[rep.fights[0].a.elder].skill : undefined,
-        rep.kind === 'sect' ? SECTS[rep.i]?.elder.skill : rep.fights[0]?.b.elder ? ELDERS[rep.fights[0].b.elder].skill : undefined, // PvP: trưởng lão bên kia
+        rep.kind === 'sect'
+          ? SECTS[rep.i]?.elder.skill
+          : rep.fights[0]?.b.elder
+            ? ELDERS[rep.fights[0].b.elder].skill
+            : undefined, // PvP: trưởng lão bên kia
       ]
       const b = new Battle(rep, skills, innerWidth / k, innerHeight / k)
       b.root.scale.set(k)
@@ -109,81 +115,156 @@
 
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
   const foeEmblem: Emblem = $derived(
-    !report || report.kind === 'trib' ? 'thunder' : report.kind === 'pvp' ? 'crest' : report.kind === 'spot' ? (EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus') : EMBLEM[report.kind][report.i],
+    !report || report.kind === 'trib'
+      ? 'thunder'
+      : report.kind === 'pvp'
+        ? 'crest'
+        : report.kind === 'spot'
+          ? (EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus')
+          : EMBLEM[report.kind][report.i],
   )
-  const retreat = $derived(!!report && !report.win && !!f && f.rounds.length >= 10 && counts(1, f.rounds.length).some(x => x > 0) && counts(0, f.rounds.length).some(x => x > 0))
+  const retreat = $derived(
+    !!report &&
+      !report.win &&
+      !!f &&
+      f.rounds.length >= 10 &&
+      counts(1, f.rounds.length).some(x => x > 0) &&
+      counts(0, f.rounds.length).some(x => x > 0),
+  )
   const dead = $derived(report ? count(report.dead) : 0)
 </script>
 
-<dialog bind:this={dlg} class="replay paper" class:trib={report?.kind === 'trib'} aria-label={L.report.title} onclose={onclose}>
+<dialog bind:this={dlg} class="replay paper" class:trib={report?.kind === 'trib'} aria-label={L.report.title} {onclose}>
   <!-- svelte-ignore a11y_autofocus -->
   <div class="stage" bind:this={host} tabindex="-1" autofocus></div>
   {#if report && f}
     <header class="row foe">
       <Medal emblem={foeEmblem} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={46} />
-      <span class="stack" style:--gap="0"><b class="t-head">{foeName}</b>{#if report.kind === 'tower'}<small class="t-small t-bad t-strong">{L.tower.floor(f.b.level)}</small>{:else if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span>
+      <span class="stack" style:--gap="0"
+        ><b class="t-head">{foeName}</b>{#if report.kind === 'tower'}<small class="t-small t-bad t-strong"
+            >{L.tower.floor(f.b.level)}</small
+          >{:else if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span
+      >
     </header>
 
     <div class="mid">
-      <p class="round row center"><Icon name="swords" size={16} />{#if report.kind === 'trib'}{L.report.wave(fi + 1)} · {/if}{L.report.round(r, MAX_ROUNDS)}</p>
+      <p class="round row center">
+        <Icon name="swords" size={16} />{#if report.kind === 'trib'}{L.report.wave(fi + 1)} ·
+        {/if}{L.report.round(r, MAX_ROUNDS)}
+      </p>
     </div>
     <!-- Công pháp xuất chiêu: dải sơn mài quét ngang, chân dung trưởng lão, tên chiêu viết lớn -->
     {#key r}
       {#if cast[0] && f.a.elder}
         <div class="cutin" style:--d="{pace * 1.7}s" aria-live="polite">
           <span class="band"></span>
-          <span class="who" style:--ring="url({paintedUrl('ring', portraitRing, 100)})"><Portrait look={LOOK[f.a.elder]} size={88} /></span>
-          <span class="stack name" style:--gap="0"><small class="t-strong">{L.elders[f.a.elder].name}</small><b class="skill">{L.elders[f.a.elder].skill}</b></span>
+          <span class="who" style:--ring="url({paintedUrl('ring', portraitRing, 100)})"
+            ><Portrait look={LOOK[f.a.elder]} size={88} /></span
+          >
+          <span class="stack name" style:--gap="0"
+            ><small class="t-strong">{L.elders[f.a.elder].name}</small><b class="skill">{L.elders[f.a.elder].skill}</b
+            ></span
+          >
         </div>
       {/if}
       {#if cast[1]}
         <div class="cutin foe" style:--d="{pace * 1.7}s" aria-live="polite">
           <span class="band"></span>
-          <span class="who"><Medal emblem={foeEmblem} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={72} /></span>
-          <span class="stack name" style:--gap="0"><small class="t-strong">{foeName}</small><b class="skill">{L.report.foeSkill}</b></span>
+          <span class="who"
+            ><Medal emblem={foeEmblem} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={72} /></span
+          >
+          <span class="stack name" style:--gap="0"
+            ><small class="t-strong">{foeName}</small><b class="skill">{L.report.foeSkill}</b></span
+          >
         </div>
       {/if}
     {/key}
     <!-- Độ kiếp sang đợt mới: huy hiệu lôi kiếp và tên đợt loang ra như mực -->
     {#key fi}
       {#if report.kind === 'trib' && fi > 0 && !done}
-        <div class="wave stack center"><Medal emblem="thunder" tone="thunder" size={88} /><b class="t-title">{L.report.wave(fi + 1)}</b></div>
+        <div class="wave stack center">
+          <Medal emblem="thunder" tone="thunder" size={88} /><b class="t-title">{L.report.wave(fi + 1)}</b>
+        </div>
       {/if}
     {/key}
-    <p class="sr">{f.a.troops.map((t, k) => `${L.units[t.type]} ${counts(0, r)[k]}`).join(', ')} — {f.b.troops.map((t, k) => `${L.units[t.type]} ${counts(1, r)[k]}`).join(', ')}</p>
+    <p class="sr">
+      {f.a.troops.map((t, k) => `${L.units[t.type]} ${counts(0, r)[k]}`).join(', ')} — {f.b.troops
+        .map((t, k) => `${L.units[t.type]} ${counts(1, r)[k]}`)
+        .join(', ')}
+    </p>
 
     <header class="row ours">
       {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={46} />{/if}
-      <span class="stack" style:--gap="0"><b class="t-head">{f.a.elder ? L.elders[f.a.elder].name : ''}</b><small class="t-small t-gold t-strong">{L.lv(f.a.level)}</small></span>
+      <span class="stack" style:--gap="0"
+        ><b class="t-head">{f.a.elder ? L.elders[f.a.elder].name : ''}</b><small class="t-small t-gold t-strong"
+          >{L.lv(f.a.level)}</small
+        ></span
+      >
     </header>
 
     {#if done}
-      <div class="verdict" class:lose={!report.win}><span class="splat"></span><Medal emblem={report.win ? 'win' : 'lose'} tone={report.win ? 'red' : 'ink'} size={140} /></div>
+      <div class="verdict" class:lose={!report.win}>
+        <span class="splat"></span><Medal
+          emblem={report.win ? 'win' : 'lose'}
+          tone={report.win ? 'red' : 'ink'}
+          size={140}
+        />
+      </div>
       <div class="result">
         <Card tone={report.win ? 'glow' : 'paper'}>
           <div class="stack">
-            <h2 class="t-title center" class:t-bad={!report.win}>{report.kind === 'trib' ? (report.win ? L.report.tribWin : L.report.tribLose) : report.win ? L.report.win : L.report.lose}</h2>
+            <h2 class="t-title center" class:t-bad={!report.win}>
+              {report.kind === 'trib'
+                ? report.win
+                  ? L.report.tribWin
+                  : L.report.tribLose
+                : report.win
+                  ? L.report.win
+                  : L.report.lose}
+            </h2>
             {#if retreat}<p class="center t-small t-lore">{L.report.retreat}</p>{/if}
-            {#if count(report.hurt) - dead}<Stat label={L.report.hurt}><Icon name="heal" size={16} />{num(count(report.hurt) - dead)}</Stat>{/if}
+            {#if count(report.hurt) - dead}<Stat label={L.report.hurt}
+                ><Icon name="heal" size={16} />{num(count(report.hurt) - dead)}</Stat
+              >{/if}
             {#if dead}<Stat label={L.report.dead} tone="bad"><Icon name="skull" size={16} />{num(dead)}</Stat>{/if}
-            {#if report.gain.exp && f.a.elder}<Stat label="{L.report.exp} · {L.elders[f.a.elder].name}" tone="gold">+{num(report.gain.exp)}</Stat>{/if}
+            {#if report.gain.exp && f.a.elder}<Stat label="{L.report.exp} · {L.elders[f.a.elder].name}" tone="gold"
+                >+{num(report.gain.exp)}</Stat
+              >{/if}
             <Bag res={report.gain.res} items={report.gain.items} />
-            {#if report.lost && RESOURCES.some(x => report.lost?.[x])}<Stat label={L.pvp.lost} tone="bad"><Bag res={report.lost} /></Stat>{/if}
+            {#if report.lost && RESOURCES.some(x => report.lost?.[x])}<Stat label={L.pvp.lost} tone="bad"
+                ><Bag res={report.lost} /></Stat
+              >{/if}
             {#if report.gain.elder}
-              <span class="row"><Portrait look={LOOK[report.gain.elder]} size={36} /><span class="t-strong">{L.report.newElder}: {L.elders[report.gain.elder].name}</span></span>
+              <span class="row"
+                ><Portrait look={LOOK[report.gain.elder]} size={36} /><span class="t-strong"
+                  >{L.report.newElder}: {L.elders[report.gain.elder].name}</span
+                ></span
+              >
             {/if}
             <div class="grid">
-              <Button variant="ghost" onclick={() => ((fi = 0), (r = 0), (done = false), battle?.wave(0))}>{L.report.replay}</Button>
+              <Button variant="ghost" onclick={() => ((fi = 0), (r = 0), (done = false), battle?.wave(0))}
+                >{L.report.replay}</Button
+              >
               <Button variant="gold" onclick={() => dlg?.close()}>{L.report.close}</Button>
             </div>
-            {#if revenge && onrevenge}<Button variant="danger" wide icon="swords" onclick={() => onrevenge(report.i)}>{L.pvp.revenge}</Button>{/if}
+            {#if revenge && onrevenge}<Button variant="danger" wide icon="swords" onclick={() => onrevenge(report.i)}
+                >{L.pvp.revenge}</Button
+              >{/if}
           </div>
         </Card>
       </div>
     {:else}
       <div class="row center ctl">
         <Button variant="ghost" size="sm" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</Button>
-        <Button size="sm" onclick={() => ((fi = report.fights.length - 1), (r = report.fights.at(-1)!.rounds.length), battle?.jump(), finish())}>{L.report.skip}</Button>
+        <Button
+          size="sm"
+          onclick={() => (
+            (fi = report.fights.length - 1),
+            (r = report.fights.at(-1)!.rounds.length),
+            battle?.jump(),
+            finish()
+          )}>{L.report.skip}</Button
+        >
       </div>
     {/if}
   {/if}
@@ -307,26 +388,61 @@
     background: var(--stroke-gold) left bottom / 100% 12px no-repeat;
   }
   @keyframes band-in {
-    0% { clip-path: inset(0 100% 0 0); }
-    16%, 82% { clip-path: inset(0 0 0 0); }
-    100% { clip-path: inset(0 0 0 100%); }
+    0% {
+      clip-path: inset(0 100% 0 0);
+    }
+    16%,
+    82% {
+      clip-path: inset(0 0 0 0);
+    }
+    100% {
+      clip-path: inset(0 0 0 100%);
+    }
   }
   @keyframes band-in-r {
-    0% { clip-path: inset(0 0 0 100%); }
-    16%, 82% { clip-path: inset(0 0 0 0); }
-    100% { clip-path: inset(0 100% 0 0); }
+    0% {
+      clip-path: inset(0 0 0 100%);
+    }
+    16%,
+    82% {
+      clip-path: inset(0 0 0 0);
+    }
+    100% {
+      clip-path: inset(0 100% 0 0);
+    }
   }
   @keyframes slide-in {
-    0%, 8% { opacity: 0; translate: -70px 0; }
-    30%, 100% { opacity: 1; translate: 0 0; }
+    0%,
+    8% {
+      opacity: 0;
+      translate: -70px 0;
+    }
+    30%,
+    100% {
+      opacity: 1;
+      translate: 0 0;
+    }
   }
   @keyframes slide-in-r {
-    0%, 12% { opacity: 0; translate: 70px 0; }
-    34%, 100% { opacity: 1; translate: 0 0; }
+    0%,
+    12% {
+      opacity: 0;
+      translate: 70px 0;
+    }
+    34%,
+    100% {
+      opacity: 1;
+      translate: 0 0;
+    }
   }
   @keyframes cut-out {
-    0%, 84% { opacity: 1; }
-    100% { opacity: 0; }
+    0%,
+    84% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
   }
 
   /* ---- Đợt kiếp mới ---- */
@@ -340,9 +456,21 @@
     animation: wave 1.6s var(--ease) forwards;
   }
   @keyframes wave {
-    0% { opacity: 0; scale: 1.25; filter: blur(6px); }
-    18%, 70% { opacity: 1; scale: 1; filter: blur(0); }
-    100% { opacity: 0; scale: 0.96; }
+    0% {
+      opacity: 0;
+      scale: 1.25;
+      filter: blur(6px);
+    }
+    18%,
+    70% {
+      opacity: 1;
+      scale: 1;
+      filter: blur(0);
+    }
+    100% {
+      opacity: 0;
+      scale: 0.96;
+    }
   }
 
   /* ---- Dấu thắng/bại đóng xuống ---- */
@@ -369,13 +497,29 @@
     background: var(--ink);
   }
   @keyframes slam {
-    0% { opacity: 0; scale: 2.8; rotate: -14deg; }
-    48% { opacity: 1; scale: 0.9; rotate: 0deg; }
-    70% { scale: 1.04; }
-    100% { opacity: 1; scale: 1; }
+    0% {
+      opacity: 0;
+      scale: 2.8;
+      rotate: -14deg;
+    }
+    48% {
+      opacity: 1;
+      scale: 0.9;
+      rotate: 0deg;
+    }
+    70% {
+      scale: 1.04;
+    }
+    100% {
+      opacity: 1;
+      scale: 1;
+    }
   }
   @keyframes splat {
-    from { scale: 0.2; opacity: 0.5; }
+    from {
+      scale: 0.2;
+      opacity: 0.5;
+    }
   }
   .ctl {
     bottom: calc(var(--sp-4) + var(--safe-b));

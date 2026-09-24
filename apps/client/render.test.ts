@@ -153,7 +153,10 @@ const failTrib = run(
 )
 const trib10: State = { ...mid, levels: levels(mid, 10), trib: 1, marches: [] }
 // có chỗ trên bản đồ giới: kiếp vân đang tụ (server giải lúc giáng), đã bị phá kiếp một lần
-const clouded = run({ ...trib10, seat: { x: 10, y: 10 }, res: rich, troops: { ...trib10.troops, kiem2: 200 } }, { type: 'trib', elder: 'thanhPhong', army: { kiem2: 200 }, pill: false })
+const clouded = run(
+  { ...trib10, seat: { x: 10, y: 10 }, res: rich, troops: { ...trib10.troops, kiem2: 200 } },
+  { type: 'trib', elder: 'thanhPhong', army: { kiem2: 200 }, pill: false },
+)
 const cloud: State = { ...clouded, marches: clouded.marches.map(m => ({ ...m, foil: 1 })) }
 const late: State = {
   ...mid,
@@ -192,8 +195,18 @@ const top: State = { ...high, levels: levels(high, 25), trib: 4, realms: REALMS.
 // Tranh đoạt: tông môn A cướp B — A đang mang chiến lợi phẩm về, B vừa bị cướp (khiên, kẻ thù, chiến báo thủ), có thư, điểm sự kiện
 function raided(): [State, State] {
   const a0: State = { ...late, shield: 0, marches: [], troops: { ...late.troops, kiem3: 1500 } }
-  const b0: State = { ...late, name: 'Huyết Kiếm Tông', shield: 0, marches: [], troops: { ...late.troops, the1: 100 }, guard: 'thachKien' }
-  const ps = new Map([[1, a0], [2, b0]])
+  const b0: State = {
+    ...late,
+    name: 'Huyết Kiếm Tông',
+    shield: 0,
+    marches: [],
+    troops: { ...late.troops, the1: 100 },
+    guard: 'thachKien',
+  }
+  const ps = new Map([
+    [1, a0],
+    [2, b0],
+  ])
   const r = worldAct(ps, 1, { type: 'raid', pid: 2, elder: 'thanhPhong', army: { kiem3: 1500 } }, late.time, 99)
   if (!r.ok) throw new Error(r.error)
   for (const [id, x] of r.changed) ps.set(id, x)
@@ -201,7 +214,13 @@ function raided(): [State, State] {
   const at = onWay.marches[0].arriveAt
   for (const [id, x] of advanceWorld(ps, at)) ps.set(id, x)
   const gift = { res: { linhThach: 5000 }, items: { daiTuKhi: 1 } }
-  const b = mail(mail({ ...ps.get(2)!, ev: { ...late.ev, pts: 320, got: [true, false, false, false, false] } }, { at, k: 'eventTop', a: [2, 'raid'], gift }), { at, k: 'khoáLạ', a: [1] })
+  const b = mail(
+    mail(
+      { ...ps.get(2)!, ev: { ...late.ev, pts: 320, got: [true, false, false, false, false] } },
+      { at, k: 'eventTop', a: [2, 'raid'], gift },
+    ),
+    { at, k: 'khoáLạ', a: [1] },
+  )
   return [ps.get(1)!, b]
 }
 const [raider, victim] = raided()
@@ -223,7 +242,11 @@ const STATES: [string, State][] = [
 function unnamed(html: string) {
   const out: string[] = []
   for (const m of html.matchAll(/<button([^>]*)>([\s\S]*?)<\/button>/g)) {
-    const text = m[2].replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, '').trim()
+    const text = m[2]
+      .replace(/<svg[\s\S]*?<\/svg>/g, '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<[^>]+>/g, '')
+      .trim()
     if (!text && !/aria-label="[^"]+"/.test(m[1])) out.push(m[0].slice(0, 140))
   }
   for (const m of html.matchAll(/<(input|textarea)([^>]*)>/g))
@@ -250,7 +273,8 @@ test('màn tiêu đề, núi và HUD ở mọi trạng thái', async () => {
     await load(lang)
     paint('Title', { mode: 'first', onstart: noop, ondone: noop }, 'lần đầu')
     paint('Title', { mode: 'splash', onstart: noop, ondone: noop }, 'quay lại')
-    for (const f of L.naming.first) for (const l of L.naming.last) assert.ok(`${f} ${l}`.length <= 20, `tên gợi ý quá dài (tối đa 20): ${f} ${l}`)
+    for (const f of L.naming.first)
+      for (const l of L.naming.last) assert.ok(`${f} ${l}`.length <= 20, `tên gợi ý quá dài (tối đa 20): ${f} ${l}`)
     for (const [label, s] of STATES) {
       const now = s.time + 5000
       paint('Home', { game: s, now, still: false, onselect: noop }, label)
@@ -317,23 +341,48 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
       }).body
     assert.ok(panel(trib5, 'chuDien').includes(L.trib.title), 'Chủ điện tầng 5 phải hiện độ kiếp')
     assert.ok(panel(late, 'chuDien').includes(L.rebirth.title), 'Chủ điện tầng 15 phải hiện luân hồi')
-    assert.ok(panel({ ...late, seat: { x: 3, y: 3 } }, 'chuDien').includes(L.rebirth.season), 'trong giới: luân hồi khi hết mùa, không có nút')
+    assert.ok(
+      panel({ ...late, seat: { x: 3, y: 3 } }, 'chuDien').includes(L.rebirth.season),
+      'trong giới: luân hồi khi hết mùa, không có nút',
+    )
     const gathering = panel(cloud, 'chuDien')
-    assert.ok(gathering.includes(L.trib.gathering('').slice(0, 14)) && gathering.includes(L.trib.foiled(1)), 'kiếp vân đang tụ: đếm ngược, số lần bị phá kiếp')
+    assert.ok(
+      gathering.includes(L.trib.gathering('').slice(0, 14)) && gathering.includes(L.trib.foiled(1)),
+      'kiếp vân đang tụ: đếm ngược, số lần bị phá kiếp',
+    )
     assert.ok(!gathering.includes(L.trib.need), 'đã trả chi phí lúc tụ: không hỏi tài nguyên nữa')
     assert.ok(panel(mid, 'tangBaoCac').includes(L.trade.tab), 'Tàng Bảo Các có thẻ Thương hội')
-    assert.ok(panel(late, 'chuDien').includes(L.rebirth.gain(late.rebirths + 1)), 'luân hồi phải nói rõ thưởng kiếp sau (căn cơ)')
-    const poor: State = { ...trib10, res: { linhThach: 500, linhThao: 500, linhKhoang: 500 }, levels: { ...trib10.levels, tangBaoCac: 2 } }
-    assert.ok(panel(poor, 'chuDien').includes(L.b.tangBaoCac.name), 'chi phí vượt sức chứa: phải chỉ đường tới Tàng Bảo Các')
+    assert.ok(
+      panel(late, 'chuDien').includes(L.rebirth.gain(late.rebirths + 1)),
+      'luân hồi phải nói rõ thưởng kiếp sau (căn cơ)',
+    )
+    const poor: State = {
+      ...trib10,
+      res: { linhThach: 500, linhThao: 500, linhKhoang: 500 },
+      levels: { ...trib10.levels, tangBaoCac: 2 },
+    }
+    assert.ok(
+      panel(poor, 'chuDien').includes(L.b.tangBaoCac.name),
+      'chi phí vượt sức chứa: phải chỉ đường tới Tàng Bảo Các',
+    )
     assert.ok(!panel(trib10, 'chuDien').includes(L.panel.store('', 0).slice(0, 12)), 'đủ tiền thì không nhắc kho')
     assert.ok(panel(mid, 'dienVoTruong').includes(L.train.pick), 'Diễn võ trường mở sẵn thẻ tuyển')
     assert.ok(panel(mid, 'dienVoTruong', 'upgrade').includes(L.panel.upgrade))
     // Tầng 16–25: độ kiếp tầng 20 kèm luân hồi, Phá Cảnh Đan thay Độ Kiếp Đan, Luyện Khí Phòng có thẻ luyện khí
     const hall20 = panel(high20, 'chuDien')
-    assert.ok(hall20.includes(L.trib.title) && hall20.includes(L.rebirth.title), 'Chủ điện tầng 20: độ kiếp và luân hồi')
+    assert.ok(
+      hall20.includes(L.trib.title) && hall20.includes(L.rebirth.title),
+      'Chủ điện tầng 20: độ kiếp và luân hồi',
+    )
     assert.ok(hall20.includes(L.pills.phaCanh.name), 'có Phá Cảnh Đan thì dùng nó cho độ kiếp')
-    assert.ok(panel(top, 'chuDien').includes(L.panel.maxed) && panel(top, 'chuDien').includes(L.rebirth.title), 'tầng 25: tối đa, vẫn luân hồi được')
-    assert.ok(panel(high20, 'luyenKhiPhong').includes(L.forge.doing(L.gear.hoTam, 5)), 'đang luyện hiện ở Luyện Khí Phòng')
+    assert.ok(
+      panel(top, 'chuDien').includes(L.panel.maxed) && panel(top, 'chuDien').includes(L.rebirth.title),
+      'tầng 25: tối đa, vẫn luân hồi được',
+    )
+    assert.ok(
+      panel(high20, 'luyenKhiPhong').includes(L.forge.doing(L.gear.hoTam, 5)),
+      'đang luyện hiện ở Luyện Khí Phòng',
+    )
   }
 })
 
@@ -344,7 +393,11 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       const now = s.time + 5000
       paint('MapView', { game: s, now, onpick: noop, onreports: noop }, label)
       paint('Reports', { game: s, open: true, onclose: noop, onopen: noop }, label)
-      paint('Rivals', { game: s, now, open: true, load: async () => [], onclose: noop, onraid: noop, onrecruit: noop }, label)
+      paint(
+        'Rivals',
+        { game: s, now, open: true, load: async () => [], onclose: noop, onraid: noop, onrecruit: noop },
+        label,
+      )
       const targets: Target[] = [
         ...BEASTS.map((_, i) => ({ kind: 'beast', i }) as Target),
         ...SECTS.map((_, i) => ({ kind: 'sect', i }) as Target),
@@ -367,21 +420,63 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       for (const report of s.reports as Report[])
         paint('Replay', { report, onclose: noop }, `${label}, chiến báo ${report.kind} ${report.i}`)
     }
-    assert.ok(mid.reports.length >= 2 && afterTrib.reports.at(-1)!.fights.length === 3, 'dữ liệu thử phải có đủ loại chiến báo')
+    assert.ok(
+      mid.reports.length >= 2 && afterTrib.reports.at(-1)!.fights.length === 3,
+      'dữ liệu thử phải có đủ loại chiến báo',
+    )
     // Tranh đoạt: chiến báo hai phía, nút báo thù cho bên bị cướp, thư có quà và thư khoá lạ vẫn có chữ
     assert.equal(victim.reports.at(-1)!.def, true)
     assert.ok(victim.shield > victim.time && victim.foes.length === 1)
     const rep = victim.reports.at(-1)!
-    assert.ok(paint('Reports', { game: victim, open: true, onclose: noop, onopen: noop }, 'hộp thư').includes(L.mail.claim))
+    assert.ok(
+      paint('Reports', { game: victim, open: true, onclose: noop, onopen: noop }, 'hộp thư').includes(L.mail.claim),
+    )
     paint('Ranks', { open: true, me: 1, load: async () => null, onclose: noop }, 'xếp hạng')
-    assert.ok(paint('Hud', { game: victim, now: victim.time, tab: 'banDo', gain: null, onclaim: noop, onquest: noop, onbuilder: noop, ontab: noop, onsettings: noop, ondaily: noop }, 'khiên').includes(L.rank.open))
+    assert.ok(
+      paint(
+        'Hud',
+        {
+          game: victim,
+          now: victim.time,
+          tab: 'banDo',
+          gain: null,
+          onclaim: noop,
+          onquest: noop,
+          onbuilder: noop,
+          ontab: noop,
+          onsettings: noop,
+          ondaily: noop,
+        },
+        'khiên',
+      ).includes(L.rank.open),
+    )
     paint('Replay', { report: rep, onclose: noop, onrevenge: noop, now: rep.at + 1000 }, 'bị cướp')
     // Thông Thiên Tháp: đánh một tầng ở cuối game → chiến báo loại tháp phát lại được, bản đồ có nút tháp
-    const climbed = run({ ...late, troops: { ...late.troops, kiem1: 3000, phap2: 3000, the3: 3000 } }, { type: 'tower', elder: 'thanhPhong', army: { kiem1: 3000, phap2: 3000, the3: 3000 } })
+    const climbed = run(
+      { ...late, troops: { ...late.troops, kiem1: 3000, phap2: 3000, the3: 3000 } },
+      { type: 'tower', elder: 'thanhPhong', army: { kiem1: 3000, phap2: 3000, the3: 3000 } },
+    )
     assert.equal(climbed.reports.at(-1)!.kind, 'tower')
     paint('Replay', { report: climbed.reports.at(-1), onclose: noop }, 'chiến báo tháp')
-    assert.ok(paint('MapView', { game: climbed, now: climbed.time, onpick: noop, onreports: noop }, 'bản đồ có tháp').includes(L.tower.name))
-    assert.ok(paint('Target', { game: climbed, now: climbed.time, target: { kind: 'tower', i: 0 }, onclose: noop, onmarch: noop, onrecruit: noop }, 'tháp tầng 2').includes(L.tower.floor(climbed.tower + 1)))
+    assert.ok(
+      paint('MapView', { game: climbed, now: climbed.time, onpick: noop, onreports: noop }, 'bản đồ có tháp').includes(
+        L.tower.name,
+      ),
+    )
+    assert.ok(
+      paint(
+        'Target',
+        {
+          game: climbed,
+          now: climbed.time,
+          target: { kind: 'tower', i: 0 },
+          onclose: noop,
+          onmarch: noop,
+          onrecruit: noop,
+        },
+        'tháp tầng 2',
+      ).includes(L.tower.floor(climbed.tower + 1)),
+    )
     paint(
       'Result',
       {
@@ -402,7 +497,9 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       },
       'độ kiếp thất bại',
     )
-    const reborn = render(C.Result, { props: { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop } }).body
+    const reborn = render(C.Result, {
+      props: { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop },
+    }).body
     paint('Result', { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop }, 'luân hồi')
     assert.equal(reborn.split(L.rebirth.done(3)).length - 1, 1, 'màn luân hồi: tên kiếp chỉ hiện một lần')
     assert.ok(reborn.includes(L.rebirth.perks(3)), 'màn luân hồi: nói rõ thưởng kiếp này')
@@ -419,7 +516,12 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
       const daily = paint('Daily', { game: s, now, open: true, onclose: noop, act }, label)
       assert.ok(daily.includes(L.weekly.title) && daily.includes(L.weekly.bonus), `nhiệm vụ tuần phải hiện (${label})`)
       const sat = Date.UTC(2026, 8, 26, 3) // thứ Bảy 10h giờ VN
-      assert.equal(paint('Daily', { game: s, now: sat, open: true, onclose: noop, act }, `${label}, cuối tuần`).includes(L.weekend.title), true)
+      assert.equal(
+        paint('Daily', { game: s, now: sat, open: true, onclose: noop, act }, `${label}, cuối tuần`).includes(
+          L.weekend.title,
+        ),
+        true,
+      )
       assert.equal(daily.includes(L.weekend.title), false, 'ngày thường không có sự kiện')
       const settings = paint(
         'Settings',
@@ -439,8 +541,22 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
       )
       // bản online: mục tài khoản (SSR chưa có thông tin tài khoản — chỉ cần vẽ không lỗi, vẫn có tiêu đề mục)
       const ok = async () => ({ ok: true as const, data: { ok: true } })
-      const account = { info: ok, link: ok, password: ok, code: ok, logout: ok, remove: ok, push: async () => 'on' as const }
-      assert.ok(paint('Settings', { game: s, now: s.time, open: true, muted: false, onclose: noop, onmute: noop, account, onout: noop }, `${label}, online`).includes(L.settings.account))
+      const account = {
+        info: ok,
+        link: ok,
+        password: ok,
+        code: ok,
+        logout: ok,
+        remove: ok,
+        push: async () => 'on' as const,
+      }
+      assert.ok(
+        paint(
+          'Settings',
+          { game: s, now: s.time, open: true, muted: false, onclose: noop, onmute: noop, account, onout: noop },
+          `${label}, online`,
+        ).includes(L.settings.account),
+      )
     }
   }
 })
@@ -450,13 +566,42 @@ test('tiên minh, chat', async () => {
     { pid: 1, name: 'Lạc Hà Tông', role: 2 as const, hall: 12, power: 9000, online: true },
     { pid: 2, name: 'Huyết Kiếm Tông', role: 0 as const, hall: 10, power: 7000, online: false },
   ]
-  const info = { id: 1, name: 'Thanh Vân Minh', tag: 'TVM', members: { 1: 2, 2: 0 } as Record<number, 0 | 1 | 2>, notice: 'Họp lúc 8h', at: late.time, helps: [{ pid: 2, job: 'build' as const, startAt: 0, ms: 60_000, by: [] }], people, rallies: [{ id: 1, ally: 1, by: 1, i: 3, task: 'hit' as const, at: late.time + 600_000 }] }
-  const api = { ask: async () => [], say: async () => ({ ok: true as const }), report: async () => true, onChat: () => () => {} }
+  const info = {
+    id: 1,
+    name: 'Thanh Vân Minh',
+    tag: 'TVM',
+    members: { 1: 2, 2: 0 } as Record<number, 0 | 1 | 2>,
+    notice: 'Họp lúc 8h',
+    at: late.time,
+    helps: [{ pid: 2, job: 'build' as const, startAt: 0, ms: 60_000, by: [] }],
+    people,
+    rallies: [{ id: 1, ally: 1, by: 1, i: 3, task: 'hit' as const, at: late.time + 600_000 }],
+  }
+  const api = {
+    ask: async () => [],
+    say: async () => ({ ok: true as const }),
+    report: async () => true,
+    onChat: () => () => {},
+  }
   for (const lang of LANGS) {
     await load(lang)
     for (const [label, s] of STATES) {
-      paint('Alliance', { game: s, me: 1, ally: null, rows: [{ id: 1, name: 'Thanh Vân Minh', tag: 'TVM', n: 2, power: 16000 }], send: async () => ({ ok: true }) }, `${label}, chưa vào minh`)
-      const inside = paint('Alliance', { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }) }, `${label}, trong minh`)
+      paint(
+        'Alliance',
+        {
+          game: s,
+          me: 1,
+          ally: null,
+          rows: [{ id: 1, name: 'Thanh Vân Minh', tag: 'TVM', n: 2, power: 16000 }],
+          send: async () => ({ ok: true }),
+        },
+        `${label}, chưa vào minh`,
+      )
+      const inside = paint(
+        'Alliance',
+        { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }) },
+        `${label}, trong minh`,
+      )
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       paint('Chat', { game: s, me: 1, ally: true, api, act, toast: noop, inline: true }, `${label}, chat trong trang`)
       paint('Chat', { game: s, me: 1, api: null, act, toast: noop }, `${label}, dải chat`)
@@ -470,28 +615,72 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
   const a = atlas(7)
   const taken: { x: number; y: number }[] = []
   let k = 3
-  const rand = () => ((k = (Math.imul(k, 1103515245) + 12345) >>> 0) / 4294967296)
-  const ps = new Map(STATES.map(([, st], i) => {
-    const seat = spawn(a, taken, rand)!
-    taken.push(seat)
-    return [i + 1, { ...st, seat }] as [number, State]
-  }))
+  const rand = () => (k = (Math.imul(k, 1103515245) + 12345) >>> 0) / 4294967296
+  const ps = new Map(
+    STATES.map(([, st], i) => {
+      const seat = spawn(a, taken, rand)!
+      taken.push(seat)
+      return [i + 1, { ...st, seat }] as [number, State]
+    }),
+  )
   const vein = a.points.find(p => p.kind === 'vein')!
   const mine = a.points.find(p => p.kind === 'mine')!
   const boss = a.points.find(p => p.kind === 'boss')!
-  const w = { ...freshWorld(), spots: { [vein.i]: { own: -1, since: late.time }, [mine.i]: { left: 500 }, [boss.i]: { hp: 30_000 } } }
-  const snap = mapOf(ps, late.time, new Set([2]), [{ at: late.time, k: 'found', a: ['Lạc Hà Tông'] }, { at: late.time, k: 'khoáLạ', a: [] }], w)
+  const w = {
+    ...freshWorld(),
+    spots: { [vein.i]: { own: -1, since: late.time }, [mine.i]: { left: 500 }, [boss.i]: { hp: 30_000 } },
+  }
+  const snap = mapOf(
+    ps,
+    late.time,
+    new Set([2]),
+    [
+      { at: late.time, k: 'found', a: ['Lạc Hà Tông'] },
+      { at: late.time, k: 'khoáLạ', a: [] },
+    ],
+    w,
+  )
   const game = ps.get(1)!
   const now = late.time
   const picks = [
-    { kind: 'seat', pid: 2 }, { kind: 'seat', pid: 1 }, { kind: 'point', i: vein.i }, { kind: 'point', i: mine.i }, { kind: 'point', i: boss.i },
-    { kind: 'point', i: a.points.find(p => p.kind === 'gate')!.i }, { kind: 'point', i: a.points.find(p => p.kind === 'heaven')!.i }, { kind: 'tile', x: 3, y: 4 },
+    { kind: 'seat', pid: 2 },
+    { kind: 'seat', pid: 1 },
+    { kind: 'point', i: vein.i },
+    { kind: 'point', i: mine.i },
+    { kind: 'point', i: boss.i },
+    { kind: 'point', i: a.points.find(p => p.kind === 'gate')!.i },
+    { kind: 'point', i: a.points.find(p => p.kind === 'heaven')!.i },
+    { kind: 'tile', x: 3, y: 4 },
   ]
   for (const lang of LANGS) {
     await load(lang)
     paint('WorldView', { game, now, info, me: 1, snap, allies: [3], onpick: noop }, 'bản đồ giới')
-    paint('WorldView', { game: { ...game, seat: null }, now, info, me: 1, snap: null, onpick: noop }, 'chưa có ảnh chụp, chưa có chỗ')
-    paint('MapTab', { game, now, info, me: 1, watch: () => () => {}, onpick: noop, onreports: noop, onrivals: noop, onraid: noop, send: async () => ({ ok: true }) }, 'tab bản đồ')
-    for (const pick of picks) paint('TileSheet', { game, now, info, atlas: a, me: 1, snap, pick, onclose: noop, onraid: noop, send: async () => ({ ok: true }) }, `chạm ${pick.kind} ${JSON.stringify(pick)}`)
+    paint(
+      'WorldView',
+      { game: { ...game, seat: null }, now, info, me: 1, snap: null, onpick: noop },
+      'chưa có ảnh chụp, chưa có chỗ',
+    )
+    paint(
+      'MapTab',
+      {
+        game,
+        now,
+        info,
+        me: 1,
+        watch: () => () => {},
+        onpick: noop,
+        onreports: noop,
+        onrivals: noop,
+        onraid: noop,
+        send: async () => ({ ok: true }),
+      },
+      'tab bản đồ',
+    )
+    for (const pick of picks)
+      paint(
+        'TileSheet',
+        { game, now, info, atlas: a, me: 1, snap, pick, onclose: noop, onraid: noop, send: async () => ({ ok: true }) },
+        `chạm ${pick.kind} ${JSON.stringify(pick)}`,
+      )
   }
 })

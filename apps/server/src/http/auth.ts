@@ -37,10 +37,17 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
       schema: {
         body: z.object({
           name: z.string().max(64),
-          lang: z.string().regex(/^[a-z]{2}(-[A-Za-z]{2})?$/).catch('en'),
+          lang: z
+            .string()
+            .regex(/^[a-z]{2}(-[A-Za-z]{2})?$/)
+            .catch('en'),
           world: z.number().int().positive().optional(),
         }),
-        response: { 200: z.object({ token: z.string(), pid: z.number(), world: z.number(), path: z.string() }), 400: ErrorReply, 409: ErrorReply },
+        response: {
+          200: z.object({ token: z.string(), pid: z.number(), world: z.number(), path: z.string() }),
+          400: ErrorReply,
+          409: ErrorReply,
+        },
       },
     },
     async (req, reply) => {
@@ -50,8 +57,17 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
       const state: State = { ...newGame(Date.now(), n.name), seed: randomInt(1, 2 ** 32 - 1) }
       try {
         const g = await store.createGuest(o.db, {
-          hash: hashToken(token), locale: req.body.lang, name: n.name, nameKey: n.key, crest: randomInt(0, 2 ** 31 - 1), state, cap: o.worldCap,
-          world: o.pickWorld ? req.body.world : undefined, ip: req.ip, ua: req.headers['user-agent'], seed: randomInt(1, 2 ** 31 - 1),
+          hash: hashToken(token),
+          locale: req.body.lang,
+          name: n.name,
+          nameKey: n.key,
+          crest: randomInt(0, 2 ** 31 - 1),
+          state,
+          cap: o.worldCap,
+          world: o.pickWorld ? req.body.world : undefined,
+          ip: req.ip,
+          ua: req.headers['user-agent'],
+          seed: randomInt(1, 2 ** 31 - 1),
         })
         req.log.info({ pid: g.pid, world: g.world }, 'guest created')
         reply.setCookie(COOKIE, token, cookieOptions(o.secure))
@@ -67,7 +83,15 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
     '/me',
     {
       schema: {
-        response: { 200: z.object({ account: z.number().nullable(), pid: z.number().nullable(), world: z.number().nullable(), path: z.string() }), 403: ErrorReply },
+        response: {
+          200: z.object({
+            account: z.number().nullable(),
+            pid: z.number().nullable(),
+            world: z.number().nullable(),
+            path: z.string(),
+          }),
+          403: ErrorReply,
+        },
       },
     },
     // Chưa có phiên là chuyện bình thường (lần đầu mở game): trả 200 với account null thay vì 401 (trình duyệt coi 401 là lỗi đỏ)
@@ -81,11 +105,15 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
     },
   )
 
-  app.post('/logout', { schema: { response: { 200: z.object({ ok: z.boolean() }), 401: ErrorReply, 403: ErrorReply } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    await store.deleteSession(o.db, hashToken(s.token))
-    reply.clearCookie(COOKIE, { path: '/' })
-    return { ok: true }
-  })
+  app.post(
+    '/logout',
+    { schema: { response: { 200: z.object({ ok: z.boolean() }), 401: ErrorReply, 403: ErrorReply } } },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      await store.deleteSession(o.db, hashToken(s.token))
+      reply.clearCookie(COOKIE, { path: '/' })
+      return { ok: true }
+    },
+  )
 }

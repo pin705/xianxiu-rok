@@ -16,7 +16,17 @@ export const devRoutes: FastifyPluginAsyncZod<{ db: Database; host: Host }> = as
 
   app.post(
     '/warp',
-    { schema: { body: z.object({ min: z.number().min(0).max(60 * 24 * 60) }), response: { 200: z.object({ now: z.number() }), 401: ErrorReply, 403: ErrorReply, 409: ErrorReply } } },
+    {
+      schema: {
+        body: z.object({
+          min: z
+            .number()
+            .min(0)
+            .max(60 * 24 * 60),
+        }),
+        response: { 200: z.object({ now: z.number() }), 401: ErrorReply, 403: ErrorReply, 409: ErrorReply },
+      },
+    },
     async (req, reply) => {
       const s = await requireSession(db, req, reply)
       if (!s) return reply

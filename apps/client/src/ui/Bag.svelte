@@ -11,7 +11,14 @@
     have,
     size = 'md',
     named = false,
-  }: { res?: Partial<Res>; items?: Partial<Record<PillId, number>>; exp?: number; have?: Res; size?: 'sm' | 'md'; named?: boolean } = $props()
+  }: {
+    res?: Partial<Res>
+    items?: Partial<Record<PillId, number>>
+    exp?: number
+    have?: Res
+    size?: 'sm' | 'md'
+    named?: boolean
+  } = $props()
 </script>
 
 <ul class="bag">
@@ -20,7 +27,9 @@
       {@const short = have && have[r] < (res[r] ?? 0)}
       <li>
         <Tag icon={r} tone={short ? 'bad' : 'plain'} {size}>
-          {num(res[r] ?? 0)}{#if short}<small> · {L.panel.have(num(have![r]))}</small>{/if}<span class="sr"> {L.res[r]}</span>
+          {num(res[r] ?? 0)}{#if short}<small> · {L.panel.have(num(have![r]))}</small>{/if}<span class="sr">
+            {L.res[r]}</span
+          >
         </Tag>
       </li>
     {/if}

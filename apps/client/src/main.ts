@@ -25,7 +25,10 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator)
     .then(() => caches.open(`rok-${__BUILD__}`))
     .then(c => {
       // chỉ file tĩnh: các lần gọi API (fetch cũng nằm trong danh sách này) mà lọt vào thì addAll hỏng cả lô
-      const mine = performance.getEntriesByType('resource').map(e => e.name).filter(u => u.startsWith(location.origin) && /\/(assets|fonts|icons)\/|manifest|favicon/.test(u))
+      const mine = performance
+        .getEntriesByType('resource')
+        .map(e => e.name)
+        .filter(u => u.startsWith(location.origin) && /\/(assets|fonts|icons)\/|manifest|favicon/.test(u))
       return c.addAll([location.href.split('#')[0], ...mine])
     })
     // tải sẵn bộ chữ các ngôn ngữ khác (vài KB mỗi bộ) để service worker cất: offline vẫn đổi được ngôn ngữ

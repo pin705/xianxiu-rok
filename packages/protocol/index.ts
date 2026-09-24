@@ -42,7 +42,16 @@ export type Me = { pid: number; name: string; world: number; x: number | null; y
 export type WorldInfo = { id: number; name: string; season: number; map: number; opened: number; market: boolean } // market: chợ đang bật
 // Lát state lúc rời game (server lưu khi kết nối cuối đóng): màn Xuất quan so với state lúc quay lại
 export type Seen = Pick<State, 'time' | 'res' | 'levels' | 'tech' | 'stats'>
-export type Welcome = { now: number; v: number; state: View; me: Me; world: WorldInfo; seen?: Seen; ro: boolean; warp: boolean }
+export type Welcome = {
+  now: number
+  v: number
+  state: View
+  me: Me
+  world: WorldInfo
+  seen?: Seen
+  ro: boolean
+  warp: boolean
+}
 
 export type ServerErr = 'rate' | 'unavailable' | 'moving' | 'maintenance' | 'rude'
 // Trả lời một thao tác (ack của socket.io, gửi SAU khi đã ghi DB): có v/p nếu state đổi; rep = chiến báo mới
@@ -53,7 +62,15 @@ export type Snap = { v: number; state: View }
 // kèm theo dõi 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn)
 // allies: danh sách tiên minh → AllyRow[] · ally: minh của mình → AllyInfo | null · season: điểm mùa → Season
 // market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình → Market | null (chợ tắt)
-export type Query = { k: 'reports'; before?: number } | { k: 'rivals'; pid?: number } | { k: 'map' } | { k: 'allies' } | { k: 'ally' } | { k: 'chat'; ch: Channel } | { k: 'season' } | { k: 'market'; good?: Good }
+export type Query =
+  | { k: 'reports'; before?: number }
+  | { k: 'rivals'; pid?: number }
+  | { k: 'map' }
+  | { k: 'allies' }
+  | { k: 'ally' }
+  | { k: 'chat'; ch: Channel }
+  | { k: 'season' }
+  | { k: 'market'; good?: Good }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
 export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
 export type Season = { rows: { name: string; pts: number }[]; me: { rank: number; pts: number } | null; fame: Fame[] }

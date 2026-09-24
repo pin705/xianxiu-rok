@@ -32,11 +32,12 @@
   }
   async function link(e: SubmitEvent) {
     e.preventDefault()
-    if (await run(() => account.link(email, pass))) (info = { ...info!, email: email.trim().toLowerCase() }), (pass = ''), sfx('reward')
+    if (await run(() => account.link(email, pass)))
+      ((info = { ...info!, email: email.trim().toLowerCase() }), (pass = ''), sfx('reward'))
   }
   async function change(e: SubmitEvent) {
     e.preventDefault()
-    if (await run(() => account.password(old, pass), L.account.changed)) (old = pass = '')
+    if (await run(() => account.password(old, pass), L.account.changed)) old = pass = ''
   }
   async function makeCode() {
     const r = await account.code()
@@ -61,15 +62,44 @@
     <p class="t-small t-lore">{info.email ? L.account.linked(info.email) : L.account.guest}</p>
     {#if !info.email}
       <form class="stack" onsubmit={link}>
-        <input type="email" bind:value={email} autocomplete="email" placeholder={L.account.email} aria-label={L.account.email} />
-        <input type="password" bind:value={pass} autocomplete="new-password" minlength="8" placeholder={L.account.pass} aria-label={L.account.pass} />
-        <Button variant="gold" wide type="submit" disabled={busy || !email.includes('@') || pass.length < 8}>{L.account.link}</Button>
+        <input
+          type="email"
+          bind:value={email}
+          autocomplete="email"
+          placeholder={L.account.email}
+          aria-label={L.account.email}
+        />
+        <input
+          type="password"
+          bind:value={pass}
+          autocomplete="new-password"
+          minlength="8"
+          placeholder={L.account.pass}
+          aria-label={L.account.pass}
+        />
+        <Button variant="gold" wide type="submit" disabled={busy || !email.includes('@') || pass.length < 8}
+          >{L.account.link}</Button
+        >
       </form>
     {:else}
       <form class="stack" onsubmit={change}>
-        <input type="password" bind:value={old} autocomplete="current-password" placeholder={L.account.old} aria-label={L.account.old} />
-        <input type="password" bind:value={pass} autocomplete="new-password" minlength="8" placeholder={L.account.fresh} aria-label={L.account.fresh} />
-        <Button variant="ghost" wide type="submit" disabled={busy || !old || pass.length < 8}>{L.account.change}</Button>
+        <input
+          type="password"
+          bind:value={old}
+          autocomplete="current-password"
+          placeholder={L.account.old}
+          aria-label={L.account.old}
+        />
+        <input
+          type="password"
+          bind:value={pass}
+          autocomplete="new-password"
+          minlength="8"
+          placeholder={L.account.fresh}
+          aria-label={L.account.fresh}
+        />
+        <Button variant="ghost" wide type="submit" disabled={busy || !old || pass.length < 8}>{L.account.change}</Button
+        >
       </form>
     {/if}
 
@@ -86,15 +116,33 @@
       </div>
     </Card>
 
-    {#if info.push && !pushed}<Button variant="ghost" wide icon="mail" onclick={push}>{L.push.toggle}: {L.push.on}</Button>{/if}
+    {#if info.push && !pushed}<Button variant="ghost" wide icon="mail" onclick={push}
+        >{L.push.toggle}: {L.push.on}</Button
+      >{/if}
     {#if msg}<p class="t-small" class:t-bad={msg.bad} class:t-good={!msg.bad} role="status">{msg.text}</p>{/if}
 
     {#if out}
-      <p class="t-small t-bad t-strong">{out === 'remove' ? `${L.account.removeHint} ${L.account.removeSure}` : !info.email ? L.account.guestOut : out === 'all' ? L.account.logoutAll : L.account.logout}</p>
-      {#if out === 'remove' && info.email}<input type="password" bind:value={pass} autocomplete="current-password" placeholder={L.account.old} aria-label={L.account.old} />{/if}
+      <p class="t-small t-bad t-strong">
+        {out === 'remove'
+          ? `${L.account.removeHint} ${L.account.removeSure}`
+          : !info.email
+            ? L.account.guestOut
+            : out === 'all'
+              ? L.account.logoutAll
+              : L.account.logout}
+      </p>
+      {#if out === 'remove' && info.email}<input
+          type="password"
+          bind:value={pass}
+          autocomplete="current-password"
+          placeholder={L.account.old}
+          aria-label={L.account.old}
+        />{/if}
       <div class="grid">
         <Button variant="ghost" onclick={() => ((out = null), (pass = ''))}>{L.panel.close}</Button>
-        <Button variant="danger" disabled={out === 'remove' && !!info.email && !pass} onclick={leave}>{out === 'remove' ? L.account.remove : out === 'all' ? L.account.logoutAll : L.account.logout}</Button>
+        <Button variant="danger" disabled={out === 'remove' && !!info.email && !pass} onclick={leave}
+          >{out === 'remove' ? L.account.remove : out === 'all' ? L.account.logoutAll : L.account.logout}</Button
+        >
       </div>
     {:else}
       <div class="row wrap">

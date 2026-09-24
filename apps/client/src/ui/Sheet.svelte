@@ -67,7 +67,10 @@
     if (!dlg?.open || leaving || !panel) return
     leaving = true
     const off = center
-      ? [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.92)' }]
+      ? [
+          { opacity: 1, transform: 'scale(1)' },
+          { opacity: 0, transform: 'scale(0.92)' },
+        ]
       : dock
         ? [{ transform: 'translateX(0)' }, { transform: 'translateX(105%)' }]
         : [{ transform: `translateY(${from}px)` }, { transform: 'translateY(105%)' }]
@@ -97,7 +100,10 @@
     const { dy, t } = drag
     drag = null
     if (dy > 90 || dy / (performance.now() - t) > 0.6) return dismiss(dy)
-    panel.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }], { duration: 220, easing: 'cubic-bezier(.3,1.4,.5,1)' })
+    panel.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }], {
+      duration: 220,
+      easing: 'cubic-bezier(.3,1.4,.5,1)',
+    })
     panel.style.transform = ''
   }
 </script>
@@ -115,11 +121,20 @@
   {#if open}
     <!-- Vuốt để đóng chỉ là cử chỉ thêm; bàn phím dùng nút × hoặc Esc -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="scroll paper" bind:this={panel} onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
+    <div
+      class="scroll paper"
+      bind:this={panel}
+      onpointerdown={down}
+      onpointermove={move}
+      onpointerup={up}
+      onpointercancel={up}
+    >
       <div class="rod" aria-hidden="true"></div>
       <!-- svelte-ignore a11y_autofocus -->
       <div class="body" tabindex="-1" autofocus>
-        <button class="x" aria-label={L.panel.close} onclick={() => (sfx('tap'), dismiss())}><Icon name="close" size={16} /></button>
+        <button class="x" aria-label={L.panel.close} onclick={() => (sfx('tap'), dismiss())}
+          ><Icon name="close" size={16} /></button
+        >
         {#if title}
           <header class="head" class:has-art={!!art}>
             {#if art}<div class="art">{@render art()}</div>{/if}

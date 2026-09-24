@@ -15,7 +15,10 @@ test('gập: thao tác đoán trước áp tại lúc bấm, theo thứ tự; th
     { a: { type: 'upgrade', building: 'linhDien' }, at: 2000, predicted: true }, // tạp dịch đang bận: bỏ qua
   ]
   const f = fold(s, pending)
-  assert.deepEqual(f.queue.map(j => j.building), ['tuLinhTran'])
+  assert.deepEqual(
+    f.queue.map(j => j.building),
+    ['tuLinhTran'],
+  )
   assert.equal(f.queue[0].startAt, 1000, 'áp tại lúc người chơi bấm')
   assert.equal(f.reports.length, 0, 'không bịa trận')
   assert.equal(fold(s, []), s, 'không có gì chờ: giữ nguyên tham chiếu')
@@ -26,5 +29,12 @@ test('state gửi xuống không có mầm: client không bao giờ tự giải 
 })
 
 test('đồng hồ: lấy độ lệch của mẫu ping có vòng đi-về ngắn nhất', () => {
-  assert.equal(offsetOf([{ rtt: 80, off: 40 }, { rtt: 12, off: 5 }, { rtt: 30, off: 9 }]), 5)
+  assert.equal(
+    offsetOf([
+      { rtt: 80, off: 40 },
+      { rtt: 12, off: 5 },
+      { rtt: 30, off: 9 },
+    ]),
+    5,
+  )
 })

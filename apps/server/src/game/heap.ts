@@ -12,7 +12,7 @@ export class Heap<T extends Timed> {
   push(e: T) {
     const a = this.a
     a.push(e)
-    for (let i = a.length - 1; i > 0; ) {
+    for (let i = a.length - 1; i > 0;) {
       const p = (i - 1) >> 1
       if (!before(a[i], a[p])) break
       ;[a[i], a[p]] = [a[p], a[i]]
@@ -25,8 +25,9 @@ export class Heap<T extends Timed> {
     const last = a.pop()
     if (a.length && last) {
       a[0] = last
-      for (let i = 0; ; ) {
-        const l = 2 * i + 1, r = l + 1
+      for (let i = 0; ;) {
+        const l = 2 * i + 1,
+          r = l + 1
         let m = i
         if (l < a.length && before(a[l], a[m])) m = l
         if (r < a.length && before(a[r], a[m])) m = r

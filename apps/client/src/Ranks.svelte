@@ -15,7 +15,13 @@
     load,
     season,
     onclose,
-  }: { open: boolean; me: number | null; load: (b: Board) => Promise<Ranks | null>; season?: () => Promise<Season | null>; onclose: () => void } = $props()
+  }: {
+    open: boolean
+    me: number | null
+    load: (b: Board) => Promise<Ranks | null>
+    season?: () => Promise<Season | null>
+    onclose: () => void
+  } = $props()
 
   let board = $state<Board | 'season'>('power')
   let data = $state<Ranks | null>(null)
@@ -31,10 +37,19 @@
 </script>
 
 <Sheet {open} {onclose} title={L.rank.title}>
-  <Tabs items={[...BOARDS.map(id => ({ id, label: L.rank.boards[id] })), ...(season ? [{ id: 'season', label: L.rank.season }] : [])]} value={board} onchange={b => (board = b as Board)} />
+  <Tabs
+    items={[
+      ...BOARDS.map(id => ({ id, label: L.rank.boards[id] })),
+      ...(season ? [{ id: 'season', label: L.rank.season }] : []),
+    ]}
+    value={board}
+    onchange={b => (board = b as Board)}
+  />
   {#if board === 'season' && sea}
     <p class="t-small t-soft mt-2">{L.rank.seasonHint}</p>
-    {#if sea.me}<p class="t-small t-gold t-strong mt-2">{L.rank.me}: #{sea.me.rank} · {L.rank.pts(num(sea.me.pts))}</p>{/if}
+    {#if sea.me}<p class="t-small t-gold t-strong mt-2">
+        {L.rank.me}: #{sea.me.rank} · {L.rank.pts(num(sea.me.pts))}
+      </p>{/if}
     {#if !sea.rows.length}<p class="center t-lore mt-4">{L.rank.none}</p>{/if}
     <ol class="stack mt-2" style:--gap="4px">
       {#each sea.rows as r, k (k)}
@@ -53,7 +68,10 @@
       <h3 class="t-head mt-4">{L.rank.fame}</h3>
       <ul class="stack mt-2" style:--gap="4px">
         {#each sea.fame as f (f.season)}
-          <li class="t-small"><b>{L.rank.fameRow(f.season)}:</b> {f.top.map(t => t.name).join(' · ') || L.rank.none}</li>
+          <li class="t-small">
+            <b>{L.rank.fameRow(f.season)}:</b>
+            {f.top.map(t => t.name).join(' · ') || L.rank.none}
+          </li>
         {/each}
       </ul>
     {/if}

@@ -16,5 +16,9 @@ export default defineConfig({
   build: { chunkSizeWarningLimit: 600 },
   // __BUILD__: mã riêng mỗi lần build — service worker đặt tên cache theo nó, bản mới dọn cache cũ
   // __PROTOCOL__: hash luật + gói tin — server so lúc bắt tay, lệch là client phải tải bản mới
-  define: { __VERSION__: JSON.stringify(pkg.version), __BUILD__: JSON.stringify(Date.now().toString(36)), __PROTOCOL__: JSON.stringify(protocolHash()) },
+  define: {
+    __VERSION__: JSON.stringify(pkg.version),
+    __BUILD__: JSON.stringify(Date.now().toString(36)),
+    __PROTOCOL__: JSON.stringify(protocolHash()),
+  },
 })

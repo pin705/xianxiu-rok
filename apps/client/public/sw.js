@@ -45,7 +45,14 @@ self.addEventListener('push', e => {
   try {
     n = e.data?.json() ?? {}
   } catch {}
-  e.waitUntil(self.registration.showNotification(n.title || 'Sơn Hà Tiên Tông', { body: n.body, tag: n.tag, icon: 'icons/icon-192.png', badge: 'favicon.png' }))
+  e.waitUntil(
+    self.registration.showNotification(n.title || 'Sơn Hà Tiên Tông', {
+      body: n.body,
+      tag: n.tag,
+      icon: 'icons/icon-192.png',
+      badge: 'favicon.png',
+    }),
+  )
 })
 // Chạm thông báo: đưa tab game đang mở lên trước, không có thì mở game
 self.addEventListener('notificationclick', e => {

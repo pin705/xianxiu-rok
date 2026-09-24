@@ -1,6 +1,12 @@
 <script lang="ts">
   // Thanh kéo: rãnh mực vẽ tay, phần đã chọn là nét lam khoáng, núm là đĩa vàng vòng mực.
-  let { value, min = 0, max, label, onchange }: { value: number; min?: number; max: number; label: string; onchange: (n: number) => void } = $props()
+  let {
+    value,
+    min = 0,
+    max,
+    label,
+    onchange,
+  }: { value: number; min?: number; max: number; label: string; onchange: (n: number) => void } = $props()
 </script>
 
 <input
@@ -26,13 +32,22 @@
   }
   .slider::-webkit-slider-runnable-track {
     height: 10px;
-    background: linear-gradient(90deg, color-mix(in srgb, var(--azurite) 85%, transparent) var(--p), transparent var(--p)) 3px 2px / calc(100% - 6px) 6px no-repeat;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--azurite) 85%, transparent) var(--p),
+        transparent var(--p)
+      )
+      3px 2px / calc(100% - 6px) 6px no-repeat;
     border: 0 solid transparent;
     border-image: var(--sk-track);
   }
   .slider::-moz-range-track {
     height: 10px;
-    background: linear-gradient(90deg, var(--azurite) var(--p), color-mix(in srgb, var(--ink) 18%, transparent) var(--p));
+    background: linear-gradient(
+      90deg,
+      var(--azurite) var(--p),
+      color-mix(in srgb, var(--ink) 18%, transparent) var(--p)
+    );
     border-radius: 5px;
   }
   .slider::-webkit-slider-thumb {

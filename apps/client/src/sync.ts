@@ -22,4 +22,5 @@ export function fold(confirmed: State, pending: readonly Pending[]) {
 }
 
 // Mẫu ping có vòng đi-về ngắn nhất là mẫu đáng tin nhất cho độ lệch đồng hồ
-export const offsetOf = (samples: readonly { rtt: number; off: number }[]) => samples.reduce((a, b) => (b.rtt < a.rtt ? b : a)).off
+export const offsetOf = (samples: readonly { rtt: number; off: number }[]) =>
+  samples.reduce((a, b) => (b.rtt < a.rtt ? b : a)).off

@@ -2,11 +2,23 @@
   // Tăng giảm một số nguyên trong [min, max]
   import Button from './Button.svelte'
 
-  let { value, min = 1, max, onchange }: { value: number; min?: number; max: number; onchange: (n: number) => void } = $props()
+  let {
+    value,
+    min = 1,
+    max,
+    onchange,
+  }: { value: number; min?: number; max: number; onchange: (n: number) => void } = $props()
 </script>
 
 <div class="stepper">
-  <Button variant="ghost" size="sm" icon="minus" label="−" disabled={value <= min} onclick={() => onchange(value - 1)} />
+  <Button
+    variant="ghost"
+    size="sm"
+    icon="minus"
+    label="−"
+    disabled={value <= min}
+    onclick={() => onchange(value - 1)}
+  />
   <b class="t-num">{value}</b>
   <Button variant="ghost" size="sm" icon="plus" label="+" disabled={value >= max} onclick={() => onchange(value + 1)} />
 </div>

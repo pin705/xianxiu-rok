@@ -38,8 +38,15 @@
   let scene = $state.raw<Home>()
 
   const hour = $derived(new Date(now).getHours())
-  const phase: Phase = $derived(hour >= 5 && hour < 7 ? 'dawn' : hour >= 7 && hour < 17 ? 'day' : hour >= 17 && hour < 19 ? 'dusk' : 'night')
-  const tops = $derived(Object.fromEntries(IDS.map(id => [id, building(id as Kind, Math.max(1, game.levels[id])).top])) as Record<BuildingId, number>)
+  const phase: Phase = $derived(
+    hour >= 5 && hour < 7 ? 'dawn' : hour >= 7 && hour < 17 ? 'day' : hour >= 17 && hour < 19 ? 'dusk' : 'night',
+  )
+  const tops = $derived(
+    Object.fromEntries(IDS.map(id => [id, building(id as Kind, Math.max(1, game.levels[id])).top])) as Record<
+      BuildingId,
+      number
+    >,
+  )
 
   $effect(() => scene?.set({ game, selected, storm, phase }))
   $effect(() => {
@@ -86,7 +93,14 @@
   }
 </script>
 
-<View make={() => new Home({ still })} height={HOME.h} {hidden} start={still ? 0 : 0.3} bind:scroller bind:scene={scene as never}>
+<View
+  make={() => new Home({ still })}
+  height={HOME.h}
+  {hidden}
+  start={still ? 0 : 0.3}
+  bind:scroller
+  bind:scene={scene as never}
+>
   {#snippet hits(k)}
     {#if !still}
       {#each IDS as id (id)}
@@ -95,7 +109,9 @@
         <button
           class="hit"
           data-b={id}
-          style="left:{(x - w / 2 - 6) * k}px;top:{(y - tops[id] - 12) * k}px;width:{(w + 12) * k}px;height:{(tops[id] + 34) * k}px"
+          style="left:{(x - w / 2 - 6) * k}px;top:{(y - tops[id] - 12) * k}px;width:{(w + 12) * k}px;height:{(tops[id] +
+            34) *
+            k}px"
           aria-label="{L.b[id].name}{lv ? `, ${L.level(lv)}` : ''}"
           onclick={() => onselect?.(id)}
         ></button>
@@ -117,15 +133,23 @@
         {@const hint = !job && !wj ? idle(id) : null}
         {@const by = bubbleY(id, h)}
         {#if locked}
-          <span class="pin" style={at(x, y - h * 0.4)}><Tag icon="lock" size="sm">{L.level(BUILDINGS[id].unlock)}</Tag></span>
+          <span class="pin" style={at(x, y - h * 0.4)}
+            ><Tag icon="lock" size="sm">{L.level(BUILDINGS[id].unlock)}</Tag></span
+          >
         {:else}
           <span class="pin" style={at(x, y + 13)}><Plate name={L.b[id].name} level={lv} dim={!lv} /></span>
         {/if}
         {#if job}
-          <span class="pin" style={at(x, by)}><Bubble icon="hammer" time={clock(job.finishAt - now)} value={progress(job, now)} /></span>
+          <span class="pin" style={at(x, by)}
+            ><Bubble icon="hammer" time={clock(job.finishAt - now)} value={progress(job, now)} /></span
+          >
         {:else if wj}
           <span class="pin" style={at(x, by)}>
-            <Bubble icon={game.heal && id === 'danPhong' ? 'heal' : WORK_ICON[id as keyof typeof WORK_ICON]} time={clock(wj.finishAt - now)} value={progress(wj, now)} />
+            <Bubble
+              icon={game.heal && id === 'danPhong' ? 'heal' : WORK_ICON[id as keyof typeof WORK_ICON]}
+              time={clock(wj.finishAt - now)}
+              value={progress(wj, now)}
+            />
           </span>
         {:else if hint}
           <span class="pin" style={at(x + w * 0.3, y - h * 0.72)}><Hint icon={hint} size={26} tone="paper" /></span>
@@ -134,7 +158,9 @@
         {/if}
         {#if full}
           <!-- có bong bóng đồng hồ thì nhãn "Đầy" nằm ngay trên bong bóng, không đè nhau -->
-          <span class="pin" style={job || wj ? at(x, by - 26) : at(x, y - Math.min(h, 58) - 6)}><Tag tone="bad" size="sm">{L.full}</Tag></span>
+          <span class="pin" style={job || wj ? at(x, by - 26) : at(x, y - Math.min(h, 58) - 6)}
+            ><Tag tone="bad" size="sm">{L.full}</Tag></span
+          >
         {/if}
         {#if guide === id}
           <span class="pin up" style={at(x, job || wj ? by - 26 : y - h - 18)}><Pointer /></span>

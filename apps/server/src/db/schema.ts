@@ -1,7 +1,21 @@
 // Schema PostgreSQL (Drizzle). Sinh migration: npm run db:generate -w @rok/server (drizzle-kit so schema này với migration cũ).
 // Migration chỉ được THÊM: node bản cũ phải chạy được trên schema mới lúc deploy cuốn chiếu.
 import { sql } from 'drizzle-orm'
-import { boolean, customType, doublePrecision, index, inet, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, unique } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  customType,
+  doublePrecision,
+  index,
+  inet,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  smallint,
+  text,
+  timestamp,
+  unique,
+} from 'drizzle-orm/pg-core'
 import type { State } from '@rok/rules'
 import type { Seen } from '@rok/protocol'
 
@@ -24,7 +38,9 @@ export const sessions = pgTable(
   'sessions',
   {
     hash: bytea().primaryKey(), // sha256(token); token chỉ nằm ở client
-    accountId: integer().notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+    accountId: integer()
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
     createdAt: ts('created_at').notNull().defaultNow(),
     seenAt: ts('seen_at').notNull().defaultNow(),
     ip: inet(),
@@ -38,7 +54,9 @@ export const worlds = pgTable('worlds', {
   name: text().notNull().default(''),
   seed: integer().notNull(), // bản đồ giới sinh từ seed
   season: integer().notNull().default(1),
-  status: text({ enum: ['open', 'closed', 'ended'] }).notNull().default('open'), // closed: vẫn chạy, không nhận người mới
+  status: text({ enum: ['open', 'closed', 'ended'] })
+    .notNull()
+    .default('open'), // closed: vẫn chạy, không nhận người mới
   opensAt: ts('opens_at').notNull().defaultNow(),
   endsAt: ts('ends_at'),
   config: jsonb().notNull().default({}),
@@ -55,8 +73,12 @@ export const players = pgTable(
   'players',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    accountId: integer().unique().references(() => accounts.id, { onDelete: 'cascade' }), // null: tông môn NPC
-    worldId: integer().notNull().references(() => worlds.id),
+    accountId: integer()
+      .unique()
+      .references(() => accounts.id, { onDelete: 'cascade' }), // null: tông môn NPC
+    worldId: integer()
+      .notNull()
+      .references(() => worlds.id),
     name: text().notNull(),
     nameKey: text().notNull(), // tên chuẩn hoá để chặn trùng
     crest: integer().notNull().default(0),
@@ -79,7 +101,9 @@ export const players = pgTable(
 export const reports = pgTable(
   'reports',
   {
-    playerId: integer().notNull().references(() => players.id, { onDelete: 'cascade' }),
+    playerId: integer()
+      .notNull()
+      .references(() => players.id, { onDelete: 'cascade' }),
     id: integer().notNull(), // Report.id (nextId của state)
     at: ts('at').notNull(),
     kind: text().notNull(),
@@ -93,7 +117,9 @@ export const reports = pgTable(
 export const chat = pgTable(
   'chat',
   {
-    worldId: integer().notNull().references(() => worlds.id),
+    worldId: integer()
+      .notNull()
+      .references(() => worlds.id),
     id: integer().notNull(),
     ch: text().notNull(),
     playerId: integer().notNull(),
@@ -119,13 +145,19 @@ export const inbox = pgTable(
   'inbox',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(), // lệnh bền cho chủ giới: thư admin, mute, ban, xoá tài khoản…
-    worldId: integer().notNull().references(() => worlds.id),
+    worldId: integer()
+      .notNull()
+      .references(() => worlds.id),
     kind: text().notNull(),
     body: jsonb().notNull(),
     createdAt: ts('created_at').notNull().defaultNow(),
     doneAt: ts('done_at'),
   },
-  t => [index('inbox_open').on(t.worldId).where(sql`done_at is null`)],
+  t => [
+    index('inbox_open')
+      .on(t.worldId)
+      .where(sql`done_at is null`),
+  ],
 )
 
 export const events = pgTable(
@@ -143,7 +175,9 @@ export const events = pgTable(
 // Mã chuyển máy (một lần, hết hạn sau 15 phút): sha256 của mã → tài khoản
 export const codes = pgTable('codes', {
   hash: bytea().primaryKey(),
-  accountId: integer().notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  accountId: integer()
+    .notNull()
+    .references(() => accounts.id, { onDelete: 'cascade' }),
   expiresAt: ts('expires_at').notNull(),
 })
 
@@ -152,7 +186,9 @@ export const pushSubs = pgTable(
   'push_subs',
   {
     endpoint: text().primaryKey(),
-    accountId: integer().notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+    accountId: integer()
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
     p256dh: text().notNull(),
     auth: text().notNull(),
     createdAt: ts('created_at').notNull().defaultNow(),

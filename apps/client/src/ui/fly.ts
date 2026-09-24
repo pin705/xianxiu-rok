@@ -19,13 +19,24 @@ export function fly(from: Element | null | undefined, bag: Bag, into?: Element) 
     const src = paintedUrl(`icon:${name}`, () => itemIcon(name), 26)
     for (let i = 0; i < count; i++) {
       const r = () => Math.random() - 0.5
-      const x0 = a.left + a.width / 2 - 13 + r() * 36, y0 = a.top + a.height / 2 - 13 + r() * 14
-      const x1 = b.left + Math.min(b.width / 2, 22) - 13, y1 = b.top + b.height / 2 - 13
-      const mx = (x0 + x1) / 2 + r() * 90, my = Math.min(y0, y1) - 50 - Math.random() * 50
+      const x0 = a.left + a.width / 2 - 13 + r() * 36,
+        y0 = a.top + a.height / 2 - 13 + r() * 14
+      const x1 = b.left + Math.min(b.width / 2, 22) - 13,
+        y1 = b.top + b.height / 2 - 13
+      const mx = (x0 + x1) / 2 + r() * 90,
+        my = Math.min(y0, y1) - 50 - Math.random() * 50
       const img = document.createElement('img')
       img.src = src
       img.alt = ''
-      Object.assign(img.style, { position: 'fixed', left: '0', top: '0', width: '26px', height: '26px', zIndex: '99', pointerEvents: 'none' })
+      Object.assign(img.style, {
+        position: 'fixed',
+        left: '0',
+        top: '0',
+        width: '26px',
+        height: '26px',
+        zIndex: '99',
+        pointerEvents: 'none',
+      })
       layer.append(img)
       img
         .animate(
@@ -39,7 +50,10 @@ export function fly(from: Element | null | undefined, bag: Bag, into?: Element) 
         )
         .finished.then(() => {
           img.remove()
-          target.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.16)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'ease-out' })
+          target.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.16)' }, { transform: 'scale(1)' }], {
+            duration: 240,
+            easing: 'ease-out',
+          })
         })
     }
     wave++

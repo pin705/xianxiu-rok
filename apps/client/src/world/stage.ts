@@ -17,7 +17,8 @@ const layout = () => (box ??= typeof document === 'undefined' ? { rail: 0, col: 
 export const railPx = () => layout().rail
 export const cssPerDU = () => Math.min(innerWidth - railPx(), railPx() ? WIDE : layout().col) / 400
 // ngăn kéo desktop đang mở (ui/Sheet ghi --dockw lên <html>): cảnh dịch sang trái cho khỏi bị che
-const dockPx = () => (typeof document === 'undefined' ? 0 : parseFloat(document.documentElement.style.getPropertyValue('--dockw')) || 0)
+const dockPx = () =>
+  typeof document === 'undefined' ? 0 : parseFloat(document.documentElement.style.getPropertyValue('--dockw')) || 0
 // mép trái của cảnh (px CSS): giữa vùng còn lại giữa cột trái và ngăn kéo
 export const sceneX = (k: number) => railPx() + (innerWidth - railPx() - dockPx() - 400 * k) / 2
 // Độ phân giải texture: đủ nét cho màn hình hiện tại, làm tròn để cache không vỡ khi đổi cỡ nhỏ
@@ -76,7 +77,11 @@ export function texOf(key: string, make: () => HTMLCanvasElement | OffscreenCanv
 // Trên nền giấy sáng mà chỉ cộng sáng thì hình bị loá mất; lớp mực giữ dáng, chỉ lõi mới phát sáng.
 export type Hue = readonly [ink: string, pigment: string, glow: string]
 type Canvas = HTMLCanvasElement | OffscreenCanvas
-const LAYERS = [[1, 'normal', 0.9], [0.62, 'normal', 1], [0.3, 'add', 1]] as const
+const LAYERS = [
+  [1, 'normal', 0.9],
+  [0.62, 'normal', 1],
+  [0.3, 'add', 1],
+] as const
 // Khung tan: mỗi khung vẽ lại khô hơn, đuôi nét tước sợi rồi hết (đầu nét vẫn đậm) — thay cho mờ dần đều
 export const DRY = [0.12, 0.3, 0.55, 0.78, 0.95]
 // vượt quá rồi thu về: khung "BÙNG" khi hiệu ứng vừa bung ra
@@ -84,7 +89,13 @@ export const back = (k: number) => 1 + 2.7 * (k - 1) ** 3 + 1.7 * (k - 1) ** 2
 export const last = DRY.length - 1
 export type Ink = { c: Container; frame: (f: number) => void }
 // make(f, k): khung f (0..frames-1), hệ số bề ngang k. size: bề ngang hiện ra (DU)
-export function ink(key: string, make: (f: number, k: number) => Canvas, hue: Hue, size: number, frames = DRY.length): Ink {
+export function ink(
+  key: string,
+  make: (f: number, k: number) => Canvas,
+  hue: Hue,
+  size: number,
+  frames = DRY.length,
+): Ink {
   const c = new Container()
   const tex = (li: number, f: number) => texOf(`${key}:${li}:${f}`, () => make(f, LAYERS[li][0]))
   const layers = LAYERS.map(([, blend, alpha], li) => {
@@ -96,7 +107,8 @@ export function ink(key: string, make: (f: number, k: number) => Canvas, hue: Hu
     return c.addChild(s)
   })
   c.scale.set(size / layers[0].texture.width)
-  const frame = (f: number) => layers.forEach((s, li) => (s.texture = tex(li, Math.max(0, Math.min(frames - 1, Math.floor(f))))))
+  const frame = (f: number) =>
+    layers.forEach((s, li) => (s.texture = tex(li, Math.max(0, Math.min(frames - 1, Math.floor(f))))))
   return { c, frame }
 }
 // Nướng sẵn mọi khung của các nét VFX lúc rảnh, mỗi lần một hình (~5 ms), để lần hiện đầu không khựng

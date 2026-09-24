@@ -11,7 +11,12 @@ const unset = <T extends z.ZodType>(t: T) => z.preprocess(v => (v === '' ? undef
 const list = z
   .string()
   .optional()
-  .transform(v => (v ?? '').split(',').map(s => s.trim()).filter(Boolean))
+  .transform(v =>
+    (v ?? '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean),
+  )
 
 const Env = z
   .object({
@@ -20,7 +25,10 @@ const Env = z
     HOST: z.string().default('0.0.0.0'),
     DATABASE_URL: z.string().default('postgres://rok:rok@127.0.0.1:5439/rok'), // npm run db
     // Định danh công khai của node: đường Socket.IO mà Caddy trỏ thẳng về node này (/n1/socket.io). Hai node không được trùng.
-    NODE_PATH: z.string().regex(/^\/[\w/-]*socket\.io$/).default('/socket.io'),
+    NODE_PATH: z
+      .string()
+      .regex(/^\/[\w/-]*socket\.io$/)
+      .default('/socket.io'),
     ORIGINS: list, // origin khác được gọi API/socket (itch.io…)
     TRUST_PROXY: bool(false),
     ALLOW_WARP: bool(false), // công cụ dev/e2e: tua giờ, đặt state
@@ -35,7 +43,10 @@ const Env = z
     // Web Push: khoá VAPID (npx web-push generate-vapid-keys) + liên hệ (mailto:…); không đặt thì không có thông báo đẩy
     VAPID_PUBLIC_KEY: unset(z.string().min(40)),
     VAPID_PRIVATE_KEY: unset(z.string().min(20)),
-    VAPID_SUBJECT: z.string().regex(/^(mailto:|https:)/).default('mailto:admin@localhost'),
+    VAPID_SUBJECT: z
+      .string()
+      .regex(/^(mailto:|https:)/)
+      .default('mailto:admin@localhost'),
   })
   .refine(e => !(e.NODE_ENV === 'production' && e.ALLOW_WARP), 'ALLOW_WARP bị cấm ở production')
 

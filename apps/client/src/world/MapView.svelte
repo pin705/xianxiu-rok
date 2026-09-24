@@ -1,7 +1,19 @@
 <script lang="ts">
   // Màn bản đồ: cảnh WebGL (map.ts) + mục tiêu là huy hiệu HTML (chạm được, đọc được) + thanh trên và danh sách đội.
   import type { Snippet } from 'svelte'
-  import { BEASTS, MAP_HALL, PVP_HALL, REALMS, SECTS, TOWER, coolKey, marchSlots, targetError, type State, type Target } from '@rok/rules'
+  import {
+    BEASTS,
+    MAP_HALL,
+    PVP_HALL,
+    REALMS,
+    SECTS,
+    TOWER,
+    coolKey,
+    marchSlots,
+    targetError,
+    type State,
+    type Target,
+  } from '@rok/rules'
   import { Icon, Portrait, type Emblem } from '@rok/art'
   import { Badge, Button, Card, Medal, Tag } from '../ui'
   import { EMBLEM, L, LOOK, clock, marchName } from '../lib'
@@ -29,25 +41,63 @@
   let scene = $state.raw<MapScene>()
   type Node = { t: Target; x: number; y: number; emblem: Emblem; lv?: number; name: string }
   const nodes: Node[] = [
-    ...BEASTS.map((b, i) => ({ t: { kind: 'beast', i } as Target, x: b.x, y: b.y, emblem: EMBLEM.beast[i], lv: i + 1, name: L.beasts[i] })),
-    ...SECTS.map((d, i) => ({ t: { kind: 'sect', i } as Target, x: d.x, y: d.y, emblem: EMBLEM.sect[i], name: L.sects[i].name })),
-    ...REALMS.map((d, i) => ({ t: { kind: 'realm', i } as Target, x: d.x, y: d.y, emblem: EMBLEM.realm[i], name: L.realms[i].name })),
+    ...BEASTS.map((b, i) => ({
+      t: { kind: 'beast', i } as Target,
+      x: b.x,
+      y: b.y,
+      emblem: EMBLEM.beast[i],
+      lv: i + 1,
+      name: L.beasts[i],
+    })),
+    ...SECTS.map((d, i) => ({
+      t: { kind: 'sect', i } as Target,
+      x: d.x,
+      y: d.y,
+      emblem: EMBLEM.sect[i],
+      name: L.sects[i].name,
+    })),
+    ...REALMS.map((d, i) => ({
+      t: { kind: 'realm', i } as Target,
+      x: d.x,
+      y: d.y,
+      emblem: EMBLEM.realm[i],
+      name: L.realms[i].name,
+    })),
     { t: { kind: 'tower', i: 0 }, x: TOWER.x, y: TOWER.y, emblem: EMBLEM.tower[0], name: L.tower.name },
   ]
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
   const status = (n: Node) => {
     const e = targetError(game, n.t, now)
-    return e === 'locked' ? 'locked' : e === 'cooldown' ? 'cool' : e === 'max_level' ? 'done' : e === 'busy' ? 'busy' : 'open'
+    return e === 'locked'
+      ? 'locked'
+      : e === 'cooldown'
+        ? 'cool'
+        : e === 'max_level'
+          ? 'done'
+          : e === 'busy'
+            ? 'busy'
+            : 'open'
   }
   // Mục tiêu nên đánh tiếp: yêu thú cấp cao nhất đang mở
   const next = $derived(game.beast < BEASTS.length ? game.beast : -1)
-  $effect(() => scene?.set(game, game.levels.chuDien >= MAP_HALL ? nodes.filter(n => status(n) !== 'locked').map(n => n.t) : [], now))
+  $effect(() =>
+    scene?.set(
+      game,
+      game.levels.chuDien >= MAP_HALL ? nodes.filter(n => status(n) !== 'locked').map(n => n.t) : [],
+      now,
+    ),
+  )
 </script>
 
 <View make={() => new MapScene()} height={MAP_H} start={1} zoomable bind:scene={scene as never}>
   {#snippet hits(k)}
     {#each nodes as n (n.name + n.t.kind)}
-      <button class="hit" style="left:{(n.x - 24) * k}px;top:{(n.y + MAP.top - 24) * k}px;width:{48 * k}px;height:{56 * k}px" aria-label="{n.name}{n.lv ? `, ${L.lv(n.lv)}` : ''}" onclick={() => onpick(n.t)}></button>
+      <button
+        class="hit"
+        style="left:{(n.x - 24) * k}px;top:{(n.y + MAP.top - 24) * k}px;width:{48 * k}px;height:{56 * k}px"
+        aria-label="{n.name}{n.lv ? `, ${L.lv(n.lv)}` : ''}"
+        onclick={() => onpick(n.t)}
+      ></button>
     {/each}
   {/snippet}
   {#snippet pins(k)}
@@ -64,13 +114,19 @@
           {#if n.lv}<b class="lv">{n.lv}</b>{/if}
           {#if n.t.kind === 'realm'}<b class="lv">{game.realms[n.t.i]}/5</b>{/if}
           {#if n.t.kind === 'tower' && game.tower}<b class="lv">{game.tower}</b>{/if}
-          {#if st === 'locked'}<span class="mark"><Icon name="lock" size={11} /></span>{:else if st === 'done'}<span class="mark ok"><Icon name="check" size={12} /></span>{/if}
+          {#if st === 'locked'}<span class="mark"><Icon name="lock" size={11} /></span>{:else if st === 'done'}<span
+              class="mark ok"><Icon name="check" size={12} /></span
+            >{/if}
         </span>
         <span class="label" class:wrap={edge} style:translate="{dx}px 0">{n.name}</span>
-        {#if st === 'cool'}<span class="label t-num" style:translate="{dx}px 0">{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</span>{/if}
+        {#if st === 'cool'}<span class="label t-num" style:translate="{dx}px 0"
+            >{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</span
+          >{/if}
       </span>
     {/each}
-    <span class="pin" style="left:{200 * k}px;top:{(MAP.top + 948) * k}px"><span class="label home">{game.name}</span></span>
+    <span class="pin" style="left:{200 * k}px;top:{(MAP.top + 948) * k}px"
+      ><span class="label home">{game.name}</span></span
+    >
   {/snippet}
 </View>
 
@@ -78,7 +134,9 @@
   {#if toggle}{@render toggle()}{/if}
   <span class="grow"><Tag icon="flag">{L.map.slots(game.marches.length, marchSlots(game))}</Tag></span>
   {#if game.levels.chuDien >= PVP_HALL}<Button size="sm" icon="swords" onclick={onrivals}>{L.pvp.find}</Button>{/if}
-  <span class="rep"><Button size="sm" icon="scroll" onclick={onreports}>{L.report.title}</Button><Badge n={unread} /></span>
+  <span class="rep"
+    ><Button size="sm" icon="scroll" onclick={onreports}>{L.report.title}</Button><Badge n={unread} /></span
+  >
 </div>
 
 {#if game.marches.length}
@@ -87,14 +145,40 @@
       {@const out = now < m.arriveAt}
       {@const held = !!m.stay || !!(m.mine && m.mine.end > now)}
       <li>
-        <Card tone="silk" onclick={() => (m.target.kind === 'pvp' ? onrivals() : m.target.kind === 'spot' || m.target.kind === 'trib' ? undefined : onpick(m.target))}>
+        <Card
+          tone="silk"
+          onclick={() =>
+            m.target.kind === 'pvp'
+              ? onrivals()
+              : m.target.kind === 'spot' || m.target.kind === 'trib'
+                ? undefined
+                : onpick(m.target)}
+        >
           <span class="row">
             <Portrait look={LOOK[m.elder]} size={30} />
-            <span class="grow stack" style:--gap="0"><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft">{m.target.kind === 'trib' ? L.trib.gather : m.stay ? L.world.stay : m.mine && m.mine.end > now ? L.world.gathering : out ? L.map.out : L.map.back}</small></span>
+            <span class="grow stack" style:--gap="0"
+              ><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft"
+                >{m.target.kind === 'trib'
+                  ? L.trib.gather
+                  : m.stay
+                    ? L.world.stay
+                    : m.mine && m.mine.end > now
+                      ? L.world.gathering
+                      : out
+                        ? L.map.out
+                        : L.map.back}</small
+              ></span
+            >
             {#if held && onrecall}
-              <Button size="sm" variant="ghost" onclick={e => (e.stopPropagation(), onrecall(m.id))}>{L.world.recall}</Button>
+              <Button size="sm" variant="ghost" onclick={e => (e.stopPropagation(), onrecall(m.id))}
+                >{L.world.recall}</Button
+              >
             {:else}
-              <b class="t-num t-gold">{clock((out ? m.arriveAt : m.mine && m.mine.end > now ? m.mine.end : m.returnAt || m.arriveAt) - now)}</b>
+              <b class="t-num t-gold"
+                >{clock(
+                  (out ? m.arriveAt : m.mine && m.mine.end > now ? m.mine.end : m.returnAt || m.arriveAt) - now,
+                )}</b
+              >
             {/if}
           </span>
         </Card>

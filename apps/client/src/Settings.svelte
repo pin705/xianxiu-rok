@@ -34,7 +34,9 @@
 </script>
 
 <Sheet {open} {onclose} title={L.settings.title}>
-  <Toggle checked={!muted} onchange={onmute}><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</Toggle>
+  <Toggle checked={!muted} onchange={onmute}
+    ><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</Toggle
+  >
   <Toggle
     checked={music}
     onchange={on => {

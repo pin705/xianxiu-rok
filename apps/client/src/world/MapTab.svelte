@@ -66,12 +66,40 @@
 </script>
 
 {#snippet toggle()}
-  <Tabs items={[{ id: 'world', label: L.world.toggle.world }, { id: 'region', label: L.world.toggle.region }]} value={mode} onchange={choose} />
+  <Tabs
+    items={[
+      { id: 'world', label: L.world.toggle.world },
+      { id: 'region', label: L.world.toggle.region },
+    ]}
+    value={mode}
+    onchange={choose}
+  />
 {/snippet}
 
 {#if mode === 'world' && info && world}
   <WorldView {game} {now} {info} {me} {snap} {allies} onpick={p => (pick = p)} {toggle} />
-  <TileSheet {game} {now} {info} atlas={world} {me} {snap} {pick} {busy} {ally} onclose={() => (pick = null)} onraid={pid => ((pick = null), onraid(pid))} {send} />
+  <TileSheet
+    {game}
+    {now}
+    {info}
+    atlas={world}
+    {me}
+    {snap}
+    {pick}
+    {busy}
+    {ally}
+    onclose={() => (pick = null)}
+    onraid={pid => ((pick = null), onraid(pid))}
+    {send}
+  />
 {:else}
-  <MapView {game} {now} {onpick} {onreports} {onrivals} onrecall={id => send({ type: 'recall', id })} toggle={info ? toggle : undefined} />
+  <MapView
+    {game}
+    {now}
+    {onpick}
+    {onreports}
+    {onrivals}
+    onrecall={id => send({ type: 'recall', id })}
+    toggle={info ? toggle : undefined}
+  />
 {/if}

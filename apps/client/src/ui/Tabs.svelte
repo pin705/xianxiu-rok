@@ -2,12 +2,18 @@
   // Thẻ chuyển trong bảng: rãnh mực nhạt vẽ tay, thẻ đang mở là mảng son loang viền mực.
   import { sfx } from '../lib'
 
-  let { items, value, onchange }: { items: readonly { id: T; label: string }[]; value: T; onchange: (id: T) => void } = $props()
+  let { items, value, onchange }: { items: readonly { id: T; label: string }[]; value: T; onchange: (id: T) => void } =
+    $props()
 </script>
 
 <div class="tabs" role="tablist">
   {#each items as it (it.id)}
-    <button role="tab" aria-selected={it.id === value} class:on={it.id === value} onclick={() => it.id !== value && (sfx('tap'), onchange(it.id))}>{it.label}</button>
+    <button
+      role="tab"
+      aria-selected={it.id === value}
+      class:on={it.id === value}
+      onclick={() => it.id !== value && (sfx('tap'), onchange(it.id))}>{it.label}</button
+    >
   {/each}
 </div>
 

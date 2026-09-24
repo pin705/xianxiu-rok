@@ -21,7 +21,10 @@ const { values: o } = parseArgs({
     child: { type: 'boolean', default: false },
   },
 })
-const N = Number(o.clients), P = Math.max(1, Number(o.procs)), RAMP = Number(o.ramp) * 1000, DURATION = Number(o.duration) * 1000
+const N = Number(o.clients),
+  P = Math.max(1, Number(o.procs)),
+  RAMP = Number(o.ramp) * 1000,
+  DURATION = Number(o.duration) * 1000
 const [T1, T2] = o.think!.split('-').map(x => Number(x) * 1000)
 type Stat = { rtt: number[]; acks: number; nacks: number; errors: number; connected: number; failed: number }
 
@@ -32,7 +35,9 @@ if (!o.child) {
   const t0 = Date.now()
   const kids = Array.from({ length: P }, (_, i) => {
     const n = Math.floor(N / P) + (i < N % P ? 1 : 0)
-    const k = fork(import.meta.filename, [...process.argv.slice(2), '--child', '--clients', String(n)], { stdio: 'inherit' })
+    const k = fork(import.meta.filename, [...process.argv.slice(2), '--child', '--clients', String(n)], {
+      stdio: 'inherit',
+    })
     k.on('message', (m: Stat & { i?: number }) => {
       totals.rtt.push(...m.rtt)
       totals.acks += m.acks
@@ -62,7 +67,9 @@ if (!o.child) {
   const sent = totals.acks + totals.errors
   const errRate = sent ? totals.errors / sent : 1
   const p99 = pct(all, 99)
-  console.log(`\nKẾT QUẢ: ${all.length} thao tác · p50 ${pct(all, 50)} ms · p95 ${pct(all, 95)} ms · p99 ${p99} ms · lỗi ${(errRate * 100).toFixed(2)} % · nối hỏng ${totals.failed}`)
+  console.log(
+    `\nKẾT QUẢ: ${all.length} thao tác · p50 ${pct(all, 50)} ms · p95 ${pct(all, 95)} ms · p99 ${p99} ms · lỗi ${(errRate * 100).toFixed(2)} % · nối hỏng ${totals.failed}`,
+  )
   if (p99 > Number(o.p99) || errRate > 0.001 || totals.failed > N * 0.001) {
     console.error(`KHÔNG ĐẠT (ngưỡng p99 ${o.p99} ms, lỗi 0,1 %)`)
     process.exit(1)
@@ -101,7 +108,11 @@ async function bot(i: number) {
   }).catch(() => null)
   if (!r?.ok) return void stat.failed++
   const { token, path } = (await r.json()) as { token: string; path: string }
-  const s: Socket<ServerToClient, ClientToServer> = io(o.url, { path, auth: { token, protocol, build: 'load', lang: 'vi' }, transports: ['websocket'] })
+  const s: Socket<ServerToClient, ClientToServer> = io(o.url, {
+    path,
+    auth: { token, protocol, build: 'load', lang: 'vi' },
+    transports: ['websocket'],
+  })
   let state: State | null = null
   let offset = 0
   s.on('welcome', (w: Welcome) => {

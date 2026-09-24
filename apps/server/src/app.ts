@@ -6,7 +6,12 @@ import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import underPressure from '@fastify/under-pressure'
 import Fastify from 'fastify'
-import { jsonSchemaTransform, serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod'
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod'
 import { protocolHash } from '@rok/protocol/hash'
 import type { Config } from './config.ts'
 import { createDb, migrate } from './db/index.ts'
@@ -28,7 +33,10 @@ export async function buildServer(c: Config, hooks: { push?: Pusher } = {}) {
     logger: {
       level: c.LOG_LEVEL,
       redact: ['req.headers.cookie', 'req.headers.authorization', 'res.headers["set-cookie"]'],
-      ...(dev && process.stdout.isTTY && { transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss', ignore: 'pid,hostname' } } }),
+      ...(dev &&
+        process.stdout.isTTY && {
+          transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss', ignore: 'pid,hostname' } },
+        }),
     },
     trustProxy: c.TRUST_PROXY,
     bodyLimit: 16_384,
@@ -42,15 +50,29 @@ export async function buildServer(c: Config, hooks: { push?: Pusher } = {}) {
   if (c.LIMITS) await app.register(rateLimit, { max: 60, timeWindow: '1 minute' }) // LIMITS=off (load test): không giới hạn gì
   await app.register(underPressure, { maxEventLoopDelay: 1_000, retryAfter: 10 }) // event loop nghẽn: trả 503 thay vì chết dần
   if (dev) {
-    await app.register(swagger, { openapi: { info: { title: 'Sơn Hà Tiên Tông API', version: '1' } }, transform: jsonSchemaTransform })
+    await app.register(swagger, {
+      openapi: { info: { title: 'Sơn Hà Tiên Tông API', version: '1' } },
+      transform: jsonSchemaTransform,
+    })
     await app.register(swaggerUi, { routePrefix: '/docs' })
   }
 
   const d = createDb(c.DATABASE_URL)
   await migrate(d)
   const protocol = protocolHash()
-  const push = hooks.push ?? makePusher(d.db, { pub: c.VAPID_PUBLIC_KEY, priv: c.VAPID_PRIVATE_KEY, subject: c.VAPID_SUBJECT }, app.log)
-  const host = new Host({ db: d.db, node: c.NODE_PATH, commitMs: c.COMMIT_MS, sync: c.SYNC_COMMIT, warpAllowed: c.ALLOW_WARP, market: c.MARKET, log: app.log, push })
+  const push =
+    hooks.push ??
+    makePusher(d.db, { pub: c.VAPID_PUBLIC_KEY, priv: c.VAPID_PRIVATE_KEY, subject: c.VAPID_SUBJECT }, app.log)
+  const host = new Host({
+    db: d.db,
+    node: c.NODE_PATH,
+    commitMs: c.COMMIT_MS,
+    sync: c.SYNC_COMMIT,
+    warpAllowed: c.ALLOW_WARP,
+    market: c.MARKET,
+    log: app.log,
+    push,
+  })
 
   await app.register(healthRoutes, { host })
   await app.register(
@@ -59,8 +81,21 @@ export async function buildServer(c: Config, hooks: { push?: Pusher } = {}) {
       api.addHook('onRequest', async (req, reply) => {
         if (req.method === 'POST' && req.headers['x-rok'] !== '1') return reply.code(403).send({ error: 'csrf' })
       })
-      await api.register(authRoutes, { db: d.db, worldCap: c.WORLD_CAP, secure: c.NODE_ENV === 'production', path: c.NODE_PATH, pickWorld: c.ALLOW_WARP })
-      await api.register(accountRoutes, { db: d.db, secure: c.NODE_ENV === 'production', path: c.NODE_PATH, limits: c.LIMITS, pushKey: push ? c.VAPID_PUBLIC_KEY! : null, localPush: c.NODE_ENV !== 'production' })
+      await api.register(authRoutes, {
+        db: d.db,
+        worldCap: c.WORLD_CAP,
+        secure: c.NODE_ENV === 'production',
+        path: c.NODE_PATH,
+        pickWorld: c.ALLOW_WARP,
+      })
+      await api.register(accountRoutes, {
+        db: d.db,
+        secure: c.NODE_ENV === 'production',
+        path: c.NODE_PATH,
+        limits: c.LIMITS,
+        pushKey: push ? c.VAPID_PUBLIC_KEY! : null,
+        localPush: c.NODE_ENV !== 'production',
+      })
       await api.register(gameRoutes, { db: d.db })
       if (c.ALLOW_WARP) await api.register(devRoutes, { prefix: '/dev', db: d.db, host })
       if (c.ADMIN_TOKEN) await api.register(adminRoutes, { prefix: '/admin', db: d.db, token: c.ADMIN_TOKEN })
@@ -68,9 +103,20 @@ export async function buildServer(c: Config, hooks: { push?: Pusher } = {}) {
     { prefix: '/api' },
   )
 
-  const io = attachRealtime(app.server, { db: d.db, host, path: c.NODE_PATH, origins: c.ORIGINS, protocol, limits: c.LIMITS, log: app.log })
+  const io = attachRealtime(app.server, {
+    db: d.db,
+    host,
+    path: c.NODE_PATH,
+    origins: c.ORIGINS,
+    protocol,
+    limits: c.LIMITS,
+    log: app.log,
+  })
   host.start({ rebalance: c.REBALANCE })
-  const nightly = setInterval(() => void prune(d.db).catch(err => app.log.warn({ err }, 'prune failed')), 24 * 3_600_000)
+  const nightly = setInterval(
+    () => void prune(d.db).catch(err => app.log.warn({ err }, 'prune failed')),
+    24 * 3_600_000,
+  )
   nightly.unref()
 
   // Tắt / deploy: xả giới trước (commit lần cuối, nhả lease, báo client) khi socket còn mở, rồi mới đóng DB

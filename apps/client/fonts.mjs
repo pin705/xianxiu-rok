@@ -15,7 +15,10 @@ const FAMILIES = [
   // { name: 'Noto Serif Thai', query: 'Noto+Serif+Thai:wght@400..900' }, // tiếng Thái
 ]
 const OUT = import.meta.dirname
-const UA = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36' }
+const UA = {
+  'User-Agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+}
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
 mkdirSync(`${OUT}/public/fonts`, { recursive: true })
@@ -23,7 +26,9 @@ for (const f of readdirSync(`${OUT}/public/fonts`)) if (/\.woff2$/.test(f)) rmSy
 let css = '/* Sinh bởi fonts.mjs — đừng sửa tay. */\n'
 let files = 0
 for (const fam of FAMILIES) {
-  const src = await (await fetch(`https://fonts.googleapis.com/css2?family=${fam.query}&display=block`, { headers: UA })).text()
+  const src = await (
+    await fetch(`https://fonts.googleapis.com/css2?family=${fam.query}&display=block`, { headers: UA })
+  ).text()
   for (const [, subset, block] of src.matchAll(/\/\* ([\w-]+) \*\/\s*(@font-face \{[^}]+\})/g)) {
     const style = block.match(/font-style: (\w+)/)[1]
     const file = `${slug(fam.name)}-${style === 'italic' ? 'i-' : ''}${subset}.woff2`

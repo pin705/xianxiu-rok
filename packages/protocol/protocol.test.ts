@@ -1,6 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { BEASTS, ELDER_IDS, IDS, TECH_IDS, UNITS, advance, apply, count, newGame, type Action, type State } from '@rok/rules'
+import {
+  BEASTS,
+  ELDER_IDS,
+  IDS,
+  TECH_IDS,
+  UNITS,
+  advance,
+  apply,
+  count,
+  newGame,
+  type Action,
+  type State,
+} from '@rok/rules'
 import { diff, merge, view } from './index.ts'
 
 // Lịch sử state thật: bot chơi 12 ngày (xây, tuyển, nghiên cứu, hành quân, bí cảnh) — như server sẽ thấy
@@ -18,12 +30,30 @@ function history() {
       push(advance(s, d * 86_400_000 + h * 3_600_000))
       for (let g = 0; g < 30; g++) {
         let acted = tryDo({ type: 'claim' })
-        for (const id of IDS) if (tryDo({ type: 'upgrade', building: id })) { acted = true; break }
-        if (!s.train && s.levels.dienVoTruong) for (const u of ['kiem2', 'phap2', 'the2', 'kiem1', 'phap1', 'the1'] as const) if (tryDo({ type: 'train', unit: u, n: 40 })) { acted = true; break }
+        for (const id of IDS)
+          if (tryDo({ type: 'upgrade', building: id })) {
+            acted = true
+            break
+          }
+        if (!s.train && s.levels.dienVoTruong)
+          for (const u of ['kiem2', 'phap2', 'the2', 'kiem1', 'phap1', 'the1'] as const)
+            if (tryDo({ type: 'train', unit: u, n: 40 })) {
+              acted = true
+              break
+            }
         if (count(s.wounded) && tryDo({ type: 'heal' })) acted = true
-        for (const t of TECH_IDS) if (tryDo({ type: 'study', tech: t })) { acted = true; break }
+        for (const t of TECH_IDS)
+          if (tryDo({ type: 'study', tech: t })) {
+            acted = true
+            break
+          }
         const army = Object.fromEntries(UNITS.filter(u => s.troops[u] > 0).map(u => [u, s.troops[u]]))
-        for (const e of ELDER_IDS) for (let i = BEASTS.length - 1; i >= 0; i--) if (tryDo({ type: 'march', target: { kind: 'beast', i }, elder: e, army })) { acted = true; break }
+        for (const e of ELDER_IDS)
+          for (let i = BEASTS.length - 1; i >= 0; i--)
+            if (tryDo({ type: 'march', target: { kind: 'beast', i }, elder: e, army })) {
+              acted = true
+              break
+            }
         for (let i = 0; i < 3; i++) if (tryDo({ type: 'realm', i, elder: 'thanhPhong', army })) acted = true
         if (!acted) break
       }

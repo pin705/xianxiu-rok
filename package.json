@@ -11,6 +11,8 @@
     "build": "npm run build -w @rok/client",
     "test": "node --test architecture.test.ts 'packages/*/*.test.ts' 'apps/*/*.test.ts'",
     "check": "tsc && npm run check -ws --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "sim": "node packages/rules/simulate.ts",
     "e2e": "node apps/client/e2e.ts",
     "fonts": "npm run fonts -w @rok/client",
@@ -21,6 +23,8 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
+    "prettier": "^3.9.9",
+    "prettier-plugin-svelte": "^4.1.1",
     "typescript": "^7.0.2"
   }
 }

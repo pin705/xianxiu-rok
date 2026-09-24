@@ -1,6 +1,11 @@
 <script lang="ts">
   // Thanh tiến độ: rãnh mực vẽ tay, nét bút màu khoáng chạy dài, đầu nét khô tước sợi. value 0..1
-  let { value, tone = 'spirit', size = 'md', label }: {
+  let {
+    value,
+    tone = 'spirit',
+    size = 'md',
+    label,
+  }: {
     value: number
     tone?: 'spirit' | 'gold' | 'good' | 'bad' | 'azure'
     size?: 'xs' | 'sm' | 'md' | 'lg'
@@ -9,7 +14,12 @@
   const v = $derived(Math.max(0, Math.min(1, value)))
 </script>
 
-<span class="meter {tone} {size}" role={label ? 'progressbar' : undefined} aria-label={label} aria-valuenow={label ? Math.round(v * 100) : undefined}>
+<span
+  class="meter {tone} {size}"
+  role={label ? 'progressbar' : undefined}
+  aria-label={label}
+  aria-valuenow={label ? Math.round(v * 100) : undefined}
+>
   {#if v > 0}<i style:width="max(calc(var(--h) * 1.6), {v * 100}%)"></i>{/if}
 </span>
 

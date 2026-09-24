@@ -3,7 +3,8 @@
   import type { Snippet } from 'svelte'
   import { sfx } from '../lib'
 
-  let { checked, onchange, children }: { checked: boolean; onchange: (on: boolean) => void; children: Snippet } = $props()
+  let { checked, onchange, children }: { checked: boolean; onchange: (on: boolean) => void; children: Snippet } =
+    $props()
 </script>
 
 <label class="toggle">

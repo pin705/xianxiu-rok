@@ -10,7 +10,9 @@
 </script>
 
 {#if game.study}
-  <div class="mt-3"><JobRow {game} {now} kind="study" label={L.library.doing(L.techs[game.study.tech], game.study.level)} {act} /></div>
+  <div class="mt-3">
+    <JobRow {game} {now} kind="study" label={L.library.doing(L.techs[game.study.tech], game.study.level)} {act} />
+  </div>
 {/if}
 
 {#each TECH_ROWS as need, row (row)}
@@ -32,7 +34,11 @@
                   <b>{L.techs[t]}</b>
                   <small class="t-small t-soft">
                     {L.bonus(d.key, d.v * Math.max(1, lv))}
-                    {#if lv && lv < d.max}<span class="t-good"> → {L.bonus(d.key, d.v * (lv + 1)).split(' ').at(-1)}</span>{/if}
+                    {#if lv && lv < d.max}<span class="t-good">
+                        → {L.bonus(d.key, d.v * (lv + 1))
+                          .split(' ')
+                          .at(-1)}</span
+                      >{/if}
                   </small>
                 </span>
                 <b class="t-num t-gold">{lv}/{d.max}</b>
@@ -42,7 +48,12 @@
               {:else if open && !doing}
                 <div class="row between">
                   <Bag res={techCost(t, lv + 1)} have={game.res} size="sm" />
-                  <Button size="sm" trail={clock(techTime(t, lv + 1))} disabled={!!err} onclick={() => act({ type: 'study', tech: t }) && sfx('build')}>{L.library.go}</Button>
+                  <Button
+                    size="sm"
+                    trail={clock(techTime(t, lv + 1))}
+                    disabled={!!err}
+                    onclick={() => act({ type: 'study', tech: t }) && sfx('build')}>{L.library.go}</Button
+                  >
                 </div>
               {/if}
             </div>

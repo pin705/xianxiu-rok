@@ -3,7 +3,15 @@
   import { paintedUrl, pointerArt } from '@rok/art'
 </script>
 
-<img class="pointer" src={paintedUrl('pointer', pointerArt, 32)} width="25" height="32" alt="" aria-hidden="true" draggable="false" />
+<img
+  class="pointer"
+  src={paintedUrl('pointer', pointerArt, 32)}
+  width="25"
+  height="32"
+  alt=""
+  aria-hidden="true"
+  draggable="false"
+/>
 
 <style>
   .pointer {

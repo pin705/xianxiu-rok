@@ -53,7 +53,9 @@
 >
   {#if icon}<Icon name={icon} size={iconSize} />{/if}
   {#if children}<span class="label">{@render children()}</span>{/if}
-  {#if trail}<span class="trail">{#if trailIcon}<Icon name={trailIcon} size={13} />{/if}{trail}</span>{/if}
+  {#if trail}<span class="trail"
+      >{#if trailIcon}<Icon name={trailIcon} size={13} />{/if}{trail}</span
+    >{/if}
 </button>
 
 <style>
@@ -110,7 +112,8 @@
     position: absolute;
     inset: 5px 10px 9px;
     border-radius: 12px;
-    background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.5) 48%, transparent 58%) 130% 0 / 260% 100% no-repeat;
+    background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.5) 48%, transparent 58%) 130% 0 / 260% 100%
+      no-repeat;
     animation: sheen 4.5s var(--ease) 1.2s infinite;
     pointer-events: none;
   }

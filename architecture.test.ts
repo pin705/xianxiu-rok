@@ -31,7 +31,10 @@ test('mỗi package chỉ import đúng các package được phép, không vớ
       for (const [, spec] of readFileSync(join(root, dir, f), 'utf8').matchAll(/(?:from|import)\s*\(?\s*'([^']+)'/g)) {
         const pkg = spec.match(/^@rok\/([\w-]+)/)?.[1]
         if (pkg && !allowed.includes(pkg)) bad.push(`${dir}/${f}: không được import @rok/${pkg}`)
-        if (spec.startsWith('.') && relative(join(root, dir), resolve(dirname(join(root, dir, f)), spec)).startsWith('..'))
+        if (
+          spec.startsWith('.') &&
+          relative(join(root, dir), resolve(dirname(join(root, dir, f)), spec)).startsWith('..')
+        )
           bad.push(`${dir}/${f}: import '${spec}' ra ngoài package — dùng @rok/*`)
       }
     }

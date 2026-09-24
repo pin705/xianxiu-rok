@@ -1,0 +1,8 @@
+# Sinh tự động hoặc tài liệu viết tay: không format
+dist
+package-lock.json
+apps/server/drizzle
+apps/client/src/fonts.css
+*.md
+# Nét vẽ tay (mảng toạ độ): Prettier bẻ mỗi điểm một dòng, tranh một màn hình thành ba — giữ gọn theo tay
+packages/art/*.ts

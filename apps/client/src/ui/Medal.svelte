@@ -7,13 +7,21 @@
   // lôi kiếp, hệ đệ tử…). Chấm vàng bên dưới = bậc.
   import { medal, paintedUrl, type Emblem, type MedalTone } from '@rok/art'
 
-  let { emblem, tone = 'ink', size = 40, pips = 0, dim = false }: { emblem: Emblem; tone?: MedalTone; size?: number; pips?: number; dim?: boolean } = $props()
+  let {
+    emblem,
+    tone = 'ink',
+    size = 40,
+    pips = 0,
+    dim = false,
+  }: { emblem: Emblem; tone?: MedalTone; size?: number; pips?: number; dim?: boolean } = $props()
   const src = $derived(paintedUrl(`medal:${emblem}:${tone}`, () => medal(emblem, tone), size))
 </script>
 
 <span class="medal" class:dim style:--s="{size}px" aria-hidden="true">
   <img {src} width={size} height={size} alt="" draggable="false" />
-  {#if pips}<span class="pips" class:many={pips > 3}>{#each { length: pips } as _}<i></i>{/each}</span>{/if}
+  {#if pips}<span class="pips" class:many={pips > 3}
+      >{#each { length: pips } as _}<i></i>{/each}</span
+    >{/if}
 </span>
 
 <style>

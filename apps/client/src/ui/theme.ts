@@ -4,8 +4,30 @@
 // Vẽ da tốn công (bút lông trên canvas + mã hoá PNG) nên bản chạy thật cất ảnh vào cache của bản build
 // (cùng cache với service worker: bản mới thì vẽ lại, bản cũ tự dọn) — lần mở sau chỉ đọc lại.
 import {
-  PIGMENT, badgeSkin, brushBar, buttonSkin, capsuleSkin, cardSkin, discSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, inkBlot, knobSkin,
-  paper, plateSkin, rodSkin, scrollSkin, slipSkin, stripSkin, switchSkin, tagSkin, toastSkin, trackSkin, type Skin,
+  PIGMENT,
+  badgeSkin,
+  brushBar,
+  buttonSkin,
+  capsuleSkin,
+  cardSkin,
+  discSkin,
+  dotsSkin,
+  fieldSkin,
+  fillSkin,
+  grooveSkin,
+  inkBlot,
+  knobSkin,
+  paper,
+  plateSkin,
+  rodSkin,
+  scrollSkin,
+  slipSkin,
+  stripSkin,
+  switchSkin,
+  tagSkin,
+  toastSkin,
+  trackSkin,
+  type Skin,
 } from '@rok/art'
 
 type Canvas = HTMLCanvasElement | OffscreenCanvas
@@ -13,8 +35,12 @@ const kebab = (k: string) => k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)
 // Độ nét khi vẽ da: theo màn hình (tối thiểu 2 để màn thường vẫn sắc, tối đa 3)
 const S = Math.min(3, Math.max(2, Math.ceil(globalThis.devicePixelRatio || 1)))
 
-const encode = (cv: Canvas): Promise<Blob> => ('convertToBlob' in cv ? cv.convertToBlob() : new Promise(r => cv.toBlob(b => r(b!))))
-const store = import.meta.env.PROD && 'caches' in globalThis ? caches.open(`rok-${__BUILD__}`).catch(() => null) : Promise.resolve(null)
+const encode = (cv: Canvas): Promise<Blob> =>
+  'convertToBlob' in cv ? cv.convertToBlob() : new Promise(r => cv.toBlob(b => r(b!)))
+const store =
+  import.meta.env.PROD && 'caches' in globalThis
+    ? caches.open(`rok-${__BUILD__}`).catch(() => null)
+    : Promise.resolve(null)
 
 // Một ảnh: đọc từ cache nếu đã vẽ ở bản build này, không thì vẽ + mã hoá (PNG, ngoài luồng chính) rồi cất.
 // nine: kèm thông số 9 mảnh (cất trong header để lần sau khỏi vẽ lại chỉ để biết slice).
@@ -30,7 +56,10 @@ async function image(name: string, draw: () => Skin | Canvas): Promise<{ url: st
   const skin = 'cv' in art ? art : undefined
   const blob = await encode(skin ? skin.cv : (art as Canvas))
   const meta = skin && { w: skin.w, h: skin.h, slice: skin.slice, outset: skin.outset, repeat: skin.repeat }
-  c?.put(req, new Response(blob, { headers: { 'content-type': 'image/png', ...(meta && { 'x-skin': JSON.stringify(meta) }) } })).catch(() => {})
+  c?.put(
+    req,
+    new Response(blob, { headers: { 'content-type': 'image/png', ...(meta && { 'x-skin': JSON.stringify(meta) }) } }),
+  ).catch(() => {})
   return { url: `url(${URL.createObjectURL(blob)})`, skin: meta }
 }
 const img = async (name: string, draw: () => Skin | Canvas) => (await image(name, draw)).url
@@ -104,7 +133,9 @@ export async function applyTheme() {
   }
   // Font: chờ tối đa 2.5 giây rồi vẫn vào game (mạng chậm)
   const fonts = Promise.race([
-    Promise.all(['700 16px Alegreya', '500 16px Alegreya', 'italic 500 16px Alegreya'].map(f => document.fonts.load(f, 'Sơn Hà'))),
+    Promise.all(
+      ['700 16px Alegreya', '500 16px Alegreya', 'italic 500 16px Alegreya'].map(f => document.fonts.load(f, 'Sơn Hà')),
+    ),
     new Promise(r => setTimeout(r, 2500)),
   ])
   await Promise.all([fonts, ...Object.entries(vars).map(async ([k, v]) => root.setProperty(k, await v))])

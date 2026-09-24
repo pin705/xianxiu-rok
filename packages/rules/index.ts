@@ -1,14 +1,126 @@
 import { fight, type Round, type Side, type Troop } from './combat.ts'
 import {
-  BASE_CAP, BASE_RATE, BATCH_BASE, BATCH_STEP, BEASTS, BEAST_COOLDOWN, BEAST_EXP, BEAST_LOOT, BEAST_STR, BEATS, BOI_NGUYEN_EXP,
-  BREW_MAX, BUILDINGS, CAP_GROWTH, EVENTS, EVENT_GOALS, EVENT_PTS, EVENT_REWARDS, NEWBIE_SHIELD, PVP_GATE, PVP_START, COST_GROWTH, COST_GROWTH2, CURE, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, WEEKEND, TRADE_KEEP, TRADE_KEEP_MAX, TRADE_STEP, TOWER, TOWER_ELDERS, TOWER_GROW, TOWER_RES, TOWER_RES_GROW, TOWER_STR, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, FOCUS, FOCUS_TIME,
-  GEAR, GEAR_COST_GROWTH, GEAR_MAX, GEAR_TIME_GROWTH, HEAL_COST,
-  HEAL_TIME, HOME, HOSPITAL_BASE, HOSPITAL_STEP, KNEE, LOSS_EXP, MAIN_SHARE, MAP_HALL, MARCH_MIN, MARCH_SLOTS, MARCH_SPEED,
-  MAX_CUT, MAX_LEVEL, PHA_CANH, PILLS, QUESTS, QUEUE_SIZE, RATE_HIGH, REALMS, REBIRTH_BUILD, REBIRTH_HALL, REBIRTH_HEAD, REBIRTH_HEAD_MAX, REBIRTH_MAX, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
-  SECT_SHARE, SPEEDUP, SPEEDUP_BIG, START, TALENTS, TALENT_EVERY, TALENT_MAX, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TIME_GROWTH2, TRIBS, TRIB_CLOUD, TRIB_COOLDOWN,
-  TRIB_EXP, TYPES, UNITS, UNIT_BASE,
-  type Bag, type Bonus, type BuildingId, type DailyId, type EventId, type WeeklyId, type ElderId, type GearId, type PillId, type Quest, type Res, type Reward, type Skill,
-  type TechId, type Tier, type UnitId, type UnitType,
+  BASE_CAP,
+  BASE_RATE,
+  BATCH_BASE,
+  BATCH_STEP,
+  BEASTS,
+  BEAST_COOLDOWN,
+  BEAST_EXP,
+  BEAST_LOOT,
+  BEAST_STR,
+  BEATS,
+  BOI_NGUYEN_EXP,
+  BREW_MAX,
+  BUILDINGS,
+  CAP_GROWTH,
+  EVENTS,
+  EVENT_GOALS,
+  EVENT_PTS,
+  EVENT_REWARDS,
+  NEWBIE_SHIELD,
+  PVP_GATE,
+  PVP_START,
+  COST_GROWTH,
+  COST_GROWTH2,
+  CURE,
+  DAILY,
+  DAILY_BONUS,
+  DAILY_HALL,
+  DAILY_RES,
+  DAY_OFFSET,
+  WEEKEND,
+  TRADE_KEEP,
+  TRADE_KEEP_MAX,
+  TRADE_STEP,
+  TOWER,
+  TOWER_ELDERS,
+  TOWER_GROW,
+  TOWER_RES,
+  TOWER_RES_GROW,
+  TOWER_STR,
+  WEEKLY,
+  WEEKLY_BONUS,
+  WEEKLY_RES,
+  DO_KIEP,
+  ELDERS,
+  ELDER_MAX,
+  ELDER_STEP,
+  EXP_BASE,
+  FIRST_ELDER,
+  FOCUS,
+  FOCUS_TIME,
+  GEAR,
+  GEAR_COST_GROWTH,
+  GEAR_MAX,
+  GEAR_TIME_GROWTH,
+  HEAL_COST,
+  HEAL_TIME,
+  HOME,
+  HOSPITAL_BASE,
+  HOSPITAL_STEP,
+  KNEE,
+  LOSS_EXP,
+  MAIN_SHARE,
+  MAP_HALL,
+  MARCH_MIN,
+  MARCH_SLOTS,
+  MARCH_SPEED,
+  MAX_CUT,
+  MAX_LEVEL,
+  PHA_CANH,
+  PILLS,
+  QUESTS,
+  QUEUE_SIZE,
+  RATE_HIGH,
+  REALMS,
+  REBIRTH_BUILD,
+  REBIRTH_HALL,
+  REBIRTH_HEAD,
+  REBIRTH_HEAD_MAX,
+  REBIRTH_MAX,
+  REBIRTH_PROD,
+  RESOURCES,
+  SECTS,
+  SECT_COOLDOWN,
+  SECT_SHARE,
+  SPEEDUP,
+  SPEEDUP_BIG,
+  START,
+  TALENTS,
+  TALENT_EVERY,
+  TALENT_MAX,
+  TECHS,
+  TECH_COST_GROWTH,
+  TECH_ROWS,
+  TECH_TIME_GROWTH,
+  TIER,
+  TIME_GROWTH,
+  TIME_GROWTH2,
+  TRIBS,
+  TRIB_CLOUD,
+  TRIB_COOLDOWN,
+  TRIB_EXP,
+  TYPES,
+  UNITS,
+  UNIT_BASE,
+  type Bag,
+  type Bonus,
+  type BuildingId,
+  type DailyId,
+  type EventId,
+  type WeeklyId,
+  type ElderId,
+  type GearId,
+  type PillId,
+  type Quest,
+  type Res,
+  type Reward,
+  type Skill,
+  type TechId,
+  type Tier,
+  type UnitId,
+  type UnitType,
 } from './data.ts'
 
 export * from './data.ts'
@@ -82,21 +194,21 @@ export type Foe = { pid: number; name: string; at: number } // ai đã đánh m�
 export type Mail = { id: number; at: number; k: string; a?: (string | number)[]; gift?: Reward; got?: boolean }
 
 export type State = {
-  v: 4                               // phiên bản save
-  name: string                       // tên tông môn
-  quest: number                      // chỉ số nhiệm vụ hiện tại trong QUESTS
-  time: number                       // tài nguyên đã tính tới mốc này
+  v: 4 // phiên bản save
+  name: string // tên tông môn
+  quest: number // chỉ số nhiệm vụ hiện tại trong QUESTS
+  time: number // tài nguyên đã tính tới mốc này
   res: Bag
-  carry: Bag                         // phần lẻ chưa đủ 1 đơn vị (đơn vị × ms), để kết quả không phụ thuộc số lần gọi advance
+  carry: Bag // phần lẻ chưa đủ 1 đơn vị (đơn vị × ms), để kết quả không phụ thuộc số lần gọi advance
   levels: Record<BuildingId, number>
   queue: Job[]
-  troops: Troops                     // đệ tử đang ở tông môn
-  wounded: Troops                    // thương binh nằm ở Đan phòng (kể cả đang được chữa)
+  troops: Troops // đệ tử đang ở tông môn
+  wounded: Troops // thương binh nằm ở Đan phòng (kể cả đang được chữa)
   train: TrainJob | null
   heal: HealJob | null
   study: StudyJob | null
   brew: BrewJob | null
-  forge: ForgeJob | null             // Luyện Khí Phòng: một món mỗi lúc
+  forge: ForgeJob | null // Luyện Khí Phòng: một món mỗi lúc
   tech: Partial<Record<TechId, number>>
   items: Items
   elders: Partial<Record<ElderId, number>> // trưởng lão đã thu nhận → kinh nghiệm
@@ -105,29 +217,29 @@ export type State = {
   buffs: Buff[]
   marches: March[]
   reports: Report[]
-  seen: number                       // id chiến báo mới nhất đã đọc
-  beast: number                      // cấp yêu thú cao nhất đã hạ
-  cool: Record<string, number>       // mục tiêu đã hạ → lúc có lại
-  sects: boolean[]                   // đã hạ lần đầu
-  realms: number[]                   // số tầng bí cảnh đã qua
-  tower: number                      // số tầng Thông Thiên Tháp đã qua (kỷ lục, giữ qua luân hồi)
-  trib: number                       // số lần độ kiếp đã vượt
+  seen: number // id chiến báo mới nhất đã đọc
+  beast: number // cấp yêu thú cao nhất đã hạ
+  cool: Record<string, number> // mục tiêu đã hạ → lúc có lại
+  sects: boolean[] // đã hạ lần đầu
+  realms: number[] // số tầng bí cảnh đã qua
+  tower: number // số tầng Thông Thiên Tháp đã qua (kỷ lục, giữ qua luân hồi)
+  trib: number // số lần độ kiếp đã vượt
   tribCool: number
   rebirths: number
-  seed: number                       // mầm ngẫu nhiên cho trận kế tiếp
+  seed: number // mầm ngẫu nhiên cho trận kế tiếp
   nextId: number
   stats: Stats
-  daily: Daily                       // nhiệm vụ ngày: tiến độ hôm nay, việc đã nhận thưởng
-  weekly: Weekly                     // nhiệm vụ tuần: tiến độ tuần này (làm mới 0h thứ Hai)
-  ev: Ev                             // sự kiện tuần
-  shield: number                     // khiên PvP tới lúc này
-  guard: ElderId | null              // trưởng lão giữ nhà (phải đang ở tông môn mới tính)
+  daily: Daily // nhiệm vụ ngày: tiến độ hôm nay, việc đã nhận thưởng
+  weekly: Weekly // nhiệm vụ tuần: tiến độ tuần này (làm mới 0h thứ Hai)
+  ev: Ev // sự kiện tuần
+  shield: number // khiên PvP tới lúc này
+  guard: ElderId | null // trưởng lão giữ nhà (phải đang ở tông môn mới tính)
   pvp: { pts: number; win: number; loss: number }
   foes: Foe[]
   mail: Mail[]
   seat: { x: number; y: number } | null // chỗ trên bản đồ giới (server xếp lúc vào giới lần đầu)
-  blocks: number[]                   // người chơi đã chặn (ẩn chat của họ)
-  ascended: number[]                 // các mùa đã phi thăng (danh hiệu)
+  blocks: number[] // người chơi đã chặn (ẩn chat của họ)
+  ascended: number[] // các mùa đã phi thăng (danh hiệu)
 }
 
 export type Action =
@@ -162,8 +274,27 @@ export type Action =
   | { type: 'block'; pid: number; on: boolean } // chặn / bỏ chặn một người (chat)
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'
 export type Err =
-  | 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done' | 'locked' | 'cooldown'
-  | 'empty' | 'no_item' | 'slots' | 'trib' | 'bad' | 'shield' | 'weak' | 'gone' | 'far' | 'friend' | 'taken' | 'full' | 'limit'
+  | 'max_level'
+  | 'need_main_hall'
+  | 'busy'
+  | 'queue_full'
+  | 'not_enough'
+  | 'not_done'
+  | 'locked'
+  | 'cooldown'
+  | 'empty'
+  | 'no_item'
+  | 'slots'
+  | 'trib'
+  | 'bad'
+  | 'shield'
+  | 'weak'
+  | 'gone'
+  | 'far'
+  | 'friend'
+  | 'taken'
+  | 'full'
+  | 'limit'
 export type Result = { ok: true; state: State } | { ok: false; error: Err }
 
 const HOUR = 3_600_000
@@ -207,12 +338,52 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
   levels.chuDien = 1
   const clean = name.trim().replace(/\s+/g, ' ').slice(0, 20) || DEFAULT_NAME
   return {
-    v: 4, name: clean, quest: 0, time: now, res: { ...START }, carry: bag(() => 0), levels, queue: [],
-    troops: troops(() => 0), wounded: troops(() => 0), train: null, heal: null, study: null, brew: null, forge: null,
-    tech: {}, items: {}, elders: { [FIRST_ELDER]: 0 }, talents: {}, gear: {}, buffs: [], marches: [], reports: [], seen: 0,
-    beast: 0, cool: {}, sects: SECTS.map(() => false), realms: REALMS.map(() => 0), tower: 0, trib: 0, tribCool: 0, rebirths: 0,
-    seed: now >>> 0 || 1, nextId: 1, stats: { trained: 0, healed: 0, brewed: 0, won: 0, lost: 0 }, daily: freshDaily(now), weekly: freshWeekly(now),
-    ev: freshEv(now), shield: now + NEWBIE_SHIELD, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [], seat: null, blocks: [], ascended: [],
+    v: 4,
+    name: clean,
+    quest: 0,
+    time: now,
+    res: { ...START },
+    carry: bag(() => 0),
+    levels,
+    queue: [],
+    troops: troops(() => 0),
+    wounded: troops(() => 0),
+    train: null,
+    heal: null,
+    study: null,
+    brew: null,
+    forge: null,
+    tech: {},
+    items: {},
+    elders: { [FIRST_ELDER]: 0 },
+    talents: {},
+    gear: {},
+    buffs: [],
+    marches: [],
+    reports: [],
+    seen: 0,
+    beast: 0,
+    cool: {},
+    sects: SECTS.map(() => false),
+    realms: REALMS.map(() => 0),
+    tower: 0,
+    trib: 0,
+    tribCool: 0,
+    rebirths: 0,
+    seed: now >>> 0 || 1,
+    nextId: 1,
+    stats: { trained: 0, healed: 0, brewed: 0, won: 0, lost: 0 },
+    daily: freshDaily(now),
+    weekly: freshWeekly(now),
+    ev: freshEv(now),
+    shield: now + NEWBIE_SHIELD,
+    guard: null,
+    pvp: { pts: PVP_START, win: 0, loss: 0 },
+    foes: [],
+    mail: [],
+    seat: null,
+    blocks: [],
+    ascended: [],
   }
 }
 
@@ -221,11 +392,21 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
 const DAY = 86_400_000
 export const dayOf = (t: number) => Math.floor((t + DAY_OFFSET) / DAY)
 export const nextDay = (t: number) => (dayOf(t) + 1) * DAY - DAY_OFFSET // lúc làm mới kế tiếp
-const freshDaily = (t: number): Daily => ({ day: dayOf(t), n: { build: 0, train: 0, win: 0, brew: 0 }, got: DAILY.map(() => false), bonus: false })
+const freshDaily = (t: number): Daily => ({
+  day: dayOf(t),
+  n: { build: 0, train: 0, win: 0, brew: 0 },
+  got: DAILY.map(() => false),
+  bonus: false,
+})
 // Tuần bắt đầu 0h thứ Hai giờ VN (ngày 4 kể từ 1/1/1970 — thứ Năm — là thứ Hai 5/1/1970)
 export const weekOf = (t: number) => Math.floor((dayOf(t) - 4) / 7)
 export const nextWeek = (t: number) => ((weekOf(t) + 1) * 7 + 4) * DAY - DAY_OFFSET
-const freshWeekly = (t: number): Weekly => ({ week: weekOf(t), n: { build: 0, train: 0, win: 0, brew: 0, days: 0 }, got: WEEKLY.map(() => false), bonus: false })
+const freshWeekly = (t: number): Weekly => ({
+  week: weekOf(t),
+  n: { build: 0, train: 0, win: 0, brew: 0, days: 0 },
+  got: WEEKLY.map(() => false),
+  bonus: false,
+})
 const freshEv = (t: number): Ev => ({ week: weekOf(t), pts: 0, got: EVENT_GOALS.map(() => false) })
 export const eventOf = (week: number): EventId => EVENTS[((week % EVENTS.length) + EVENTS.length) % EVENTS.length]
 const rollDay = (s: State, t: number): State => {
@@ -235,13 +416,19 @@ const rollDay = (s: State, t: number): State => {
 }
 // Điểm sự kiện tuần khi làm đúng việc của chủ đề tuần này (tuyển: mỗi 5 đệ tử một lần)
 export const evBump = (s: State, id: EventId, k = 1): State =>
-  eventOf(s.ev.week) !== id ? s : { ...s, ev: { ...s.ev, pts: s.ev.pts + EVENT_PTS[id] * (id === 'train' ? Math.floor(k / 5) : k) } }
+  eventOf(s.ev.week) !== id
+    ? s
+    : { ...s, ev: { ...s.ev, pts: s.ev.pts + EVENT_PTS[id] * (id === 'train' ? Math.floor(k / 5) : k) } }
 export const bump = (s: State, id: DailyId, k = 1): State =>
-  evBump({
-    ...s,
-    daily: { ...s.daily, n: { ...s.daily.n, [id]: s.daily.n[id] + k } },
-    weekly: { ...s.weekly, n: { ...s.weekly.n, [id]: s.weekly.n[id] + k } },
-  }, id, k)
+  evBump(
+    {
+      ...s,
+      daily: { ...s.daily, n: { ...s.daily.n, [id]: s.daily.n[id] + k } },
+      weekly: { ...s.weekly, n: { ...s.weekly.n, [id]: s.weekly.n[id] + k } },
+    },
+    id,
+    k,
+  )
 export const dailyDone = (s: State, i: number) => s.daily.n[DAILY[i].id] >= DAILY[i].n
 export const dailyReward = (s: State) => DAILY_RES * s.levels.chuDien
 // Số việc làm xong mà chưa nhận thưởng (kể cả rương) — để hiện huy hiệu
@@ -294,7 +481,8 @@ export const talentPoints = (s: State, elder: ElderId) => Math.floor(elderLevel(
 export const talentUsed = (s: State, elder: ElderId) => (s.talents[elder] ?? [0, 0, 0]).reduce((a, b) => a + b, 0)
 export const gearOf = (s: State, elder: ElderId) => GEAR_IDS.find(g => s.gear[g]?.on === elder)
 
-export const cost = (b: BuildingId, level: number) => bag(r => climb(BUILDINGS[b].cost[r], COST_GROWTH, COST_GROWTH2, level - 1))
+export const cost = (b: BuildingId, level: number) =>
+  bag(r => climb(BUILDINGS[b].cost[r], COST_GROWTH, COST_GROWTH2, level - 1))
 export const buildTime = (s: State, b: BuildingId, level: number) =>
   Math.round(climb(BUILDINGS[b].time, TIME_GROWTH, TIME_GROWTH2, level - 1) * cut(s, 'build')) * 1000
 export const capAt = (vaultLevel: number) => grow(BASE_CAP, CAP_GROWTH, vaultLevel)
@@ -309,7 +497,10 @@ export function storeNeed(s: State, c: Bag) {
   return l
 }
 export const baseRate = (s: State, r: Res) =>
-  IDS.reduce((sum, id) => (BUILDINGS[id].makes === r ? sum + (BUILDINGS[id].rate ?? 0) * rateLevels(s.levels[id]) : sum), BASE_RATE)
+  IDS.reduce(
+    (sum, id) => (BUILDINGS[id].makes === r ? sum + (BUILDINGS[id].rate ?? 0) * rateLevels(s.levels[id]) : sum),
+    BASE_RATE,
+  )
 export const rate = (s: State, r: Res) => Math.round(baseRate(s, r) * (1 + bonus(s, 'prod') + bonus(s, `prod.${r}`)))
 
 export const unitOf = (u: UnitId) => ({ type: u.slice(0, -1) as UnitType, tier: Number(u.slice(-1)) as Tier })
@@ -321,7 +512,8 @@ const unitSeconds = (u: UnitId) => UNIT_BASE[unitOf(u).type].time * TIER[unitOf(
 export const trainTime = (s: State, u: UnitId, n: number) => Math.round(unitSeconds(u) * n * cut(s, 'train')) * 1000
 export const batch = (s: State) => BATCH_BASE + BATCH_STEP * s.levels.dienVoTruong
 export const tierOpen = (s: State, tier: Tier) => s.levels.dienVoTruong >= TIER[tier].unlock
-export const hospital = (s: State) => Math.round((HOSPITAL_BASE + HOSPITAL_STEP * s.levels.danPhong) * (1 + bonus(s, 'hospital')))
+export const hospital = (s: State) =>
+  Math.round((HOSPITAL_BASE + HOSPITAL_STEP * s.levels.danPhong) * (1 + bonus(s, 'hospital')))
 export const healCost = (s: State, a: Army) =>
   bag(r => Math.round(UNITS.reduce((sum, u) => sum + (a[u] ?? 0) * trainCost(u, 1)[r], 0) * HEAL_COST * cut(s, 'heal')))
 export const healTime = (s: State, a: Army) =>
@@ -333,15 +525,21 @@ export const techSum = (s: State) => TECH_IDS.reduce((sum, t) => sum + (s.tech[t
 export const brewCost = (s: State, p: PillId, n: number) => bag(r => Math.round(PILLS[p].cost[r] * n * cut(s, 'brew')))
 export const brewTime = (s: State, p: PillId, n: number) => Math.round(PILLS[p].time * n * cut(s, 'brew')) * 1000
 // đan làm nguyên liệu cho n viên
-export const brewNeed = (p: PillId, n: number) => Object.fromEntries(Object.entries(PILLS[p].need ?? {}).map(([k, v]) => [k, v! * n])) as Items
+export const brewNeed = (p: PillId, n: number) =>
+  Object.fromEntries(Object.entries(PILLS[p].need ?? {}).map(([k, v]) => [k, v! * n])) as Items
 
 // Luyện Khí Phòng
 export const gearCap = (s: State) => Math.min(GEAR_MAX, Math.ceil(s.levels.luyenKhiPhong / 2))
 export const gearCost = (g: GearId, level: number) => bag(r => grow(GEAR[g].cost[r], GEAR_COST_GROWTH, level - 1))
-export const gearTime = (s: State, g: GearId, level: number) => Math.round(grow(GEAR[g].time, GEAR_TIME_GROWTH, level - 1) * cut(s, 'forge')) * 1000
+export const gearTime = (s: State, g: GearId, level: number) =>
+  Math.round(grow(GEAR[g].time, GEAR_TIME_GROWTH, level - 1) * cut(s, 'forge')) * 1000
 export const gearSum = (s: State) => GEAR_IDS.reduce((sum, g) => sum + (s.gear[g]?.lv ?? 0), 0)
 
-export const away = (s: State) => s.marches.reduce((a, m) => plus(a, m.army), troops(() => 0))
+export const away = (s: State) =>
+  s.marches.reduce(
+    (a, m) => plus(a, m.army),
+    troops(() => 0),
+  )
 export const totalTroops = (s: State) => count(s.troops) + count(s.wounded) + count(away(s))
 export function power(s: State) {
   const out = away(s)
@@ -363,7 +561,15 @@ export const beastStr = (level: number) => grow(BEAST_STR[0], BEAST_STR[1], leve
 export const beastLoot = (level: number) => grow(BEAST_LOOT[0], BEAST_LOOT[1], level - 1)
 export const beastExp = (level: number) => grow(BEAST_EXP[0], BEAST_EXP[1], level - 1)
 export const place = (t: Target) =>
-  t.kind === 'beast' ? BEASTS[t.i] : t.kind === 'sect' ? SECTS[t.i] : t.kind === 'tower' ? TOWER : t.kind === 'pvp' || t.kind === 'spot' ? PVP_GATE : REALMS[t.i]
+  t.kind === 'beast'
+    ? BEASTS[t.i]
+    : t.kind === 'sect'
+      ? SECTS[t.i]
+      : t.kind === 'tower'
+        ? TOWER
+        : t.kind === 'pvp' || t.kind === 'spot'
+          ? PVP_GATE
+          : REALMS[t.i]
 export const marchTime = (s: State, t: Target) => {
   const p = place(t)
   return Math.round(Math.max(MARCH_MIN, Math.hypot(p.x - HOME.x, p.y - HOME.y) * MARCH_SPEED) * cut(s, 'march')) * 1000
@@ -393,12 +599,19 @@ export function mob(str: number, tier: Tier, parts: [UnitType, number][], level 
   return {
     skill,
     troops: parts.map(([type, share]) => ({
-      type, tier, n: Math.max(1, Math.round((str * share) / k)),
-      atk: UNIT_BASE[type].atk * m * weaken, def: UNIT_BASE[type].def * k, hp: UNIT_BASE[type].hp * m,
+      type,
+      tier,
+      n: Math.max(1, Math.round((str * share) / k)),
+      atk: UNIT_BASE[type].atk * m * weaken,
+      def: UNIT_BASE[type].def * k,
+      hp: UNIT_BASE[type].hp * m,
     })),
   }
 }
-const pair = (type: UnitType, share: number): [UnitType, number][] => [[type, share], [BEATS[type], 1 - share]]
+const pair = (type: UnitType, share: number): [UnitType, number][] => [
+  [type, share],
+  [BEATS[type], 1 - share],
+]
 
 // Thông Thiên Tháp, tầng f (0 = tầng 1): sức địch, hệ chính (đổi theo vòng), thưởng lần đầu
 export const towerStr = (f: number) => grow(TOWER_STR, TOWER_GROW, f)
@@ -434,15 +647,19 @@ export function enemyOf(s: State, t: Target): Side {
 export function sideOf(s: State, elder: ElderId | null, army: Army): Side {
   const m = elder ? 1 + ELDER_STEP * (elderLevel(s.elders[elder]) - 1) : 1
   const b = (k: Bonus) => (elder ? lead(s, elder, k) : bonus(s, k))
-  const sk = elder ? ELDERS[elder].skill : undefined, power = elder ? b('skill') : 0
+  const sk = elder ? ELDERS[elder].skill : undefined,
+    power = elder ? b('skill') : 0
   return {
     el: elder ? ELDERS[elder].el : undefined,
     skill: sk && power ? { ...sk, v: sk.v * (1 + power) } : sk,
     troops: UNITS.filter(u => (army[u] ?? 0) > 0).map(u => {
       const { type, tier } = unitOf(u)
-      const base = UNIT_BASE[type], k = TIER[tier].stat
+      const base = UNIT_BASE[type],
+        k = TIER[tier].stat
       return {
-        type, tier, n: army[u]!,
+        type,
+        tier,
+        n: army[u]!,
         atk: base.atk * k * m * (1 + b('atk') + b(`atk.${type}`)),
         def: base.def * k * (1 + b('def')),
         hp: base.hp * k * m * (1 + b('hp') + b(`hp.${type}`)),
@@ -464,7 +681,9 @@ export function armyError(s: State, elder: ElderId, army: Army): Err | null {
 }
 
 export const snap = (side: Side, elder?: ElderId, level = 1): Snap => ({
-  elder, level, troops: side.troops.map(t => ({ type: t.type, tier: t.tier, n: t.n })),
+  elder,
+  level,
+  troops: side.troops.map(t => ({ type: t.type, tier: t.tier, n: t.n })),
 })
 
 // Thương binh về Đan phòng; hết chỗ thì phần dư tử trận. Nhận bậc cao trước.
@@ -502,11 +721,15 @@ export function grant(s: State, r: Reward): State {
 
 const fromReward = (r: Reward, lootMul: number, exp: number): Gain => ({
   res: Object.fromEntries(RESOURCES.map(x => [x, Math.round((r.res?.[x] ?? 0) * lootMul)])),
-  items: { ...r.items }, elder: r.elder, exp: Math.round(exp),
+  items: { ...r.items },
+  elder: r.elder,
+  exp: Math.round(exp),
 })
 
 export const pushReport = (s: State, r: Omit<Report, 'id'>): State => ({
-  ...s, nextId: s.nextId + 1, reports: [...s.reports, { ...r, id: s.nextId }].slice(-30),
+  ...s,
+  nextId: s.nextId + 1,
+  reports: [...s.reports, { ...r, id: s.nextId }].slice(-30),
   stats: { ...s.stats, won: s.stats.won + (r.win ? 1 : 0), lost: s.stats.lost + (r.win ? 0 : 1) },
 })
 
@@ -540,7 +763,11 @@ function battle(s: State, t: Target, elder: ElderId, army: Army, seed: number, a
     g.exp = Math.round(d.exp * expMul)
     if (f.win) {
       g = st.sects[t.i] ? fromReward({ res: bag(() => d.loot) }, loot, g.exp) : fromReward(d.first, 1, g.exp)
-      st = { ...st, sects: st.sects.map((x, k) => x || k === t.i), cool: { ...st.cool, [coolKey(t)]: at + SECT_COOLDOWN } }
+      st = {
+        ...st,
+        sects: st.sects.map((x, k) => x || k === t.i),
+        cool: { ...st.cool, [coolKey(t)]: at + SECT_COOLDOWN },
+      }
     }
   } else if (t.kind === 'tower') {
     floor = st.tower
@@ -562,7 +789,14 @@ function battle(s: State, t: Target, elder: ElderId, army: Army, seed: number, a
   }
   if (f.win) st = bump(st, 'win')
   st = pushReport(st, {
-    at, kind: t.kind, i: t.i, f: floor, win: f.win, hurt, dead: {}, gain: g,
+    at,
+    kind: t.kind,
+    i: t.i,
+    f: floor,
+    win: f.win,
+    hurt,
+    dead: {},
+    gain: g,
     fights: [{ a: snap(me, elder, elderLevel(s.elders[elder])), b: snap(foe, undefined, foeLevel), rounds: f.rounds }],
   })
   return { state: st, back, hurt, gain: g, report: st.nextId - 1 }
@@ -605,7 +839,11 @@ function home(s: State, id: number): State {
   const m = s.marches.find(x => x.id === id)!
   if (!m.back) return s // trận chưa giải (mầm ẩn ở client): chờ server báo kết quả
   const { state, dead } = admit({ ...s, marches: s.marches.filter(x => x.id !== id) }, m.hurt ?? {})
-  let st = gain({ ...state, troops: plus(state.troops, m.back ?? m.army) }, m.elder, m.gain ?? { res: {}, items: {}, exp: 0 })
+  let st = gain(
+    { ...state, troops: plus(state.troops, m.back ?? m.army) },
+    m.elder,
+    m.gain ?? { res: {}, items: {}, exp: 0 },
+  )
   // Báo cho chiến báo của chuyến này biết bao nhiêu người không qua khỏi
   if (count(dead)) st = { ...st, reports: st.reports.map(r => (r.id === m.report ? { ...r, dead } : r)) }
   return st
@@ -616,25 +854,64 @@ function due(s: State, now: number): Due[] {
   const ev: Due[] = []
   for (const j of s.queue)
     if (j.finishAt <= now)
-      ev.push([j.finishAt, st => ({ ...st, levels: { ...st.levels, [j.building]: j.level }, queue: st.queue.filter(q => q.building !== j.building) })])
+      ev.push([
+        j.finishAt,
+        st => ({
+          ...st,
+          levels: { ...st.levels, [j.building]: j.level },
+          queue: st.queue.filter(q => q.building !== j.building),
+        }),
+      ])
   const t = s.train
   if (t && t.finishAt <= now)
-    ev.push([t.finishAt, st => ({ ...st, train: null, troops: plus(st.troops, { [t.unit]: t.n }), stats: { ...st.stats, trained: st.stats.trained + t.n } })])
+    ev.push([
+      t.finishAt,
+      st => ({
+        ...st,
+        train: null,
+        troops: plus(st.troops, { [t.unit]: t.n }),
+        stats: { ...st.stats, trained: st.stats.trained + t.n },
+      }),
+    ])
   const h = s.heal
   if (h && h.finishAt <= now)
-    ev.push([h.finishAt, st => ({ ...st, heal: null, troops: plus(st.troops, h.troops), wounded: minus(st.wounded, h.troops), stats: { ...st.stats, healed: st.stats.healed + count(h.troops) } })])
+    ev.push([
+      h.finishAt,
+      st => ({
+        ...st,
+        heal: null,
+        troops: plus(st.troops, h.troops),
+        wounded: minus(st.wounded, h.troops),
+        stats: { ...st.stats, healed: st.stats.healed + count(h.troops) },
+      }),
+    ])
   const r = s.study
-  if (r && r.finishAt <= now) ev.push([r.finishAt, st => ({ ...st, study: null, tech: { ...st.tech, [r.tech]: r.level } })])
+  if (r && r.finishAt <= now)
+    ev.push([r.finishAt, st => ({ ...st, study: null, tech: { ...st.tech, [r.tech]: r.level } })])
   const b = s.brew
   if (b && b.finishAt <= now)
-    ev.push([b.finishAt, st => ({ ...st, brew: null, items: addItems(st.items, { [b.pill]: b.n }), stats: { ...st.stats, brewed: st.stats.brewed + b.n } })])
+    ev.push([
+      b.finishAt,
+      st => ({
+        ...st,
+        brew: null,
+        items: addItems(st.items, { [b.pill]: b.n }),
+        stats: { ...st.stats, brewed: st.stats.brewed + b.n },
+      }),
+    ])
   const f = s.forge
-  if (f && f.finishAt <= now) ev.push([f.finishAt, st => ({ ...st, forge: null, gear: { ...st.gear, [f.gear]: { ...st.gear[f.gear], lv: f.level } } })])
+  if (f && f.finishAt <= now)
+    ev.push([
+      f.finishAt,
+      st => ({ ...st, forge: null, gear: { ...st.gear, [f.gear]: { ...st.gear[f.gear], lv: f.level } } }),
+    ])
   for (const x of s.buffs)
-    if (x.until && x.until <= now) ev.push([x.until, st => ({ ...st, buffs: st.buffs.filter(y => y.src !== x.src || y.until !== x.until) })])
+    if (x.until && x.until <= now)
+      ev.push([x.until, st => ({ ...st, buffs: st.buffs.filter(y => y.src !== x.src || y.until !== x.until) })])
   for (const m of s.marches) {
     // đi cướp: trận cần state của người kia — server giải (world.ts), ở đây chỉ chờ
-    if (!m.back && m.seed && m.arriveAt <= now && (m.target.kind === 'beast' || m.target.kind === 'sect')) ev.push([m.arriveAt, st => arrive(st, m.id)])
+    if (!m.back && m.seed && m.arriveAt <= now && (m.target.kind === 'beast' || m.target.kind === 'sect'))
+      ev.push([m.arriveAt, st => arrive(st, m.id)])
     if (m.returnAt && m.returnAt <= now) ev.push([m.returnAt, st => home(st, m.id)])
   }
   return ev.sort((a, b) => a[0] - b[0])
@@ -705,11 +982,28 @@ export function forgeError(s: State, g: GearId): Err | null {
 function reborn(s: State, t: number, n: number): State {
   const fresh = newGame(t, s.name)
   return {
-    ...fresh, levels: rebirthLevels(s.rebirths + n), tech: s.tech, study: s.study, items: s.items, brew: s.brew, elders: s.elders,
-    talents: s.talents, gear: s.gear, forge: s.forge, guard: s.guard,
-    rebirths: s.rebirths + n, stats: s.stats, seed: s.seed, nextId: s.nextId, seen: s.nextId - 1,
+    ...fresh,
+    levels: rebirthLevels(s.rebirths + n),
+    tech: s.tech,
+    study: s.study,
+    items: s.items,
+    brew: s.brew,
+    elders: s.elders,
+    talents: s.talents,
+    gear: s.gear,
+    forge: s.forge,
+    guard: s.guard,
+    rebirths: s.rebirths + n,
+    stats: s.stats,
+    seed: s.seed,
+    nextId: s.nextId,
+    seen: s.nextId - 1,
     daily: s.daily, // cùng ngày: không nhận lại thưởng ngày
-    weekly: s.weekly, ev: s.ev, mail: s.mail, blocks: s.blocks, ascended: s.ascended,
+    weekly: s.weekly,
+    ev: s.ev,
+    mail: s.mail,
+    blocks: s.blocks,
+    ascended: s.ascended,
     tower: s.tower, // kỷ lục tháp giữ qua luân hồi (thưởng chỉ lần đầu nên không cày lại được)
   }
 }
@@ -735,7 +1029,7 @@ export function rebirthLevels(n: number) {
   return Object.fromEntries(IDS.map(id => [id, BUILDINGS[id].unlock <= hall ? hall : 0])) as Record<BuildingId, number>
 }
 
-export const jobOf = (s: State, k: JobKind) => (k === 'build' ? s.queue[0] ?? null : s[k])
+export const jobOf = (s: State, k: JobKind) => (k === 'build' ? (s.queue[0] ?? null) : s[k])
 
 // Đồng môn giúp: bớt ms cho việc `job` của s (đúng việc đã nhờ — startAt khớp), tại lúc at. Việc đã đổi/xong thì không làm gì.
 export function hasten(s: State, job: JobKind, startAt: number, ms: number, at: number): State {
@@ -743,7 +1037,10 @@ export function hasten(s: State, job: JobKind, startAt: number, ms: number, at: 
   const j = jobOf(st, job)
   if (!j || j.startAt !== startAt || job === 'brew') return st
   const sped = { ...j, finishAt: Math.max(st.time, j.finishAt - ms) }
-  return advance(job === 'build' ? { ...st, queue: st.queue.map(x => (x === j ? (sped as Job) : x)) } : { ...st, [job]: sped }, at)
+  return advance(
+    job === 'build' ? { ...st, queue: st.queue.map(x => (x === j ? (sped as Job) : x)) } : { ...st, [job]: sped },
+    at,
+  )
 }
 
 // Đan độ kiếp được dùng khi bật "dùng đan": viên mạnh nhất đang có
@@ -753,7 +1050,8 @@ export const tribPill = (s: State, want: boolean): 'phaCanh' | 'doKiep' | null =
 // Ba đợt lôi kiếp nối nhau; đệ tử còn đứng được đi tiếp sang đợt sau. mul: hộ pháp / phá kiếp (kiếp vân công khai)
 function tribulation(s: State, elder: ElderId, army: Army, p: PillId | null, seed: number, mul = 1) {
   const tr = TRIBS[s.trib]
-  const weaken = (1 - Math.min(MAX_CUT, lead(s, elder, 'trib'))) * (p === 'phaCanh' ? 1 - PHA_CANH : p ? 1 - DO_KIEP : 1) * mul
+  const weaken =
+    (1 - Math.min(MAX_CUT, lead(s, elder, 'trib'))) * (p === 'phaCanh' ? 1 - PHA_CANH : p ? 1 - DO_KIEP : 1) * mul
   const lv = elderLevel(s.elders[elder])
   let me = sideOf(s, elder, army)
   let win = true
@@ -776,7 +1074,16 @@ function tribulation(s: State, elder: ElderId, army: Army, p: PillId | null, see
 
 // Kiếp giáng lúc at: đội độ kiếp (đã rời khỏi s.troops) đánh ba đợt, người còn đứng về nhà, thương binh vào Đan phòng.
 // paid: chi phí đã trả lúc kiếp vân tụ (công khai) — thành công không trừ nữa, thất bại hoàn lại.
-function settle(s: State, elder: ElderId, army: Army, p: PillId | null, seed: number, at: number, mul: number, paid: boolean) {
+function settle(
+  s: State,
+  elder: ElderId,
+  army: Army,
+  p: PillId | null,
+  seed: number,
+  at: number,
+  mul: number,
+  paid: boolean,
+) {
   const k = s.trib
   const tr = TRIBS[k]
   const r = tribulation(s, elder, army, p, seed, mul)
@@ -787,9 +1094,29 @@ function settle(s: State, elder: ElderId, army: Army, p: PillId | null, seed: nu
   const st = giveExp(adm.state, elder, exp)
   const price = cost('chuDien', tr.hall + 1)
   const next = r.win
-    ? bump({ ...st, trib: k + 1, res: paid ? st.res : bag(x => st.res[x] - price[x]), levels: { ...st.levels, chuDien: tr.hall + 1 } }, 'win')
+    ? bump(
+        {
+          ...st,
+          trib: k + 1,
+          res: paid ? st.res : bag(x => st.res[x] - price[x]),
+          levels: { ...st.levels, chuDien: tr.hall + 1 },
+        },
+        'win',
+      )
     : { ...st, tribCool: at + TRIB_COOLDOWN, res: paid ? addBag(st.res, price) : st.res }
-  return { state: pushReport(next, { at, kind: 'trib', i: k, win: r.win, fights: r.fights, hurt, dead: adm.dead, gain: { res: {}, items: {}, exp } }), seed: r.seed }
+  return {
+    state: pushReport(next, {
+      at,
+      kind: 'trib',
+      i: k,
+      win: r.win,
+      fights: r.fights,
+      hurt,
+      dead: adm.dead,
+      gain: { res: {}, items: {}, exp },
+    }),
+    seed: r.seed,
+  }
 }
 
 // Kiếp vân giáng (server gọi lúc m.arriveAt; world.ts tính mul từ hộ pháp và phá kiếp)
@@ -797,7 +1124,16 @@ export function tribEnd(s: State, id: number, at: number, mul: number): State {
   const st = advance(s, at)
   const m = st.marches.find(x => x.id === id)
   if (!m || m.target.kind !== 'trib') return st
-  return settle({ ...st, marches: st.marches.filter(x => x !== m) }, m.elder, m.army, m.pill ?? null, m.seed, at, mul, true).state
+  return settle(
+    { ...st, marches: st.marches.filter(x => x !== m) },
+    m.elder,
+    m.army,
+    m.pill ?? null,
+    m.seed,
+    at,
+    mul,
+    true,
+  ).state
 }
 
 // Tỉ lệ thắng ước lượng để hiện cho người chơi: đánh thử với 9 mầm cố định, khác mầm thật (không lộ đúng kết quả).
@@ -808,7 +1144,12 @@ export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'tri
   let won = 0
   for (let k = 1; k <= 9; k++) {
     const seed = Math.imul(k, 0x9e3779b1) >>> 0
-    if (t === 'trib' ? tribulation(s, elder, army, tribPill(s, pill), seed).win : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win) won++
+    if (
+      t === 'trib'
+        ? tribulation(s, elder, army, tribPill(s, pill), seed).win
+        : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win
+    )
+      won++
   }
   return won / 9
 }
@@ -818,8 +1159,14 @@ export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'tri
 // Thao tác từ client là JSON, có thể là bất cứ thứ gì (chuỗi thay số, 'constructor' thay id, thiếu trường, thừa trường).
 // apply() kiểm ở đây trước tiên — một chốt cho mọi nơi gọi (server, client, sim): dựng lại object mới chỉ từ trường đã biết,
 // id phải là khoá thật của bảng (không nhận khoá thừa kế như 'constructor'), số phải là số nguyên an toàn trong khoảng.
-const oneOf = <T extends string>(ids: readonly T[]) => (x: unknown): x is T => typeof x === 'string' && (ids as readonly string[]).includes(x)
-const int = (lo: number, hi: number) => (x: unknown): x is number => Number.isSafeInteger(x) && (x as number) >= lo && (x as number) <= hi
+const oneOf =
+  <T extends string>(ids: readonly T[]) =>
+  (x: unknown): x is T =>
+    typeof x === 'string' && (ids as readonly string[]).includes(x)
+const int =
+  (lo: number, hi: number) =>
+  (x: unknown): x is number =>
+    Number.isSafeInteger(x) && (x as number) >= lo && (x as number) <= hi
 const isElder = oneOf(ELDER_IDS)
 const JOB_KINDS: readonly JobKind[] = ['build', 'train', 'heal', 'study', 'brew', 'forge']
 export function pickArmy(x: unknown): Army | null {
@@ -846,21 +1193,29 @@ const PICK: { [K in Action['type']]: Pick<K> } = {
   study: a => (oneOf(TECH_IDS)(a.tech) ? { type: 'study', tech: a.tech } : null),
   brew: a => (oneOf(PILL_IDS)(a.pill) && int(1, BREW_MAX)(a.n) ? { type: 'brew', pill: a.pill, n: a.n } : null),
   march: a => {
-    const target = pickTarget(a.target), army = pickArmy(a.army)
+    const target = pickTarget(a.target),
+      army = pickArmy(a.army)
     return target && army && isElder(a.elder) ? { type: 'march', target, elder: a.elder, army } : null
   },
   realm: a => {
     const army = pickArmy(a.army)
-    return army && isElder(a.elder) && int(0, REALMS.length - 1)(a.i) ? { type: 'realm', i: a.i, elder: a.elder, army } : null
+    return army && isElder(a.elder) && int(0, REALMS.length - 1)(a.i)
+      ? { type: 'realm', i: a.i, elder: a.elder, army }
+      : null
   },
   tower: a => {
     const army = pickArmy(a.army)
     return army && isElder(a.elder) ? { type: 'tower', elder: a.elder, army } : null
   },
-  trade: a => (oneOf(RESOURCES)(a.from) && oneOf(RESOURCES)(a.to) && int(1, 1e12)(a.n) ? { type: 'trade', from: a.from, to: a.to, n: a.n } : null),
+  trade: a =>
+    oneOf(RESOURCES)(a.from) && oneOf(RESOURCES)(a.to) && int(1, 1e12)(a.n)
+      ? { type: 'trade', from: a.from, to: a.to, n: a.n }
+      : null,
   trib: a => {
     const army = pickArmy(a.army)
-    return army && isElder(a.elder) && typeof a.pill === 'boolean' ? { type: 'trib', elder: a.elder, army, pill: a.pill } : null
+    return army && isElder(a.elder) && typeof a.pill === 'boolean'
+      ? { type: 'trib', elder: a.elder, army, pill: a.pill }
+      : null
   },
   speed: a =>
     oneOf(JOB_KINDS)(a.job) && int(1, 1e4)(a.n) && (a.pill === undefined || a.pill === 'daiTuKhi')
@@ -874,8 +1229,12 @@ const PICK: { [K in Action['type']]: Pick<K> } = {
   weekly: a => (int(0, WEEKLY.length - 1)(a.i) ? { type: 'weekly', i: a.i } : null),
   weeklyBonus: () => ({ type: 'weeklyBonus' }),
   forge: a => (oneOf(GEAR_IDS)(a.gear) ? { type: 'forge', gear: a.gear } : null),
-  equip: a => (oneOf(GEAR_IDS)(a.gear) && (a.elder === null || isElder(a.elder)) ? { type: 'equip', gear: a.gear, elder: a.elder } : null),
-  talent: a => (isElder(a.elder) && int(0, 2)(a.branch) ? { type: 'talent', elder: a.elder, branch: a.branch as 0 | 1 | 2 } : null),
+  equip: a =>
+    oneOf(GEAR_IDS)(a.gear) && (a.elder === null || isElder(a.elder))
+      ? { type: 'equip', gear: a.gear, elder: a.elder }
+      : null,
+  talent: a =>
+    isElder(a.elder) && int(0, 2)(a.branch) ? { type: 'talent', elder: a.elder, branch: a.branch as 0 | 1 | 2 } : null,
   wash: a => (isElder(a.elder) ? { type: 'wash', elder: a.elder } : null),
   cure: () => ({ type: 'cure' }),
   focus: () => ({ type: 'focus' }),
@@ -914,31 +1273,64 @@ export function apply(s: State, raw: Action, now: number): Result {
     case 'claim': {
       const q = QUESTS[state.quest]
       if (!q || !questDone(state)) return no('not_done')
-      return ok({ ...state, quest: state.quest + 1, res: addBag(state.res, q.reward), items: addItems(state.items, q.items ?? {}) })
+      return ok({
+        ...state,
+        quest: state.quest + 1,
+        res: addBag(state.res, q.reward),
+        items: addItems(state.items, q.items ?? {}),
+      })
     }
     case 'train': {
       const e = trainError(state, a.unit, a.n)
       if (e) return no(e)
-      return ok(bump({ ...state, res: pay(trainCost(a.unit, a.n)), train: { unit: a.unit, n: a.n, startAt: t, finishAt: t + trainTime(state, a.unit, a.n) } }, 'train', a.n))
+      return ok(
+        bump(
+          {
+            ...state,
+            res: pay(trainCost(a.unit, a.n)),
+            train: { unit: a.unit, n: a.n, startAt: t, finishAt: t + trainTime(state, a.unit, a.n) },
+          },
+          'train',
+          a.n,
+        ),
+      )
     }
     case 'heal': {
       const e = healError(state)
       if (e) return no(e)
       const hurt = { ...state.wounded }
-      return ok({ ...state, res: pay(healCost(state, hurt)), heal: { troops: hurt, startAt: t, finishAt: t + healTime(state, hurt) } })
+      return ok({
+        ...state,
+        res: pay(healCost(state, hurt)),
+        heal: { troops: hurt, startAt: t, finishAt: t + healTime(state, hurt) },
+      })
     }
     case 'study': {
       const e = techError(state, a.tech)
       if (e) return no(e)
       const level = (state.tech[a.tech] ?? 0) + 1
-      return ok({ ...state, res: pay(techCost(a.tech, level)), study: { tech: a.tech, level, startAt: t, finishAt: t + techTime(a.tech, level) } })
+      return ok({
+        ...state,
+        res: pay(techCost(a.tech, level)),
+        study: { tech: a.tech, level, startAt: t, finishAt: t + techTime(a.tech, level) },
+      })
     }
     case 'brew': {
       const e = brewError(state, a.pill, a.n)
       if (e) return no(e)
       const need = brewNeed(a.pill, a.n)
       const items = Object.fromEntries(PILL_IDS.map(p => [p, (state.items[p] ?? 0) - (need[p] ?? 0)])) as Items
-      return ok(bump({ ...state, res: pay(brewCost(state, a.pill, a.n)), items, brew: { pill: a.pill, n: a.n, startAt: t, finishAt: t + brewTime(state, a.pill, a.n) } }, 'brew'))
+      return ok(
+        bump(
+          {
+            ...state,
+            res: pay(brewCost(state, a.pill, a.n)),
+            items,
+            brew: { pill: a.pill, n: a.n, startAt: t, finishAt: t + brewTime(state, a.pill, a.n) },
+          },
+          'brew',
+        ),
+      )
     }
     case 'march': {
       if (a.target?.kind !== 'beast' && a.target?.kind !== 'sect') return no('bad')
@@ -947,8 +1339,23 @@ export function apply(s: State, raw: Action, now: number): Result {
       if (state.marches.length >= marchSlots(state)) return no('slots')
       const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
       const dt = marchTime(state, a.target)
-      const m: March = { id: state.nextId, elder: a.elder, army, target: { ...a.target }, seed: state.seed, startAt: t, arriveAt: t + dt, returnAt: t + 2 * dt }
-      return ok({ ...state, troops: minus(state.troops, army), marches: [...state.marches, m], nextId: state.nextId + 1, seed: nextSeed(state.seed) })
+      const m: March = {
+        id: state.nextId,
+        elder: a.elder,
+        army,
+        target: { ...a.target },
+        seed: state.seed,
+        startAt: t,
+        arriveAt: t + dt,
+        returnAt: t + 2 * dt,
+      }
+      return ok({
+        ...state,
+        troops: minus(state.troops, army),
+        marches: [...state.marches, m],
+        nextId: state.nextId + 1,
+        seed: nextSeed(state.seed),
+      })
     }
     case 'realm':
     case 'tower': {
@@ -976,8 +1383,24 @@ export function apply(s: State, raw: Action, now: number): Result {
       if (state.marches.length >= marchSlots(state)) return no('slots')
       const k = state.trib
       const price = cost('chuDien', TRIBS[k].hall + 1)
-      const m: March = { id: state.nextId, elder: a.elder, army, target: { kind: 'trib', i: k }, seed: state.seed, startAt: t, arriveAt: t + TRIB_CLOUD[k], returnAt: 0, ...(p && { pill: p }) }
-      return ok({ ...away, res: bag(r => away.res[r] - price[r]), marches: [...away.marches, m], nextId: state.nextId + 1, seed: nextSeed(state.seed) })
+      const m: March = {
+        id: state.nextId,
+        elder: a.elder,
+        army,
+        target: { kind: 'trib', i: k },
+        seed: state.seed,
+        startAt: t,
+        arriveAt: t + TRIB_CLOUD[k],
+        returnAt: 0,
+        ...(p && { pill: p }),
+      }
+      return ok({
+        ...away,
+        res: bag(r => away.res[r] - price[r]),
+        marches: [...away.marches, m],
+        nextId: state.nextId + 1,
+        seed: nextSeed(state.seed),
+      })
     }
     case 'speed': {
       if (a.job === 'brew') return no('bad') // đan không rút ngắn việc luyện đan: có giảm thời gian từ công pháp là thành vòng lặp đẻ đan
@@ -995,7 +1418,13 @@ export function apply(s: State, raw: Action, now: number): Result {
     case 'feed': {
       if (state.elders[a.elder] === undefined) return no('locked')
       if (!Number.isInteger(a.n) || a.n < 1 || a.n > (state.items.boiNguyen ?? 0)) return no('no_item')
-      return ok(giveExp({ ...state, items: { ...state.items, boiNguyen: state.items.boiNguyen! - a.n } }, a.elder, BOI_NGUYEN_EXP * a.n))
+      return ok(
+        giveExp(
+          { ...state, items: { ...state.items, boiNguyen: state.items.boiNguyen! - a.n } },
+          a.elder,
+          BOI_NGUYEN_EXP * a.n,
+        ),
+      )
     }
     case 'seen':
       return ok({ ...state, seen: state.nextId - 1 })
@@ -1010,18 +1439,34 @@ export function apply(s: State, raw: Action, now: number): Result {
       if (state.daily.got[a.i]) return no('max_level')
       if (!dailyDone(state, a.i)) return no('not_done')
       const n = dailyReward(state)
-      return ok({ ...state, res: bag(r => state.res[r] + n), daily: { ...state.daily, got: state.daily.got.map((x, k) => x || k === a.i) } })
+      return ok({
+        ...state,
+        res: bag(r => state.res[r] + n),
+        daily: { ...state.daily, got: state.daily.got.map((x, k) => x || k === a.i) },
+      })
     }
     case 'dailyBonus': {
       if (state.levels.chuDien < DAILY_HALL) return no('locked')
       if (state.daily.bonus) return no('max_level')
       if (!state.daily.got.every(Boolean)) return no('not_done')
       const w = state.weekly
-      return ok({ ...state, items: addItems(state.items, DAILY_BONUS), daily: { ...state.daily, bonus: true }, weekly: { ...w, n: { ...w.n, days: w.n.days + 1 } } })
+      return ok({
+        ...state,
+        items: addItems(state.items, DAILY_BONUS),
+        daily: { ...state.daily, bonus: true },
+        weekly: { ...w, n: { ...w.n, days: w.n.days + 1 } },
+      })
     }
     case 'trade': {
       if (state.levels.tangBaoCac < 1) return no('locked')
-      if (a.from === a.to || !RESOURCES.includes(a.from) || !RESOURCES.includes(a.to) || !Number.isInteger(a.n) || a.n < 1) return no('locked')
+      if (
+        a.from === a.to ||
+        !RESOURCES.includes(a.from) ||
+        !RESOURCES.includes(a.to) ||
+        !Number.isInteger(a.n) ||
+        a.n < 1
+      )
+        return no('locked')
       if (a.n > Math.floor(state.res[a.from])) return no('not_enough')
       const got = Math.floor(a.n * tradeKeep(state))
       return ok({ ...state, res: { ...state.res, [a.from]: state.res[a.from] - a.n, [a.to]: state.res[a.to] + got } })
@@ -1031,7 +1476,11 @@ export function apply(s: State, raw: Action, now: number): Result {
       if (state.weekly.got[a.i]) return no('max_level')
       if (!weeklyDone(state, a.i)) return no('not_done')
       const n = weeklyReward(state)
-      return ok({ ...state, res: bag(r => state.res[r] + n), weekly: { ...state.weekly, got: state.weekly.got.map((x, k) => x || k === a.i) } })
+      return ok({
+        ...state,
+        res: bag(r => state.res[r] + n),
+        weekly: { ...state.weekly, got: state.weekly.got.map((x, k) => x || k === a.i) },
+      })
     }
     case 'weeklyBonus': {
       if (state.levels.chuDien < DAILY_HALL) return no('locked')
@@ -1043,7 +1492,16 @@ export function apply(s: State, raw: Action, now: number): Result {
       const e = forgeError(state, a.gear)
       if (e) return no(e)
       const level = (state.gear[a.gear]?.lv ?? 0) + 1
-      return ok(evBump({ ...state, res: pay(gearCost(a.gear, level)), forge: { gear: a.gear, level, startAt: t, finishAt: t + gearTime(state, a.gear, level) } }, 'forge'))
+      return ok(
+        evBump(
+          {
+            ...state,
+            res: pay(gearCost(a.gear, level)),
+            forge: { gear: a.gear, level, startAt: t, finishAt: t + gearTime(state, a.gear, level) },
+          },
+          'forge',
+        ),
+      )
     }
     case 'equip': {
       const g = state.gear[a.gear]
@@ -1061,7 +1519,10 @@ export function apply(s: State, raw: Action, now: number): Result {
       const cur = state.talents[a.elder] ?? [0, 0, 0]
       if (cur[a.branch] >= TALENT_MAX) return no('max_level')
       if (talentUsed(state, a.elder) >= talentPoints(state, a.elder)) return no('not_enough')
-      return ok({ ...state, talents: { ...state.talents, [a.elder]: cur.map((x, i) => (i === a.branch ? x + 1 : x)) as Talent } })
+      return ok({
+        ...state,
+        talents: { ...state.talents, [a.elder]: cur.map((x, i) => (i === a.branch ? x + 1 : x)) as Talent },
+      })
     }
     case 'wash': {
       if (!state.items.taiTuy) return no('no_item')
@@ -1078,11 +1539,14 @@ export function apply(s: State, raw: Action, now: number): Result {
       const up: Army = {}
       for (const u of [...UNITS].sort((a, b) => unitOf(b).tier - unitOf(a).tier)) {
         const n = Math.min(free[u], left)
-        if (n > 0) (up[u] = n), (left -= n)
+        if (n > 0) ((up[u] = n), (left -= n))
       }
       if (!count(up)) return no('empty')
       return ok({
-        ...state, items: use('hoiXuan'), troops: plus(state.troops, up), wounded: minus(state.wounded, up),
+        ...state,
+        items: use('hoiXuan'),
+        troops: plus(state.troops, up),
+        wounded: minus(state.wounded, up),
         stats: { ...state.stats, healed: state.stats.healed + count(up) },
       })
     }
@@ -1100,7 +1564,10 @@ export function apply(s: State, raw: Action, now: number): Result {
       if (state.levels.chuDien < DAILY_HALL || !EVENT_GOALS[a.i]) return no('locked')
       if (state.ev.got[a.i]) return no('max_level')
       if (state.ev.pts < EVENT_GOALS[a.i]) return no('not_done')
-      return ok({ ...grant(state, EVENT_REWARDS[a.i]), ev: { ...state.ev, got: state.ev.got.map((x, k) => x || k === a.i) } })
+      return ok({
+        ...grant(state, EVENT_REWARDS[a.i]),
+        ev: { ...state.ev, got: state.ev.got.map((x, k) => x || k === a.i) },
+      })
     }
     case 'block': {
       const rest = state.blocks.filter(p => p !== a.pid)
@@ -1122,15 +1589,24 @@ export function apply(s: State, raw: Action, now: number): Result {
 export const questOf = (s: State): Quest | undefined => QUESTS[s.quest]
 export function questProgress(s: State, q: Quest): [number, number] {
   switch (q.k) {
-    case 'build': return [s.levels[q.id as BuildingId], q.n]
-    case 'train': return [totalTroops(s), q.n]
-    case 'hunt': return [s.beast, q.n]
-    case 'sect': return [s.sects[Number(q.id)] ? 1 : 0, 1]
-    case 'realm': return [s.realms[Number(q.id)], q.n]
-    case 'tech': return [techSum(s), q.n]
-    case 'brew': return [s.stats.brewed + (s.brew?.n ?? 0), q.n] // tính cả mẻ đang luyện: không bắt người mới chờ 20 phút giữa hướng dẫn
-    case 'tower': return [s.tower, q.n]
-    case 'forge': return [gearSum(s) + (s.forge ? 1 : 0), q.n] // như luyện đan: tính cả món đang luyện
+    case 'build':
+      return [s.levels[q.id as BuildingId], q.n]
+    case 'train':
+      return [totalTroops(s), q.n]
+    case 'hunt':
+      return [s.beast, q.n]
+    case 'sect':
+      return [s.sects[Number(q.id)] ? 1 : 0, 1]
+    case 'realm':
+      return [s.realms[Number(q.id)], q.n]
+    case 'tech':
+      return [techSum(s), q.n]
+    case 'brew':
+      return [s.stats.brewed + (s.brew?.n ?? 0), q.n] // tính cả mẻ đang luyện: không bắt người mới chờ 20 phút giữa hướng dẫn
+    case 'tower':
+      return [s.tower, q.n]
+    case 'forge':
+      return [gearSum(s) + (s.forge ? 1 : 0), q.n] // như luyện đan: tính cả món đang luyện
   }
 }
 export const questDone = (s: State) => {
@@ -1144,8 +1620,21 @@ export const questDone = (s: State) => {
 
 // Đọc save từ mọi phiên bản trước. Không nhận ra → null (người gọi cất bản sao rồi cho chơi mới).
 const V2_QUESTS: [BuildingId, number][] = [
-  ['tuLinhTran', 1], ['linhDien', 1], ['khoangMach', 1], ['chuDien', 2], ['tangBaoCac', 1], ['dienVoTruong', 1], ['tuLinhTran', 2],
-  ['linhDien', 2], ['khoangMach', 2], ['chuDien', 3], ['tangBaoCac', 2], ['chuDien', 4], ['tangKinhCac', 1], ['danPhong', 1], ['chuDien', 5],
+  ['tuLinhTran', 1],
+  ['linhDien', 1],
+  ['khoangMach', 1],
+  ['chuDien', 2],
+  ['tangBaoCac', 1],
+  ['dienVoTruong', 1],
+  ['tuLinhTran', 2],
+  ['linhDien', 2],
+  ['khoangMach', 2],
+  ['chuDien', 3],
+  ['tangBaoCac', 2],
+  ['chuDien', 4],
+  ['tangKinhCac', 1],
+  ['danPhong', 1],
+  ['chuDien', 5],
 ]
 export function migrate(raw: unknown): State | null {
   try {
@@ -1165,32 +1654,101 @@ const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >=
 const isTimed = (j: unknown) => j === null || (obj(j) && num(j.startAt) && num(j.finishAt))
 function valid(s: any): s is State {
   return (
-    s.v === 4 && typeof s.name === 'string' && num(s.quest) && num(s.time) && isBag(s.res) && isBag(s.carry) &&
-    obj(s.levels) && IDS.every(id => num(s.levels[id]) && s.levels[id] >= 0 && s.levels[id] <= MAX_LEVEL) &&
-    Array.isArray(s.queue) && s.queue.every((j: any) => isTimed(j) && j && IDS.includes(j.building) && num(j.level)) &&
-    isTroops(s.troops) && isTroops(s.wounded) &&
-    [s.train, s.heal, s.study, s.brew, s.forge].every(isTimed) && (!s.forge || (Object.hasOwn(GEAR, s.forge.gear) && num(s.forge.level))) &&
-    obj(s.tech) && obj(s.items) && obj(s.elders) && Object.keys(s.elders).every(e => Object.hasOwn(ELDERS, e) && num(s.elders[e])) &&
-    obj(s.talents) && Object.entries(s.talents).every(([e, t]) => Object.hasOwn(ELDERS, e) && Array.isArray(t) && t.length === 3 && t.every(num)) &&
-    obj(s.gear) && Object.entries(s.gear).every(([g, x]: [string, any]) => Object.hasOwn(GEAR, g) && obj(x) && num(x.lv) && (x.on === undefined || Object.hasOwn(ELDERS, x.on))) &&
-    Array.isArray(s.buffs) && s.buffs.every((b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string') &&
+    s.v === 4 &&
+    typeof s.name === 'string' &&
+    num(s.quest) &&
+    num(s.time) &&
+    isBag(s.res) &&
+    isBag(s.carry) &&
+    obj(s.levels) &&
+    IDS.every(id => num(s.levels[id]) && s.levels[id] >= 0 && s.levels[id] <= MAX_LEVEL) &&
+    Array.isArray(s.queue) &&
+    s.queue.every((j: any) => isTimed(j) && j && IDS.includes(j.building) && num(j.level)) &&
+    isTroops(s.troops) &&
+    isTroops(s.wounded) &&
+    [s.train, s.heal, s.study, s.brew, s.forge].every(isTimed) &&
+    (!s.forge || (Object.hasOwn(GEAR, s.forge.gear) && num(s.forge.level))) &&
+    obj(s.tech) &&
+    obj(s.items) &&
+    obj(s.elders) &&
+    Object.keys(s.elders).every(e => Object.hasOwn(ELDERS, e) && num(s.elders[e])) &&
+    obj(s.talents) &&
+    Object.entries(s.talents).every(
+      ([e, t]) => Object.hasOwn(ELDERS, e) && Array.isArray(t) && t.length === 3 && t.every(num),
+    ) &&
+    obj(s.gear) &&
+    Object.entries(s.gear).every(
+      ([g, x]: [string, any]) =>
+        Object.hasOwn(GEAR, g) && obj(x) && num(x.lv) && (x.on === undefined || Object.hasOwn(ELDERS, x.on)),
+    ) &&
+    Array.isArray(s.buffs) &&
+    s.buffs.every(
+      (b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string',
+    ) &&
     Array.isArray(s.marches) &&
-    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect', 'pvp', 'spot', 'trib'].includes(m.target.kind) &&
-      num(m.target.i) && num(m.seed) && num(m.startAt) && num(m.arriveAt) && num(m.returnAt)) &&
-    Array.isArray(s.reports) && s.reports.every((r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead)) &&
-    num(s.seen) && num(s.beast) && obj(s.cool) &&
-    num(s.tower) && Array.isArray(s.sects) && s.sects.length === SECTS.length && Array.isArray(s.realms) && s.realms.length === REALMS.length &&
-    num(s.trib) && num(s.tribCool) && num(s.rebirths) && num(s.seed) && num(s.nextId) &&
-    obj(s.stats) && ['trained', 'healed', 'brewed', 'won', 'lost'].every(k => num(s.stats[k])) &&
-    obj(s.daily) && num(s.daily.day) && obj(s.daily.n) && Array.isArray(s.daily.got) && s.daily.got.length === DAILY.length &&
-    obj(s.weekly) && num(s.weekly.week) && obj(s.weekly.n) && WEEKLY.every(w => num(s.weekly.n[w.id])) &&
-    Array.isArray(s.weekly.got) && s.weekly.got.length === WEEKLY.length &&
-    obj(s.ev) && num(s.ev.week) && num(s.ev.pts) && Array.isArray(s.ev.got) && s.ev.got.length === EVENT_GOALS.length &&
-    num(s.shield) && (s.guard === null || Object.hasOwn(ELDERS, s.guard)) && obj(s.pvp) && num(s.pvp.pts) && num(s.pvp.win) && num(s.pvp.loss) &&
-    Array.isArray(s.foes) && s.foes.every((f: any) => obj(f) && num(f.pid) && typeof f.name === 'string' && num(f.at)) &&
-    Array.isArray(s.mail) && s.mail.every((m: any) => obj(m) && num(m.id) && num(m.at) && typeof m.k === 'string') &&
+    s.marches.every(
+      (m: any) =>
+        obj(m) &&
+        Object.hasOwn(ELDERS, m.elder) &&
+        obj(m.army) &&
+        obj(m.target) &&
+        ['beast', 'sect', 'pvp', 'spot', 'trib'].includes(m.target.kind) &&
+        num(m.target.i) &&
+        num(m.seed) &&
+        num(m.startAt) &&
+        num(m.arriveAt) &&
+        num(m.returnAt),
+    ) &&
+    Array.isArray(s.reports) &&
+    s.reports.every(
+      (r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead),
+    ) &&
+    num(s.seen) &&
+    num(s.beast) &&
+    obj(s.cool) &&
+    num(s.tower) &&
+    Array.isArray(s.sects) &&
+    s.sects.length === SECTS.length &&
+    Array.isArray(s.realms) &&
+    s.realms.length === REALMS.length &&
+    num(s.trib) &&
+    num(s.tribCool) &&
+    num(s.rebirths) &&
+    num(s.seed) &&
+    num(s.nextId) &&
+    obj(s.stats) &&
+    ['trained', 'healed', 'brewed', 'won', 'lost'].every(k => num(s.stats[k])) &&
+    obj(s.daily) &&
+    num(s.daily.day) &&
+    obj(s.daily.n) &&
+    Array.isArray(s.daily.got) &&
+    s.daily.got.length === DAILY.length &&
+    obj(s.weekly) &&
+    num(s.weekly.week) &&
+    obj(s.weekly.n) &&
+    WEEKLY.every(w => num(s.weekly.n[w.id])) &&
+    Array.isArray(s.weekly.got) &&
+    s.weekly.got.length === WEEKLY.length &&
+    obj(s.ev) &&
+    num(s.ev.week) &&
+    num(s.ev.pts) &&
+    Array.isArray(s.ev.got) &&
+    s.ev.got.length === EVENT_GOALS.length &&
+    num(s.shield) &&
+    (s.guard === null || Object.hasOwn(ELDERS, s.guard)) &&
+    obj(s.pvp) &&
+    num(s.pvp.pts) &&
+    num(s.pvp.win) &&
+    num(s.pvp.loss) &&
+    Array.isArray(s.foes) &&
+    s.foes.every((f: any) => obj(f) && num(f.pid) && typeof f.name === 'string' && num(f.at)) &&
+    Array.isArray(s.mail) &&
+    s.mail.every((m: any) => obj(m) && num(m.id) && num(m.at) && typeof m.k === 'string') &&
     (s.seat === null || (obj(s.seat) && num(s.seat.x) && num(s.seat.y))) &&
-    Array.isArray(s.blocks) && s.blocks.every(num) && Array.isArray(s.ascended) && s.ascended.every(num)
+    Array.isArray(s.blocks) &&
+    s.blocks.every(num) &&
+    Array.isArray(s.ascended) &&
+    s.ascended.every(num)
   )
 }
 
@@ -1200,11 +1758,17 @@ function upgrade(raw: unknown) {
   if (s.v === 1) s = { ...s, v: 2, name: DEFAULT_NAME, quest: 0 }
   if (s.v === 2) {
     const fresh = newGame(s.time, s.name)
-    const at = (i: number) => QUESTS.findIndex(q => q.k === 'build' && q.id === V2_QUESTS[i][0] && q.n === V2_QUESTS[i][1])
+    const at = (i: number) =>
+      QUESTS.findIndex(q => q.k === 'build' && q.id === V2_QUESTS[i][0] && q.n === V2_QUESTS[i][1])
     const quest = s.quest < V2_QUESTS.length ? at(s.quest) : at(V2_QUESTS.length - 1) + 1
     const levels = { ...fresh.levels, ...s.levels }
     s = {
-      ...fresh, quest, time: s.time, res: s.res, carry: s.carry, levels,
+      ...fresh,
+      quest,
+      time: s.time,
+      res: s.res,
+      carry: s.carry,
+      levels,
       queue: s.queue.map((j: Job) => ({ ...j, startAt: j.finishAt - buildTime(fresh, j.building, j.level) })),
       trib: TRIBS.filter(t => t.hall < levels.chuDien).length, // bản cũ chưa có độ kiếp: coi như đã vượt
     }
@@ -1213,8 +1777,16 @@ function upgrade(raw: unknown) {
     // Bản 4: tầng 16–25 (công trình mới, đệ tử bậc 4–5, bí cảnh mới), pháp bảo, thiên phú, buff
     const zero = troops(() => 0)
     s = {
-      ...s, v: 4, levels: { ...Object.fromEntries(IDS.map(id => [id, 0])), ...s.levels }, troops: { ...zero, ...s.troops }, wounded: { ...zero, ...s.wounded },
-      realms: REALMS.map((_, i) => s.realms?.[i] ?? 0), forge: null, talents: {}, gear: {}, buffs: [],
+      ...s,
+      v: 4,
+      levels: { ...Object.fromEntries(IDS.map(id => [id, 0])), ...s.levels },
+      troops: { ...zero, ...s.troops },
+      wounded: { ...zero, ...s.wounded },
+      realms: REALMS.map((_, i) => s.realms?.[i] ?? 0),
+      forge: null,
+      talents: {},
+      gear: {},
+      buffs: [],
     }
   }
   if (s.v !== 4 || typeof s.time !== 'number') return null
@@ -1223,7 +1795,8 @@ function upgrade(raw: unknown) {
   if (!s.weekly) s = { ...s, weekly: freshWeekly(s.time) } // … nhiệm vụ tuần
   if (s.tower === undefined) s = { ...s, tower: 0 } // … Thông Thiên Tháp
   if (!s.ev) s = { ...s, ev: freshEv(s.time) } // … PvP, thư, sự kiện tuần (người cũ không được khiên tân thủ)
-  if (s.shield === undefined) s = { ...s, shield: 0, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [] }
+  if (s.shield === undefined)
+    s = { ...s, shield: 0, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [] }
   if (s.seat === undefined) s = { ...s, seat: null } // … bản đồ giới
   if (!s.blocks) s = { ...s, blocks: [] } // … chat
   if (!s.ascended) s = { ...s, ascended: [] } // … mùa giải

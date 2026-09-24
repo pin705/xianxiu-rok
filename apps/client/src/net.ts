@@ -5,11 +5,27 @@
 import { io, type Socket } from 'socket.io-client'
 import { advance, apply, type Action, type Report, type State } from '@rok/rules'
 import type { WorldAction } from '@rok/rules/world'
-import type { Ack, Channel, ChatMsg, ClientToServer, MapSnap, Push, Query, Refuse, SayErr, ServerToClient, Welcome } from '@rok/protocol'
+import type {
+  Ack,
+  Channel,
+  ChatMsg,
+  ClientToServer,
+  MapSnap,
+  Push,
+  Query,
+  Refuse,
+  SayErr,
+  ServerToClient,
+  Welcome,
+} from '@rok/protocol'
 import { fold, offsetOf, withReports, type Pending } from './sync'
 
-export type Ranks = { rows: { pid: number; name: string; v: number; hall: number; rank: number }[]; me: { rank: number; v: number } | null }
-export type Status = 'boot' | 'nosect' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'update' | 'lost' | 'banned' | 'deleted'
+export type Ranks = {
+  rows: { pid: number; name: string; v: number; hall: number; rank: number }[]
+  me: { rank: number; v: number } | null
+}
+export type Status =
+  'boot' | 'nosect' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'update' | 'lost' | 'banned' | 'deleted'
 export type Why = 'first' | 'tick' | 'mine' | 'push' | 'resync'
 // ---------- Kết nối ----------
 
@@ -42,7 +58,7 @@ export function createNet(h: Handlers, lang: string) {
   const mapWatch = new Set<(m: MapSnap) => void>() // đang mở bản đồ giới
   const chatWatch = new Set<(ch: Channel, ms: ChatMsg[]) => void>()
   const allyWatch = new Set<() => void>()
-  const listen = <T,>(set: Set<T>, f: T) => (set.add(f), () => void set.delete(f))
+  const listen = <T>(set: Set<T>, f: T) => (set.add(f), () => void set.delete(f))
 
   const now = () => Date.now() + offset
   const set = (s: Status) => {
@@ -71,7 +87,10 @@ export function createNet(h: Handlers, lang: string) {
     h.reports(rep)
   }
 
-  async function api<T>(route: string, body?: object): Promise<{ ok: true; data: T } | { ok: false; status: number; error: string }> {
+  async function api<T>(
+    route: string,
+    body?: object,
+  ): Promise<{ ok: true; data: T } | { ok: false; status: number; error: string }> {
     try {
       const t = token()
       const r = await fetch(`${SERVER}/api${route}`, {
@@ -81,7 +100,9 @@ export function createNet(h: Handlers, lang: string) {
         body: body && JSON.stringify(body),
       })
       const data = await r.json().catch(() => ({}))
-      return r.ok ? { ok: true, data: data as T } : { ok: false, status: r.status, error: (data as { error?: string }).error ?? 'server' }
+      return r.ok
+        ? { ok: true, data: data as T }
+        : { ok: false, status: r.status, error: (data as { error?: string }).error ?? 'server' }
     } catch {
       return { ok: false, status: 0, error: 'offline' }
     }
@@ -248,12 +269,17 @@ export function createNet(h: Handlers, lang: string) {
   // Bật thông báo đẩy (gọi từ thao tác của người chơi — trình duyệt chỉ hỏi quyền lúc đó): đăng ký với dịch vụ push của trình
   // duyệt bằng khoá VAPID của server, rồi gửi đăng ký cho server. Chưa có service worker (bản dev) thì không hỗ trợ.
   async function enablePush(key: string): Promise<'on' | 'denied' | 'unsupported' | 'error'> {
-    const reg = 'PushManager' in globalThis && 'Notification' in globalThis ? await navigator.serviceWorker?.getRegistration() : undefined
+    const reg =
+      'PushManager' in globalThis && 'Notification' in globalThis
+        ? await navigator.serviceWorker?.getRegistration()
+        : undefined
     if (!reg) return 'unsupported'
     if ((await Notification.requestPermission()) !== 'granted') return 'denied'
     try {
       const key8 = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
-      const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key8 }))
+      const sub =
+        (await reg.pushManager.getSubscription()) ??
+        (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key8 }))
       const j = sub.toJSON()
       return (await api('/push/sub', { endpoint: j.endpoint, keys: j.keys })).ok ? 'on' : 'error'
     } catch {
@@ -262,7 +288,9 @@ export function createNet(h: Handlers, lang: string) {
   }
 
   const ask = (q: Query) =>
-    new Promise<unknown>(ok => (socket?.connected ? socket.timeout(10_000).emit('get', q, (err, d) => ok(err ? null : d)) : ok(null)))
+    new Promise<unknown>(ok =>
+      socket?.connected ? socket.timeout(10_000).emit('get', q, (err, d) => ok(err ? null : d)) : ok(null),
+    )
   const askMap = () => ask({ k: 'map' }).then(m => m && mapWatch.forEach(f => f(m as MapSnap)))
 
   return {
@@ -348,9 +376,16 @@ export function createNet(h: Handlers, lang: string) {
     // Chat: gửi (server lọc chữ, giới hạn tần suất), báo cáo; nghe tin mới / tiên minh đổi. listen trả hàm huỷ.
     say: (ch: Channel, text: string) =>
       new Promise<{ ok: true } | { ok: false; err: SayErr }>(ok =>
-        socket?.connected ? socket.timeout(10_000).emit('say', { ch, text }, (err, r) => ok(err ? { ok: false, err: 'unavailable' } : r)) : ok({ ok: false, err: 'unavailable' }),
+        socket?.connected
+          ? socket
+              .timeout(10_000)
+              .emit('say', { ch, text }, (err, r) => ok(err ? { ok: false, err: 'unavailable' } : r))
+          : ok({ ok: false, err: 'unavailable' }),
       ),
-    report: (id: number) => new Promise<boolean>(ok => (socket?.connected ? socket.timeout(10_000).emit('report', { id }, (err, r) => ok(!err && r)) : ok(false))),
+    report: (id: number) =>
+      new Promise<boolean>(ok =>
+        socket?.connected ? socket.timeout(10_000).emit('report', { id }, (err, r) => ok(!err && r)) : ok(false),
+      ),
     onChat: (f: (ch: Channel, ms: ChatMsg[]) => void) => listen(chatWatch, f),
     onAlly: (f: () => void) => listen(allyWatch, f),
     // Bảng xếp hạng của giới mình (HTTP, server cache 30 giây)

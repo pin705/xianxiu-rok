@@ -67,7 +67,9 @@
     }
     scroller?.addEventListener('wheel', wheel, { passive: false })
     addEventListener('keydown', keys)
-    requestAnimationFrame(() => scroller && (scroller.scrollTop = (scroller.scrollHeight - scroller.clientHeight) * start))
+    requestAnimationFrame(
+      () => scroller && (scroller.scrollTop = (scroller.scrollHeight - scroller.clientHeight) * start),
+    )
     getApp().then(app => {
       if (dead) return
       if (!app.canvas.isConnected) document.body.prepend(app.canvas)
@@ -146,7 +148,11 @@
   .vignette {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 80% 70% at 50% 48%, transparent 58%, color-mix(in srgb, var(--ink) 26%, transparent) 100%);
+    background: radial-gradient(
+      ellipse 80% 70% at 50% 48%,
+      transparent 58%,
+      color-mix(in srgb, var(--ink) 26%, transparent) 100%
+    );
   }
   .layer {
     position: relative;

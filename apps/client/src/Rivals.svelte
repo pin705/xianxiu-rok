@@ -1,7 +1,17 @@
 <script lang="ts">
   // Tranh đoạt: kẻ đã cướp mình (báo thù) và vài tông môn gần lực chiến; chọn một → xem dò thám → chọn đội → xuất quân cướp.
   // Danh sách do server ghép (cần state của cả giới); tỉ lệ thắng ước lượng theo phòng thủ đã dò thám.
-  import { PVP_HALL, UNITS, marchSlots, marchTime, might, type Army, type ElderId, type State, type UnitId } from '@rok/rules'
+  import {
+    PVP_HALL,
+    UNITS,
+    marchSlots,
+    marchTime,
+    might,
+    type Army,
+    type ElderId,
+    type State,
+    type UnitId,
+  } from '@rok/rules'
   import { raidChance, type Rival } from '@rok/rules/world'
   import { Icon, Portrait } from '@rok/art'
   import ArmyPick from './Army.svelte'
@@ -45,10 +55,18 @@
     void refresh()
   })
   const full = $derived(game.marches.length >= marchSlots(game))
-  const troopsOf = (r: Rival) => r.scout.side.troops.map(t => ({ u: `${t.type}${t.tier}` as UnitId, n: t.n })).filter(x => UNITS.includes(x.u))
+  const troopsOf = (r: Rival) =>
+    r.scout.side.troops.map(t => ({ u: `${t.type}${t.tier}` as UnitId, n: t.n })).filter(x => UNITS.includes(x.u))
 </script>
 
-<Sheet {open} {onclose} title={pick ? pick.name : L.pvp.title} sub={pick ? `${L.realm(pick.hall)} · ${L.power} ${num(pick.power)}` : `${L.pvp.pts(game.pvp.pts)} · ${L.pvp.record(game.pvp.win, game.pvp.loss)}`}>
+<Sheet
+  {open}
+  {onclose}
+  title={pick ? pick.name : L.pvp.title}
+  sub={pick
+    ? `${L.realm(pick.hall)} · ${L.power} ${num(pick.power)}`
+    : `${L.pvp.pts(game.pvp.pts)} · ${L.pvp.record(game.pvp.win, game.pvp.loss)}`}
+>
   {#snippet art()}<Medal emblem="crest" tone="pvp" size={62} />{/snippet}
   {#if game.levels.chuDien < PVP_HALL}
     <Tag icon="lock" tone="bad">{L.pvp.locked}</Tag>
@@ -57,13 +75,24 @@
     <Section title={L.pvp.defense}>
       <ul class="row wrap">
         {#each troopsOf(r) as t (t.u)}
-          <li class="row" style:--gap="5px"><Medal emblem={EMBLEM.unit[t.u.slice(0, -1) as 'kiem']} tone={t.u.slice(0, -1) as 'kiem'} size={30} pips={Number(t.u.slice(-1))} /><span class="t-small t-strong">~{num(t.n)}</span></li>
+          <li class="row" style:--gap="5px">
+            <Medal
+              emblem={EMBLEM.unit[t.u.slice(0, -1) as 'kiem']}
+              tone={t.u.slice(0, -1) as 'kiem'}
+              size={30}
+              pips={Number(t.u.slice(-1))}
+            /><span class="t-small t-strong">~{num(t.n)}</span>
+          </li>
         {/each}
         {#if !troopsOf(r).length}<li class="t-small t-soft">{L.army.noTroops}</li>{/if}
       </ul>
       <div class="row wrap">
         {#if r.scout.guard}
-          <Tag icon="power" tone="bad"><Portrait look={LOOK[r.scout.guard]} size={18} />{L.elders[r.scout.guard].name} · {L.lv(r.scout.level)}</Tag>
+          <Tag icon="power" tone="bad"
+            ><Portrait look={LOOK[r.scout.guard]} size={18} />{L.elders[r.scout.guard].name} · {L.lv(
+              r.scout.level,
+            )}</Tag
+          >
         {:else}
           <Tag>{L.pvp.noGuard}</Tag>
         {/if}

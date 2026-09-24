@@ -20,7 +20,8 @@ export const gameRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, o
     const week = weekOf(Date.now())
     const key = `${s.world}:${board}:${week}`
     let hit = cache.get(key)
-    if (!hit || Date.now() - hit.at > TTL) cache.set(key, (hit = { at: Date.now(), rows: await store.topOf(o.db, s.world, board, week) }))
+    if (!hit || Date.now() - hit.at > TTL)
+      cache.set(key, (hit = { at: Date.now(), rows: await store.topOf(o.db, s.world, board, week) }))
     return { rows: hit.rows, me: await store.rankOf(o.db, s.world, board, s.pid, week) }
   })
 }

@@ -160,7 +160,7 @@ export type Mood = 'home' | 'map' | 'battle'
 let mood: Mood = 'home'
 export const setMood = (m: Mood) => void (mood = m)
 
-const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
+const pick = <T>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x))
 
 // Một đoạn 8 phách bắt đầu từ t. p: số thứ tự đoạn; deg: bậc giai điệu hiện tại (đi ngẫu nhiên, trả về bậc mới)
@@ -169,12 +169,30 @@ export function phrase(ac: BaseAudioContext, bus: Bus, t: number, p: number, deg
   const fight = m === 'battle'
   if (p % 2 === 0) drone(ac, bus, t, fight || p % 4 === 0 ? 73.42 : 110, PHRASE * 2 + 1, 0.035) // Rê2 / La2
   if (p % 4 === 0) for (let k = 0; k < 5; k++) pluck(ac, bus, t + k * 0.06, hz(deg - 5 + k), 0.05 + k * 0.01) // vuốt dây mở đoạn
-  if (fight) for (const [beat, v] of [[0, 0.16], [2, 0.1], [4, 0.14], [5.5, 0.08], [6, 0.12]] as const) drum(ac, bus, t + beat * BEAT, v)
+  if (fight)
+    for (const [beat, v] of [
+      [0, 0.16],
+      [2, 0.1],
+      [4, 0.14],
+      [5.5, 0.08],
+      [6, 0.12],
+    ] as const)
+      drum(ac, bus, t + beat * BEAT, v)
   const kind = fight
     ? 'zheng'
     : m === 'map'
-      ? p % 3 === 1 ? 'flute' : p % 8 === 7 ? 'rest' : 'zheng'
-      : p % 4 === 3 ? 'rest' : p % 6 === 4 ? 'flute' : Math.random() < 0.12 ? 'rest' : 'zheng'
+      ? p % 3 === 1
+        ? 'flute'
+        : p % 8 === 7
+          ? 'rest'
+          : 'zheng'
+      : p % 4 === 3
+        ? 'rest'
+        : p % 6 === 4
+          ? 'flute'
+          : Math.random() < 0.12
+            ? 'rest'
+            : 'zheng'
   if (kind === 'flute') {
     let f0: number | undefined
     let at = 0

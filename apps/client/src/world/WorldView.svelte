@@ -45,14 +45,16 @@
   // giữ khung nhìn trong giới: phóng to thì mép màn không vượt mép giới (thu nhỏ hết thì giới nằm giữa)
   const clamp = (c: Cam): Cam => {
     const z = Math.min(1.4, Math.max(zMin(), c.z))
-    const hx = (innerWidth - railPx()) / 2 / z, hy = innerHeight / 2 / z
+    const hx = (innerWidth - railPx()) / 2 / z,
+      hy = innerHeight / 2 / z
     const fit = (v: number, h: number) => (h * 2 >= WORLD_DU ? WORLD_DU / 2 : Math.min(WORLD_DU - h, Math.max(h, v)))
     return { z, x: fit(c.x, hx), y: fit(c.y, hy) }
   }
   // Đổi độ phóng mà giữ nguyên điểm dưới (sx, sy)
   function zoomAt(k: number, sx: number, sy: number) {
     const c = center()
-    const wx = cam.x + (sx - c.x) / cam.z, wy = cam.y + (sy - c.y) / cam.z
+    const wx = cam.x + (sx - c.x) / cam.z,
+      wy = cam.y + (sy - c.y) / cam.z
     const z = Math.min(1.4, Math.max(zMin(), cam.z * k))
     cam = clamp({ z, x: wx - (sx - c.x) / z, y: wy - (sy - c.y) / z })
   }
@@ -76,7 +78,8 @@
   function pointermove(e: PointerEvent) {
     const p = pts.get(e.pointerId)
     if (!p) return
-    const dx = e.clientX - p.x, dy = e.clientY - p.y
+    const dx = e.clientX - p.x,
+      dy = e.clientY - p.y
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pts.size === 2) {
       const [a, b] = [...pts.values()]
@@ -105,7 +108,13 @@
     zoomAt(Math.exp(-e.deltaY * 0.0022), e.clientX, e.clientY)
   }
   function keys(e: KeyboardEvent) {
-    if (e.metaKey || e.ctrlKey || document.querySelector('dialog:modal') || (e.target as Element).closest?.('input, textarea, select')) return
+    if (
+      e.metaKey ||
+      e.ctrlKey ||
+      document.querySelector('dialog:modal') ||
+      (e.target as Element).closest?.('input, textarea, select')
+    )
+      return
     const step = 120 / cam.z
     const k: Record<string, () => void> = {
       ArrowLeft: () => (cam = clamp({ ...cam, x: cam.x - step })),
@@ -158,7 +167,8 @@
     }
   })
 
-  const rel = (pid: number): Rel => (pid === me ? 'me' : allies.includes(pid) ? 'ally' : snap?.seats.find(s => s.pid === pid)?.npc ? 'npc' : 'other')
+  const rel = (pid: number): Rel =>
+    pid === me ? 'me' : allies.includes(pid) ? 'ally' : snap?.seats.find(s => s.pid === pid)?.npc ? 'npc' : 'other'
   $effect(() => {
     if (scene && snap) scene.setData(snap, rel, phase, now)
   })
@@ -201,7 +211,9 @@
         <b class="t-small">{L.rank.fameRow(info.season)} · {L.world.day(day, SEASON_DAYS)} · {L.world.phase[phase]}</b>
         <small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>
       </span>
-      <Button size="sm" variant="ghost" onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}><Icon name="flag" size={14} />{L.world.you}</Button>
+      <Button size="sm" variant="ghost" onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}
+        ><Icon name="flag" size={14} />{L.world.you}</Button
+      >
     </div>
     {#if snap?.chron.length}
       <button class="chron" onclick={() => (chronOpen = !chronOpen)} aria-expanded={chronOpen}>
@@ -210,7 +222,10 @@
       {#if chronOpen}
         <ol class="stack" style:--gap="2px">
           {#each [...snap.chron].reverse().slice(0, 8) as c, i (i)}
-            <li class="t-tiny">{chronText(c.k, c.a)} · <span class="t-faint">{clock(Math.max(0, now - c.at)).replace(/:\d\d$/, '')}</span></li>
+            <li class="t-tiny">
+              {chronText(c.k, c.a)} ·
+              <span class="t-faint">{clock(Math.max(0, now - c.at)).replace(/:\d\d$/, '')}</span>
+            </li>
           {/each}
         </ol>
       {/if}

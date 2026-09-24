@@ -11,7 +11,14 @@
     size = 38,
     onclick,
     children,
-  }: { icon: IconName; label: string; tone?: 'silk' | 'paper'; size?: number; onclick: () => void; children?: Snippet } = $props()
+  }: {
+    icon: IconName
+    label: string
+    tone?: 'silk' | 'paper'
+    size?: number
+    onclick: () => void
+    children?: Snippet
+  } = $props()
 </script>
 
 <button class="ib {tone}" style:--s="{size}px" aria-label={label} title={label} onclick={() => (sfx('tap'), onclick())}>

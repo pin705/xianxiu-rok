@@ -8,7 +8,9 @@ const SKIP = /\.test\.ts$|^(simulate|simpvp|bot|hash)\.ts$/ // công cụ chạy
 export function protocolHash(root = join(import.meta.dirname, '..')) {
   const h = createHash('sha256')
   for (const dir of ['rules', 'protocol'])
-    for (const f of readdirSync(join(root, dir)).filter(f => f.endsWith('.ts') && !SKIP.test(f)).sort())
+    for (const f of readdirSync(join(root, dir))
+      .filter(f => f.endsWith('.ts') && !SKIP.test(f))
+      .sort())
       h.update(`${dir}/${f}\n`).update(readFileSync(join(root, dir, f)))
   return h.digest('hex').slice(0, 12)
 }

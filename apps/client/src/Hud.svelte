@@ -3,7 +3,20 @@
   // dải tab dưới cùng — mọi mặt đều vẽ tay (da từ theme.ts, icon/huy hiệu từ @rok/art), cùng họ màu với tranh.
   import { Tween } from 'svelte/motion'
   import {
-    DAILY_HALL, RESOURCES, count, dailyReady, isWeekend, power, questDone, questOf, questProgress, rate, storage, unitOf, type Bag as Res, type BuildingId,
+    DAILY_HALL,
+    RESOURCES,
+    count,
+    dailyReady,
+    isWeekend,
+    power,
+    questDone,
+    questOf,
+    questProgress,
+    rate,
+    storage,
+    unitOf,
+    type Bag as Res,
+    type BuildingId,
     type State,
   } from '@rok/rules'
   import { Icon, Portrait, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon, type Look } from '@rok/art'
@@ -42,7 +55,14 @@
     onfocus: (id: BuildingId, view?: string) => void // mở bảng công trình (danh sách việc đang chạy)
   } = $props()
 
-  const MASTER: Look = { robe: '#1b4566', trim: '#c9a14a', hair: '#211c17', style: 'bun', bg: '#78a6c2', mark: '#b8382a' }
+  const MASTER: Look = {
+    robe: '#1b4566',
+    trim: '#c9a14a',
+    hair: '#211c17',
+    style: 'bun',
+    bg: '#78a6c2',
+    mark: '#b8382a',
+  }
   const ready = $derived(dailyReady(game))
   let visited = $state(visitedTabs())
   // Ghé tab bằng cách nào cũng tính (bấm tab, hay nhiệm vụ dẫn sang bản đồ)
@@ -55,7 +75,9 @@
   const cap = $derived(storage(game))
   const job = $derived(game.queue[0])
   const live = $derived(questOf(game))
-  const liveProg = $derived(live && live.k !== 'build' && live.k !== 'hunt' && live.k !== 'sect' ? questProgress(game, live) : null)
+  const liveProg = $derived(
+    live && live.k !== 'build' && live.k !== 'hunt' && live.k !== 'sect' ? questProgress(game, live) : null,
+  )
   // Nhận thưởng: giữ nhiệm vụ vừa xong thêm một nhịp để dấu tích son đóng lên, rồi nhiệm vụ mới trượt vào
   let held = $state<{ quest: typeof live; prog: typeof liveProg } | null>(null)
   const quest = $derived(held ? held.quest : live)
@@ -80,17 +102,63 @@
   const runs = $derived.by(() => {
     const out: Run[] = []
     for (const j of game.queue)
-      out.push({ key: `b${j.building}`, icon: 'hammer', text: `${L.b[j.building].name} · ${L.level(j.level)}`, end: j.finishAt, go: () => onfocus(j.building, 'upgrade') })
+      out.push({
+        key: `b${j.building}`,
+        icon: 'hammer',
+        text: `${L.b[j.building].name} · ${L.level(j.level)}`,
+        end: j.finishAt,
+        go: () => onfocus(j.building, 'upgrade'),
+      })
     if (game.train) {
       const u = unitOf(game.train.unit)
-      out.push({ key: 't', icon: 'people', text: L.train.doing(game.train.n, `${L.units[u.type]} ${L.tiers[u.tier]}`), end: game.train.finishAt, go: () => onfocus('dienVoTruong', 'train') })
+      out.push({
+        key: 't',
+        icon: 'people',
+        text: L.train.doing(game.train.n, `${L.units[u.type]} ${L.tiers[u.tier]}`),
+        end: game.train.finishAt,
+        go: () => onfocus('dienVoTruong', 'train'),
+      })
     }
-    if (game.heal) out.push({ key: 'h', icon: 'heal', text: L.alchemy.healing(count(game.heal.troops)), end: game.heal.finishAt, go: () => onfocus('danPhong', 'alchemy') })
-    if (game.brew) out.push({ key: 'p', icon: 'cauldron', text: L.alchemy.brewing(game.brew.n, L.pills[game.brew.pill].name), end: game.brew.finishAt, go: () => onfocus('danPhong', 'alchemy') })
-    if (game.forge) out.push({ key: 'f', icon: 'hammer', text: L.forge.doing(L.gear[game.forge.gear], game.forge.level), end: game.forge.finishAt, go: () => onfocus('luyenKhiPhong', 'forge') })
-    if (game.study) out.push({ key: 's', icon: 'scroll', text: L.library.doing(L.techs[game.study.tech], game.study.level), end: game.study.finishAt, go: () => onfocus('tangKinhCac', 'library') })
+    if (game.heal)
+      out.push({
+        key: 'h',
+        icon: 'heal',
+        text: L.alchemy.healing(count(game.heal.troops)),
+        end: game.heal.finishAt,
+        go: () => onfocus('danPhong', 'alchemy'),
+      })
+    if (game.brew)
+      out.push({
+        key: 'p',
+        icon: 'cauldron',
+        text: L.alchemy.brewing(game.brew.n, L.pills[game.brew.pill].name),
+        end: game.brew.finishAt,
+        go: () => onfocus('danPhong', 'alchemy'),
+      })
+    if (game.forge)
+      out.push({
+        key: 'f',
+        icon: 'hammer',
+        text: L.forge.doing(L.gear[game.forge.gear], game.forge.level),
+        end: game.forge.finishAt,
+        go: () => onfocus('luyenKhiPhong', 'forge'),
+      })
+    if (game.study)
+      out.push({
+        key: 's',
+        icon: 'scroll',
+        text: L.library.doing(L.techs[game.study.tech], game.study.level),
+        end: game.study.finishAt,
+        go: () => onfocus('tangKinhCac', 'library'),
+      })
     for (const m of game.marches)
-      out.push({ key: `m${m.id}`, icon: 'flag', text: L.activity.march(L.elders[m.elder].name, L.target(m.target)), end: now < m.arriveAt ? m.arriveAt : m.returnAt, go: e => (m.target.kind === 'trib' ? onfocus('chuDien', 'upgrade') : ontab('banDo', e)) })
+      out.push({
+        key: `m${m.id}`,
+        icon: 'flag',
+        text: L.activity.march(L.elders[m.elder].name, L.target(m.target)),
+        end: now < m.arriveAt ? m.arriveAt : m.returnAt,
+        go: e => (m.target.kind === 'trib' ? onfocus('chuDien', 'upgrade') : ontab('banDo', e)),
+      })
     return out.sort((a, b) => a.end - b.end)
   })
 
@@ -104,21 +172,44 @@
     <div class="row who">
       <!-- chân dung: chạm để xem xếp hạng; vòng khiên xanh khi đang được bảo hộ -->
       <button class="avatar" class:shielded={game.shield > now} onclick={onranks} aria-label={L.rank.open}>
-        <Portrait look={MASTER} size={50} /><img class="frame" src={paintedUrl('ring', portraitRing, 62)} alt="" draggable="false" />
-        {#if game.shield > now}<span class="shield" title={L.pvp.shield(clock(game.shield - now))}><Icon name="shield" size={18} /></span>{/if}
+        <Portrait look={MASTER} size={50} /><img
+          class="frame"
+          src={paintedUrl('ring', portraitRing, 62)}
+          alt=""
+          draggable="false"
+        />
+        {#if game.shield > now}<span class="shield" title={L.pvp.shield(clock(game.shield - now))}
+            ><Icon name="shield" size={18} /></span
+          >{/if}
       </button>
       <div class="grow id">
         <b class="t-ellipsis">{game.name}</b>
-        <span class="realm"><img src={paintedUrl('lotus', () => emblemArt('lotus'), 18)} width="18" height="18" alt="" draggable="false" />{L.realm(hall)}</span>
+        <span class="realm"
+          ><img
+            src={paintedUrl('lotus', () => emblemArt('lotus'), 18)}
+            width="18"
+            height="18"
+            alt=""
+            draggable="false"
+          />{L.realm(hall)}</span
+        >
       </div>
-      <span class="pow" title={L.power}><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(Math.round(powerT.current))}</span>
-      <IconButton icon="mail" label="{L.mail.title}{letters ? ` (${letters})` : ''}" size={34} onclick={onmail}><Badge n={letters} /></IconButton>
+      <span class="pow" title={L.power}
+        ><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(Math.round(powerT.current))}</span
+      >
+      <IconButton icon="mail" label="{L.mail.title}{letters ? ` (${letters})` : ''}" size={34} onclick={onmail}
+        ><Badge n={letters} /></IconButton
+      >
       <IconButton icon="gear" label={L.settings.open} size={34} onclick={onsettings} />
     </div>
     <ul class="res">
       {#each RESOURCES as r, i (r)}
         {@const full = game.res[r] >= cap}
-        <li class:full data-res={r} title="{L.res[r]}: {num(game.res[r])} / {num(cap)} · +{num(rate(game, r))}{L.panel.perHour}">
+        <li
+          class:full
+          data-res={r}
+          title="{L.res[r]}: {num(game.res[r])} / {num(cap)} · +{num(rate(game, r))}{L.panel.perHour}"
+        >
           <Icon name={r} size={22} />
           <span class="stack">
             <b class="t-num">{num(Math.round(resT[i].current))}<span class="sr"> {L.res[r]}</span></b>
@@ -139,12 +230,23 @@
       {#if quest}
         <button class="quest" class:done class:enter={!held} onclick={done ? claim : onquest}>
           <span class="stack grow" style:--gap="3px">
-            <small class="row">{L.quest.title}{#if prog}<b class="t-num">{num(Math.min(prog[0], prog[1]))}/{num(prog[1])}</b>{/if}</small>
+            <small class="row"
+              >{L.quest.title}{#if prog}<b class="t-num">{num(Math.min(prog[0], prog[1]))}/{num(prog[1])}</b
+                >{/if}</small
+            >
             <b class="qt">{L.quest.text(quest)}</b>
             <Bag res={quest.reward} items={quest.items} size="sm" />
           </span>
           {#if held}
-            <span class="stamp"><img src={paintedUrl('tick', () => emblemArt('tick'), 48)} width="48" height="48" alt="" draggable="false" /></span>
+            <span class="stamp"
+              ><img
+                src={paintedUrl('tick', () => emblemArt('tick'), 48)}
+                width="48"
+                height="48"
+                alt=""
+                draggable="false"
+              /></span
+            >
           {:else if done}
             <span class="claim"><Tag tone="gold" icon="star">{L.quest.claim}</Tag></span>
           {:else}
@@ -156,7 +258,9 @@
       {/if}
       {#if hall >= DAILY_HALL}
         <span class="daily" class:ready={ready > 0}>
-          <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}><Badge n={ready} /></IconButton>
+          <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}
+            ><Badge n={ready} /></IconButton
+          >
           <!-- sự kiện cuối tuần đang diễn ra: nhãn vàng ngay dưới nút nhiệm vụ (chi tiết trong bảng nhiệm vụ) -->
           {#if isWeekend(now)}<Tag tone="gold" size="sm" icon="star">{L.weekend.tag}</Tag>{/if}
         </span>
@@ -164,14 +268,24 @@
       <section class="runs" aria-label={L.activity.title}>
         <h3>{L.activity.title}</h3>
         {#each runs as r (r.key)}
-          <button class="run" onclick={r.go}><Icon name={r.icon} size={16} /><span class="grow t-ellipsis">{r.text}</span><b class="t-num">{clock(r.end - now)}</b></button>
+          <button class="run" onclick={r.go}
+            ><Icon name={r.icon} size={16} /><span class="grow t-ellipsis">{r.text}</span><b class="t-num"
+              >{clock(r.end - now)}</b
+            ></button
+          >
         {:else}
           <p class="t-small">{L.activity.empty}</p>
         {/each}
       </section>
     </div>
 
-    <button class="builder" class:away={tab !== 'tongMon'} class:idle={!job} onclick={onbuilder} aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}">
+    <button
+      class="builder"
+      class:away={tab !== 'tongMon'}
+      class:idle={!job}
+      onclick={onbuilder}
+      aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}"
+    >
       <svg class="ring" viewBox="0 0 60 60" aria-hidden="true">
         <circle class="rbg" cx="30" cy="30" r="26" />
         <circle class="rfg" cx="30" cy="30" r="26" stroke-dasharray="{ring * 163.4} 163.4" />
@@ -186,9 +300,22 @@
       {@const on = t.id === tab}
       {@const locked = hall < t.unlock}
       {@const fresh = !locked && !visited.includes(t.id)}
-      <button class:on class:locked disabled={locked} data-tab={t.id} aria-current={on ? 'page' : undefined} onclick={e => !on && ontab(t.id, e)}>
+      <button
+        class:on
+        class:locked
+        disabled={locked}
+        data-tab={t.id}
+        aria-current={on ? 'page' : undefined}
+        onclick={e => !on && ontab(t.id, e)}
+      >
         <span class="medal">
-          <img src={paintedUrl(`tab:${t.id}`, () => tabIcon(t.id), 44)} width="40" height="40" alt="" draggable="false" />
+          <img
+            src={paintedUrl(`tab:${t.id}`, () => tabIcon(t.id), 44)}
+            width="40"
+            height="40"
+            alt=""
+            draggable="false"
+          />
           {#if locked}<span class="lk"><Icon name="lock" size={10} /></span>{/if}
           {#if !on}<Badge n={t.id === 'banDo' ? unread : 0} dot={t.id === 'monHa' && hurt} {fresh} />{/if}
         </span>
@@ -240,7 +367,9 @@
     cursor: pointer;
   }
   .shielded {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--malachite) 70%, transparent), 0 0 10px color-mix(in srgb, var(--malachite) 50%, transparent);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--malachite) 70%, transparent),
+      0 0 10px color-mix(in srgb, var(--malachite) 50%, transparent);
   }
   .shield {
     position: absolute;
@@ -388,15 +517,29 @@
     animation: stamp 0.4s cubic-bezier(0.5, 0, 0.75, 0) both;
   }
   @keyframes stamp {
-    0% { opacity: 0; scale: 2.6; rotate: -16deg; }
-    60% { opacity: 1; scale: 0.92; rotate: 0deg; }
-    100% { opacity: 1; scale: 1; }
+    0% {
+      opacity: 0;
+      scale: 2.6;
+      rotate: -16deg;
+    }
+    60% {
+      opacity: 1;
+      scale: 0.92;
+      rotate: 0deg;
+    }
+    100% {
+      opacity: 1;
+      scale: 1;
+    }
   }
   .enter {
     animation: enter var(--dur-3) var(--spring);
   }
   @keyframes enter {
-    from { opacity: 0; translate: -14px 0; }
+    from {
+      opacity: 0;
+      translate: -14px 0;
+    }
   }
   .go {
     display: grid;

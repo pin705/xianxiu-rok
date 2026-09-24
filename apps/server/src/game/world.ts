@@ -6,21 +6,82 @@ import { randomInt } from 'node:crypto'
 import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
 import {
-  BUILDINGS, EVENT_PRIZES, IDS, REVENGE_TIME, UNITS, advance, apply, dayOf, eventOf, expAt, jobOf, migrate, newGame, power, weekOf,
-  type Action, type ElderId, type JobKind, type Mail, type Report, type State,
+  BUILDINGS,
+  EVENT_PRIZES,
+  IDS,
+  REVENGE_TIME,
+  UNITS,
+  advance,
+  apply,
+  dayOf,
+  eventOf,
+  expAt,
+  jobOf,
+  migrate,
+  newGame,
+  power,
+  weekOf,
+  type Action,
+  type ElderId,
+  type JobKind,
+  type Mail,
+  type Report,
+  type State,
 } from '@rok/rules'
 import {
-  MARKET_ACTIONS, SEASON_DAYS, WORLD_ACTIONS, advanceAll, allyInfo, allyOf, allyRows, endSeason, worldBuffs, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
-  marketOf, seasonBoard, sideKey, spawn, worldAct,
-  type Chron, type MapCtx, type World as Shared, type WorldAction, type WorldResult,
+  MARKET_ACTIONS,
+  SEASON_DAYS,
+  WORLD_ACTIONS,
+  advanceAll,
+  allyInfo,
+  allyOf,
+  allyRows,
+  endSeason,
+  worldBuffs,
+  atlas,
+  dayIn,
+  eventTop,
+  freshWorld,
+  mail,
+  mapOf,
+  nextRaid,
+  parseWorldAction,
+  phaseOf,
+  raidChance,
+  regionOf,
+  rivals,
+  scout,
+  marketOf,
+  seasonBoard,
+  sideKey,
+  spawn,
+  worldAct,
+  type Chron,
+  type MapCtx,
+  type World as Shared,
+  type WorldAction,
+  type WorldResult,
 } from '@rok/rules/world'
 import { turn } from '@rok/rules/bot'
 import { loadText } from '@rok/i18n'
 
 const vi = await loadText('vi') // tên phân đà NPC (tên tông môn là dữ liệu của giới, mọi người thấy cùng một tên)
 import {
-  diff, view,
-  type Ack, type Bye, type Channel, type ChatMsg, type ClientToServer, type Fame, type Push, type Query, type SayErr, type Seen, type ServerToClient, type Snap, type WorldInfo,
+  diff,
+  view,
+  type Ack,
+  type Bye,
+  type Channel,
+  type ChatMsg,
+  type ClientToServer,
+  type Fame,
+  type Push,
+  type Query,
+  type SayErr,
+  type Seen,
+  type ServerToClient,
+  type Snap,
+  type WorldInfo,
 } from '@rok/protocol'
 import { hasBad, mask, clean as tidy } from '../lib/filter.ts'
 import type { Database } from '../db/index.ts'
@@ -31,7 +92,16 @@ import type { Pusher } from '../lib/push.ts'
 
 export type SocketData = { pid: number; world: number; lang: string }
 export type Sock = Socket<ClientToServer, ServerToClient, Record<string, never>, SocketData>
-export type Env = { db: Database; node: string; commitMs: number; sync: boolean; warpAllowed: boolean; market?: boolean; log: FastifyBaseLogger; push?: Pusher | null }
+export type Env = {
+  db: Database
+  node: string
+  commitMs: number
+  sync: boolean
+  warpAllowed: boolean
+  market?: boolean
+  log: FastifyBaseLogger
+  push?: Pusher | null
+}
 
 type Slot = {
   id: number
@@ -47,7 +117,13 @@ type Slot = {
 }
 // remind: nhắc qua Web Push lúc việc dài xong (người chơi đang offline); không có thì là vé đẩy kết quả trận
 type Wake = { at: number; n: number; pid: number; gen: number; remind?: { k: JobKind | 'march'; away: number } }
-type Pending = { reports: store.Batch['reports']; events: store.Batch['events']; inboxDone: number[]; chat: store.ChatRow[]; gone: number[] }
+type Pending = {
+  reports: store.Batch['reports']
+  events: store.Batch['events']
+  inboxDone: number[]
+  chat: store.ChatRow[]
+  gone: number[]
+}
 const empty = (): Pending => ({ reports: [], events: [], inboxDone: [], chat: [], gone: [] })
 const MAX_TABS = 5
 const NPC_PER = 2 // phân đà NPC mỗi vùng ngoài
@@ -63,7 +139,8 @@ const CHAT_HALL = 3
 const CHAT_KEEP = 50
 const seed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước mọi thao tác: client không đoán trước được trận
 // Chữ người chơi tự đặt mà cả giới thấy: lọc từ tục trước khi vào luật (chat lọc riêng bằng mask)
-const publicText = (a: WorldAction) => (a.type === 'allyFound' ? [a.name, a.tag] : a.type === 'allyNotice' ? [a.text] : [])
+const publicText = (a: WorldAction) =>
+  a.type === 'allyFound' ? [a.name, a.tag] : a.type === 'allyNotice' ? [a.text] : []
 
 export class World {
   readonly id: number
@@ -121,7 +198,14 @@ export class World {
     this.warp = env.warpAllowed ? c.warp : 0
     this.seed = c.seed
     this.opened = c.opensAt.getTime()
-    this.info = { id: c.id, name: c.name, season: c.season, map: c.seed, opened: this.opened, market: env.market !== false }
+    this.info = {
+      id: c.id,
+      name: c.name,
+      season: c.season,
+      map: c.seed,
+      opened: this.opened,
+      market: env.market !== false,
+    }
     for (const r of rows) this.adopt(r)
     const st = (c.state ?? {}) as { week?: number; npcs?: boolean; chron?: Chron[]; world?: Shared; fame?: Fame[] }
     this.shared = { ...freshWorld(), ...st.world } // blob cũ thiếu trường mới: lấy mặc định
@@ -154,7 +238,18 @@ export class World {
     }
     this.ps.set(r.id, s)
     if (r.accountId === null) this.npc.add(r.id)
-    this.slots.set(r.id, { id: r.id, name: r.name, v: 1, conns: new Set(), seen: r.seen, gen: 0, errors: 0, broken: false, day: -1, away: 0 })
+    this.slots.set(r.id, {
+      id: r.id,
+      name: r.name,
+      v: 1,
+      conns: new Set(),
+      seen: r.seen,
+      gen: 0,
+      errors: 0,
+      broken: false,
+      day: -1,
+      away: 0,
+    })
   }
   quarantined(pid: number) {
     return this.bad.has(pid)
@@ -187,7 +282,8 @@ export class World {
   // trùng tên (đã tạo ở lần nhận trước mà chưa kịp ghi cờ) thì DB bỏ qua.
   async ensureNpcs() {
     if (this.npcsMade) return
-    const a = atlas(this.seed), now = this.now()
+    const a = atlas(this.seed),
+      now = this.now()
     const taken = [...this.ps.values()].flatMap(x => (x.seat ? [x.seat] : []))
     const count = new Map<number, number>()
     const rows: { name: string; nameKey: string; state: State }[] = []
@@ -223,8 +319,17 @@ export class World {
         const target = foe && this.ps.get(foe.pid)
         const e = (Object.keys(s.elders) as ElderId[]).find(x => !s.marches.some(m => m.elder === x))
         const army = Object.fromEntries(UNITS.filter(u => s.troops[u] > 0).map(u => [u, s.troops[u]]))
-        if (!foe || !target || !e || !Object.keys(army).length || raidChance(s, e, army, scout(target).side) < 0.8) continue
-        const r = worldAct(this.ps, pid, { type: 'raid', pid: foe.pid, elder: e, army }, now, seed(), this.map(now), this.shared)
+        if (!foe || !target || !e || !Object.keys(army).length || raidChance(s, e, army, scout(target).side) < 0.8)
+          continue
+        const r = worldAct(
+          this.ps,
+          pid,
+          { type: 'raid', pid: foe.pid, elder: e, army },
+          now,
+          seed(),
+          this.map(now),
+          this.shared,
+        )
         if (r.ok) for (const [id, x] of r.changed) this.commit(this.slots.get(id)!, x)
       } catch (err) {
         this.env.log.error({ err, world: this.id, pid }, 'npc turn failed')
@@ -239,12 +344,22 @@ export class World {
     if (!s.seat || s.marches.some(m => m.target.kind === 'spot')) return
     const a = atlas(this.seed)
     const region = regionOf(a, s.seat)
-    const vein = a.points.find(p => p.kind === 'vein' && p.region === region && this.shared.spots[p.i]?.own === undefined)
+    const vein = a.points.find(
+      p => p.kind === 'vein' && p.region === region && this.shared.spots[p.i]?.own === undefined,
+    )
     const e = (Object.keys(s.elders) as ElderId[]).find(x => !s.marches.some(m => m.elder === x))
     if (!vein || !e) return
     const army = Object.fromEntries(UNITS.filter(u => s.troops[u] >= 2).map(u => [u, Math.floor(s.troops[u] / 2)]))
     if (!Object.keys(army).length) return
-    const r = worldAct(this.ps, pid, { type: 'go', i: vein.i, task: 'take', elder: e, army }, now, seed(), this.map(now), this.shared)
+    const r = worldAct(
+      this.ps,
+      pid,
+      { type: 'go', i: vein.i, task: 'take', elder: e, army },
+      now,
+      seed(),
+      this.map(now),
+      this.shared,
+    )
     if (!r.ok) return
     if (r.world !== this.shared) this.share(r.world)
     this.commitAll(r.changed)
@@ -296,7 +411,20 @@ export class World {
     const state = view(this.ps.get(pid)!)
     const v = slot.v
     const at = this.ps.get(pid)!.seat
-    this.deliver(() => sock.emit('welcome', { now, v, state, me: { pid, name: slot.name, world: this.id, x: at?.x ?? null, y: at?.y ?? null }, world: this.info, seen, ro: this.readOnly, warp: this.env.warpAllowed }), true)
+    this.deliver(
+      () =>
+        sock.emit('welcome', {
+          now,
+          v,
+          state,
+          me: { pid, name: slot.name, world: this.id, x: at?.x ?? null, y: at?.y ?? null },
+          world: this.info,
+          seen,
+          ro: this.readOnly,
+          warp: this.env.warpAllowed,
+        }),
+      true,
+    )
     this.wake(slot)
   }
 
@@ -356,7 +484,10 @@ export class World {
     } catch (e) {
       // state bất biến: lỗi giữa chừng không làm hỏng gì, chỉ từ chối thao tác này
       r = { ok: false, error: 'bad' }
-      this.env.log.error({ err: e, world: this.id, pid: slot.id, action: JSON.stringify(a).slice(0, 300) }, 'apply threw')
+      this.env.log.error(
+        { err: e, world: this.id, pid: slot.id, action: JSON.stringify(a).slice(0, 300) },
+        'apply threw',
+      )
       if (++slot.errors >= 5) slot.broken = true
     }
     intents.inc({ result: r.ok ? 'ok' : r.error })
@@ -410,13 +541,15 @@ export class World {
       const a = atlas(this.seed)
       for (const [k, sp] of Object.entries(next.spots)) {
         const p = a.points[Number(k)]
-        if (p?.kind === 'boss' && sp.until && sp.until !== prev.spots[Number(k)]?.until) this.record(this.now(), 'boss', [p.lv])
+        if (p?.kind === 'boss' && sp.until && sp.until !== prev.spots[Number(k)]?.until)
+          this.record(this.now(), 'boss', [p.lv])
       }
     }
     const touched = new Set<number>()
     for (const al of [...Object.values(prev.allies), ...Object.values(next.allies)])
       if (prev.allies[al.id] !== next.allies[al.id]) for (const pid of Object.keys(al.members)) touched.add(Number(pid))
-    for (const pid of touched) for (const c of this.slots.get(pid)?.conns ?? []) this.deliver(() => c.emit('ally'), true)
+    for (const pid of touched)
+      for (const c of this.slots.get(pid)?.conns ?? []) this.deliver(() => c.emit('ally'), true)
     this.schedule()
   }
 
@@ -424,20 +557,31 @@ export class World {
     const pid = sock.data.pid
     if (q.k === 'rivals') {
       this.tick(this.now())
-      return this.deliver(() => ack(rivals(this.ps, pid, this.now(), Math.random, this.map(this.now()), q.pid, this.shared)))
+      return this.deliver(() =>
+        ack(rivals(this.ps, pid, this.now(), Math.random, this.map(this.now()), q.pid, this.shared)),
+      )
     }
     if (q.k === 'chat') {
       const key = this.channel(pid, q.ch)
       return this.deliver(() => ack(key ? (this.chats.get(key) ?? []) : []))
     }
     if (q.k === 'allies') return this.deliver(() => ack(allyRows(this.shared, this.ps)))
-    if (q.k === 'market') return this.deliver(() => ack(this.info.market ? marketOf(this.ps, this.shared, pid, this.now(), q.good) : null))
+    if (q.k === 'market')
+      return this.deliver(() => ack(this.info.market ? marketOf(this.ps, this.shared, pid, this.now(), q.good) : null))
     if (q.k === 'season') {
       const rows = seasonBoard(this.shared, this.ps, this.map(this.now()), this.now())
-      const side = sideKey(this.shared, pid), k = rows.findIndex(r => r.side === side)
-      return this.deliver(() => ack({ rows: rows.slice(0, 20).map(({ name, pts }) => ({ name, pts })), me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts }, fame: this.fame }))
+      const side = sideKey(this.shared, pid),
+        k = rows.findIndex(r => r.side === side)
+      return this.deliver(() =>
+        ack({
+          rows: rows.slice(0, 20).map(({ name, pts }) => ({ name, pts })),
+          me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts },
+          fame: this.fame,
+        }),
+      )
     }
-    if (q.k === 'ally') return this.deliver(() => ack(allyInfo(this.shared, this.ps, pid, p => !!this.slots.get(p)?.conns.size)))
+    if (q.k === 'ally')
+      return this.deliver(() => ack(allyInfo(this.shared, this.ps, pid, p => !!this.slots.get(p)?.conns.size)))
     if (q.k === 'map') {
       const now = this.now()
       this.watchers.set(sock, now + MAP_WATCH)
@@ -475,7 +619,8 @@ export class World {
     if (!rep.length && !Object.keys(p).length) return ack && this.deliver(() => ack({ ok: true })) // chỉ mầm đổi
     const v = ++slot.v
     this.dirty.add(slot.id)
-    for (const r of rep) this.pending.reports.push({ pid: slot.id, id: r.id, at: r.at, kind: r.kind, win: r.win, body: r })
+    for (const r of rep)
+      this.pending.reports.push({ pid: slot.id, id: r.id, at: r.at, kind: r.kind, win: r.win, body: r })
     this.track(slot.id, prev, stored, rep)
     if (rep.length && !slot.conns.size) this.notify(slot, rep)
     const push: Push = rep.length ? { v, p, rep } : { v, p }
@@ -485,7 +630,13 @@ export class World {
     }, true)
     if (ack) this.deliver(() => ack({ ok: true, ...push }), true)
     if (prev.marches !== stored.marches) this.wake(slot)
-    if (prev.seat !== stored.seat || prev.name !== stored.name || prev.levels.chuDien !== stored.levels.chuDien || (prev.marches !== stored.marches && [...prev.marches, ...stored.marches].some(m => m.path || m.target.kind === 'trib')))
+    if (
+      prev.seat !== stored.seat ||
+      prev.name !== stored.name ||
+      prev.levels.chuDien !== stored.levels.chuDien ||
+      (prev.marches !== stored.marches &&
+        [...prev.marches, ...stored.marches].some(m => m.path || m.target.kind === 'trib'))
+    )
       this.mapChanged()
     this.schedule()
   }
@@ -494,23 +645,39 @@ export class World {
   private notify(slot: Slot, rep: Report[]) {
     if (!this.env.push || this.npc.has(slot.id)) return
     for (const r of rep) {
-      if (r.kind === 'pvp' && r.def) this.env.push(slot.id, L => ({ title: L.push.title, body: r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''), tag: 'raid' }))
-      if (r.kind === 'trib') this.env.push(slot.id, L => ({ title: L.trib.title, body: r.win ? L.trib.success : L.trib.fail, tag: 'trib' }))
+      if (r.kind === 'pvp' && r.def)
+        this.env.push(slot.id, L => ({
+          title: L.push.title,
+          body: r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''),
+          tag: 'raid',
+        }))
+      if (r.kind === 'trib')
+        this.env.push(slot.id, L => ({ title: L.trib.title, body: r.win ? L.trib.success : L.trib.fail, tag: 'trib' }))
     }
   }
 
   // Analytics phía server: client không phải gửi gì
   private track(pid: number, prev: State, next: State, rep: Report[]) {
     const at = next.time
-    if (next.levels.chuDien > prev.levels.chuDien) this.event(pid, 'hall', at, { n: next.levels.chuDien, rebirths: next.rebirths })
+    if (next.levels.chuDien > prev.levels.chuDien)
+      this.event(pid, 'hall', at, { n: next.levels.chuDien, rebirths: next.rebirths })
     if (next.rebirths > prev.rebirths) this.event(pid, 'rebirth', at, { n: next.rebirths })
-    for (const r of rep) if (r.kind === 'trib' && r.id >= prev.nextId) this.event(pid, 'trib', at, { win: r.win, hall: next.levels.chuDien })
-    for (const r of rep) if (r.kind === 'pvp' && !r.def && r.id >= prev.nextId) {
-      this.event(pid, 'raid', at, { win: r.win, foe: r.i, hall: next.levels.chuDien })
-      this.record(r.at, 'raid', [next.name, r.foe ?? '', r.win ? 1 : 0])
-    }
+    for (const r of rep)
+      if (r.kind === 'trib' && r.id >= prev.nextId)
+        this.event(pid, 'trib', at, { win: r.win, hall: next.levels.chuDien })
+    for (const r of rep)
+      if (r.kind === 'pvp' && !r.def && r.id >= prev.nextId) {
+        this.event(pid, 'raid', at, { win: r.win, foe: r.i, hall: next.levels.chuDien })
+        this.record(r.at, 'raid', [next.name, r.foe ?? '', r.win ? 1 : 0])
+      }
     // đột phá từ Kim Đan trở lên là chuyện cả giới biết
-    if (next.levels.chuDien > prev.levels.chuDien && next.levels.chuDien >= 11 && next.trib > prev.trib && !this.npc.has(pid)) this.record(at, 'trib', [next.name, next.levels.chuDien])
+    if (
+      next.levels.chuDien > prev.levels.chuDien &&
+      next.levels.chuDien >= 11 &&
+      next.trib > prev.trib &&
+      !this.npc.has(pid)
+    )
+      this.record(at, 'trib', [next.name, next.levels.chuDien])
   }
   event(pid: number, name: string, at: number, props: object = {}) {
     this.pending.events.push({ pid, name, day: dayOf(at), at, props })
@@ -559,14 +726,18 @@ export class World {
   private seasonEnd(now: number) {
     const season = this.info.season
     const r = endSeason(this.ps, this.shared, this.map(now), now, season, this.npc)
-    this.fame = [{ season, at: now, top: r.top.slice(0, 3).map(x => ({ name: x.name, pts: x.pts })) }, ...this.fame].slice(0, 10)
+    this.fame = [
+      { season, at: now, top: r.top.slice(0, 3).map(x => ({ name: x.name, pts: x.pts })) },
+      ...this.fame,
+    ].slice(0, 10)
     this.seed = randomInt(1, 2 ** 31)
     this.opened = now
     this.info = { ...this.info, season: season + 1, map: this.seed, opened: now }
     this.seasonDirty = true
     this.share(r.world)
     this.chron = []
-    const a = atlas(this.seed), taken: { x: number; y: number }[] = []
+    const a = atlas(this.seed),
+      taken: { x: number; y: number }[] = []
     for (const [pid, slot] of this.slots) {
       const s = r.changed.get(pid) ?? this.ps.get(pid)
       const seat = s && spawn(a, taken, Math.random)
@@ -616,7 +787,10 @@ export class World {
     const week = this.week
     eventTop(this.ps, week).forEach((pid, i) => {
       const gift = EVENT_PRIZES[i === 0 ? 0 : i < 3 ? 1 : 2]
-      this.commit(this.slots.get(pid)!, mail(this.ps.get(pid)!, { at: now, k: 'eventTop', a: [i + 1, eventOf(week)], gift }))
+      this.commit(
+        this.slots.get(pid)!,
+        mail(this.ps.get(pid)!, { at: now, k: 'eventTop', a: [i + 1, eventOf(week)], gift }),
+      )
     })
     this.week = weekOf(now)
     this.worldDirty = true
@@ -684,7 +858,13 @@ export class World {
     for (const [key, list] of this.chats) {
       const m = list.find(x => x.id === id)
       if (!m || !this.listeners(key).some(s => s.id === sock.data.pid)) continue
-      await store.reportChat(this.env.db, { world: this.id, msgId: id, reporter: sock.data.pid, author: m.pid, text: m.text })
+      await store.reportChat(this.env.db, {
+        world: this.id,
+        msgId: id,
+        reporter: sock.data.pid,
+        author: m.pid,
+        text: m.text,
+      })
       return true
     }
     return false
@@ -716,7 +896,8 @@ export class World {
       else this.muted.delete(b.pid)
     } else if (r.kind === 'mail' && b.mail) {
       for (const pid of b.pid ? [b.pid] : [...this.slots.keys()]) {
-        const slot = this.slots.get(pid), s = this.ps.get(pid)
+        const slot = this.slots.get(pid),
+          s = this.ps.get(pid)
         if (slot && s) this.commit(slot, mail(s, { ...b.mail, at: now }))
       }
     } else if (r.kind === 'delete' && b.pid) this.remove(b.pid, now)
@@ -758,7 +939,8 @@ export class World {
       const slot = this.slots.get(ev.pid)
       if (slot && ev.remind) {
         const k = ev.remind.k
-        if (slot.away === ev.remind.away && !slot.conns.size) this.env.push?.(slot.id, L => ({ title: L.push.title, body: L.push.done[k], tag: 'done' }))
+        if (slot.away === ev.remind.away && !slot.conns.size)
+          this.env.push?.(slot.id, L => ({ title: L.push.title, body: L.push.done[k], tag: 'done' }))
         continue
       }
       if (!slot || slot.gen !== ev.gen) continue // vé cũ
@@ -800,7 +982,17 @@ export class World {
   async flush(renew = false) {
     if (this.committing || this.lost) return
     const p = this.pending
-    if (!renew && !this.dirty.size && !this.outbox.length && !p.events.length && !p.inboxDone.length && !p.chat.length && !p.gone.length && !this.worldDirty) return
+    if (
+      !renew &&
+      !this.dirty.size &&
+      !this.outbox.length &&
+      !p.events.length &&
+      !p.inboxDone.length &&
+      !p.chat.length &&
+      !p.gone.length &&
+      !this.worldDirty
+    )
+      return
     if (this.commitTimer) clearTimeout(this.commitTimer)
     this.commitTimer = null
     const ids = [...this.dirty].filter(id => this.ps.has(id)) // người vừa xoá tài khoản: không ghi lại
@@ -814,13 +1006,25 @@ export class World {
       const s = this.ps.get(id)!
       const slot = this.slots.get(id)!
       return {
-        id, state: s, name: slot.name, power: Math.round(power(s)), hall: s.levels.chuDien, tower: s.tower, rebirths: s.rebirths,
-        pvp: s.pvp.pts, weekNo: s.ev.week, weekPts: s.ev.pts,
+        id,
+        state: s,
+        name: slot.name,
+        power: Math.round(power(s)),
+        hall: s.levels.chuDien,
+        tower: s.tower,
+        rebirths: s.rebirths,
+        pvp: s.pvp.pts,
+        weekNo: s.ev.week,
+        weekPts: s.ev.pts,
         ...(seenIds.has(id) && slot.seen ? { seen: slot.seen } : {}),
       }
     })
-    const worldState = this.worldDirty ? { week: this.week, npcs: this.npcsMade, chron: this.chron, world: this.shared, fame: this.fame } : undefined
-    const season = this.seasonDirty ? { seed: this.seed, season: this.info.season, opensAt: new Date(this.opened) } : undefined
+    const worldState = this.worldDirty
+      ? { week: this.week, npcs: this.npcsMade, chron: this.chron, world: this.shared, fame: this.fame }
+      : undefined
+    const season = this.seasonDirty
+      ? { seed: this.seed, season: this.info.season, opensAt: new Date(this.opened) }
+      : undefined
     this.seasonDirty = false
     this.worldDirty = false
     this.committing = true
@@ -828,8 +1032,19 @@ export class World {
     const stop = commitSeconds.startTimer()
     try {
       await store.flushWorld(this.env.db, {
-        world: this.id, epoch: this.epoch, node: this.env.node, online: this.online, sync: this.env.sync, state: worldState, season,
-        players, reports: p.reports, events: p.events, inboxDone: p.inboxDone, chat: p.chat, gone: p.gone,
+        world: this.id,
+        epoch: this.epoch,
+        node: this.env.node,
+        online: this.online,
+        sync: this.env.sync,
+        state: worldState,
+        season,
+        players,
+        reports: p.reports,
+        events: p.events,
+        inboxDone: p.inboxDone,
+        chat: p.chat,
+        gone: p.gone,
       })
       stop()
       this.renewedAt = performance.now()
@@ -848,8 +1063,11 @@ export class World {
       if (season) this.seasonDirty = true
       for (const id of seenIds) this.seenDirty.add(id)
       this.pending = {
-        reports: [...p.reports, ...this.pending.reports], events: [...p.events, ...this.pending.events],
-        inboxDone: [...p.inboxDone, ...this.pending.inboxDone], chat: [...p.chat, ...this.pending.chat], gone: [...p.gone, ...this.pending.gone],
+        reports: [...p.reports, ...this.pending.reports],
+        events: [...p.events, ...this.pending.events],
+        inboxDone: [...p.inboxDone, ...this.pending.inboxDone],
+        chat: [...p.chat, ...this.pending.chat],
+        gone: [...p.gone, ...this.pending.gone],
       }
       this.outbox = [...outbox, ...this.outbox]
       this.retries++
@@ -904,7 +1122,11 @@ export class World {
   // Deploy / tắt node: commit lần cuối, nhả lease, báo client nối lại (tới node khác nhận giới)
   async close() {
     this.closing = true
-    for (let i = 0; i < 100 && !this.lost && (this.committing || this.dirty.size || this.outbox.length || this.pending.events.length); i++) {
+    for (
+      let i = 0;
+      i < 100 && !this.lost && (this.committing || this.dirty.size || this.outbox.length || this.pending.events.length);
+      i++
+    ) {
       if (this.committing) await new Promise(r => setTimeout(r, 20))
       else await this.flush(true)
     }
@@ -939,7 +1161,15 @@ function npcState(now: number, name: string, seat: { x: number; y: number }): St
   const s = newGame(now, name)
   const levels = Object.fromEntries(IDS.map(id => [id, BUILDINGS[id].unlock <= 7 ? 7 : 0])) as State['levels']
   return {
-    ...s, name, seat, levels, trib: 1, shield: 0, guard: 'thanhPhong', elders: { thanhPhong: expAt(10) },
-    troops: { ...s.troops, kiem2: 120, phap2: 120, the2: 120 }, res: { linhThach: 20_000, linhThao: 20_000, linhKhoang: 20_000 },
+    ...s,
+    name,
+    seat,
+    levels,
+    trib: 1,
+    shield: 0,
+    guard: 'thanhPhong',
+    elders: { thanhPhong: expAt(10) },
+    troops: { ...s.troops, kiem2: 120, phap2: 120, the2: 120 },
+    res: { linhThach: 20_000, linhThao: 20_000, linhKhoang: 20_000 },
   }
 }

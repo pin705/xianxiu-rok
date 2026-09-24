@@ -2,7 +2,20 @@
 // bóng mây lướt qua, hạc bay ngang; đường tới các nơi đã mở (nét đứt mực), đường hành quân (nét son chạy),
 // cờ quân nội suy theo giờ, nhún bước và tung bụi.
 import { Container, Sprite, TilingSprite } from 'pixi.js'
-import { PIGMENT as C, building, crane, dashTex, glowTex, mapTerrain, marchToken, mistTex, paper, puffTex, sparkTex, type Pt } from '@rok/art'
+import {
+  PIGMENT as C,
+  building,
+  crane,
+  dashTex,
+  glowTex,
+  mapTerrain,
+  marchToken,
+  mistTex,
+  paper,
+  puffTex,
+  sparkTex,
+  type Pt,
+} from '@rok/art'
 import { HOME, place, type March, type State, type Target } from '@rok/rules'
 import { painted, texOf } from './stage'
 import type { Scene } from './View.svelte'
@@ -11,15 +24,51 @@ export const MAP = { w: 400, h: 1000, top: 110, bottom: 170 }
 export const MAP_H = MAP.h + MAP.top + MAP.bottom
 
 const PEAKS = [
-  [30, 690, 120, 90], [370, 650, 130, 110], [150, 600, 90, 70], [250, 470, 140, 100], [20, 360, 110, 120], [380, 330, 120, 90],
-  [160, 260, 150, 120], [340, 160, 120, 110], [60, 170, 130, 100], [230, 110, 170, 90], [110, 900, 120, 60], [300, 960, 150, 70],
+  [30, 690, 120, 90],
+  [370, 650, 130, 110],
+  [150, 600, 90, 70],
+  [250, 470, 140, 100],
+  [20, 360, 110, 120],
+  [380, 330, 120, 90],
+  [160, 260, 150, 120],
+  [340, 160, 120, 110],
+  [60, 170, 130, 100],
+  [230, 110, 170, 90],
+  [110, 900, 120, 60],
+  [300, 960, 150, 70],
 ]
-const PINES = [[40, 880], [352, 862], [130, 640], [270, 700], [20, 520], [205, 440], [370, 540], [100, 360], [300, 350], [150, 180]]
-const RIVER: Pt[] = [[262, 0], [248, 90], [290, 170], [280, 250], [200, 340], [200, 460], [300, 560], [300, 660], [220, 760], [240, 860], [320, 950], [320, 1000]]
+const PINES = [
+  [40, 880],
+  [352, 862],
+  [130, 640],
+  [270, 700],
+  [20, 520],
+  [205, 440],
+  [370, 540],
+  [100, 360],
+  [300, 350],
+  [150, 180],
+]
+const RIVER: Pt[] = [
+  [262, 0],
+  [248, 90],
+  [290, 170],
+  [280, 250],
+  [200, 340],
+  [200, 460],
+  [300, 560],
+  [300, 660],
+  [220, 760],
+  [240, 860],
+  [320, 950],
+  [320, 1000],
+]
 
 // Điểm trên dòng sông ở quãng k (0 đầu nguồn … 1 cuối), nội suy thẳng giữa các điểm
 const riverAt = (k: number): Pt => {
-  const f = Math.max(0, Math.min(0.9999, k)) * (RIVER.length - 1), i = Math.floor(f), u = f - i
+  const f = Math.max(0, Math.min(0.9999, k)) * (RIVER.length - 1),
+    i = Math.floor(f),
+    u = f - i
   return [RIVER[i][0] + (RIVER[i + 1][0] - RIVER[i][0]) * u, RIVER[i][1] + (RIVER[i + 1][1] - RIVER[i][1]) * u]
 }
 
@@ -34,7 +83,15 @@ export function along(x: number, y: number, k: number): [number, number] {
 export const marchK = (m: March, now: number) =>
   !m.returnAt && now >= m.arriveAt
     ? 1
-    : Math.max(0, Math.min(1, now < m.arriveAt ? (now - m.startAt) / (m.arriveAt - m.startAt) : 1 - (now - m.arriveAt) / (m.returnAt - m.arriveAt)))
+    : Math.max(
+        0,
+        Math.min(
+          1,
+          now < m.arriveAt
+            ? (now - m.startAt) / (m.arriveAt - m.startAt)
+            : 1 - (now - m.arriveAt) / (m.returnAt - m.arriveAt),
+        ),
+      )
 
 // Nét đứt dọc đường cong, chia theo độ dài (không theo tham số): tâm + hướng của từng vệt
 function dashes(x: number, y: number, dash: number, gap: number, offset = 0) {
@@ -47,14 +104,24 @@ function dashes(x: number, y: number, dash: number, gap: number, offset = 0) {
   for (let s = offset % (dash + gap); s + dash <= acc[n]; s += dash + gap) {
     const m = s + dash / 2
     while (acc[i + 1] < m) i++
-    const u = (m - acc[i]) / (acc[i + 1] - acc[i] || 1), a = pts[i], b = pts[i + 1]
+    const u = (m - acc[i]) / (acc[i + 1] - acc[i] || 1),
+      a = pts[i],
+      b = pts[i + 1]
     out.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, Math.atan2(b[1] - a[1], b[0] - a[0])])
   }
   return out
 }
 // Vệt mực của nét đứt: ba dáng xen nhau cho khỏi đều tăm tắp
 const dashT = (i: number) => texOf(`dash:${i % 3}`, () => dashTex(32, 10, 3 + (i % 3)))
-function lay(layer: Container, marks: [number, number, number][], len: number, thick: number, color: string, alpha: number, from = 0) {
+function lay(
+  layer: Container,
+  marks: [number, number, number][],
+  len: number,
+  thick: number,
+  color: string,
+  alpha: number,
+  from = 0,
+) {
   marks.forEach(([x, y, a], i) => {
     const s = (layer.children[from + i] as Sprite | undefined) ?? layer.addChild(new Sprite(dashT(from + i)))
     s.anchor.set(0.5)
@@ -100,7 +167,8 @@ export class MapScene implements Scene {
       g.blendMode = 'add'
       g.tint = i % 3 ? 0xe8f4ff : hex(C.azuriteL)
       g.width = g.height = 4 + (i % 3) * 2
-      const off = i / 22, side = ((i * 7) % 5) - 2
+      const off = i / 22,
+        side = ((i * 7) % 5) - 2
       this.body.addChild(g)
       this.tickers.push(() => {
         const k = (off + this.t * 0.012) % 1
@@ -125,7 +193,11 @@ export class MapScene implements Scene {
     this.body.addChild(hs, this.dust, this.troops)
     // bóng mây lướt chậm qua bản đồ (nhìn từ trên cao xuống)
     const glowT = texOf('glow', () => glowTex(64))
-    for (const [x0, y0, w, sp] of [[60, 250, 260, 5], [300, 620, 300, -4], [120, 860, 240, 3]] as const) {
+    for (const [x0, y0, w, sp] of [
+      [60, 250, 260, 5],
+      [300, 620, 300, -4],
+      [120, 860, 240, 3],
+    ] as const) {
       const sh = new Sprite(glowT)
       sh.anchor.set(0.5)
       sh.tint = hex(C.ink)
@@ -133,12 +205,17 @@ export class MapScene implements Scene {
       sh.height = w * 0.55
       sh.alpha = 0.07
       this.body.addChild(sh)
-      this.tickers.push(() => sh.position.set(((x0 + this.t * sp + 700) % 700) - 150, y0 + Math.sin(this.t / 9 + x0) * 20))
+      this.tickers.push(() =>
+        sh.position.set(((x0 + this.t * sp + 700) % 700) - 150, y0 + Math.sin(this.t / 9 + x0) * 20),
+      )
     }
     // hạc bay ngang, thưa
     const wings = [painted('crane:up', () => crane(true)), painted('crane:down', () => crane(false))]
     const flock = new Container()
-    const birds = [[0, 0, 0.8], [26, 10, 0.62]].map(([dx, dy, sc]) => {
+    const birds = [
+      [0, 0, 0.8],
+      [26, 10, 0.62],
+    ].map(([dx, dy, sc]) => {
       const b = new Sprite(wings[0].tex)
       b.anchor.set(wings[0].anchor[0], wings[0].anchor[1])
       b.scale.set(sc / wings[0].scale)
@@ -194,7 +271,7 @@ export class MapScene implements Scene {
     for (const d of [...this.dust.children] as Sprite[]) {
       const e = this.t - (d as Sprite & { t0: number }).t0
       if (e > 1.2) d.destroy()
-      else (d.width = d.height = 5 + e * 10), (d.alpha = 0.4 * (1 - e / 1.2))
+      else ((d.width = d.height = 5 + e * 10), (d.alpha = 0.4 * (1 - e / 1.2)))
     }
   }
 

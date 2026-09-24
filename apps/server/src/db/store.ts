@@ -3,11 +3,30 @@ import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 import { JOIN_DAYS, type State } from '@rok/rules'
 import type { Seen } from '@rok/protocol'
 import type { Database } from './index.ts'
-import { accounts, chat, chatReports, codes, events, inbox, players, pushSubs, reports, sessions, worlds } from './schema.ts'
+import {
+  accounts,
+  chat,
+  chatReports,
+  codes,
+  events,
+  inbox,
+  players,
+  pushSubs,
+  reports,
+  sessions,
+  worlds,
+} from './schema.ts'
 
 // ---------- Phiên ----------
 
-export type Session = { account: number; locale: string; banned: boolean; deleted: boolean; pid: number | null; world: number | null }
+export type Session = {
+  account: number
+  locale: string
+  banned: boolean
+  deleted: boolean
+  pid: number | null
+  world: number | null
+}
 // Mọi lối vào (HTTP, socket) đều qua đây: phiên còn dùng thì dời seen_at (tối đa một lần mỗi ngày) để prune không xoá oan
 export async function findSession(db: Database, hash: Buffer): Promise<Session | null> {
   const [r] = await db
@@ -26,7 +45,11 @@ export async function findSession(db: Database, hash: Buffer): Promise<Session |
     .where(eq(sessions.hash, hash))
   if (!r) return null
   const { stale, ...s } = r
-  if (stale) await db.update(sessions).set({ seenAt: sql`now()` }).where(eq(sessions.hash, hash))
+  if (stale)
+    await db
+      .update(sessions)
+      .set({ seenAt: sql`now()` })
+      .where(eq(sessions.hash, hash))
   return s
 }
 
@@ -37,12 +60,29 @@ export class NameTaken extends Error {}
 // Khách mới: tài khoản + tông môn + phiên trong một transaction. Giới: giới mở id nhỏ nhất còn chỗ; hết chỗ thì mở giới mới.
 export async function createGuest(
   db: Database,
-  g: { hash: Buffer; locale: string; name: string; nameKey: string; crest: number; state: State; cap: number; world?: number; ip?: string; ua?: string; seed: number },
+  g: {
+    hash: Buffer
+    locale: string
+    name: string
+    nameKey: string
+    crest: number
+    state: State
+    cap: number
+    world?: number
+    ip?: string
+    ua?: string
+    seed: number
+  },
 ) {
   try {
     return await db.transaction(async tx => {
       let world = g.world
-        ? (await tx.select({ id: worlds.id }).from(worlds).where(and(eq(worlds.id, g.world), eq(worlds.status, 'open'))))[0]?.id
+        ? (
+            await tx
+              .select({ id: worlds.id })
+              .from(worlds)
+              .where(and(eq(worlds.id, g.world), eq(worlds.status, 'open')))
+          )[0]?.id
         : undefined
       if (!world) {
         await tx.execute(sql`select pg_advisory_xact_lock(hashtext('rok:world'))`) // hai khách cùng lúc không mở hai giới
@@ -58,11 +98,15 @@ export async function createGuest(
         .insert(players)
         .values({ accountId: a.id, worldId: world, name: g.name, nameKey: g.nameKey, crest: g.crest, state: g.state })
         .returning({ id: players.id })
-      await tx.insert(sessions).values({ hash: g.hash, accountId: a.id, ip: g.ip ?? null, ua: g.ua?.slice(0, 200) ?? null })
+      await tx
+        .insert(sessions)
+        .values({ hash: g.hash, accountId: a.id, ip: g.ip ?? null, ua: g.ua?.slice(0, 200) ?? null })
       return { account: a.id, pid: p.id, world }
     })
   } catch (e) {
-    const cause = (e as { cause?: { code?: string; constraint_name?: string } }).cause ?? (e as { code?: string; constraint_name?: string })
+    const cause =
+      (e as { cause?: { code?: string; constraint_name?: string } }).cause ??
+      (e as { code?: string; constraint_name?: string })
     if (cause.code === '23505' && cause.constraint_name === 'players_world_name') throw new NameTaken()
     throw e
   }
@@ -70,13 +114,27 @@ export async function createGuest(
 
 // ---------- Giới: nhận / nhả (lease + epoch) ----------
 
-export type Claimed = { id: number; name: string; seed: number; season: number; state: unknown; epoch: number; warp: number; opensAt: Date }
+export type Claimed = {
+  id: number
+  name: string
+  seed: number
+  season: number
+  state: unknown
+  epoch: number
+  warp: number
+  opensAt: Date
+}
 // Nhận giới nếu chưa ai giữ, hoặc chính node này giữ (khởi động lại), hoặc lease đã hết quá 15 giây
 // (grace: DB chập chờn không làm giới chuyển oan sang node khác)
 export async function claimWorld(db: Database, id: number, node: string): Promise<Claimed | { owner: string | null }> {
   const [w] = await db
     .update(worlds)
-    .set({ owner: node, epoch: sql`${worlds.epoch} + 1`, leaseUntil: sql`now() + interval '15 seconds'`, updatedAt: sql`now()` })
+    .set({
+      owner: node,
+      epoch: sql`${worlds.epoch} + 1`,
+      leaseUntil: sql`now() + interval '15 seconds'`,
+      updatedAt: sql`now()`,
+    })
     .where(
       and(
         eq(worlds.id, id),
@@ -84,7 +142,16 @@ export async function claimWorld(db: Database, id: number, node: string): Promis
         or(isNull(worlds.owner), eq(worlds.owner, node), lt(worlds.leaseUntil, sql`now() - interval '15 seconds'`)),
       ),
     )
-    .returning({ id: worlds.id, name: worlds.name, seed: worlds.seed, season: worlds.season, state: worlds.state, epoch: worlds.epoch, warp: worlds.warp, opensAt: worlds.opensAt })
+    .returning({
+      id: worlds.id,
+      name: worlds.name,
+      seed: worlds.seed,
+      season: worlds.season,
+      state: worlds.state,
+      epoch: worlds.epoch,
+      warp: worlds.warp,
+      opensAt: worlds.opensAt,
+    })
   if (w) return w
   const [o] = await db.select({ owner: worlds.owner }).from(worlds).where(eq(worlds.id, id))
   return { owner: o?.owner ?? null }
@@ -92,25 +159,53 @@ export async function claimWorld(db: Database, id: number, node: string): Promis
 
 // Đường Socket.IO của node đang giữ giới (null: chưa ai giữ, hoặc lease đã hết)
 export async function worldPath(db: Database, id: number) {
-  const [w] = await db.select({ owner: worlds.owner }).from(worlds).where(and(eq(worlds.id, id), sql`${worlds.leaseUntil} > now()`))
+  const [w] = await db
+    .select({ owner: worlds.owner })
+    .from(worlds)
+    .where(and(eq(worlds.id, id), sql`${worlds.leaseUntil} > now()`))
   return w?.owner ?? null
 }
 
 export const releaseWorld = (db: Database, id: number, node: string, epoch: number) =>
-  db.update(worlds).set({ owner: null, leaseUntil: null }).where(and(eq(worlds.id, id), eq(worlds.owner, node), eq(worlds.epoch, epoch)))
+  db
+    .update(worlds)
+    .set({ owner: null, leaseUntil: null })
+    .where(and(eq(worlds.id, id), eq(worlds.owner, node), eq(worlds.epoch, epoch)))
 
 // Giới mồ côi (chưa ai giữ, hoặc lease hết quá grace) và giới đang có chủ — cho vòng cân tải
 export async function worldOwners(db: Database) {
   const rows = await db
-    .select({ id: worlds.id, owner: worlds.owner, live: sql<boolean>`${worlds.leaseUntil} > now()`, orphan: sql<boolean>`${worlds.owner} is null or ${worlds.leaseUntil} < now() - interval '15 seconds'` })
+    .select({
+      id: worlds.id,
+      owner: worlds.owner,
+      live: sql<boolean>`${worlds.leaseUntil} > now()`,
+      orphan: sql<boolean>`${worlds.owner} is null or ${worlds.leaseUntil} < now() - interval '15 seconds'`,
+    })
     .from(worlds)
     .where(sql`${worlds.status} <> 'ended'`)
   return rows
 }
 
-export type PlayerRow = { id: number; accountId: number | null; name: string; crest: number; state: State; seen: Seen | null; worldId: number }
-const playerCols = { id: players.id, accountId: players.accountId, name: players.name, crest: players.crest, state: players.state, seen: players.seen, worldId: players.worldId }
-export const worldPlayers = (db: Database, world: number): Promise<PlayerRow[]> => db.select(playerCols).from(players).where(eq(players.worldId, world))
+export type PlayerRow = {
+  id: number
+  accountId: number | null
+  name: string
+  crest: number
+  state: State
+  seen: Seen | null
+  worldId: number
+}
+const playerCols = {
+  id: players.id,
+  accountId: players.accountId,
+  name: players.name,
+  crest: players.crest,
+  state: players.state,
+  seen: players.seen,
+  worldId: players.worldId,
+}
+export const worldPlayers = (db: Database, world: number): Promise<PlayerRow[]> =>
+  db.select(playerCols).from(players).where(eq(players.worldId, world))
 export const findPlayer = async (db: Database, pid: number): Promise<PlayerRow | null> =>
   (await db.select(playerCols).from(players).where(eq(players.id, pid)))[0] ?? null
 
@@ -125,7 +220,19 @@ export type Batch = {
   state?: object // phần chung của giới, khi đổi
   season?: { seed: number; season: number; opensAt: Date } // hết mùa: bản đồ mới, mùa mới, mở lại từ lúc này
   gone?: number[] // tông môn vừa xoá tài khoản: xoá dòng tài khoản (dây chuyền tông môn, chiến báo, mã, push)
-  players: { id: number; state: State; name: string; power: number; hall: number; tower: number; rebirths: number; pvp: number; weekNo: number; weekPts: number; seen?: Seen }[]
+  players: {
+    id: number
+    state: State
+    name: string
+    power: number
+    hall: number
+    tower: number
+    rebirths: number
+    pvp: number
+    weekNo: number
+    weekPts: number
+    seen?: Seen
+  }[]
   reports: { pid: number; id: number; at: number; kind: string; win: boolean; body: object }[]
   events: { pid: number; name: string; day: number; at: number; props: object }[]
   inboxDone: number[]
@@ -143,7 +250,13 @@ export async function flushWorld(db: Database, b: Batch) {
     const q: Promise<unknown>[] = [
       tx
         .update(worlds)
-        .set({ leaseUntil: sql`now() + interval '15 seconds'`, online: b.online, updatedAt: sql`now()`, ...(b.state && { state: b.state }), ...b.season })
+        .set({
+          leaseUntil: sql`now() + interval '15 seconds'`,
+          online: b.online,
+          updatedAt: sql`now()`,
+          ...(b.state && { state: b.state }),
+          ...b.season,
+        })
         .where(and(eq(worlds.id, b.world), eq(worlds.owner, b.node), eq(worlds.epoch, b.epoch)))
         .returning({ id: worlds.id }),
     ]
@@ -180,8 +293,24 @@ export async function flushWorld(db: Database, b: Batch) {
           on conflict do nothing`),
       )
     if (b.gone?.length)
-      q.push(tx.delete(accounts).where(inArray(accounts.id, tx.select({ id: sql<number>`${players.accountId}` }).from(players).where(and(eq(players.worldId, b.world), inArray(players.id, b.gone))))))
-    if (b.inboxDone.length) q.push(tx.update(inbox).set({ doneAt: sql`now()` }).where(and(eq(inbox.worldId, b.world), inArray(inbox.id, b.inboxDone))))
+      q.push(
+        tx.delete(accounts).where(
+          inArray(
+            accounts.id,
+            tx
+              .select({ id: sql<number>`${players.accountId}` })
+              .from(players)
+              .where(and(eq(players.worldId, b.world), inArray(players.id, b.gone))),
+          ),
+        ),
+      )
+    if (b.inboxDone.length)
+      q.push(
+        tx
+          .update(inbox)
+          .set({ doneAt: sql`now()` })
+          .where(and(eq(inbox.worldId, b.world), inArray(inbox.id, b.inboxDone))),
+      )
     const [fence] = (await Promise.all(q)) as [unknown[]]
     if (!fence.length) throw new Fenced()
   })
@@ -209,26 +338,49 @@ export async function recentChat(db: Database, world: number, limit = 400): Prom
     .limit(limit)
   return rows.reverse().map(r => ({ ...r, at: r.at.getTime() }))
 }
-export const reportChat = (db: Database, r: { world: number; msgId: number; reporter: number; author: number; text: string }) =>
-  db.insert(chatReports).values({ worldId: r.world, msgId: r.msgId, reporter: r.reporter, author: r.author, text: r.text })
-export const setMute = (db: Database, pid: number, until: Date | null) => db.update(players).set({ mutedUntil: until }).where(eq(players.id, pid))
+export const reportChat = (
+  db: Database,
+  r: { world: number; msgId: number; reporter: number; author: number; text: string },
+) =>
+  db
+    .insert(chatReports)
+    .values({ worldId: r.world, msgId: r.msgId, reporter: r.reporter, author: r.author, text: r.text })
+export const setMute = (db: Database, pid: number, until: Date | null) =>
+  db.update(players).set({ mutedUntil: until }).where(eq(players.id, pid))
 export const mutes = (db: Database, world: number) =>
-  db.select({ pid: players.id, until: players.mutedUntil }).from(players).where(and(eq(players.worldId, world), sql`${players.mutedUntil} > now()`))
+  db
+    .select({ pid: players.id, until: players.mutedUntil })
+    .from(players)
+    .where(and(eq(players.worldId, world), sql`${players.mutedUntil} > now()`))
 
 // ---------- Hộp lệnh (inbox): API ghi, chủ giới đọc 2 giây một lần, đánh dấu xong trong chính commit của nó ----------
 
 export type InboxRow = { id: number; kind: string; body: unknown }
 export const openInbox = (db: Database, world: number): Promise<InboxRow[]> =>
-  db.select({ id: inbox.id, kind: inbox.kind, body: inbox.body }).from(inbox).where(and(eq(inbox.worldId, world), isNull(inbox.doneAt))).orderBy(inbox.id).limit(100)
-export const addInbox = (db: Database, world: number, kind: string, body: object) => db.insert(inbox).values({ worldId: world, kind, body }).returning({ id: inbox.id })
+  db
+    .select({ id: inbox.id, kind: inbox.kind, body: inbox.body })
+    .from(inbox)
+    .where(and(eq(inbox.worldId, world), isNull(inbox.doneAt)))
+    .orderBy(inbox.id)
+    .limit(100)
+export const addInbox = (db: Database, world: number, kind: string, body: object) =>
+  db.insert(inbox).values({ worldId: world, kind, body }).returning({ id: inbox.id })
 
 // ---------- Xếp hạng ----------
 
 export const BOARDS = ['power', 'hall', 'tower', 'pvp', 'week'] as const
 export type Board = (typeof BOARDS)[number]
-const boardValue = { power: players.power, hall: players.hall, tower: players.tower, pvp: players.pvp, week: players.weekPts }
-const boardScope = (world: number, board: Board, week: number) => and(eq(players.worldId, world), board === 'week' ? eq(players.weekNo, week) : undefined)
-const boardOrder = (board: Board) => (board === 'hall' ? [desc(players.hall), desc(players.power)] : [desc(boardValue[board])])
+const boardValue = {
+  power: players.power,
+  hall: players.hall,
+  tower: players.tower,
+  pvp: players.pvp,
+  week: players.weekPts,
+}
+const boardScope = (world: number, board: Board, week: number) =>
+  and(eq(players.worldId, world), board === 'week' ? eq(players.weekNo, week) : undefined)
+const boardOrder = (board: Board) =>
+  board === 'hall' ? [desc(players.hall), desc(players.power)] : [desc(boardValue[board])]
 // Top 50 của giới. ponytail: quét cả giới (≤ vài trăm dòng, API cache 30 giây); index khi giới to.
 export async function topOf(db: Database, world: number, board: Board, week: number) {
   const rows = await db
@@ -258,7 +410,11 @@ export async function stats(db: Database) {
       avg((exists (select 1 from d where d.player_id = f.player_id and d.day = f.d0 + 1))::int)::float8 as d1,
       avg((exists (select 1 from d where d.player_id = f.player_id and d.day = f.d0 + 7))::int)::float8 as d7
     from f group by f.d0 order by f.d0 desc limit 60`)
-  const halls = await db.select({ hall: players.hall, n: sql<number>`count(*)::int` }).from(players).groupBy(players.hall).orderBy(players.hall)
+  const halls = await db
+    .select({ hall: players.hall, n: sql<number>`count(*)::int` })
+    .from(players)
+    .groupBy(players.hall)
+    .orderBy(players.hall)
   const tribs = await db.execute<{ hall: number; tries: number; wins: number }>(sql`
     select (props->>'hall')::int as hall, count(*)::int as tries, count(*) filter (where (props->>'win')::boolean)::int as wins
     from ${events} where name = 'trib' group by 1 order by 1`)
@@ -276,12 +432,17 @@ export async function playerReports(db: Database, pid: number, before?: number) 
 }
 
 export const addWarp = (db: Database, world: number, ms: number) =>
-  db.update(worlds).set({ warp: sql`${worlds.warp} + ${ms}` }).where(eq(worlds.id, world))
+  db
+    .update(worlds)
+    .set({ warp: sql`${worlds.warp} + ${ms}` })
+    .where(eq(worlds.id, world))
 
 // Việc hằng đêm: chiến báo 30 ngày, analytics 180 ngày, phiên không dùng 180 ngày. Khoá: nhiều node không chạy chồng.
 export async function prune(db: Database) {
   await db.transaction(async tx => {
-    const [{ ok }] = await tx.execute<{ ok: boolean }>(sql`select pg_try_advisory_xact_lock(hashtext('rok:prune')) as ok`)
+    const [{ ok }] = await tx.execute<{ ok: boolean }>(
+      sql`select pg_try_advisory_xact_lock(hashtext('rok:prune')) as ok`,
+    )
     if (!ok) return
     await tx.delete(reports).where(lt(reports.at, sql`now() - interval '30 days'`))
     await tx.delete(events).where(lt(events.at, sql`now() - interval '180 days'`))
@@ -290,13 +451,15 @@ export async function prune(db: Database) {
   })
 }
 
-
 // ---------- Tài khoản (M9) ----------
 
 export type Login = { account: number; pass: string | null; email: string | null; banned: boolean; deleted: boolean }
 const loginCols = {
-  account: accounts.id, pass: accounts.pass, email: accounts.email,
-  banned: sql<boolean>`${accounts.bannedAt} is not null`, deleted: sql<boolean>`${accounts.deletedAt} is not null`,
+  account: accounts.id,
+  pass: accounts.pass,
+  email: accounts.email,
+  banned: sql<boolean>`${accounts.bannedAt} is not null`,
+  deleted: sql<boolean>`${accounts.deletedAt} is not null`,
 }
 export const accountOf = async (db: Database, id: number): Promise<Login | null> =>
   (await db.select(loginCols).from(accounts).where(eq(accounts.id, id)))[0] ?? null
@@ -307,7 +470,11 @@ export class EmailTaken extends Error {}
 // Khách gắn email + mật khẩu (một lần; đổi mật khẩu đi đường setPass)
 export async function linkEmail(db: Database, account: number, email: string, pass: string) {
   try {
-    const r = await db.update(accounts).set({ email, pass }).where(and(eq(accounts.id, account), isNull(accounts.email))).returning({ id: accounts.id })
+    const r = await db
+      .update(accounts)
+      .set({ email, pass })
+      .where(and(eq(accounts.id, account), isNull(accounts.email)))
+      .returning({ id: accounts.id })
     return r.length > 0
   } catch (e) {
     const cause = (e as { cause?: { code?: string } }).cause ?? (e as { code?: string })
@@ -315,7 +482,8 @@ export async function linkEmail(db: Database, account: number, email: string, pa
     throw e
   }
 }
-export const setPass = (db: Database, account: number, pass: string) => db.update(accounts).set({ pass }).where(eq(accounts.id, account))
+export const setPass = (db: Database, account: number, pass: string) =>
+  db.update(accounts).set({ pass }).where(eq(accounts.id, account))
 
 export const newSession = (db: Database, account: number, hash: Buffer, ip?: string, ua?: string) =>
   db.insert(sessions).values({ hash, accountId: account, ip: ip ?? null, ua: ua?.slice(0, 200) ?? null })
@@ -331,13 +499,21 @@ export async function putCode(db: Database, account: number, hash: Buffer, expir
   })
 }
 export const takeCode = async (db: Database, hash: Buffer): Promise<number | null> =>
-  (await db.delete(codes).where(and(eq(codes.hash, hash), sql`${codes.expiresAt} > now()`)).returning({ account: codes.accountId }))[0]?.account ?? null
+  (
+    await db
+      .delete(codes)
+      .where(and(eq(codes.hash, hash), sql`${codes.expiresAt} > now()`))
+      .returning({ account: codes.accountId })
+  )[0]?.account ?? null
 
 // Xoá tài khoản: đánh dấu + bỏ mọi phiên ngay (không vào được nữa), rồi nhờ chủ giới gỡ tông môn khỏi giới (inbox 'delete');
 // chủ giới xoá dòng tài khoản (dây chuyền: tông môn, chiến báo, mã, đăng ký push) trong commit của chính nó.
 export async function markDeleted(db: Database, account: number, pid: number | null, world: number | null) {
   await db.transaction(async tx => {
-    await tx.update(accounts).set({ deletedAt: sql`now()` }).where(eq(accounts.id, account))
+    await tx
+      .update(accounts)
+      .set({ deletedAt: sql`now()` })
+      .where(eq(accounts.id, account))
     await tx.delete(sessions).where(eq(sessions.accountId, account))
     if (pid && world) await tx.insert(inbox).values({ worldId: world, kind: 'delete', body: { pid } })
     else await tx.delete(accounts).where(eq(accounts.id, account)) // chưa có tông môn: xoá luôn
@@ -347,7 +523,10 @@ export async function markDeleted(db: Database, account: number, pid: number | n
 // ---------- Web Push ----------
 
 export const addPushSub = (db: Database, account: number, sub: { endpoint: string; p256dh: string; auth: string }) =>
-  db.insert(pushSubs).values({ accountId: account, ...sub }).onConflictDoUpdate({ target: pushSubs.endpoint, set: { accountId: account, p256dh: sub.p256dh, auth: sub.auth } })
+  db
+    .insert(pushSubs)
+    .values({ accountId: account, ...sub })
+    .onConflictDoUpdate({ target: pushSubs.endpoint, set: { accountId: account, p256dh: sub.p256dh, auth: sub.auth } })
 export const dropPushSub = (db: Database, endpoint: string, account?: number) =>
   db.delete(pushSubs).where(and(eq(pushSubs.endpoint, endpoint), account ? eq(pushSubs.accountId, account) : undefined))
 // Đăng ký push của người chơi pid, kèm ngôn ngữ tài khoản (server dựng chữ thông báo)

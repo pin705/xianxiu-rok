@@ -3,7 +3,17 @@
 // nội suy theo giờ server. Camera do WorldView điều khiển; cảnh chỉ vẽ theo camera được đưa vào.
 import { Container, Graphics, Sprite, Texture } from 'pixi.js'
 import { MAP_W, atlas, regionOf, tide, type Atlas, type MapMarch, type MapSnap, type Pos } from '@rok/rules/world'
-import { SECT_EMBLEMS, WORLD_TILE, bake, marchToken, medal, vortexTex, worldPiece, type Emblem, type MedalTone } from '@rok/art'
+import {
+  SECT_EMBLEMS,
+  WORLD_TILE,
+  bake,
+  marchToken,
+  medal,
+  vortexTex,
+  worldPiece,
+  type Emblem,
+  type MedalTone,
+} from '@rok/art'
 import type { BakeJob } from './bake.worker'
 import { DPR, painted, texOf } from './stage'
 
@@ -27,7 +37,10 @@ export type Pick =
 class Bakery {
   private worker: Worker | null = null
   private n = 0
-  private wait = new Map<number, { job: Omit<BakeJob, 'id'>; ok: (b: ImageBitmap | HTMLCanvasElement | null) => void }>()
+  private wait = new Map<
+    number,
+    { job: Omit<BakeJob, 'id'>; ok: (b: ImageBitmap | HTMLCanvasElement | null) => void }
+  >()
   constructor() {
     try {
       if (typeof OffscreenCanvas !== 'undefined') {
@@ -41,7 +54,7 @@ class Bakery {
           console.warn('bake worker failed, baking on main thread', e.message)
           this.worker?.terminate()
           this.worker = null
-          for (const [id, w] of this.wait) this.wait.delete(id), w.ok(this.here(w.job))
+          for (const [id, w] of this.wait) (this.wait.delete(id), w.ok(this.here(w.job)))
         }
       }
     } catch {
@@ -50,7 +63,13 @@ class Bakery {
   }
   private here(j: Omit<BakeJob, 'id'>) {
     const a = atlas(j.seed)
-    const piece = worldPiece({ seed: j.seed, tiles: a.tiles, rings: a.regions.map(r => r.ring), w: MAP_W }, j.x0, j.y0, j.n, j.fine)
+    const piece = worldPiece(
+      { seed: j.seed, tiles: a.tiles, rings: a.regions.map(r => r.ring), w: MAP_W },
+      j.x0,
+      j.y0,
+      j.n,
+      j.fine,
+    )
     return bake(piece, j.px / (j.n * T)).canvas as HTMLCanvasElement
   }
   bake(j: Omit<BakeJob, 'id'>): Promise<ImageBitmap | HTMLCanvasElement | null> {
@@ -68,7 +87,8 @@ class Bakery {
 }
 
 // Texture huy hiệu (nướng một lần theo cỡ hiện trên màn)
-const markTex = (emblem: Emblem, tone: MedalTone) => painted(`wmark:${emblem}:${tone}`, () => medal(emblem, tone), (MARK / 48) * DPR * 1.5)
+const markTex = (emblem: Emblem, tone: MedalTone) =>
+  painted(`wmark:${emblem}:${tone}`, () => medal(emblem, tone), (MARK / 48) * DPR * 1.5)
 const ringTex = (color: string) =>
   texOf(`wring:${color}`, () => {
     const c = document.createElement('canvas')
@@ -155,14 +175,20 @@ export class WorldScene {
       if (p.kind === 'gate') add(p, 'tower', p.lv <= phase ? 'jade' : 'ink', 0.7, p.lv <= phase ? 1 : 0.6, 0.3)
       else if (p.kind === 'vein') add(p, 'lotus', sp?.own ? 'jade' : 'realm', 0.8, 1, 0.22)
       else if (p.kind === 'mine') add(p, 'earth', 'gold', 0.7, sp?.until && sp.until > now ? 0.4 : 1, 0.34)
-      else if (p.kind === 'boss') add(p, 'dragon', 'beast', p.lv === 3 ? 1.3 : 1.05, sp?.until && sp.until > now ? 0.4 : 1)
+      else if (p.kind === 'boss')
+        add(p, 'dragon', 'beast', p.lv === 3 ? 1.3 : 1.05, sp?.until && sp.until > now ? 0.4 : 1)
       else add(p, 'rebirth', 'gold', 1.5)
     }
     for (const s of snap.seats) {
       const r = rel(s.pid)
       const faction = SECT_EMBLEMS[regionOf(this.atlas, s) % SECT_EMBLEMS.length]
       // khác nhau cả hình chạm lẫn màu (không chỉ màu): mình huy hiệu lớn, NPC hình tông môn phái, người khác huy hiệu son
-      const m = add(s, r === 'npc' ? faction : 'crest', r === 'me' ? 'gold' : r === 'ally' ? 'jade' : r === 'npc' ? 'ink' : 'red', r === 'me' ? 1.3 : 1)
+      const m = add(
+        s,
+        r === 'npc' ? faction : 'crest',
+        r === 'me' ? 'gold' : r === 'ally' ? 'jade' : r === 'npc' ? 'ink' : 'red',
+        r === 'me' ? 1.3 : 1,
+      )
       if (s.shield) {
         const ring = new Sprite(ringTex('#8cc09d'))
         ring.anchor.set(0.5)
@@ -189,15 +215,25 @@ export class WorldScene {
     const r = (MARK * 0.6) / z
     const d = (p: Pos) => Math.hypot((p.x + 0.5) * T - x, (p.y + 0.5) * T - y)
     // trong mỗi loại lấy cái GẦN NHẤT trong tầm chạm (các tông môn sát nhau vẫn chọn đúng)
-    const nearest = <X,>(list: readonly X[], at: (x: X) => Pos, k = 1) =>
-      list.reduce<[X | null, number]>((best, it) => { const dd = d(at(it)); return dd < r * k && dd < best[1] ? [it, dd] : best }, [null, Infinity])[0]
+    const nearest = <X>(list: readonly X[], at: (x: X) => Pos, k = 1) =>
+      list.reduce<[X | null, number]>(
+        (best, it) => {
+          const dd = d(at(it))
+          return dd < r * k && dd < best[1] ? [it, dd] : best
+        },
+        [null, Infinity],
+      )[0]
     const m = nearest(this.marches, x2 => marchAt(x2, now), 0.8)
     if (m) return { kind: 'march', pid: m.pid, id: m.id }
     const s = nearest(seats, x2 => x2)
     if (s) return { kind: 'seat', pid: s.pid }
     const p = nearest(this.atlas.points, x2 => x2, 1.2)
     if (p) return { kind: 'point', i: p.i }
-    return { kind: 'tile', x: Math.max(0, Math.min(MAP_W - 1, Math.floor(x / T))), y: Math.max(0, Math.min(MAP_W - 1, Math.floor(y / T))) }
+    return {
+      kind: 'tile',
+      x: Math.max(0, Math.min(MAP_W - 1, Math.floor(x / T))),
+      y: Math.max(0, Math.min(MAP_W - 1, Math.floor(y / T))),
+    }
   }
 
   // Mỗi khung: camera → biến đổi gốc; huy hiệu giữ cỡ trên màn; cờ hành quân theo giờ; xin mảnh nét khi phóng to
@@ -261,7 +297,10 @@ export class WorldScene {
 
   // Mảnh nét trong khung nhìn (có đệm): nướng khi cần, bỏ mảnh lâu không dùng nhất khi quá KEEP
   private fine(cam: Cam, sx: number, sy: number) {
-    const x0 = cam.x - sx / cam.z, y0 = cam.y - sy / cam.z, x1 = cam.x + sx / cam.z, y1 = cam.y + sy / cam.z
+    const x0 = cam.x - sx / cam.z,
+      y0 = cam.y - sy / cam.z,
+      x1 = cam.x + sx / cam.z,
+      y1 = cam.y + sy / cam.z
     const span = PIECE * T
     for (let cy = Math.max(0, Math.floor(y0 / span)); cy <= Math.min(4, Math.floor(y1 / span)); cy++)
       for (let cx = Math.max(0, Math.floor(x0 / span)); cx <= Math.min(4, Math.floor(x1 / span)); cx++) {
@@ -273,22 +312,24 @@ export class WorldScene {
         }
         if (this.asked.has(key)) continue
         this.asked.add(key)
-        void this.bakery.bake({ seed: this.atlas.seed, x0: cx * PIECE, y0: cy * PIECE, n: PIECE, px: PIECE_PX, fine: true }).then(b => {
-          this.asked.delete(key)
-          if (!b || this.dead) return
-          const tex = Texture.from(b)
-          const s = new Sprite(tex)
-          s.position.set(cx * span, cy * span)
-          s.width = s.height = span
-          this.land.addChild(s)
-          this.pieces.set(key, { s, used: performance.now(), tex })
-          while (this.pieces.size > KEEP) {
-            const [old] = [...this.pieces].sort((a, b) => a[1].used - b[1].used)
-            old[1].s.destroy()
-            old[1].tex.destroy(true)
-            this.pieces.delete(old[0])
-          }
-        })
+        void this.bakery
+          .bake({ seed: this.atlas.seed, x0: cx * PIECE, y0: cy * PIECE, n: PIECE, px: PIECE_PX, fine: true })
+          .then(b => {
+            this.asked.delete(key)
+            if (!b || this.dead) return
+            const tex = Texture.from(b)
+            const s = new Sprite(tex)
+            s.position.set(cx * span, cy * span)
+            s.width = s.height = span
+            this.land.addChild(s)
+            this.pieces.set(key, { s, used: performance.now(), tex })
+            while (this.pieces.size > KEEP) {
+              const [old] = [...this.pieces].sort((a, b) => a[1].used - b[1].used)
+              old[1].s.destroy()
+              old[1].tex.destroy(true)
+              this.pieces.delete(old[0])
+            }
+          })
       }
   }
 

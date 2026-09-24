@@ -24,7 +24,8 @@
 {#if isItem(name) || isGear(name) || isColored(name)}
   <img class="icon" {src} width={size} height={size} alt="" aria-hidden="true" draggable="false" />
 {:else}
-  <span class="icon mask" style:width="{size}px" style:height="{size}px" style:--m="url({src})" aria-hidden="true"></span>
+  <span class="icon mask" style:width="{size}px" style:height="{size}px" style:--m="url({src})" aria-hidden="true"
+  ></span>
 {/if}
 
 <style>

@@ -9,7 +9,11 @@ import * as store from '../db/store.ts'
 export type Note = { title: string; body: string; tag: string } // tag: thông báo cùng loại thay nhau, không chồng
 export type Pusher = (pid: number, note: (L: Text) => Note) => void
 
-export function makePusher(db: Database, keys: { pub?: string; priv?: string; subject: string }, log: FastifyBaseLogger): Pusher | null {
+export function makePusher(
+  db: Database,
+  keys: { pub?: string; priv?: string; subject: string },
+  log: FastifyBaseLogger,
+): Pusher | null {
   if (!keys.pub || !keys.priv) return null
   webpush.setVapidDetails(keys.subject, keys.pub, keys.priv)
   // bắn rồi quên: actor không chờ mạng ngoài; lỗi chỉ ghi log
@@ -17,11 +21,16 @@ export function makePusher(db: Database, keys: { pub?: string; priv?: string; su
     void (async () => {
       for (const s of await store.pushSubsOf(db, pid)) {
         const body = JSON.stringify(note(await loadText(pick(s.locale, []))))
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, { TTL: 6 * 3600, urgency: 'normal' }).catch(e => {
-          const code = (e as { statusCode?: number }).statusCode
-          if (code === 404 || code === 410) return store.dropPushSub(db, s.endpoint)
-          log.warn({ err: e, pid, code }, 'push send failed')
-        })
+        await webpush
+          .sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, {
+            TTL: 6 * 3600,
+            urgency: 'normal',
+          })
+          .catch(e => {
+            const code = (e as { statusCode?: number }).statusCode
+            if (code === 404 || code === 410) return store.dropPushSub(db, s.endpoint)
+            log.warn({ err: e, pid, code }, 'push send failed')
+          })
       }
     })().catch(e => log.warn({ err: e, pid }, 'push failed'))
 }

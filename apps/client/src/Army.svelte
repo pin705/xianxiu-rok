@@ -1,6 +1,18 @@
 <script lang="ts">
   // Chọn đội: trưởng lão dẫn đội + số đệ tử mỗi loại. Trước khi đánh: lực chiến hai bên + tỉ lệ thắng ước lượng.
-  import { ELDER_IDS, UNITS, count, elderLevel, might, sideOf, unitOf, type Army, type ElderId, type State, type UnitId } from '@rok/rules'
+  import {
+    ELDER_IDS,
+    UNITS,
+    count,
+    elderLevel,
+    might,
+    sideOf,
+    unitOf,
+    type Army,
+    type ElderId,
+    type State,
+    type UnitId,
+  } from '@rok/rules'
   import { Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Section, Slider } from './ui'
   import { EMBLEM, L, LOOK, num } from './lib'
@@ -25,7 +37,9 @@
     onrecruit?: () => void
   } = $props()
 
-  const idle = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined).sort((a, b) => (game.elders[b] ?? 0) - (game.elders[a] ?? 0)))
+  const idle = $derived(
+    ELDER_IDS.filter(e => game.elders[e] !== undefined).sort((a, b) => (game.elders[b] ?? 0) - (game.elders[a] ?? 0)),
+  )
   const busy = (e: ElderId) => game.marches.some(m => m.elder === e)
   let elder = $state<ElderId | null>(null)
   const lead = $derived(elder && !busy(elder) ? elder : (idle.find(e => !busy(e)) ?? null))
@@ -33,7 +47,11 @@
   let picks = $state<Partial<Record<UnitId, number>>>({})
   let touched = $state(false)
   // Mặc định mang tất cả; chỉnh tay thì giữ theo người chơi (nhưng không quá số đang có)
-  const army = $derived(Object.fromEntries(home.map(u => [u, Math.min(game.troops[u], touched ? (picks[u] ?? 0) : game.troops[u])])) as Army)
+  const army = $derived(
+    Object.fromEntries(
+      home.map(u => [u, Math.min(game.troops[u], touched ? (picks[u] ?? 0) : game.troops[u])]),
+    ) as Army,
+  )
   const ours = $derived(lead ? might(sideOf(game, lead, army)) : 0)
   // Nhận định dựa trên đánh thử (tính hệ khắc, công pháp), không dựa lực chiến thô
   const p = $derived(lead && chance ? chance(lead, army) : 0)
@@ -86,7 +104,9 @@
         <li class="row">
           <Medal emblem={EMBLEM.unit[t.type]} tone={t.type} size={32} pips={t.tier} />
           <span class="grow">
-            <span class="row between t-small"><span>{L.unit(u)}</span><b class="t-num">{num(army[u] ?? 0)}/{num(game.troops[u])}</b></span>
+            <span class="row between t-small"
+              ><span>{L.unit(u)}</span><b class="t-num">{num(army[u] ?? 0)}/{num(game.troops[u])}</b></span
+            >
             <Slider value={army[u] ?? 0} max={game.troops[u]} label={L.unit(u)} onchange={n => set(u, n)} />
           </span>
         </li>
@@ -100,11 +120,22 @@
 
 {#if chance && foe !== undefined}
   <div class="row mt-4">
-    <span class="stack" style:--gap="0"><small class="t-tiny t-soft">{L.army.ours}</small><b class="t-num">{num(ours)}</b></span>
-    <span class="grow"><Meter value={p} tone={verdict === 'weak' ? 'bad' : verdict === 'even' ? 'gold' : 'good'} size="lg" /></span>
-    <span class="stack center" style:--gap="0"><small class="t-tiny t-soft">{L.army.theirs}</small><b class="t-num">{num(foe)}</b></span>
+    <span class="stack" style:--gap="0"
+      ><small class="t-tiny t-soft">{L.army.ours}</small><b class="t-num">{num(ours)}</b></span
+    >
+    <span class="grow"
+      ><Meter value={p} tone={verdict === 'weak' ? 'bad' : verdict === 'even' ? 'gold' : 'good'} size="lg" /></span
+    >
+    <span class="stack center" style:--gap="0"
+      ><small class="t-tiny t-soft">{L.army.theirs}</small><b class="t-num">{num(foe)}</b></span
+    >
   </div>
-  <p class="center t-small t-strong mt-2" class:t-good={verdict === 'strong'} class:t-gold={verdict === 'even'} class:t-bad={verdict === 'weak'}>
+  <p
+    class="center t-small t-strong mt-2"
+    class:t-good={verdict === 'strong'}
+    class:t-gold={verdict === 'even'}
+    class:t-bad={verdict === 'weak'}
+  >
     {L.army.verdict[verdict]} · {L.army.chance(Math.round(p * 100))}
   </p>
 {:else}
@@ -112,11 +143,21 @@
 {/if}
 <!-- yếu thế mà vẫn còn quân: chỉ đường đi tuyển thêm (không quân thì nút đã có ở trên) -->
 {#if chance && verdict === 'weak' && home.length && onrecruit}
-  <div class="row center mt-2"><Button variant="ghost" size="sm" icon="people" onclick={onrecruit}>{L.army.recruit}</Button></div>
+  <div class="row center mt-2">
+    <Button variant="ghost" size="sm" icon="people" onclick={onrecruit}>{L.army.recruit}</Button>
+  </div>
 {/if}
 
 <div class="mt-3">
-  <Button wide size="lg" icon="flag" trail={time} trailIcon="clock" disabled={disabled || !lead || !count(army)} onclick={() => lead && onsubmit(lead, army)}>{cta}</Button>
+  <Button
+    wide
+    size="lg"
+    icon="flag"
+    trail={time}
+    trailIcon="clock"
+    disabled={disabled || !lead || !count(army)}
+    onclick={() => lead && onsubmit(lead, army)}>{cta}</Button
+  >
 </div>
 
 <style>

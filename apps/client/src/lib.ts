@@ -1,4 +1,13 @@
-import { BEAST_EMBLEMS, ELEMENT_EMBLEMS, REALM_EMBLEMS, SECT_EMBLEMS, UNIT_EMBLEMS, type Emblem, type Look, type TabIcon } from '@rok/art'
+import {
+  BEAST_EMBLEMS,
+  ELEMENT_EMBLEMS,
+  REALM_EMBLEMS,
+  SECT_EMBLEMS,
+  UNIT_EMBLEMS,
+  type Emblem,
+  type Look,
+  type TabIcon,
+} from '@rok/art'
 import type { ElderId, Element, Report, UnitType } from '@rok/rules'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
@@ -44,19 +53,95 @@ export const EMBLEM = {
 }
 
 export const LOOK: Record<ElderId, Look> = {
-  thanhPhong: { robe: '#3f6f8a', trim: '#c9a14a', hair: '#e8e6e0', style: 'bun', beard: 'long', bg: '#8fb3bd', mark: '#5fb7c9' },
+  thanhPhong: {
+    robe: '#3f6f8a',
+    trim: '#c9a14a',
+    hair: '#e8e6e0',
+    style: 'bun',
+    beard: 'long',
+    bg: '#8fb3bd',
+    mark: '#5fb7c9',
+  },
   thachKien: { robe: '#7a5234', trim: '#2b2b2b', hair: '#2b2622', style: 'bald', beard: 'short', bg: '#b89a78' },
-  nhuYen: { robe: '#b8412c', trim: '#f1d98f', hair: '#1a1616', style: 'long', female: true, bg: '#e0a58f', mark: '#c23b22' },
+  nhuYen: {
+    robe: '#b8412c',
+    trim: '#f1d98f',
+    hair: '#1a1616',
+    style: 'long',
+    female: true,
+    bg: '#e0a58f',
+    mark: '#c23b22',
+  },
   loiChan: { robe: '#4b3f86', trim: '#f5d34f', hair: '#16181f', style: 'tied', bg: '#9d95c8' },
   vanHac: { robe: '#e9ece6', trim: '#c23b22', hair: '#f4f4f0', style: 'bald', beard: 'long', bg: '#a9c6b4' },
-  hanBang: { robe: '#8fc3dc', trim: '#e9f6fb', hair: '#dfe9ef', style: 'crown', female: true, bg: '#bcd9e6', mark: '#5aa5d0' },
+  hanBang: {
+    robe: '#8fc3dc',
+    trim: '#e9f6fb',
+    hair: '#dfe9ef',
+    style: 'crown',
+    female: true,
+    bg: '#bcd9e6',
+    mark: '#5aa5d0',
+  },
   // Từ tầng 15: kim · thổ · hoả · thuỷ · mộc · thuỷ
-  bachVoNhai: { robe: '#eef0ee', trim: '#8f9aa6', hair: '#dde2e8', style: 'long', brow: 'fierce', sword: '#b8382a', bg: '#aab5c0' },
-  macSau: { robe: '#8a6d45', trim: '#d9c49a', hair: '#5b5048', style: 'long', beard: 'short', brow: 'sad', hat: '#c9a86a', bg: '#c4ad86' },
-  hoacThienCuong: { robe: '#8e2a1c', trim: '#f0a24a', hair: '#3a120c', style: 'wild', beard: 'short', brow: 'fierce', bg: '#e8a06e', mark: '#f0a24a' },
-  toMiNuong: { robe: '#2f7f8f', trim: '#f2b8c6', hair: '#1c1a26', style: 'bun', female: true, flower: '#f29ab4', bg: '#a3d6d6', mark: '#e0506a' },
-  diepCoThanh: { robe: '#3e7a4f', trim: '#1f3a2a', hair: '#15140f', style: 'tied', band: '#8cc09d', sword: '#c9a14a', bg: '#a2c7a0' },
-  huyenMinh: { robe: '#1d2a44', trim: '#6fb3c9', hair: '#ecedf2', style: 'crown', beard: 'long', brow: 'long', bg: '#56708c', mark: '#7fd6dc' },
+  bachVoNhai: {
+    robe: '#eef0ee',
+    trim: '#8f9aa6',
+    hair: '#dde2e8',
+    style: 'long',
+    brow: 'fierce',
+    sword: '#b8382a',
+    bg: '#aab5c0',
+  },
+  macSau: {
+    robe: '#8a6d45',
+    trim: '#d9c49a',
+    hair: '#5b5048',
+    style: 'long',
+    beard: 'short',
+    brow: 'sad',
+    hat: '#c9a86a',
+    bg: '#c4ad86',
+  },
+  hoacThienCuong: {
+    robe: '#8e2a1c',
+    trim: '#f0a24a',
+    hair: '#3a120c',
+    style: 'wild',
+    beard: 'short',
+    brow: 'fierce',
+    bg: '#e8a06e',
+    mark: '#f0a24a',
+  },
+  toMiNuong: {
+    robe: '#2f7f8f',
+    trim: '#f2b8c6',
+    hair: '#1c1a26',
+    style: 'bun',
+    female: true,
+    flower: '#f29ab4',
+    bg: '#a3d6d6',
+    mark: '#e0506a',
+  },
+  diepCoThanh: {
+    robe: '#3e7a4f',
+    trim: '#1f3a2a',
+    hair: '#15140f',
+    style: 'tied',
+    band: '#8cc09d',
+    sword: '#c9a14a',
+    bg: '#a2c7a0',
+  },
+  huyenMinh: {
+    robe: '#1d2a44',
+    trim: '#6fb3c9',
+    hair: '#ecedf2',
+    style: 'crown',
+    beard: 'long',
+    brow: 'long',
+    bg: '#56708c',
+    mark: '#7fd6dc',
+  },
 }
 
 export const TABS: readonly { id: TabIcon; unlock: number }[] = [
@@ -77,22 +162,30 @@ export const progress = (j: { startAt: number; finishAt: number }, now: number) 
 
 export function clock(ms: number) {
   const t = Math.max(0, Math.ceil(ms / 1000))
-  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60)
+  const h = Math.floor(t / 3600),
+    m = Math.floor((t % 3600) / 60)
   const ss = String(t % 60).padStart(2, '0')
   return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`
 }
 
 // n tên khác nhau (danh sách gợi ý dùng tên làm key, trùng là vỡ)
 export function suggestNames(n: number) {
-  const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
+  const pick = <T>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
   const names = new Set<string>()
   while (names.size < n) names.add(`${pick(L.naming.first)} ${pick(L.naming.last)}`)
   return [...names]
 }
 
-export const spotName = (kind?: string) => L.world.point[(kind ?? 'vein') as keyof typeof L.world.point] ?? L.world.point.vein
+export const spotName = (kind?: string) =>
+  L.world.point[(kind ?? 'vein') as keyof typeof L.world.point] ?? L.world.point.vein
 export const reportName = (r: Report) =>
-  r.kind === 'trib' ? L.trib.title : r.kind === 'pvp' ? (r.foe ?? L.pvp.kind) : r.kind === 'spot' ? spotName(r.spot) : L.target({ kind: r.kind, i: r.i })
+  r.kind === 'trib'
+    ? L.trib.title
+    : r.kind === 'pvp'
+      ? (r.foe ?? L.pvp.kind)
+      : r.kind === 'spot'
+        ? spotName(r.spot)
+        : L.target({ kind: r.kind, i: r.i })
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE
 export const marchName = (m: { target: { kind: string; i: number }; foe?: string; spot?: string }) =>
   m.foe ?? (m.target.kind === 'spot' ? spotName(m.spot) : L.target(m.target as Parameters<typeof L.target>[0]))
@@ -132,7 +225,8 @@ export function setMuted(m: boolean) {
   write('rok.mute', m ? '1' : '0')
 }
 
-export type Sfx = 'tap' | 'build' | 'done' | 'reward' | 'march' | 'hit' | 'win' | 'lose' | 'thunder' | 'err' | 'stamp' | 'whoosh'
+export type Sfx =
+  'tap' | 'build' | 'done' | 'reward' | 'march' | 'hit' | 'win' | 'lose' | 'thunder' | 'err' | 'stamp' | 'whoosh'
 export function sfx(kind: Sfx) {
   const buzz = (p: number | number[]) => navigator.userActivation?.hasBeenActive && navigator.vibrate?.(p)
   if (kind === 'done' || kind === 'reward' || kind === 'win') buzz(18)

@@ -14,7 +14,9 @@
     const t = setTimeout(() => (late = true), 1500)
     return () => clearTimeout(t)
   })
-  const modal = $derived(status === 'offline' || status === 'update' || status === 'lost' || status === 'banned' || status === 'deleted')
+  const modal = $derived(
+    status === 'offline' || status === 'update' || status === 'lost' || status === 'banned' || status === 'deleted',
+  )
 </script>
 
 {#if status === 'reconnecting' && late}

@@ -14,11 +14,11 @@ export const MAX_LEVEL = 25
 export const REBIRTH_HALL = 15
 export const QUEUE_SIZE = 1
 export const START: Bag = b(1000, 1000, 1000)
-export const BASE_CAP = 2000   // sức chứa mỗi loại khi chưa có Tàng Bảo Các
+export const BASE_CAP = 2000 // sức chứa mỗi loại khi chưa có Tàng Bảo Các
 // Linh khí tự nhiên của núi: mỗi loại 60/giờ dù chưa có công trình nào. Không có nó, người dồn hết tài nguyên nâng
 // Chủ điện trước khi xây Linh điền/Khoáng mạch sẽ kẹt vĩnh viễn (xây hai nhà đó cần chính thảo/khoáng đã cạn).
 export const BASE_RATE = 60
-export const CAP_GROWTH = 1.3  // mỗi tầng Tàng Bảo Các
+export const CAP_GROWTH = 1.3 // mỗi tầng Tàng Bảo Các
 export const COST_GROWTH = 1.6 // mỗi tầng công trình
 export const TIME_GROWTH = 1.7
 // Trên tầng KNEE đường tăng trưởng thoải hẳn: nhân tiếp 1,6 thì Chủ điện 25 tốn 7,9M mỗi loại và 5 657 giờ xây.
@@ -30,23 +30,23 @@ export const RATE_HIGH = 1.5
 
 export type BuildingDef = {
   unlock: number // tầng Chủ điện cần để xây
-  cost: Bag      // chi phí lên tầng 1, tầng sau nhân COST_GROWTH
-  time: number   // giây lên tầng 1, tầng sau nhân TIME_GROWTH
-  power: number  // thế lực mỗi tầng, cộng dồn: tầng n góp power × (1 + 2 + … + n)
-  makes?: Res    // tài nguyên sản xuất
-  rate?: number  // sản lượng mỗi giờ, cho mỗi tầng
+  cost: Bag // chi phí lên tầng 1, tầng sau nhân COST_GROWTH
+  time: number // giây lên tầng 1, tầng sau nhân TIME_GROWTH
+  power: number // thế lực mỗi tầng, cộng dồn: tầng n góp power × (1 + 2 + … + n)
+  makes?: Res // tài nguyên sản xuất
+  rate?: number // sản lượng mỗi giờ, cho mỗi tầng
 }
 
 // Chủ điện bắt đầu ở tầng 1, nên lần nâng đầu là lên tầng 2.
 const defs = {
-  chuDien:      { unlock: 1, time: 60, power: 40, cost: b(100, 100, 100) },
-  tuLinhTran:   { unlock: 1, time: 10, power: 8, cost: b(0, 80, 80), makes: 'linhThach', rate: 600 },
-  linhDien:     { unlock: 1, time: 10, power: 8, cost: b(80, 0, 80), makes: 'linhThao', rate: 600 },
-  khoangMach:   { unlock: 1, time: 10, power: 8, cost: b(80, 80, 0), makes: 'linhKhoang', rate: 600 },
-  tangBaoCac:   { unlock: 2, time: 20, power: 10, cost: b(100, 60, 100) },
+  chuDien: { unlock: 1, time: 60, power: 40, cost: b(100, 100, 100) },
+  tuLinhTran: { unlock: 1, time: 10, power: 8, cost: b(0, 80, 80), makes: 'linhThach', rate: 600 },
+  linhDien: { unlock: 1, time: 10, power: 8, cost: b(80, 0, 80), makes: 'linhThao', rate: 600 },
+  khoangMach: { unlock: 1, time: 10, power: 8, cost: b(80, 80, 0), makes: 'linhKhoang', rate: 600 },
+  tangBaoCac: { unlock: 2, time: 20, power: 10, cost: b(100, 60, 100) },
   dienVoTruong: { unlock: 2, time: 30, power: 14, cost: b(120, 120, 60) },
-  danPhong:     { unlock: 3, time: 45, power: 16, cost: b(100, 150, 100) },
-  tangKinhCac:  { unlock: 4, time: 45, power: 16, cost: b(150, 80, 150) },
+  danPhong: { unlock: 3, time: 45, power: 16, cost: b(100, 150, 100) },
+  tangKinhCac: { unlock: 4, time: 45, power: 16, cost: b(150, 80, 150) },
   luyenKhiPhong: { unlock: 8, time: 45, power: 16, cost: b(110, 70, 140) },
   hoSonDaiTran: { unlock: 6, time: 40, power: 18, cost: b(120, 90, 130) }, // Hộ Sơn Đại Trận: bên thủ mạnh hơn GUARD_STEP mỗi tầng
 } satisfies Record<string, BuildingDef>
@@ -83,30 +83,48 @@ export const UNIT_BASE: Record<UnitType, { atk: number; def: number; hp: number;
 export type UnitId = `${UnitType}${Tier}`
 export const UNITS = TYPES.flatMap(t => TIERS.map(n => `${t}${n}` as UnitId))
 
-export const BATCH_BASE = 20     // số đệ tử mỗi lượt tuyển: BATCH_BASE + BATCH_STEP × tầng Diễn võ trường
+export const BATCH_BASE = 20 // số đệ tử mỗi lượt tuyển: BATCH_BASE + BATCH_STEP × tầng Diễn võ trường
 export const BATCH_STEP = 20
-export const HOSPITAL_BASE = 80  // chỗ nằm thương binh: HOSPITAL_BASE + HOSPITAL_STEP × tầng Đan phòng
+export const HOSPITAL_BASE = 80 // chỗ nằm thương binh: HOSPITAL_BASE + HOSPITAL_STEP × tầng Đan phòng
 export const HOSPITAL_STEP = 120
-export const HEAL_COST = 0.4     // chữa 1 thương binh tốn 40% chi phí tuyển
+export const HEAL_COST = 0.4 // chữa 1 thương binh tốn 40% chi phí tuyển
 export const HEAL_TIME = 0.3
 
 // ---------- Trận đánh ----------
 
-export const DEF_K = 60        // giảm sát thương = thủ / (DEF_K + thủ)
-export const MAX_ROUNDS = 10   // hết 10 lượt chưa phân thắng bại: bên tấn công rút lui
-export const SKILL_EVERY = 3   // trưởng lão thi triển công pháp ở lượt 3, 6, 9
+export const DEF_K = 60 // giảm sát thương = thủ / (DEF_K + thủ)
+export const MAX_ROUNDS = 10 // hết 10 lượt chưa phân thắng bại: bên tấn công rút lui
+export const SKILL_EVERY = 3 // trưởng lão thi triển công pháp ở lượt 3, 6, 9
 
 // Trưởng lão là trận nhãn: mỗi cấp +4% công và máu cả đội
 export const ELDER_STEP = 0.04
 export const ELDER_MAX = 40
-export const EXP_BASE = 50     // tổng kinh nghiệm để đạt cấp n: EXP_BASE × n × (n − 1)
-export const LOSS_EXP = 0      // thua không có kinh nghiệm: bí cảnh đánh tức thì, cho kinh nghiệm khi thua là cày cấp bằng cách gửi 1 đệ tử
+export const EXP_BASE = 50 // tổng kinh nghiệm để đạt cấp n: EXP_BASE × n × (n − 1)
+export const LOSS_EXP = 0 // thua không có kinh nghiệm: bí cảnh đánh tức thì, cho kinh nghiệm khi thua là cày cấp bằng cách gửi 1 đệ tử
 
 // skill: sức công pháp chủ động của trưởng lão · forge: thời gian luyện pháp bảo
 export type Bonus =
-  | 'prod' | 'prod.linhThach' | 'prod.linhThao' | 'prod.linhKhoang' | 'storage' | 'build' | 'train' | 'march'
-  | 'heal' | 'brew' | 'hospital' | 'loot' | 'exp' | 'trib' | 'atk' | 'def' | 'hp' | `atk.${UnitType}` | `hp.${UnitType}`
-  | 'skill' | 'forge'
+  | 'prod'
+  | 'prod.linhThach'
+  | 'prod.linhThao'
+  | 'prod.linhKhoang'
+  | 'storage'
+  | 'build'
+  | 'train'
+  | 'march'
+  | 'heal'
+  | 'brew'
+  | 'hospital'
+  | 'loot'
+  | 'exp'
+  | 'trib'
+  | 'atk'
+  | 'def'
+  | 'hp'
+  | `atk.${UnitType}`
+  | `hp.${UnitType}`
+  | 'skill'
+  | 'forge'
 
 // ---------- Ngũ hành ----------
 
@@ -126,19 +144,115 @@ export type ElderDef = { type: UnitType; el: Element; skill: Skill; passives: { 
 // Bị động chỉ có tác dụng với đội do chính trưởng lão đó dẫn. Không trưởng lão, pháp bảo, thiên phú nào dùng khoá
 // 'march' (hành quân là của cả tông môn, người dẫn đổi giữa đường không được).
 const elders = {
-  thanhPhong: { type: 'kiem', el: 'moc', skill: { kind: 'burst', v: 1.2, type: 'kiem' }, passives: [{ at: 5, key: 'atk.kiem', v: 0.1 }, { at: 12, key: 'atk', v: 0.06 }] },
-  thachKien: { type: 'the', el: 'tho', skill: { kind: 'shield', v: 0.5 }, passives: [{ at: 5, key: 'hp.the', v: 0.12 }, { at: 12, key: 'def', v: 0.1 }] },
-  nhuYen: { type: 'phap', el: 'hoa', skill: { kind: 'burst', v: 1.4, type: 'phap' }, passives: [{ at: 5, key: 'atk.phap', v: 0.1 }, { at: 12, key: 'exp', v: 0.2 }] },
-  loiChan: { type: 'kiem', el: 'kim', skill: { kind: 'burst', v: 0.9 }, passives: [{ at: 5, key: 'atk.kiem', v: 0.12 }, { at: 12, key: 'trib', v: 0.12 }] },
-  vanHac: { type: 'phap', el: 'moc', skill: { kind: 'heal', v: 0.25 }, passives: [{ at: 5, key: 'hp', v: 0.06 }, { at: 12, key: 'loot', v: 0.2 }] },
-  hanBang: { type: 'the', el: 'thuy', skill: { kind: 'weaken', v: 0.35 }, passives: [{ at: 5, key: 'def', v: 0.1 }, { at: 12, key: 'atk', v: 0.08 }] },
+  thanhPhong: {
+    type: 'kiem',
+    el: 'moc',
+    skill: { kind: 'burst', v: 1.2, type: 'kiem' },
+    passives: [
+      { at: 5, key: 'atk.kiem', v: 0.1 },
+      { at: 12, key: 'atk', v: 0.06 },
+    ],
+  },
+  thachKien: {
+    type: 'the',
+    el: 'tho',
+    skill: { kind: 'shield', v: 0.5 },
+    passives: [
+      { at: 5, key: 'hp.the', v: 0.12 },
+      { at: 12, key: 'def', v: 0.1 },
+    ],
+  },
+  nhuYen: {
+    type: 'phap',
+    el: 'hoa',
+    skill: { kind: 'burst', v: 1.4, type: 'phap' },
+    passives: [
+      { at: 5, key: 'atk.phap', v: 0.1 },
+      { at: 12, key: 'exp', v: 0.2 },
+    ],
+  },
+  loiChan: {
+    type: 'kiem',
+    el: 'kim',
+    skill: { kind: 'burst', v: 0.9 },
+    passives: [
+      { at: 5, key: 'atk.kiem', v: 0.12 },
+      { at: 12, key: 'trib', v: 0.12 },
+    ],
+  },
+  vanHac: {
+    type: 'phap',
+    el: 'moc',
+    skill: { kind: 'heal', v: 0.25 },
+    passives: [
+      { at: 5, key: 'hp', v: 0.06 },
+      { at: 12, key: 'loot', v: 0.2 },
+    ],
+  },
+  hanBang: {
+    type: 'the',
+    el: 'thuy',
+    skill: { kind: 'weaken', v: 0.35 },
+    passives: [
+      { at: 5, key: 'def', v: 0.1 },
+      { at: 12, key: 'atk', v: 0.08 },
+    ],
+  },
   // Từ tầng 15: bí cảnh 4–5, Thông Thiên Tháp tầng 30 và 45, sự kiện tuần (mốc 5), yêu vương trung tâm giới
-  bachVoNhai: { type: 'kiem', el: 'kim', skill: { kind: 'burst', v: 1.7, type: 'kiem' }, passives: [{ at: 5, key: 'atk.kiem', v: 0.12 }, { at: 12, key: 'atk', v: 0.08 }] },
-  macSau: { type: 'phap', el: 'tho', skill: { kind: 'weaken', v: 0.4 }, passives: [{ at: 5, key: 'atk.phap', v: 0.12 }, { at: 12, key: 'hp', v: 0.06 }] },
-  hoacThienCuong: { type: 'the', el: 'hoa', skill: { kind: 'shield', v: 0.55 }, passives: [{ at: 5, key: 'hp.the', v: 0.14 }, { at: 12, key: 'atk', v: 0.06 }] },
-  toMiNuong: { type: 'phap', el: 'thuy', skill: { kind: 'heal', v: 0.3 }, passives: [{ at: 5, key: 'hp', v: 0.06 }, { at: 12, key: 'loot', v: 0.25 }] },
-  diepCoThanh: { type: 'kiem', el: 'moc', skill: { kind: 'burst', v: 1.1 }, passives: [{ at: 5, key: 'atk.kiem', v: 0.15 }, { at: 12, key: 'exp', v: 0.2 }] },
-  huyenMinh: { type: 'the', el: 'thuy', skill: { kind: 'weaken', v: 0.45 }, passives: [{ at: 5, key: 'def', v: 0.12 }, { at: 12, key: 'trib', v: 0.15 }] },
+  bachVoNhai: {
+    type: 'kiem',
+    el: 'kim',
+    skill: { kind: 'burst', v: 1.7, type: 'kiem' },
+    passives: [
+      { at: 5, key: 'atk.kiem', v: 0.12 },
+      { at: 12, key: 'atk', v: 0.08 },
+    ],
+  },
+  macSau: {
+    type: 'phap',
+    el: 'tho',
+    skill: { kind: 'weaken', v: 0.4 },
+    passives: [
+      { at: 5, key: 'atk.phap', v: 0.12 },
+      { at: 12, key: 'hp', v: 0.06 },
+    ],
+  },
+  hoacThienCuong: {
+    type: 'the',
+    el: 'hoa',
+    skill: { kind: 'shield', v: 0.55 },
+    passives: [
+      { at: 5, key: 'hp.the', v: 0.14 },
+      { at: 12, key: 'atk', v: 0.06 },
+    ],
+  },
+  toMiNuong: {
+    type: 'phap',
+    el: 'thuy',
+    skill: { kind: 'heal', v: 0.3 },
+    passives: [
+      { at: 5, key: 'hp', v: 0.06 },
+      { at: 12, key: 'loot', v: 0.25 },
+    ],
+  },
+  diepCoThanh: {
+    type: 'kiem',
+    el: 'moc',
+    skill: { kind: 'burst', v: 1.1 },
+    passives: [
+      { at: 5, key: 'atk.kiem', v: 0.15 },
+      { at: 12, key: 'exp', v: 0.2 },
+    ],
+  },
+  huyenMinh: {
+    type: 'the',
+    el: 'thuy',
+    skill: { kind: 'weaken', v: 0.45 },
+    passives: [
+      { at: 5, key: 'def', v: 0.12 },
+      { at: 12, key: 'trib', v: 0.15 },
+    ],
+  },
 } satisfies Record<string, ElderDef>
 export type ElderId = keyof typeof elders
 export const ELDERS: Record<ElderId, ElderDef> = elders
@@ -148,7 +262,11 @@ export const FIRST_ELDER: ElderId = 'thanhPhong'
 // Tẩy Tủy Đan trả lại hết điểm. Nhánh đạo tăng sức công pháp chủ động.
 export const TALENT_EVERY = 5
 export const TALENT_MAX = 5
-export const TALENTS: { key: Bonus; v: number }[] = [{ key: 'atk', v: 0.03 }, { key: 'hp', v: 0.04 }, { key: 'skill', v: 0.06 }]
+export const TALENTS: { key: Bonus; v: number }[] = [
+  { key: 'atk', v: 0.03 },
+  { key: 'hp', v: 0.04 },
+  { key: 'skill', v: 0.06 },
+]
 
 // ---------- Tàng Kinh Các ----------
 
@@ -156,8 +274,13 @@ export const TECH_ROWS = [1, 3, 6, 9, 12, 16, 21] // tầng Tàng Kinh Các mở
 export const TECH_COST_GROWTH = 1.7
 export const TECH_TIME_GROWTH = 1.8
 export type TechDef = { row: number; max: number; key: Bonus; v: number; cost: Bag; time: number }
-const R0 = b(100, 150, 150), R1 = b(400, 500, 400), R2 = b(1200, 1500, 1200), R3 = b(3000, 3500, 3000), R4 = b(7000, 8000, 7000)
-const R5 = b(15000, 17000, 15000), R6 = b(32000, 36000, 32000)
+const R0 = b(100, 150, 150),
+  R1 = b(400, 500, 400),
+  R2 = b(1200, 1500, 1200),
+  R3 = b(3000, 3500, 3000),
+  R4 = b(7000, 8000, 7000)
+const R5 = b(15000, 17000, 15000),
+  R6 = b(32000, 36000, 32000)
 const techs = {
   tuLinh: { row: 0, max: 5, key: 'prod.linhThach', v: 0.06, cost: R0, time: 90 },
   duongThao: { row: 0, max: 5, key: 'prod.linhThao', v: 0.06, cost: R0, time: 90 },
@@ -200,10 +323,10 @@ export const MAX_CUT = 0.6
 // need: đan khác làm nguyên liệu (mỗi viên), trừ lúc bắt đầu luyện
 export type PillDef = { unlock: number; cost: Bag; time: number; need?: Partial<Record<string, number>> }
 const pills = {
-  tuKhi: { unlock: 1, cost: b(300, 600, 150), time: 1200 },      // bớt 15 phút một việc đang chờ
+  tuKhi: { unlock: 1, cost: b(300, 600, 150), time: 1200 }, // bớt 15 phút một việc đang chờ
   boiNguyen: { unlock: 3, cost: b(600, 1500, 600), time: 1800 }, // +kinh nghiệm cho trưởng lão
-  doKiep: { unlock: 5, cost: b(1500, 3000, 1500), time: 900 },   // lôi kiếp yếu đi khi độ kiếp
-  hoiXuan: { unlock: 8, cost: b(2000, 5000, 2000), time: 1800 },  // chữa ngay CURE thương binh
+  doKiep: { unlock: 5, cost: b(1500, 3000, 1500), time: 900 }, // lôi kiếp yếu đi khi độ kiếp
+  hoiXuan: { unlock: 8, cost: b(2000, 5000, 2000), time: 1800 }, // chữa ngay CURE thương binh
   ngungThan: { unlock: 12, cost: b(6000, 8000, 4000), time: 3600 }, // công cả tông môn +FOCUS trong FOCUS_TIME
   daiTuKhi: { unlock: 14, cost: b(4000, 6000, 3000), time: 3600, need: { tuKhi: 6 } }, // bớt 2 giờ một việc
   phaCanh: { unlock: 15, cost: b(12000, 20000, 12000), time: 3600, need: { doKiep: 2 } }, // lôi kiếp yếu hơn Độ Kiếp Đan
@@ -229,17 +352,19 @@ export const GEAR_MAX = 10
 export const GEAR_COST_GROWTH = 1.45
 export const GEAR_TIME_GROWTH = 1.3
 export type GearDef = { key: Bonus; v: number; cost: Bag; time: number } // v: bonus mỗi cấp
-const G0 = b(2000, 1500, 3000), G1 = b(1500, 3000, 2000), G2 = b(3000, 2000, 1500)
+const G0 = b(2000, 1500, 3000),
+  G1 = b(1500, 3000, 2000),
+  G2 = b(3000, 2000, 1500)
 const gear = {
   thanhSuong: { key: 'atk.kiem', v: 0.03, cost: G0, time: 1800 }, // kiếm
-  xichViem: { key: 'atk.phap', v: 0.03, cost: G2, time: 1800 },   // quạt
-  kimCang: { key: 'hp.the', v: 0.035, cost: G1, time: 1800 },     // vòng tay
-  huyenVu: { key: 'def', v: 0.03, cost: G1, time: 2400 },         // giáp mai rùa
-  hoTam: { key: 'hp', v: 0.02, cost: G1, time: 2400 },            // kính hộ tâm
-  thienLoi: { key: 'atk', v: 0.02, cost: G0, time: 2400 },        // chuỳ
-  tuBao: { key: 'loot', v: 0.05, cost: G2, time: 1800 },          // bồn tụ bảo
-  ngocGian: { key: 'exp', v: 0.05, cost: G2, time: 1800 },        // ngọc giản
-  tiLoi: { key: 'trib', v: 0.03, cost: G0, time: 2400 },          // châu tị lôi
+  xichViem: { key: 'atk.phap', v: 0.03, cost: G2, time: 1800 }, // quạt
+  kimCang: { key: 'hp.the', v: 0.035, cost: G1, time: 1800 }, // vòng tay
+  huyenVu: { key: 'def', v: 0.03, cost: G1, time: 2400 }, // giáp mai rùa
+  hoTam: { key: 'hp', v: 0.02, cost: G1, time: 2400 }, // kính hộ tâm
+  thienLoi: { key: 'atk', v: 0.02, cost: G0, time: 2400 }, // chuỳ
+  tuBao: { key: 'loot', v: 0.05, cost: G2, time: 1800 }, // bồn tụ bảo
+  ngocGian: { key: 'exp', v: 0.05, cost: G2, time: 1800 }, // ngọc giản
+  tiLoi: { key: 'trib', v: 0.03, cost: G0, time: 2400 }, // châu tị lôi
 } satisfies Record<string, GearDef>
 export type GearId = keyof typeof gear
 export const GEAR: Record<GearId, GearDef> = gear
@@ -249,7 +374,7 @@ export const GEAR: Record<GearId, GearDef> = gear
 // Toạ độ trên bản đồ vùng 400 × 1000; tông môn ở dưới cùng. Khoảng cách → thời gian hành quân.
 export const HOME = { x: 200, y: 930 }
 export const MARCH_SPEED = 0.5 // giây mỗi đơn vị bản đồ
-export const MARCH_MIN = 20    // giây
+export const MARCH_MIN = 20 // giây
 export const MARCH_SLOTS = [1, 2, 3, 4, 5] // số đội xuất quân cùng lúc ở Luyện Khí / Trúc Cơ / Kim Đan / Nguyên Anh / Hóa Thần
 
 export type Reward = { res?: Partial<Bag>; items?: Partial<Record<PillId, number>>; elder?: ElderId; exp?: number }
@@ -272,7 +397,7 @@ export const BEASTS: { type: UnitType; x: number; y: number }[] = [
   { type: 'phap', x: 198, y: 196 },
   { type: 'the', x: 84, y: 118 },
 ]
-export const BEAST_STR = [15, 1.4]  // sức mạnh cấp n = 15 × 1.4^(n−1), tính bằng số đệ tử bậc 1
+export const BEAST_STR = [15, 1.4] // sức mạnh cấp n = 15 × 1.4^(n−1), tính bằng số đệ tử bậc 1
 export const BEAST_LOOT = [80, 1.42] // mỗi loại tài nguyên
 export const BEAST_EXP = [15, 1.3]
 export const BEAST_COOLDOWN = 45 * 60_000
@@ -286,24 +411,86 @@ export type SectDef = {
   str: number
   elder: { skill: Skill; level: number }
   first: Reward // lần đầu hạ
-  loot: number  // mỗi lần sau: mỗi loại tài nguyên
+  loot: number // mỗi lần sau: mỗi loại tài nguyên
   exp: number
 }
 export const SECTS: SectDef[] = [
-  { hall: 3, x: 330, y: 890, type: 'the', str: 45, elder: { skill: { kind: 'shield', v: 0.3 }, level: 2 }, first: { res: b(600, 600, 600), items: { tuKhi: 2 }, elder: 'thachKien' }, loot: 250, exp: 60 },
-  { hall: 6, x: 40, y: 520, type: 'kiem', str: 180, elder: { skill: { kind: 'burst', v: 1.2 }, level: 8 }, first: { res: b(2500, 2500, 2500), items: { boiNguyen: 2 } }, loot: 900, exp: 200 },
-  { hall: 8, x: 360, y: 370, type: 'phap', str: 380, elder: { skill: { kind: 'weaken', v: 0.3 }, level: 12 }, first: { res: b(4000, 4000, 4000), items: { doKiep: 1 }, elder: 'loiChan' }, loot: 1800, exp: 400 },
-  { hall: 11, x: 40, y: 220, type: 'kiem', str: 800, elder: { skill: { kind: 'burst', v: 1.6 }, level: 16 }, first: { res: b(8000, 8000, 8000), items: { boiNguyen: 3 } }, loot: 4000, exp: 800 },
-  { hall: 13, x: 300, y: 110, type: 'the', str: 1500, elder: { skill: { kind: 'heal', v: 0.3 }, level: 20 }, first: { res: b(15000, 15000, 15000), items: { tuKhi: 10 } }, loot: 7000, exp: 1400 },
+  {
+    hall: 3,
+    x: 330,
+    y: 890,
+    type: 'the',
+    str: 45,
+    elder: { skill: { kind: 'shield', v: 0.3 }, level: 2 },
+    first: { res: b(600, 600, 600), items: { tuKhi: 2 }, elder: 'thachKien' },
+    loot: 250,
+    exp: 60,
+  },
+  {
+    hall: 6,
+    x: 40,
+    y: 520,
+    type: 'kiem',
+    str: 180,
+    elder: { skill: { kind: 'burst', v: 1.2 }, level: 8 },
+    first: { res: b(2500, 2500, 2500), items: { boiNguyen: 2 } },
+    loot: 900,
+    exp: 200,
+  },
+  {
+    hall: 8,
+    x: 360,
+    y: 370,
+    type: 'phap',
+    str: 380,
+    elder: { skill: { kind: 'weaken', v: 0.3 }, level: 12 },
+    first: { res: b(4000, 4000, 4000), items: { doKiep: 1 }, elder: 'loiChan' },
+    loot: 1800,
+    exp: 400,
+  },
+  {
+    hall: 11,
+    x: 40,
+    y: 220,
+    type: 'kiem',
+    str: 800,
+    elder: { skill: { kind: 'burst', v: 1.6 }, level: 16 },
+    first: { res: b(8000, 8000, 8000), items: { boiNguyen: 3 } },
+    loot: 4000,
+    exp: 800,
+  },
+  {
+    hall: 13,
+    x: 300,
+    y: 110,
+    type: 'the',
+    str: 1500,
+    elder: { skill: { kind: 'heal', v: 0.3 }, level: 20 },
+    first: { res: b(15000, 15000, 15000), items: { tuKhi: 10 } },
+    loot: 7000,
+    exp: 1400,
+  },
 ]
 export const SECT_COOLDOWN = 8 * 3_600_000
 export const SECT_SHARE = 0.5 // hệ chính 50%, hai hệ còn lại mỗi hệ 25%
 
 // Bí cảnh: đánh ngay không cần hành quân, mỗi tầng một lần.
-export type RealmDef = { hall: number; x: number; y: number; type: UnitType; tier: Tier; el?: Element; floors: { str: number; reward: Reward }[] }
+export type RealmDef = {
+  hall: number
+  x: number
+  y: number
+  type: UnitType
+  tier: Tier
+  el?: Element
+  floors: { str: number; reward: Reward }[]
+}
 export const REALMS: RealmDef[] = [
   {
-    hall: 3, x: 250, y: 752, type: 'phap', tier: 1,
+    hall: 3,
+    x: 250,
+    y: 752,
+    type: 'phap',
+    tier: 1,
     floors: [
       { str: 25, reward: { res: b(300, 300, 300), items: { tuKhi: 1 }, exp: 40 } },
       { str: 40, reward: { res: b(500, 500, 500), exp: 60 } },
@@ -313,7 +500,11 @@ export const REALMS: RealmDef[] = [
     ],
   },
   {
-    hall: 7, x: 104, y: 470, type: 'kiem', tier: 2,
+    hall: 7,
+    x: 104,
+    y: 470,
+    type: 'kiem',
+    tier: 2,
     floors: [
       { str: 200, reward: { res: b(2000, 2000, 2000), exp: 200 } },
       { str: 260, reward: { items: { tuKhi: 3 }, exp: 240 } },
@@ -323,7 +514,11 @@ export const REALMS: RealmDef[] = [
     ],
   },
   {
-    hall: 11, x: 280, y: 180, type: 'the', tier: 3,
+    hall: 11,
+    x: 280,
+    y: 180,
+    type: 'the',
+    tier: 3,
     floors: [
       { str: 700, reward: { res: b(6000, 6000, 6000), exp: 500 } },
       { str: 900, reward: { items: { tuKhi: 5 }, exp: 600 } },
@@ -333,7 +528,12 @@ export const REALMS: RealmDef[] = [
     ],
   },
   {
-    hall: 16, x: 196, y: 298, type: 'kiem', tier: 4, el: 'moc',
+    hall: 16,
+    x: 196,
+    y: 298,
+    type: 'kiem',
+    tier: 4,
+    el: 'moc',
     floors: [
       { str: 6000, reward: { res: b(40000, 40000, 40000), exp: 1500 } },
       { str: 7500, reward: { items: { daiTuKhi: 1, hoiXuan: 2 }, exp: 1800 } },
@@ -343,7 +543,12 @@ export const REALMS: RealmDef[] = [
     ],
   },
   {
-    hall: 21, x: 300, y: 30, type: 'phap', tier: 5, el: 'thuy',
+    hall: 21,
+    x: 300,
+    y: 30,
+    type: 'phap',
+    tier: 5,
+    el: 'thuy',
     floors: [
       { str: 20000, reward: { res: b(150000, 150000, 150000), exp: 4000 } },
       { str: 25000, reward: { items: { daiTuKhi: 2, ngungThan: 2 }, exp: 4600 } },
@@ -360,10 +565,42 @@ export const REALMS: RealmDef[] = [
 // vượt 3 đợt lôi kiếp. Đệ tử sống sót đi tiếp sang đợt sau. Thành công thì lên tầng ngay; thất bại chỉ phải chờ rồi thử lại.
 // Từ Nguyên Anh lôi kiếp có ngũ hành: trưởng lão hành khắc đợt nào thì đợt đó nhẹ đi.
 export const TRIBS: { hall: number; tier: Tier; waves: { type: UnitType; str: number; el?: Element }[] }[] = [
-  { hall: 5, tier: 1, waves: [{ type: 'kiem', str: 80 }, { type: 'phap', str: 100 }, { type: 'the', str: 120 }] },
-  { hall: 10, tier: 2, waves: [{ type: 'kiem', str: 250 }, { type: 'phap', str: 320 }, { type: 'the', str: 400 }] },
-  { hall: 15, tier: 3, waves: [{ type: 'kiem', str: 3000, el: 'hoa' }, { type: 'phap', str: 3600, el: 'thuy' }, { type: 'the', str: 4200, el: 'kim' }] },
-  { hall: 20, tier: 4, waves: [{ type: 'kiem', str: 9000, el: 'moc' }, { type: 'phap', str: 10500, el: 'hoa' }, { type: 'the', str: 12000, el: 'tho' }] },
+  {
+    hall: 5,
+    tier: 1,
+    waves: [
+      { type: 'kiem', str: 80 },
+      { type: 'phap', str: 100 },
+      { type: 'the', str: 120 },
+    ],
+  },
+  {
+    hall: 10,
+    tier: 2,
+    waves: [
+      { type: 'kiem', str: 250 },
+      { type: 'phap', str: 320 },
+      { type: 'the', str: 400 },
+    ],
+  },
+  {
+    hall: 15,
+    tier: 3,
+    waves: [
+      { type: 'kiem', str: 3000, el: 'hoa' },
+      { type: 'phap', str: 3600, el: 'thuy' },
+      { type: 'the', str: 4200, el: 'kim' },
+    ],
+  },
+  {
+    hall: 20,
+    tier: 4,
+    waves: [
+      { type: 'kiem', str: 9000, el: 'moc' },
+      { type: 'phap', str: 10500, el: 'hoa' },
+      { type: 'the', str: 12000, el: 'tho' },
+    ],
+  },
 ]
 export const TRIB_COOLDOWN = 10 * 60_000
 export const TRIB_EXP = [300, 1500, 4000, 9000]
@@ -516,9 +753,23 @@ export const MINE_RATE = [3_000, 5_000, 5_000]
 export const MINE_RESPAWN = 2 * 3_600_000
 // Yêu vương: kho máu chung (tính bằng số đệ tử bậc 1), mỗi đội đánh một "lát" SLICE = str / slices — đội nhỏ đánh một mình thì thua,
 // cả minh kết trận thì hạ được (Lanchester). Chết thì thưởng chia theo sát thương, hồi sau respawn.
-export const BOSSES: Partial<Record<number, { str: number; tier: Tier; slices: number; respawn: number; reward: Reward }>> = {
-  2: { str: 60_000, tier: 4, slices: 5, respawn: 24 * 3_600_000, reward: { res: b(300_000, 300_000, 300_000), items: { daiTuKhi: 6, phaCanh: 3 } } },
-  3: { str: 150_000, tier: 5, slices: 8, respawn: 72 * 3_600_000, reward: { res: b(800_000, 800_000, 800_000), items: { daiTuKhi: 15, taiTuy: 5 }, elder: 'huyenMinh' } },
+export const BOSSES: Partial<
+  Record<number, { str: number; tier: Tier; slices: number; respawn: number; reward: Reward }>
+> = {
+  2: {
+    str: 60_000,
+    tier: 4,
+    slices: 5,
+    respawn: 24 * 3_600_000,
+    reward: { res: b(300_000, 300_000, 300_000), items: { daiTuKhi: 6, phaCanh: 3 } },
+  },
+  3: {
+    str: 150_000,
+    tier: 5,
+    slices: 8,
+    respawn: 72 * 3_600_000,
+    reward: { res: b(800_000, 800_000, 800_000), items: { daiTuKhi: 15, taiTuy: 5 }, elder: 'huyenMinh' },
+  },
 }
 // Linh triều: mỗi TIDE_EVERY một vùng có triều trong TIDE_LEN: sản lượng +TIDE_PROD cho tông môn trong vùng, khai mỏ +TIDE_MINE
 export const TIDE_EVERY = 8 * 3_600_000
