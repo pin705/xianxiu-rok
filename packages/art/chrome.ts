@@ -198,7 +198,10 @@ function silkTile(tone: string, s: number) {
 
 // Ảnh nhỏ (144 × 144) dùng với border-image-repeat: round — mép giữa dài 96px = 2 chu kỳ lụa nên lặp ghép liền,
 // nét kẻ thẳng không võng; lòng để trống (bảng dùng nền giấy ghép, không giãn hạt giấy).
-export function scrollSkin(s: number, silk: string = mix(C.azuriteL, C.paper2, 0.55)): Skin {
+// Lụa bồi thanh lục (lam pha lục, nhạt như sương) — màu viền chung của mọi khung sáng, cùng họ với núi trong cảnh
+export const SILK = mix(mix(C.azuriteL, C.malachiteL, 0.3), C.paper2, 0.5)
+
+export function scrollSkin(s: number, silk: string = SILK): Skin {
   const W = 144, H = 144, band = 11, sl = 24
   const { cv, g } = surface(W, H, s)
   // lụa
@@ -276,11 +279,11 @@ export function rodSkin(s: number): Skin {
 
 // ---------- Thẻ giấy (mục trong danh sách) ----------
 
-export type CardTone = 'paper' | 'glow' | 'selected' | 'lacquer' | 'plain'
+export type CardTone = 'paper' | 'glow' | 'selected' | 'lacquer' | 'plain' | 'silk'
 export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
   const W = 180, H = 100, sl = 14, pad = 3
   const { cv, g } = surface(W, H, s)
-  const base = { paper: mix(C.paper, '#ffffff', 0.4), plain: mix(C.paper, '#ffffff', 0.4), glow: mix(C.goldL, C.paper, 0.45), selected: mix(C.paper, '#ffffff', 0.4), lacquer: C.lacquer }[tone]
+  const base = { paper: mix(C.paper, '#ffffff', 0.4), plain: mix(C.paper, '#ffffff', 0.4), glow: mix(C.goldL, C.paper, 0.45), selected: mix(C.paper, '#ffffff', 0.4), lacquer: C.lacquer, silk: mix(SILK, '#ffffff', 0.25) }[tone]
   const edge = deckle(pad, pad, W - pad, H - pad - 0.5, tone === 'lacquer' ? 0.5 : 1.3, seed)
   // bóng: giấy hơi nhấc khỏi mặt bảng
   const lift = () => {
@@ -306,17 +309,17 @@ export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
     sheen.addColorStop(1, rgba('#000000', 0.25))
     g.fillStyle = sheen
     g.fillRect(0, 0, W, H)
-  } else age(g, pad, pad, W - pad, H - pad, 10, tone === 'glow' ? C.gold : C.ochre, tone === 'glow' ? 0.22 : 0.1)
+  } else age(g, pad, pad, W - pad, H - pad, 10, tone === 'glow' ? C.gold : tone === 'silk' ? C.azurite : C.ochre, tone === 'glow' ? 0.22 : tone === 'silk' ? 0.14 : 0.1)
   g.restore()
   // viền: một nét bút đi vòng theo mép giấy — lượn tay, dày ở phía khuất sáng (dưới, phải), mảnh và khô ở phía sáng
   const i = pad + 3.2
-  const col = { paper: C.ink, plain: C.ink, glow: C.goldD, selected: C.cinnabar, lacquer: C.gold }[tone]
+  const col = { paper: C.ink, plain: C.ink, glow: C.goldD, selected: C.cinnabar, lacquer: C.gold, silk: C.ink2 }[tone]
   const w = tone === 'selected' ? 1.8 : tone === 'plain' ? 0.95 : 1.25
   const al = tone === 'plain' ? 0.5 : tone === 'paper' ? 0.72 : 0.9
   outline(g, rounded(i, i, W - i, H - i, 2.5, seed + 1, 0.45), w, col, seed + 2, al, 0.3, 0.95)
-  if (tone === 'glow' || tone === 'lacquer')
+  if (tone === 'glow' || tone === 'lacquer' || tone === 'silk')
     for (const [x, y, rot] of [[i + 4, i + 4, Math.PI * 1.25], [W - i - 4, i + 4, -Math.PI * 0.25], [W - i - 4, H - i - 4, Math.PI * 0.25], [i + 4, H - i - 4, Math.PI * 0.75]] as const)
-      curl(g, x, y, 2.2, rot, tone === 'glow' ? C.goldD : C.goldL, 0.85, seed + x + y, 0.85)
+      curl(g, x, y, 2.2, rot, tone === 'lacquer' ? C.goldL : C.goldD, 0.85, seed + x + y, 0.85)
   grain(g, 0.2)
   return { cv, w: W, h: H, slice: [sl, sl, sl, sl] }
 }
@@ -422,15 +425,15 @@ export function buttonSkin(s: number, tone: ButtonTone, seed = 7): Skin {
 
 // ---------- Nhãn nhỏ: mẩu giấy/lụa viền mực ----------
 
-export type TagTone = 'plain' | 'good' | 'bad' | 'gold' | 'dark' | 'red'
+export type TagTone = 'plain' | 'good' | 'bad' | 'gold' | 'dark' | 'red' | 'silk'
 export function tagSkin(s: number, tone: TagTone, seed = 11): Skin {
   const W = 72, H = 28
   const { cv, g } = surface(W, H, s)
   const fill = {
     plain: mix(C.paper2, C.ink3, 0.18), good: mix(C.malachiteL, C.paper, 0.55), bad: mix(C.cinnabarL, C.paper, 0.62),
-    gold: mix(C.goldL, C.paper, 0.35), dark: mix(C.lacquer, C.ink, 0.2), red: C.cinnabar,
+    gold: mix(C.goldL, C.paper, 0.35), dark: mix(C.lacquer, C.ink, 0.2), red: C.cinnabar, silk: mix(SILK, '#ffffff', 0.2),
   }[tone]
-  const line = { plain: C.ink2, good: C.malachiteD, bad: C.cinnabar, gold: C.goldD, dark: C.gold, red: mix(C.cinnabar, C.ink, 0.5) }[tone]
+  const line = { plain: C.ink2, good: C.malachiteD, bad: C.cinnabar, gold: C.goldD, dark: C.gold, red: mix(C.cinnabar, C.ink, 0.5), silk: C.ink2 }[tone]
   const shape = rounded(1.5, 1.5, W - 1.5, H - 1.5, 5, seed, 0.5)
   wash(g, shape, { fill, alpha: tone === 'dark' ? 0.85 : 1, layers: 3, jitter: 0.45, edge: 1.9, seed })
   // gờ sáng khô ở mép trên (như nút), rồi viền mực dày mỏng theo hướng sáng
@@ -592,11 +595,11 @@ export function dotsSkin(s: number, seed = 31): Skin {
 
 // ---------- Đĩa tròn: nút một biểu tượng, bong bóng gợi ý ----------
 
-export type DiscTone = 'lacquer' | 'paper' | 'azure' | 'gold'
+export type DiscTone = 'lacquer' | 'paper' | 'azure' | 'gold' | 'silk'
 export function discSkin(s: number, tone: DiscTone, seed = 33): Skin {
   const W = 48, H = 48, c = 24, r = 20.5
   const { cv, g } = surface(W, H, s)
-  const base = { lacquer: C.lacquer, paper: mix(C.paper, '#ffffff', 0.45), azure: C.azuriteD, gold: C.gold }[tone]
+  const base = { lacquer: C.lacquer, paper: mix(C.paper, '#ffffff', 0.45), azure: C.azuriteD, gold: C.gold, silk: SILK }[tone]
   const disc = rounded(c - r, c - r, c + r, c + r, r, seed, 0.3)
   const lift = () => {
     g.shadowColor = rgba(C.ink, 0.45)
@@ -617,15 +620,15 @@ export function discSkin(s: number, tone: DiscTone, seed = 33): Skin {
   g.clip()
   if (tone !== 'paper') wash(g, disc, { fill: base, alpha: 1, layers: 3, jitter: 0.4, edge: 1.8, seed })
   const sheen = g.createRadialGradient(c - 6, c - 9, 1, c, c, r + 2)
-  sheen.addColorStop(0, rgba('#ffffff', tone === 'gold' ? 0.55 : tone === 'paper' ? 0.2 : 0.22))
+  sheen.addColorStop(0, rgba('#ffffff', tone === 'gold' || tone === 'silk' ? 0.55 : tone === 'paper' ? 0.2 : 0.22))
   sheen.addColorStop(0.6, rgba('#ffffff', 0))
-  sheen.addColorStop(1, rgba('#000000', tone === 'paper' ? 0.08 : 0.3))
+  sheen.addColorStop(1, rgba('#000000', tone === 'paper' ? 0.08 : tone === 'silk' ? 0.14 : 0.3))
   g.fillStyle = sheen
   g.fillRect(0, 0, W, H)
   g.restore()
   if (tone === 'paper') ring(g, c, c, r - 1, 1.7, C.ink2, seed + 1, 0.85, 0.06)
   else {
-    ring(g, c, c, r - 2.2, 1.4, tone === 'gold' ? C.goldD : C.goldL, seed + 1, 0.9, 0.03)
+    ring(g, c, c, r - 2.2, 1.4, tone === 'gold' || tone === 'silk' ? C.goldD : C.goldL, seed + 1, 0.9, 0.03)
     stroke(g, [...disc, disc[0], disc[1]], { w: 1.1, color: C.ink, alpha: 0.9, press: 'even', rough: 0.3, seed: seed + 2 })
   }
   stroke(g, [[c - 12, c - 6], [c - 9, c - 12], [c - 3, c - 15]], { w: 1.4, color: '#ffffff', alpha: tone === 'paper' ? 0.5 : 0.3, press: 'swell', dry: 0.4, seed: seed + 3 })
@@ -664,3 +667,105 @@ export const pointerArt = (): Asset => ({
     grain(g, 0.15)
   },
 })
+
+
+// ---------- Khung sáng (hub) — cùng họ màu với tranh: giấy, lụa lam lục, nét mực, điểm son ----------
+
+// Dải giấy bồi lụa: thanh trên, thanh tab, cột trái desktop. Viền lụa lam lục dệt sợi, chỉ vàng mảnh, một nét mực kẻ tay
+// trong giấy, mây cuộn son ở góc. Chỉ khung (lòng là nền giấy ghép); 124 × 124, mép giữa 96px = 2 chu kỳ lụa → lặp liền.
+export function stripSkin(s: number, silk: string = SILK): Skin {
+  const W = 124, H = 124, band = 7, sl = 14
+  const { cv, g } = surface(W, H, s)
+  const pat = g.createPattern(silkTile(silk, s) as CanvasImageSource, 'repeat')!
+  pat.setTransform(new DOMMatrix().scale(1 / s))
+  g.fillStyle = pat
+  path(g, rounded(0.5, 0.5, W - 0.5, H - 0.5, 2, 3, 0.12))
+  g.fill()
+  outline(g, rounded(0.8, 0.8, W - 0.8, H - 0.8, 2, 5, 0.1), 1, C.ink2, 5, 0.65, 0, 0.5)
+  outline(g, rounded(band - 0.8, band - 0.8, W - band + 0.8, H - band + 0.8, 1, 7, 0.08), 0.8, C.goldD, 7, 0.7, 0.2, 0.3)
+  const inner = rounded(band, band, W - band, H - band, 1, 9, 0.1)
+  fillPaper(g, s, inner)
+  g.save()
+  path(g, inner)
+  g.clip()
+  age(g, band, band, W - band, H - band, 7, C.ochre, 0.1)
+  g.restore()
+  const a = band + 3.6
+  rule(g, [a, a], [W - a, a], 0.8, C.ink2, 21, 0.55, 0.6, 0)
+  rule(g, [W - a, a], [W - a, H - a], 1.05, C.ink2, 22, 0.55, 0.6, 0)
+  rule(g, [W - a, H - a], [a, H - a], 1.05, C.ink2, 23, 0.55, 0.6, 0)
+  rule(g, [a, H - a], [a, a], 0.8, C.ink2, 24, 0.55, 0.6, 0)
+  for (const [x, y, rot] of [[a + 3, a + 3, Math.PI * 1.25], [W - a - 3, a + 3, -Math.PI * 0.25], [W - a - 3, H - a - 3, Math.PI * 0.25], [a + 3, H - a - 3, Math.PI * 0.75]] as const)
+    curl(g, x, y, 1.9, rot, C.cinnabar, 0.8, 41 + x + y, 0.8)
+  grain(g, 0.15)
+  return { cv, w: W, h: H, slice: [sl, sl, sl, sl], repeat: 'round' }
+}
+
+// Viên giấy bo tròn: ô tài nguyên (paper) trên dải giấy, bong bóng đồng hồ trên cảnh; lụa: nền lam lục nhạt
+export function capsuleSkin(s: number, tone: 'paper' | 'silk' = 'paper', seed = 41): Skin {
+  const W = 120, H = 34
+  const { cv, g } = surface(W, H, s)
+  const shape = rounded(2, 2, W - 2, H - 3, 13, seed, 0.4)
+  const lift = () => {
+    g.shadowColor = rgba(C.ink, tone === 'paper' ? 0.3 : 0.18)
+    g.shadowBlur = 2.5 * s
+    g.shadowOffsetY = 1.2 * s
+  }
+  fillPaper(g, s, shape, tone === 'paper' ? mix(C.paper, '#ffffff', 0.45) : mix(SILK, '#ffffff', 0.35), lift)
+  g.save()
+  path(g, shape)
+  g.clip()
+  age(g, 2, 2, W - 2, H - 3, 6, tone === 'paper' ? C.ochre : C.azurite, 0.1)
+  g.restore()
+  stroke(g, [[14, 5.4], [W * 0.4, 4.6], [W * 0.6, 5.2]], { w: 1.1, color: '#ffffff', alpha: 0.5, press: 'swell', dry: 0.5, seed: seed + 1 })
+  outline(g, shape, 1.1, C.ink2, seed + 2, 0.75, 0.3, 0.9)
+  grain(g, 0.15)
+  return { cv, w: W, h: H, slice: [13, 15, 13, 15] }
+}
+
+// Thẻ tên công trình: mẩu giấy hai đầu vát như thẻ treo, viền mực, đầu lụa lam lục
+export function plateSkin(s: number, seed = 43): Skin {
+  const W = 120, H = 30
+  const { cv, g } = surface(W, H, s)
+  const shape: Pt[] = [[8, 1.5], [W - 8, 1.5], [W - 1.5, H / 2], [W - 8, H - 2.5], [8, H - 2.5], [1.5, H / 2]]
+  fillPaper(g, s, shape, mix(C.paper, '#ffffff', 0.5), () => {
+    g.shadowColor = rgba(C.ink, 0.35)
+    g.shadowBlur = 2.5 * s
+    g.shadowOffsetY = 1.2 * s
+  })
+  // hai đầu lụa
+  for (const [x0, x1] of [[1.5, 10], [W - 10, W - 1.5]] as const) {
+    g.save()
+    path(g, shape)
+    g.clip()
+    wash(g, [[x0, 0], [x1, 0], [x1, H], [x0, H]], { fill: SILK, alpha: 0.95, layers: 2, jitter: 0.3, sharp: true, seed: seed + x0 })
+    g.restore()
+    rule(g, [x0 === 1.5 ? x1 : x0, 4], [x0 === 1.5 ? x1 : x0, H - 5], 0.7, C.goldD, seed + 3 + x0, 0.7, 0.2, 0)
+  }
+  outline(g, shape.map(([x, y]) => [x, y] as Pt), 1.1, C.ink2, seed + 5, 0.8, 0.25, 0.9)
+  grain(g, 0.15)
+  return { cv, w: W, h: H, slice: [12, 14, 12, 14] }
+}
+
+// Thông báo trên núi: dải giấy hai đầu lụa, viền mực; báo lỗi thì giấy ửng son, viền son
+export function slipSkin(s: number, bad = false, seed = 45): Skin {
+  const W = 240, H = 44
+  const { cv, g } = surface(W, H, s)
+  const shape = rounded(3, 3, W - 3, H - 4, 6, seed, 0.5)
+  fillPaper(g, s, shape, bad ? mix(C.cinnabarL, C.paper, 0.75) : mix(C.paper, '#ffffff', 0.5), () => {
+    g.shadowColor = rgba(C.ink, 0.35)
+    g.shadowBlur = 4 * s
+    g.shadowOffsetY = 2 * s
+  })
+  for (const [x0, x1] of [[3, 16], [W - 16, W - 3]] as const) {
+    g.save()
+    path(g, shape)
+    g.clip()
+    wash(g, [[x0, 0], [x1, 0], [x1, H], [x0, H]], { fill: bad ? C.cinnabarL : SILK, alpha: 0.9, layers: 2, jitter: 0.4, sharp: true, seed: seed + x0 })
+    g.restore()
+    rule(g, [x0 === 3 ? x1 : x0, 6], [x0 === 3 ? x1 : x0, H - 7], 0.8, C.goldD, seed + 3 + x0, 0.7, 0.2, 0)
+  }
+  outline(g, shape, 1.2, bad ? C.cinnabar : C.ink2, seed + 5, 0.85, 0.3, 0.9)
+  grain(g, 0.15)
+  return { cv, w: W, h: H, slice: [12, 22, 13, 22] }
+}

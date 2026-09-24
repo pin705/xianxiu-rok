@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Biển tên công trình trên núi: tấm biển sơn mài hai đầu vát, viền vàng kẻ tay; số tầng trên giọt son.
+  // Biển tên công trình trên núi: thẻ giấy hai đầu vát, đầu lụa lam lục, viền mực; số tầng trên giọt son.
   let { name, level = 0, dim = false }: { name: string; level?: number; dim?: boolean } = $props()
 </script>
 
@@ -13,15 +13,14 @@
     align-items: center;
     gap: 5px;
     max-width: 156px;
-    padding: 4px 14px 5px 7px;
+    padding: 4px 15px 6px 9px;
     font-size: var(--fs-2);
     font-weight: 800;
     line-height: 1.3;
     white-space: nowrap;
-    color: var(--text-inv);
-    text-shadow: 0 1px 1px rgb(0 0 0 / 0.5);
+    color: var(--text);
     border: 0 solid transparent;
-    border-image: var(--sk-sign);
+    border-image: var(--sk-plate);
   }
   .plate:not(:has(.lv)) {
     padding-left: 14px;

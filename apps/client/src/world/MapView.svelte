@@ -1,6 +1,6 @@
 <script lang="ts">
   // Màn bản đồ: cảnh WebGL (map.ts) + mục tiêu là huy hiệu HTML (chạm được, đọc được) + thanh trên và danh sách đội.
-  import { BEASTS, MAP_HALL, REALMS, SECTS, coolKey, marchSlots, targetError, type State, type Target } from '@rok/rules'
+  import { BEASTS, MAP_HALL, REALMS, SECTS, TOWER, coolKey, marchSlots, targetError, type State, type Target } from '@rok/rules'
   import { Icon, Portrait, type Emblem } from '@rok/art'
   import { Badge, Button, Card, Medal, Tag } from '../ui'
   import { EMBLEM, L, LOOK, clock } from '../lib'
@@ -15,6 +15,7 @@
     ...BEASTS.map((b, i) => ({ t: { kind: 'beast', i } as Target, x: b.x, y: b.y, emblem: EMBLEM.beast[i], lv: i + 1, name: L.beasts[i] })),
     ...SECTS.map((d, i) => ({ t: { kind: 'sect', i } as Target, x: d.x, y: d.y, emblem: EMBLEM.sect[i], name: L.sects[i].name })),
     ...REALMS.map((d, i) => ({ t: { kind: 'realm', i } as Target, x: d.x, y: d.y, emblem: EMBLEM.realm[i], name: L.realms[i].name })),
+    { t: { kind: 'tower', i: 0 }, x: TOWER.x, y: TOWER.y, emblem: EMBLEM.tower[0], name: L.tower.name },
   ]
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
   const status = (n: Node) => {
@@ -45,6 +46,7 @@
           <Medal emblem={n.emblem} tone={n.t.kind} size={36} dim={st === 'locked' || st === 'cool'} />
           {#if n.lv}<b class="lv">{n.lv}</b>{/if}
           {#if n.t.kind === 'realm'}<b class="lv">{game.realms[n.t.i]}/5</b>{/if}
+          {#if n.t.kind === 'tower' && game.tower}<b class="lv">{game.tower}</b>{/if}
           {#if st === 'locked'}<span class="mark"><Icon name="lock" size={11} /></span>{:else if st === 'done'}<span class="mark ok"><Icon name="check" size={12} /></span>{/if}
         </span>
         <span class="label" class:wrap={edge} style:translate="{dx}px 0">{n.name}</span>
@@ -65,8 +67,8 @@
     {#each game.marches as m (m.id)}
       {@const out = now < m.arriveAt}
       <li>
-        <Card tone="lacquer" onclick={() => onpick(m.target)}>
-          <span class="row on-dark">
+        <Card tone="silk" onclick={() => onpick(m.target)}>
+          <span class="row">
             <Portrait look={LOOK[m.elder]} size={30} />
             <span class="grow stack" style:--gap="0"><b class="t-small">{L.target(m.target)}</b><small class="t-tiny t-soft">{out ? L.map.out : L.map.back}</small></span>
             <b class="t-num t-gold">{clock((out ? m.arriveAt : m.returnAt) - now)}</b>
@@ -105,7 +107,7 @@
       transform: scale(1.4);
     }
   }
-  /* cấp: giọt son viền vàng; dấu khoá / đã chinh phục: đĩa sơn mài, đĩa vàng vẽ tay */
+  /* cấp: giọt son viền vàng; dấu khoá / đã chinh phục: đĩa lụa, đĩa vàng vẽ tay */
   .lv {
     position: absolute;
     top: -7px;
@@ -128,8 +130,8 @@
     place-items: center;
     width: 20px;
     height: 20px;
-    color: var(--gold-l);
-    background: var(--img-disc) center / 100% 100% no-repeat;
+    color: var(--ink);
+    background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .ok {
     color: var(--ink);

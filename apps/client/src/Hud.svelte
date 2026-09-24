@@ -92,7 +92,7 @@
 </script>
 
 <div class="hud">
-  <header class="topbar plank">
+  <header class="topbar strip">
     <div class="row who">
       <span class="avatar"><Portrait look={MASTER} size={50} /><img class="frame" src={paintedUrl('ring', portraitRing, 62)} alt="" draggable="false" /></span>
       <div class="grow id">
@@ -109,7 +109,7 @@
           <Icon name={r} size={22} />
           <span class="stack">
             <b class="t-num">{num(Math.round(resT[i].current))}<span class="sr"> {L.res[r]}</span></b>
-            <Meter value={game.res[r] / cap} tone={full ? 'bad' : 'spirit'} size="xs" dark />
+            <Meter value={game.res[r] / cap} tone={full ? 'bad' : 'spirit'} size="xs" />
           </span>
           {#if full}<em>{L.full}</em>{/if}
           {#if gain && gain.bag[r] && now - gain.t < 1400}
@@ -166,7 +166,7 @@
     </button>
   {/if}
 
-  <nav class="tabs plank">
+  <nav class="tabs strip">
     {#each TABS as t (t.id)}
       {@const on = t.id === tab}
       {@const locked = hall < t.unlock}
@@ -206,7 +206,7 @@
     display: grid;
     gap: var(--sp-2);
     padding: calc(var(--sp-2) + var(--safe-t)) 20px 18px;
-    filter: drop-shadow(0 6px 10px rgb(20 14 10 / 0.35));
+    filter: drop-shadow(0 4px 10px rgb(20 14 10 / 0.18));
   }
   .who {
     gap: var(--sp-2);
@@ -233,7 +233,6 @@
   .id b {
     font-size: var(--fs-4);
     font-weight: 800;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
   }
   .realm {
     display: inline-flex;
@@ -241,7 +240,7 @@
     gap: 4px;
     font-size: var(--fs-2);
     font-weight: 700;
-    color: var(--gold-l);
+    color: var(--cinnabar);
   }
   .pow {
     display: inline-flex;
@@ -249,11 +248,11 @@
     gap: 5px;
     padding: 5px 13px 6px 11px;
     font-weight: 800;
-    color: var(--gold-l);
+    color: var(--text);
     border: 0 solid transparent;
-    border-image: var(--sk-tag-dark);
+    border-image: var(--sk-tag-silk);
   }
-  /* ô tài nguyên: bảng sơn mài bo tròn viền vàng kẻ tay */
+  /* ô tài nguyên: viên giấy viền mực */
   .res {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -267,7 +266,7 @@
     min-width: 0;
     padding: 5px 12px 7px 7px;
     border: 0 solid transparent;
-    border-image: var(--sk-bubble);
+    border-image: var(--sk-capsule);
   }
   .res .stack {
     flex: 1;
@@ -277,10 +276,9 @@
   .res b {
     font-size: var(--fs-4);
     line-height: 1;
-    text-shadow: 0 1px 1px rgb(0 0 0 / 0.5);
   }
   .full b {
-    color: var(--cinnabar-l);
+    color: var(--cinnabar);
   }
   em {
     position: absolute;
@@ -298,8 +296,9 @@
     left: 30px;
     font-size: var(--fs-4);
     font-weight: 900;
-    color: var(--gold-l);
-    text-shadow: var(--text-shadow-inv);
+    color: var(--gold-d);
+    -webkit-text-stroke: 3px var(--paper);
+    paint-order: stroke fill;
     pointer-events: none;
     animation: float 1.4s var(--ease) forwards;
   }
@@ -393,7 +392,7 @@
     }
   }
 
-  /* Nút tạp dịch: đĩa sơn mài vòng vàng vẽ tay, vòng tiến độ linh khí */
+  /* Nút tạp dịch: đĩa lụa lam lục vòng vàng vẽ tay, vòng tiến độ linh khí */
   .builder {
     position: absolute;
     right: var(--sp-3);
@@ -402,8 +401,8 @@
     place-items: center;
     width: 66px;
     height: 66px;
-    color: var(--gold-l);
-    background: var(--img-disc) center / 100% 100% no-repeat;
+    color: var(--ink);
+    background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .builder:active {
     transform: scale(0.94);
@@ -422,7 +421,7 @@
     stroke-width: 3.5;
   }
   .rbg {
-    stroke: rgb(255 255 255 / 0.08);
+    stroke: color-mix(in srgb, var(--ink) 12%, transparent);
   }
   .rfg {
     stroke: var(--spirit);
@@ -436,17 +435,18 @@
     padding: 2px 10px 3px;
     font: 800 var(--fs-1) / 1.4 var(--font);
     font-variant-numeric: tabular-nums lining-nums;
-    color: var(--silk);
+    color: var(--text);
     white-space: nowrap;
     border: 0 solid transparent;
-    border-image: var(--sk-tag-dark);
+    border-image: var(--sk-tag-silk);
     translate: -50% 0;
   }
   .idle .btime {
+    color: var(--silk);
     border-image: var(--sk-tag-red);
   }
 
-  /* Ván tab: gỗ sơn mài viền vàng; tab đang mở nhô lên, icon toả ánh vàng, nét vàng dưới tên */
+  /* Dải tab: giấy bồi lụa lam lục; tab đang mở nhô lên, icon toả ánh vàng nhạt, tên màu son gạch nét son */
   .tabs {
     position: absolute;
     right: 0;
@@ -455,7 +455,7 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     padding: 12px 14px calc(14px + var(--safe-b));
-    filter: drop-shadow(0 -6px 12px rgb(20 14 10 / 0.3));
+    filter: drop-shadow(0 -4px 10px rgb(20 14 10 / 0.18));
   }
   .tabs button {
     display: grid;
@@ -463,7 +463,7 @@
     gap: 1px;
     font-size: var(--fs-2);
     font-weight: 700;
-    color: var(--text-inv-soft);
+    color: var(--text-soft);
   }
   .medal {
     position: relative;
@@ -477,11 +477,15 @@
   }
   .medal img {
     display: block;
-    filter: saturate(0.75) brightness(0.9);
+    opacity: 0.85;
+    filter: saturate(0.85);
   }
   .on .medal {
     transform: translateY(-7px) scale(1.14);
-    filter: drop-shadow(0 0 8px rgb(236 208 138 / 0.85));
+    filter: drop-shadow(0 0 7px rgb(201 161 74 / 0.55));
+  }
+  .on .medal img {
+    opacity: 1;
   }
   .on .medal img {
     filter: none;
@@ -489,11 +493,12 @@
   .on .tl {
     padding: 0 6px 5px;
     font-weight: 800;
-    color: var(--gold-l);
-    background: var(--stroke-gold) no-repeat center bottom / 100% 5px;
+    color: var(--cinnabar);
+    background: var(--stroke-red) no-repeat center bottom / 100% 5px;
   }
   .locked .medal img {
-    filter: grayscale(1) brightness(0.6);
+    opacity: 0.55;
+    filter: grayscale(1);
   }
   .lk {
     position: absolute;
@@ -503,12 +508,12 @@
     place-items: center;
     width: 19px;
     height: 19px;
-    color: var(--gold-l);
-    background: var(--img-disc) center / 100% 100% no-repeat;
+    color: var(--ink);
+    background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .tabs small {
     font-size: 10px;
-    color: color-mix(in srgb, var(--silk) 50%, transparent);
+    color: var(--text-faint);
   }
   .away,
   .runs {
@@ -569,7 +574,7 @@
       align-content: start;
       gap: 2px;
       padding: var(--sp-4) var(--sp-4) 0;
-      filter: drop-shadow(6px 0 12px rgb(20 14 10 / 0.3));
+      filter: drop-shadow(4px 0 10px rgb(20 14 10 / 0.18));
     }
     .tabs button {
       display: flex;
@@ -581,7 +586,7 @@
       transition: background var(--dur-2) var(--ease);
     }
     .tabs button:not(:disabled):hover {
-      background: rgb(236 208 138 / 0.08);
+      background: color-mix(in srgb, var(--azurite-l) 18%, transparent);
     }
     .on .medal {
       transform: scale(1.12);
@@ -621,7 +626,7 @@
       display: grid;
       gap: 2px;
       margin-top: var(--sp-3);
-      color: var(--text-inv-soft);
+      color: var(--text-soft);
     }
     .runs h3 {
       margin-bottom: var(--sp-1);
@@ -629,7 +634,7 @@
       font-weight: 800;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--gold-l);
+      color: var(--cinnabar);
     }
     .run {
       display: flex;
@@ -639,14 +644,14 @@
       padding: 7px var(--sp-2);
       font-size: var(--fs-2);
       text-align: left;
-      color: var(--silk);
+      color: var(--text);
       border-radius: 8px;
     }
     .run:hover {
-      background: rgb(236 208 138 / 0.1);
+      background: color-mix(in srgb, var(--azurite-l) 18%, transparent);
     }
     .run b {
-      color: var(--gold-l);
+      color: var(--gold-d);
     }
     /* góc dưới phải vùng cảnh, tránh ngăn kéo đang mở */
     .builder,

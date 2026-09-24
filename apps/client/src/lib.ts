@@ -36,6 +36,7 @@ export const EMBLEM = {
   beast: BEAST_EMBLEMS,
   sect: SECT_EMBLEMS,
   realm: REALM_EMBLEMS,
+  tower: ['tower'] as const, // một tháp (i = 0) — mảng để tra theo report.kind[i] như các loại khác
 }
 
 export const LOOK: Record<ElderId, Look> = {

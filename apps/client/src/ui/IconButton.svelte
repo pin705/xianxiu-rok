@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Nút tròn một biểu tượng: đĩa sơn mài vòng vàng (trên HUD) hoặc đĩa giấy vòng mực (trong bảng) — vẽ tay.
+  // Nút tròn một biểu tượng: đĩa lụa lam lục vòng vàng (trên HUD) hoặc đĩa giấy vòng mực (trong bảng) — vẽ tay.
   import type { Snippet } from 'svelte'
   import { Icon, type IconName } from '@rok/art'
   import { sfx } from '../lib'
@@ -7,11 +7,11 @@
   let {
     icon,
     label,
-    tone = 'lacquer',
+    tone = 'silk',
     size = 38,
     onclick,
     children,
-  }: { icon: IconName; label: string; tone?: 'lacquer' | 'paper'; size?: number; onclick: () => void; children?: Snippet } = $props()
+  }: { icon: IconName; label: string; tone?: 'silk' | 'paper'; size?: number; onclick: () => void; children?: Snippet } = $props()
 </script>
 
 <button class="ib {tone}" style:--s="{size}px" aria-label={label} title={label} onclick={() => (sfx('tap'), onclick())}>
@@ -27,8 +27,8 @@
     place-items: center;
     width: var(--s);
     height: var(--s);
-    color: var(--gold-l);
-    background: var(--img-disc) center / 100% 100% no-repeat;
+    color: var(--ink);
+    background: var(--img-disc-silk) center / 100% 100% no-repeat;
     transition: transform var(--dur-1) var(--ease);
   }
   .paper {

@@ -1,5 +1,6 @@
 <script lang="ts">
   // Thẻ giấy vẽ tay: mép xơ, ố vàng dọc mép, viền mực kẻ tay (một mục trong danh sách, ô thông tin). button: cả thẻ bấm được.
+  // silk: thẻ lụa lam lục (mục nổi bật, hành quân trên bản đồ, rương thưởng); glow: ánh vàng (có thưởng để nhận).
   import type { Snippet } from 'svelte'
   import { sfx } from '../lib'
 
@@ -10,7 +11,7 @@
     selected = false,
     label,
     children,
-  }: { tone?: 'paper' | 'lacquer' | 'glow'; onclick?: () => void; disabled?: boolean; selected?: boolean; label?: string; children: Snippet } = $props()
+  }: { tone?: 'paper' | 'silk' | 'glow'; onclick?: () => void; disabled?: boolean; selected?: boolean; label?: string; children: Snippet } = $props()
 </script>
 
 {#if onclick}
@@ -32,12 +33,11 @@
     border: 0 solid transparent;
     border-image: var(--sk-card);
   }
-  .lacquer {
-    color: var(--text-inv);
-    border-image: var(--sk-card-lacquer);
-  }
   .glow {
     border-image: var(--sk-card-glow);
+  }
+  .silk {
+    border-image: var(--sk-card-silk);
   }
   .selected {
     border-image: var(--sk-card-sel);

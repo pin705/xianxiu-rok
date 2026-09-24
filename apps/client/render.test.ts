@@ -289,6 +289,7 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
         ...BEASTS.map((_, i) => ({ kind: 'beast', i }) as Target),
         ...SECTS.map((_, i) => ({ kind: 'sect', i }) as Target),
         ...REALMS.map((_, i) => ({ kind: 'realm', i }) as Target),
+        { kind: 'tower', i: 0 },
       ]
       for (const target of targets)
         paint(
@@ -307,6 +308,12 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
         paint('Replay', { report, onclose: noop }, `${label}, chiến báo ${report.kind} ${report.i}`)
     }
     assert.ok(mid.reports.length >= 2 && afterTrib.reports.at(-1)!.fights.length === 3, 'dữ liệu thử phải có đủ loại chiến báo')
+    // Thông Thiên Tháp: đánh một tầng ở cuối game → chiến báo loại tháp phát lại được, bản đồ có nút tháp
+    const climbed = run({ ...late, troops: { ...late.troops, kiem1: 3000, phap2: 3000, the3: 3000 } }, { type: 'tower', elder: 'thanhPhong', army: { kiem1: 3000, phap2: 3000, the3: 3000 } })
+    assert.equal(climbed.reports.at(-1)!.kind, 'tower')
+    paint('Replay', { report: climbed.reports.at(-1), onclose: noop }, 'chiến báo tháp')
+    assert.ok(paint('MapView', { game: climbed, now: climbed.time, onpick: noop, onreports: noop }, 'bản đồ có tháp').includes(L.tower.name))
+    assert.ok(paint('Target', { game: climbed, now: climbed.time, target: { kind: 'tower', i: 0 }, onclose: noop, onmarch: noop, onrecruit: noop }, 'tháp tầng 2').includes(L.tower.floor(climbed.tower + 1)))
     paint(
       'Result',
       {
@@ -341,7 +348,8 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
       const now = s.time + 5000
       paint('Disciples', { game: s, now, act, onfocus: noop }, label)
       paint('Vault', { game: s, now, act, onfocus: noop }, label)
-      paint('Daily', { game: s, now, open: true, onclose: noop, act }, label)
+      const daily = paint('Daily', { game: s, now, open: true, onclose: noop, act }, label)
+      assert.ok(daily.includes(L.weekly.title) && daily.includes(L.weekly.bonus), `nhiệm vụ tuần phải hiện (${label})`)
       const settings = paint(
         'Settings',
         {

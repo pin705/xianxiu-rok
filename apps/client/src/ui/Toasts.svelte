@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-  // Thông báo ngắn: một dải mực quét ngang (hai đầu bút khô tước sợi, chỉ vàng bên trong) hiện ra như nét bút đang vẽ;
+  // Thông báo ngắn: dải giấy hai đầu lụa lam lục, viền mực (báo lỗi: giấy ửng son), hiện ra như nét bút đang vẽ;
   // có nút phụ (vd. "Xem lại" chiến báo).
   import { Icon } from '@rok/art'
 
@@ -43,11 +43,10 @@
     font-size: var(--fs-3);
     font-weight: 700;
     text-align: left;
-    color: var(--text-inv);
-    text-shadow: 0 1px 1px rgb(0 0 0 / 0.5);
+    color: var(--text);
     pointer-events: auto;
     border: 0 solid transparent;
-    border-image: var(--sk-toast);
+    border-image: var(--sk-slip);
     filter: drop-shadow(0 4px 8px rgb(20 14 10 / 0.35));
     -webkit-mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
     mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
@@ -56,7 +55,8 @@
       wipe 0.45s var(--ease) forwards;
   }
   .bad {
-    border-image: var(--sk-toast-bad);
+    color: var(--cinnabar);
+    border-image: var(--sk-slip-bad);
   }
   em {
     padding: 3px 10px 4px;

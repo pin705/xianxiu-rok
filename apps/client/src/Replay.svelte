@@ -186,7 +186,7 @@
     padding: 0;
   }
   .replay::backdrop {
-    background: var(--lacquer);
+    background: var(--paper2);
   }
   .stage {
     position: absolute;

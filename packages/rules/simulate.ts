@@ -98,6 +98,17 @@ function fightAll() {
       if (r.state.reports.at(-1)!.win) i--
     }
   }
+  // Thông Thiên Tháp: leo khi chắc thắng (mỗi lượt tối đa vài tầng), như người chơi xem tỉ lệ thắng
+  for (let k = 0; k < 3; k++) {
+    const e = idleElders(s)[0]
+    if (!e || !count(s.troops)) break
+    const t: Target = { kind: 'tower', i: 0 }
+    const r = apply(s, { type: 'tower', elder: e, army: home(s) }, s.time)
+    if (!r.ok || !wins(s, e, home(s), t) || !(casual || r.state.reports.at(-1)!.win)) break
+    s = r.state
+    if (r.state.reports.at(-1)!.win) note(`tháp tầng ${s.tower}`)
+    acted = true
+  }
   // Xuất quân: tông môn chưa hạ trước, rồi yêu thú cấp cao nhất đánh thắng được
   for (const e of ready() ? [] : idleElders(s)) {
     if (!count(s.troops)) break
@@ -123,6 +134,8 @@ function turn() {
     if (tryDo({ type: 'claim' })) acted = true
     for (let i = 0; i < 4; i++) if (tryDo({ type: 'daily', i })) acted = true
     if (tryDo({ type: 'dailyBonus' })) acted = true
+    for (let i = 0; i < 5; i++) if (tryDo({ type: 'weekly', i })) acted = true
+    if (tryDo({ type: 'weeklyBonus' })) acted = true
     if (count(s.wounded) && tryDo({ type: 'heal' })) acted = true
     if (build()) acted = true
     if (!s.study) for (const t of [...TECH_IDS].sort((a, b) => (s.tech[a] ?? 0) - (s.tech[b] ?? 0))) if (tryDo({ type: 'study', tech: t })) { acted = true; break }
@@ -163,7 +176,7 @@ for (let d = 0; d < days; d++) {
 
 console.log(log.join('\n'))
 const tot = UNITS.map(u => `${u}:${s.troops[u] + s.wounded[u]}`).filter(x => !x.endsWith(':0')).join(' ')
-console.log(`\nSau ${days} ngày: Chủ điện ${s.levels.chuDien}, yêu thú ${s.beast}, tông môn ${s.sects.filter(Boolean).length}/${SECTS.length}, bí cảnh ${s.realms.join('/')}, nhiệm vụ ${s.quest}/${QUESTS.length}`)
+console.log(`\nSau ${days} ngày: Chủ điện ${s.levels.chuDien}, yêu thú ${s.beast}, tông môn ${s.sects.filter(Boolean).length}/${SECTS.length}, bí cảnh ${s.realms.join('/')}, tháp ${s.tower}, nhiệm vụ ${s.quest}/${QUESTS.length}`)
 console.log(`Công trình: ${IDS.map(id => `${id} ${s.levels[id]}`).join(', ')}`)
 console.log(`Đệ tử: ${tot}`)
 console.log(`Trưởng lão: ${ELDER_IDS.filter(e => s.elders[e] !== undefined).map(e => `${e} ${elderLevel(s.elders[e])}`).join(', ')}`)

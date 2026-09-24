@@ -178,7 +178,15 @@ export const vi = {
     { name: 'Huyền Băng Bí Cảnh', lore: 'Băng nguyên vĩnh cửu, gió lạnh cắt da.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : vi.realms[t.i].name
+    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : vi.realms[t.i].name
+  },
+  tower: {
+    name: 'Thông Thiên Tháp',
+    lore: 'Tháp cổ đâm xuyên mây, mỗi tầng một yêu vương canh giữ. Chưa ai lên tới đỉnh.',
+    kind: 'Tháp thử thách',
+    floor: (n: number) => `Tầng ${n}`,
+    best: (n: number) => (n ? `Kỷ lục: qua ${n} tầng` : 'Chưa qua tầng nào'),
+    hint: 'Mỗi tầng địch mạnh hơn và đổi hệ chính. Thưởng chỉ nhận lần đầu qua tầng.',
   },
   map: {
     title: 'Bản đồ',
@@ -411,7 +419,22 @@ export const vi = {
     } as Record<'build' | 'train' | 'win' | 'brew', (n: number) => string>,
     bonus: 'Rương thưởng ngày',
     open: 'Mở rương',
-    button: 'Nhiệm vụ ngày',
+    button: 'Nhiệm vụ ngày & tuần',
+  },
+  weekly: {
+    title: 'Nhiệm vụ tuần',
+    reset: (ms: number) => {
+      const h = Math.max(0, Math.floor(ms / 3_600_000))
+      return `Làm mới sau ${h >= 24 ? `${Math.floor(h / 24)} ngày ${h % 24} giờ` : `${h} giờ`} (0h thứ Hai giờ Việt Nam)`
+    },
+    task: {
+      build: (n: number) => `Xây hoặc nâng công trình ${n} lần`,
+      train: (n: number) => `Tuyển ${n} đệ tử`,
+      win: (n: number) => `Thắng ${n} trận`,
+      brew: (n: number) => `Luyện ${n} mẻ đan`,
+      days: (n: number) => `Mở rương thưởng ngày ${n} hôm`,
+    } as Record<'build' | 'train' | 'win' | 'brew' | 'days', (n: number) => string>,
+    bonus: 'Rương thưởng tuần',
   },
   crash: {
     title: 'Tông môn gặp sự cố',

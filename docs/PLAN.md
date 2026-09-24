@@ -58,12 +58,13 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 | Tàng Kinh Các | Học viện | ✅ 20 công pháp, 5 hàng mở theo tầng 1/3/6/9/12 | Mở rộng theo mùa |
 | Đan phòng | Bệnh viện | ✅ Chữa thương (chỗ nằm có hạn, dư thì tử trận) + 3 đan: Tụ Khí (tăng tốc), Bồi Nguyên (kinh nghiệm), Độ Kiếp | Luyện đan theo công thức |
 | Bản đồ | Bản đồ vương quốc | ✅ Vùng PvE riêng: 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, 3 bí cảnh × 5 tầng | P3: giới chung |
+| Thông Thiên Tháp | — | ✅ Tháp thử thách không giới hạn tầng, mở ở tầng 10, đánh ngay như bí cảnh; mỗi tầng địch mạnh hơn 10% và đổi hệ chính; thưởng lần đầu mỗi tầng (tầng 5: Tụ Khí, tầng 10: Độ Kiếp + Bồi Nguyên); kỷ lục giữ qua luân hồi. Sim: bot giỏi tầng 39 sau 30 ngày, người chơi thường tầng 38 sau 45 ngày | Bảng xếp hạng tháp (P2) |
 | Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | P3: kiếp vân công khai trên bản đồ |
 | PvP | Đánh thành | — | P2: bất đồng bộ; P3: trên bản đồ |
 | Tiên minh | Liên minh | — (tab khóa "sắp có") | P3 |
 | Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; kiếp sau khởi đầu với công trình tầng 3 rồi tầng 5 ("căn cơ"), mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
 | Chat | Chat | — | P3 |
-| Nhiệm vụ ngày | Nhiệm vụ hằng ngày | ✅ 4 việc (xây 2 lần, tuyển 50, thắng 3 trận, luyện 1 mẻ đan) + rương; làm mới 0h giờ VN; mở ở tầng 3 | Nhiệm vụ tuần, sự kiện |
+| Nhiệm vụ ngày, tuần | Nhiệm vụ hằng ngày | ✅ Ngày: 4 việc (xây 2 lần, tuyển 50, thắng 3 trận, luyện 1 mẻ đan) + rương, làm mới 0h giờ VN. Tuần: 5 việc (xây 12, tuyển 400, thắng 15, luyện 5 mẻ, mở rương ngày 5 hôm) + rương có Độ Kiếp Đan, làm mới 0h thứ Hai. Mở ở tầng 3 | Sự kiện |
 | Âm thanh | — | ✅ Hiệu ứng + nhạc nền cổ phong sinh bằng WebAudio (đàn tranh, sáo trúc, trầm nền), bật/tắt riêng | Nhạc theo cảnh (bản đồ, trận) |
 
 5 cảnh giới × 5 tầng = 25 cấp, như 25 cấp Tòa thị chính của RoK. Qua mỗi cảnh giới mới (tầng 5→6, 10→11, 15→16) phải độ kiếp.
@@ -199,10 +200,10 @@ Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết qu�
 | | Bot giỏi, 4 phiên/ngày | Bot giỏi, 2 phiên/ngày | Người chơi thường, 3 phiên/ngày |
 |---|---|---|---|
 | Độ kiếp → Trúc Cơ | ngày 3 | ngày 5 | ngày 7 |
-| Độ kiếp → Kim Đan | ngày 6 | ngày 10 | ngày 12 |
-| Chủ điện tầng 15 | ngày 11 | ngày 19 | ngày 19, không thua trận nào |
+| Độ kiếp → Kim Đan | ngày 6 | ngày 10 | ngày 10 |
+| Chủ điện tầng 15 | ngày 11 | ngày 18 | ngày 17,5, không thua trận nào |
 
-(đã tính nhiệm vụ ngày; bot dồn Chủ điện nhưng giữ 3 công trình tài nguyên ≥ tầng 2 như chuỗi nhiệm vụ dạy)
+(đã tính nhiệm vụ ngày và tuần; bot dồn Chủ điện nhưng giữ 3 công trình tài nguyên ≥ tầng 2 như chuỗi nhiệm vụ dạy)
 
 **Luân hồi** (`npm run sim -- 60 4 --rebirth` và `npm run sim -- 90 3 --casual --rebirth`, tính từ đầu kiếp tới lúc luân hồi, gồm cả dọn hết bản đồ):
 
@@ -331,7 +332,7 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 | Hạng mục | Trạng thái | Bằng chứng |
 |---|---|---|
 | Vòng chơi trọn vẹn | ✅ | Lập tông môn → 46 nhiệm vụ → 2 lần độ kiếp → Chủ điện 15 → luân hồi. Bot bấm UI đi được tới nhiệm vụ 42 (tầng 11); luân hồi kiểm riêng qua UI |
-| Nhịp (bot giỏi / người chơi thường) | ✅ | Tầng 10: ngày 5 / ngày 10 · tầng 15: ngày 11 / ngày 19 · kiếp 2 ngắn hơn: 12,8 → 9 → 5,6 ngày |
+| Nhịp (bot giỏi / người chơi thường) | ✅ | Tầng 10: ngày 5 / ngày 9 · tầng 15: ngày 11 / ngày 17,5 (đã tính nhiệm vụ tuần) · kiếp 2 ngắn hơn: 12,8 → 9 → 5,6 ngày |
 | Không kẹt cứng | ✅ | Linh khí tự nhiên (BASE_RATE); chi phí vượt kho thì chỉ đường tới Tàng Bảo Các; thế yếu thì có nút tuyển; bảng tuyển chọn hệ đỡ cạn một loại tài nguyên |
 | Save an toàn | ✅ | Kiểm khuôn khi nhập, cất bản hỏng, xuất/nhập file, 2 tab không đè nhau, màn lỗi có nút xuất save |
 | Offline / PWA | ✅ | Tắt máy chủ vẫn chơi và đổi ngôn ngữ được (e2e); cache bỏ qua `Vary` của host |
@@ -343,7 +344,7 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 | Đăng tải + cộng đồng | ⬜ | `npm run package` → tải `release.zip` lên itch.io; nhóm Facebook/Discord |
 | Cổng P1 | ⬜ | ≥ 300 người thử, D1 ≥ 30 %, D7 ≥ 10 %, đọc ở `/stats` |
 
-**Rủi ro đã biết (không chặn demo):** chưa có âm thanh/rung được kiểm trên iOS thật; bản đồ chưa phóng to/thu nhỏ bằng con lăn chuột; người chơi chỉ bấm theo nhiệm vụ mà không nâng công pháp, công trình tài nguyên sẽ chậm dần ở tầng 11+ (sim có chiến thuật vẫn tới tầng 15 ngày 19) — theo dõi bằng phân bố cảnh giới ở `/stats`.
+**Rủi ro đã biết (không chặn demo):** chưa có âm thanh/rung được kiểm trên iOS thật; người chơi chỉ bấm theo nhiệm vụ mà không nâng công pháp, công trình tài nguyên sẽ chậm dần ở tầng 11+ (sim có chiến thuật vẫn tới tầng 15 ngày 17,5) — theo dõi bằng phân bố cảnh giới ở `/stats`.
 
 **Ưu tiên sau khi có số liệu người thật:** (1) chỗ người chơi bỏ cuộc nhiều nhất theo phân bố cảnh giới; (2) tỉ lệ độ kiếp thành công lần đầu; (3) có ai luân hồi và chơi tiếp không — đúng câu hỏi của cổng P1.
 6. Spike PixiJS 100×100 ô trên điện thoại thật.

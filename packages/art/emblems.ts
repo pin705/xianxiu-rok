@@ -5,14 +5,14 @@ import { blot, grain, stroke, wash, type Asset, type G, type Press, type Pt } fr
 import { outline, ring } from './chrome'
 import { PIGMENT as C, mix, rgba } from './palette'
 
-export type MedalTone = 'kiem' | 'phap' | 'the' | 'beast' | 'sect' | 'realm' | 'thunder' | 'ink' | 'jade' | 'gold' | 'red'
+export type MedalTone = 'kiem' | 'phap' | 'the' | 'beast' | 'sect' | 'realm' | 'thunder' | 'ink' | 'jade' | 'gold' | 'red' | 'tower'
 export const BEAST_EMBLEMS = ['wolf', 'snake', 'bear', 'fox', 'eagle', 'ape', 'windWolf', 'leopard', 'rhino', 'nineFox', 'hawk', 'turtle', 'tiger', 'phoenix', 'dragon'] as const
 export const SECT_EMBLEMS = ['wind', 'blood', 'poison', 'demon', 'ghost'] as const
 export const REALM_EMBLEMS = ['wood', 'fire', 'ice'] as const
 export const UNIT_EMBLEMS = { kiem: 'sword', phap: 'orb', the: 'fist' } as const
 export type Emblem =
   | (typeof BEAST_EMBLEMS)[number] | (typeof SECT_EMBLEMS)[number] | (typeof REALM_EMBLEMS)[number]
-  | (typeof UNIT_EMBLEMS)[keyof typeof UNIT_EMBLEMS] | 'thunder' | 'win' | 'lose' | 'rebirth' | 'lotus' | 'crest' | 'tick'
+  | (typeof UNIT_EMBLEMS)[keyof typeof UNIT_EMBLEMS] | 'thunder' | 'win' | 'lose' | 'rebirth' | 'lotus' | 'crest' | 'tick' | 'tower'
 
 const DISC: Record<MedalTone, [string, string]> = {
   kiem: [C.azuriteL, C.azuriteD],
@@ -26,6 +26,7 @@ const DISC: Record<MedalTone, [string, string]> = {
   ink: [C.ink3, C.ink],
   gold: [C.goldL, C.goldD],
   red: [C.cinnabarL, mix(C.cinnabar, C.ink, 0.3)],
+  tower: [C.azuriteL, mix(C.indigo, C.ink, 0.3)],
 }
 
 const oval = (cx: number, cy: number, rx: number, ry: number, n = 28, rot = 0): Pt[] =>
@@ -521,13 +522,32 @@ function crest(g: G) {
   ln(g, [[-14, 11.5], [0, 10.2], [14, 11.6]], 1.4, C.azurite, 'taper', 0.85, 574)
   ln(g, [[-10, 14.4], [2, 13.4], [11, 14.2]], 1, C.azurite, 'taper', 0.7, 575)
 }
+// Thông Thiên Tháp: tháp bảy tầng mái vút khỏi biển mây, đỉnh toả ánh vàng
+function tower(g: G) {
+  for (let i = 0; i < 8; i++) {
+    const a = -Math.PI / 2 + (i - 3.5) * 0.28
+    ln(g, [[Math.cos(a) * 3, -13 + Math.sin(a) * 3], [Math.cos(a) * 8, -13 + Math.sin(a) * 8]], 0.9, C.goldL, 'taper', 0.85, 590 + i)
+  }
+  blot(g, 0, -13.2, 2.4, C.goldL, 0.95, 598, 1)
+  ln(g, [[0, -10.6], [0, -16.8]], 0.9, C.goldD, 'even', 1, 599)
+  for (let t = 0; t < 7; t++) {
+    const y = 11 - t * 3.3, w = 7.2 - t * 0.78
+    part(g, [[-w * 0.62, y], [w * 0.62, y], [w * 0.62, y - 2], [-w * 0.62, y - 2]], C.silk, 600 + t, 0.6)
+    ln(g, [[-w * 0.3, y - 0.3], [-w * 0.3, y - 1.8]], 0.5, C.cinnabar, 'even', 0.9, 610 + t)
+    ln(g, [[w * 0.3, y - 0.3], [w * 0.3, y - 1.8]], 0.5, C.cinnabar, 'even', 0.9, 620 + t)
+    part(g, [[-w - 1.2, y - 1.6], [-w * 0.7, y - 3.2], [w * 0.7, y - 3.2], [w + 1.2, y - 1.6], [w * 0.7, y - 2.2], [-w * 0.7, y - 2.2]], C.malachite, 630 + t, 0.7)
+  }
+  for (const [x, y, r] of [[-9, 12.4, 4.2], [-2, 13.4, 4.8], [6, 12.6, 4.4], [12, 13.8, 3.2], [-13, 14.2, 3]] as const) blot(g, x, y, r, '#ffffff', 0.95, 640 + x, 0.6)
+  ln(g, [[-14, 14.8], [0, 15.6], [14, 14.6]], 0.8, C.azurite, 'taper', 0.7, 650)
+}
+
 function tick(g: G) {
   ln(g, [[-9, 0], [-3.6, 7.4], [11, -10.4]], 3.4, C.cinnabar, t => (t < 0.35 ? 0.55 + t : 1.1 - (t - 0.35) * 1.3), 1, 580)
 }
 
 const DRAW: Record<Emblem, (g: G) => void> = {
   wolf, snake, bear, fox, eagle, ape, windWolf, leopard, rhino, nineFox, hawk, turtle, tiger, phoenix, dragon,
-  wind, blood, poison, demon, ghost, wood, fire, ice, thunder, sword, orb, fist, win, lose, rebirth, lotus, crest, tick,
+  wind, blood, poison, demon, ghost, wood, fire, ice, thunder, sword, orb, fist, win, lose, rebirth, lotus, crest, tick, tower,
 }
 
 // Huy hiệu: đĩa màu khoáng loang sáng trên tối dưới, vòng vàng một nét, viền mực, hình chạm ở giữa, ánh men

@@ -4,8 +4,8 @@
 // Vẽ da tốn công (bút lông trên canvas + mã hoá PNG) nên bản chạy thật cất ảnh vào cache của bản build
 // (cùng cache với service worker: bản mới thì vẽ lại, bản cũ tự dọn) — lần mở sau chỉ đọc lại.
 import {
-  PIGMENT, badgeSkin, brushBar, buttonSkin, cardSkin, discSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, inkBlot, knobSkin, lacquerSkin,
-  lacquerTex, paper, plankSkin, rodSkin, scrollSkin, switchSkin, tagSkin, toastSkin, trackSkin, type Skin,
+  PIGMENT, badgeSkin, brushBar, buttonSkin, capsuleSkin, cardSkin, discSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, inkBlot, knobSkin,
+  paper, plateSkin, rodSkin, scrollSkin, slipSkin, stripSkin, switchSkin, tagSkin, toastSkin, trackSkin, type Skin,
 } from '@rok/art'
 
 type Canvas = HTMLCanvasElement | OffscreenCanvas
@@ -47,9 +47,9 @@ export async function applyTheme() {
   const P = PIGMENT
   const vars: Record<string, Promise<string>> = {
     '--paper-tex': img('paper', () => paper(256)),
-    '--lacquer-tex': img('lacquer', () => lacquerTex(192)),
     '--stroke-ink': img('stroke', () => brushBar(320, 28)),
     '--stroke-gold': img('stroke-gold', () => brushBar(320, 28, P.gold, 13)),
+    '--stroke-red': img('stroke-red', () => brushBar(320, 28, P.cinnabar, 15)),
     '--blot-mask': img('blot', () => inkBlot(256)),
     // khung cuộn tranh (chỉ khung, lòng là nền giấy ghép), thẻ, ván
     '--sk-scroll': nine('scroll', () => scrollSkin(S), false),
@@ -58,8 +58,15 @@ export async function applyTheme() {
     '--sk-card-plain': nine('card-plain', () => cardSkin(S, 'plain', 5)),
     '--sk-card-glow': nine('card-glow', () => cardSkin(S, 'glow', 7)),
     '--sk-card-sel': nine('card-sel', () => cardSkin(S, 'selected', 9)),
-    '--sk-card-lacquer': nine('card-lacquer', () => cardSkin(S, 'lacquer', 11)),
-    '--sk-plank': nine('plank', () => plankSkin(S)),
+    // khung sáng của hub: dải giấy bồi lụa (thanh trên, tab, cột trái), thẻ lụa, nhãn lụa, viên giấy, thẻ tên, thông báo
+    '--sk-strip': nine('strip', () => stripSkin(S), false),
+    '--sk-card-silk': nine('card-silk', () => cardSkin(S, 'silk', 13)),
+    '--sk-tag-silk': nine('tag-silk', () => tagSkin(S, 'silk', 17)),
+    '--sk-capsule': nine('capsule', () => capsuleSkin(S)),
+    '--sk-capsule-silk': nine('capsule-silk', () => capsuleSkin(S, 'silk', 47)),
+    '--sk-plate': nine('plate', () => plateSkin(S)),
+    '--sk-slip': nine('slip', () => slipSkin(S)),
+    '--sk-slip-bad': nine('slip-bad', () => slipSkin(S, true, 49)),
     // nút, nhãn, huy hiệu số
     '--sk-btn': nine('btn', () => buttonSkin(S, 'primary')),
     '--sk-btn-gold': nine('btn-gold', () => buttonSkin(S, 'gold', 9)),
@@ -76,7 +83,6 @@ export async function applyTheme() {
     '--sk-badge-fresh': nine('badge-fresh', () => badgeSkin(S, true, 14)),
     // thanh tiến độ, ô nhập, rãnh thẻ, bảng tối nhỏ, thông báo
     '--sk-track': nine('track', () => trackSkin(S)),
-    '--sk-track-dark': nine('track-dark', () => trackSkin(S, true, 16)),
     '--sk-fill': nine('fill', () => fillSkin(S, P.spirit)),
     '--sk-fill-gold': nine('fill-gold', () => fillSkin(S, P.gold, 18)),
     '--sk-fill-good': nine('fill-good', () => fillSkin(S, P.malachite, 19)),
@@ -84,15 +90,13 @@ export async function applyTheme() {
     '--sk-fill-azure': nine('fill-azure', () => fillSkin(S, P.azuriteL, 21)),
     '--sk-field': nine('field', () => fieldSkin(S)),
     '--sk-groove': nine('groove', () => grooveSkin(S)),
-    '--sk-bubble': nine('bubble', () => lacquerSkin(S)),
-    '--sk-sign': nine('sign', () => lacquerSkin(S, 31, 'notch')),
     '--sk-toast': nine('toast', () => toastSkin(S)),
     '--sk-toast-bad': nine('toast-bad', () => toastSkin(S, true, 27)),
     // ảnh nguyên tấm (nền, không giãn 9 mảnh)
-    '--img-disc': img('disc', () => discSkin(S, 'lacquer')),
     '--img-disc-paper': img('disc-paper', () => discSkin(S, 'paper', 35)),
     '--img-disc-azure': img('disc-azure', () => discSkin(S, 'azure', 37)),
     '--img-disc-gold': img('disc-gold', () => discSkin(S, 'gold', 39)),
+    '--img-disc-silk': img('disc-silk', () => discSkin(S, 'silk', 51)),
     '--img-switch': img('switch', () => switchSkin(S, false)),
     '--img-switch-on': img('switch-on', () => switchSkin(S, true, 28)),
     '--img-knob': img('knob', () => knobSkin(S)),

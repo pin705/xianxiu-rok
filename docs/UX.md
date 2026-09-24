@@ -8,7 +8,7 @@
 
 **Công nghệ**
 
-- **Hình vẽ tay sinh bằng mã** (`packages/art` = `@rok/art`, không phụ thuộc game): một "bút lông" (`brush.ts`: nét có lực đầu đinh đuôi chuột, mép sần, cuối nét khô tách sợi 飞白, mảng màu loang nhiều lớp, mép sắc tố đậm, hạt giấy) vẽ mọi thứ — núi (`landscape.ts`), công trình lối 界画 (`buildings.ts`), mây, tùng, hạc, bản đồ, icon vật phẩm (`icons.ts`), icon thao tác nét bút (`actions.ts`), chân dung trưởng lão, quân lính và yêu thú (`figures.ts`), huy hiệu và icon tab (`emblems.ts`), sân trận, và cả **da giao diện** (`chrome.ts`: khung cuộn tranh bồi lụa, thẻ giấy mép xơ, nút sơn loang, ván sơn mài viền vàng, nhãn, thanh tiến độ, công tắc, đĩa tròn; `ui.ts`: sơn mài, nét gạch chân, vết mực chuyển cảnh). Nướng một lần ra texture ở đúng độ nét màn hình (~30 ms cho cả bộ công trình); icon/chân dung trong HTML qua `paintedUrl` (`img.ts`).
+- **Hình vẽ tay sinh bằng mã** (`packages/art` = `@rok/art`, không phụ thuộc game): một "bút lông" (`brush.ts`: nét có lực đầu đinh đuôi chuột, mép sần, cuối nét khô tách sợi 飞白, mảng màu loang nhiều lớp, mép sắc tố đậm, hạt giấy) vẽ mọi thứ — núi (`landscape.ts`), công trình lối 界画 (`buildings.ts`), mây, tùng, hạc, bản đồ, icon vật phẩm (`icons.ts`), icon thao tác nét bút (`actions.ts`), chân dung trưởng lão, quân lính và yêu thú (`figures.ts`), huy hiệu và icon tab (`emblems.ts`), sân trận, và cả **da giao diện** (`chrome.ts`: khung cuộn tranh bồi lụa, thẻ giấy mép xơ, nút sơn loang, dải giấy bồi lụa, viên giấy, thẻ tên, nhãn, thanh tiến độ, công tắc, đĩa tròn; `ui.ts`: nét gạch chân, vết mực chuyển cảnh, hào quang). Nướng một lần ra texture ở đúng độ nét màn hình (~30 ms cho cả bộ công trình); icon/chân dung trong HTML qua `paintedUrl` (`img.ts`).
 - **Cảnh núi, bản đồ và trận đánh chạy WebGL** (PixiJS, `apps/client/src/world/`): texture tĩnh + chuyển động trên GPU (sương trôi, thác, hạc, khói lò, lửa, cột linh khí, đèn đêm, sét độ kiếp). Cuộn bằng lớp cuộn gốc của trình duyệt (quán tính như app thật); biển tên/đồng hồ là HTML dịch cùng camera trong cùng khung hình (`View.svelte`). Phát lại trận (`battle.ts`) mượn chung canvas: hai đội vẽ tay xông lên mỗi lượt, kiếm khí / hoả cầu / sóng chấn / vuốt / sét, chớp sáng, rung màn, quân ngã theo thương vong; công pháp có hiệu ứng riêng (mưa kiếm, khiên vàng, hồi sinh, độc vụ); sân theo cảnh (hoang dã, rừng, hoả sơn, băng nguyên, kiếp vân). Phòng thử art: `/lab.html?view=buildings|icons|faces|troops|decor|chrome|medals|fx|battle` (bản dev; `battle&kind=sect|beast|trib&t=0.4&skill=…` đứng hình trận thật ở giây t).
 - **VFX cũng là nét bút, không phải quầng gradient** (`fx.ts`: kiếm khí, hoả cầu, vuốt, vòng 圆相, tia trúng đòn, sét, vệt mưa kiếm, khói mực; `stage.ts` → `ink()`): mỗi hiệu ứng là một hình trắng vẽ ba bề ngang, ghép ba lớp — **bóng mực** (thường) → **sắc khoáng** (thường) → **lõi sáng** (cộng). Trên giấy sáng mà chỉ cộng sáng thì hình bị loá mất; lớp mực giữ dáng, chỉ lõi mới phát sáng. Hiệu ứng tan bằng **khung khô dần** (`DRY`: vẽ lại với độ khô tăng, đuôi nét tước sợi rồi hết, đầu nét vẫn đậm) thay cho mờ dần đều; lửa lò là ba khung lưỡi lửa thay nhau. Mặt trời son, trăng, linh châu, cờ quân trên bản đồ, nét đứt đường đi đều vẽ tay; chỉ ánh sáng thật (đèn, cột linh khí, tia nắng, sương) còn dùng quầng mềm.
 - **HTML cho HUD và bảng**, dựng từ design system `apps/client/src/ui/` (mục 6): chữ tiếng Việt, co giãn, trình đọc màn hình tốt hơn canvas.
@@ -17,7 +17,7 @@
 **Hình ảnh**
 
 - *Thanh lục sơn thủy* (青绿山水, như bức "Thiên Lý Giang Sơn Đồ"): núi lam khoáng chuyển lục, sương trắng ngăn các lớp xa gần.
-- **HUD sơn mài viền vàng, bảng giấy khung mực**: tách rõ "thế giới" (tranh) và "giao diện" (đồ vật trong tông môn), không kính mờ bo tròn kiểu web.
+- **Khung giấy bồi lụa sáng, cùng họ màu với tranh**: HUD, thanh tab, bảng là giấy xuyến chỉ viền lụa lam lục, nét mực, điểm son — bức tranh sáng không bị một khung tối nặng nề bao quanh; không kính mờ bo tròn kiểu web.
 - **Thời gian thật**: trời đổi theo giờ máy người chơi. Bình minh 5–7h, ngày 7–17h, hoàng hôn 17–19h; ban đêm có trăng sao, cửa sổ và đèn lồng sáng.
 
 ## 2. Nguyên tắc UX
@@ -130,7 +130,7 @@ Chủ điện tầng 15: bảng liệt kê Giữ lại / Làm lại và thưởn
 
 ## 6. Hệ thiết kế
 
-Nguồn màu duy nhất là `PIGMENT` trong `packages/art/palette.ts` (màu khoáng: mực, giấy, 石青, 石绿, 赭石, 朱砂, vàng lá, sơn mài). `apps/client/src/ui/theme.ts` bơm chúng thành biến CSS (`--ink`, `--azurite-d`…) rồi **vẽ toàn bộ da giao diện bằng bút lông** (`packages/art/chrome.ts`) một lần lúc khởi động (~60 ms, song song với chờ font) và bơm thành biến: `--sk-*` là giá trị `border-image` 9 mảnh đủ bộ, `--img-*` là ảnh nguyên tấm (đĩa, công tắc, chấm dẫn). Da vẽ ở độ nét màn hình (2–3×), thành blob URL (không chặn luồng chính). `ui/theme.css` giữ token (chữ, khoảng cách, bóng, chuyển động, lớp), vài tiện ích bố cục (`.stack`, `.row`, `.grid`, `.t-*`) và ba lớp chất liệu `.scroll-skin` `.card-skin` `.plank`.
+Nguồn màu duy nhất là `PIGMENT` trong `packages/art/palette.ts` (màu khoáng: mực, giấy, 石青, 石绿, 赭石, 朱砂, vàng lá, sơn mài). `apps/client/src/ui/theme.ts` bơm chúng thành biến CSS (`--ink`, `--azurite-d`…) rồi **vẽ toàn bộ da giao diện bằng bút lông** (`packages/art/chrome.ts`) một lần lúc khởi động (~60 ms, song song với chờ font) và bơm thành biến: `--sk-*` là giá trị `border-image` 9 mảnh đủ bộ, `--img-*` là ảnh nguyên tấm (đĩa, công tắc, chấm dẫn). Da vẽ ở độ nét màn hình (2–3×), thành blob URL (không chặn luồng chính). `ui/theme.css` giữ token (chữ, khoảng cách, bóng, chuyển động, lớp), vài tiện ích bố cục (`.stack`, `.row`, `.grid`, `.t-*`) và ba lớp chất liệu `.scroll-skin` `.card-skin` `.strip`.
 
 **Quy tắc:** màn hình chỉ ghép component trong `ui/` + tiện ích bố cục; không tự đặt màu, bo góc, bóng, viền CSS. Mặt nào cần "khung" thì dùng da vẽ tay (`border: 0 solid; border-image: var(--sk-…)` — bề dày 0 nên da vẽ đè lên vùng đệm, bố cục do padding quyết định). Cần kiểu mới thì vẽ thêm da trong `chrome.ts` rồi đưa vào `theme.ts`, không vẽ bằng CSS.
 
@@ -138,11 +138,12 @@ Nguồn màu duy nhất là `PIGMENT` trong `packages/art/palette.ts` (màu kho�
 
 ### Chất liệu (vẽ bằng bút lông)
 
-- **Cuộn tranh bồi lụa** (bảng dưới, hộp giữa, trang): viền lụa lam xám dệt sợi, chỉ vàng 隔水, giấy ố vàng dọc mép, khung mực đôi kẻ tay (nét dưới/phải đậm hơn theo hướng sáng), mây cuộn son ở góc; bảng dưới có trục gỗ sơn mài hai đầu bịt đồng chạm hoa.
-- **Thẻ giấy mép xơ** (mục danh sách, ô thông tin, nhiệm vụ): mép giấy xé, bóng nhấc khỏi mặt bảng, viền mực kẻ tay vượt góc; biến thể vàng (có mây cuộn góc), son (đang chọn), sơn mài.
-- **Ván sơn mài viền vàng** (HUD trên, thanh tab): vân gỗ ngang, vệt bóng sơn, chỉ vàng đôi kẻ tay, ke góc đồng có đinh tán.
+- **Cuộn tranh bồi lụa** (bảng dưới, hộp giữa, trang): viền lụa lam lục dệt sợi, chỉ vàng 隔水, giấy ố vàng dọc mép, khung mực đôi kẻ tay (nét dưới/phải đậm hơn theo hướng sáng), mây cuộn son ở góc; bảng dưới có trục gỗ sơn mài hai đầu bịt đồng chạm hoa.
+- **Thẻ giấy mép xơ** (mục danh sách, ô thông tin, nhiệm vụ): mép giấy xé, bóng nhấc khỏi mặt bảng, viền mực kẻ tay vượt góc; biến thể vàng (có thưởng, mây cuộn góc), son (đang chọn), lụa lam lục (mục nổi bật: hành quân, rương thưởng).
+- **Dải giấy bồi lụa** (HUD trên, thanh tab, cột trái desktop): giấy xuyến chỉ, viền lụa lam lục dệt sợi, chỉ vàng mảnh, một nét mực kẻ tay, mây cuộn son ở góc. Cả khung hub cùng họ màu với tranh (giấy, lam lục, mực, điểm son) — không dùng mặt tối nặng quanh một cảnh sáng.
+- **Viên giấy, thẻ tên, dải thông báo** (ô tài nguyên, bong bóng đồng hồ, biển tên công trình trên núi, thông báo): giấy trắng ngà viền mực dày mỏng; thẻ tên hai đầu vát bịt lụa lam lục, số tầng trên giọt son; thông báo hai đầu lụa (báo lỗi: giấy ửng son). Nút tròn trên HUD là đĩa lụa lam lục vòng vàng.
 - **Nút sơn loang**: mảng màu khoáng loang nhiều lớp, mép sắc tố dồn đậm, thớ bút khô, vảy vàng lá (nút vàng), viền mực dày mỏng; nhấn thì lún, luôn phát tiếng gõ; nút vàng có vệt sáng lướt.
-- **Nhãn, huy hiệu số, thanh tiến độ, ô nhập, công tắc, đĩa tròn, thông báo**: mẩu giấy viền mực; giọt son viền vàng; rãnh mực + nét bút màu đầu khô tước sợi; gạch chân mực; núm đĩa giấy vòng mực một nét (圆相); đĩa sơn mài/giấy/lam/vàng; dải mực quét ngang tước sợi.
+- **Nhãn, huy hiệu số, thanh tiến độ, ô nhập, công tắc, đĩa tròn, thông báo**: mẩu giấy viền mực; giọt son viền vàng; rãnh mực + nét bút màu đầu khô tước sợi; gạch chân mực; núm đĩa giấy vòng mực một nét (圆相); đĩa lụa/giấy/lam/vàng; dải mực quét ngang tước sợi (chỉ cho khoảnh khắc lớn: xuất chiêu, màn tiêu đề).
 
 ### Hình vẽ tay thay cho chữ
 
@@ -196,7 +197,7 @@ Button · IconButton · Sheet (cuộn tranh: bảng dưới / hộp giữa, vu�
   - Giữa: cảnh núi / bản đồ co theo bề ngang vùng giữa (tối đa 600px mỗi 400 DU — `cssPerDU()`, `sceneX()` trong `world/stage.ts`; `View.svelte` đặt lề trái bằng JS, không căn giữa bằng CSS).
   - Bảng công trình, mục tiêu, cài đặt… là **ngăn kéo ghim bên phải** (~440px, `--dock`): mở không chặn (núi vẫn thấy và bấm được, chọn công trình khác thì ngăn kéo đổi nội dung), trượt từ phải, Esc để đóng; hộp giữa (`center`) vẫn chặn như trên điện thoại. Khi có ngăn kéo, `--dockw` ghi lên `<html>` để cảnh nhường chỗ.
   - Trang Môn hạ / Bảo khố rộng tối đa ~1000px, lưới 3 cột.
-  - Mọi mặt vẫn là da vẽ tay như trên điện thoại (ván sơn mài cho thanh trên và cột trái, cuộn tranh cho ngăn kéo); token bố cục trong `theme.css`: `--rail` (0 / 300px), `--top` (0 / 84px), `--dock` (440px).
+  - Mọi mặt vẫn là da vẽ tay như trên điện thoại (dải giấy bồi lụa cho thanh trên và cột trái, cuộn tranh cho ngăn kéo); token bố cục trong `theme.css`: `--rail` (0 / 300px), `--top` (0 / 84px), `--dock` (440px).
 - Vùng an toàn qua `env(safe-area-inset-*)`.
 
 ## 8. Trợ năng

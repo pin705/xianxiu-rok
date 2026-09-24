@@ -181,7 +181,15 @@ export const en: Text = {
     { name: 'Dark Ice Realm', lore: 'Eternal ice fields and winds that cut like blades.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : en.realms[t.i].name
+    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : en.realms[t.i].name
+  },
+  tower: {
+    name: 'Heaven-Piercing Tower',
+    lore: 'An ancient tower that pierces the clouds, each floor guarded by a demon king. No one has reached the top.',
+    kind: 'Trial tower',
+    floor: (n: number) => `Floor ${n}`,
+    best: (n: number) => (n ? `Record: ${n} floors cleared` : 'No floors cleared yet'),
+    hint: 'Each floor is stronger and changes its main type. Rewards only on the first clear of a floor.',
   },
   map: {
     title: 'Map',
@@ -412,7 +420,22 @@ export const en: Text = {
     } as Record<'build' | 'train' | 'win' | 'brew', (n: number) => string>,
     bonus: 'Daily chest',
     open: 'Open',
-    button: 'Daily tasks',
+    button: 'Daily & weekly tasks',
+  },
+  weekly: {
+    title: 'Weekly tasks',
+    reset: (ms: number) => {
+      const h = Math.max(0, Math.floor(ms / 3_600_000))
+      return `Resets in ${h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h`} (Monday midnight, Vietnam time)`
+    },
+    task: {
+      build: (n: number) => `Start ${n} building upgrades`,
+      train: (n: number) => `Recruit ${n} disciples`,
+      win: (n: number) => `Win ${n} battles`,
+      brew: (n: number) => `Brew ${n} batches of pills`,
+      days: (n: number) => `Open the daily chest on ${n} days`,
+    } as Record<'build' | 'train' | 'win' | 'brew' | 'days', (n: number) => string>,
+    bonus: 'Weekly chest',
   },
   crash: {
     title: 'The sect ran into trouble',

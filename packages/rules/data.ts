@@ -278,6 +278,30 @@ export const DAILY: { id: DailyId; n: number }[] = [
 export const DAILY_RES = 150 // mỗi việc: DAILY_RES × tầng Chủ điện, mỗi loại tài nguyên
 export const DAILY_BONUS: Partial<Record<PillId, number>> = { tuKhi: 1, boiNguyen: 1 } // rương khi xong cả 4
 
+// ---------- Thông Thiên Tháp ----------
+
+// Tháp thử thách không giới hạn tầng, mở ở Chủ điện tầng 10: việc để làm sau khi dọn bản đồ, ngoài luân hồi.
+// Đánh ngay (không hành quân), thua mất quân như bí cảnh. Mỗi tầng địch mạnh hơn TOWER_GROW và đổi hệ chính theo vòng
+// (một đội hình không ăn hết — phải đổi hệ khắc). Thưởng chỉ lần đầu qua mỗi tầng; kỷ lục giữ qua luân hồi.
+export const TOWER = { hall: 10, x: 192, y: 104 }
+export const TOWER_STR = 800 // tầng 1, tính bằng số đệ tử bậc 1
+export const TOWER_GROW = 1.1
+export const TOWER_RES = 1500 // thưởng tầng 1, mỗi loại tài nguyên
+export const TOWER_RES_GROW = 1.06
+
+// Nhiệm vụ tuần: đếm cùng lúc với nhiệm vụ ngày, cộng số hôm đã mở rương ngày. Làm mới 0h thứ Hai giờ VN.
+// Lý do có: nhiệm vụ ngày kéo người chơi vào mỗi hôm, nhiệm vụ tuần cho lý do giữ nhịp cả tuần (đúng chỉ số D7 của cổng P1).
+export type WeeklyId = DailyId | 'days'
+export const WEEKLY: { id: WeeklyId; n: number }[] = [
+  { id: 'build', n: 12 },
+  { id: 'train', n: 400 },
+  { id: 'win', n: 15 },
+  { id: 'brew', n: 5 },
+  { id: 'days', n: 5 }, // mở rương ngày 5 hôm trong tuần
+]
+export const WEEKLY_RES = 500 // mỗi việc: WEEKLY_RES × tầng Chủ điện, mỗi loại tài nguyên
+export const WEEKLY_BONUS: Partial<Record<PillId, number>> = { tuKhi: 3, boiNguyen: 2, doKiep: 1 } // rương khi xong cả 5
+
 // ---------- Luân hồi ----------
 
 // Chủ điện tầng 15: luân hồi tự nguyện. Giữ trưởng lão, công pháp, đan dược; mất công trình, tài nguyên, đệ tử, bản đồ.

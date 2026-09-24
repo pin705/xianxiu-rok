@@ -249,8 +249,9 @@
   }
 
   function march(t: Target, elder: ElderId, army: Army) {
-    if (t.kind === 'realm') {
-      const s = fightNow({ type: 'realm', i: t.i, elder, army })
+    // bí cảnh, tháp: đánh ngay tại chỗ, xem trận luôn
+    if (t.kind === 'realm' || t.kind === 'tower') {
+      const s = fightNow(t.kind === 'tower' ? { type: 'tower', elder, army } : { type: 'realm', i: t.i, elder, army })
       if (!s) return
       target = null
       replay = s.reports.at(-1)!

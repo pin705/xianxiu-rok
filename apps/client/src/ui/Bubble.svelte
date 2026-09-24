@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Bong bóng đồng hồ trên công trình: bảng sơn mài bo tròn viền vàng, đĩa lam có biểu tượng việc, thời gian, dải tiến độ.
+  // Bong bóng đồng hồ trên công trình: viên giấy viền mực, đĩa lam có biểu tượng việc, thời gian, dải tiến độ.
   import { Icon, type IconName } from '@rok/art'
   import Meter from './Meter.svelte'
 
@@ -10,7 +10,7 @@
   <span class="ic"><Icon name={icon} size={13} /></span>
   <span class="stack">
     <b class="t-num">{time}</b>
-    <Meter {value} size="xs" dark />
+    <Meter {value} size="xs" />
   </span>
 </span>
 
@@ -21,9 +21,9 @@
     gap: 6px;
     padding: 4px 13px 6px 4px;
     font-size: var(--fs-2);
-    color: var(--text-inv);
+    color: var(--text);
     border: 0 solid transparent;
-    border-image: var(--sk-bubble);
+    border-image: var(--sk-capsule);
   }
   .stack {
     --gap: 3px;

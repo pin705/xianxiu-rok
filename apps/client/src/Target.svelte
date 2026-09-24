@@ -1,8 +1,8 @@
 <script lang="ts">
   // Bảng mục tiêu trên bản đồ: yêu thú, tông môn đối địch, bí cảnh. Xem địch, phần thưởng, chọn đội rồi xuất quân.
   import {
-    BEASTS, BEATS, REALMS, SECTS, TYPES, beastExp, beastLoot, coolKey, enemyOf, marchSlots, marchTime,
-    might, targetError, tierFor, winChance,
+    BEASTS, BEATS, REALMS, SECTS, TOWER, TYPES, beastExp, beastLoot, coolKey, enemyOf, marchSlots, marchTime,
+    might, targetError, tierFor, towerReward, towerType, winChance,
     type Army, type ElderId, type Reward, type State, type Target, type UnitType,
   } from '@rok/rules'
   import { Portrait } from '@rok/art'
@@ -48,6 +48,13 @@
         rewardLabel: first ? L.map.firstWin : L.map.repeat, tier: tierFor(d.hall), skill: d.elder,
       }
     }
+    if (t.kind === 'tower') {
+      const f = game.tower
+      return {
+        emblem: EMBLEM.tower[0], sub: `${L.tower.kind} · ${L.tower.floor(f + 1)}`, type: towerType(f), lore: `${L.tower.lore} ${L.tower.hint}`,
+        reward: towerReward(f), rewardLabel: `${L.map.firstWin} · ${L.tower.best(f)}`, tier: 3 as const,
+      }
+    }
     const d = REALMS[t.i]
     const f = Math.min(game.realms[t.i], d.floors.length - 1)
     return {
@@ -61,7 +68,7 @@
     const t = target
     if (!t || err !== 'locked') return ''
     if (t.kind === 'beast') return L.map.lockedBeast(t.i)
-    return L.panel.locked(t.kind === 'sect' ? SECTS[t.i].hall : REALMS[t.i].hall)
+    return L.panel.locked(t.kind === 'sect' ? SECTS[t.i].hall : t.kind === 'tower' ? TOWER.hall : REALMS[t.i].hall)
   })
 </script>
 
@@ -104,7 +111,7 @@
       {:else if err === 'busy'}
         <Tag icon="flag">{L.map.heading}</Tag>
       {:else if foe}
-        {@const realm = target.kind === 'realm'}
+        {@const realm = target.kind === 'realm' || target.kind === 'tower'}
         {@const full = !realm && game.marches.length >= marchSlots(game)}
         {#if full}<Tag icon="flag" tone="bad">{L.map.slotsFull}</Tag>{/if}
         <ArmyPick

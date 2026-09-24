@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   BASE_RATE, BEASTS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
-  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed,
+  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, nextWeek, weekOf, towerReward, towerStr, towerType, enemyOf, targetError,
   techTime, trainCost, trainTime, upgradeError, winChance,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
@@ -290,6 +290,43 @@ test('nhiệm vụ ngày: đếm tiến độ, nhận thưởng từng việc, r
   assert.equal(err(rich(2), { type: 'daily', i: 0 }), 'locked')
 })
 
+test('nhiệm vụ tuần: đếm cùng nhiệm vụ ngày và số hôm mở rương ngày, làm mới 0h thứ Hai giờ VN', () => {
+  let s = { ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 2000 } }
+  s = up(s, 'tuLinhTran')
+  s = run(s, { type: 'train', unit: 'kiem1', n: 60 })
+  assert.equal(s.weekly.n.build, 1)
+  assert.equal(s.weekly.n.train, 60)
+  assert.equal(err(s, { type: 'weekly', i: 1 }), 'not_done')
+  // Tuần: xong mọi việc (giả tiến độ) → nhận từng việc, rồi rương
+  s = { ...s, weekly: { ...s.weekly, n: Object.fromEntries(WEEKLY.map(w => [w.id, w.n])) as typeof s.weekly.n } }
+  const before = s.res.linhKhoang
+  assert.equal(err(s, { type: 'weeklyBonus' }), 'not_done')
+  for (let i = 0; i < WEEKLY.length; i++) s = run(s, { type: 'weekly', i })
+  assert.equal(s.res.linhKhoang, before + WEEKLY.length * WEEKLY_RES * 6)
+  assert.equal(err(s, { type: 'weekly', i: 0 }), 'max_level')
+  const pills = s.items.doKiep ?? 0
+  s = run(s, { type: 'weeklyBonus' })
+  assert.equal(s.items.doKiep, pills + (WEEKLY_BONUS.doKiep ?? 0))
+  assert.equal(err(s, { type: 'weeklyBonus' }), 'max_level')
+  // mở rương ngày thì cộng một hôm
+  const d = run({ ...s, daily: { ...s.daily, got: s.daily.got.map(() => true) } }, { type: 'dailyBonus' })
+  assert.equal(d.weekly.n.days, s.weekly.n.days + 1)
+  // Mốc làm mới đúng 0h thứ Hai giờ VN (17h Chủ nhật UTC)
+  const mon = nextWeek(s.time)
+  assert.equal(new Date(mon + 7 * 3_600_000).getUTCDay(), 1)
+  assert.equal(new Date(mon + 7 * 3_600_000).getUTCHours(), 0)
+  assert.equal(weekOf(mon) - weekOf(mon - 1), 1)
+  assert.equal(advance(s, mon - 1).weekly.bonus, true)
+  const fresh = advance(s, mon)
+  assert.equal(fresh.weekly.bonus, false)
+  assert.equal(fresh.weekly.n.build, 0)
+  // Save cũ chưa có nhiệm vụ tuần: nạp được, có tuần mới
+  const { weekly: _, ...old } = s
+  assert.equal(migrate(JSON.parse(JSON.stringify(old)))?.weekly.bonus, false)
+  assert.equal(migrate(JSON.parse(JSON.stringify({ ...s, weekly: { ...s.weekly, got: [true] } }))), null, 'khuôn tuần sai thì từ chối')
+  assert.equal(err(rich(2), { type: 'weekly', i: 0 }), 'locked')
+})
+
 test('save bản 2 đọc được, giữ tiến độ và đúng nhiệm vụ', () => {
   const v2 = {
     v: 2, name: 'Lạc Hà Tông', quest: 4, time: T0, res: { linhThach: 5, linhThao: 6, linhKhoang: 7 },
@@ -359,4 +396,30 @@ test('kho không đủ chỗ cho chi phí: chỉ ra tầng Tàng Bảo Các cầ
   assert.ok(storage({ ...s, levels: { ...s.levels, tangBaoCac: need - 1 } }) < c.linhThach)
   assert.equal(storeNeed(s, cost('chuDien', 3)), 0, 'kho đủ chỗ')
   assert.equal(storeNeed({ ...s, res: { linhThach: 2e4, linhThao: 2e4, linhKhoang: 2e4 } }, c), 0, 'đã có đủ (thưởng vượt kho)')
+})
+
+test('Thông Thiên Tháp: mở ở tầng 10, qua tầng thì lên kỷ lục và nhận thưởng lần đầu, địch mạnh dần và đổi hệ', () => {
+  assert.equal(err(rich(9), { type: 'tower', elder: 'thanhPhong', army: { kiem3: 10 } }), 'locked')
+  let s: State = { ...rich(10, 10), troops: { ...rich(10, 10).troops, kiem3: 3000, phap3: 3000, the3: 3000 }, elders: { thanhPhong: expAt(30) } }
+  assert.equal(targetError(s, { kind: 'tower', i: 0 }), null)
+  // mỗi tầng một hệ khác, sức tăng đều
+  assert.notEqual(towerType(0), towerType(1))
+  assert.ok(towerStr(1) > towerStr(0))
+  assert.equal(enemyOf(s, { kind: 'tower', i: 0 }).troops[0].type, towerType(0))
+  const before = s.res.linhThach
+  s = run(s, { type: 'tower', elder: 'thanhPhong', army: { kiem3: 3000, phap3: 3000, the3: 3000 } })
+  assert.equal(s.tower, 1, 'thắng thì lên tầng 2')
+  assert.equal(s.res.linhThach, before + towerReward(0).res!.linhThach!)
+  assert.equal(s.reports.at(-1)!.kind, 'tower')
+  assert.equal(enemyOf(s, { kind: 'tower', i: 0 }).troops[0].type, towerType(1), 'tầng mới, địch đổi hệ')
+  assert.deepEqual(towerReward(4).items, { tuKhi: 3 })
+  assert.equal(towerReward(9).items?.doKiep, 1)
+  // thua: không lên tầng, không nhận thưởng
+  const weak = run({ ...s, troops: { ...s.troops, kiem1: 1 } }, { type: 'tower', elder: 'thanhPhong', army: { kiem1: 1 } })
+  assert.equal(weak.tower, 1)
+  // kỷ lục giữ qua luân hồi; save cũ chưa có tháp thì bắt đầu từ 0
+  const reborn = run({ ...s, levels: { ...s.levels, chuDien: 15 }, marches: [] }, { type: 'rebirth' })
+  assert.equal(reborn.tower, 1)
+  const { tower: _, ...old } = s
+  assert.equal(migrate(JSON.parse(JSON.stringify(old)))?.tower, 0)
 })
