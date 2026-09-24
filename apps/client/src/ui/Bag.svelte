@@ -1,7 +1,8 @@
 <script lang="ts">
-  // Túi tài nguyên/đan dược: chi phí (có `have` thì tô đỏ chỗ thiếu, ghi "có X") hoặc phần thưởng.
-  import { PILL_IDS, RESOURCES, type Bag as Res, type PillId } from '@rok/rules'
+  // Túi tài nguyên/đan dược/vật phẩm: chi phí (có `have` thì tô đỏ chỗ thiếu, ghi "có X") hoặc phần thưởng.
+  import { BAG_IDS, PILL_IDS, RESOURCES, bagFamily, type Bag as Res, type ItemId } from '@rok/rules'
   import { L, num } from '../lib'
+  import { denom } from '../bag'
   import Tag from './Tag.svelte'
 
   let {
@@ -13,7 +14,7 @@
     named = false,
   }: {
     res?: Partial<Res>
-    items?: Partial<Record<PillId, number>>
+    items?: Partial<Record<ItemId, number>>
     exp?: number
     have?: Res
     size?: 'sm' | 'md'
@@ -36,6 +37,13 @@
   {/each}
   {#each PILL_IDS as p (p)}
     {#if items[p]}<li><Tag icon={p} tone="gold" {size}>{named ? `${L.pills[p].name} ` : ''}×{items[p]}</Tag></li>{/if}
+  {/each}
+  {#each BAG_IDS as id (id)}
+    {#if items[id]}<li>
+        <Tag icon={bagFamily(id)} tone="gold" {size}
+          >{named ? `${L.bag.family[bagFamily(id)].name} ` : ''}{denom(id)} ×{items[id]}</Tag
+        >
+      </li>{/if}
   {/each}
   {#if exp}<li><Tag icon="star" tone="gold" {size}>{L.map.exp(exp)}</Tag></li>{/if}
 </ul>

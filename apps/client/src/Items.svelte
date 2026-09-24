@@ -95,7 +95,8 @@
             >
           </Card>
         {/each}
-      {:else}
+      {:else if def.use !== 'key'}
+        <!-- thiếp Chiêu Hiền Đài: mở ở Chiêu Hiền Đài (tab Môn hạ), mô tả đã nói -->
         <Button wide onclick={() => use()}>{n > 1 ? L.bag.useAll(n) : L.bag.use}</Button>
       {/if}
     </div>

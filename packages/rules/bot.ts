@@ -1,8 +1,15 @@
 // Chiến thuật bot: một lượt chơi trên state (thử mọi thao tác trên bản sao, luật tất định). Dùng bởi simulate.ts;
 // sau này bởi sim PvP (nhiều bot một giới) và load test.
 import {
+  ACH_IDS,
+  BAG,
+  BAG_IDS,
   BEASTS,
   ELDER_IDS,
+  ELDER_MAX,
+  FEST_IDS,
+  festRewards,
+  jobOf,
   IDS,
   MAX_LEVEL,
   PILL_IDS,
@@ -81,6 +88,56 @@ export const idleElders = (st: State) =>
   ELDER_IDS.filter(e => st.elders[e] !== undefined && !isMarching(st, e)).sort(
     (a, b) => elderLevel(st.elders[b]) - elderLevel(st.elders[a]),
   )
+
+// Quà và túi đồ, như người chơi thật: nhận mọi quà sự kiện đang chờ, mở nang tài nguyên, dùng Tụ Linh Phù khi hết buff,
+// kinh thư cho trưởng lão mạnh nhất, phù/đan tăng tốc cho việc còn lâu (mệnh giá lớn nhất không phí quá phần còn lại)
+export function perks(start: State): State {
+  let s = start
+  const tryDo = (a: Action) => {
+    const r = apply(s, a, s.time)
+    if (r.ok) s = r.state
+    return r.ok
+  }
+  tryDo({ type: 'login' })
+  tryDo({ type: 'vipChest' })
+  // Chiêu Hiền Đài: mở hết thiếp (miễn phí + trong túi), thu nhận khi đủ tín vật, nâng sao người mạnh nhất
+  for (const kind of ['silver', 'gold'] as const) while (tryDo({ type: 'draw', kind, n: 1 }));
+  for (const e of ELDER_IDS) tryDo({ type: 'recruit', elder: e })
+  for (const e of idleElders(s)) while (tryDo({ type: 'star', elder: e }));
+  for (const job of ['build', 'study', 'train', 'heal', 'forge'] as const) tryDo({ type: 'finish', job })
+  for (const id of FEST_IDS) festRewards(id).forEach((_, i) => tryDo({ type: 'fest', id, i }))
+  for (const id of ACH_IDS) while (tryDo({ type: 'ach', id }));
+  for (const id of BAG_IDS) {
+    const d = BAG[id]
+    if (d.use === 'res' && s.items[id]) tryDo({ type: 'use', item: id, n: s.items[id]! })
+  }
+  if (!s.buffs.some(b => b.src === 'phu.prod'))
+    (['tuLinh24', 'tuLinh8'] as const).some(id => s.items[id] && tryDo({ type: 'use', item: id, n: 1 }))
+  const top = idleElders(s).find(e => elderLevel(s.elders[e]) < ELDER_MAX)
+  for (const id of ['kinhThu8k', 'kinhThu2k', 'kinhThu500'] as const)
+    if (top && s.items[id]) tryDo({ type: 'use', item: id, n: s.items[id]!, elder: top })
+  for (const job of ['build', 'study', 'train'] as const) {
+    const left = () => {
+      const j = jobOf(s, job)
+      return j ? j.finishAt - s.time : 0
+    }
+    for (let guard = 0; guard < 40 && left() > 20 * 60_000; guard++) {
+      const id = BAG_IDS.filter(x => {
+        const d = BAG[x]
+        return d.use === 'speed' && (!d.job || d.job === job) && s.items[x] && d.min * 60_000 <= left()
+      }).sort((a, b) => speedOf(b) - speedOf(a))[0]
+      if (!id || !tryDo({ type: 'use', item: id, n: 1, job })) break
+    }
+  }
+  const left = () => (s.queue[0] ? s.queue[0].finishAt - s.time : 0)
+  if (s.items.daiTuKhi && left() > 3 * 3_600_000) tryDo({ type: 'speed', job: 'build', n: 1, pill: 'daiTuKhi' })
+  if (s.items.tuKhi && left() > 20 * 60_000) tryDo({ type: 'speed', job: 'build', n: 1 })
+  return s
+}
+const speedOf = (id: (typeof BAG_IDS)[number]) => {
+  const d = BAG[id]
+  return d.use === 'speed' ? d.min : 0
+}
 
 export function turn(start: State, o: BotOpts = {}): State {
   let s = start
@@ -227,8 +284,6 @@ export function turn(start: State, o: BotOpts = {}): State {
   for (let guard = 0; guard < 60; guard++) {
     let acted = false
     if (tryDo({ type: 'claim' })) acted = true
-    for (let i = 0; i < 4; i++) if (tryDo({ type: 'daily', i })) acted = true
-    if (tryDo({ type: 'dailyBonus' })) acted = true
     for (let i = 0; i < 5; i++) if (tryDo({ type: 'weekly', i })) acted = true
     if (tryDo({ type: 'weeklyBonus' })) acted = true
     if (count(s.wounded) && tryDo({ type: 'heal' })) acted = true
@@ -245,20 +300,11 @@ export function turn(start: State, o: BotOpts = {}): State {
           acted = true
           break
         }
-    if (
-      s.items.daiTuKhi &&
-      s.queue[0] &&
-      s.queue[0].finishAt - s.time > 3 * 3_600_000 &&
-      tryDo({ type: 'speed', job: 'build', n: 1, pill: 'daiTuKhi' })
-    )
+    const p = perks(s)
+    if (p !== s) {
+      s = p
       acted = true
-    if (
-      s.items.tuKhi &&
-      s.queue[0] &&
-      s.queue[0].finishAt - s.time > 20 * 60_000 &&
-      tryDo({ type: 'speed', job: 'build', n: 1 })
-    )
-      acted = true
+    }
     if (s.items.hoiXuan && count(s.wounded) >= 300 && tryDo({ type: 'cure' })) acted = true
     if (gear()) acted = true
     for (const e of ELDER_IDS)

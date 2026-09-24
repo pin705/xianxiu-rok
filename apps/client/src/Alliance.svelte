@@ -1,14 +1,26 @@
 <script lang="ts">
-  // Trang Tiên minh: chưa có minh thì xem các minh trong giới (vào ngay) hoặc lập minh; có rồi thì bố cáo, giúp đỡ,
-  // người trong minh (chức vị, đang chơi), chat kênh minh. Luật ở rules/world.ts, server kiểm lại mọi thao tác.
-  import { ALLY_COST, ALLY_HALL, ALLY_HELPS, RESOURCES, jobOf, type JobKind } from '@rok/rules'
-  import type { AllyInfo, AllyRow, Role, WorldAction } from '@rok/rules/world'
+  // Trang Tiên minh: chưa có minh thì xem các minh trong giới (vào ngay) hoặc lập minh; có rồi thì cống hiến / Minh khố /
+  // Minh lễ, lối vào Hộ Minh Đại Trận và Cống Hiến Các, bố cáo, giúp đỡ, người trong minh (chức vị, đang chơi), chat kênh
+  // minh. Luật ở rules/world, server kiểm lại mọi thao tác.
+  import { ALLY_COST, ALLY_GIFT_LV, ALLY_HALL, DONATE_MAX, RESOURCES, jobOf, type JobKind } from '@rok/rules'
+  import {
+    donateLeft,
+    giftLevel,
+    helpsOf,
+    seatsOf,
+    type AllyInfo,
+    type AllyRow,
+    type Role,
+    type WorldAction,
+  } from '@rok/rules/world'
   import type { Ack } from '@rok/protocol'
   import type { Snippet } from 'svelte'
   import { Icon } from '@rok/art'
-  import { Button, Card, Confirm, Medal, Page, Section, Tag } from './ui'
+  import { Button, Card, Confirm, Medal, Meter, Page, Section, Tag } from './ui'
   import { L, clock, num, sfx } from './lib'
   import { useGame } from './game'
+  import AllyTech from './AllyTech.svelte'
+  import AllyShop from './AllyShop.svelte'
 
   let {
     me,
@@ -30,13 +42,22 @@
   let tag = $state('')
   let editing = $state<string | null>(null)
   let pick = $state<number | null>(null)
+  let sheet = $state<'tech' | 'shop' | null>(null)
+  const maxHelps = $derived(ally ? helpsOf(ally) : 0)
+  const left = $derived(donateLeft(game, g.now))
+  const gift = $derived(ally ? giftLevel(ally) : 1)
+  const giftPart = $derived(
+    ally && gift < ALLY_GIFT_LV.length
+      ? ((ally.gift ?? 0) - ALLY_GIFT_LV[gift - 1]) / (ALLY_GIFT_LV[gift] - ALLY_GIFT_LV[gift - 1])
+      : 1,
+  )
   const myRole = $derived<Role | -1>(ally && me !== null ? (ally.members[me] ?? -1) : -1)
   const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge']
   const running = $derived(JOBS.filter(k => jobOf(game, k)))
   const asked = (k: JobKind) =>
     !!ally?.helps.some(h => h.pid === me && h.job === k && h.startAt === jobOf(game, k)?.startAt)
   const others = $derived(
-    ally ? ally.helps.filter(h => h.pid !== me && me !== null && !h.by.includes(me) && h.by.length < ALLY_HELPS) : [],
+    ally ? ally.helps.filter(h => h.pid !== me && me !== null && !h.by.includes(me) && h.by.length < maxHelps) : [],
   )
   const nameOf = (pid: number) => ally?.people.find(p => p.pid === pid)?.name ?? '?'
   const go = async (a: WorldAction, sound: 'reward' | 'tap' = 'tap') => {
@@ -59,7 +80,7 @@
                 <Medal emblem="crest" tone="gold" size={34} />
                 <span class="grow stack" style:--gap="1px"
                   ><b>{r.name} [{r.tag}]</b><small class="t-small t-soft"
-                    >{L.ally.members(r.n)} · {L.power} {num(r.power)}</small
+                    >{L.ally.members(r.n, r.max)} · {L.power} {num(r.power)}</small
                   ></span
                 >
                 <Button size="sm" onclick={() => go({ type: 'allyJoin', id: r.id }, 'reward')}>{L.ally.join}</Button>
@@ -102,11 +123,44 @@
         <Medal emblem="crest" tone="gold" size={46} />
         <span class="grow stack" style:--gap="1px"
           ><b class="t-head">{ally.name} [{ally.tag}]</b><small class="t-small t-soft"
-            >{L.ally.members(ally.people.length)} · {L.ally.role[myRole === -1 ? 0 : myRole]}</small
+            >{L.ally.members(ally.people.length, seatsOf(ally))} · {L.ally.role[myRole === -1 ? 0 : myRole]}</small
           ></span
         >
       </span>
+      <div class="stats mt-2">
+        <span title={L.guild.creditHint}
+          ><small class="t-tiny t-soft">{L.guild.credit}</small><b class="t-num">{num(game.contrib?.credit ?? 0)}</b
+          ></span
+        >
+        <span title={L.guild.fundHint}
+          ><small class="t-tiny t-soft">{L.guild.fund}</small><b class="t-num">{num(ally.fund ?? 0)}</b></span
+        >
+        <span title={L.guild.giftHint}
+          ><small class="t-tiny t-soft">{L.guild.gift}</small><b>{L.guild.giftLv(gift)}</b><Meter
+            value={giftPart}
+            size="xs"
+            tone="gold"
+          /></span
+        >
+      </div>
     </Card>
+
+    <!-- lối vào như menu tiên minh của RoK: ô hình + tên + dòng phụ, chấm đỏ khi lượt cung phụng đầy (đang phí lượt hồi) -->
+    <div class="tiles">
+      <button type="button" class="tile" onclick={() => (sheet = 'tech')}>
+        {#if left >= DONATE_MAX}<span class="dot-red" aria-hidden="true"></span>{/if}
+        <Icon name="shield" size={30} />
+        <b class="t-small">{L.guild.tech}</b>
+        <small class="t-tiny t-soft">{L.guild.left(left)}</small>
+      </button>
+      <button type="button" class="tile" onclick={() => (sheet = 'shop')}>
+        <Icon name="hoSon" size={30} />
+        <b class="t-small">{L.guild.shop}</b>
+        <small class="t-tiny t-soft">{L.guild.credit} {num(game.contrib?.credit ?? 0)}</small>
+      </button>
+    </div>
+    <AllyTech open={sheet === 'tech'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
+    <AllyShop open={sheet === 'shop'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
 
     <Section title={L.ally.notice}>
       {#if editing !== null}
@@ -125,7 +179,7 @@
     </Section>
 
     <Section title={L.ally.help}>
-      <p class="t-small t-soft">{L.ally.helpHint}</p>
+      <p class="t-small t-soft">{L.ally.helpHint(maxHelps)}</p>
       {#if running.length}
         <div class="row wrap">
           {#each running as k (k)}
@@ -137,7 +191,7 @@
       {/if}
       <ul class="stack" style:--gap="2px">
         {#each ally.helps as h (h.pid + h.job + h.startAt)}<li class="t-small">
-            {L.ally.wants(nameOf(h.pid), L.jobs[h.job], h.by.length)}
+            {L.ally.wants(nameOf(h.pid), L.jobs[h.job], h.by.length, maxHelps)}
           </li>{/each}
         {#if !ally.helps.length}<li class="t-small t-soft">{L.ally.noHelp}</li>{/if}
       </ul>
@@ -242,5 +296,45 @@
   }
   .on {
     background: var(--malachite);
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-2);
+  }
+  .stats > span {
+    display: grid;
+    gap: 1px;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-2);
+  }
+  .tile {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 10px 8px;
+    font: inherit;
+    color: inherit;
+    background: var(--silk);
+    border: 1.5px solid var(--paper3);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .tile:active {
+    transform: scale(0.97);
+  }
+  .dot-red {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--cinnabar);
+    box-shadow: 0 0 0 2px var(--silk);
   }
 </style>

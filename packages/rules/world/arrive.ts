@@ -31,6 +31,7 @@ import {
   type World,
 } from './base.ts'
 import { addArmy, carryOf, combine, split, flipRounds } from './fight.ts'
+import { allyGifts } from './guild.ts'
 import { bank, hold, spotOf, bossSlice } from './points.ts'
 
 type Arrived = { changed: Players; world: World }
@@ -153,7 +154,7 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
   let dead = setSpot(w, i, { until: at + boss.respawn })
   for (const [id2, d] of Object.entries(dmgs))
     dead = bank(dead, sideKey(w, Number(id2)), ((SEASON_BOSS[p.lv] ?? 0) * d) / sum)
-  return { changed, world: dead }
+  return { changed, world: allyGifts(ps, changed, dead, Object.keys(dmgs).map(Number), p.lv, at) }
 }
 
 // Chiếm điểm: trống hoặc của phe mình → đóng quân (tới khi đầy; đầy rồi thì null: quay về); của phe khác → đánh cả quân đang đóng

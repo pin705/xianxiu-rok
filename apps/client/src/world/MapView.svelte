@@ -216,7 +216,7 @@
     right: -12px;
     min-width: 20px;
     padding: 0 5px 1px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     line-height: 17px;
     text-align: center;

@@ -7,6 +7,7 @@ import {
   DAILY_RES,
   DAY_OFFSET,
   EVENT_GOALS,
+  EVENT_HALL,
   EVENT_PTS,
   EVENTS,
   WEEKEND,
@@ -41,8 +42,14 @@ export const rollDay = (s: State, t: number): State => {
   return weekOf(t) > s.weekly.week ? { ...s, weekly: freshWeekly(t) } : s
 }
 // Điểm sự kiện tuần khi làm đúng việc của chủ đề tuần này (tuyển: mỗi 5 đệ tử một lần)
+// Chủ đề cần tính năng chưa mở ở tầng của người chơi (tranh đoạt cần tầng PvP, luyện khí cần Luyện Khí Phòng): tuần đó
+// thắng trận tính điểm thay — người chơi tầng thấp không có tuần trắng tay
+export const themeFor = (s: State, week: number): EventId => {
+  const theme = eventOf(week)
+  return s.levels.chuDien < (EVENT_HALL[theme] ?? 0) ? 'win' : theme
+}
 export const evBump = (s: State, id: EventId, k = 1): State =>
-  eventOf(s.ev.week) !== id
+  themeFor(s, s.ev.week) !== id
     ? s
     : { ...s, ev: { ...s.ev, pts: s.ev.pts + EVENT_PTS[id] * (id === 'train' ? Math.floor(k / 5) : k) } }
 export const bump = (s: State, id: DailyId, k = 1): State =>
@@ -63,10 +70,9 @@ export const eventMul = (t: number) => (isWeekend(t) ? WEEKEND : 1)
 export const weeklyDone = (s: State, i: number) => s.weekly.n[WEEKLY[i].id] >= WEEKLY[i].n
 export const weeklyReward = (s: State) => WEEKLY_RES * s.levels.chuDien
 // số phần thưởng đang chờ nhận (ngày + tuần) — huy hiệu trên nút nhiệm vụ
+// (nhiệm vụ ngày giờ là Nhật Khóa trong trung tâm sự kiện: festReady(s, t, 'daily'); ở đây chỉ còn nhiệm vụ tuần)
 export const dailyReady = (s: State) =>
   s.levels.chuDien < DAILY_HALL
     ? 0
-    : DAILY.filter((_, i) => dailyDone(s, i) && !s.daily.got[i]).length +
-      (s.daily.got.every(Boolean) && !s.daily.bonus ? 1 : 0) +
-      WEEKLY.filter((_, i) => weeklyDone(s, i) && !s.weekly.got[i]).length +
+    : WEEKLY.filter((_, i) => weeklyDone(s, i) && !s.weekly.got[i]).length +
       (s.weekly.got.every(Boolean) && !s.weekly.bonus ? 1 : 0)

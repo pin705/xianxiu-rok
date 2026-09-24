@@ -12,6 +12,7 @@ import {
   BEASTS,
   BEATS,
   DO_KIEP,
+  ELDER_DUP_EXP,
   ELDER_MAX,
   ELDER_STEP,
   ELDERS,
@@ -202,10 +203,16 @@ export function giveExp(s: State, elder: ElderId, exp: number): State {
 
 export const addGain = (s: State, elder: ElderId, g: Gain): State => giveExp(grant(s, g), elder, g.exp)
 
-// Quà từ ngoài (thư, mốc sự kiện): tài nguyên, đan, trưởng lão — không có kinh nghiệm
+// Quà từ ngoài (thư, mốc sự kiện): tài nguyên, đan, trưởng lão — không có kinh nghiệm.
+// Trưởng lão đã có thì đổi thành kinh nghiệm cho chính người đó (như tượng tướng trùng của RoK): quà không bao giờ mất.
 export function grant(s: State, r: Reward): State {
-  const st: State = { ...s, res: addBag(s.res, r.res ?? {}), items: addItems(s.items, r.items ?? {}) }
-  return r.elder && st.elders[r.elder] === undefined ? { ...st, elders: { ...st.elders, [r.elder]: 0 } } : st
+  const extra = (r.hallRes ?? 0) * s.levels.chuDien
+  const res = extra ? addBag(s.res, bag(x => (r.res?.[x] ?? 0) + extra)) : addBag(s.res, r.res ?? {})
+  const st: State = { ...s, res, items: addItems(s.items, r.items ?? {}) }
+  if (!r.elder) return st
+  return st.elders[r.elder] === undefined
+    ? { ...st, elders: { ...st.elders, [r.elder]: 0 } }
+    : giveExp(st, r.elder, ELDER_DUP_EXP)
 }
 
 const fromReward = (r: Reward, lootMul: number, exp: number): Gain => ({

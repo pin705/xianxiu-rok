@@ -7,7 +7,17 @@
 //   inbox.ts lệnh admin · lease.ts gia hạn, rào, đóng, lô ghi · committer.ts ghi DB · alarm.ts hẹn giờ · mapwatch.ts bản đồ
 import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
-import { NPC_EVERY, advance, dayOf, migrate, weekOf, type Action, type Report, type State } from '@rok/rules'
+import {
+  NPC_EVERY,
+  advance,
+  dayOf,
+  migrate,
+  weekOf,
+  type Action,
+  type Incoming,
+  type Report,
+  type State,
+} from '@rok/rules'
 import {
   SEASON_DAYS,
   advanceAll,
@@ -52,7 +62,7 @@ import { Committer } from './committer.ts'
 import { attach, detach, sync } from './conn.ts'
 import { batch, fence } from './lease.ts'
 import { MapWatch } from './mapwatch.ts'
-import { remindNote, reportNote } from './notify.ts'
+import { incomingNote, remindNote, reportNote } from './notify.ts'
 import { npcTurn } from './npc.ts'
 import { answersOf } from './queries.ts'
 import { rollWeek, seasonEnd } from './rollover.ts'
@@ -306,7 +316,7 @@ export class World {
     for (const r of rep)
       this.persist.pending.reports.push({ pid: slot.id, id: r.id, at: r.at, kind: r.kind, win: r.win, body: r })
     this.track(slot.id, prev, stored, rep)
-    if (rep.length && !slot.conns.size) this.notify(slot, rep)
+    if (!slot.conns.size) this.notify(slot, rep, (stored.incoming ?? []).filter(x => !prev.incoming?.includes(x)))
     const push: Push = rep.length ? { v, p, rep } : { v, p }
     const others = [...slot.conns].filter(c => c !== origin?.sock)
     this.persist.deliver(() => {
@@ -325,9 +335,10 @@ export class World {
     this.persist.schedule()
   }
 
-  // Offline mà bị cướp / kiếp vân vừa giáng: báo qua Web Push
-  private notify(slot: Slot, rep: Report[]) {
+  // Offline mà có đội kéo tới / bị cướp / kiếp vân vừa giáng: báo qua Web Push
+  private notify(slot: Slot, rep: Report[], warn: Incoming[]) {
     if (!this.env.push || this.npc.has(slot.id)) return
+    for (const x of warn) this.env.push(slot.id, incomingNote(x.foe))
     for (const r of rep) {
       const note = reportNote(r)
       if (note) this.env.push(slot.id, note)

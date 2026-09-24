@@ -19,6 +19,7 @@
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Page, Section, Stat } from './ui'
   import Items from './Items.svelte'
+  import Achievements from './Achievements.svelte'
   import { L, LOOK, clock, num, sfx, type PanelTab } from './lib'
   import { useGame } from './game'
 
@@ -67,6 +68,9 @@
 <Page title={L.baoKho.title} icon="baoKho">
   <Section title={L.bag.title}>
     <Items />
+  </Section>
+  <Section title={L.ach.title}>
+    <Achievements />
   </Section>
   <Section title={L.baoKho.pills}>
     <ul class="stack">

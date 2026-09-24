@@ -23,6 +23,7 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
+import { allyBuffs } from './guild.ts'
 import { hold, TASK_OF, spotOf } from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
@@ -191,17 +192,18 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
   }
   const t = tide(map.atlas, at)
   const changed: Players = new Map()
+  const mapped = (b: Buff) => b.src === 'vein' || b.src === 'ally' || b.src.startsWith('tide')
   for (const [pid, s] of ps) {
-    if (!s.seat) continue
     const v = Math.min(VEIN_CAP, veins.get(sideKey(w, pid)) ?? 0)
     const want: Buff[] = [
       ...(v ? [{ key: 'prod' as const, v, until: 0, src: 'vein' }] : []),
-      ...(t.active && regionOf(map.atlas, s.seat) === t.region
+      ...(s.seat && t.active && regionOf(map.atlas, s.seat) === t.region
         ? [{ key: 'prod' as const, v: TIDE_PROD, until: t.end, src: `tide${t.cycle}` }]
         : []),
+      ...allyBuffs(allyOf(w, pid)), // Hộ Minh Đại Trận
     ]
-    const keep = s.buffs.filter(b => b.src !== 'vein' && !b.src.startsWith('tide'))
-    const have = s.buffs.filter(b => b.src === 'vein' || b.src.startsWith('tide'))
+    const keep = s.buffs.filter(b => !mapped(b))
+    const have = s.buffs.filter(mapped)
     if (JSON.stringify(have) === JSON.stringify(want)) continue
     const st = advance(s, at) // sản lượng trước lúc đổi tính theo buff cũ
     changed.set(pid, { ...st, buffs: [...keep, ...want] })

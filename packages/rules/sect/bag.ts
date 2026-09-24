@@ -13,12 +13,14 @@ export type BagAction = { type: 'use'; item: BagId; n: number; job?: JobKind; el
 // Vì sao không dùng được (null: dùng được). Client dùng để tắt nút và nói lý do.
 export function useError(s: State, a: BagAction): Err | null {
   const d = BAG[a.item]
+  if (d.use === 'key') return 'bad' // thiếp Chiêu Hiền Đài mở ở Chiêu Hiền Đài
   if (a.n > (s.items[a.item] ?? 0)) return 'no_item'
   if (d.use === 'speed') {
     // luyện đan không rút ngắn được (có giảm thời gian là thành vòng lặp đẻ đan); phù riêng chỉ cho đúng việc
     if (!a.job || a.job === 'brew' || (d.job && d.job !== a.job)) return 'bad'
     return jobOf(s, a.job) ? null : 'empty'
   }
+  if (d.use === 'shield' && (s.frenzy ?? 0) > s.time) return 'frenzy' // vừa đi cướp: chưa bật khiên được
   if (d.use === 'exp') {
     if (!a.elder || s.elders[a.elder] === undefined) return 'locked'
     return elderLevel(s.elders[a.elder]!) >= ELDER_MAX ? 'max_level' : null
@@ -55,7 +57,7 @@ export const bagActions: Actions<BagAction> = {
       if (d.use === 'res') return ok({ ...st, res: { ...st.res, [d.res]: st.res[d.res] + d.n * a.n } })
       if (d.use === 'buff') return ok({ ...st, buffs: extend(st, d.key, d.v, d.hours * HOUR * a.n) })
       if (d.use === 'shield') return ok({ ...st, shield: Math.max(st.shield, s.time) + d.hours * HOUR * a.n })
-      return ok(giveExp(st, a.elder!, d.n * a.n))
+      return d.use === 'exp' ? ok(giveExp(st, a.elder!, d.n * a.n)) : no('bad')
     },
   },
 }

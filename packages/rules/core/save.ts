@@ -1,10 +1,16 @@
 // Tông môn mới và save cũ: newGame, nâng bản, kiểm khuôn.
-import { dayOf, freshDaily, freshEv, freshWeekly } from './calendar.ts'
+import { freshDaily, freshEv, freshWeekly } from './calendar.ts'
+import { festLogin, rollFest } from './fest.ts'
+import { freshVip, vipLogin } from './vip.ts'
+import { type Tavern } from './types.ts'
+// lượt miễn phí đầu tiên mở ngay (thiếp bạc, thiếp vàng) — người mới vào là có quà
+const freshTavern = (now: number): Tavern => ({ silver: now, gold: now, pity: 0, last: null })
 import { obj } from './parse.ts'
 import { buildTime } from './stats.ts'
 import { type Job, type State } from './types.ts'
 import { bag, IDS, troops } from './util.ts'
 import {
+  ACHS,
   DAILY,
   ELDERS,
   EVENT_GOALS,
@@ -32,6 +38,10 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
   const levels = Object.fromEntries(IDS.map(id => [id, 0])) as Record<BuildingId, number>
   levels.chuDien = 1
   const clean = name.trim().replace(/\s+/g, ' ').slice(0, 20) || DEFAULT_NAME
+  // mở sẵn các sự kiện đang chạy (tân thủ…) và tính luôn ngày vào game đầu tiên
+  return festLogin(vipLogin(rollFest(blank(now, clean, levels), now), now), now)
+}
+function blank(now: number, clean: string, levels: Record<BuildingId, number>): State {
   return {
     v: SAVE_VERSION,
     name: clean,
@@ -80,7 +90,12 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
     blocks: [],
     ascended: [],
     fest: {},
-    born: dayOf(now),
+    born: now,
+    vip: freshVip(),
+    tavern: freshTavern(now),
+    tokens: {},
+    stars: {},
+    ach: {},
   }
 }
 
@@ -214,14 +229,43 @@ function valid(s: any): s is State {
     s.blocks.every(num) &&
     Array.isArray(s.ascended) &&
     s.ascended.every(num) &&
-    obj(s.fest) &&
-    Object.entries(s.fest).every(
-      ([id, f]: [string, any]) =>
-        Object.hasOwn(FESTS, id) && obj(f) && num(f.key) && num(f.stage) && obj(f.base) && num(f.bank) && Array.isArray(f.got),
-    ) &&
-    (s.born === undefined || num(s.born))
+    validFest(s)
   )
 }
+const validFest = (s: any) =>
+  obj(s.fest) &&
+  Object.entries(s.fest).every(
+    ([id, f]: [string, any]) =>
+      Object.hasOwn(FESTS, id) &&
+      obj(f) &&
+      num(f.key) &&
+      num(f.stage) &&
+      obj(f.base) &&
+      num(f.bank) &&
+      Array.isArray(f.got),
+  ) &&
+  (s.born === undefined || num(s.born)) &&
+  obj(s.vip) &&
+  num(s.vip.pts) &&
+  num(s.vip.streak) &&
+  num(s.vip.day) &&
+  num(s.vip.chest) &&
+  obj(s.tavern) &&
+  num(s.tavern.silver) &&
+  num(s.tavern.gold) &&
+  num(s.tavern.pity) &&
+  obj(s.tokens) &&
+  Object.entries(s.tokens).every(([e, n]) => Object.hasOwn(ELDERS, e) && num(n)) &&
+  obj(s.stars) &&
+  Object.entries(s.stars).every(([e, n]) => Object.hasOwn(ELDERS, e) && num(n)) &&
+  obj(s.ach) &&
+  Object.entries(s.ach).every(([k, n]) => Object.hasOwn(ACHS, k) && num(n)) &&
+  (s.incoming === undefined ||
+    (Array.isArray(s.incoming) &&
+      s.incoming.every((x: any) => obj(x) && num(x.id) && num(x.pid) && typeof x.foe === 'string' && num(x.at)))) &&
+  (s.frenzy === undefined || num(s.frenzy)) &&
+  (s.contrib === undefined ||
+    (obj(s.contrib) && num(s.contrib.credit) && num(s.contrib.full) && num(s.contrib.day) && num(s.contrib.helped)))
 
 function upgradeSave(raw: unknown) {
   let s = raw as any
@@ -265,7 +309,10 @@ function upgradeSave(raw: unknown) {
   if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save làm trước khi có nhiệm vụ ngày
   if (!s.weekly) s = { ...s, weekly: freshWeekly(s.time) } // … nhiệm vụ tuần
   if (s.tower === undefined) s = { ...s, tower: 0 } // … Thông Thiên Tháp
-  if (!s.fest) s = { ...s, fest: {}, born: dayOf(s.time) } // … trung tâm sự kiện (người cũ: sự kiện tân thủ tính từ lúc nâng bản)
+  if (!s.fest) s = { ...s, fest: {}, born: s.time } // … trung tâm sự kiện (người cũ: sự kiện tân thủ tính từ lúc nâng bản)
+  if (!s.vip) s = { ...s, vip: freshVip() } // … Hương Hỏa
+  if (!s.tavern) s = { ...s, tavern: freshTavern(s.time), tokens: {}, stars: {} } // … Chiêu Hiền Đài
+  if (!s.ach) s = { ...s, ach: {} } // … thành tựu
   if (!s.ev) s = { ...s, ev: freshEv(s.time) } // … PvP, thư, sự kiện tuần (người cũ không được khiên tân thủ)
   if (s.shield === undefined)
     s = { ...s, shield: 0, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [] }

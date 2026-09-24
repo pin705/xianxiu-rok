@@ -16,7 +16,7 @@ import {
   type World,
 } from './base.ts'
 import { unsold } from './market.ts'
-import { raid } from './raid.ts'
+import { dropIncoming, raid } from './raid.ts'
 import { spotArrive } from './arrive.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
@@ -93,6 +93,7 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     // tông môn kia không còn (xoá tài khoản), hoặc vừa có khiên (người khác cướp trước): quay về tay không
     if (!d || d.shield > at) {
       changed.set(pid, turnBack(att, m, at))
+      if (d && dropIncoming(d, pid, m.id) !== d) changed.set(m.target.i, dropIncoming(d, pid, m.id))
       continue
     }
     const helpers = aidAt(view(), m.target.i).map(
@@ -100,7 +101,7 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     )
     const r = raid(att, pid, advance(d, at), m.target.i, m, at, helpers)
     changed.set(pid, r.att)
-    changed.set(m.target.i, r.def)
+    changed.set(m.target.i, dropIncoming(r.def, pid, m.id)) // trận đã giải: hết cảnh báo đội này
     for (const [k, v] of r.helpers) changed.set(k, v)
   }
   return { changed, world: w }

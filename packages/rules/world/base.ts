@@ -4,7 +4,7 @@ import { type Pick } from '../core/action.ts'
 import { marchTime } from '../core/battle.ts'
 import { cutOf } from '../core/stats.ts'
 import { type Err, type JobKind, type March, type State } from '../core/types.ts'
-import { type PillId } from '../data.ts'
+import { type AllyTechId, type ItemId, type PillId } from '../data.ts'
 import { noGain } from '../core/util.ts'
 
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
@@ -30,6 +30,12 @@ export type Alliance = {
   notice: string
   at: number
   helps: Help[]
+  // Hộ Minh Đại Trận, Cống Hiến Các, Minh lễ (blob cũ chưa có: coi như 0 / trống)
+  tech?: Partial<Record<AllyTechId, number>> // điểm trận đã góp mỗi trận
+  star?: AllyTechId // trận minh chủ điểm: góp được gấp đôi
+  fund?: number // Minh khố: nhập hàng Cống Hiến Các
+  stock?: Partial<Record<ItemId, number>> // hàng đang có ở Cống Hiến Các
+  gift?: number // điểm quà minh (cấp Minh lễ)
 }
 // Trạng thái một điểm trên bản đồ giới. own: phe giữ (mã minh > 0, người giữ một mình = −mã người chơi), since: từ lúc nào.
 // Mỏ: còn left, cạn thì hồi đầy lúc until. Yêu vương: còn hp, sát thương từng người; chết thì hồi sinh lúc until.
@@ -70,6 +76,7 @@ export const freshWorld = (): World => ({
   nextOrder: 1,
   mkt: {},
 })
+export const put = (w: World, al: Alliance): World => ({ ...w, allies: { ...w.allies, [al.id]: al } })
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
 
 // world: phần chung sau thao tác (cùng tham chiếu nếu không đổi)

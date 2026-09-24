@@ -10,8 +10,6 @@ import {
   ALLY_COST,
   ALLY_ELDERS,
   ALLY_HALL,
-  ALLY_HELPS,
-  ALLY_MAX,
   HELP_MIN,
   HELP_SHARE,
   REINFORCE_MAX,
@@ -21,6 +19,7 @@ import {
 import {
   aidAt,
   allyOf,
+  put,
   raidPath,
   type Alliance,
   type Ctx,
@@ -32,8 +31,8 @@ import {
   type WorldActions,
   type WorldResult,
 } from './base.ts'
+import { helpCredit, helpsOf, seatsOf } from './guild.ts'
 
-const put = (w: World, al: Alliance): World => ({ ...w, allies: { ...w.allies, [al.id]: al } })
 const drop = (w: World, aid: number): World => {
   const { [aid]: _, ...allies } = w.allies
   return { ...w, allies }
@@ -50,7 +49,7 @@ function leave(w: World, al: Alliance, pid: number): World {
   return put(w, { ...al, members, helps: al.helps.filter(h => h.pid !== pid) })
 }
 // Cho client: danh sách minh (tìm để vào), minh của mình với người trong đó
-export type AllyRow = { id: number; name: string; tag: string; n: number; power: number }
+export type AllyRow = { id: number; name: string; tag: string; n: number; max: number; power: number }
 export type Member = { pid: number; name: string; role: Role; hall: number; power: number; online: boolean }
 export type AllyInfo = Alliance & { people: Member[]; rallies: Rally[] }
 export const allyRows = (w: World, ps: Players): AllyRow[] =>
@@ -60,6 +59,7 @@ export const allyRows = (w: World, ps: Players): AllyRow[] =>
       name: al.name,
       tag: al.tag,
       n: Object.keys(al.members).length,
+      max: seatsOf(al),
       power: Object.keys(al.members).reduce((sum, p) => {
         const s = ps.get(Number(p))
         return sum + (s ? Math.round(power(s)) : 0)
@@ -139,7 +139,7 @@ export const allianceActions: WorldActions<AllianceAction> = {
       const al = w.allies[a.id]
       if (allyOf(w, pid)) return no('busy')
       if (!al) return no('gone')
-      if (Object.keys(al.members).length >= ALLY_MAX) return no('full')
+      if (Object.keys(al.members).length >= seatsOf(al)) return no('full')
       // ponytail: vào tự do (không duyệt đơn) — thêm duyệt nếu bị phá
       return { ok: true, changed: new Map(), world: put(w, { ...al, members: { ...al.members, [pid]: 0 } }) }
     },
@@ -203,9 +203,10 @@ export const allianceActions: WorldActions<AllianceAction> = {
   },
   helpAll: {
     pick: () => ({ type: 'helpAll' }),
-    run: ({ ps, w, pid, now }) => {
+    run: ({ ps, w, pid, s: me, now }) => {
       const mine = allyOf(w, pid)
       if (!mine) return no('locked')
+      const max = helpsOf(mine)
       const changed: Players = new Map()
       const helps: Help[] = []
       let n = 0
@@ -213,16 +214,17 @@ export const allianceActions: WorldActions<AllianceAction> = {
         const s = changed.get(h.pid) ?? ps.get(h.pid)
         const j = s && jobOf(advance(s, now), h.job)
         if (!s || !j || j.startAt !== h.startAt || mine.members[h.pid] === undefined) continue // việc đã xong/đổi: bỏ lời nhờ
-        if (h.pid === pid || h.by.includes(pid) || h.by.length >= ALLY_HELPS) {
+        if (h.pid === pid || h.by.includes(pid) || h.by.length >= max) {
           helps.push(h)
           continue
         }
         changed.set(h.pid, hasten(s, h.job, h.startAt, h.ms, now))
         n++
         const next = { ...h, by: [...h.by, pid] }
-        if (next.by.length < ALLY_HELPS) helps.push(next)
+        if (next.by.length < max) helps.push(next)
       }
       if (!n) return no('empty')
+      changed.set(pid, helpCredit(me, n, now)) // người giúp được cống hiến
       return { ok: true, changed, world: put(w, { ...mine, helps }) }
     },
   },

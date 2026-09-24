@@ -7,7 +7,8 @@ import {
   BUILDINGS,
   MAX_LEVEL,
   REALMS,
-  DAILY_RES,
+  FESTS,
+  festPoints,
   HOSPITAL_BASE,
   PILLS,
   QUESTS,
@@ -368,9 +369,10 @@ test('luân hồi: giữ trưởng lão + công pháp, làm lại tông môn, m�
   assert.equal(upgradeError(r3, 'chuDien'), 'trib')
 })
 
-test('nhiệm vụ ngày: đếm tiến độ, nhận thưởng từng việc, rương khi đủ 4, sang ngày mới thì làm lại', () => {
-  let s = { ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 2000 } }
-  assert.equal(err(s, { type: 'daily', i: 0 }), 'not_done')
+test('Nhật Khóa (nhiệm vụ ngày kiểu RoK): việc xong cộng điểm hoạt lực, đủ mốc mở rương, 0h hôm sau làm lại', () => {
+  // rich() sửa thẳng số tầng: mở lại lượt sự kiện từ trạng thái này để mốc chụp đúng
+  let s = advance({ ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 2000 }, fest: {} }, rich(6, 5).time)
+  assert.equal(err(s, { type: 'fest', id: 'nhatKhoa', i: 0 }), 'not_done')
   s = up(s, 'tuLinhTran')
   s = advance(s, s.time + buildTime(s, 'tuLinhTran', 6))
   s = up(s, 'linhDien')
@@ -378,22 +380,25 @@ test('nhiệm vụ ngày: đếm tiến độ, nhận thưởng từng việc, r
   s = run(s, { type: 'brew', pill: 'tuKhi', n: 1 })
   for (let k = 0; k < 3; k++)
     s = run({ ...s, realms: [0, 0, 0] }, { type: 'realm', i: 0, elder: 'thanhPhong', army: { kiem1: s.troops.kiem1 } })
-  assert.deepEqual(s.daily.n, { build: 2, train: 60, win: 3, brew: 1 })
-  assert.equal(err(s, { type: 'dailyBonus' }), 'not_done')
+  s = advance(s, s.time + 3_600_000) // hoạt lực tính lúc việc xong: tuyển xong, luyện xong, xây xong
+  // xây 2 (20) + tuyển 50 (15) + thắng 3 (20) + luyện đan (10) = 65 điểm: mở được 3 rương đầu
+  assert.equal(festPoints(s, 'nhatKhoa'), 65)
   const before = s.res.linhThach
-  for (let i = 0; i < 4; i++) s = run(s, { type: 'daily', i })
-  assert.equal(s.res.linhThach, before + 4 * DAILY_RES * 6)
-  assert.equal(err(s, { type: 'daily', i: 0 }), 'claimed')
-  s = run(s, { type: 'dailyBonus' })
-  assert.equal(s.items.boiNguyen, 1)
-  assert.equal(err(s, { type: 'dailyBonus' }), 'claimed')
+  for (let i = 0; i < 3; i++) s = run(s, { type: 'fest', id: 'nhatKhoa', i })
+  const nk = FESTS.nhatKhoa.kind === 'activity' ? FESTS.nhatKhoa.rewards : []
+  const perHall = nk.slice(0, 3).reduce((a, r) => a + (r.hallRes ?? 0), 0)
+  assert.equal(s.res.linhThach, before + perHall * 6) // hallRes × tầng Chủ điện
+  assert.equal(s.weekly.n.days, 1, 'rương mốc 60 tính một hôm mở rương ngày cho nhiệm vụ tuần')
+  assert.equal(err(s, { type: 'fest', id: 'nhatKhoa', i: 3 }), 'not_done')
+  assert.equal(err(s, { type: 'fest', id: 'nhatKhoa', i: 0 }), 'claimed')
   // 0h giờ VN hôm sau: làm lại từ đầu
   const fresh = advance(s, nextDay(s.time))
-  assert.deepEqual(fresh.daily.n, { build: 0, train: 0, win: 0, brew: 0 })
-  assert.equal(fresh.daily.bonus, false)
-  assert.equal(advance(s, nextDay(s.time) - 1).daily.bonus, true)
-  // Chưa tới tầng 3 thì khoá
-  assert.equal(err(rich(2), { type: 'daily', i: 0 }), 'locked')
+  assert.equal(festPoints(fresh, 'nhatKhoa'), 0)
+  assert.deepEqual(fresh.fest.nhatKhoa!.got, [])
+  // nhiệm vụ ngày kiểu cũ không nhận được nữa (không nhận thưởng hai lần); chưa tới tầng 3 thì khoá
+  assert.equal(err(s, { type: 'daily', i: 0 }), 'locked')
+  assert.equal(err(s, { type: 'dailyBonus' }), 'locked')
+  assert.equal(err(rich(2), { type: 'fest', id: 'nhatKhoa', i: 0 }), 'locked')
 })
 
 test('nhiệm vụ tuần: đếm cùng nhiệm vụ ngày và số hôm mở rương ngày, làm mới 0h thứ Hai giờ VN', () => {
@@ -414,9 +419,7 @@ test('nhiệm vụ tuần: đếm cùng nhiệm vụ ngày và số hôm mở r�
   s = run(s, { type: 'weeklyBonus' })
   assert.equal(s.items.doKiep, pills + (WEEKLY_BONUS.doKiep ?? 0))
   assert.equal(err(s, { type: 'weeklyBonus' }), 'claimed')
-  // mở rương ngày thì cộng một hôm
-  const d = run({ ...s, daily: { ...s.daily, got: s.daily.got.map(() => true) } }, { type: 'dailyBonus' })
-  assert.equal(d.weekly.n.days, s.weekly.n.days + 1)
+  // (mở rương ngày = rương mốc 60 của Nhật Khóa cộng một hôm — xem test Nhật Khóa)
   // Mốc làm mới đúng 0h thứ Hai giờ VN (17h Chủ nhật UTC)
   const mon = nextWeek(s.time)
   assert.equal(new Date(mon + 7 * 3_600_000).getUTCDay(), 1)

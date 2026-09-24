@@ -3,7 +3,7 @@ import { BAG, BAG_IDS, bagFamily, type BagId, type JobKind, type State } from '@
 import { L } from './lib'
 
 export type BagTab = 'speed' | 'res' | 'buff' | 'other'
-const TAB_OF = { speed: 'speed', res: 'res', buff: 'buff', shield: 'buff', exp: 'other' } as const satisfies Record<
+const TAB_OF = { speed: 'speed', res: 'res', buff: 'buff', shield: 'buff', exp: 'other', key: 'other' } as const satisfies Record<
   (typeof BAG)[BagId]['use'],
   BagTab
 >
@@ -14,7 +14,7 @@ export function denom(id: BagId) {
   const d = BAG[id]
   if (d.use === 'speed') return L.bag.denom.min(d.min)
   if (d.use === 'buff' || d.use === 'shield') return L.bag.denom.hours(d.hours)
-  return L.bag.denom.n(d.n)
+  return d.use === 'key' ? '' : L.bag.denom.n(d.n)
 }
 export const itemName = (id: BagId) => `${L.bag.family[bagFamily(id)].name} · ${denom(id)}`
 

@@ -13,13 +13,20 @@ import {
   type WorldResult,
   type WorldRun,
 } from './base.ts'
+import { guildActions, type GuildAction } from './guild.ts'
 import { marketActions, type MarketAction } from './market.ts'
 import { raidActions, type RaidAction } from './raid.ts'
 import { spotActions, type SpotAction } from './spots.ts'
 
-export type WorldAction = RaidAction | AllianceAction | SpotAction | MarketAction
+export type WorldAction = RaidAction | AllianceAction | GuildAction | SpotAction | MarketAction
 
-const WORLD: WorldActions<WorldAction> = { ...raidActions, ...allianceActions, ...spotActions, ...marketActions }
+const WORLD: WorldActions<WorldAction> = {
+  ...raidActions,
+  ...allianceActions,
+  ...guildActions,
+  ...spotActions,
+  ...marketActions,
+}
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 
 export function parseWorldAction(raw: unknown): WorldAction | null {

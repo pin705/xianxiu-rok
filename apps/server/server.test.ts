@@ -400,6 +400,8 @@ test(
       'bản đồ có đội đi cướp',
     )
     assert.equal(m.seed, 0, 'mầm trận cướp không rời server')
+    const warn = await cb.push(p => !!p.p.incoming?.length)
+    assert.equal(warn.p.incoming![0].pid, A.pid, 'tháp canh: bên bị cướp thấy đội đang kéo tới')
     assert.deepEqual(await ca.act({ type: 'raid', pid: B.pid, elder: 'thanhPhong', army: { kiem3: 1 } }), {
       ok: false,
       err: 'busy',

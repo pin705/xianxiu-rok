@@ -60,7 +60,7 @@
     border-radius: 6px;
     background: var(--ink);
     color: var(--paper);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     line-height: 16px;
   }

@@ -6,7 +6,12 @@
     DAILY_HALL,
     RESOURCES,
     count,
+    achCount,
     dailyReady,
+    dayOf,
+    festReady,
+    tavernFree,
+    vipLevel,
     isWeekend,
     power,
     questDone,
@@ -16,9 +21,13 @@
     storage,
     unitOf,
     type Bag as Res,
+    type Res as ResId,
     type BuildingId,
     type State,
   } from '@rok/rules'
+  import ResSheet from './ResSheet.svelte'
+  import VipSheet from './VipSheet.svelte'
+  import { useGame } from './game'
   import { Icon, Portrait, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon, type Look } from '@rok/art'
   import { Badge, Bag, IconButton, Meter, Tag } from './ui'
   import { L, TABS, clock, num, progress, sfx, visitTab, visitedTabs, type Tab, type PanelTab } from './lib'
@@ -35,6 +44,7 @@
     ontab,
     onsettings,
     ondaily,
+    onfests = () => {},
     onranks = () => {},
     onmail = () => {},
     onfocus,
@@ -50,6 +60,7 @@
     ontab: (t: Tab, e: MouseEvent) => void
     onsettings: () => void
     ondaily: () => void
+    onfests?: () => void // trung tâm sự kiện
     onranks?: () => void // chạm chân dung: xếp hạng
     onmail?: () => void
     onfocus: (id: BuildingId, view?: PanelTab) => void // mở bảng công trình (danh sách việc đang chạy)
@@ -63,7 +74,18 @@
     bg: '#78a6c2',
     mark: '#b8382a',
   }
-  const ready = $derived(dailyReady(game))
+  const ready = $derived(dailyReady(game) + festReady(game, now, 'daily'))
+  const fests = $derived(festReady(game, now))
+  // chấm trên tab: Bảo khố = thành tựu chờ nhận; Môn hạ còn chấm khi Chiêu Hiền Đài có lượt miễn phí
+  const tavernReady = $derived(
+    (['silver', 'gold'] as const).some(k => tavernFree({ ...game, time: now }, k)) && !!game.tavern,
+  )
+  let resOpen = $state<ResId | null>(null)
+  let vipOpen = $state(false)
+  // đội địch đang kéo tới (chưa tới nơi) và Hộ Sơn Phù nhỏ nhất đang có để bật khiên ngay
+  const g = useGame()
+  const incoming = $derived((game.incoming ?? []).filter(x => x.at > now && game.shield <= now))
+  const ward = $derived((['hoSon8', 'hoSon24', 'hoSon72'] as const).find(id => (game.items[id] ?? 0) > 0))
   let visited = $state(visitedTabs())
   // Ghé tab bằng cách nào cũng tính (bấm tab, hay nhiệm vụ dẫn sang bản đồ)
   $effect(() => {
@@ -93,6 +115,7 @@
   const ring = $derived(job ? progress(job, now) : 0)
   // Huy hiệu trên thanh tab: số chiến báo chưa đọc; chấm đỏ khi có thương binh chờ chữa
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
+  const tabCount = $derived<Partial<Record<Tab, number>>>({ banDo: unread, baoKho: game.ach ? achCount(game) : 0 })
   const hurt = $derived(!game.heal && count(game.wounded) > 0)
   // thư mới chưa đọc hoặc còn quà chưa nhận
   const letters = $derived(game.mail.filter(m => m.id > game.seen || (m.gift && !m.got)).length)
@@ -159,6 +182,12 @@
         end: now < m.arriveAt ? m.arriveAt : m.returnAt,
         go: e => (m.target.kind === 'trib' ? onfocus('chuDien', 'upgrade') : ontab('banDo', e)),
       })
+    // nhà rảnh (như "idle" của RoK): có nhà mà không làm gì — chip son nhấp nháy, chạm là tới đúng bảng
+    const idle = (key: string, icon: IconName, b: BuildingId, view: PanelTab, text: string) =>
+      out.push({ key, icon, text, end: 0, go: () => onfocus(b, view) })
+    if (!game.train && game.levels.dienVoTruong > 0) idle('ti', 'people', 'dienVoTruong', 'train', L.train.tab)
+    if (!game.study && game.levels.tangKinhCac > 0) idle('si', 'scroll', 'tangKinhCac', 'library', L.library.tab)
+    if (!game.brew && game.levels.danPhong > 0) idle('pi', 'cauldron', 'danPhong', 'alchemy', L.alchemy.brew)
     return out.sort((a, b) => a.end - b.end)
   })
 
@@ -193,6 +222,10 @@
             draggable="false"
           />{L.realm(hall)}</span
         >
+        <!-- Hương Hỏa (VIP): chấm son khi lễ vật hôm nay chưa nhận -->
+        <button class="vip" onclick={() => (vipOpen = true)} aria-label={L.vip.level(vipLevel(game))}
+          >{L.vip.short(vipLevel(game))}{#if game.vip && game.vip.chest !== dayOf(now)}<Badge dot />{/if}</button
+        >
       </div>
       <span class="pow" title={L.power}
         ><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(Math.round(powerT.current))}</span
@@ -216,12 +249,33 @@
             <Meter value={game.res[r] / cap} tone={full ? 'bad' : 'spirit'} size="xs" />
           </span>
           {#if full}<em>{L.full}</em>{/if}
+          <!-- chạm ô: bảng tài nguyên (sản lượng, sức chứa, mở nang, đổi ở Thương hội) -->
+          <button class="rb" aria-label="{L.res[r]}: {num(game.res[r])} / {num(cap)}" onclick={() => (resOpen = r)}
+          ></button>
           {#if gain && gain.bag[r] && now - gain.t < 1400}
             {#key gain.t}<span class="float">+{num(gain.bag[r] ?? 0)}</span>{/key}
           {/if}
         </li>
       {/each}
     </ul>
+    <!-- Tháp canh (như RoK): đội địch đang kéo tới — thẻ son ở mọi tab, bật khiên ngay tại đây -->
+    {#each incoming as x (`${x.pid}:${x.id}`)}
+      <div class="alarm" role="alert">
+        <Icon name="swords" size={18} />
+        <span class="grow"
+          ><b>{L.pvp.incoming(x.foe)}</b> <span class="t-num">{clock(x.at - now)}</span><br /><small
+            >{L.pvp.incomingHint}</small
+          ></span
+        >
+        {#if ward}
+          <button
+            class="shieldup"
+            disabled={(game.frenzy ?? 0) > now}
+            onclick={() => g.act({ type: 'use', item: ward, n: 1 }, 'reward')}>{L.pvp.shieldUp}</button
+          >
+        {/if}
+      </div>
+    {/each}
   </header>
 
   <!-- màn hẹp: chỉ ở tab Tông môn; desktop: luôn nằm trong cột trái (CSS .away) -->
@@ -256,6 +310,12 @@
       {:else}
         <p class="quest t-small t-lore">{L.quest.allDone}</p>
       {/if}
+      <!-- trung tâm sự kiện: luôn có (sự kiện tân thủ từ ngày đầu), chấm đỏ = quà chờ nhận -->
+      <span class="daily" class:ready={fests > 0}>
+        <IconButton icon="star" label="{L.fest.button}{fests ? ` (${fests})` : ''}" size={46} onclick={onfests}
+          ><Badge n={fests} /></IconButton
+        >
+      </span>
       {#if hall >= DAILY_HALL}
         <span class="daily" class:ready={ready > 0}>
           <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}
@@ -268,9 +328,13 @@
       <section class="runs" aria-label={L.activity.title}>
         <h3>{L.activity.title}</h3>
         {#each runs as r (r.key)}
-          <button class="run" onclick={r.go}
+          <button
+            class="run"
+            class:idle={!r.end}
+            onclick={r.go}
+            aria-label="{r.text}: {r.end ? clock(r.end - now) : L.builder.idle}"
             ><Icon name={r.icon} size={16} /><span class="grow t-ellipsis">{r.text}</span><b class="t-num"
-              >{clock(r.end - now)}</b
+              >{r.end ? clock(r.end - now) : L.builder.idle}</b
             ></button
           >
         {:else}
@@ -317,7 +381,11 @@
             draggable="false"
           />
           {#if locked}<span class="lk"><Icon name="lock" size={10} /></span>{/if}
-          {#if !on}<Badge n={t.id === 'banDo' ? unread : 0} dot={t.id === 'monHa' && hurt} {fresh} />{/if}
+          {#if !on}<Badge
+              n={tabCount[t.id] ?? 0}
+              dot={t.id === 'monHa' && (hurt || tavernReady)}
+              {fresh}
+            />{/if}
         </span>
         <span class="tl">{L.tabs[t.id]}</span>
         {#if locked}<small>{t.unlock > 15 ? L.soonTag : L.level(t.unlock)}</small>{/if}
@@ -325,6 +393,8 @@
     {/each}
   </nav>
 </div>
+<ResSheet res={resOpen} onclose={() => (resOpen = null)} {onfocus} />
+<VipSheet open={vipOpen} onclose={() => (vipOpen = false)} />
 
 <style>
   .hud {
@@ -431,6 +501,73 @@
     min-width: 0;
     --gap: 4px;
   }
+  .rb {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: none;
+    border: 0;
+  }
+  /* Tháp canh: thẻ son nhấp nháy viền khi có đội địch kéo tới */
+  .alarm {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 6px 10px;
+    font-size: var(--fs-2);
+    color: var(--silk);
+    pointer-events: auto;
+    background: color-mix(in srgb, var(--cinnabar) 88%, var(--ink));
+    border: 1.5px solid var(--gold-l);
+    border-radius: 10px;
+    animation: alarm 1.2s var(--ease) infinite;
+  }
+  .alarm small {
+    opacity: 0.85;
+  }
+  .shieldup {
+    flex: none;
+    padding: 4px 10px;
+    font-weight: 800;
+    color: var(--ink);
+    background: var(--gold-l);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .shieldup:disabled {
+    opacity: 0.5;
+  }
+  @keyframes alarm {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--cinnabar) 60%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--cinnabar) 0%, transparent);
+    }
+  }
+  /* Hương Hỏa: nhãn vàng nhỏ dưới cảnh giới, như huy hiệu VIP cạnh chân dung của RoK */
+  .vip {
+    position: relative;
+    justify-self: start;
+    width: max-content;
+    min-height: 22px;
+    margin-top: 2px;
+    padding: 1px 10px 2px;
+    font-size: var(--fs-1);
+    font-weight: 800;
+    color: var(--gold-d);
+    background: color-mix(in srgb, var(--gold-l) 45%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .vip :global(.badge) {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+  }
   .res b {
     font-size: var(--fs-4);
     line-height: 1;
@@ -443,7 +580,7 @@
     top: -9px;
     right: 2px;
     padding: 1px 7px 2px;
-    font: 800 10px/1.4 var(--font);
+    font: 800 11px/1.4 var(--font);
     font-style: normal;
     color: var(--silk);
     border: 0 solid transparent;
@@ -688,12 +825,78 @@
     background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .tabs small {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-faint);
   }
-  .away,
-  .runs {
+  .away {
     display: none;
+  }
+  /* Điện thoại: dải "Đang diễn ra" dưới thẻ nhiệm vụ — chip biểu tượng + đồng hồ, chip "Rảnh" son nhấp nháy;
+     cột phải là các đĩa (Sự kiện, Nhiệm vụ ngày) xếp dọc như cột biểu tượng của RoK */
+  .side {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    justify-items: start;
+  }
+  /* điện thoại: cột nhiệm vụ chỉ ở tab Tông môn (desktop luôn hiện trong cột trái — xem @media dưới) */
+  .side.away {
+    display: none;
+  }
+  .side > .quest {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .side > .daily {
+    grid-column: 2;
+  }
+  .runs {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 100%;
+  }
+  .runs h3,
+  .runs > p {
+    display: none;
+  }
+  .run {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px 3px 6px;
+    font-size: var(--fs-2);
+    color: var(--text);
+    pointer-events: auto;
+    background: color-mix(in srgb, var(--silk) 90%, transparent);
+    border: 1px solid var(--paper3);
+    border-radius: 999px;
+    box-shadow: 0 1px 3px rgb(var(--shade) / 0.18);
+  }
+  .run span {
+    display: none;
+  }
+  .run b {
+    color: var(--gold-d);
+  }
+  .run.idle {
+    border-color: var(--cinnabar);
+    animation: nudge 1.8s var(--ease) infinite;
+  }
+  .run.idle b {
+    color: var(--cinnabar);
+  }
+  @keyframes nudge {
+    0%,
+    70%,
+    100% {
+      transform: none;
+    }
+    80% {
+      transform: translateY(-2px);
+    }
   }
   /* điện thoại rất hẹp (320px): nút nhận thưởng xuống dòng, phần thưởng dàn ngang — thẻ không cao lên che biển tên Chủ điện */
   @media (max-width: 360px) {
@@ -820,7 +1023,13 @@
       font-size: var(--fs-2);
       text-align: left;
       color: var(--text);
+      background: none;
+      border: 0;
       border-radius: 8px;
+      box-shadow: none;
+    }
+    .run span {
+      display: block;
     }
     .run:hover {
       background: color-mix(in srgb, var(--azurite-l) 18%, transparent);

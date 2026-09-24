@@ -42,6 +42,7 @@
   import Forge from './Forge.svelte'
   import Guard from './Guard.svelte'
   import JobRow from './JobRow.svelte'
+  import Refill from './Refill.svelte'
   import Library from './Library.svelte'
   import Train from './Train.svelte'
   import Trade from './Trade.svelte'
@@ -271,6 +272,7 @@
           {/if}
           <Bag res={c} have={game.res} />
           {@render store(c)}
+          <Refill cost={c} />
         </Section>
         <div class="mt-4">
           <Button

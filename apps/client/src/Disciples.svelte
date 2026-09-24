@@ -23,7 +23,13 @@
     type ElderId,
     type UnitId,
     isMarching,
+    STAR_MAX,
+    TAVERN_HALL,
+    TOKEN_SUMMON,
+    starCost,
+    starOf,
   } from '@rok/rules'
+  import Tavern from './Tavern.svelte'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Page, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num, type PanelTab } from './lib'
@@ -56,12 +62,22 @@
 </script>
 
 <Page title={L.monHa.title} icon="monHa">
+  {#if game.levels.chuDien >= TAVERN_HALL}
+    <Section title={L.tavern.title}>
+      <Tavern />
+    </Section>
+  {/if}
   <Section title={L.monHa.elders}>
     <ul class="grid">
       {#each ELDER_IDS as e (e)}
         {@const has = game.elders[e] !== undefined}
         {@const m = marchOf(e)}
         <li>
+          {#if !has && (game.tokens[e] ?? 0) >= TOKEN_SUMMON}
+            <Button variant="gold" size="sm" wide onclick={() => act({ type: 'recruit', elder: e }, 'reward')}
+              >{L.tavern.recruit} {L.elders[e].name}</Button
+            >
+          {/if}
           <Card onclick={has ? () => (open = e) : undefined} disabled={!has} label={has ? L.elders[e].name : undefined}>
             <span class="row">
               <Portrait look={LOOK[e]} size={50} dim={!has} />
@@ -72,7 +88,8 @@
                     >{L.elders[e].title} · {L.units[ELDERS[e].type]} · {L.el[ELDERS[e].el]}</small
                   >
                   <span class="row" style:--gap="6px"
-                    ><b class="t-tiny t-gold">{L.lv(elderLevel(game.elders[e]))}</b><span class="grow"
+                    ><b class="t-tiny t-gold">{L.lv(elderLevel(game.elders[e]))} · {'★'.repeat(starOf(game, e))}</b><span
+                      class="grow"
                       ><Meter value={expPart(e)} tone="gold" size="sm" /></span
                     ></span
                   >
@@ -83,6 +100,9 @@
                   <small class="t-tiny t-soft row" style:--gap="3px"
                     ><Icon name="lock" size={11} />{L.unlockHint[e]}</small
                   >
+                  {#if game.tokens[e]}
+                    <small class="t-tiny t-gold">{L.tavern.token}: {game.tokens[e]}/{TOKEN_SUMMON}</small>
+                  {/if}
                 {/if}
               </span>
             </span>
@@ -167,6 +187,17 @@
       <Tag icon="power" tone="good"
         >{L.monHa.leads} +{Math.round((lv - 1) * 4)}% {L.stat.atk.toLowerCase()}, {L.stat.hp.toLowerCase()}</Tag
       >
+    </Section>
+    <Section title="{L.tavern.stars(starOf(game, e))} · {L.tavern.token} {game.tokens[e] ?? 0}">
+      <p class="t-small t-soft">{L.tavern.starHint}</p>
+      {#if starOf(game, e) < STAR_MAX}
+        <Button
+          size="sm"
+          variant="gold"
+          disabled={(game.tokens[e] ?? 0) < starCost(game, e)}
+          onclick={() => act({ type: 'star', elder: e }, 'reward')}>{L.tavern.star(starCost(game, e))}</Button
+        >
+      {/if}
     </Section>
     <Section title={L.monHa.skill}>
       <Card tone="glow">

@@ -1,18 +1,19 @@
 <script lang="ts">
-  // Nhiệm vụ ngày (4 việc quen tay mỗi phiên, làm mới 0h giờ VN) và nhiệm vụ tuần (mục tiêu gộp cả tuần, làm mới 0h thứ Hai).
-  // Mỗi phần: từng việc nhận thưởng riêng, xong hết thì mở rương.
+  // Nhiệm vụ ngày = Nhật Khóa (như Daily Objectives của RoK: việc xong cộng hoạt lực, 5 rương mốc, làm mới 0h giờ VN),
+  // nhiệm vụ tuần (mục tiêu gộp cả tuần, làm mới 0h thứ Hai: từng việc nhận riêng, xong hết thì mở rương), sự kiện tuần.
   import {
-    DAILY,
-    DAILY_BONUS,
     DAILY_HALL,
     EVENT_GOALS,
     EVENT_REWARDS,
+    FESTS,
     RESOURCES,
     WEEKLY,
     WEEKLY_BONUS,
-    dailyDone,
-    dailyReward,
-    eventOf,
+    advance,
+    festOpen,
+    festPoints,
+    festProgress,
+    themeFor,
     isWeekend,
     nextDay,
     nextWeek,
@@ -32,8 +33,13 @@
   const now = $derived(g.now)
   const act = g.act
 
-  const perDay = $derived(Object.fromEntries(RESOURCES.map(r => [r, dailyReward(game)])))
   const perWeek = $derived(Object.fromEntries(RESOURCES.map(r => [r, weeklyReward(game)])))
+  // state đưa tới bây giờ: qua 0h thì Nhật Khóa mới mở ngay, không chờ thao tác kế tiếp
+  const s = $derived(open ? advance(game, now) : game)
+  const nk = $derived(festOpen(s, 'nhatKhoa', now))
+  // quà có phần theo tầng Chủ điện (hallRes): hiện số thật người chơi sẽ nhận
+  const withHall = (res: Partial<Record<(typeof RESOURCES)[number], number>> = {}, per = 0) =>
+    Object.fromEntries(RESOURCES.map(r => [r, (res[r] ?? 0) + per * s.levels.chuDien]))
 </script>
 
 {#snippet task(
@@ -105,6 +111,66 @@
   </div>
 {/snippet}
 
+{#snippet nhat()}
+  <!-- Nhật Khóa (Daily Objectives của RoK): mỗi việc xong cộng hoạt lực, đủ mốc mở rương — đầu bảng -->
+  {#if nk && open}
+    {@const d = FESTS.nhatKhoa}
+    {#if d.kind === 'activity'}
+      {@const pts = festPoints(s, 'nhatKhoa')}
+      {@const max = d.goals[d.goals.length - 1]}
+      <Section title="{L.fest.names.nhatKhoa.name} · {L.daily.activity(Math.min(pts, max), max)}">
+        <Meter value={Math.min(1, pts / max)} tone="gold" size="md" />
+        <ul class="stack mt-2">
+          {#each d.goals as goal, i (goal)}
+            {@const r = d.rewards[i]}
+            {@const got = !!s.fest.nhatKhoa?.got.includes(i)}
+            {@const ready = pts >= goal}
+            <li>
+              <Card tone={ready && !got ? 'glow' : 'silk'}>
+                <div class="row">
+                  <Icon name="star" size={24} />
+                  <span class="grow stack" style:--gap="3px"
+                    ><b class="t-small">{L.daily.chest(goal)}</b><Bag
+                      res={withHall(r.res, r.hallRes)}
+                      items={r.items}
+                      size="sm"
+                    /></span
+                  >
+                  {#if got}
+                    <span class="t-good"><Icon name="check" size={22} /></span>
+                  {:else}
+                    <Button
+                      variant="gold"
+                      size="sm"
+                      disabled={!ready}
+                      onclick={() => act({ type: 'fest', id: 'nhatKhoa', i }, 'win')}>{L.daily.open}</Button
+                    >
+                  {/if}
+                </div>
+              </Card>
+            </li>
+          {/each}
+        </ul>
+        <ul class="stack mt-2">
+          {#each d.tasks as t (t.m)}
+            {@const v = festProgress(s, 'nhatKhoa', t.m)}
+            <li class="row between t-small" class:done={v >= t.n}>
+              <span class="row" style:--gap="6px"
+                ><Icon name={v >= t.n ? 'check' : 'clock'} size={16} />{L.fest.task[t.m](num(t.n))}</span
+              >
+              <span class="row" style:--gap="8px"
+                ><span class="t-num t-soft">{num(Math.min(v, t.n))}/{num(t.n)}</span><b class="t-gold"
+                  >{L.daily.pts(t.pts)}</b
+                ></span
+              >
+            </li>
+          {/each}
+        </ul>
+      </Section>
+    {/if}
+  {/if}
+{/snippet}
+
 <Sheet {open} {onclose} title={L.daily.title} sub={L.daily.reset(clock(nextDay(now) - now))}>
   {#if isWeekend(now)}
     <div class="mt-2">
@@ -117,9 +183,10 @@
       >
     </div>
   {/if}
+  {@render nhat()}
   {#if game.levels.chuDien >= DAILY_HALL}
     <!-- Sự kiện tuần: chủ đề đổi theo tuần, đủ mốc nhận quà, top của giới nhận thư lúc hết tuần -->
-    {@const theme = eventOf(game.ev.week)}
+    {@const theme = themeFor(game, game.ev.week)}
     <Section title="{L.event.title} · {L.event.theme[theme]}">
       {#snippet aside()}{L.event.pts(game.ev.pts)}{/snippet}
       <p class="t-small t-soft">{L.event.how[theme]} · {L.weekly.reset(nextWeek(now) - now)}</p>
@@ -159,22 +226,6 @@
       <p class="t-small t-lore">{L.event.top}</p>
     </Section>
   {/if}
-  <ul class="stack mt-2">
-    {#each DAILY as d, i (d.id)}
-      {@render task(
-        L.daily.task[d.id](d.n),
-        game.daily.n[d.id],
-        d.n,
-        game.daily.got[i],
-        dailyDone(game, i),
-        perDay,
-        () => act({ type: 'daily', i }),
-      )}
-    {/each}
-  </ul>
-  {@render chest(L.daily.bonus, DAILY_BONUS, game.daily.got.every(Boolean), game.daily.bonus, () =>
-    act({ type: 'dailyBonus' }),
-  )}
 
   <Section title={L.weekly.title}>
     <p class="t-small t-soft">{L.weekly.reset(nextWeek(now) - now)}</p>

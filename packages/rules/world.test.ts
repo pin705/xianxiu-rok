@@ -3,6 +3,12 @@ import assert from 'node:assert/strict'
 import {
   ASCEND,
   ASCEND_HALL,
+  DONATE_COST,
+  DONATE_EVERY,
+  DONATE_MAX,
+  DONATE_PTS,
+  DONATE_STAR,
+  HELP_CREDIT,
   EVENT_GOALS,
   HO_PHAP_EXP,
   MARKET_BUYS,
@@ -11,6 +17,8 @@ import {
   MARKET_TTL,
   NEWBIE_SHIELD,
   PROTECT,
+  FRENZY_TIME,
+  GIFT_PTS,
   PVP_START,
   REVENGE_TIME,
   SHIELD_TIME,
@@ -41,6 +49,8 @@ import {
   allyRows,
   atlas,
   basePrice,
+  contribOf,
+  donateLeft,
   defense,
   endSeason,
   eventTop,
@@ -64,6 +74,7 @@ import {
   sellCap,
   spawn,
   spotOf,
+  techLevel,
   worldAct,
   worldBuffs,
   type Players,
@@ -140,6 +151,21 @@ test('cướp: đội mạnh thắng, lấy 30 % phần vượt kho bảo hộ, 
   const b2 = small.get(1)!.marches[0]
   const loot = Object.values(b2.gain!.res).reduce((a, b) => a + (b ?? 0), 0)
   assert.ok(loot <= b2.back!.kiem2! * 40 * 2.2 && loot > 0.95 * b2.back!.kiem2! * 40 * 2.2)
+})
+
+test('cướp: bên thủ thấy đội đang kéo tới (Tháp canh) tới khi trận giải; bên đánh nổi sát khí, chưa bật khiên được', () => {
+  const ps = world(sect('Công', 10, { kiem3: 1100 }), sect('Thủ', 10, { the1: 200 }))
+  const m = send(ps, 1, 2, { kiem3: 1100 })
+  const def = ps.get(2)!
+  assert.deepEqual(def.incoming, [{ id: m.id, pid: 1, foe: 'Công', at: m.arriveAt }])
+  // bên đánh: vừa xuất quân cướp thì chưa dùng Hộ Sơn Phù được (không cướp xong rồi trốn sau khiên)
+  const att = { ...ps.get(1)!, items: { ...ps.get(1)!.items, hoSon8: 1 } }
+  assert.deepEqual(apply(att, { type: 'use', item: 'hoSon8', n: 1 }, att.time), { ok: false, error: 'frenzy' })
+  assert.equal(apply(att, { type: 'use', item: 'hoSon8', n: 1 }, att.time + FRENZY_TIME + 1).ok, true)
+  // bên thủ bật khiên kịp trước khi địch tới: dùng được (bên thủ không có sát khí)
+  assert.equal(apply({ ...def, items: { hoSon8: 1 } }, { type: 'use', item: 'hoSon8', n: 1 }, def.time).ok, true)
+  resolve(ps, m.arriveAt)
+  assert.deepEqual(ps.get(2)!.incoming, [], 'trận đã giải: hết cảnh báo')
 })
 
 test('cướp: khiên, chênh lực chiến, chưa tới tầng, không tự đánh mình; báo thù bỏ giới hạn lực chiến trong 24 giờ', () => {
@@ -399,10 +425,61 @@ test('tiên minh giúp đỡ: nhờ một việc, mỗi người giúp một l�
   assert.equal(act(1, { type: 'helpAll' }), 'empty', 'không tự giúp mình')
   assert.equal(act(2, { type: 'helpAll' }), null)
   assert.equal(ps.get(1)!.queue[0].finishAt, job.finishAt - helpMs(job))
+  assert.equal(contribOf(ps.get(2)!).credit, HELP_CREDIT, 'người giúp được cống hiến')
   assert.equal(act(2, { type: 'helpAll' }), 'empty', 'mỗi người giúp một lần')
   for (let p = 3; p <= 12; p++) act(p, { type: 'helpAll' })
   assert.equal(ps.get(1)!.queue[0].finishAt, job.finishAt - 10 * helpMs(job), 'tối đa 10 lần')
   assert.equal(allyOf(w, 1)!.helps.length, 0, 'đủ 10 lần thì lời nhờ tự gỡ')
+})
+
+test('Hộ Minh Đại Trận: cung phụng theo lượt (hồi 30 phút), trận được điểm góp gấp đôi, tầng trận thành tăng ích cả minh; Cống Hiến Các: trưởng lão nhập bằng Minh khố, người trong minh đổi bằng cống hiến', () => {
+  const ps = world(sect('A', 12), sect('B', 12), sect('C', 12))
+  let w = freshWorld()
+  const act = (pid: number, a: Parameters<typeof worldAct>[2], now = T0) => {
+    const r = worldAct(ps, pid, a, now, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [id, s] of r.changed) ps.set(id, s)
+    w = r.world
+    return null
+  }
+  const give = (pid: number, now = T0) => act(pid, { type: 'allyDonate', tech: 'tuLinh', res: 'linhThach' }, now)
+  act(1, { type: 'allyFound', name: 'Vạn Kiếm', tag: 'VK' })
+  act(2, { type: 'allyJoin', id: allyOf(w, 1)!.id })
+  assert.equal(give(3), 'locked', 'chưa vào minh')
+  const before = ps.get(2)!.res.linhThach
+  assert.equal(give(2), null)
+  assert.equal(ps.get(2)!.res.linhThach, before - DONATE_COST, 'tầng 0: một phần phí')
+  assert.equal(contribOf(ps.get(2)!).credit, DONATE_PTS)
+  assert.deepEqual([allyOf(w, 1)!.tech!.tuLinh, allyOf(w, 1)!.fund], [DONATE_PTS, DONATE_PTS])
+  assert.equal(act(2, { type: 'allyStar', tech: 'tuLinh' }), 'locked', 'thành viên không điểm trận')
+  assert.equal(act(1, { type: 'allyStar', tech: 'tuLinh' }), null)
+  for (let i = 1; i < DONATE_MAX; i++) assert.equal(give(2), null)
+  assert.equal(donateLeft(ps.get(2)!, T0), 0)
+  assert.equal(give(2), 'cooldown', 'hết lượt')
+  const pts = DONATE_PTS + (DONATE_MAX - 1) * DONATE_PTS * DONATE_STAR
+  assert.equal(allyOf(w, 1)!.tech!.tuLinh, pts, 'trận được điểm: gấp đôi')
+  assert.equal(donateLeft(ps.get(2)!, T0 + DONATE_EVERY - 1), 0)
+  assert.equal(give(2, T0 + DONATE_EVERY), null, 'hồi một lượt sau 30 phút')
+  assert.equal(techLevel(allyOf(w, 1)!, 'tuLinh'), 1)
+  const buffed = worldBuffs(ps, w, { atlas: atlas(777), phase: 3 }, T0 + DONATE_EVERY)
+  for (const pid of [1, 2])
+    assert.ok(
+      buffed.get(pid)!.buffs.some(b => b.src === 'ally' && b.key === 'prod' && b.v === 0.02),
+      'cả minh +2 %',
+    )
+  assert.equal(buffed.has(3), false, 'người ngoài minh không có')
+  // Cống Hiến Các
+  const credit = pts + DONATE_PTS * DONATE_STAR
+  assert.equal(contribOf(ps.get(2)!).credit, credit)
+  assert.equal(act(2, { type: 'allyStock', item: 'kinhThu2k', n: 1 }), 'locked', 'thành viên không nhập hàng')
+  assert.equal(act(2, { type: 'allyBuy', item: 'kinhThu2k', n: 1 }), 'empty', 'chưa có hàng')
+  assert.equal(act(1, { type: 'allyStock', item: 'hoSon24', n: 1 }), 'not_enough', 'Minh khố chưa đủ')
+  assert.equal(act(1, { type: 'allyStock', item: 'kinhThu2k', n: 2 }), null)
+  assert.equal(act(2, { type: 'allyBuy', item: 'kinhThu2k', n: 1 }), null)
+  assert.equal(ps.get(2)!.items.kinhThu2k, 1)
+  assert.equal(contribOf(ps.get(2)!).credit, credit - 300)
+  assert.equal(allyOf(w, 1)!.stock!.kinhThu2k, 1)
+  assert.equal(act(2, { type: 'allyBuy', item: 'kinhThu2k', n: 1 }), 'not_enough', 'hết cống hiến')
 })
 
 test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác đánh bật, gọi về thì mất điểm; buff cho cả minh', async () => {
@@ -521,7 +598,11 @@ test('yêu vương: kho máu chung, mỗi đội đánh một lát; hạ thì th
       elders: { thanhPhong: expAt(40) },
     })),
   )
-  let w: World = { ...freshWorld(), spots: { [boss.i]: { hp: 20_000 } } } // còn 20k: một lát tối đa 12k, phải hai đội
+  let w: World = {
+    ...freshWorld(),
+    spots: { [boss.i]: { hp: 20_000 } }, // còn 20k: một lát tối đa 12k, phải hai đội
+    allies: { 1: { id: 1, name: 'Vạn Kiếm', tag: 'VK', members: { 1: 2, 3: 0 }, notice: '', at: T0, helps: [] } },
+  }
   for (const pid of [1, 2]) {
     const r = worldAct(
       ps,
@@ -542,6 +623,10 @@ test('yêu vương: kho máu chung, mỗi đội đánh một lát; hạ thì th
   assert.ok((w.spots[boss.i].until ?? 0) > at, 'đã hạ, chờ hồi sinh')
   const gifts = [1, 2].map(p => ps.get(p)!.mail.find(m => m.k === 'boss'))
   assert.ok(gifts.every(Boolean), 'ai đánh cũng có quà')
+  const minhLe = (p: number) => ps.get(p)!.mail.find(m => m.k === 'allyGift')
+  assert.ok(minhLe(1) && minhLe(3), 'Minh lễ: cả minh của người đánh nhận quà, kể cả người không đánh')
+  assert.equal(minhLe(2), undefined, 'không vào minh: không có Minh lễ')
+  assert.equal(allyOf(w, 1)!.gift, GIFT_PTS[2])
   assert.equal(
     worldAct(ps, 3, { type: 'go', i: boss.i, task: 'hit', elder: 'thanhPhong', army: { kiem4: 10 } }, at + 1, 1, map, w)
       .ok,

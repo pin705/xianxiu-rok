@@ -7,7 +7,7 @@ export type Away = NonNullable<ReturnType<typeof summarize>>
 export function summarize(before: Seen, after: State) {
   const ms = after.time - before.time
   if (ms < 60_000) return null
-  const d = (k: keyof State['stats']) => after.stats[k] - before.stats[k]
+  const d = (k: keyof State['stats']) => (after.stats[k] ?? 0) - (before.stats[k] ?? 0)
   return {
     ms,
     gains: RESOURCES.filter(r => after.res[r] > before.res[r]).map(r => ({ r, n: after.res[r] - before.res[r] })),

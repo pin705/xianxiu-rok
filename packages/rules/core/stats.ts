@@ -55,6 +55,9 @@ import {
   TRADE_STEP,
   UNIT_BASE,
   UNITS,
+  STAR_BONUS,
+  VIP_LEVELS,
+  VIP_PERKS,
   type Bag,
   type Bonus,
   type BuildingId,
@@ -68,14 +71,21 @@ import {
   type UnitType,
 } from '../data.ts'
 
-// Công pháp + luân hồi + buff. Bonus giảm (thời gian, chi phí) dùng qua cutOf().
+// Công pháp + luân hồi + buff + Hương Hỏa. Bonus giảm (thời gian, chi phí) dùng qua cutOf().
 export function bonus(s: State, key: Bonus) {
   let v = 0
   for (const id of TECH_IDS) if (TECHS[id].key === key) v += TECHS[id].v * (s.tech[id] ?? 0)
   if (key === 'prod') v += REBIRTH_PROD * Math.min(REBIRTH_MAX, s.rebirths)
   if (key === 'build') v += REBIRTH_BUILD * Math.min(REBIRTH_MAX, s.rebirths)
   for (const b of s.buffs) if (b.key === key) v += b.v
-  return v
+  return v + (VIP_PERKS[vipLevel(s)][key] ?? 0)
+}
+// Cấp Hương Hỏa theo tổng điểm (save cũ chưa có: cấp 0)
+export const vipLevel = (s: State) => {
+  const pts = s.vip?.pts ?? 0
+  let lv = 0
+  while (lv + 1 < VIP_LEVELS.length && pts >= VIP_LEVELS[lv + 1]) lv++
+  return lv
 }
 export const cutOf = (s: State, key: Bonus) => 1 - Math.min(MAX_CUT, bonus(s, key))
 
@@ -92,7 +102,7 @@ export function lead(s: State, elder: ElderId, key: Bonus) {
   for (const g of GEAR_IDS) if (s.gear[g]?.on === elder && GEAR[g].key === key) v += GEAR[g].v * s.gear[g]!.lv
   const t = s.talents[elder]
   if (t) TALENTS.forEach((d, i) => d.key === key && (v += d.v * t[i]))
-  return v
+  return v + (STAR_BONUS[key] ?? 0) * ((s.stars?.[elder] ?? 1) - 1) // sao trưởng lão (Chiêu Hiền Đài)
 }
 export const talentPoints = (s: State, elder: ElderId) => Math.floor(elderLevel(s.elders[elder]) / TALENT_EVERY)
 export const talentUsed = (s: State, elder: ElderId) => (s.talents[elder] ?? [0, 0, 0]).reduce((a, b) => a + b, 0)

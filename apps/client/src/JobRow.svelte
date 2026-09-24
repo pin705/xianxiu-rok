@@ -1,6 +1,6 @@
 <script lang="ts">
   // Một việc đang chờ: chữ, đồng hồ, thanh tiến độ, và nút Tăng tốc (mở bảng phù/đan) nếu có thứ rút ngắn được.
-  import type { JobKind } from '@rok/rules'
+  import { vipFree, type JobKind } from '@rok/rules'
   import { Button, Card, Meter } from './ui'
   import SpeedUp from './SpeedUp.svelte'
   import { speedsFor } from './bag'
@@ -29,7 +29,11 @@
     <div class="stack">
       <p class="row between"><span class="t-strong">{label}</span><b class="t-num">{clock(job.finishAt - now)}</b></p>
       <Meter value={progress(job, now)} size="md" />
-      {#if boosts}
+      {#if kind !== 'brew' && job.finishAt - now <= vipFree(game)}
+        <Button variant="gold" size="sm" onclick={() => g.act({ type: 'finish', job: kind }, 'reward')}
+          >{L.vip.finish}</Button
+        >
+      {:else if boosts}
         <Button variant="ghost" size="sm" icon="thoiQuang" trail="×{boosts}" onclick={() => (open = true)}
           >{L.bag.speedTitle}</Button
         >

@@ -1,14 +1,13 @@
 // Nhiệm vụ chính (hướng dẫn), nhiệm vụ ngày / tuần, quà mốc sự kiện tuần.
 import { no, ok, type Actions } from '../core/action.ts'
 import { grant } from '../core/battle.ts'
-import { dailyDone, dailyReward, weeklyDone, weeklyReward } from '../core/calendar.ts'
+import { weeklyDone, weeklyReward } from '../core/calendar.ts'
 import { int } from '../core/parse.ts'
 import { cost, gearSum, storeNeed, techSum, totalTroops } from '../core/stats.ts'
 import { type State } from '../core/types.ts'
 import { addBag, addItems, bag, mark } from '../core/util.ts'
 import {
   DAILY,
-  DAILY_BONUS,
   DAILY_HALL,
   EVENT_GOALS,
   EVENT_REWARDS,
@@ -70,34 +69,15 @@ export const taskActions: Actions<TaskAction> = {
       return ok({ ...s, quest: s.quest + 1, res: addBag(s.res, q.reward), items: addItems(s.items, q.items ?? {}) })
     },
   },
+  // Nhiệm vụ ngày kiểu cũ (4 việc + rương) đã thay bằng Nhật Khóa (fest nhatKhoa: điểm hoạt lực + 5 rương). Giữ hai thao tác
+  // để client cũ gửi lên không vỡ, nhưng không nhận được nữa — không có đường nhận thưởng hai lần.
   daily: {
     pick: a => (int(0, DAILY.length - 1)(a.i) ? { type: 'daily', i: a.i } : null),
-    run: (s, a) => {
-      if (s.levels.chuDien < DAILY_HALL || !DAILY[a.i]) return no('locked')
-      if (s.daily.got[a.i]) return no('claimed')
-      if (!dailyDone(s, a.i)) return no('not_done')
-      const n = dailyReward(s)
-      return ok({
-        ...s,
-        res: bag(r => s.res[r] + n),
-        daily: { ...s.daily, got: mark(s.daily.got, a.i) },
-      })
-    },
+    run: () => no('locked'),
   },
   dailyBonus: {
     pick: () => ({ type: 'dailyBonus' }),
-    run: s => {
-      if (s.levels.chuDien < DAILY_HALL) return no('locked')
-      if (s.daily.bonus) return no('claimed')
-      if (!s.daily.got.every(Boolean)) return no('not_done')
-      const w = s.weekly
-      return ok({
-        ...s,
-        items: addItems(s.items, DAILY_BONUS),
-        daily: { ...s.daily, bonus: true },
-        weekly: { ...w, n: { ...w.n, days: w.n.days + 1 } },
-      })
-    },
+    run: () => no('locked'),
   },
   weekly: {
     pick: a => (int(0, WEEKLY.length - 1)(a.i) ? { type: 'weekly', i: a.i } : null),

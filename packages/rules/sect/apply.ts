@@ -8,6 +8,9 @@ import { alchemyActions, type AlchemyAction } from './alchemy.ts'
 import { armyActions, type ArmyAction } from './army.ts'
 import { bagActions, type BagAction } from './bag.ts'
 import { festActions, type FestAction } from './fest.ts'
+import { vipActions, type VipAction } from './vip.ts'
+import { tavernActions, type TavernAction } from './tavern.ts'
+import { achActions, type AchAction } from './ach.ts'
 import { buildingActions, type BuildingAction } from './buildings.ts'
 import { elderActions, type ElderAction } from './elders.ts'
 import { expeditionActions, type ExpeditionAction } from './expedition.ts'
@@ -32,6 +35,9 @@ export type Action =
   | InboxAction
   | BagAction
   | FestAction
+  | VipAction
+  | TavernAction
+  | AchAction
 
 const ACTIONS: Actions<Action> = {
   ...buildingActions,
@@ -47,6 +53,9 @@ const ACTIONS: Actions<Action> = {
   ...inboxActions,
   ...bagActions,
   ...festActions,
+  ...vipActions,
+  ...tavernActions,
+  ...achActions,
 }
 
 export const ACTION_TYPES = Object.keys(ACTIONS) as Action['type'][]

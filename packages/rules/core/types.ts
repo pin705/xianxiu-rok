@@ -19,6 +19,7 @@ import {
   type EventId,
   type FestId,
   type Metric,
+  type AchId,
 } from '../data.ts'
 
 export type Troops = Record<UnitId, number>
@@ -88,6 +89,8 @@ export type Stats = {
   sped?: number // phút tăng tốc đã dùng
   raided?: number // lần cướp thắng
   gathered?: number // tài nguyên khai mỏ mang về
+  drawn?: number // lần mở thiếp Chiêu Hiền Đài
+  allied?: number // lượt cung phụng Đại Trận + lượt giúp đỡ đồng minh
 }
 // Một sự kiện của trung tâm sự kiện: lượt đang mở (key), giai đoạn, chỉ số lúc bắt đầu giai đoạn, điểm đã dồn từ giai đoạn
 // trước, quà đã nhận, số ngày đăng nhập trong lượt (và ngày đếm gần nhất)
@@ -100,10 +103,25 @@ export type Fest = {
   days: number
   last: number
 }
+// Hương Hỏa: tổng điểm, chuỗi ngày vào game liên tiếp, ngày vào gần nhất, ngày đã mở rương (dayOf; -1 = chưa)
+export type Vip = { pts: number; streak: number; day: number; chest: number }
+// Chiêu Hiền Đài: lúc lượt miễn phí kế tiếp của mỗi loại thiếp, số lần mở thiếp vàng từ lần bảo hiểm trước,
+// và phần quà lần mở gần nhất (server điền — client hiện sau khi nhận patch)
+export type Tavern = {
+  silver: number
+  gold: number
+  pity: number
+  last: { at: number; got: Reward; tokens: Partial<Record<ElderId, number>> } | null
+}
 export type Daily = { day: number; n: Record<DailyId, number>; got: boolean[]; bonus: boolean }
 export type Weekly = { week: number; n: Record<WeeklyId, number>; got: boolean[]; bonus: boolean }
 export type Ev = { week: number; pts: number; got: boolean[] } // sự kiện tuần: điểm, mốc đã nhận
 export type Foe = { pid: number; name: string; at: number } // ai đã đánh mình (báo thù)
+// Cống hiến trong tiên minh: điểm cống hiến đang có (mua ở Cống Hiến Các, giữ cả khi đổi minh), lúc lượt cung phụng hồi đầy,
+// ngày (dayOf) và số cống hiến đã nhận từ giúp đỡ trong ngày đó
+export type Contrib = { credit: number; full: number; day: number; helped: number }
+// Đội đang kéo tới: mã hành quân và người chơi bên kia (để gỡ đúng lúc trận giải), tên tông môn, lúc tới nơi
+export type Incoming = { id: number; pid: number; foe: string; at: number }
 // Thư: chữ dựng ở client theo khoá k và tham số a (@rok/i18n mailText), quà nhận đúng một lần.
 // Thêm loại thư: thêm khoá vào MailArgs — i18n báo thiếu chữ ở mọi ngôn ngữ.
 export type MailArgs = {
@@ -112,6 +130,7 @@ export type MailArgs = {
   gift: []
   comp: []
   boss: [lv: number, rank: number, pct: number]
+  allyGift: [lv: number, gift: number] // Minh lễ: người trong minh hạ yêu vương cấp lv, quà cấp gift
   season: [season: number, rank: number, up: 0 | 1]
   sold: [good: string, n: number, net: number]
   unsold: [good: string, n: number]
@@ -170,7 +189,15 @@ export type State = {
   blocks: number[] // người chơi đã chặn (ẩn chat của họ)
   ascended: number[] // các mùa đã phi thăng (danh hiệu)
   fest: Partial<Record<FestId, Fest>> // trung tâm sự kiện
-  born?: number // ngày lập tông môn (dayOf) — sự kiện tân thủ tính từ đây; save cũ thiếu thì không có sự kiện tân thủ
+  vip: Vip // Hương Hỏa
+  tavern: Tavern // Chiêu Hiền Đài
+  tokens: Partial<Record<ElderId, number>> // tín vật (hồn ấn) từng trưởng lão
+  stars: Partial<Record<ElderId, number>> // sao trưởng lão (không có = 1 sao)
+  ach: Partial<Record<AchId, number>> // thành tựu: số bậc đã nhận quà
+  incoming?: Incoming[] // đội đang kéo tới cướp mình (như Tháp canh của RoK) — server ghi lúc bên kia xuất quân
+  contrib?: Contrib // cống hiến tiên minh (chưa từng góp / giúp: chưa có)
+  frenzy?: number // cơn sát khí: vừa đi cướp, tới lúc này chưa dùng được Hộ Sơn Phù (như War Frenzy)
+  born?: number // lúc lập tông môn (ms) — sự kiện tân thủ tính theo giờ từ đây (lập lúc 23h vẫn đủ 24 giờ ngày đầu)
 }
 
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'
@@ -197,4 +224,5 @@ export type Err =
   | 'full'
   | 'limit'
   | 'claimed' // phần thưởng đã nhận rồi
+  | 'frenzy' // vừa đi cướp: chưa bật khiên được (cơn sát khí)
 export type Result = { ok: true; state: State } | { ok: false; error: Err }

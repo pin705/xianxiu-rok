@@ -10,10 +10,11 @@
   /* Chữ */
   /* hệ chữ Alegreya chưa có thì rơi về Noto Serif (đủ mọi hệ chữ) của máy, rồi serif mặc định */
   --font: 'Alegreya', 'Noto Serif', 'Noto Serif CJK SC', 'Noto Serif Thai', 'Noto Naskh Arabic', Georgia, serif;
-  --fs-1: 11px;
-  --fs-2: 12.5px;
-  --fs-3: 14.5px;
-  --fs-4: 16.5px;
+  /* điện thoại: chữ nhỏ nhất 12px (đọc được khi cầm máy như RoK), số chính ≥ 16px */
+  --fs-1: 12px;
+  --fs-2: 13px;
+  --fs-3: 15px;
+  --fs-4: 17px;
   --fs-5: 19px;
   --fs-6: 24px;
   --fs-7: 32px;
@@ -330,7 +331,7 @@ dialog::backdrop {
    Breakpoint đồng bộ với DESK trong lib.ts. */
 @media (min-width: 1024px) and (min-height: 600px) {
   :root {
-    --fs-1: 12px;
+    --fs-1: 12.5px;
     --fs-2: 13.5px;
     --fs-3: 15.5px;
   }

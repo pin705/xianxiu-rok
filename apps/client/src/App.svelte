@@ -19,6 +19,7 @@
   import { Button, Card, Medal, Toasts, fly, type ToastItem } from './ui'
   import Conn from './Conn.svelte'
   import Daily from './Daily.svelte'
+  import Events from './Events.svelte'
   import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
   import MapTab from './world/MapTab.svelte'
@@ -79,6 +80,7 @@
   let reportsOpen = $state(false)
   let settingsOpen = $state(false)
   let dailyOpen = $state(false)
+  let festsOpen = $state(false)
   let rivalsOpen = $state(false)
   let rivalsFocus = $state<number | null>(null)
   let info = $state<WorldInfo | null>(null) // giới đang ở: seed bản đồ, lúc mở (pha mùa)
@@ -178,6 +180,8 @@
           seen = w.seen
           me = w.me.pid
           info = w.world
+          // vào game: điểm danh Hương Hỏa, ngày đăng nhập của sự kiện (gửi lại trong ngày không đổi gì)
+          if (!w.ro) setTimeout(() => n.act({ type: 'login' }))
           void loadAlly()
           void n.account.info().then(r => {
             if (r.ok) pushKey = r.data.push
@@ -519,11 +523,13 @@
       ontab={switchTab}
       onsettings={() => (settingsOpen = true)}
       ondaily={() => (dailyOpen = true)}
+      onfests={() => (festsOpen = true)}
       onranks={() => (ranksOpen = true)}
       onmail={openReports}
       onfocus={focus}
     />
     <Daily open={dailyOpen} onclose={() => (dailyOpen = false)} />
+    <Events open={festsOpen} onclose={() => (festsOpen = false)} />
     <Panel
       id={selected}
       {view}

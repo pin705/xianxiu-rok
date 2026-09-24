@@ -11,6 +11,7 @@ import { minus, compact, noGain } from '../core/util.ts'
 import {
   ELO_K,
   FOES_MAX,
+  FRENZY_TIME,
   MATCH_PICK,
   MATCH_POOL,
   PROTECT,
@@ -38,6 +39,11 @@ import {
 import { addArmy, combine, defense, guardOf, scout, split, type Scout, carryOf, flipRounds } from './fight.ts'
 
 const revenge = (att: State, pid: number, now: number) => att.foes.some(f => f.pid === pid && f.at + REVENGE_TIME > now)
+// Gỡ cảnh báo của một đội (trận đã giải / đội quay về)
+export const dropIncoming = (s: State, pid: number, id: number): State =>
+  s.incoming?.some(x => x.pid === pid && x.id === id)
+    ? { ...s, incoming: s.incoming.filter(x => !(x.pid === pid && x.id === id)) }
+    : s
 
 export function raidError(
   att: State,
@@ -85,8 +91,20 @@ export const raidActions: WorldActions<RaidAction> = {
         foe: other!.name,
         ...(go.path && { path: go.path }),
       }
-      // đi đánh người khác thì mất khiên
-      return { ok: true, world: w, changed: new Map([[pid, { ...launch(att, army, m), shield: 0 }]]) }
+      // đi đánh người khác thì mất khiên, và nổi cơn sát khí (chưa bật lại khiên ngay được)
+      const me: State = { ...launch(att, army, m), shield: 0, frenzy: t + FRENZY_TIME }
+      // bên kia thấy đội đang kéo tới (như Tháp canh của RoK) — gỡ khi trận giải hoặc đội quay về
+      const def = advance(other!, now)
+      const warn = { id: m.id, pid, foe: att.name, at: m.arriveAt }
+      const them: State = { ...def, incoming: [...(def.incoming ?? []).filter(x => x.at > t), warn] }
+      return {
+        ok: true,
+        world: w,
+        changed: new Map([
+          [pid, me],
+          [a.pid, them],
+        ]),
+      }
     },
   },
 }

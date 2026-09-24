@@ -9,6 +9,7 @@ export const GOOD_ICONS = [
   'hoSon', // phù hộ sơn: khiên
   'thachNang', 'thaoNang', 'khoangNang', // nang tài nguyên
   'kinhThu', // kinh thư: kinh nghiệm trưởng lão
+  'nganDuyen', 'kimDuyen', // thiếp Chiêu Hiền Đài: bạc, vàng
 ] as const
 export type GoodIcon = (typeof GOOD_ICONS)[number]
 export const isGoodIcon = (n: string): n is GoodIcon => (GOOD_ICONS as readonly string[]).includes(n)
@@ -177,6 +178,21 @@ function book(g: G) {
   blot(g, 4.6, 7, 1.6, C.cinnabar, 1, 45, 1)
 }
 
+// Thiếp mời gấp đôi (bạc / vàng): nền kim loại, dải son buộc chéo, nút đồng tâm kết duyên ở giữa
+function invite(g: G, light: string, deep: string, seed: number) {
+  const card: Pt[] = [[-8.4, -7.4], [8.4, -7.4], [8.4, 7.8], [-8.4, 7.8]]
+  blot(g, 0, 0, 11, light, 0.22, seed, 1)
+  wash(g, card, { fill: g2 => grad(g2, -7, 8, mix(light, WHITE, 0.45), deep), alpha: 1, jitter: 0.15, layers: 2, sharp: true, seed })
+  stroke(g, [[0, -7.4], [0, 7.8]], { w: 0.6, color: deep, press: 'even', alpha: 0.6 })
+  line(g, [[-8.4, -3], [8.4, 3.6]], C.cinnabar, 1.4)
+  line(g, [[-8.4, 3.6], [8.4, -3]], C.cinnabar, 1.4)
+  wash(g, ring(0, 0.3, 3, 16), { fill: C.cinnabarL, alpha: 1, jitter: 0.1, layers: 2, seed: seed + 1 })
+  stroke(g, [...ring(0, 0.3, 3, 16), ring(0, 0.3, 3, 16)[0]], { w: 0.7, color: C.ink, press: 'even', alpha: 0.85 })
+  stroke(g, [...ring(0, 0.3, 1.4, 12), ring(0, 0.3, 1.4, 12)[0]], { w: 0.6, color: C.goldL, press: 'even', alpha: 1 })
+  ink(g, card, 1.2)
+  blot(g, -5.6, -4.8, 1.2, WHITE, 0.7, seed + 2, 0.6, -0.5)
+}
+
 const DRAW: Record<GoodIcon, (g: G) => void> = {
   thoiQuang: g => talisman(g, SPEED_PAPER, C.cinnabar, hourglass(C.cinnabar, C.gold), 100),
   loBan: g => talisman(g, SPEED_PAPER, C.cinnabar, hammer, 110),
@@ -193,6 +209,8 @@ const DRAW: Record<GoodIcon, (g: G) => void> = {
   thaoNang: g => pouch(g, C.malachiteL, C.malachiteD, sprout, 220),
   khoangNang: g => pouch(g, '#a597d8', '#4e3f93', crystal('#c9bbf6', '#6a58b8'), 230),
   kinhThu: book,
+  nganDuyen: g => invite(g, '#dfe6ec', '#7d8a96', 240),
+  kimDuyen: g => invite(g, C.goldL, C.goldD, 250),
 }
 
 export function goodIcon(name: GoodIcon): Asset {

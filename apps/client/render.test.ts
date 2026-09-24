@@ -58,10 +58,18 @@ async function load(lang: 'vi' | 'en') {
     'Rivals',
     'Ranks',
     'Alliance',
+    'AllyTech',
+    'AllyShop',
     'Chat',
     'world/WorldView',
     'world/MapTab',
     'TileSheet',
+    'Events',
+    'VipSheet',
+    'ResSheet',
+    'SpeedUp',
+    'Items',
+    'Tavern',
   ])
     C[name.replace('world/', '')] = (await vite.ssrLoadModule(`/src/${name}.svelte`)).default
   L = (await vite.ssrLoadModule('/src/lib.ts')).L
@@ -572,6 +580,28 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
   }
 })
 
+test('sự kiện, túi đồ, tăng tốc, Hương Hỏa, bảng tài nguyên, Chiêu Hiền Đài', async () => {
+  for (const lang of LANGS) {
+    await load(lang)
+    for (const [label, s] of STATES) {
+      const now = s.time + 5000
+      // túi có đủ mọi loại vật phẩm để mọi ô, mọi tab đều được vẽ
+      const full: State = {
+        ...s,
+        items: { ...s.items, thoiQuang60: 3, loBan15: 2, thachNang5k: 1, tuLinh8: 1, hoSon24: 1, kinhThu2k: 2, kimDuyen: 4 },
+        tokens: { hanBang: 12, thanhPhong: 3 },
+      }
+      const events = paint('Events', { game: full, now, open: true, onclose: noop }, label)
+      assert.ok(events.includes(L.fest.calendar), `trung tâm sự kiện phải có lịch 7 ngày (${label})`)
+      paint('VipSheet', { game: full, now, open: true, onclose: noop }, label)
+      paint('ResSheet', { game: full, now, res: 'linhThach', onclose: noop, onfocus: noop }, label)
+      paint('Items', { game: full, now }, label)
+      paint('Tavern', { game: full, now }, label)
+      if (full.queue[0]) paint('SpeedUp', { game: full, now, kind: 'build', open: true, onclose: noop }, label)
+    }
+  }
+})
+
 test('tiên minh, chat', async () => {
   const people = [
     { pid: 1, name: 'Lạc Hà Tông', role: 2 as const, hall: 12, power: 9000, online: true },
@@ -587,6 +617,11 @@ test('tiên minh, chat', async () => {
     helps: [{ pid: 2, job: 'build' as const, startAt: 0, ms: 60_000, by: [] }],
     people,
     rallies: [{ id: 1, ally: 1, by: 1, i: 3, task: 'hit' as const, at: late.time + 600_000 }],
+    tech: { tuLinh: 1300, loBan: 10_000, dongTam: 50 },
+    star: 'tuLinh' as const,
+    fund: 820,
+    stock: { thoiQuang60: 3, kinhThu2k: 0 },
+    gift: 700,
   }
   const api = {
     ask: async () => [],
@@ -603,7 +638,7 @@ test('tiên minh, chat', async () => {
           game: s,
           me: 1,
           ally: null,
-          rows: [{ id: 1, name: 'Thanh Vân Minh', tag: 'TVM', n: 2, power: 16000 }],
+          rows: [{ id: 1, name: 'Thanh Vân Minh', tag: 'TVM', n: 2, max: 32, power: 16000 }],
           send: async () => ({ ok: true }),
         },
         `${label}, chưa vào minh`,
@@ -614,6 +649,14 @@ test('tiên minh, chat', async () => {
         `${label}, trong minh`,
       )
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
+      for (const officer of [false, true]) {
+        const who = officer ? 'trưởng lão' : 'thành viên'
+        const sheet = { game: s, ally: info, officer, open: true, onclose: noop, send: async () => ({ ok: true }) }
+        const tech = paint('AllyTech', sheet, `${label}, Hộ Minh Đại Trận (${who})`)
+        assert.ok(tech.includes(L.guild.names.quangNap) && tech.includes(L.guild.maxed), 'đủ trận, trận đầy ghi viên mãn')
+        const shop = paint('AllyShop', sheet, `${label}, Cống Hiến Các (${who})`)
+        assert.equal(shop.includes(L.guild.restock), officer, 'chỉ trưởng lão / minh chủ thấy nút nhập hàng')
+      }
       paint('Chat', { game: s, me: 1, ally: true, api, act, toast: noop, inline: true }, `${label}, chat trong trang`)
       paint('Chat', { game: s, me: 1, api: null, act, toast: noop }, `${label}, dải chat`)
     }

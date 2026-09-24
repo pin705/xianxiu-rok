@@ -22,6 +22,11 @@ export const remindNote =
   (k: Remind['k']) =>
   (L: Text): Note => ({ title: L.push.title, body: L.push.done[k], tag: 'done' })
 
+// Tháp canh: có đội vừa xuất quân cướp mình — báo sớm để kịp vào bật khiên
+export const incomingNote =
+  (foe: string) =>
+  (L: Text): Note => ({ title: L.push.title, body: L.pvp.incoming(foe), tag: 'raid' })
+
 // Chiến báo mới lúc offline đáng báo: bị cướp (thủ được hay không), kiếp vân giáng
 export function reportNote(r: Report): ((L: Text) => Note) | null {
   if (r.kind === 'pvp' && r.def)
