@@ -1,7 +1,7 @@
 <script lang="ts">
   // Tab Bản đồ: nút gạt Giới (bản đồ giới chung) | Vùng (bản đồ PvE riêng). Nhớ lựa chọn trên máy. Chỉ theo dõi bản đồ giới
   // (server đẩy ảnh chụp khi đổi) lúc đang xem.
-  import type { State, Target } from '@rok/rules'
+  import type { Target } from '@rok/rules'
   import { atlas, type AllyInfo, type MapSnap, type WorldAction } from '@rok/rules/world'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import TileSheet from '../TileSheet.svelte'
@@ -12,13 +12,10 @@
   import type { Pick } from './worldmap'
 
   let {
-    game,
-    now,
     info,
     me,
     allies = [],
     ally = null,
-    busy = false,
     watch,
     onpick,
     onreports,
@@ -26,13 +23,10 @@
     onraid,
     send,
   }: {
-    game: State
-    now: number
     info: WorldInfo | null
     me: number | null
     allies?: number[]
     ally?: AllyInfo | null
-    busy?: boolean
     watch: (on: (m: MapSnap) => void) => () => void
     onpick: (t: Target) => void
     onreports: () => void
@@ -77,16 +71,13 @@
 {/snippet}
 
 {#if mode === 'world' && info && world}
-  <WorldView {game} {now} {info} {me} {snap} {allies} onpick={p => (pick = p)} {toggle} />
+  <WorldView {info} {me} {snap} {allies} onpick={p => (pick = p)} {toggle} />
   <TileSheet
-    {game}
-    {now}
     {info}
     atlas={world}
     {me}
     {snap}
     {pick}
-    {busy}
     {ally}
     onclose={() => (pick = null)}
     onraid={pid => ((pick = null), onraid(pid))}
@@ -94,8 +85,6 @@
   />
 {:else}
   <MapView
-    {game}
-    {now}
     {onpick}
     {onreports}
     {onrivals}

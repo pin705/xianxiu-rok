@@ -1,31 +1,30 @@
 <script lang="ts">
   // Dải chat (chỉ ở tab Bản đồ và Tiên minh): một dòng tin mới nhất, chạm để mở kênh giới / tiên minh.
   // Chữ đã lọc ở server; người mình chặn thì ẩn ở đây (danh sách chặn nằm trong state của mình).
-  import type { Action, State } from '@rok/rules'
   import type { Channel, ChatMsg } from '@rok/protocol'
   import type { Net } from './net'
   import { Icon } from '@rok/art'
   import { Button, Sheet, Tabs } from './ui'
   import { L, clock } from './lib'
+  import { useGame } from './game'
 
   type Api = Pick<Net, 'ask' | 'say' | 'report' | 'onChat'>
   let {
-    game,
     me,
     ally = false,
     api,
-    act,
     toast,
     inline = false,
   }: {
-    game: State
     me: number | null
     ally?: boolean
     api: Api | null
-    act: (a: Action) => State | null
     toast: (t: string) => void
     inline?: boolean
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const act = g.act
 
   const channels = $derived<Channel[]>(ally ? ['world', 'ally'] : ['world'])
   let ch = $state<Channel>('world')

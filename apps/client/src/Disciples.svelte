@@ -19,27 +19,24 @@
     talentPoints,
     talentUsed,
     tierOpen,
-    type Action,
     type BuildingId,
     type ElderId,
-    type State,
     type UnitId,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Page, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num, sfx } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
-    now,
-    act,
     onfocus,
   }: {
-    game: State
-    now: number
-    act: (a: Action) => State | null
     onfocus: (id: BuildingId, view?: string | null) => void
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const act = g.act
 
   let open = $state<ElderId | null>(null)
   let picking = $state(false) // đang chọn pháp bảo cho trưởng lão đang mở

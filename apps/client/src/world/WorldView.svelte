@@ -3,18 +3,16 @@
   // + dải trên (ngày, pha mùa, biên niên). Dữ liệu sống: ảnh chụp server đẩy khi đổi (watch). Chạm: cờ hành quân → tông môn → điểm → ô.
   import { chronText } from '@rok/i18n'
   import { onMount, type Snippet } from 'svelte'
-  import type { State } from '@rok/rules'
   import { MAP_W, SEASON_DAYS, dayIn, phaseOf, type MapSnap } from '@rok/rules/world'
   import type { WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Button, Card } from '../ui'
-  import { L, clock } from '../lib'
+  import { L, clock, keyBlocked } from '../lib'
   import { getApp, railPx } from './stage'
   import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Pick, type Rel } from './worldmap'
+  import { useGame } from '../game'
 
   let {
-    game,
-    now,
     info,
     me,
     snap,
@@ -22,8 +20,6 @@
     onpick,
     toggle,
   }: {
-    game: State
-    now: number
     info: WorldInfo
     me: number | null
     snap: MapSnap | null
@@ -31,6 +27,9 @@
     onpick: (p: Pick) => void
     toggle?: Snippet // nút gạt Giới | Vùng (MapTab)
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
 
   const T = WORLD_DU / MAP_W
   const home = () => ({ x: ((game.seat?.x ?? MAP_W / 2) + 0.5) * T, y: ((game.seat?.y ?? MAP_W / 2) + 0.5) * T })
@@ -109,13 +108,7 @@
     zoomAt(Math.exp(-e.deltaY * 0.0022), e.clientX, e.clientY)
   }
   function keys(e: KeyboardEvent) {
-    if (
-      e.metaKey ||
-      e.ctrlKey ||
-      document.querySelector('dialog:modal') ||
-      (e.target as Element).closest?.('input, textarea, select')
-    )
-      return
+    if (keyBlocked(e)) return
     const step = 120 / cam.z
     const k: Record<string, () => void> = {
       ArrowLeft: () => (cam = clamp({ ...cam, x: cam.x - step })),

@@ -191,6 +191,14 @@ export const marchName = (m: { target: { kind: string; i: number }; foe?: string
   m.foe ?? (m.target.kind === 'spot' ? spotName(m.spot) : L.target(m.target as Parameters<typeof L.target>[0]))
 
 // Tab đã từng mở (để đánh dấu "!" trên tab vừa mở khóa mà người chơi chưa ghé)
+// Phím tắt của game không chạy khi đang gõ chữ, đang có hộp thoại modal che, hay có phím bổ trợ (phím tắt của trình duyệt)
+export const keyBlocked = (e: KeyboardEvent) =>
+  e.metaKey ||
+  e.ctrlKey ||
+  e.altKey ||
+  !!(e.target as HTMLElement).closest?.('input, textarea, select') ||
+  !!document.querySelector('dialog:modal')
+
 export const visitedTabs = (): string[] => (read('rok.tabs') ?? 'tongMon').split(',')
 export const visitTab = (id: string) => write('rok.tabs', [...new Set([...visitedTabs(), id])].join(','))
 

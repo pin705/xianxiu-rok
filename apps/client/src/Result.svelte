@@ -1,21 +1,20 @@
 <script module lang="ts">
   import type { Report } from '@rok/rules'
+  import { useGame } from './game'
   export type Outcome = { kind: 'trib'; report: Report } | { kind: 'rebirth'; n: number }
 </script>
 
 <script lang="ts">
   // Khoảnh khắc lớn: đột phá cảnh giới sau độ kiếp (chữ Hán lớn, hào quang), thất bại, hoặc luân hồi.
-  import { marchSlots, type State } from '@rok/rules'
+  import { marchSlots } from '@rok/rules'
   import { radiance } from '@rok/art'
   import { Button, Medal, Painting, Sheet, Tag } from './ui'
   import { L } from './lib'
 
-  let {
-    outcome,
-    game,
-    onclose,
-    onreplay,
-  }: { outcome: Outcome | null; game: State; onclose: () => void; onreplay: (r: Report) => void } = $props()
+  let { outcome, onclose, onreplay }: { outcome: Outcome | null; onclose: () => void; onreplay: (r: Report) => void } =
+    $props()
+  const g = useGame()
+  const game = $derived(g.game)
   const hall = $derived(game.levels.chuDien)
   const glory = $derived(outcome?.kind === 'rebirth' || !!(outcome?.kind === 'trib' && outcome.report.win))
 </script>

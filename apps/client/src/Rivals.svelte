@@ -1,44 +1,33 @@
 <script lang="ts">
   // Tranh đoạt: kẻ đã cướp mình (báo thù) và vài tông môn gần lực chiến; chọn một → xem dò thám → chọn đội → xuất quân cướp.
   // Danh sách do server ghép (cần state của cả giới); tỉ lệ thắng ước lượng theo phòng thủ đã dò thám.
-  import {
-    PVP_HALL,
-    UNITS,
-    marchSlots,
-    marchTime,
-    might,
-    type Army,
-    type ElderId,
-    type State,
-    type UnitId,
-  } from '@rok/rules'
+  import { PVP_HALL, UNITS, marchSlots, marchTime, might, type Army, type ElderId, type UnitId } from '@rok/rules'
   import { raidChance, type Rival } from '@rok/rules/world'
   import { Icon, Portrait } from '@rok/art'
   import ArmyPick from './Army.svelte'
   import { Button, Card, Medal, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
-    now,
     open,
-    busy = false,
     focus = null,
     load,
     onclose,
     onraid,
     onrecruit,
   }: {
-    game: State
-    now: number
     open: boolean
-    busy?: boolean
     focus?: number | null // mở thẳng một tông môn (chạm trên bản đồ giới)
     load: (pid?: number) => Promise<Rival[] | null>
     onclose: () => void
     onraid: (pid: number, elder: ElderId, army: Army) => void
     onrecruit: () => void
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const busy = $derived(g.busy)
 
   let list = $state<Rival[] | null>(null)
   let pick = $state<Rival | null>(null)
@@ -101,7 +90,6 @@
     </Section>
     {#if full}<Tag icon="flag" tone="bad">{L.map.slotsFull}</Tag>{/if}
     <ArmyPick
-      {game}
       foe={might(r.scout.side)}
       chance={(e, a) => raidChance(game, e, a, r.scout.side)}
       cta={r.revenge ? L.pvp.revenge : L.pvp.attack}

@@ -11,7 +11,6 @@
     coolKey,
     marchSlots,
     targetError,
-    type State,
     type Target,
   } from '@rok/rules'
   import { Icon, Portrait, type Emblem } from '@rok/art'
@@ -19,24 +18,24 @@
   import { EMBLEM, L, LOOK, clock, marchName } from '../lib'
   import { MAP, MAP_H, MapScene } from './map'
   import View from './View.svelte'
+  import { useGame } from '../game'
 
   let {
-    game,
-    now,
     onpick,
     onreports,
     onrivals = () => {},
     onrecall,
     toggle,
   }: {
-    game: State
-    now: number
     onpick: (t: Target) => void
     onreports: () => void
     onrivals?: () => void
     onrecall?: (id: number) => void
     toggle?: Snippet // nút gạt Giới | Vùng (MapTab)
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
 
   let scene = $state.raw<MapScene>()
   type Node = { t: Target; x: number; y: number; emblem: Emblem; lv?: number; name: string }

@@ -1,6 +1,5 @@
 <script lang="ts">
   // Cài đặt: âm thanh, ngôn ngữ, hướng dẫn, tài khoản, thông tin. Tiến độ nằm trên server (không còn xuất/nhập save).
-  import type { State } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Card, Section, Sheet, Toggle } from './ui'
   import { LOCALES, LOCALE_IDS, type Locale } from '@rok/i18n'
@@ -8,10 +7,9 @@
   import { startMusic, stopMusic } from './music'
   import Account from './Account.svelte'
   import type { Net } from './net'
+  import { useGame } from './game'
 
   let {
-    game,
-    now,
     open,
     muted,
     account,
@@ -19,8 +17,6 @@
     onmute,
     onout,
   }: {
-    game: State
-    now: number
     open: boolean
     muted: boolean
     account?: Net['account'] // online: màn tài khoản (gắn email, mã chuyển máy, đăng xuất, xoá)
@@ -29,6 +25,9 @@
     onout?: () => void
     toast?: (t: string) => void
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
 
   let music = $state(isMusicOn())
 </script>

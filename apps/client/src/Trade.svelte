@@ -1,11 +1,14 @@
 <script lang="ts">
   // Thương hội (Tàng Bảo Các): đổi tài nguyên dư lấy tài nguyên thiếu, có phí. Mặc định: đổi loại nhiều nhất lấy loại ít nhất.
-  import { RESOURCES, tradeKeep, type Action, type Res, type State } from '@rok/rules'
+  import { RESOURCES, tradeKeep, type Res } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Button, Card, Section, Slider } from './ui'
   import { L, num, sfx } from './lib'
+  import { useGame } from './game'
 
-  let { game, act }: { game: State; act: (a: Action) => State | null } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const act = g.act
 
   const byAmount = $derived([...RESOURCES].sort((a, b) => game.res[b] - game.res[a]))
   let from = $state<Res | null>(null)

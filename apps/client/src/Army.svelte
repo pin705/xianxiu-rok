@@ -10,15 +10,14 @@
     unitOf,
     type Army,
     type ElderId,
-    type State,
     type UnitId,
   } from '@rok/rules'
   import { Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Section, Slider } from './ui'
   import { EMBLEM, L, LOOK, num } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
     foe,
     chance,
     cta,
@@ -27,7 +26,6 @@
     onsubmit,
     onrecruit,
   }: {
-    game: State
     foe?: number // lực chiến địch (không biết thì bỏ: chỉ hiện lực chiến của mình)
     chance?: (elder: ElderId, army: Army) => number // tỉ lệ thắng ước lượng (rules.winChance); không có: không đoán
     cta: string
@@ -36,6 +34,8 @@
     onsubmit: (elder: ElderId, army: Army) => void
     onrecruit?: () => void
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
 
   const idle = $derived(
     ELDER_IDS.filter(e => game.elders[e] !== undefined).sort((a, b) => (game.elders[b] ?? 0) - (game.elders[a] ?? 0)),

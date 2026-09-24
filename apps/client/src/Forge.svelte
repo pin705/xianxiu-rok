@@ -9,17 +9,18 @@
     gearCap,
     gearCost,
     gearTime,
-    type Action,
     type ElderId,
     type GearId,
-    type State,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Bag, Button, Card, Section, Tag } from './ui'
   import JobRow from './JobRow.svelte'
   import { L, LOOK, clock, sfx } from './lib'
+  import { useGame } from './game'
 
-  let { game, now, act }: { game: State; now: number; act: (a: Action) => State | null } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const act = g.act
 
   let picking = $state<GearId | null>(null)
   const cap = $derived(gearCap(game))
@@ -31,7 +32,7 @@
 
 {#if game.forge}
   <div class="mt-3">
-    <JobRow {game} {now} kind="forge" label={L.forge.doing(L.gear[game.forge.gear], game.forge.level)} {act} />
+    <JobRow kind="forge" label={L.forge.doing(L.gear[game.forge.gear], game.forge.level)} />
   </div>
 {/if}
 <p class="t-small t-lore mt-3">{L.forge.hint}</p>

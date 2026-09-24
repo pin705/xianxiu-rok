@@ -1,24 +1,24 @@
 <script lang="ts">
   // Hộp thư: thư (quà nhận ngay tại đây) và chiến báo (chạm để xem lại trận), mới nhất trên cùng.
   import { mailText } from '@rok/i18n'
-  import { RESOURCES, count, type Action, type Mail, type Report, type State } from '@rok/rules'
+  import { RESOURCES, count, type Mail, type Report } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Sheet, Tabs, fly } from './ui'
   import { L, num, reportName, sfx } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
     open,
     onclose,
     onopen,
-    act = () => null,
   }: {
-    game: State
     open: boolean
     onclose: () => void
     onopen: (r: Report) => void
-    act?: (a: Action) => State | null
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const act = g.act
 
   // Thư còn quà chưa nhận: mở thẳng thẻ Thư (người chơi chọn thẻ khác thì giữ tới lần mở sau)
   let picked = $state<'reports' | 'mail' | null>(null)

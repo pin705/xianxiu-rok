@@ -1,16 +1,15 @@
 <script lang="ts">
   // Một việc đang chờ: chữ, đồng hồ, thanh tiến độ, và nút dùng Tụ Khí Đan / Đại Tụ Khí Đan nếu có.
-  import type { Action, JobKind, State } from '@rok/rules'
+  import type { JobKind } from '@rok/rules'
   import { Button, Card, Meter } from './ui'
   import { L, clock, progress } from './lib'
+  import { useGame } from './game'
 
-  let {
-    game,
-    now,
-    kind,
-    label,
-    act,
-  }: { game: State; now: number; kind: JobKind; label: string; act: (a: Action) => State | null } = $props()
+  let { kind, label }: { kind: JobKind; label: string } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const act = g.act
 
   const job = $derived(kind === 'build' ? game.queue[0] : game[kind])
   const pills = $derived(game.items.tuKhi ?? 0)

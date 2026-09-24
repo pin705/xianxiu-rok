@@ -8,7 +8,6 @@
     REALMS,
     TOWER,
     TRIBS,
-    RESOURCES,
     SECTS,
     TECH_IDS,
     MAX_LEVEL,
@@ -17,7 +16,6 @@
     newGame,
     questDone,
     questOf,
-    storage,
     storeNeed,
     type Action,
     type Army,
@@ -29,8 +27,7 @@
     type Target,
   } from '@rok/rules'
   import type { MapSnap, Seen, WorldInfo } from '@rok/protocol'
-  import { Icon } from '@rok/art'
-  import { Bag, Button, Card, Medal, Sheet, Toasts, fly, type ToastItem } from './ui'
+  import { Button, Card, Medal, Toasts, fly, type ToastItem } from './ui'
   import Conn from './Conn.svelte'
   import Daily from './Daily.svelte'
   import Disciples from './Disciples.svelte'
@@ -49,10 +46,27 @@
   import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
   import Vault from './Vault.svelte'
+  import AwaySummary from './AwaySummary.svelte'
+  import { summarize, type Away } from './away'
   import { createNet, type Net, type Status } from './net'
+  import { provideGame } from './game'
   import { setMood } from './music'
   import type { AllyInfo, AllyRow, WorldAction } from '@rok/rules/world'
-  import { DESK, L, LANG, TABS, forgetP1, isMuted, read, reportName, setMuted, sfx, write, type Tab } from './lib'
+  import {
+    DESK,
+    L,
+    LANG,
+    TABS,
+    forgetP1,
+    isMuted,
+    keyBlocked,
+    read,
+    reportName,
+    setMuted,
+    sfx,
+    write,
+    type Tab,
+  } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
 
@@ -86,11 +100,24 @@
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
   let gain: { bag: Partial<Res>; t: number } | null = $state(null)
   let toasts: ToastItem[] = $state([])
-  let away: ReturnType<typeof summarize> = $state.raw(null)
+  let away: Away | null = $state.raw(null)
   let seen: Seen | undefined
   let awayOpen = $state(false)
   let muted = $state(isMuted())
   let world = $state<HTMLDivElement>()
+  // Mọi màn trong game đọc state / giờ / thao tác từ đây (game.ts) — chỉ dùng khi đã vào game (game khác null)
+  provideGame({
+    get game() {
+      return game!
+    },
+    get now() {
+      return now
+    },
+    get busy() {
+      return busy
+    },
+    act,
+  })
 
   // Mũi tên chỉ đường: công trình của nhiệm vụ, khi tạp dịch rảnh và chưa mở bảng
   const guide = $derived.by(() => {
@@ -194,14 +221,15 @@
           game = next
         },
         status: s => (status = s),
-        welcome: w => (
-          (seen = w.seen),
-          (me = w.me.pid),
-          (info = w.world),
-          void loadAlly(),
-          void n.account.info().then(r => r.ok && (pushKey = r.data.push))
-        ),
-        reports: () => {},
+        welcome: w => {
+          seen = w.seen
+          me = w.me.pid
+          info = w.world
+          void loadAlly()
+          void n.account.info().then(r => {
+            if (r.ok) pushKey = r.data.push
+          })
+        },
         error(code) {
           sfx('err')
           toast((L.err as Record<string, string>)[code] ?? L.err.unavailable, { bad: true })
@@ -221,8 +249,7 @@
     // Phím 1–5: chuyển tab (không khi đang gõ chữ hay có hộp thoại modal che)
     const keys = (e: KeyboardEvent) => {
       const t = TABS[Number(e.key) - 1]
-      if (!t || !game || screen !== 'game' || e.metaKey || e.ctrlKey || e.altKey) return
-      if ((e.target as Element).closest?.('input, textarea, select') || document.querySelector('dialog:modal')) return
+      if (!t || !game || screen !== 'game' || keyBlocked(e)) return
       if (game.levels.chuDien >= t.unlock && t.id !== tab)
         switchTab(t.id, new MouseEvent('click', { clientX: innerWidth / 2, clientY: innerHeight / 2 }))
     }
@@ -341,17 +368,30 @@
     focus(job?.building ?? guide ?? 'chuDien', 'upgrade')
   }
 
+  // Chờ server (trận đánh ngay, thao tác giới): một việc mỗi lúc; busy tắt lại cả khi mạng lỗi
+  async function waiting<T>(run: (n: Net) => Promise<T>): Promise<T | null> {
+    if (!net || busy) return null
+    busy = true
+    try {
+      return await run(net)
+    } finally {
+      busy = false
+    }
+  }
+
   // Trận đánh ngay (bí cảnh, tháp, độ kiếp): server giải bằng mầm bí mật, client chờ kết quả rồi diễn.
   // Người chơi xem tận mắt nên không tính là chiến báo chưa đọc.
   async function fightNow(a: Action) {
     if (!net || busy) return null
     const fresh = !!game && game.reports.every(r => r.id <= game!.seen)
-    busy = true
     quiet = a.type === 'trib'
-    const r = await net.send(a)
-    quiet = false
-    busy = false
-    const rep = r.ok ? (r.rep?.at(-1) ?? null) : null
+    let r
+    try {
+      r = await waiting(n => n.send(a))
+    } finally {
+      quiet = false
+    }
+    const rep = r?.ok ? (r.rep?.at(-1) ?? null) : null
     if (rep && fresh) act({ type: 'seen' })
     return rep
   }
@@ -376,11 +416,8 @@
   // Có chỗ trên bản đồ giới: kiếp vân tụ trước cho cả giới thấy, server giải lúc giáng — sét diễn khi kết quả về (notice)
   async function trib(elder: ElderId, army: Army, pill: boolean) {
     if (game?.seat) {
-      if (!net || busy) return
-      busy = true
-      const r = await net.send({ type: 'trib', elder, army, pill })
-      busy = false
-      if (!r.ok) return
+      const r = await waiting(n => n.send({ type: 'trib', elder, army, pill }))
+      if (!r?.ok) return
       selected = null
       tab = 'tongMon'
       sfx('thunder')
@@ -421,11 +458,8 @@
 
   // Đi cướp: luật giới (server kiểm cả hai bên) nên không đoán trước — chờ server
   async function raid(pid: number, elder: ElderId, army: Army) {
-    if (!net || busy) return
-    busy = true
-    const r = await net.send({ type: 'raid', pid, elder, army })
-    busy = false
-    if (!r.ok) return
+    const r = await waiting(n => n.send({ type: 'raid', pid, elder, army }))
+    if (!r?.ok) return
     sfx('march')
     rivalsOpen = false
   }
@@ -453,11 +487,8 @@
   const watchMap = (on: (m: MapSnap) => void) => net?.watchMap(on) ?? (() => {})
 
   async function rebirth() {
-    if (!net || busy) return
-    busy = true
-    const r = await net.send({ type: 'rebirth' })
-    busy = false
-    if (!r.ok || !game) return
+    const r = await waiting(n => n.send({ type: 'rebirth' }))
+    if (!r?.ok || !game) return
     selected = null
     tab = 'tongMon'
     outcome = { kind: 'rebirth', n: game.rebirths }
@@ -467,28 +498,6 @@
   function openReports() {
     reportsOpen = true
     if (game && game.seen < game.nextId - 1) act({ type: 'seen' })
-  }
-
-  // Xuất quan: so lát state lúc rời game (server lưu khi kết nối cuối đóng) với state lúc quay lại
-  function summarize(before: Seen, after: State) {
-    const ms = after.time - before.time
-    if (ms < 60_000) return null
-    const d = (k: keyof State['stats']) => after.stats[k] - before.stats[k]
-    return {
-      ms,
-      gains: RESOURCES.filter(r => after.res[r] > before.res[r]).map(r => ({ r, n: after.res[r] - before.res[r] })),
-      done: IDS.filter(id => after.levels[id] > before.levels[id]).map(id => ({ id, level: after.levels[id] })),
-      techs: TECH_IDS.filter(t => (after.tech[t] ?? 0) > (before.tech[t] ?? 0)).map(t =>
-        L.away.tech(L.techs[t], after.tech[t]!),
-      ),
-      misc: [
-        d('trained') && L.away.trained(d('trained')),
-        d('healed') && L.away.healed(d('healed')),
-        d('brewed') && L.away.brewed(d('brewed')),
-        (d('won') || d('lost')) && L.away.battles(d('won'), d('lost')),
-      ].filter(Boolean) as string[],
-      full: RESOURCES.some(r => after.res[r] >= storage(after)),
-    }
   }
 </script>
 
@@ -521,14 +530,11 @@
       onselect={id => select(id)}
     />
     {#if tab === 'monHa'}
-      <Disciples {game} {now} {act} onfocus={focus} />
+      <Disciples onfocus={focus} />
     {:else if tab === 'banDo'}
       <MapTab
-        {game}
-        {now}
         {info}
         {me}
-        {busy}
         allies={ally ? ally.people.map(p => p.pid) : []}
         {ally}
         watch={watchMap}
@@ -539,13 +545,13 @@
         send={sendWorld}
       />
     {:else if tab === 'baoKho'}
-      <Vault {game} {now} {act} onfocus={focus} />
+      <Vault onfocus={focus} />
     {:else if tab === 'tienMinh'}
-      <Alliance {game} {me} {ally} rows={allyRows} send={sendWorld}>
-        {#snippet chat()}<Chat game={game!} {me} ally api={net ?? null} {act} toast={t => toast(t)} inline />{/snippet}
+      <Alliance {me} {ally} rows={allyRows} send={sendWorld}>
+        {#snippet chat()}<Chat {me} ally api={net ?? null} toast={t => toast(t)} inline />{/snippet}
       </Alliance>
     {/if}
-    {#if tab === 'banDo'}<Chat {game} {me} ally={!!ally} api={net ?? null} {act} toast={t => toast(t)} />{/if}
+    {#if tab === 'banDo'}<Chat {me} ally={!!ally} api={net ?? null} toast={t => toast(t)} />{/if}
     <Hud
       game={shown}
       {now}
@@ -562,14 +568,10 @@
       onmail={openReports}
       onfocus={focus}
     />
-    <Daily {game} {now} open={dailyOpen} onclose={() => (dailyOpen = false)} {act} />
+    <Daily open={dailyOpen} onclose={() => (dailyOpen = false)} />
     <Panel
-      {game}
-      {now}
       id={selected}
       {view}
-      {act}
-      {busy}
       onupgrade={upgrade}
       onclose={() => (selected = null)}
       onselect={focus}
@@ -577,31 +579,35 @@
       onrebirth={rebirth}
     />
     <TargetSheet
-      {game}
-      {now}
       {target}
-      {busy}
       onclose={() => (target = null)}
       onmarch={march}
       onrecruit={() => focus('dienVoTruong', 'train')}
     />
-    <Reports {game} {act} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
+    <Reports open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
     <Replay
       report={replay}
       onclose={() => (replay = null)}
-      onrevenge={() => ((replay = null), (reportsOpen = false), (rivalsOpen = true))}
+      onrevenge={() => {
+        replay = null
+        reportsOpen = false
+        rivalsOpen = true
+      }}
       {now}
     />
     <Rivals
-      {game}
-      {now}
-      {busy}
       open={rivalsOpen}
       focus={rivalsFocus}
       load={pid => net?.ask({ k: 'rivals', pid }) ?? Promise.resolve(null)}
-      onclose={() => ((rivalsOpen = false), (rivalsFocus = null))}
+      onclose={() => {
+        rivalsOpen = false
+        rivalsFocus = null
+      }}
       onraid={raid}
-      onrecruit={() => ((rivalsOpen = false), focus('dienVoTruong', 'train'))}
+      onrecruit={() => {
+        rivalsOpen = false
+        focus('dienVoTruong', 'train')
+      }}
     />
     <Ranks
       open={ranksOpen}
@@ -610,10 +616,8 @@
       season={info ? () => net?.ask({ k: 'season' }) ?? Promise.resolve(null) : undefined}
       onclose={() => (ranksOpen = false)}
     />
-    <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
+    <Result {outcome} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
     <Settings
-      {game}
-      {now}
       open={settingsOpen}
       {muted}
       account={net?.account}
@@ -631,45 +635,7 @@
       top={DESK?.matches ? 'calc(var(--top) + 16px)' : `calc(${tab === 'tongMon' ? 236 : 150}px + var(--safe-t))`}
     />
 
-    <Sheet
-      open={awayOpen && !!away}
-      onclose={() => (awayOpen = false)}
-      center
-      title={L.away.title}
-      sub={away ? L.away.for(L.ago(away.ms)) : ''}
-    >
-      {#if away}
-        {#if away.gains.length}
-          <p class="t-small t-strong t-soft mt-2">{L.away.got}</p>
-          <Bag res={Object.fromEntries(away.gains.map(g => [g.r, g.n]))} />
-        {/if}
-        {#if away.done.length || away.techs.length || away.misc.length}
-          <p class="t-small t-strong t-soft mt-3">{L.away.done}</p>
-          <ul class="stack mt-2" style:--gap="4px">
-            {#each away.done as d (d.id)}<li class="row t-good">
-                <Icon name="check" size={16} /><span class="t-strong">{L.b[d.id].name} · {L.level(d.level)}</span>
-              </li>{/each}
-            {#each [...away.techs, ...away.misc] as m (m)}<li class="row t-good">
-                <Icon name="check" size={16} /><span class="t-strong">{m}</span>
-              </li>{/each}
-          </ul>
-        {/if}
-        {#if away.full}<p class="t-small t-bad mt-3">{L.away.full}</p>{/if}
-        <div class="mt-4">
-          <Button
-            variant="gold"
-            size="lg"
-            wide
-            onclick={e => {
-              const from = e.currentTarget as Element
-              const bag = Object.fromEntries((away?.gains ?? []).map(g => [g.r, g.n]))
-              awayOpen = false
-              requestAnimationFrame(() => fly(from, bag, document.body)) // bay sau khi hộp thoại đóng
-            }}>{L.away.enter}</Button
-          >
-        </div>
-      {/if}
-    </Sheet>
+    <AwaySummary {away} open={awayOpen} onclose={() => (awayOpen = false)} />
   {:else}
     <Home game={game ?? preview} {now} still />
     {#if status !== 'boot'}

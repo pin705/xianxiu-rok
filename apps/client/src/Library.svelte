@@ -1,17 +1,20 @@
 <script lang="ts">
   // Tàng Kinh Các: 20 công pháp chia 5 hàng, hàng sau mở theo tầng Tàng Kinh Các. Mỗi lúc lĩnh ngộ một môn.
-  import { TECHS, TECH_IDS, TECH_ROWS, techCost, techError, techTime, type Action, type State } from '@rok/rules'
+  import { TECHS, TECH_IDS, TECH_ROWS, techCost, techError, techTime } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Section } from './ui'
   import JobRow from './JobRow.svelte'
   import { L, clock, sfx } from './lib'
+  import { useGame } from './game'
 
-  let { game, now, act }: { game: State; now: number; act: (a: Action) => State | null } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const act = g.act
 </script>
 
 {#if game.study}
   <div class="mt-3">
-    <JobRow {game} {now} kind="study" label={L.library.doing(L.techs[game.study.tech], game.study.level)} {act} />
+    <JobRow kind="study" label={L.library.doing(L.techs[game.study.tech], game.study.level)} />
   </div>
 {/if}
 

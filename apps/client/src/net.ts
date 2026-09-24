@@ -40,7 +40,6 @@ export type Handlers = {
   status(s: Status): void
   error(code: string): void
   welcome(w: Welcome): void
-  reports(fresh: Report[]): void
 }
 
 export function createNet(h: Handlers, lang: string) {
@@ -86,7 +85,6 @@ export function createNet(h: Handlers, lang: string) {
     const byId = new Map(reports.map(r => [r.id, r]))
     for (const r of rep) byId.set(r.id, r)
     reports = [...byId.values()].sort((a, b) => a.id - b.id).slice(-50)
-    h.reports(rep)
   }
 
   async function api<T>(

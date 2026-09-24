@@ -12,8 +12,6 @@
     trainError,
     trainTime,
     unitOf,
-    type Action,
-    type State,
     type Tier,
     type UnitId,
     type UnitType,
@@ -21,8 +19,11 @@
   import { Bag, Button, Card, Medal, Section, Slider, Stat, Tag } from './ui'
   import JobRow from './JobRow.svelte'
   import { EMBLEM, L, clock, num, sfx } from './lib'
+  import { useGame } from './game'
 
-  let { game, now, act }: { game: State; now: number; act: (a: Action) => State | null } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const act = g.act
 
   // Mặc định: hệ tuyển được nhiều nhất với tài nguyên đang có — mỗi hệ ăn chủ yếu một loại, luôn chọn một hệ sẽ cạn một loại
   const afford = (t: UnitType) => Math.min(...RESOURCES.map(r => game.res[r] / UNIT_BASE[t].cost[r]))
@@ -53,13 +54,7 @@
 {#if game.train}
   {@const t = unitOf(game.train.unit)}
   <div class="mt-3">
-    <JobRow
-      {game}
-      {now}
-      kind="train"
-      label={L.train.doing(game.train.n, `${L.units[t.type]} ${L.tiers[t.tier]}`)}
-      {act}
-    />
+    <JobRow kind="train" label={L.train.doing(game.train.n, `${L.units[t.type]} ${L.tiers[t.tier]}`)} />
   </div>
 {/if}
 

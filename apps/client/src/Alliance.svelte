@@ -1,29 +1,30 @@
 <script lang="ts">
   // Trang Tiên minh: chưa có minh thì xem các minh trong giới (vào ngay) hoặc lập minh; có rồi thì bố cáo, giúp đỡ,
   // người trong minh (chức vị, đang chơi), chat kênh minh. Luật ở rules/world.ts, server kiểm lại mọi thao tác.
-  import { ALLY_COST, ALLY_HALL, ALLY_HELPS, RESOURCES, jobOf, type JobKind, type State } from '@rok/rules'
+  import { ALLY_COST, ALLY_HALL, ALLY_HELPS, RESOURCES, jobOf, type JobKind } from '@rok/rules'
   import type { AllyInfo, AllyRow, Role, WorldAction } from '@rok/rules/world'
   import type { Ack } from '@rok/protocol'
   import type { Snippet } from 'svelte'
   import { Icon } from '@rok/art'
   import { Button, Card, Medal, Page, Section, Tag } from './ui'
   import { L, clock, num, sfx } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
     me,
     ally,
     rows,
     send,
     chat,
   }: {
-    game: State
     me: number | null
     ally: AllyInfo | null
     rows: AllyRow[] | null // danh sách minh (khi chưa vào minh nào)
     send: (a: WorldAction) => Promise<Ack>
     chat?: Snippet
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
 
   let name = $state('')
   let tag = $state('')

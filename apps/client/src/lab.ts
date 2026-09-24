@@ -528,7 +528,10 @@ if (view === 'chrome') {
     document.body.append(host)
     sv.mount(R.default, {
       target: host,
-      props: { outcome, game: rules.newGame(Date.now()), onclose: () => {}, onreplay: () => {} },
+      props: { outcome, onclose: () => {}, onreplay: () => {} },
+      context: new Map([
+        ['rok.game', { game: rules.newGame(Date.now()), now: Date.now(), act: () => null, busy: false }],
+      ]),
     })
     setTimeout(() => (document.title = 'ready'), 900)
   })

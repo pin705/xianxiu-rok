@@ -11,27 +11,24 @@
     rate,
     storage,
     talentUsed,
-    type Action,
     type BuildingId,
     type JobKind,
     type PillId,
-    type State,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Page, Section, Stat } from './ui'
   import { L, LOOK, clock, num, sfx } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
-    now,
-    act,
     onfocus,
   }: {
-    game: State
-    now: number
-    act: (a: Action) => State | null
     onfocus: (id: BuildingId, view?: string | null) => void
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const act = g.act
 
   let using = $state<PillId | null>(null)
   const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge'] // luyện đan không rút ngắn bằng đan được

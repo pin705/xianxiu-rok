@@ -26,7 +26,6 @@
     type Army,
     type ElderId,
     type Reward,
-    type State,
     type Target,
     type UnitType,
   } from '@rok/rules'
@@ -34,24 +33,23 @@
   import ArmyPick from './Army.svelte'
   import { Bag, Card, Medal, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
-    now,
     target,
-    busy = false,
     onclose,
     onmarch,
     onrecruit,
   }: {
-    game: State
-    now: number
     target: Target | null
-    busy?: boolean // đang chờ server giải trận
     onclose: () => void
     onmarch: (t: Target, elder: ElderId, army: Army) => void
     onrecruit: () => void
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const busy = $derived(g.busy)
 
   // Hệ khắc được hệ chính của địch
   const counter = (t: UnitType) => TYPES.find(x => BEATS[x] === t)!
@@ -185,7 +183,6 @@
         {@const full = !realm && game.marches.length >= marchSlots(game)}
         {#if full}<Tag icon="flag" tone="bad">{L.map.slotsFull}</Tag>{/if}
         <ArmyPick
-          {game}
           foe={might(foe)}
           chance={(e, a) => winChance(game, e, a, target!)}
           cta={realm ? L.map.enter : L.map.go}

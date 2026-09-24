@@ -18,21 +18,19 @@
     nextWeek,
     weeklyDone,
     weeklyReward,
-    type Action,
     type PillId,
     type State,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Meter, Section, Sheet, fly } from './ui'
   import { L, clock, num, sfx } from './lib'
+  import { useGame } from './game'
 
-  let {
-    game,
-    now,
-    open,
-    onclose,
-    act,
-  }: { game: State; now: number; open: boolean; onclose: () => void; act: (a: Action) => State | null } = $props()
+  let { open, onclose }: { open: boolean; onclose: () => void } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const act = g.act
 
   const perDay = $derived(Object.fromEntries(RESOURCES.map(r => [r, dailyReward(game)])))
   const perWeek = $derived(Object.fromEntries(RESOURCES.map(r => [r, weeklyReward(game)])))

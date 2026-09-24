@@ -15,16 +15,17 @@
     healTime,
     hospital,
     unitOf,
-    type Action,
     type PillId,
-    type State,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Section, Stepper, Tag } from './ui'
   import JobRow from './JobRow.svelte'
   import { EMBLEM, L, clock, num, sfx } from './lib'
+  import { useGame } from './game'
 
-  let { game, now, act }: { game: State; now: number; act: (a: Action) => State | null } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const act = g.act
 
   let pill: PillId = $state('tuKhi')
   let n = $state(1)
@@ -36,7 +37,7 @@
 
 <Section title={L.alchemy.heal}>
   {#snippet aside()}{L.alchemy.bed(hurt, beds)}{/snippet}
-  {#if game.heal}<JobRow {game} {now} kind="heal" label={L.alchemy.healing(count(game.heal.troops))} {act} />{/if}
+  {#if game.heal}<JobRow kind="heal" label={L.alchemy.healing(count(game.heal.troops))} />{/if}
   {#if hurt}
     <ul class="row wrap">
       {#each UNITS as u (u)}
@@ -67,13 +68,7 @@
 </Section>
 
 <Section title={L.alchemy.brew}>
-  {#if game.brew}<JobRow
-      {game}
-      {now}
-      kind="brew"
-      label={L.alchemy.brewing(game.brew.n, L.pills[game.brew.pill].name)}
-      {act}
-    />{/if}
+  {#if game.brew}<JobRow kind="brew" label={L.alchemy.brewing(game.brew.n, L.pills[game.brew.pill].name)} />{/if}
   <div class="grid" style:--cols="3">
     {#each PILL_IDS as p (p)}
       {@const open = game.levels.danPhong >= PILLS[p].unlock}

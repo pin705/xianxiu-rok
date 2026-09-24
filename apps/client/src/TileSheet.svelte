@@ -1,7 +1,7 @@
 <script lang="ts">
   // Chạm trên bản đồ giới: tông môn (thông tin, đường đi, cướp), điểm (ai giữ, mỏ còn bao nhiêu, yêu vương còn máu; chiếm /
   // khai / đánh; gọi đội về), đội hành quân, ô trống (vùng, vòng, thời tiết). Luật ở rules/world.ts, server kiểm lại.
-  import { MINE_STOCK, BOSSES, cutOf, might, type Army, type ElderId, type State } from '@rok/rules'
+  import { MINE_STOCK, BOSSES, cutOf, might, type Army, type ElderId } from '@rok/rules'
   import { RALLY_WAIT } from '@rok/rules'
   import {
     TILE_TIME,
@@ -24,34 +24,33 @@
   import { Button, Card, Medal, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, clock, num, sfx, spotName } from './lib'
   import type { Pick } from './world/worldmap'
+  import { useGame } from './game'
 
   let {
-    game,
-    now,
     info,
     atlas,
     me,
     snap,
     pick,
-    busy = false,
     ally = null,
     onclose,
     onraid,
     send,
   }: {
-    game: State
-    now: number
     info: WorldInfo
     atlas: Atlas
     me: number | null
     snap: MapSnap | null
     pick: Pick | null
-    busy?: boolean
     ally?: AllyInfo | null // tiên minh của mình: kết trận, viện binh
     onclose: () => void
     onraid: (pid: number) => void
     send: (a: WorldAction) => Promise<Ack>
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const busy = $derived(g.busy)
 
   const phase = $derived(phaseOf(dayIn(info.opened, now)))
   const TASK = { vein: 'take', gate: 'take', heaven: 'take', mine: 'gather', boss: 'hit' } as const
@@ -134,13 +133,7 @@
     </Card>
     {#if seat.pid !== me && isAlly(seat.pid) && r}
       {#if aiding}
-        <ArmyPick
-          {game}
-          cta={L.world.aid}
-          time={time(r.len)}
-          disabled={busy}
-          onsubmit={(e, a) => aid(seat.pid, e, a)}
-        />
+        <ArmyPick cta={L.world.aid} time={time(r.len)} disabled={busy} onsubmit={(e, a) => aid(seat.pid, e, a)} />
       {:else}
         <div class="mt-3">
           <Button variant="gold" wide icon="shield" onclick={() => (aiding = true)}>{L.world.aid}</Button>
@@ -234,7 +227,6 @@
         </Section>
       {/if}
       <ArmyPick
-        {game}
         foe={slice ? might(slice) : undefined}
         chance={slice ? (e, a) => raidChance(game, e, a, slice) : undefined}
         cta={task === 'take' ? L.world.take : task === 'gather' ? L.world.gather : L.world.hit}

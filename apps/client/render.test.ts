@@ -3,6 +3,8 @@
 // đọc thuộc tính của undefined) và chữ hỏng lọt ra màn hình (NaN, undefined, [object Object]) trước khi tới người chơi.
 import test, { after, before } from 'node:test'
 import assert from 'node:assert/strict'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer, type ViteDevServer } from 'vite'
 import {
@@ -28,7 +30,7 @@ const root = fileURLToPath(new URL('.', import.meta.url))
 let vite: ViteDevServer
 const C: Record<string, any> = {}
 let L: any
-let render: (c: any, o: { props: Record<string, unknown> }) => { body: string } // lấy qua Vite: cùng bản runtime với component
+let render: (c: any, o: { props: Record<string, unknown>; context?: Map<string, unknown> }) => { body: string } // lấy qua Vite: cùng bản runtime với component
 
 // Ngôn ngữ chọn lúc nạp lib.ts theo navigator.language: nạp lại toàn bộ component cho từng ngôn ngữ
 async function load(lang: 'vi' | 'en') {
@@ -254,9 +256,20 @@ function unnamed(html: string) {
   return out
 }
 
+// Vẽ một màn: game / now / act / busy đi qua context (src/game.ts) như trong App, phần còn lại là props
+function draw(name: string, props: Record<string, unknown>) {
+  const { game, now = T0, act = () => null, busy = false } = props
+  return render(C[name], { props, context: new Map([['rok.game', { game, now, act, busy }]]) }).body
+}
+
+// RENDER_DUMP=<thư mục>: ghi HTML mọi lần vẽ ra file — so trước / sau khi sửa giao diện (diff -r)
+const DUMP = process.env.RENDER_DUMP
+if (DUMP) mkdirSync(DUMP, { recursive: true })
+let dumped = 0
 function paint(name: string, props: Record<string, unknown>, label: string) {
   let body = ''
-  assert.doesNotThrow(() => (body = render(C[name], { props }).body), `${name} vỡ khi vẽ (${label})`)
+  assert.doesNotThrow(() => (body = draw(name, props)), `${name} vỡ khi vẽ (${label})`)
+  if (DUMP) writeFileSync(join(DUMP, `${String(++dumped).padStart(4, '0')}-${name}.html`), `<!-- ${label} -->\n${body}`)
   assert.ok(body.length > 20, `${name} trống (${label})`)
   const bad = body.match(/NaN|undefined|\[object Object\]/)
   assert.equal(
@@ -325,20 +338,18 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
           )
     // Đúng nội dung ở những chỗ quan trọng
     const panel = (s: State, id: BuildingId, view: string | null = null) =>
-      render(C.Panel, {
-        props: {
-          game: s,
-          now: s.time,
-          id,
-          view,
-          act,
-          onupgrade: noop,
-          onclose: noop,
-          onselect: noop,
-          ontrib: noop,
-          onrebirth: noop,
-        },
-      }).body
+      draw('Panel', {
+        game: s,
+        now: s.time,
+        id,
+        view,
+        act,
+        onupgrade: noop,
+        onclose: noop,
+        onselect: noop,
+        ontrib: noop,
+        onrebirth: noop,
+      })
     assert.ok(panel(trib5, 'chuDien').includes(L.trib.title), 'Chủ điện tầng 5 phải hiện độ kiếp')
     assert.ok(panel(late, 'chuDien').includes(L.rebirth.title), 'Chủ điện tầng 15 phải hiện luân hồi')
     assert.ok(
@@ -497,9 +508,7 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       },
       'độ kiếp thất bại',
     )
-    const reborn = render(C.Result, {
-      props: { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop },
-    }).body
+    const reborn = draw('Result', { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop })
     paint('Result', { outcome: { kind: 'rebirth', n: 3 }, game: late, onclose: noop, onreplay: noop }, 'luân hồi')
     assert.equal(reborn.split(L.rebirth.done(3)).length - 1, 1, 'màn luân hồi: tên kiếp chỉ hiện một lần')
     assert.ok(reborn.includes(L.rebirth.perks(3)), 'màn luân hồi: nói rõ thưởng kiếp này')

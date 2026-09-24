@@ -29,11 +29,9 @@
     tribPill,
     upgradeError,
     winChance,
-    type Action,
     type Army,
     type BuildingId,
     type ElderId,
-    type State,
     type Tier,
     type UnitType,
   } from '@rok/rules'
@@ -48,32 +46,29 @@
   import Train from './Train.svelte'
   import Trade from './Trade.svelte'
   import { L, clock, num } from './lib'
+  import { useGame } from './game'
 
   let {
-    game,
-    now,
     id,
     view,
-    act,
-    busy = false,
     onupgrade,
     onclose,
     onselect,
     ontrib,
     onrebirth,
   }: {
-    game: State
-    now: number
     id: BuildingId | null
     view: string | null
-    act: (a: Action) => State | null
-    busy?: boolean // đang chờ server (độ kiếp, luân hồi)
     onupgrade: (id: BuildingId) => void
     onclose: () => void
     onselect: (id: BuildingId, view?: string | null) => void
     ontrib: (elder: ElderId, army: Army, pill: boolean) => void
     onrebirth: () => void
   } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const busy = $derived(g.busy)
 
   const FN: Partial<Record<BuildingId, [string, string]>> = {
     dienVoTruong: ['train', L.train.tab],
@@ -143,17 +138,17 @@
     {/if}
 
     {#if tab === 'train'}
-      <Train {game} {now} {act} />
+      <Train />
     {:else if tab === 'alchemy'}
-      <Alchemy {game} {now} {act} />
+      <Alchemy />
     {:else if tab === 'library'}
-      <Library {game} {now} {act} />
+      <Library />
     {:else if tab === 'trade'}
-      <Trade {game} {act} />
+      <Trade />
     {:else if tab === 'forge'}
-      <Forge {game} {now} {act} />
+      <Forge />
     {:else if tab === 'guard'}
-      <Guard {game} {now} {act} />
+      <Guard />
     {:else if locked}
       <div class="stack mt-3">
         <Tag icon="lock" tone="bad">{L.panel.locked(d.unlock)}</Tag>
@@ -202,7 +197,7 @@
       </Card>
 
       {#if job}
-        <div class="mt-3"><JobRow {game} {now} kind="build" label={L.panel.upgrading(job.level)} {act} /></div>
+        <div class="mt-3"><JobRow kind="build" label={L.panel.upgrading(job.level)} /></div>
       {:else if err === 'trib' && tr}
         <!-- Độ kiếp -->
         {@const terr = tribError(game)}
@@ -250,7 +245,6 @@
             {/if}
           </Section>
           <ArmyPick
-            {game}
             foe={tr.waves.reduce((s, w) => s + waveMight(w.str, tr.tier, w.type), 0)}
             chance={(e, a) => winChance(game, e, a, 'trib', pill && !!tp)}
             cta={L.trib.go}

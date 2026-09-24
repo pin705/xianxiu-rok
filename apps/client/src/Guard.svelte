@@ -1,12 +1,16 @@
 <script lang="ts">
   // Hộ Sơn Đại Trận: khiên, trưởng lão trấn thủ, quân giữ nhà (mọi đệ tử đang ở tông môn), thành tích tranh đoạt.
-  import { ELDER_IDS, GUARD_STEP, count, elderLevel, might, type Action, type State } from '@rok/rules'
+  import { ELDER_IDS, GUARD_STEP, count, elderLevel, might } from '@rok/rules'
   import { defense, guardOf } from '@rok/rules/world'
   import { Icon, Portrait } from '@rok/art'
   import { Card, Section, Stat } from './ui'
   import { L, LOOK, clock, num, sfx } from './lib'
+  import { useGame } from './game'
 
-  let { game, now, act }: { game: State; now: number; act: (a: Action) => State | null } = $props()
+  const g = useGame()
+  const game = $derived(g.game)
+  const now = $derived(g.now)
+  const act = g.act
 
   const elders = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined))
   const on = $derived(guardOf(game))

@@ -1,5 +1,6 @@
 <script module lang="ts">
   import type { Container } from 'pixi.js'
+  import { keyBlocked } from '../lib'
   // Một cảnh WebGL cuộn dọc (núi tông môn, bản đồ)
   export type Scene = { root: Container; tick(dt: number, camDU: number): void; destroy(): void }
 </script>
@@ -60,8 +61,7 @@
       zoomTo(zoom * Math.exp(-e.deltaY * 0.004))
     }
     const keys = (e: KeyboardEvent) => {
-      if (!zoomable || hidden || e.metaKey || e.ctrlKey || document.querySelector('dialog:modal')) return
-      if ((e.target as Element).closest?.('input, textarea, select')) return
+      if (!zoomable || hidden || keyBlocked(e)) return
       if (e.key === '+' || e.key === '=') zoomTo(zoom * 1.15)
       if (e.key === '-') zoomTo(zoom / 1.15)
     }
