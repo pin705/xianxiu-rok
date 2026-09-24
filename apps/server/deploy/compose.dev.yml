@@ -1,0 +1,17 @@
+# Postgres cho dev và test tích hợp: npm run db (cổng 5439, không đụng Postgres khác trên máy)
+name: rok
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: rok
+      POSTGRES_PASSWORD: rok
+      POSTGRES_DB: rok
+    ports: ['127.0.0.1:5439:5432']
+    volumes: [rokdb:/var/lib/postgresql/data]
+    healthcheck:
+      test: pg_isready -U rok
+      interval: 2s
+      retries: 20
+volumes:
+  rokdb:

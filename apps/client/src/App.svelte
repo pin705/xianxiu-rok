@@ -19,7 +19,7 @@
   import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
   import Vault from './Vault.svelte'
-  import { DESK, L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, track, watchSave, wipe, type Tab } from './lib'
+  import { DESK, L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, watchSave, wipe, type Tab } from './lib'
 
   const saved = load(nowMs())
   const start = saved && advance(saved, nowMs())
@@ -85,10 +85,7 @@
       if (next.levels[id] > prev.levels[id]) {
         bursts = [...bursts, { id, level: next.levels[id], t: nowMs() }]
         sfx('done')
-        if (id === 'chuDien') {
-          track('hall', { n: next.levels[id], rebirths: next.rebirths })
-          unlocks(next.levels[id])
-        }
+        if (id === 'chuDien') unlocks(next.levels[id])
       }
     }
     if (reports) for (const r of next.reports.filter(r => r.id >= prev.nextId)) toast(L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
@@ -110,7 +107,6 @@
       if (events) save(next)
       if (bursts.length && now - bursts[0].t > 2000) bursts = bursts.filter(b => now - b.t < 2000)
     }, 250)
-    if (game) track('open', { hall: game.levels.chuDien, rebirths: game.rebirths, away: away ? Math.round(away.ms / 60_000) : 0 })
     const hide = () => document.hidden && game && save(game)
     const leave = () => game && save(game) // Safari iOS có lúc bỏ qua visibilitychange khi tắt app
     document.addEventListener('visibilitychange', hide)
@@ -172,7 +168,6 @@
     game = newGame(nowMs(), name)
     save(game)
     screen = 'game'
-    track('found')
   }
 
   function select(id: BuildingId, v: string | null = null) {
@@ -269,7 +264,6 @@
     const s = fightNow({ type: 'trib', elder, army, pill })
     if (!s) return
     const r = s.reports.at(-1)!
-    track('trib', { win: r.win, hall: s.levels.chuDien })
     selected = null
     tab = 'tongMon'
     requestAnimationFrame(() => world?.querySelector('[data-b="chuDien"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
@@ -293,7 +287,6 @@
     tab = 'tongMon'
     outcome = { kind: 'rebirth', n: s.rebirths }
     sfx('done')
-    track('rebirth', { n: s.rebirths })
   }
 
   function openReports() {

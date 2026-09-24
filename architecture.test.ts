@@ -1,5 +1,5 @@
 // Ranh giới monorepo: mỗi package chỉ được import những package @rok/* ghi dưới đây, không import tương đối ra ngoài thư mục mình.
-// apps/* dùng packages/*, không bao giờ ngược lại. rules là lõi thuần: không phụ thuộc gì — server P2 chạy lại đúng luật này.
+// apps/* dùng packages/*, không bao giờ ngược lại. rules là lõi thuần: không phụ thuộc gì — server chạy lại đúng luật này.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
@@ -9,8 +9,9 @@ const ALLOWED: Record<string, string[]> = {
   'packages/rules': [],
   'packages/art': [],
   'packages/i18n': ['rules'],
-  'apps/client': ['rules', 'art', 'i18n'],
-  'apps/server': ['rules'],
+  'packages/protocol': ['rules'],
+  'apps/client': ['rules', 'art', 'i18n', 'protocol'],
+  'apps/server': ['rules', 'protocol', 'i18n'], // i18n: chữ của Web Push (app đang đóng, client không dựng được)
 }
 const root = import.meta.dirname
 

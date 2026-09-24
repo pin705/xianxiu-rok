@@ -133,18 +133,6 @@ export const wipe = () => {
 }
 export { DEFAULT_NAME }
 
-// Đo retention ẩn danh (cổng P1: D1/D7). Chỉ gửi khi build có VITE_ANALYTICS_URL; không có thì không làm gì.
-// Gửi: mã ngẫu nhiên của máy, tên sự kiện, vài con số. Không có tên tông môn hay dữ liệu cá nhân.
-const BEACON = import.meta.env.VITE_ANALYTICS_URL as string | undefined
-export function track(name: string, props: Record<string, number | string | boolean> = {}) {
-  if (!BEACON) return
-  try {
-    let id = read('rok.anon')
-    if (!id) write('rok.anon', (id = crypto.randomUUID()))
-    navigator.sendBeacon(BEACON, JSON.stringify({ id, name, props, v: __VERSION__, t: Date.now() }))
-  } catch {}
-}
-
 // Âm thanh tổng hợp bằng WebAudio — không cần file. Chỉ phát sau lần chạm đầu tiên (luật trình duyệt).
 let ctx: AudioContext | undefined
 // Một AudioContext cho cả hiệu ứng lẫn nhạc nền (music.ts). Tạo lúc cần — chỉ chạy được sau lần chạm đầu tiên.

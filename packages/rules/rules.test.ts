@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {
   BASE_RATE, BEASTS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
   elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, nextWeek, weekOf, tradeKeep, isWeekend, eventMul, towerReward, towerStr, towerType, enemyOf, targetError,
-  techTime, trainCost, trainTime, upgradeError, winChance,
+  techTime, trainCost, trainTime, upgradeError, winChance, parseAction, ELDER_IDS, UNITS, IDS, TECH_IDS, PILL_IDS,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
 
@@ -434,7 +434,7 @@ test('Thương hội: đổi tài nguyên dư lấy tài nguyên thiếu, mất 
   assert.ok(tradeKeep({ ...s, levels: { ...s.levels, tangBaoCac: 99 } }) <= 0.75)
   assert.equal(err(s, { type: 'trade', from: 'linhKhoang', to: 'linhThach', n: 51 }), 'not_enough')
   assert.equal(err(s, { type: 'trade', from: 'linhThach', to: 'linhThach', n: 10 }), 'locked')
-  assert.equal(err(s, { type: 'trade', from: 'linhThach', to: 'linhThao', n: 1.5 }), 'locked')
+  assert.equal(err(s, { type: 'trade', from: 'linhThach', to: 'linhThao', n: 1.5 }), 'bad')
   assert.equal(err({ ...s, levels: { ...s.levels, tangBaoCac: 0 } }, { type: 'trade', from: 'linhThach', to: 'linhThao', n: 10 }), 'locked')
 })
 
@@ -455,4 +455,71 @@ test('sự kiện cuối tuần: thứ Bảy, Chủ nhật giờ VN, chiến l�
   const week = hunt(at('2026-09-23T03:00:00Z')), weekend = hunt(at('2026-09-26T03:00:00Z'))
   assert.ok(week > 0)
   assert.equal(weekend, Math.round(week * eventMul(at('2026-09-26T03:00:00Z'))))
+})
+
+// Thao tác đến từ client là JSON bất kỳ. Mỗi dòng dưới đây từng lách được luật (cày thưởng, số NaN vĩnh viễn, làm sập apply)
+test('dữ liệu vào bẩn: mọi payload lạ bị từ chối "bad", state không đổi, không bao giờ throw', () => {
+  const s: State = { ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 500 }, items: { tuKhi: 3, boiNguyen: 3 }, daily: { ...rich(6, 5).daily, n: { build: 9, train: 99, win: 9, brew: 9 } } }
+  const army = { kiem1: 10 }
+  const bad: unknown[] = [
+    { type: 'daily', i: '0' }, { type: 'weekly', i: '0' }, // chuỗi thay số: thưởng nhận mãi không đánh dấu
+    { type: 'realm', i: '0', elder: 'thanhPhong', army }, // bí cảnh cày mãi tầng 1
+    { type: 'march', target: { kind: 'beast', i: '2' }, elder: 'thanhPhong', army }, // '2' + 1 = '21'
+    { type: 'march', target: { kind: 'beast', i: 1.5 }, elder: 'thanhPhong', army },
+    { type: 'feed', elder: 'constructor', n: 1 }, { type: 'feed', elder: '__proto__', n: 1 }, // khoá thừa kế: NaN
+    { type: 'speed', job: 'time', n: 1 }, // mọi tài nguyên thành NaN
+    { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: null },
+    { type: 'upgrade', building: 'constructor' }, { type: 'brew', pill: 'constructor', n: 1 }, { type: 'study', tech: 'toString' },
+    { type: 'train', unit: 'kiem1', n: 1.5 }, { type: 'train', unit: 'kiem9', n: 1 }, { type: 'trade', from: 'vang', to: 'linhThao', n: 1 },
+    { type: 'march', target: { kind: 'tower', i: 0 }, elder: 'thanhPhong', army }, // tháp không đi hành quân
+    { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: { kiem1: -5 } },
+    { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: { vang: 5 } },
+    { type: 'trib', elder: 'thanhPhong', army, pill: 'có' }, { type: 'toString' }, { type: '__proto__' }, null, [], 'upgrade', 42, {},
+  ]
+  for (const a of bad) {
+    let r: ReturnType<typeof apply> | undefined
+    assert.doesNotThrow(() => (r = apply(s, a as Action, s.time)), JSON.stringify(a))
+    assert.deepEqual(r, { ok: false, error: 'bad' }, JSON.stringify(a))
+  }
+  // trường thừa bị bỏ: không lọt vào state đã lưu
+  const r = apply(s, { type: 'march', target: { kind: 'beast', i: 0, junk: 'x'.repeat(1000) }, elder: 'thanhPhong', army, extra: 1 } as unknown as Action, s.time)
+  assert.ok(r.ok && !('junk' in r.state.marches[0].target))
+  assert.deepEqual(parseAction({ type: 'upgrade', building: 'chuDien', x: 1 }), { type: 'upgrade', building: 'chuDien' })
+})
+
+test('thao tác JSON ngẫu nhiên: không bao giờ throw, state sau đó luôn hợp lệ', () => {
+  let seed = 7
+  const rnd = () => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296)
+  const pick = <T,>(a: readonly T[]) => a[Math.floor(rnd() * a.length)]
+  const types = ['upgrade', 'claim', 'train', 'heal', 'study', 'brew', 'march', 'realm', 'tower', 'trade', 'trib', 'speed', 'feed', 'seen', 'rebirth', 'daily', 'dailyBonus', 'weekly', 'weeklyBonus', 'x']
+  const junk = () => pick<unknown>([0, 1, 2, -1, 1.5, 1e9, NaN, '0', '', 'constructor', null, true, {}, [], { kiem1: 5 }, { kind: 'beast', i: 0 }, { kind: 'sect', i: '1' }])
+  const val = () => pick<unknown>([...IDS, ...TECH_IDS, ...PILL_IDS, ...ELDER_IDS, ...UNITS, 'build', 'train', 'linhThach', 'linhThao', junk()])
+  let s: State = { ...rich(10, 8), troops: { ...rich(10, 8).troops, kiem1: 300, phap2: 100 }, items: { tuKhi: 5, boiNguyen: 5, doKiep: 1 }, elders: { thanhPhong: 0, thachKien: 0 } }
+  for (let k = 0; k < 3000; k++) {
+    const a: Record<string, unknown> = { type: pick(types) }
+    for (const f of ['building', 'unit', 'n', 'tech', 'pill', 'elder', 'from', 'to', 'job', 'i', 'target', 'army']) if (rnd() < 0.5) a[f] = rnd() < 0.5 ? val() : junk()
+    if (rnd() < 0.3) a.army = { [pick(UNITS)]: Math.floor(rnd() * 50) }
+    if (rnd() < 0.3) a.target = { kind: pick(['beast', 'sect']), i: Math.floor(rnd() * 5) }
+    let r: ReturnType<typeof apply> | undefined
+    assert.doesNotThrow(() => (r = apply(s, a as Action, s.time + 1000)), JSON.stringify(a))
+    if (r!.ok) s = r!.state
+  }
+  assert.ok(migrate(JSON.parse(JSON.stringify(s))), 'state sau 3000 thao tác ngẫu nhiên vẫn qua được kiểm khuôn')
+})
+
+test('mầm ẩn (seed 0, như state client nhận từ server): không tự giải trận, cũng không cho đội về tay không', () => {
+  let s: State = { ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 500 }, seed: 0 }
+  s = run(s, { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: { kiem1: 100 } })
+  assert.equal(s.marches[0].seed, 0)
+  assert.equal(s.seed, 0, 'mầm 0 sinh ra 0')
+  s = { ...s, res: { linhThach: 100, linhThao: 100, linhKhoang: 100 } }
+  const later = advance(s, s.marches[0].returnAt + HOUR)
+  assert.equal(later.reports.length, 0, 'không bịa ra trận khi không biết mầm')
+  assert.equal(later.marches.length, 1, 'đội vẫn ngoài đường, chờ server báo kết quả')
+  assert.equal(later.troops.kiem1, 400)
+  assert.ok(later.res.linhThach > s.res.linhThach, 'tài nguyên vẫn chạy')
+  // cùng state nhưng biết mầm thật (server): trận được giải, đội về nhà
+  const real = advance({ ...s, marches: s.marches.map(m => ({ ...m, seed: 12345 })) }, s.marches[0].returnAt + HOUR)
+  assert.equal(real.reports.length, 1)
+  assert.equal(real.marches.length, 0)
 })

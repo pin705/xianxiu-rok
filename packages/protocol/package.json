@@ -1,0 +1,12 @@
+{
+  "name": "@rok/protocol",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./hash": "./hash.ts"
+  },
+  "dependencies": {
+    "@rok/rules": "*"
+  }
+}

@@ -132,7 +132,9 @@ const minus = (a: Troops, b: Army) => troops(u => a[u] - (b[u] ?? 0))
 const addBag = (a: Bag, b: Partial<Bag>) => bag(r => a[r] + (b[r] ?? 0))
 const addItems = (a: Items, b: Items) => Object.fromEntries(PILL_IDS.map(p => [p, (a[p] ?? 0) + (b[p] ?? 0)])) as Items
 export const afford = (have: Bag, c: Bag) => RESOURCES.every(r => have[r] >= c[r])
-const nextSeed = (seed: number) => (Math.imul(seed, 1664525) + 1013904223) >>> 0
+// Mầm 0 = "ẩn": máy này không biết mầm thật (client nhận state từ server với mọi seed = 0), nên không tự giải trận.
+// 0 sinh ra 0; mầm khác 0 không bao giờ sinh ra 0.
+const nextSeed = (seed: number) => (seed ? (Math.imul(seed, 1664525) + 1013904223) >>> 0 || 1 : 0)
 
 // Nhân lặp thay cho Math.pow: phép nhân IEEE cho cùng kết quả trên mọi engine, pow thì không chắc.
 function grow(base: number, factor: number, times: number) {
@@ -315,12 +317,12 @@ export function mob(str: number, tier: Tier, parts: [UnitType, number][], level 
 const pair = (type: UnitType, share: number): [UnitType, number][] => [[type, share], [BEATS[type], 1 - share]]
 
 // Thông Thiên Tháp, tầng f (0 = tầng 1): sức địch, hệ chính (đổi theo vòng), thưởng lần đầu
-export const towerStr = (f: number) => Math.round(TOWER_STR * TOWER_GROW ** f)
+export const towerStr = (f: number) => grow(TOWER_STR, TOWER_GROW, f)
 export const towerType = (f: number): UnitType => TYPES[f % TYPES.length]
 export function towerReward(f: number): Reward {
   const n = f + 1
   return {
-    res: bag(() => Math.round(TOWER_RES * TOWER_RES_GROW ** f)),
+    res: bag(() => grow(TOWER_RES, TOWER_RES_GROW, f)),
     items: n % 10 === 0 ? { doKiep: 1, boiNguyen: 1 } : n % 5 === 0 ? { tuKhi: 3 } : undefined,
     exp: 300 + 40 * f,
   }
@@ -506,6 +508,7 @@ function arrive(s: State, id: number): State {
 
 function home(s: State, id: number): State {
   const m = s.marches.find(x => x.id === id)!
+  if (!m.back) return s // trận chưa giải (mầm ẩn ở client): chờ server báo kết quả
   const { state, dead } = admit({ ...s, marches: s.marches.filter(x => x.id !== id) }, m.hurt ?? {})
   let st = gain({ ...state, troops: plus(state.troops, m.back ?? m.army) }, m.elder, m.gain ?? { res: {}, items: {}, exp: 0 })
   // Báo cho chiến báo của chuyến này biết bao nhiêu người không qua khỏi
@@ -531,7 +534,7 @@ function due(s: State, now: number): Ev[] {
   if (b && b.finishAt <= now)
     ev.push([b.finishAt, st => ({ ...st, brew: null, items: addItems(st.items, { [b.pill]: b.n }), stats: { ...st.stats, brewed: st.stats.brewed + b.n } })])
   for (const m of s.marches) {
-    if (!m.back && m.arriveAt <= now) ev.push([m.arriveAt, st => arrive(st, m.id)])
+    if (!m.back && m.seed && m.arriveAt <= now) ev.push([m.arriveAt, st => arrive(st, m.id)])
     if (m.returnAt <= now) ev.push([m.returnAt, st => home(st, m.id)])
   }
   return ev.sort((a, b) => a[0] - b[0])
@@ -637,9 +640,74 @@ export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'tri
   return won / 9
 }
 
+// ---------- Kiểm dữ liệu vào ----------
+
+// Thao tác từ client là JSON, có thể là bất cứ thứ gì (chuỗi thay số, 'constructor' thay id, thiếu trường, thừa trường).
+// apply() kiểm ở đây trước tiên — một chốt cho mọi nơi gọi (server, client, sim): dựng lại object mới chỉ từ trường đã biết,
+// id phải là khoá thật của bảng (không nhận khoá thừa kế như 'constructor'), số phải là số nguyên an toàn trong khoảng.
+const oneOf = <T extends string>(ids: readonly T[]) => (x: unknown): x is T => typeof x === 'string' && (ids as readonly string[]).includes(x)
+const int = (lo: number, hi: number) => (x: unknown): x is number => Number.isSafeInteger(x) && (x as number) >= lo && (x as number) <= hi
+const isElder = oneOf(ELDER_IDS)
+const JOB_KINDS: readonly JobKind[] = ['build', 'train', 'heal', 'study', 'brew']
+function pickArmy(x: unknown): Army | null {
+  if (!obj(x)) return null
+  const out: Army = {}
+  for (const [k, n] of Object.entries(x)) {
+    if (!oneOf(UNITS)(k) || !int(0, 1e9)(n)) return null
+    if (n) out[k] = n
+  }
+  return out
+}
+function pickTarget(x: unknown): Target | null {
+  if (!obj(x)) return null
+  if (x.kind === 'beast' && int(0, BEASTS.length - 1)(x.i)) return { kind: 'beast', i: x.i }
+  if (x.kind === 'sect' && int(0, SECTS.length - 1)(x.i)) return { kind: 'sect', i: x.i }
+  return null
+}
+type Pick<K extends Action['type']> = (a: Record<string, unknown>) => Extract<Action, { type: K }> | null
+const PICK: { [K in Action['type']]: Pick<K> } = {
+  upgrade: a => (oneOf(IDS)(a.building) ? { type: 'upgrade', building: a.building } : null),
+  claim: () => ({ type: 'claim' }),
+  train: a => (oneOf(UNITS)(a.unit) && int(1, 1e6)(a.n) ? { type: 'train', unit: a.unit, n: a.n } : null),
+  heal: () => ({ type: 'heal' }),
+  study: a => (oneOf(TECH_IDS)(a.tech) ? { type: 'study', tech: a.tech } : null),
+  brew: a => (oneOf(PILL_IDS)(a.pill) && int(1, BREW_MAX)(a.n) ? { type: 'brew', pill: a.pill, n: a.n } : null),
+  march: a => {
+    const target = pickTarget(a.target), army = pickArmy(a.army)
+    return target && army && isElder(a.elder) ? { type: 'march', target, elder: a.elder, army } : null
+  },
+  realm: a => {
+    const army = pickArmy(a.army)
+    return army && isElder(a.elder) && int(0, REALMS.length - 1)(a.i) ? { type: 'realm', i: a.i, elder: a.elder, army } : null
+  },
+  tower: a => {
+    const army = pickArmy(a.army)
+    return army && isElder(a.elder) ? { type: 'tower', elder: a.elder, army } : null
+  },
+  trade: a => (oneOf(RESOURCES)(a.from) && oneOf(RESOURCES)(a.to) && int(1, 1e12)(a.n) ? { type: 'trade', from: a.from, to: a.to, n: a.n } : null),
+  trib: a => {
+    const army = pickArmy(a.army)
+    return army && isElder(a.elder) && typeof a.pill === 'boolean' ? { type: 'trib', elder: a.elder, army, pill: a.pill } : null
+  },
+  speed: a => (oneOf(JOB_KINDS)(a.job) && int(1, 1e4)(a.n) ? { type: 'speed', job: a.job, n: a.n } : null),
+  feed: a => (isElder(a.elder) && int(1, 1e4)(a.n) ? { type: 'feed', elder: a.elder, n: a.n } : null),
+  seen: () => ({ type: 'seen' }),
+  rebirth: () => ({ type: 'rebirth' }),
+  daily: a => (int(0, DAILY.length - 1)(a.i) ? { type: 'daily', i: a.i } : null),
+  dailyBonus: () => ({ type: 'dailyBonus' }),
+  weekly: a => (int(0, WEEKLY.length - 1)(a.i) ? { type: 'weekly', i: a.i } : null),
+  weeklyBonus: () => ({ type: 'weeklyBonus' }),
+}
+export function parseAction(raw: unknown): Action | null {
+  if (!obj(raw) || typeof raw.type !== 'string' || !Object.hasOwn(PICK, raw.type)) return null
+  return (PICK[raw.type as Action['type']] as (a: Record<string, unknown>) => Action | null)(raw)
+}
+
 // ---------- Thao tác ----------
 
-export function apply(s: State, a: Action, now: number): Result {
+export function apply(s: State, raw: Action, now: number): Result {
+  const a = parseAction(raw)
+  if (!a) return { ok: false, error: 'bad' }
   const state = advance(s, now)
   const t = state.time
   const ok = (st: State): Result => ({ ok: true, state: st })
@@ -840,9 +908,9 @@ function valid(s: any): s is State {
     Array.isArray(s.queue) && s.queue.every((j: any) => isTimed(j) && j && IDS.includes(j.building) && num(j.level)) &&
     isTroops(s.troops) && isTroops(s.wounded) &&
     [s.train, s.heal, s.study, s.brew].every(isTimed) &&
-    obj(s.tech) && obj(s.items) && obj(s.elders) && Object.keys(s.elders).every(e => e in ELDERS && num(s.elders[e])) &&
+    obj(s.tech) && obj(s.items) && obj(s.elders) && Object.keys(s.elders).every(e => Object.hasOwn(ELDERS, e) && num(s.elders[e])) &&
     Array.isArray(s.marches) &&
-    s.marches.every((m: any) => obj(m) && m.elder in ELDERS && obj(m.army) && obj(m.target) && ['beast', 'sect'].includes(m.target.kind) &&
+    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect'].includes(m.target.kind) &&
       num(m.target.i) && num(m.seed) && num(m.startAt) && num(m.arriveAt) && num(m.returnAt)) &&
     Array.isArray(s.reports) && s.reports.every((r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead)) &&
     num(s.seen) && num(s.beast) && obj(s.cool) &&

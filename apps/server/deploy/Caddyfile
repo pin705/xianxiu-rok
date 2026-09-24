@@ -1,5 +1,0 @@
-# Máy nhận analytics sau Caddy (tự lấy chứng chỉ HTTPS). Đổi tên miền rồi: sudo cp Caddyfile /etc/caddy/Caddyfile && sudo systemctl reload caddy
-# Client build với: VITE_ANALYTICS_URL=https://analytics.example.com/e npm run build
-analytics.example.com {
-	reverse_proxy 127.0.0.1:8787
-}

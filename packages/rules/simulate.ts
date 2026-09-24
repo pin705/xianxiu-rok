@@ -6,7 +6,7 @@
 //   npm run sim -- 60 4 --rebirth  → luân hồi khi xong kiếp đầu, xem kiếp sau nhanh hơn bao nhiêu
 import {
   BEASTS, ELDER_IDS, IDS, MAX_LEVEL, PILL_IDS, QUESTS, REALMS, SECTS, TECH_IDS, TRIBS, TYPES, UNITS,
-  apply, advance, batch, cost, count, elderLevel, enemyOf, fight, newGame, sideOf, tierOpen, unitOf, winChance,
+  apply, advance, batch, cost, count, elderLevel, enemyOf, fight, newGame, sideOf, storage, tierOpen, unitOf, winChance,
   type Action, type Army, type ElderId, type State, type Target, type UnitId,
 } from './index.ts'
 
@@ -48,11 +48,10 @@ function build() {
   // Kho sắp không đủ chứa chi phí Chủ điện tầng sau → nâng Tàng Bảo Các trước
   const want = IDS.filter(id => id !== 'chuDien').sort((a, b) => s.levels[a] - s.levels[b] || cost(a, s.levels[a] + 1).linhThach - cost(b, s.levels[b] + 1).linhThach)
   const need = cost('chuDien', Math.min(MAX_LEVEL, hall + 1))
-  if (Math.max(need.linhThach, need.linhThao, need.linhKhoang) > 0.9 * capOf(s) && tryDo({ type: 'upgrade', building: 'tangBaoCac' })) return true
+  if (Math.max(need.linhThach, need.linhThao, need.linhKhoang) > 0.9 * storage(s) && tryDo({ type: 'upgrade', building: 'tangBaoCac' })) return true
   for (const id of want) if (tryDo({ type: 'upgrade', building: id })) return true
   return false
 }
-const capOf = (st: State) => Math.round(2000 * 1.3 ** st.levels.tangBaoCac)
 
 function train() {
   if (s.train || !s.levels.dienVoTruong) return false

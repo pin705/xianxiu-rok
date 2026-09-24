@@ -12,7 +12,8 @@ npm run build      # bản tĩnh ở apps/client/dist
 npm run e2e        # sau build: Chrome headless bấm như người chơi
 npm run package    # build + nén release.zip để tải lên itch.io
 npm run fonts      # tải lại font tự host (sau khi thêm hệ chữ mới)
-npm run analytics  # máy nhận analytics (cần STATS_TOKEN)
+npm run db         # Postgres cho dev/test (Docker, cổng 5439)
+npm run server     # server game (tự khởi động lại khi sửa code)
 ```
 
 Mọi lệnh chạy ở gốc repo. Lệnh của riêng một package: `npm run <lệnh> -w @rok/client`.
@@ -26,7 +27,7 @@ Mọi lệnh chạy ở gốc repo. Lệnh của riêng một package: `npm run 
 rok/
   apps/                      sản phẩm chạy được — dùng packages, không package nào import ngược lại
     client/    @rok/client   Vite + Svelte 5 + PixiJS: HUD, bảng, cảnh WebGL, save trên máy, PWA
-    server/    @rok/server   analytics.ts: nhận analytics + retention (P1); server game từ P2
+    server/    @rok/server   server game: API + WebSocket + world actor + PostgreSQL (đang dựng)
   packages/                  thư viện dùng chung
     rules/     @rok/rules    luật game thuần — không I/O, không Date, không phụ thuộc gì (client và server P2 chạy chung)
                              index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
