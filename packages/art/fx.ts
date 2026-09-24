@@ -1,7 +1,7 @@
 // Texture cho phần chuyển động của cảnh (GPU diễn): sương, thác, hào quang, khói, cờ, hạc, đệ tử, tia sáng.
-import { blot, canvas, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
+import { bake, blot, canvas, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
 import { ring } from './chrome'
-import { ellipse, vgrad } from './landscape'
+import { cloud, ellipse, vgrad } from './landscape'
 import { fbm, noise2, rng } from './noise'
 import { PIGMENT as C, mix, rgba } from './palette'
 
@@ -216,7 +216,7 @@ export const flyingSword = (): Asset => ({
 })
 
 // Sân trận: giấy + trời theo cảnh + dãy núi xa + mặt đất loang + đá/tùng hai mép. Neo góc trên trái, w × h DU.
-export type Theme = 'wild' | 'forest' | 'fire' | 'ice' | 'storm' | 'sect'
+export type Theme = 'wild' | 'forest' | 'fire' | 'ice' | 'storm' | 'sect' | 'tower'
 const SCENE_TONE: Record<Theme, { sky: string; ground: string; far: string }> = {
   wild: { sky: C.azuriteL, ground: C.malachiteL, far: C.azuriteL },
   forest: { sky: C.malachiteL, ground: C.malachite, far: C.malachiteD },
@@ -224,23 +224,21 @@ const SCENE_TONE: Record<Theme, { sky: string; ground: string; far: string }> = 
   ice: { sky: '#cfe6f0', ground: '#e4eef2', far: '#8fb3c8' },
   storm: { sky: '#3b3356', ground: '#5d5870', far: '#2a2540' },
   sect: { sky: C.ochreL, ground: C.paper2, far: C.ink3 },
+  tower: { sky: '#e6c98f', ground: mix(C.paper2, C.ink3, 0.3), far: C.azuriteL },
 }
 export function battlefield(w: number, h: number, theme: Theme): Asset {
   const t = SCENE_TONE[theme]
   return {
     x: 0, y: 0, w, h,
     draw(g) {
+      if (theme === 'tower') return towerTop(g, w, h, t)
       const sky = g.createLinearGradient(0, 0, 0, h * 0.5)
       sky.addColorStop(0, rgba(t.sky, theme === 'storm' ? 0.95 : 0.55))
       sky.addColorStop(1, rgba(t.sky, 0))
       g.fillStyle = sky
       g.fillRect(0, 0, w, h * 0.5)
       // núi xa
-      const far = farRange(w, h * 0.16, 77, t.far, theme === 'storm' ? 0.7 : 0.45)
-      g.save()
-      g.translate(0, h * 0.3)
-      far.draw(g)
-      g.restore()
+      stamp(g, farRange(w, h * 0.16, 77, t.far, theme === 'storm' ? 0.7 : 0.45), 0, h * 0.3)
       // mặt đất: dải loang từ giữa xuống, đậm dần
       const ground: Pt[] = [[-10, h * 0.34], [w * 0.3, h * 0.33], [w * 0.7, h * 0.35], [w + 10, h * 0.33], [w + 10, h + 10], [-10, h + 10]]
       wash(g, ground, { fill: g2 => { const r = g2.createLinearGradient(0, h * 0.33, 0, h); r.addColorStop(0, rgba(t.ground, 0.25)); r.addColorStop(1, rgba(t.ground, 0.7)); return r }, alpha: 1, jitter: 4, layers: 3, seed: 5 })
@@ -259,6 +257,81 @@ export function battlefield(w: number, h: number, theme: Theme): Asset {
       grain(g, 0.35)
     },
   }
+}
+
+// Vẽ một asset lên g qua canvas riêng: asset tự rắc hạt giấy lên cả canvas nó vẽ, vẽ thẳng thì hạt phủ đốm cả sân
+function stamp(g: G, a: Asset, x: number, y: number) {
+  const m = g.getTransform()
+  g.drawImage(bake(a, Math.hypot(m.a, m.b)).canvas as HTMLCanvasElement, x + a.x, y + a.y, a.w, a.h)
+}
+
+// Đỉnh Thông Thiên Tháp: trời ráng vàng, biển mây (vài đỉnh núi nhô lên), mặt tháp lát đá nhìn phối cảnh,
+// lan can đá trắng ở mép xa, vòng 圆相 khắc giữa sân, mây 如意 ôm hai góc dưới
+function towerTop(g: G, w: number, h: number, t: { sky: string; ground: string; far: string }) {
+  const sky = g.createLinearGradient(0, 0, 0, h * 0.4)
+  sky.addColorStop(0, rgba(t.sky, 0.75))
+  sky.addColorStop(1, rgba(C.silk, 0.2))
+  g.fillStyle = sky
+  g.fillRect(0, 0, w, h * 0.4)
+  // đỉnh núi xa nhô khỏi mây
+  stamp(g, farRange(w, h * 0.1, 91, t.far, 0.4), 0, h * 0.27)
+  // biển mây: mảng loang trắng lụa, bụng mây hắt lam
+  const r = rng(13)
+  for (let i = 0; i < 14; i++) {
+    const x = (i / 13) * w + (r() - 0.5) * 30, y = h * (0.27 + r() * 0.06), rx = 40 + r() * 50, ry = 10 + r() * 8
+    wash(g, ellipse(x, y + ry * 0.5, rx, ry * 0.7, 12), { fill: C.azuriteL, alpha: 0.25, layers: 2, jitter: 3, seed: 40 + i })
+    wash(g, ellipse(x, y, rx, ry, 12), { fill: C.silk, alpha: 0.85, layers: 3, jitter: 3, edge: 1.2, seed: 60 + i })
+  }
+  // mặt tháp: hình thang phối cảnh, đá đậm dần về phía người xem
+  const y0 = h * 0.35, y1 = h + 10, L0 = w * 0.06, R0 = w * 0.94, L1 = -w * 0.35, R1 = w * 1.35
+  // đá cẩm thạch: sáng ở mép xa, ngả xám ấm về phía người xem; vệt loang đá nhạt
+  wash(g, [[L0, y0], [R0, y0], [R1, y1], [L1, y1]], { fill: g2 => vgrad(g2, y0, y1, [[0, mix(C.paper, C.silk, 0.4)], [1, mix(t.ground, C.paper, 0.3)]]), alpha: 1, jitter: 1.5, layers: 2, sharp: true, seed: 71 })
+  for (let i = 0; i < 7; i++) {
+    const x = w * (0.1 + r() * 0.8), y = h * (0.45 + r() * 0.5)
+    wash(g, ellipse(x, y, 30 + r() * 40, 5 + r() * 5, 10), { fill: C.ink3, alpha: 0.08, layers: 2, jitter: 4, seed: 240 + i })
+  }
+  // mạch đá: hàng ngang dày dần về xa, cột chụm về phía chân trời
+  const lerp = (a: number, b: number, k: number) => a + (b - a) * k
+  for (let i = 1; i < 6; i++) {
+    const k = (i / 6) ** 1.8, y = lerp(y0, y1, k)
+    stroke(g, [[lerp(L0, L1, k), y], [lerp(R0, R1, k), y + 0.5]], { w: 0.5 + k * 1.1, color: C.ink2, press: 'taper', alpha: 0.1 + k * 0.08, dry: 0.5, seed: 80 + i })
+  }
+  for (let i = 1; i < 8; i++) {
+    const u = i / 8
+    stroke(g, [[lerp(L0, R0, u), y0], [lerp(L1, R1, u), y1]], { w: 1, color: C.ink2, press: 'taper', alpha: 0.1, dry: 0.5, seed: 100 + i })
+  }
+  // vòng 圆相 khắc chìm giữa sân (ép dẹt theo phối cảnh)
+  g.save()
+  g.translate(w / 2, h * 0.62)
+  g.scale(1, 0.32)
+  ring(g, 0, 0, w * 0.3, 3.2, C.goldD, 23, 0.35, 0.1, 0.45)
+  ring(g, 0, 0, w * 0.2, 1.6, C.ink2, 24, 0.25, 0.3, 0.5)
+  g.restore()
+  // lan can đá trắng dọc mép xa: trụ + tay vịn
+  const railY = y0 - 1, H = 17
+  // bậc đá mép xa (gờ dày) rồi lan can: thanh vịn trên + thanh dưới, trụ có đầu búp sen
+  wash(g, [[L0 - 4, y0 - 2], [R0 + 4, y0 - 2], [R0 + 6, y0 + 5], [L0 - 6, y0 + 5]], { fill: mix(C.paper2, C.ink3, 0.35), alpha: 1, jitter: 0.4, layers: 2, sharp: true, seed: 119 })
+  stroke(g, [[L0 - 6, y0 + 5], [R0 + 6, y0 + 5]], { w: 1.2, color: C.ink, press: 'even', alpha: 0.55, dry: 0.3, seed: 118 })
+  wash(g, [[L0, railY - H], [R0, railY - H], [R0, railY - H + 3.4], [L0, railY - H + 3.4]], { fill: C.silk, alpha: 1, jitter: 0.3, layers: 1, sharp: true, seed: 120 })
+  wash(g, [[L0, railY - 5], [R0, railY - 5], [R0, railY - 2.6], [L0, railY - 2.6]], { fill: C.silk, alpha: 1, jitter: 0.3, layers: 1, sharp: true, seed: 123 })
+  stroke(g, [[L0, railY - H], [R0, railY - H]], { w: 1.1, color: C.ink, press: 'even', alpha: 0.75, seed: 121 })
+  stroke(g, [[L0, railY - H + 3.4], [R0, railY - H + 3.4]], { w: 0.6, color: C.ink, press: 'even', alpha: 0.5, seed: 122 })
+  stroke(g, [[L0, railY - 2.6], [R0, railY - 2.6]], { w: 0.6, color: C.ink, press: 'even', alpha: 0.5, seed: 124 })
+  const posts = 10
+  for (let i = 0; i <= posts; i++) {
+    const x = lerp(L0, R0, i / posts)
+    wash(g, [[x - 2.6, railY + 1], [x - 2.6, railY - H - 1], [x + 2.6, railY - H - 1], [x + 2.6, railY + 1]], { fill: C.silk, alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: 130 + i })
+    wash(g, [[x + 0.6, railY + 1], [x + 0.6, railY - H - 1], [x + 2.6, railY - H - 1], [x + 2.6, railY + 1]], { fill: C.ink3, alpha: 0.25, jitter: 0.1, layers: 1, sharp: true, seed: 140 + i })
+    blot(g, x, railY - H - 2.6, 3, C.silk, 1, 150 + i, 0.85)
+    stroke(g, [[x - 2.6, railY + 1], [x - 2.6, railY - H - 1]], { w: 0.6, color: C.ink, press: 'nail', alpha: 0.7, seed: 170 + i })
+    stroke(g, [[x + 2.6, railY - H - 1], [x + 2.6, railY + 1]], { w: 1, color: C.ink, press: 'nail', alpha: 0.75, seed: 190 + i })
+    stroke(g, [[x - 3, railY - H - 2.2], [x, railY - H - 5.4], [x + 3, railY - H - 2.2]], { w: 0.8, color: C.ink, press: 'taper', alpha: 0.75, seed: 210 + i })
+  }
+  // mây 如意 ôm hai góc dưới: tháp như nổi giữa trời
+  for (const [x, y, cw, sd] of [[-6, h * 0.97, 150, 11], [w + 8, h * 0.99, 160, 17], [w * 0.1, h * 0.7, 90, 23]] as const) {
+    stamp(g, cloud(cw, sd), x, y)
+  }
+  grain(g, 0.12) // mặt đá đục: hạt giấy nặng tay sẽ thành đốm rằn ri
 }
 
 // ---------- VFX: kiếp vân, tia nắng, mưa, mực văng, nứt đất, bướm, chim, cánh hoa ----------

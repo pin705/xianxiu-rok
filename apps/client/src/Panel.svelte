@@ -13,6 +13,7 @@
   import JobRow from './JobRow.svelte'
   import Library from './Library.svelte'
   import Train from './Train.svelte'
+  import Trade from './Trade.svelte'
   import { L, clock, num } from './lib'
 
   let {
@@ -43,6 +44,7 @@
     dienVoTruong: ['train', L.train.tab],
     danPhong: ['alchemy', L.b.danPhong.name],
     tangKinhCac: ['library', L.library.tab],
+    tangBaoCac: ['trade', L.trade.tab],
   }
   // Thẻ người chơi đã chọn, nhớ theo công trình: mở công trình khác thì về thẻ mặc định
   let picked = $state<{ id: BuildingId | null; tab: string } | null>(null)
@@ -96,6 +98,8 @@
       <Alchemy {game} {now} {act} />
     {:else if tab === 'library'}
       <Library {game} {now} {act} />
+    {:else if tab === 'trade'}
+      <Trade {game} {act} />
     {:else if locked}
       <div class="stack mt-3">
         <Tag icon="lock" tone="bad">{L.panel.locked(d.unlock)}</Tag>

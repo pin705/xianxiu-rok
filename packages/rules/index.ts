@@ -1,7 +1,7 @@
 import { fight, type Round, type Side, type Troop } from './combat.ts'
 import {
   BASE_CAP, BASE_RATE, BATCH_BASE, BATCH_STEP, BEASTS, BEAST_COOLDOWN, BEAST_EXP, BEAST_LOOT, BEAST_STR, BEATS, BOI_NGUYEN_EXP,
-  BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, TOWER, TOWER_GROW, TOWER_RES, TOWER_RES_GROW, TOWER_STR, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, HEAL_COST,
+  BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, TRADE_KEEP, TRADE_KEEP_MAX, TRADE_STEP, TOWER, TOWER_GROW, TOWER_RES, TOWER_RES_GROW, TOWER_STR, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, HEAL_COST,
   HEAL_TIME, HOME, HOSPITAL_BASE, HOSPITAL_STEP, LOSS_EXP, MAIN_SHARE, MAP_HALL, MARCH_MIN, MARCH_SLOTS, MARCH_SPEED,
   MAX_CUT, MAX_LEVEL, PILLS, QUESTS, QUEUE_SIZE, REALMS, REBIRTH_BUILD, REBIRTH_HEAD, REBIRTH_HEAD_MAX, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
   SECT_SHARE, SPEEDUP, START, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TRIBS, TRIB_COOLDOWN,
@@ -103,6 +103,7 @@ export type Action =
   | { type: 'march'; target: Target; elder: ElderId; army: Army }
   | { type: 'realm'; i: number; elder: ElderId; army: Army }
   | { type: 'tower'; elder: ElderId; army: Army }
+  | { type: 'trade'; from: Res; to: Res; n: number }
   | { type: 'trib'; elder: ElderId; army: Army; pill: boolean }
   | { type: 'speed'; job: JobKind; n: number }
   | { type: 'feed'; elder: ElderId; n: number }
@@ -177,6 +178,8 @@ const bump = (s: State, id: DailyId, k = 1): State => ({
 export const dailyDone = (s: State, i: number) => s.daily.n[DAILY[i].id] >= DAILY[i].n
 export const dailyReward = (s: State) => DAILY_RES * s.levels.chuDien
 // Số việc làm xong mà chưa nhận thưởng (kể cả rương) — để hiện huy hiệu
+// Thương hội: phần giữ lại khi đổi tài nguyên (0..1)
+export const tradeKeep = (s: State) => Math.min(TRADE_KEEP_MAX, TRADE_KEEP + TRADE_STEP * (s.levels.tangBaoCac - 1))
 export const weeklyDone = (s: State, i: number) => s.weekly.n[WEEKLY[i].id] >= WEEKLY[i].n
 export const weeklyReward = (s: State) => WEEKLY_RES * s.levels.chuDien
 // số phần thưởng đang chờ nhận (ngày + tuần) — huy hiệu trên nút nhiệm vụ
@@ -759,6 +762,13 @@ export function apply(s: State, a: Action, now: number): Result {
       if (!state.daily.got.every(Boolean)) return no('not_done')
       const w = state.weekly
       return ok({ ...state, items: addItems(state.items, DAILY_BONUS), daily: { ...state.daily, bonus: true }, weekly: { ...w, n: { ...w.n, days: w.n.days + 1 } } })
+    }
+    case 'trade': {
+      if (state.levels.tangBaoCac < 1) return no('locked')
+      if (a.from === a.to || !RESOURCES.includes(a.from) || !RESOURCES.includes(a.to) || !Number.isInteger(a.n) || a.n < 1) return no('locked')
+      if (a.n > Math.floor(state.res[a.from])) return no('not_enough')
+      const got = Math.floor(a.n * tradeKeep(state))
+      return ok({ ...state, res: { ...state.res, [a.from]: state.res[a.from] - a.n, [a.to]: state.res[a.to] + got } })
     }
     case 'weekly': {
       if (state.levels.chuDien < DAILY_HALL || !WEEKLY[a.i]) return no('locked')

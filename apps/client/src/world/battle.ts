@@ -31,7 +31,7 @@ const ringT = (f: number, k: number) => ringTex(256, 80, 7, 3, DRY[f], k)
 const burstT = (n: number) => (f: number, k: number) => burstTex(128, 5 + n * 7, DRY[f], k)
 const streakT = (f: number, k: number) => streakTex(24, 128, 11, DRY[f], k)
 const boltT = (n: number) => (_: number, k: number) => boltTex(160, 640, n, k)
-const THEME: Record<Report['kind'], Theme> = { beast: 'wild', sect: 'sect', realm: 'forest', tower: 'sect', trib: 'storm' }
+const THEME: Record<Report['kind'], Theme> = { beast: 'wild', sect: 'sect', realm: 'forest', tower: 'tower', trib: 'storm' }
 const REALM: Theme[] = ['forest', 'fire', 'ice']
 const REALM_TINT = [C.malachite, C.cinnabarL, C.azuriteL]
 
@@ -61,7 +61,8 @@ export class Battle {
   ) {
     this.theme = report.kind === 'realm' ? REALM[report.i] ?? 'forest' : THEME[report.kind]
     this.enemy = report.kind === 'trib' ? 'spirit' : report.kind === 'sect' ? 'man' : 'beast'
-    this.tint = report.kind === 'realm' ? REALM_TINT[report.i] ?? C.ochre : C.ochre
+    // yêu vương canh tầng tháp: lông chàm sẫm, khác yêu thú ngoài đồng
+    this.tint = report.kind === 'realm' ? REALM_TINT[report.i] ?? C.ochre : report.kind === 'tower' ? C.indigo : C.ochre
     this.cam.pivot.set(w / 2, h / 2)
     this.cam.position.set(w / 2, h / 2)
     this.cam.addChild(this.field, this.decal, this.units, this.fx)
@@ -93,7 +94,7 @@ export class Battle {
     this.tick_.push(dt => (mist.tilePosition.x += dt * 8))
     // hạt theo cảnh: lá rơi, tàn lửa, tuyết, mưa
     const sparkT = texOf('spark', () => sparkTex(24))
-    const color = { forest: C.malachiteL, fire: '#ffb35c', ice: '#ffffff', storm: '#b9a8ff', wild: C.goldL, sect: C.goldL }[this.theme]
+    const color = { forest: C.malachiteL, fire: '#ffb35c', ice: '#ffffff', storm: '#b9a8ff', wild: C.goldL, sect: C.goldL, tower: C.goldL }[this.theme]
     for (let i = 0; i < 26; i++) {
       const p = new Sprite(sparkT)
       p.anchor.set(0.5)
@@ -101,7 +102,7 @@ export class Battle {
       p.blendMode = this.theme === 'ice' || this.theme === 'forest' ? 'normal' : 'add'
       p.width = p.height = 3 + (i % 3) * 2
       const x0 = ((i * 97) % 100) / 100, spd = 0.04 + (i % 5) * 0.012, off = i * 0.37
-      const up = this.theme === 'fire' || this.theme === 'wild' || this.theme === 'sect'
+      const up = this.theme === 'fire' || this.theme === 'wild' || this.theme === 'sect' || this.theme === 'tower'
       this.field.addChild(p)
       this.tick_.push(() => {
         const k = (this.t * spd + off) % 1

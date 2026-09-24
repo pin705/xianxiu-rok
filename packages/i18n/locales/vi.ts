@@ -1,5 +1,5 @@
 import {
-  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TRIB_COOLDOWN, rebirthLevels,
+  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIB_COOLDOWN, rebirthLevels,
   type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
@@ -179,6 +179,16 @@ export const vi = {
   ],
   target(t: Target) {
     return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : vi.realms[t.i].name
+  },
+  trade: {
+    tab: 'Thương hội',
+    give: 'Đổi đi',
+    get: 'Nhận về',
+    amount: 'Số lượng',
+    rate: (keep: string) => `Nhận về ${keep} số đổi đi — nâng Tàng Bảo Các để được giá tốt hơn`,
+    go: (n: string, r: string) => `Đổi lấy ${n} ${r}`,
+    hint: 'Kho lệch (một loại cạn, loại khác đầy) thì đổi phần dư. Muốn nhiều lâu dài, nâng công trình tài nguyên vẫn lợi hơn.',
+    done: (n: string, r: string) => `Đã nhận ${n} ${r}`,
   },
   tower: {
     name: 'Thông Thiên Tháp',
@@ -403,8 +413,9 @@ export const vi = {
       ['Trưởng lão', `Mỗi đội cần một trưởng lão dẫn. Mỗi cấp trưởng lão cho cả đội +${pct(ELDER_STEP)} công và máu; công pháp chủ động bung ra ở lượt 3, 6, 9. Thu nhận thêm trưởng lão khi công phá tông môn đối địch và qua tầng 5 các bí cảnh.`],
       ['Thương binh', 'Đánh trận nào cũng có thương binh. Họ nằm ở Đan phòng chờ chữa; Đan phòng hết chỗ thì thương binh mới tử trận — chữa trước khi đánh tiếp, hoặc nâng Đan phòng.'],
       ['Độ kiếp', `Chủ điện tầng 5 và 10 phải vượt ba đợt lôi kiếp, mỗi đợt một hệ, người sống sót đi tiếp — hãy mang đủ ba hệ. Độ Kiếp Đan làm sét yếu đi ${pct(DO_KIEP)}. Thất bại chỉ phải chờ ${TRIB_COOLDOWN / 60_000} phút rồi thử lại.`],
-      ['Kho đầy', 'Tài nguyên ngừng sinh khi kho đầy: nâng Tàng Bảo Các. Thưởng nhiệm vụ và chiến lợi phẩm vẫn nhận được dù vượt sức chứa.'],
-      ['Nhiệm vụ ngày, luân hồi', 'Nhiệm vụ ngày làm mới lúc 0h giờ Việt Nam. Tới Chủ điện tầng 15 có thể luân hồi: giữ trưởng lão, công pháp, đan dược; kiếp sau khởi đầu với công trình tầng cao hơn (căn cơ), sinh tài nguyên nhiều hơn và xây nhanh hơn — mỗi kiếp ngắn hơn hẳn kiếp trước.'],
+      ['Kho đầy, kho lệch', `Tài nguyên ngừng sinh khi kho đầy: nâng Tàng Bảo Các. Thưởng nhiệm vụ và chiến lợi phẩm vẫn nhận được dù vượt sức chứa. Kho lệch (một loại cạn, loại khác đầy) thì vào Thương hội ở Tàng Bảo Các đổi phần dư — nhận về ${pct(TRADE_KEEP)} tới ${pct(TRADE_KEEP_MAX)} tuỳ tầng.`],
+      ['Thông Thiên Tháp', `Mở ở Chủ điện tầng ${TOWER.hall}, trên đỉnh bản đồ. Tháp không có tầng cuối: mỗi tầng địch mạnh hơn và đổi hệ chính, nên hãy đổi đội theo hệ khắc. Thưởng chỉ nhận lần đầu qua mỗi tầng (tầng chẵn chục có Độ Kiếp Đan); kỷ lục giữ qua luân hồi.`],
+      ['Nhiệm vụ ngày, tuần, luân hồi', 'Nhiệm vụ ngày làm mới lúc 0h giờ Việt Nam, nhiệm vụ tuần lúc 0h thứ Hai. Tới Chủ điện tầng 15 có thể luân hồi: giữ trưởng lão, công pháp, đan dược; kiếp sau khởi đầu với công trình tầng cao hơn (căn cơ), sinh tài nguyên nhiều hơn và xây nhanh hơn — mỗi kiếp ngắn hơn hẳn kiếp trước.'],
       ['Giữ save', 'Save chỉ nằm trên máy này. Thỉnh thoảng bấm "Xuất save" ở dưới để giữ một bản sao.'],
     ] as [string, string][],
   },

@@ -1,5 +1,5 @@
 import {
-  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TRIB_COOLDOWN, rebirthLevels,
+  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIB_COOLDOWN, rebirthLevels,
   type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
@@ -182,6 +182,16 @@ export const en: Text = {
   ],
   target(t: Target) {
     return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : en.realms[t.i].name
+  },
+  trade: {
+    tab: 'Trading house',
+    give: 'Give',
+    get: 'Receive',
+    amount: 'Amount',
+    rate: (keep: string) => `The traders keep a cut: you receive ${keep} — upgrade the Treasure Pavilion for better rates`,
+    go: (n: string, r: string) => `Trade for ${n} ${r}`,
+    hint: 'When storage is lopsided (one resource short, others full), trade the surplus. For steady income, upgrading resource buildings is still better.',
+    done: (n: string, r: string) => `Received ${n} ${r}`,
   },
   tower: {
     name: 'Heaven-Piercing Tower',
@@ -404,8 +414,9 @@ export const en: Text = {
       ['Elders', `Every army needs a leading elder. Each elder level gives the whole army +${pct(ELDER_STEP)} attack and HP; their active technique fires on rounds 3, 6 and 9. Recruit more elders by conquering rival sects and clearing floor 5 of the secret realms.`],
       ['Wounded', 'Every battle leaves wounded. They wait in the Alchemy Room to be healed; when it runs out of beds, new wounded die — heal before fighting again, or upgrade the Alchemy Room.'],
       ['Tribulation', `At Main Hall levels 5 and 10 you must survive three lightning waves, one type each, and survivors carry on — bring all three types. A Tribulation Pill weakens the lightning by ${pct(DO_KIEP)}. Failing only means waiting ${TRIB_COOLDOWN / 60_000} minutes before trying again.`],
-      ['Full storage', 'Resources stop growing when storage is full: upgrade the Treasure Pavilion. Quest rewards and loot still arrive above capacity.'],
-      ['Daily tasks, reincarnation', 'Daily tasks reset at midnight, Vietnam time. At Main Hall level 15 you can reincarnate: keep elders, techniques and pills; the next life starts with higher-level buildings, produces more and builds faster — each life is much shorter than the last.'],
+      ['Full or lopsided storage', `Resources stop growing when storage is full: upgrade the Treasure Pavilion. Quest rewards and loot still arrive above capacity. If one resource runs short while others are full, trade the surplus at the Trading house in the Treasure Pavilion — you receive ${pct(TRADE_KEEP)} to ${pct(TRADE_KEEP_MAX)} depending on its level.`],
+      ['Heaven-Piercing Tower', `Opens at Main Hall level ${TOWER.hall}, at the top of the map. The tower has no last floor: each floor is stronger and changes its main type, so switch your army to the counter. Rewards come only on the first clear of each floor (every tenth floor gives a Tribulation Pill); your record carries over reincarnation.`],
+      ['Daily and weekly tasks, reincarnation', 'Daily tasks reset at midnight, Vietnam time; weekly tasks on Monday at midnight. At Main Hall level 15 you can reincarnate: keep elders, techniques and pills; the next life starts with higher-level buildings, produces more and builds faster — each life is much shorter than the last.'],
       ['Keep your save', 'Your save lives only on this device. Tap "Export save" below now and then to keep a copy.'],
     ] as [string, string][],
   },

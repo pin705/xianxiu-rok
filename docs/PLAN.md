@@ -58,6 +58,7 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 | Tàng Kinh Các | Học viện | ✅ 20 công pháp, 5 hàng mở theo tầng 1/3/6/9/12 | Mở rộng theo mùa |
 | Đan phòng | Bệnh viện | ✅ Chữa thương (chỗ nằm có hạn, dư thì tử trận) + 3 đan: Tụ Khí (tăng tốc), Bồi Nguyên (kinh nghiệm), Độ Kiếp | Luyện đan theo công thức |
 | Bản đồ | Bản đồ vương quốc | ✅ Vùng PvE riêng: 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, 3 bí cảnh × 5 tầng | P3: giới chung |
+| Thương hội | Chợ đổi tài nguyên | ✅ Ở Tàng Bảo Các: đổi tài nguyên dư lấy loại thiếu, nhận về 60% (+1% mỗi tầng Tàng Bảo Các, tối đa 75%) — cứu kho lệch, vẫn đắt hơn xây công trình tài nguyên | Chợ giữa người chơi (P3) |
 | Thông Thiên Tháp | — | ✅ Tháp thử thách không giới hạn tầng, mở ở tầng 10, đánh ngay như bí cảnh; mỗi tầng địch mạnh hơn 10% và đổi hệ chính; thưởng lần đầu mỗi tầng (tầng 5: Tụ Khí, tầng 10: Độ Kiếp + Bồi Nguyên); kỷ lục giữ qua luân hồi. Sim: bot giỏi tầng 39 sau 30 ngày, người chơi thường tầng 38 sau 45 ngày | Bảng xếp hạng tháp (P2) |
 | Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | P3: kiếp vân công khai trên bản đồ |
 | PvP | Đánh thành | — | P2: bất đồng bộ; P3: trên bản đồ |

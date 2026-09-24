@@ -112,7 +112,7 @@
   {#if report && f}
     <header class="row foe">
       <Medal emblem={foeEmblem} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={46} />
-      <span class="stack" style:--gap="0"><b class="t-head">{foeName}</b>{#if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span>
+      <span class="stack" style:--gap="0"><b class="t-head">{foeName}</b>{#if report.kind === 'tower'}<small class="t-small t-bad t-strong">{L.tower.floor(f.b.level)}</small>{:else if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span>
     </header>
 
     <div class="mid">

@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   BASE_RATE, BEASTS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
-  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, nextWeek, weekOf, towerReward, towerStr, towerType, enemyOf, targetError,
+  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, nextWeek, weekOf, tradeKeep, towerReward, towerStr, towerType, enemyOf, targetError,
   techTime, trainCost, trainTime, upgradeError, winChance,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
@@ -422,4 +422,18 @@ test('Thông Thiên Tháp: mở ở tầng 10, qua tầng thì lên kỷ lục v
   assert.equal(reborn.tower, 1)
   const { tower: _, ...old } = s
   assert.equal(migrate(JSON.parse(JSON.stringify(old)))?.tower, 0)
+})
+
+test('Thương hội: đổi tài nguyên dư lấy tài nguyên thiếu, mất phí, tầng Tàng Bảo Các càng cao phí càng thấp', () => {
+  const s = { ...rich(6, 1), res: { linhThach: 10000, linhThao: 10000, linhKhoang: 50 } }
+  const r = run(s, { type: 'trade', from: 'linhThach', to: 'linhKhoang', n: 1000 })
+  assert.equal(r.res.linhThach, 9000)
+  assert.equal(r.res.linhKhoang, 50 + Math.floor(1000 * tradeKeep(s)))
+  assert.ok(tradeKeep(s) < 1, 'luôn mất phí')
+  assert.ok(tradeKeep({ ...s, levels: { ...s.levels, tangBaoCac: 10 } }) > tradeKeep(s))
+  assert.ok(tradeKeep({ ...s, levels: { ...s.levels, tangBaoCac: 99 } }) <= 0.75)
+  assert.equal(err(s, { type: 'trade', from: 'linhKhoang', to: 'linhThach', n: 51 }), 'not_enough')
+  assert.equal(err(s, { type: 'trade', from: 'linhThach', to: 'linhThach', n: 10 }), 'locked')
+  assert.equal(err(s, { type: 'trade', from: 'linhThach', to: 'linhThao', n: 1.5 }), 'locked')
+  assert.equal(err({ ...s, levels: { ...s.levels, tangBaoCac: 0 } }, { type: 'trade', from: 'linhThach', to: 'linhThao', n: 10 }), 'locked')
 })

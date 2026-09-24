@@ -1,7 +1,7 @@
 <script lang="ts">
   import { flushSync, onMount } from 'svelte'
   import {
-    BUILDINGS, IDS, MAP_HALL, REALMS, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, advance, apply, cost, newGame, questDone, questOf, storage, storeNeed,
+    BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, advance, apply, cost, newGame, questDone, questOf, storage, storeNeed,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
@@ -65,6 +65,7 @@
       ...(n === MAP_HALL ? [L.map.title] : []),
       ...SECTS.flatMap((d, i) => (d.hall === n ? [L.sects[i].name] : [])),
       ...REALMS.flatMap((d, i) => (d.hall === n ? [L.realms[i].name] : [])),
+      ...(n === TOWER.hall ? [L.tower.name] : []),
     ]
     if (opened.length) toast(L.unlocked([...new Set(opened)].join(', ')))
   }

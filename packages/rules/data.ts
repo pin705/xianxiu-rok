@@ -278,6 +278,14 @@ export const DAILY: { id: DailyId; n: number }[] = [
 export const DAILY_RES = 150 // mỗi việc: DAILY_RES × tầng Chủ điện, mỗi loại tài nguyên
 export const DAILY_BONUS: Partial<Record<PillId, number>> = { tuKhi: 1, boiNguyen: 1 } // rương khi xong cả 4
 
+// ---------- Thương hội (Tàng Bảo Các) ----------
+
+// Đổi tài nguyên dư lấy tài nguyên thiếu: mỗi hệ đệ tử ăn chủ yếu một loại, nên kho hay lệch — một loại cạn, hai loại đầy.
+// Giữ lại TRADE_KEEP (tăng TRADE_STEP mỗi tầng Tàng Bảo Các, tối đa TRADE_KEEP_MAX): đủ cứu kho lệch, đắt hơn xây công trình tài nguyên.
+export const TRADE_KEEP = 0.6
+export const TRADE_STEP = 0.01
+export const TRADE_KEEP_MAX = 0.75
+
 // ---------- Thông Thiên Tháp ----------
 
 // Tháp thử thách không giới hạn tầng, mở ở Chủ điện tầng 10: việc để làm sau khi dọn bản đồ, ngoài luân hồi.
