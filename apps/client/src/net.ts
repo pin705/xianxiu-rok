@@ -4,9 +4,11 @@
 // Mầm trận luôn là 0 ở client (rules: mầm 0 = ẩn) nên advance ở đây không bao giờ tự bịa kết quả trận — server đẩy xuống.
 import { io, type Socket } from 'socket.io-client'
 import { advance, apply, type Action, type Report, type State } from '@rok/rules'
+import type { WorldAction } from '@rok/rules/world'
 import type { Ack, ClientToServer, Push, Query, Refuse, ServerToClient, Welcome } from '@rok/protocol'
 import { fold, offsetOf, withReports, type Pending } from './sync'
 
+export type Ranks = { rows: { pid: number; name: string; v: number; hall: number; rank: number }[]; me: { rank: number; v: number } | null }
 export type Status = 'boot' | 'nosect' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'update' | 'lost' | 'banned' | 'deleted'
 export type Why = 'first' | 'tick' | 'mine' | 'push' | 'resync'
 // ---------- Kết nối ----------
@@ -196,7 +198,7 @@ export function createNet(h: Handlers, lang: string) {
     })
   }
 
-  function send(a: Action, predicted: boolean): Promise<Ack> {
+  function send(a: Action | WorldAction, predicted: boolean): Promise<Ack> {
     return new Promise(done => {
       const p: Pending = { a, at: now(), predicted, done }
       pending.push(p)
@@ -267,7 +269,7 @@ export function createNet(h: Handlers, lang: string) {
       return display
     },
     // Thao tác có trận (bí cảnh, tháp, độ kiếp) hoặc không đảo lại được (luân hồi): chờ server
-    async send(a: Action): Promise<Ack> {
+    async send(a: Action | WorldAction): Promise<Ack> {
       if (status !== 'online') {
         h.error('offline')
         return { ok: false, err: 'unavailable' }
@@ -277,6 +279,8 @@ export function createNet(h: Handlers, lang: string) {
       return r
     },
     ask,
+    // Bảng xếp hạng của giới mình (HTTP, server cache 30 giây)
+    ranks: (board: string) => api<Ranks>(`/ranks/${board}`),
     // Công cụ dev (server bật ALLOW_WARP): tua giờ giới, đặt state
     dev: (route: 'warp' | 'state', body: object) => api(`/dev/${route}`, body),
     retry() {

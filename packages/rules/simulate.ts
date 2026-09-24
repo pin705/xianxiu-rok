@@ -8,6 +8,12 @@
 import { ELDER_IDS, GEAR_IDS, IDS, QUESTS, REBIRTH_HALL, SECTS, TECH_IDS, UNITS, apply, advance, elderLevel, newGame, type Action } from './index.ts'
 import { ready, turn, type BotOpts } from './bot.ts'
 
+//   npm run sim -- 30 4 --pvp 20   → 20 bot chung một giới cướp lẫn nhau (simpvp.ts)
+if (process.argv.includes('--pvp')) {
+  await import('./simpvp.ts')
+  process.exit(process.exitCode ?? 0)
+}
+
 const DAY = 86_400_000
 const [daysArg, perDayArg] = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && all[i - 1] !== '--goal')
 const days = Number(daysArg ?? 30)

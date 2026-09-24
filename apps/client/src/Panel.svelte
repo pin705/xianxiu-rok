@@ -2,7 +2,7 @@
   // Bảng công trình: mở khi chạm vào công trình trên núi. Công trình có chức năng thì thêm thẻ (tuyển, luyện đan, công pháp).
   // Chủ điện ở tầng 5, 10, 15, 20: thay nâng cấp bằng độ kiếp. Từ tầng 15: luân hồi.
   import {
-    BUILDINGS, DO_KIEP, MAX_LEVEL, PHA_CANH, REBIRTH_HALL, TECH_ROWS, TRIBS, batch, buildTime, capAt, cost, gearCap, hospital, marchSlots, might, mob, rate,
+    BUILDINGS, DO_KIEP, GUARD_STEP, MAX_LEVEL, PHA_CANH, REBIRTH_HALL, TECH_ROWS, TRIBS, batch, buildTime, capAt, cost, gearCap, hospital, marchSlots, might, mob, rate,
     storage, storeNeed, tribError, tribPill, upgradeError, winChance,
     type Action, type Army, type BuildingId, type ElderId, type State, type Tier, type UnitType,
   } from '@rok/rules'
@@ -11,6 +11,7 @@
   import Alchemy from './Alchemy.svelte'
   import ArmyPick from './Army.svelte'
   import Forge from './Forge.svelte'
+  import Guard from './Guard.svelte'
   import JobRow from './JobRow.svelte'
   import Library from './Library.svelte'
   import Train from './Train.svelte'
@@ -49,6 +50,7 @@
     tangKinhCac: ['library', L.library.tab],
     tangBaoCac: ['trade', L.trade.tab],
     luyenKhiPhong: ['forge', L.forge.tab],
+    hoSonDaiTran: ['guard', L.pvp.defense],
   }
   // Thẻ người chơi đã chọn, nhớ theo công trình: mở công trình khác thì về thẻ mặc định
   let picked = $state<{ id: BuildingId | null; tab: string } | null>(null)
@@ -106,6 +108,8 @@
       <Trade {game} {act} />
     {:else if tab === 'forge'}
       <Forge {game} {now} {act} />
+    {:else if tab === 'guard'}
+      <Guard {game} {now} {act} />
     {:else if locked}
       <div class="stack mt-3">
         <Tag icon="lock" tone="bad">{L.panel.locked(d.unlock)}</Tag>
@@ -127,6 +131,8 @@
           <Stat label={L.panel.rows}>{TECH_ROWS.filter(r => r <= lv).length}/{TECH_ROWS.length}</Stat>
         {:else if id === 'chuDien'}
           <Stat label={L.panel.slots}>{marchSlots(game)}</Stat>
+        {:else if id === 'hoSonDaiTran'}
+          <Stat label={L.pvp.wall(lv)}>+{Math.round(GUARD_STEP * lv * 100)}%{#if lv < MAX_LEVEL}<span class="to">→ +{Math.round(GUARD_STEP * next * 100)}%</span>{/if}</Stat>
         {:else if id === 'luyenKhiPhong'}
           <Stat label={L.panel.gearCap}>{gearCap(game)}{#if lv < MAX_LEVEL}<span class="to">→ {gearCap(withLevel(id, next))}</span>{/if}</Stat>
         {/if}

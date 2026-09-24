@@ -30,9 +30,11 @@ export function along(x: number, y: number, k: number): [number, number] {
   const u = 1 - k
   return [u * u * HOME.x + 2 * u * k * cx + k * k * x, u * u * HOME.y + 2 * u * k * cy + k * k * y]
 }
-// Tiến độ 0..1 của đội trên đường (đi rồi về)
+// Tiến độ 0..1 của đội trên đường (đi rồi về). Đi cướp chưa giải trận (returnAt 0): đứng ở đích chờ server
 export const marchK = (m: March, now: number) =>
-  Math.max(0, Math.min(1, now < m.arriveAt ? (now - m.startAt) / (m.arriveAt - m.startAt) : 1 - (now - m.arriveAt) / (m.returnAt - m.arriveAt)))
+  !m.returnAt && now >= m.arriveAt
+    ? 1
+    : Math.max(0, Math.min(1, now < m.arriveAt ? (now - m.startAt) / (m.arriveAt - m.startAt) : 1 - (now - m.arriveAt) / (m.returnAt - m.arriveAt)))
 
 // Nét đứt dọc đường cong, chia theo độ dài (không theo tham số): tâm + hướng của từng vệt
 function dashes(x: number, y: number, dash: number, gap: number, offset = 0) {

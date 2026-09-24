@@ -1,13 +1,13 @@
 <script lang="ts">
   // Màn bản đồ: cảnh WebGL (map.ts) + mục tiêu là huy hiệu HTML (chạm được, đọc được) + thanh trên và danh sách đội.
-  import { BEASTS, MAP_HALL, REALMS, SECTS, TOWER, coolKey, marchSlots, targetError, type State, type Target } from '@rok/rules'
+  import { BEASTS, MAP_HALL, PVP_HALL, REALMS, SECTS, TOWER, coolKey, marchSlots, targetError, type State, type Target } from '@rok/rules'
   import { Icon, Portrait, type Emblem } from '@rok/art'
   import { Badge, Button, Card, Medal, Tag } from '../ui'
   import { EMBLEM, L, LOOK, clock } from '../lib'
   import { MAP, MAP_H, MapScene } from './map'
   import View from './View.svelte'
 
-  let { game, now, onpick, onreports }: { game: State; now: number; onpick: (t: Target) => void; onreports: () => void } = $props()
+  let { game, now, onpick, onreports, onrivals = () => {} }: { game: State; now: number; onpick: (t: Target) => void; onreports: () => void; onrivals?: () => void } = $props()
 
   let scene = $state.raw<MapScene>()
   type Node = { t: Target; x: number; y: number; emblem: Emblem; lv?: number; name: string }
@@ -59,6 +59,7 @@
 
 <div class="top row">
   <span class="grow"><Tag icon="flag">{L.map.slots(game.marches.length, marchSlots(game))}</Tag></span>
+  {#if game.levels.chuDien >= PVP_HALL}<Button size="sm" icon="swords" onclick={onrivals}>{L.pvp.find}</Button>{/if}
   <span class="rep"><Button size="sm" icon="scroll" onclick={onreports}>{L.report.title}</Button><Badge n={unread} /></span>
 </div>
 
@@ -67,11 +68,11 @@
     {#each game.marches as m (m.id)}
       {@const out = now < m.arriveAt}
       <li>
-        <Card tone="silk" onclick={() => onpick(m.target)}>
+        <Card tone="silk" onclick={() => (m.target.kind === 'pvp' ? onrivals() : onpick(m.target))}>
           <span class="row">
             <Portrait look={LOOK[m.elder]} size={30} />
-            <span class="grow stack" style:--gap="0"><b class="t-small">{L.target(m.target)}</b><small class="t-tiny t-soft">{out ? L.map.out : L.map.back}</small></span>
-            <b class="t-num t-gold">{clock((out ? m.arriveAt : m.returnAt) - now)}</b>
+            <span class="grow stack" style:--gap="0"><b class="t-small">{m.foe ?? L.target(m.target)}</b><small class="t-tiny t-soft">{out ? L.map.out : L.map.back}</small></span>
+            <b class="t-num t-gold">{clock((out ? m.arriveAt : m.returnAt || m.arriveAt) - now)}</b>
           </span>
         </Card>
       </li>

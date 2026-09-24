@@ -1,8 +1,10 @@
 // Phần thuần của lớp mạng (không I/O, có unit test ở apps/client/net.test.ts)
 import { apply, type Action, type Report, type State } from '@rok/rules'
+import type { WorldAction } from '@rok/rules/world'
 import type { Ack, View } from '@rok/protocol'
 
-export type Pending = { a: Action; at: number; predicted: boolean; done?: (r: Ack) => void }
+// Thao tác giữa các tông môn (đi cướp) không đoán trước được: predicted luôn false
+export type Pending = { a: Action | WorldAction; at: number; predicted: boolean; done?: (r: Ack) => void }
 
 // State cho giao diện: state đã xác nhận + kho chiến báo riêng (chiến báo không đi trong patch)
 export const withReports = (v: View, reports: Report[]): State => ({ ...v, reports })
@@ -13,7 +15,7 @@ export function fold(confirmed: State, pending: readonly Pending[]) {
   let s = confirmed
   for (const p of pending) {
     if (!p.predicted) continue
-    const r = apply(s, p.a, p.at)
+    const r = apply(s, p.a as Action, p.at)
     if (r.ok) s = r.state
   }
   return s

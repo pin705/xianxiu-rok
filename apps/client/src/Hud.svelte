@@ -22,6 +22,8 @@
     ontab,
     onsettings,
     ondaily,
+    onranks = () => {},
+    onmail = () => {},
     onfocus,
   }: {
     game: State
@@ -35,6 +37,8 @@
     ontab: (t: Tab, e: MouseEvent) => void
     onsettings: () => void
     ondaily: () => void
+    onranks?: () => void // chạm chân dung: xếp hạng
+    onmail?: () => void
     onfocus: (id: BuildingId, view?: string) => void // mở bảng công trình (danh sách việc đang chạy)
   } = $props()
 
@@ -68,6 +72,8 @@
   // Huy hiệu trên thanh tab: số chiến báo chưa đọc; chấm đỏ khi có thương binh chờ chữa
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
   const hurt = $derived(!game.heal && count(game.wounded) > 0)
+  // thư mới chưa đọc hoặc còn quà chưa nhận
+  const letters = $derived(game.mail.filter(m => m.id > game.seen || (m.gift && !m.got)).length)
 
   // Cột trái desktop: mọi việc có đồng hồ, bấm là mở đúng công trình (hành quân → bản đồ)
   type Run = { key: string; icon: IconName; text: string; end: number; go: (e: MouseEvent) => void }
@@ -96,12 +102,17 @@
 <div class="hud">
   <header class="topbar strip">
     <div class="row who">
-      <span class="avatar"><Portrait look={MASTER} size={50} /><img class="frame" src={paintedUrl('ring', portraitRing, 62)} alt="" draggable="false" /></span>
+      <!-- chân dung: chạm để xem xếp hạng; vòng khiên xanh khi đang được bảo hộ -->
+      <button class="avatar" class:shielded={game.shield > now} onclick={onranks} aria-label={L.rank.open}>
+        <Portrait look={MASTER} size={50} /><img class="frame" src={paintedUrl('ring', portraitRing, 62)} alt="" draggable="false" />
+        {#if game.shield > now}<span class="shield" title={L.pvp.shield(clock(game.shield - now))}><Icon name="shield" size={18} /></span>{/if}
+      </button>
       <div class="grow id">
         <b class="t-ellipsis">{game.name}</b>
         <span class="realm"><img src={paintedUrl('lotus', () => emblemArt('lotus'), 18)} width="18" height="18" alt="" draggable="false" />{L.realm(hall)}</span>
       </div>
       <span class="pow" title={L.power}><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(Math.round(powerT.current))}</span>
+      <IconButton icon="mail" label="{L.mail.title}{letters ? ` (${letters})` : ''}" size={34} onclick={onmail}><Badge n={letters} /></IconButton>
       <IconButton icon="gear" label={L.settings.open} size={34} onclick={onsettings} />
     </div>
     <ul class="res">
@@ -222,6 +233,20 @@
     place-items: center;
     width: 56px;
     height: 56px;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .shielded {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--malachite) 70%, transparent), 0 0 10px color-mix(in srgb, var(--malachite) 50%, transparent);
+  }
+  .shield {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    line-height: 0;
   }
   .frame {
     position: absolute;

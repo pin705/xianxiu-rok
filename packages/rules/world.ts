@@ -67,7 +67,7 @@ export function worldAct(ps: Players, pid: number, a: WorldAction, now: number, 
   if (e) return { ok: false, error: e }
   const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
   const target = { kind: 'pvp', i: a.pid } as const
-  const m: March = { id: att.nextId, elder: a.elder, army, target, seed, startAt: t, arriveAt: t + marchTime(att, target), returnAt: 0 }
+  const m: March = { id: att.nextId, elder: a.elder, army, target, seed, startAt: t, arriveAt: t + marchTime(att, target), returnAt: 0, foe: other!.name }
   // đi đánh người khác thì mất khiên
   return { ok: true, changed: new Map([[pid, { ...att, troops: minus(att.troops, army), marches: [...att.marches, m], nextId: att.nextId + 1, shield: 0 }]]) }
 }
@@ -92,8 +92,8 @@ export function advanceWorld(ps: Players, now: number): Players {
     const att = advance(cur(pid)!, at)
     const m = att.marches.find(x => x.id === id)!
     const d = cur(m.target.i)
-    if (!d) {
-      // tông môn kia không còn (xoá tài khoản): quay về tay không
+    // tông môn kia không còn (xoá tài khoản), hoặc vừa có khiên (người khác cướp trước): quay về tay không
+    if (!d || d.shield > at) {
       changed.set(pid, { ...att, marches: att.marches.map(x => (x === m ? { ...m, back: m.army, hurt: {}, gain: { res: {}, items: {}, exp: 0 }, returnAt: at + (at - m.startAt) } : x)) })
       continue
     }
@@ -162,6 +162,14 @@ export function raid(att: State, attPid: number, def: State, defPid: number, m: 
     shield: f.win ? Math.max(def.shield, at + SHIELD_TIME) : def.shield,
   }
   return { att: a, def: dd }
+}
+
+// Tỉ lệ thắng ước lượng khi đi cướp, đánh thử với phòng thủ đã dò thám (9 mầm cố định như winChance, không phải mầm thật)
+export function raidChance(s: State, elder: ElderId, army: Army, foe: Side) {
+  if (!Object.values(army).some(Boolean) || s.elders[elder] === undefined) return 0
+  let won = 0
+  for (let k = 1; k <= 9; k++) if (fight(sideOf(s, elder, army), foe, Math.imul(k, 0x9e3779b1) >>> 0).win) won++
+  return won / 9
 }
 
 // ---------- Ghép đối thủ ----------

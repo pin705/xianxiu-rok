@@ -41,6 +41,7 @@ export type March = {
   startAt: number
   arriveAt: number
   returnAt: number // 0: chưa hẹn (đi cướp: server giải trận lúc tới nơi rồi mới biết giờ về)
+  foe?: string // đi cướp: tên tông môn bên kia (để hiện)
   back?: Army // sau trận: đệ tử còn đứng được, thương binh và chiến lợi phẩm mang về
   hurt?: Army
   gain?: Gain

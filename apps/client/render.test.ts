@@ -21,6 +21,7 @@ import {
   type State,
   type Target,
 } from '@rok/rules'
+import { advanceWorld, mail, worldAct } from '@rok/rules/world'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 let vite: ViteDevServer
@@ -49,6 +50,8 @@ async function load(lang: 'vi' | 'en') {
     'Settings',
     'Daily',
     'Title',
+    'Rivals',
+    'Ranks',
   ])
     C[name.replace('world/', '')] = (await vite.ssrLoadModule(`/src/${name}.svelte`)).default
   L = (await vite.ssrLoadModule('/src/lib.ts')).L
@@ -178,6 +181,22 @@ const high: State = {
 }
 const high20 = run(run(high, { type: 'focus' }), { type: 'forge', gear: 'hoTam' })
 const top: State = { ...high, levels: levels(high, 25), trib: 4, realms: REALMS.map(() => 5), tower: 50 }
+// Tranh đoạt: tông môn A cướp B — A đang mang chiến lợi phẩm về, B vừa bị cướp (khiên, kẻ thù, chiến báo thủ), có thư, điểm sự kiện
+function raided(): [State, State] {
+  const a0: State = { ...late, shield: 0, marches: [], troops: { ...late.troops, kiem3: 1500 } }
+  const b0: State = { ...late, name: 'Huyết Kiếm Tông', shield: 0, marches: [], troops: { ...late.troops, the1: 100 }, guard: 'thachKien' }
+  const ps = new Map([[1, a0], [2, b0]])
+  const r = worldAct(ps, 1, { type: 'raid', pid: 2, elder: 'thanhPhong', army: { kiem3: 1500 } }, late.time, 99)
+  if (!r.ok) throw new Error(r.error)
+  for (const [id, x] of r.changed) ps.set(id, x)
+  const onWay = ps.get(1)!
+  const at = onWay.marches[0].arriveAt
+  for (const [id, x] of advanceWorld(ps, at)) ps.set(id, x)
+  const gift = { res: { linhThach: 5000 }, items: { daiTuKhi: 1 } }
+  const b = mail(mail({ ...ps.get(2)!, ev: { ...late.ev, pts: 320, got: [true, false, false, false, false] } }, { at, k: 'eventTop', a: [2, 'raid'], gift }), { at, k: 'khoáLạ', a: [1] })
+  return [ps.get(1)!, b]
+}
+const [raider, victim] = raided()
 const STATES: [string, State][] = [
   ['người mới', fresh],
   ['giữa game', mid],
@@ -187,6 +206,8 @@ const STATES: [string, State][] = [
   ['tầng 15', late],
   ['chờ độ kiếp 20', high20],
   ['tầng 25', top],
+  ['vừa đi cướp', raider],
+  ['vừa bị cướp', victim],
 ]
 
 // Trợ năng: nút/ô nhập phải có tên cho trình đọc màn hình (chữ bên trong hoặc aria-label) — nút chỉ có icon hay quên
@@ -252,7 +273,7 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
     await load(lang)
     for (const [label, s] of STATES)
       for (const id of IDS)
-        for (const view of [null, 'upgrade', 'train', 'alchemy', 'library', 'trade', 'forge'])
+        for (const view of [null, 'upgrade', 'train', 'alchemy', 'library', 'trade', 'forge', 'guard'])
           paint(
             'Panel',
             {
@@ -310,6 +331,7 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       const now = s.time + 5000
       paint('MapView', { game: s, now, onpick: noop, onreports: noop }, label)
       paint('Reports', { game: s, open: true, onclose: noop, onopen: noop }, label)
+      paint('Rivals', { game: s, now, open: true, load: async () => [], onclose: noop, onraid: noop, onrecruit: noop }, label)
       const targets: Target[] = [
         ...BEASTS.map((_, i) => ({ kind: 'beast', i }) as Target),
         ...SECTS.map((_, i) => ({ kind: 'sect', i }) as Target),
@@ -333,6 +355,14 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
         paint('Replay', { report, onclose: noop }, `${label}, chiến báo ${report.kind} ${report.i}`)
     }
     assert.ok(mid.reports.length >= 2 && afterTrib.reports.at(-1)!.fights.length === 3, 'dữ liệu thử phải có đủ loại chiến báo')
+    // Tranh đoạt: chiến báo hai phía, nút báo thù cho bên bị cướp, thư có quà và thư khoá lạ vẫn có chữ
+    assert.equal(victim.reports.at(-1)!.def, true)
+    assert.ok(victim.shield > victim.time && victim.foes.length === 1)
+    const rep = victim.reports.at(-1)!
+    assert.ok(paint('Reports', { game: victim, open: true, onclose: noop, onopen: noop }, 'hộp thư').includes(L.mail.claim))
+    paint('Ranks', { open: true, me: 1, load: async () => null, onclose: noop }, 'xếp hạng')
+    assert.ok(paint('Hud', { game: victim, now: victim.time, tab: 'banDo', gain: null, onclaim: noop, onquest: noop, onbuilder: noop, ontab: noop, onsettings: noop, ondaily: noop }, 'khiên').includes(L.rank.open))
+    paint('Replay', { report: rep, onclose: noop, onrevenge: noop, now: rep.at + 1000 }, 'bị cướp')
     // Thông Thiên Tháp: đánh một tầng ở cuối game → chiến báo loại tháp phát lại được, bản đồ có nút tháp
     const climbed = run({ ...late, troops: { ...late.troops, kiem1: 3000, phap2: 3000, the3: 3000 } }, { type: 'tower', elder: 'thanhPhong', army: { kiem1: 3000, phap2: 3000, the3: 3000 } })
     assert.equal(climbed.reports.at(-1)!.kind, 'tower')

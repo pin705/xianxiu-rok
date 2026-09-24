@@ -7,7 +7,7 @@ import { PIGMENT as C, mix } from './palette'
 
 export const MONO = [
   'hammer', 'lock', 'check', 'cross', 'close', 'power', 'sound', 'mute', 'music', 'clock', 'arrow', 'back', 'plus', 'minus',
-  'gear', 'people', 'swords', 'skull', 'download', 'upload', 'globe',
+  'gear', 'people', 'swords', 'skull', 'download', 'upload', 'globe', 'mail', 'rank',
 ] as const
 export const COLOR = ['scroll', 'cauldron', 'flag', 'heal', 'bolt', 'star', 'shield'] as const
 export type Mono = (typeof MONO)[number]
@@ -136,6 +136,17 @@ const MONO_DRAW: Record<Mono, (g: G) => void> = {
     ln(g, [[3.8, 12], [12, 11.6], [20.2, 12]], 1.5, 'even', W, 1, 73)
     ln(g, [[5.4, 7.6], [12, 7.2], [18.6, 7.6]], 1.1, 'even', W, 0.8, 74)
     ln(g, [[5.4, 16.4], [12, 16.8], [18.6, 16.4]], 1.1, 'even', W, 0.8, 75)
+  },
+  // phong thư: thân thư, nắp gấp chéo xuống giữa
+  mail: g => {
+    ln(g, [[3.4, 6.4], [20.6, 6.2], [20.4, 18], [3.6, 18.2], [3.4, 6.4]], 2, 'even', W, 1, 76)
+    ln(g, [[3.8, 6.8], [12, 13.2], [20.2, 6.6]], 1.8, 'even', W, 1, 77)
+  },
+  // bảng xếp hạng: ba bậc bục, bậc giữa cao nhất
+  rank: g => {
+    fill(g, [[9, 7], [15, 7], [15, 20], [9, 20]], W, 78, true)
+    fill(g, [[3, 12], [8.4, 12], [8.4, 20], [3, 20]], W, 79, true)
+    fill(g, [[15.6, 14.6], [21, 14.6], [21, 20], [15.6, 20]], W, 80, true)
   },
 }
 

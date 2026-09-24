@@ -221,7 +221,7 @@ export const en: Text = {
     { name: 'Chaos Realm', lore: 'A rift back to the time before heaven and earth parted, where the five elements turn over.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : en.realms[t.i].name
+    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : t.kind === 'pvp' ? en.pvp.kind : en.realms[t.i].name
   },
   weekend: {
     title: 'Weekend event',

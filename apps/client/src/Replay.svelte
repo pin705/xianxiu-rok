@@ -1,13 +1,20 @@
 <script lang="ts">
   // Phát lại trận: luật đã tính xong (tất định), ở đây chỉ diễn lại từng lượt rồi hiện kết quả.
-  import { ELDERS, MAX_ROUNDS, SECTS, count, type Report, type Skill } from '@rok/rules'
+  import { ELDERS, MAX_ROUNDS, RESOURCES, REVENGE_TIME, SECTS, count, type Report, type Skill } from '@rok/rules'
   import { Icon, Portrait, paintedUrl, portraitRing, type Emblem } from '@rok/art'
   import { Bag, Button, Card, Medal, Stat } from './ui'
   import { Battle } from './world/battle'
   import { cssPerDU, getApp } from './world/stage'
   import { EMBLEM, L, LOOK, num, reportName, sfx } from './lib'
 
-  let { report, onclose }: { report: Report | null; onclose: () => void } = $props()
+  let {
+    report,
+    onclose,
+    onrevenge,
+    now = 0,
+  }: { report: Report | null; onclose: () => void; onrevenge?: (pid: number) => void; now?: number } = $props()
+  // bị cướp mà thua, còn trong hạn báo thù
+  const revenge = $derived(!!report && report.kind === 'pvp' && report.def && !report.win && now < report.at + REVENGE_TIME)
 
   let dlg = $state<HTMLDialogElement>()
   $effect(() => {
@@ -48,7 +55,7 @@
       const k = cssPerDU()
       const skills: [Skill | undefined, Skill | undefined] = [
         rep.fights[0]?.a.elder ? ELDERS[rep.fights[0].a.elder].skill : undefined,
-        rep.kind === 'sect' ? SECTS[rep.i]?.elder.skill : undefined,
+        rep.kind === 'sect' ? SECTS[rep.i]?.elder.skill : rep.fights[0]?.b.elder ? ELDERS[rep.fights[0].b.elder].skill : undefined, // PvP: trưởng lão bên kia
       ]
       const b = new Battle(rep, skills, innerWidth / k, innerHeight / k)
       b.root.scale.set(k)
@@ -101,7 +108,7 @@
   })
 
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
-  const foeEmblem: Emblem = $derived(!report || report.kind === 'trib' ? 'thunder' : EMBLEM[report.kind][report.i])
+  const foeEmblem: Emblem = $derived(!report || report.kind === 'trib' ? 'thunder' : report.kind === 'pvp' ? 'crest' : EMBLEM[report.kind][report.i])
   const retreat = $derived(!!report && !report.win && !!f && f.rounds.length >= 10 && counts(1, f.rounds.length).some(x => x > 0) && counts(0, f.rounds.length).some(x => x > 0))
   const dead = $derived(report ? count(report.dead) : 0)
 </script>
@@ -159,6 +166,7 @@
             {#if dead}<Stat label={L.report.dead} tone="bad"><Icon name="skull" size={16} />{num(dead)}</Stat>{/if}
             {#if report.gain.exp && f.a.elder}<Stat label="{L.report.exp} · {L.elders[f.a.elder].name}" tone="gold">+{num(report.gain.exp)}</Stat>{/if}
             <Bag res={report.gain.res} items={report.gain.items} />
+            {#if report.lost && RESOURCES.some(x => report.lost?.[x])}<Stat label={L.pvp.lost} tone="bad"><Bag res={report.lost} /></Stat>{/if}
             {#if report.gain.elder}
               <span class="row"><Portrait look={LOOK[report.gain.elder]} size={36} /><span class="t-strong">{L.report.newElder}: {L.elders[report.gain.elder].name}</span></span>
             {/if}
@@ -166,6 +174,7 @@
               <Button variant="ghost" onclick={() => ((fi = 0), (r = 0), (done = false), battle?.wave(0))}>{L.report.replay}</Button>
               <Button variant="gold" onclick={() => dlg?.close()}>{L.report.close}</Button>
             </div>
+            {#if revenge && onrevenge}<Button variant="danger" wide icon="swords" onclick={() => onrevenge(report.i)}>{L.pvp.revenge}</Button>{/if}
           </div>
         </Card>
       </div>

@@ -13,6 +13,8 @@
   import Hud from './Hud.svelte'
   import MapView from './world/MapView.svelte'
   import Panel from './Panel.svelte'
+  import Ranks from './Ranks.svelte'
+  import Rivals from './Rivals.svelte'
   import Replay from './Replay.svelte'
   import Reports from './Reports.svelte'
   import Result, { type Outcome } from './Result.svelte'
@@ -23,6 +25,7 @@
   import Vault from './Vault.svelte'
   import { createNet, type Net, type Status } from './net'
   import { setMood } from './music'
+  import type { Rival } from '@rok/rules/world'
   import { DESK, L, LANG, TABS, forgetP1, isMuted, reportName, setMuted, sfx, type Tab } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
@@ -45,6 +48,9 @@
   let reportsOpen = $state(false)
   let settingsOpen = $state(false)
   let dailyOpen = $state(false)
+  let rivalsOpen = $state(false)
+  let ranksOpen = $state(false)
+  let me = $state<number | null>(null) // mã tông môn của mình (tô đậm trên bảng xếp hạng)
   // nhạc theo cảnh: xem trận / độ kiếp là trống trận, bản đồ là sáo trúc lên đường
   $effect(() => setMood(replay || storm ? 'battle' : tab === 'banDo' ? 'map' : 'home'))
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
@@ -97,7 +103,10 @@
         if (id === 'chuDien') unlocks(next.levels[id])
       }
     }
-    if (reports) for (const r of next.reports.filter(r => r.id >= prev.nextId)) toast(L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
+    if (reports)
+      for (const r of next.reports.filter(r => r.id >= prev.nextId))
+        toast(r.def ? (r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? '')) : L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
+    if (next.mail.length && next.mail.at(-1)!.id >= prev.nextId) toast(`${L.mail.title}: ${(L.mail.msg[next.mail.at(-1)!.k] ?? L.mail.msg.unknown)(...(next.mail.at(-1)!.a ?? []))[0]}`)
     if (next.stats.trained > prev.stats.trained) toast(L.away.trained(next.stats.trained - prev.stats.trained))
     if (next.stats.healed > prev.stats.healed) toast(L.away.healed(next.stats.healed - prev.stats.healed))
     if (next.stats.brewed > prev.stats.brewed) toast(L.away.brewed(next.stats.brewed - prev.stats.brewed))
@@ -113,7 +122,7 @@
           game = next
         },
         status: s => (status = s),
-        welcome: w => (seen = w.seen),
+        welcome: w => ((seen = w.seen), (me = w.me.pid)),
         reports: () => {},
         error(code) {
           sfx('err')
@@ -299,6 +308,17 @@
     }, 800 + r.fights.length * 1200)
   }
 
+  // Đi cướp: luật giới (server kiểm cả hai bên) nên không đoán trước — chờ server
+  async function raid(pid: number, elder: ElderId, army: Army) {
+    if (!net || busy) return
+    busy = true
+    const r = await net.send({ type: 'raid', pid, elder, army })
+    busy = false
+    if (!r.ok) return
+    sfx('march')
+    rivalsOpen = false
+  }
+
   async function rebirth() {
     if (!net || busy) return
     busy = true
@@ -358,7 +378,7 @@
   {#if tab === 'monHa'}
     <Disciples {game} {now} {act} onfocus={focus} />
   {:else if tab === 'banDo'}
-    <MapView {game} {now} onpick={t => (target = t)} onreports={openReports} />
+    <MapView {game} {now} onpick={t => (target = t)} onreports={openReports} onrivals={() => (rivalsOpen = true)} />
   {:else if tab === 'baoKho'}
     <Vault {game} {now} {act} onfocus={focus} />
   {/if}
@@ -374,13 +394,17 @@
     ontab={switchTab}
     onsettings={() => (settingsOpen = true)}
     ondaily={() => (dailyOpen = true)}
+    onranks={() => (ranksOpen = true)}
+    onmail={openReports}
     onfocus={focus}
   />
   <Daily {game} {now} open={dailyOpen} onclose={() => (dailyOpen = false)} {act} />
   <Panel {game} {now} id={selected} {view} {act} {busy} onupgrade={upgrade} onclose={() => (selected = null)} onselect={focus} ontrib={trib} onrebirth={rebirth} />
   <TargetSheet {game} {now} {target} {busy} onclose={() => (target = null)} onmarch={march} onrecruit={() => focus('dienVoTruong', 'train')} />
-  <Reports {game} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
-  <Replay report={replay} onclose={() => (replay = null)} />
+  <Reports {game} {act} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
+  <Replay report={replay} onclose={() => (replay = null)} onrevenge={() => ((replay = null), (reportsOpen = false), (rivalsOpen = true))} {now} />
+  <Rivals {game} {now} {busy} open={rivalsOpen} load={() => (net?.ask({ k: 'rivals' }) ?? Promise.resolve(null)) as Promise<Rival[] | null>} onclose={() => (rivalsOpen = false)} onraid={raid} onrecruit={() => ((rivalsOpen = false), focus('dienVoTruong', 'train'))} />
+  <Ranks open={ranksOpen} {me} load={b => net?.ranks(b).then(r => (r.ok ? r.data : null)) ?? Promise.resolve(null)} onclose={() => (ranksOpen = false)} />
   <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
   <Settings
     {game}

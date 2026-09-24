@@ -217,7 +217,7 @@ export const vi = {
     { name: 'Hỗn Độn Bí Cảnh', lore: 'Khe nứt dẫn về thuở trời đất chưa phân, ngũ hành đảo lộn.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : vi.realms[t.i].name
+    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : t.kind === 'pvp' ? vi.pvp.kind : vi.realms[t.i].name
   },
   weekend: {
     title: 'Sự kiện cuối tuần',

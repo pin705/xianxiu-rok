@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const SKIP = /\.test\.ts$|^(simulate|bot|hash)\.ts$/ // công cụ chạy riêng, client không dùng
+const SKIP = /\.test\.ts$|^(simulate|simpvp|bot|hash)\.ts$/ // công cụ chạy riêng, client không dùng
 export function protocolHash(root = join(import.meta.dirname, '..')) {
   const h = createHash('sha256')
   for (const dir of ['rules', 'protocol'])

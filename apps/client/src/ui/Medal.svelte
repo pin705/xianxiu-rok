@@ -13,7 +13,7 @@
 
 <span class="medal" class:dim style:--s="{size}px" aria-hidden="true">
   <img {src} width={size} height={size} alt="" draggable="false" />
-  {#if pips}<span class="pips">{#each { length: pips } as _}<i></i>{/each}</span>{/if}
+  {#if pips}<span class="pips" class:many={pips > 3}>{#each { length: pips } as _}<i></i>{/each}</span>{/if}
 </span>
 
 <style>
@@ -43,6 +43,15 @@
     padding: 2px 5px 3px;
     border: 0 solid transparent;
     border-image: var(--sk-tag-dark);
+  }
+  /* bậc 4–5: chấm nhỏ lại cho vừa huy hiệu 28px */
+  .many {
+    gap: 1px;
+    padding: 2px 3px 3px;
+  }
+  .many i {
+    width: 3px;
+    height: 3px;
   }
   .pips i {
     width: 4px;

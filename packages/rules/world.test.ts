@@ -152,3 +152,14 @@ test('gói tin cướp bẩn bị từ chối', () => {
     assert.equal(parseWorldAction(bad), null, JSON.stringify(bad))
   assert.deepEqual(parseWorldAction({ type: 'raid', pid: 2, elder: 'thanhPhong', army: { kiem1: 3 }, x: 1 }), { type: 'raid', pid: 2, elder: 'thanhPhong', army: { kiem1: 3 } })
 })
+
+test('hai đội cùng nhắm một người: trận đầu cho bên thủ khiên, đội sau tới nơi thì quay về tay không', () => {
+  const ps = world(sect('A', 10, { kiem3: 1100 }), sect('B', 10, { kiem3: 1100 }), sect('Thủ', 10, { the1: 200 }))
+  const m1 = send(ps, 1, 3, { kiem3: 1100 })
+  const m2 = send(ps, 2, 3, { kiem3: 1100 }, T0 + 1000)
+  resolve(ps, m2.arriveAt)
+  assert.equal(ps.get(3)!.reports.filter(r => r.kind === 'pvp').length, 1, 'chỉ một trận')
+  const back = ps.get(2)!.marches[0]
+  assert.ok(back.returnAt > 0 && back.back?.kiem3 === 1100 && !Object.keys(back.gain!.res).length)
+  assert.ok(m1.arriveAt < m2.arriveAt)
+})

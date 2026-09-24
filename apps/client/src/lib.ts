@@ -88,7 +88,7 @@ export function suggestNames(n: number) {
   return [...names]
 }
 
-export const reportName = (r: Report) => (r.kind === 'trib' ? L.trib.title : L.target({ kind: r.kind, i: r.i }))
+export const reportName = (r: Report) => (r.kind === 'trib' ? L.trib.title : r.kind === 'pvp' ? (r.foe ?? L.pvp.kind) : L.target({ kind: r.kind, i: r.i }))
 
 // Tab đã từng mở (để đánh dấu "!" trên tab vừa mở khóa mà người chơi chưa ghé)
 export const visitedTabs = (): string[] => (read('rok.tabs') ?? 'tongMon').split(',')
