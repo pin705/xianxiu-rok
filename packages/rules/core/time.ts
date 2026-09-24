@@ -1,6 +1,7 @@
 // Thời gian trôi: sản lượng, việc hẹn giờ xong, hành quân tới nơi / về nhà — đúng thứ tự thời gian.
 import { addGain, admit, battle, coolKey } from './battle.ts'
 import { rollDay } from './calendar.ts'
+import { rollFest } from './fest.ts'
 import { rate, storage } from './stats.ts'
 import { type Job, type JobKind, type State } from './types.ts'
 import { addItems, count, HOUR, minus, plus, noGain } from './util.ts'
@@ -42,6 +43,11 @@ function comeHome(s: State, id: number): State {
   if (!m.back) return s // trận chưa giải (mầm ẩn ở client): chờ server báo kết quả
   const { state, dead } = admit({ ...s, marches: s.marches.filter(x => x.id !== id) }, m.hurt ?? {})
   let st = addGain({ ...state, troops: plus(state.troops, m.back ?? m.army) }, m.elder, m.gain ?? noGain())
+  // khai mỏ: đếm tài nguyên mang về (sự kiện khai thác)
+  if (m.task === 'gather' && m.gain) {
+    const got = Object.values(m.gain.res).reduce((a, b) => a + (b ?? 0), 0)
+    st = { ...st, stats: { ...st.stats, gathered: (st.stats.gathered ?? 0) + got } }
+  }
   // Báo cho chiến báo của chuyến này biết bao nhiêu người không qua khỏi
   if (count(dead)) st = { ...st, reports: st.reports.map(r => (r.id === m.report ? { ...r, dead } : r)) }
   return st
@@ -119,9 +125,11 @@ export function due(s: State, now: number): Due[] {
 // sản lượng trước lúc xong tính theo chỉ số cũ, sau đó theo chỉ số mới.
 export function advance(s: State, now: number): State {
   let st = s
-  for (const [at, run] of due(s, now)) st = run(rollDay(accrue(st, at), at))
-  return rollDay(accrue(st, now), now)
+  for (const [at, run] of due(s, now)) st = run(roll(accrue(st, at), at))
+  return roll(accrue(st, now), now)
 }
+// Sang ngày / tuần / lượt sự kiện mới trước khi xử lý việc ở lúc t
+const roll = (s: State, t: number) => rollFest(rollDay(s, t), t)
 
 export const jobOf = (s: State, k: JobKind) => (k === 'build' ? (s.queue[0] ?? null) : s[k])
 

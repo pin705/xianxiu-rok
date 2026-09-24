@@ -146,8 +146,11 @@
     }
   })
 
-  const rel = (pid: number): Rel =>
-    pid === me ? 'me' : allies.includes(pid) ? 'ally' : snap?.seats.find(s => s.pid === pid)?.npc ? 'npc' : 'other'
+  const rel = (pid: number): Rel => {
+    if (pid === me) return 'me'
+    if (allies.includes(pid)) return 'ally'
+    return snap?.seats.find(s => s.pid === pid)?.npc ? 'npc' : 'other'
+  }
   $effect(() => {
     if (scene && snap) scene.setData(snap, rel, phase, now)
   })

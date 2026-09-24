@@ -115,7 +115,7 @@ function kit(g: G, tier: number, seed: number, fx: Fx[]) {
       }
       // dầm (额枋): lam/lục theo bậc, bậc cao có điểm vàng (bậc 4: điểm bạc trên dầm chàm, bậc 5: điểm vàng trên dầm ngọc)
       const band = rect(x0 - 1, y - h, w + 2, 2.6)
-      wash(g, band, { fill: tier === 1 ? C.azuriteD : tier === 2 ? C.malachiteD : tier === 4 ? LAPIS_D : tier === 5 ? C.malachite : C.azurite, alpha: 0.95, jitter: 0.2, layers: 1, seed: seed + 11 })
+      wash(g, band, { fill: [C.azuriteD, C.malachiteD, C.azurite, LAPIS_D, C.malachite][tier - 1], alpha: 0.95, jitter: 0.2, layers: 1, seed: seed + 11 })
       if (tier > 1) for (let x = x0 + 3; x < x0 + w - 2; x += 5) blot(g, x, y - h + 1.3, 0.5, tier === 4 ? SILVER : C.goldL, 0.95, Math.round(x))
       line([[x0, y - h], [x0, y]], 0.6)
       line([[x0 + w, y - h], [x0 + w, y]], 0.6)

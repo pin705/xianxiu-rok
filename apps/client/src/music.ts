@@ -163,6 +163,16 @@ export const setMood = (m: Mood) => void (mood = m)
 const pick = <T>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x))
 
+// Tiếng của đoạn p: trận thì tranh; bản đồ: sáo đoạn 3k+1, nghỉ đoạn 8k+7; ở núi: nghỉ đoạn 4k+3, sáo đoạn 6k+4,
+// còn lại tranh (thỉnh thoảng nghỉ ngẫu nhiên)
+function voice(m: Mood, p: number): 'zheng' | 'flute' | 'rest' {
+  if (m === 'battle') return 'zheng'
+  if (m === 'map') return p % 3 === 1 ? 'flute' : p % 8 === 7 ? 'rest' : 'zheng'
+  if (p % 4 === 3) return 'rest'
+  if (p % 6 === 4) return 'flute'
+  return Math.random() < 0.12 ? 'rest' : 'zheng'
+}
+
 // Một đoạn 8 phách bắt đầu từ t. p: số thứ tự đoạn; deg: bậc giai điệu hiện tại (đi ngẫu nhiên, trả về bậc mới)
 export function phrase(ac: BaseAudioContext, bus: Bus, t: number, p: number, deg: number, m: Mood = mood) {
   const hum = () => (Math.random() - 0.5) * 0.03 // lệch nhịp chút xíu cho giống người gảy
@@ -178,21 +188,7 @@ export function phrase(ac: BaseAudioContext, bus: Bus, t: number, p: number, deg
       [6, 0.12],
     ] as const)
       drum(ac, bus, t + beat * BEAT, v)
-  const kind = fight
-    ? 'zheng'
-    : m === 'map'
-      ? p % 3 === 1
-        ? 'flute'
-        : p % 8 === 7
-          ? 'rest'
-          : 'zheng'
-      : p % 4 === 3
-        ? 'rest'
-        : p % 6 === 4
-          ? 'flute'
-          : Math.random() < 0.12
-            ? 'rest'
-            : 'zheng'
+  const kind = voice(m, p)
   if (kind === 'flute') {
     let f0: number | undefined
     let at = 0

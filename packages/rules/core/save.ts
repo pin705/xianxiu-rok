@@ -1,5 +1,5 @@
 // Tông môn mới và save cũ: newGame, nâng bản, kiểm khuôn.
-import { freshDaily, freshEv, freshWeekly } from './calendar.ts'
+import { dayOf, freshDaily, freshEv, freshWeekly } from './calendar.ts'
 import { obj } from './parse.ts'
 import { buildTime } from './stats.ts'
 import { type Job, type State } from './types.ts'
@@ -8,6 +8,7 @@ import {
   DAILY,
   ELDERS,
   EVENT_GOALS,
+  FESTS,
   FIRST_ELDER,
   GEAR,
   MAX_LEVEL,
@@ -78,6 +79,8 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
     seat: null,
     blocks: [],
     ascended: [],
+    fest: {},
+    born: dayOf(now),
   }
 }
 
@@ -210,7 +213,13 @@ function valid(s: any): s is State {
     Array.isArray(s.blocks) &&
     s.blocks.every(num) &&
     Array.isArray(s.ascended) &&
-    s.ascended.every(num)
+    s.ascended.every(num) &&
+    obj(s.fest) &&
+    Object.entries(s.fest).every(
+      ([id, f]: [string, any]) =>
+        Object.hasOwn(FESTS, id) && obj(f) && num(f.key) && num(f.stage) && obj(f.base) && num(f.bank) && Array.isArray(f.got),
+    ) &&
+    (s.born === undefined || num(s.born))
   )
 }
 
@@ -256,6 +265,7 @@ function upgradeSave(raw: unknown) {
   if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save làm trước khi có nhiệm vụ ngày
   if (!s.weekly) s = { ...s, weekly: freshWeekly(s.time) } // … nhiệm vụ tuần
   if (s.tower === undefined) s = { ...s, tower: 0 } // … Thông Thiên Tháp
+  if (!s.fest) s = { ...s, fest: {}, born: dayOf(s.time) } // … trung tâm sự kiện (người cũ: sự kiện tân thủ tính từ lúc nâng bản)
   if (!s.ev) s = { ...s, ev: freshEv(s.time) } // … PvP, thư, sự kiện tuần (người cũ không được khiên tân thủ)
   if (s.shield === undefined)
     s = { ...s, shield: 0, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [] }

@@ -68,11 +68,12 @@ npm run format && npm run lint && npm test && npm run check && npm run sim
 
 `npm run lint` (oxlint, `.oxlintrc.json`) chặn:
 - chuỗi dấu phẩy và `a && b()` dùng làm lệnh;
+- ternary lồng quá 2 tầng (luật riêng trong `lint.mjs`);
 - tên biến che tên ở tầng ngoài;
 - lồng quá 4 tầng;
 - file quá 400 dòng, hàm quá 100 dòng.
 
-Mấy file lớn đang có mức trần riêng, chỉ được nhỏ đi. Vượt trần là lúc nên tách file.
+`createNet` và `bot.turn` là closure có trần riêng về độ dài hàm, chỉ được nhỏ đi.
 
 ## Đa ngôn ngữ
 

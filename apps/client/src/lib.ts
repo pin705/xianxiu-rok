@@ -169,14 +169,12 @@ export function suggestNames(n: number) {
 
 export const spotName = (kind?: string) =>
   L.world.point[(kind ?? 'vein') as keyof typeof L.world.point] ?? L.world.point.vein
-export const reportName = (r: Report) =>
-  r.kind === 'trib'
-    ? L.trib.title
-    : r.kind === 'pvp'
-      ? (r.foe ?? L.pvp.kind)
-      : r.kind === 'spot'
-        ? spotName(r.spot)
-        : L.target({ kind: r.kind, i: r.i })
+export function reportName(r: Report) {
+  if (r.kind === 'trib') return L.trib.title
+  if (r.kind === 'pvp') return r.foe ?? L.pvp.kind
+  if (r.kind === 'spot') return spotName(r.spot)
+  return L.target({ kind: r.kind, i: r.i })
+}
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE
 // Trận PvP nhìn từ bên thủ: đẩy lui được, hay bị cướp
 export const defended = (r: Report) => (r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''))

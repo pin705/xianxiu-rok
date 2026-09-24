@@ -7,6 +7,7 @@ import {
   type DailyId,
   type ElderId,
   type GearId,
+  type ItemId,
   type PillId,
   type Res,
   type Reward,
@@ -16,11 +17,13 @@ import {
   type UnitType,
   type WeeklyId,
   type EventId,
+  type FestId,
+  type Metric,
 } from '../data.ts'
 
 export type Troops = Record<UnitId, number>
 export type Army = Partial<Troops>
-export type Items = Partial<Record<PillId, number>>
+export type Items = Partial<Record<ItemId, number>>
 export type Job = { building: BuildingId; level: number; startAt: number; finishAt: number }
 export type TrainJob = { unit: UnitId; n: number; startAt: number; finishAt: number }
 export type HealJob = { troops: Army; startAt: number; finishAt: number }
@@ -74,7 +77,29 @@ export type Report = {
   dead: Army // phần Đan phòng không còn chỗ nằm
   gain: Gain
 }
-export type Stats = { trained: number; healed: number; brewed: number; won: number; lost: number }
+// Bộ đếm tích luỹ (sự kiện đo tiến độ bằng hiệu hai lần đọc). Trường có dấu ? thêm sau: save cũ thiếu thì là 0.
+export type Stats = {
+  trained: number
+  healed: number
+  brewed: number
+  won: number
+  lost: number
+  hunted?: number // yêu thú hạ được
+  sped?: number // phút tăng tốc đã dùng
+  raided?: number // lần cướp thắng
+  gathered?: number // tài nguyên khai mỏ mang về
+}
+// Một sự kiện của trung tâm sự kiện: lượt đang mở (key), giai đoạn, chỉ số lúc bắt đầu giai đoạn, điểm đã dồn từ giai đoạn
+// trước, quà đã nhận, số ngày đăng nhập trong lượt (và ngày đếm gần nhất)
+export type Fest = {
+  key: number
+  stage: number
+  base: Partial<Record<Metric, number>>
+  bank: number
+  got: number[]
+  days: number
+  last: number
+}
 export type Daily = { day: number; n: Record<DailyId, number>; got: boolean[]; bonus: boolean }
 export type Weekly = { week: number; n: Record<WeeklyId, number>; got: boolean[]; bonus: boolean }
 export type Ev = { week: number; pts: number; got: boolean[] } // sự kiện tuần: điểm, mốc đã nhận
@@ -144,6 +169,8 @@ export type State = {
   seat: { x: number; y: number } | null // chỗ trên bản đồ giới (server xếp lúc vào giới lần đầu)
   blocks: number[] // người chơi đã chặn (ẩn chat của họ)
   ascended: number[] // các mùa đã phi thăng (danh hiệu)
+  fest: Partial<Record<FestId, Fest>> // trung tâm sự kiện
+  born?: number // ngày lập tông môn (dayOf) — sự kiện tân thủ tính từ đây; save cũ thiếu thì không có sự kiện tân thủ
 }
 
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'

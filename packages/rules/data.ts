@@ -377,7 +377,77 @@ export const MARCH_SPEED = 0.5 // giây mỗi đơn vị bản đồ
 export const MARCH_MIN = 20 // giây
 export const MARCH_SLOTS = [1, 2, 3, 4, 5] // số đội xuất quân cùng lúc ở Luyện Khí / Trúc Cơ / Kim Đan / Nguyên Anh / Hóa Thần
 
-export type Reward = { res?: Partial<Bag>; items?: Partial<Record<PillId, number>>; elder?: ElderId; exp?: number }
+// ---------- Vật phẩm (túi đồ) ----------
+
+// Phù, nang, ngọc giản: không luyện được, chỉ đến từ nhiệm vụ, sự kiện, rương, thương nhân (như túi đồ của RoK).
+// Mỗi loại một cách dùng: speed — bớt thời gian một việc đang chờ (job trống = việc nào cũng được) · res — gói tài nguyên ·
+// buff — tăng ích có hạn (dùng thêm thì kéo dài, không cộng dồn sức) · shield — khiên hộ sơn · exp — kinh nghiệm trưởng lão
+export type SpeedJob = 'build' | 'train' | 'study' | 'heal'
+export type BagDef =
+  | { use: 'speed'; job?: SpeedJob; min: number }
+  | { use: 'res'; res: Res; n: number }
+  | { use: 'buff'; key: Bonus; v: number; hours: number }
+  | { use: 'shield'; hours: number }
+  | { use: 'exp'; n: number }
+const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
+const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
+const speeds = <P extends string>(prefix: P, job?: SpeedJob) =>
+  Object.fromEntries(SPEED_MIN.map(min => [`${prefix}${min}`, { use: 'speed', min, ...(job && { job }) }])) as Record<
+    `${P}${(typeof SPEED_MIN)[number]}`,
+    BagDef
+  >
+const packs = <P extends string>(prefix: P, res: Res) =>
+  Object.fromEntries(PACK_N.map(n => [`${prefix}${n / 1000}k`, { use: 'res', res, n }])) as Record<
+    `${P}${1 | 5 | 20 | 100}k`,
+    BagDef
+  >
+const bag = {
+  ...speeds('thoiQuang'), // Thời Quang Phù — việc nào cũng được
+  ...speeds('loBan', 'build'), // Lỗ Ban Phù — xây
+  ...speeds('luyenBinh', 'train'), // Luyện Binh Phù — tuyển đệ tử
+  ...speeds('ngoDao', 'study'), // Ngộ Đạo Phù — nghiên cứu công pháp
+  ...speeds('dieuThu', 'heal'), // Diệu Thủ Phù — chữa thương
+  ...packs('thachNang', 'linhThach'),
+  ...packs('thaoNang', 'linhThao'),
+  ...packs('khoangNang', 'linhKhoang'),
+  tuLinh8: { use: 'buff', key: 'prod', v: 0.5, hours: 8 }, // Tụ Linh Phù: sản lượng +50 %
+  tuLinh24: { use: 'buff', key: 'prod', v: 0.5, hours: 24 },
+  thanHanh: { use: 'buff', key: 'march', v: 0.25, hours: 8 }, // Thần Hành Phù: hành quân nhanh 25 %
+  chienY: { use: 'buff', key: 'atk', v: 0.1, hours: 8 }, // Chiến Ý Phù: công +10 %
+  kimCuong: { use: 'buff', key: 'def', v: 0.1, hours: 8 }, // Kim Cương Phù: thủ +10 %
+  hoThe: { use: 'buff', key: 'hp', v: 0.1, hours: 8 }, // Hộ Thể Phù: sinh lực +10 %
+  hoSon8: { use: 'shield', hours: 8 }, // Hộ Sơn Phù: khiên không bị cướp
+  hoSon24: { use: 'shield', hours: 24 },
+  hoSon72: { use: 'shield', hours: 72 },
+  kinhThu500: { use: 'exp', n: 500 }, // Tâm Đắc Kinh Thư: kinh nghiệm trưởng lão
+  kinhThu2k: { use: 'exp', n: 2000 },
+  kinhThu8k: { use: 'exp', n: 8000 },
+} satisfies Record<string, BagDef>
+export type BagId = keyof typeof bag
+export const BAG: Record<BagId, BagDef> = bag
+// Họ vật phẩm = id bỏ mệnh giá cuối (thoiQuang60 → thoiQuang): một tên, một hình cho mọi mệnh giá
+export const BAG_FAMILIES = [
+  'thoiQuang',
+  'loBan',
+  'luyenBinh',
+  'ngoDao',
+  'dieuThu',
+  'tuLinh',
+  'thanHanh',
+  'chienY',
+  'kimCuong',
+  'hoThe',
+  'hoSon',
+  'thachNang',
+  'thaoNang',
+  'khoangNang',
+  'kinhThu',
+] as const
+export type BagFamily = (typeof BAG_FAMILIES)[number]
+export type ItemId = PillId | BagId
+export const BAG_USE_MAX = 999 // một lần dùng tối đa bấy nhiêu cái
+
+export type Reward = { res?: Partial<Bag>; items?: Partial<Record<ItemId, number>>; elder?: ElderId; exp?: number }
 
 // Yêu thú cấp 1–15 (chỉ số = cấp − 1). Hạ cấp n mới đánh được cấp n + 1. Hạ xong thì hang trống một lúc rồi có con mới.
 export const BEASTS: { type: UnitType; x: number; y: number }[] = [
@@ -819,6 +889,114 @@ export const EVENT_PRIZES: Reward[] = [
   { res: b(40000, 40000, 40000), items: { daiTuKhi: 1 } },
   { res: b(20000, 20000, 20000), items: { tuKhi: 5 } },
 ]
+
+// ---------- Trung tâm sự kiện (như Events của RoK) ----------
+
+// Chỉ số đo tiến độ: tổng tích luỹ suy từ state (thế lực, tổng tầng công trình…) hoặc bộ đếm trong stats. Tiến độ của một
+// sự kiện = chỉ số bây giờ − chỉ số lúc sự kiện (hay giai đoạn) bắt đầu — nên mọi việc tự được tính, không phải gọi từng nơi.
+export const METRICS = [
+  'power', // thế lực
+  'build', // tổng tầng công trình
+  'hall', // tầng Chủ điện
+  'tech', // tổng tầng công pháp
+  'forge', // tổng cấp pháp bảo
+  'elder', // tổng cấp trưởng lão
+  'train', // đệ tử tuyển xong
+  'heal', // thương binh chữa xong
+  'brew', // đan luyện xong
+  'win', // trận thắng
+  'hunt', // yêu thú hạ được
+  'realm', // tầng bí cảnh đã qua
+  'tower', // tầng Thông Thiên Tháp
+  'speed', // phút tăng tốc đã dùng (phù, đan)
+  'raid', // lần cướp thắng
+  'gather', // tài nguyên khai mỏ mang về
+] as const
+export type Metric = (typeof METRICS)[number]
+// Khung giờ: newbie — ngày thứ from..to (0 = ngày lập tông môn) · week — các thứ trong tuần giờ VN (0 = thứ Hai … 6 = Chủ nhật)
+// · cycle — mỗi `every` ngày mở `len` ngày (lệch `offset` ngày)
+export type FestWindow =
+  | { kind: 'newbie'; from: number; to: number }
+  | { kind: 'week'; days: number[] }
+  | { kind: 'cycle'; every: number; len: number; offset: number }
+// login — mỗi ngày đăng nhập mở thêm một quà · tasks — mỗi việc một quà · points — làm việc ra điểm, đủ mốc nhận quà;
+// stages: điểm mỗi việc theo từng ngày của khung (như Mightiest Governor: hôm xây, hôm nghiên cứu, hôm tuyển…), một phần tử = cả khung
+export type FestDef = { window: FestWindow; hall?: number } & (
+  | { kind: 'login'; rewards: Reward[] }
+  | { kind: 'tasks'; tasks: { m: Metric; n: number; reward: Reward }[] }
+  | { kind: 'points'; stages: Partial<Record<Metric, number>>[]; goals: number[]; rewards: Reward[] }
+)
+const fests = {
+  // Thất Nhật Lễ: 7 phần quà cho 7 ngày đăng nhập đầu (trong 14 ngày đầu), quà sau lớn hơn quà trước
+  thatNhat: {
+    window: { kind: 'newbie', from: 0, to: 13 },
+    kind: 'login',
+    rewards: [
+      { res: b(2000, 2000, 2000), items: { thoiQuang15: 2, loBan15: 2 } },
+      { items: { thoiQuang60: 1, luyenBinh60: 2, kinhThu500: 2 } },
+      { res: b(5000, 5000, 5000), items: { tuLinh8: 1, loBan60: 2 } },
+      { items: { thoiQuang60: 2, ngoDao60: 2, kinhThu2k: 1 } },
+      { res: b(10000, 10000, 10000), items: { hoSon24: 1, loBan180: 1 } },
+      { items: { thoiQuang180: 2, luyenBinh180: 1, tuLinh24: 1 } },
+      { res: b(20000, 20000, 20000), items: { thoiQuang480: 1, kinhThu8k: 1 }, elder: 'nhuYen' },
+    ],
+  },
+  // Tân Thủ Chi Lộ: chuỗi mục tiêu 7 ngày đầu — mỗi mục tiêu một phần quà
+  tanThu: {
+    window: { kind: 'newbie', from: 0, to: 6 },
+    kind: 'tasks',
+    tasks: [
+      { m: 'hall', n: 2, reward: { items: { loBan15: 2 } } },
+      { m: 'build', n: 10, reward: { items: { thoiQuang15: 2 } } },
+      { m: 'hall', n: 4, reward: { res: b(3000, 3000, 3000) } },
+      { m: 'train', n: 100, reward: { items: { luyenBinh60: 1 } } },
+      { m: 'win', n: 3, reward: { items: { kinhThu500: 2 } } },
+      { m: 'hall', n: 6, reward: { items: { loBan60: 2, thoiQuang60: 1 } } },
+      { m: 'tech', n: 3, reward: { items: { ngoDao60: 2 } } },
+      { m: 'train', n: 600, reward: { items: { luyenBinh180: 1 } } },
+      { m: 'hunt', n: 8, reward: { items: { kinhThu2k: 1, chienY: 1 } } },
+      { m: 'hall', n: 8, reward: { res: b(15000, 15000, 15000), items: { tuLinh24: 1 } } },
+      { m: 'power', n: 20000, reward: { items: { thoiQuang480: 1, hoSon24: 1 } } },
+    ],
+  },
+  // Tông Môn Tranh Bá (như Mightiest Governor): thứ Hai → thứ Bảy, mỗi ngày một việc được điểm cao
+  tranhBa: {
+    window: { kind: 'week', days: [0, 1, 2, 3, 4, 5] },
+    hall: 5,
+    kind: 'points',
+    stages: [
+      { build: 60, speed: 1 }, // hôm 1: xây
+      { tech: 120, speed: 1 }, // hôm 2: nghiên cứu công pháp
+      { train: 1, speed: 1 }, // hôm 3: tuyển đệ tử
+      { hunt: 60, win: 20, realm: 60 }, // hôm 4: săn yêu, bí cảnh
+      { power: 1 }, // hôm 5: tăng thế lực
+      { build: 60, tech: 120, train: 1, hunt: 60, forge: 80, speed: 1 }, // hôm 6: tổng lực
+    ],
+    goals: [500, 1500, 3500, 7000, 12000],
+    rewards: [
+      { items: { thoiQuang15: 3, thachNang5k: 1 } },
+      { items: { thoiQuang60: 2, thaoNang5k: 1, khoangNang5k: 1 } },
+      { items: { loBan180: 1, luyenBinh180: 1, kinhThu2k: 1 } },
+      { items: { thoiQuang480: 1, tuLinh24: 1 } },
+      { items: { thoiQuang1440: 1, kinhThu8k: 1, hoSon24: 1 } },
+    ],
+  },
+  // Săn Yêu Lệnh: Chủ nhật — săn yêu thú, qua bí cảnh
+  sanYeu: {
+    window: { kind: 'week', days: [6] },
+    hall: 3,
+    kind: 'points',
+    stages: [{ hunt: 10, realm: 12, tower: 15, win: 2 }],
+    goals: [20, 60, 120],
+    rewards: [
+      { items: { kinhThu500: 2, dieuThu60: 1 } },
+      { items: { kinhThu2k: 1, chienY: 1 } },
+      { items: { kinhThu8k: 1, thoiQuang180: 1 } },
+    ],
+  },
+} satisfies Record<string, FestDef>
+export type FestId = keyof typeof fests
+export const FESTS: Record<FestId, FestDef> = fests
 
 // ---------- Nhiệm vụ chính tuyến ----------
 

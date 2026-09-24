@@ -4,7 +4,9 @@
   // nên closure kiểu module (createNet, plugin HTTP, bot.turn) có ngưỡng riêng ở overrides.
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "ignorePatterns": ["**/dist/**", "apps/server/drizzle/**"],
+  "jsPlugins": ["./lint.mjs"],
   "rules": {
+    "rok/ternary-depth": "error",
     "no-sequences": ["error", { "allowInParentheses": false }],
     "no-unused-expressions": "error",
     "no-shadow": ["error", { "ignoreOnInitialization": true }],

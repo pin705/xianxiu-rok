@@ -1,7 +1,9 @@
 <script lang="ts">
-  // Một việc đang chờ: chữ, đồng hồ, thanh tiến độ, và nút dùng Tụ Khí Đan / Đại Tụ Khí Đan nếu có.
+  // Một việc đang chờ: chữ, đồng hồ, thanh tiến độ, và nút Tăng tốc (mở bảng phù/đan) nếu có thứ rút ngắn được.
   import type { JobKind } from '@rok/rules'
   import { Button, Card, Meter } from './ui'
+  import SpeedUp from './SpeedUp.svelte'
+  import { speedsFor } from './bag'
   import { L, clock, progress } from './lib'
   import { useGame } from './game'
 
@@ -9,11 +11,17 @@
   const g = useGame()
   const game = $derived(g.game)
   const now = $derived(g.now)
-  const act = g.act
 
   const job = $derived(kind === 'build' ? game.queue[0] : game[kind])
-  const pills = $derived(game.items.tuKhi ?? 0)
-  const big = $derived(game.items.daiTuKhi ?? 0)
+  // luyện đan không rút ngắn được
+  const boosts = $derived(
+    kind === 'brew'
+      ? 0
+      : (game.items.tuKhi ?? 0) +
+          (game.items.daiTuKhi ?? 0) +
+          speedsFor(game, kind).reduce((n, id) => n + (game.items[id] ?? 0), 0),
+  )
+  let open = $state(false)
 </script>
 
 {#if job}
@@ -21,25 +29,12 @@
     <div class="stack">
       <p class="row between"><span class="t-strong">{label}</span><b class="t-num">{clock(job.finishAt - now)}</b></p>
       <Meter value={progress(job, now)} size="md" />
-      {#if pills && kind !== 'brew'}
-        <Button
-          variant="ghost"
-          size="sm"
-          icon="tuKhi"
-          trail="−15:00"
-          onclick={() => act({ type: 'speed', job: kind, n: 1 })}>{L.panel.speed(pills)}</Button
-        >
-      {/if}
-      {#if big && kind !== 'brew'}
-        <Button
-          variant="ghost"
-          size="sm"
-          icon="daiTuKhi"
-          trail="−2:00:00"
-          onclick={() => act({ type: 'speed', job: kind, n: 1, pill: 'daiTuKhi' })}
-          >{L.pills.daiTuKhi.name} ({big})</Button
+      {#if boosts}
+        <Button variant="ghost" size="sm" icon="thoiQuang" trail="×{boosts}" onclick={() => (open = true)}
+          >{L.bag.speedTitle}</Button
         >
       {/if}
     </div>
   </Card>
+  <SpeedUp {kind} {open} onclose={() => (open = false)} />
 {/if}

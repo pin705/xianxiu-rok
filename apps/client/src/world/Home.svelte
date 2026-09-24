@@ -38,9 +38,12 @@
   let scene = $state.raw<Home>()
 
   const hour = $derived(new Date(now).getHours())
-  const phase: Phase = $derived(
-    hour >= 5 && hour < 7 ? 'dawn' : hour >= 7 && hour < 17 ? 'day' : hour >= 17 && hour < 19 ? 'dusk' : 'night',
-  )
+  // bình minh 5–7 giờ, ngày 7–17, hoàng hôn 17–19, còn lại đêm
+  const phase: Phase = $derived.by(() => {
+    if (hour >= 5 && hour < 7) return 'dawn'
+    if (hour >= 7 && hour < 17) return 'day'
+    return hour >= 17 && hour < 19 ? 'dusk' : 'night'
+  })
   const tops = $derived(
     Object.fromEntries(IDS.map(id => [id, building(id as Kind, Math.max(1, game.levels[id])).top])) as Record<
       BuildingId,

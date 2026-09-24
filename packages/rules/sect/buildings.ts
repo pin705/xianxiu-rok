@@ -54,8 +54,10 @@ export const buildingActions: Actions<BuildingAction> = {
       const pill = a.pill ?? 'tuKhi'
       if (a.n > (s.items[pill] ?? 0)) return no('no_item')
       if (!jobOf(s, a.job)) return no('empty')
-      const next = shorten(s, a.job, (pill === 'daiTuKhi' ? SPEEDUP_BIG : SPEEDUP) * a.n)
-      return ok(advance({ ...next, items: use(s, pill, a.n) }, s.time))
+      const ms = (pill === 'daiTuKhi' ? SPEEDUP_BIG : SPEEDUP) * a.n
+      const next = shorten(s, a.job, ms)
+      const stats = { ...next.stats, sped: (next.stats.sped ?? 0) + ms / 60_000 }
+      return ok(advance({ ...next, stats, items: use(s, pill, a.n) }, s.time))
     },
   },
   trade: {

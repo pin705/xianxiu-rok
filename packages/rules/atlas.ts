@@ -178,7 +178,9 @@ export type Weather = 'clear' | 'mist' | 'rain' | 'snow'
 export function weather(a: Atlas, region: number, t: number): Weather {
   const r = rng((a.seed * 31 + region * 997 + Math.floor(t / 10_800_000)) >>> 0)()
   const cold = a.regions[region].cy < MAP_W * 0.25 // phương bắc lạnh
-  return r < 0.55 ? 'clear' : r < 0.75 ? 'mist' : cold ? 'snow' : 'rain'
+  if (r < 0.55) return 'clear'
+  if (r < 0.75) return 'mist'
+  return cold ? 'snow' : 'rain'
 }
 
 // Linh triều: mỗi TIDE_EVERY một vùng (theo seed + số chu kỳ) có triều trong TIDE_LEN đầu chu kỳ

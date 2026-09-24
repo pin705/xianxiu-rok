@@ -1,7 +1,7 @@
 // Ảnh chụp bản đồ giới (server gửi cho người đang mở bản đồ).
 import { type Pos } from '../atlas.ts'
 import { power } from '../core/stats.ts'
-import { freshWorld, garrison, type Players, type World } from './base.ts'
+import { freshWorld, garrison, sideName, type Players, type World } from './base.ts'
 
 // Biên niên của giới: chữ dựng ở client theo khoá (@rok/i18n chronText). Thêm loại: thêm khoá ở đây — i18n báo thiếu chữ.
 export type ChronArgs = {
@@ -71,14 +71,7 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
   const spots: SpotView[] = []
   for (const [k, sp] of Object.entries(w.spots)) {
     const i = Number(k)
-    const own =
-      sp.own === undefined
-        ? undefined
-        : sp.own > 0
-          ? w.allies[sp.own]
-            ? `[${w.allies[sp.own].tag}] ${w.allies[sp.own].name}`
-            : undefined
-          : ps.get(-sp.own)?.name
+    const own = sp.own === undefined ? undefined : sideName(w, ps, sp.own)
     spots.push({ i, own, n: garrison(ps, i).length, left: sp.left, hp: sp.hp, until: sp.until })
   }
   return { seats, marches, chron, spots }

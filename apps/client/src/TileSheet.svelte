@@ -65,17 +65,12 @@
     pick?.kind === 'march' ? snap?.marches.find(m => m.pid === pick.pid && m.id === pick.id) : undefined,
   )
   const mine = $derived(point ? game.marches.find(m => m.target.kind === 'spot' && m.target.i === point.i) : undefined)
-  const title = $derived(
-    seat
-      ? seat.name
-      : point
-        ? `${spotName(point.kind)} · ${L.lv(point.lv)}`
-        : march
-          ? (snap?.seats.find(s => s.pid === march.pid)?.name ?? '')
-          : pick?.kind === 'tile'
-            ? regionName(regionOf(atlas, pick))
-            : '',
-  )
+  const title = $derived.by(() => {
+    if (seat) return seat.name
+    if (point) return `${spotName(point.kind)} · ${L.lv(point.lv)}`
+    if (march) return snap?.seats.find(s => s.pid === march.pid)?.name ?? ''
+    return pick?.kind === 'tile' ? regionName(regionOf(atlas, pick)) : ''
+  })
   // cách xuất quân tới điểm: một mình, mở kết trận (chờ 5/10/30 phút), hay góp vào kết trận đang mở
   let way = $state<'solo' | 'rally' | number>('solo')
   let wait = $state<0 | 1 | 2>(1)

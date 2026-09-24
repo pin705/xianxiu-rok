@@ -54,16 +54,13 @@ export const tierFor = (level: number): Tier => (level <= 5 ? 1 : level <= 10 ? 
 export const beastStr = (level: number) => grow(BEAST_STR[0], BEAST_STR[1], level - 1)
 export const beastLoot = (level: number) => grow(BEAST_LOOT[0], BEAST_LOOT[1], level - 1)
 export const beastExp = (level: number) => grow(BEAST_EXP[0], BEAST_EXP[1], level - 1)
-export const place = (t: Target) =>
-  t.kind === 'beast'
-    ? BEASTS[t.i]
-    : t.kind === 'sect'
-      ? SECTS[t.i]
-      : t.kind === 'tower'
-        ? TOWER
-        : t.kind === 'pvp' || t.kind === 'spot'
-          ? PVP_GATE
-          : REALMS[t.i]
+export function place(t: Target) {
+  if (t.kind === 'beast') return BEASTS[t.i]
+  if (t.kind === 'sect') return SECTS[t.i]
+  if (t.kind === 'tower') return TOWER
+  if (t.kind === 'pvp' || t.kind === 'spot') return PVP_GATE
+  return REALMS[t.i]
+}
 export const marchTime = (s: State, t: Target) => {
   const p = place(t)
   return (
@@ -222,7 +219,12 @@ export const pushReport = (s: State, r: Omit<Report, 'id'>): State => ({
   ...s,
   nextId: s.nextId + 1,
   reports: [...s.reports, { ...r, id: s.nextId }].slice(-30),
-  stats: { ...s.stats, won: s.stats.won + (r.win ? 1 : 0), lost: s.stats.lost + (r.win ? 0 : 1) },
+  stats: {
+    ...s.stats,
+    won: s.stats.won + (r.win ? 1 : 0),
+    lost: s.stats.lost + (r.win ? 0 : 1),
+    hunted: (s.stats.hunted ?? 0) + (r.win && r.kind === 'beast' ? 1 : 0),
+  },
 })
 
 // Đánh một mục tiêu trên bản đồ. Cập nhật tiến độ bản đồ + chiến báo; phần thưởng trả về để người gọi trao
@@ -295,8 +297,11 @@ export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: nu
 }
 
 // Đan độ kiếp được dùng khi bật "dùng đan": viên mạnh nhất đang có
-export const tribPill = (s: State, want: boolean): 'phaCanh' | 'doKiep' | null =>
-  !want ? null : s.items.phaCanh ? 'phaCanh' : s.items.doKiep ? 'doKiep' : null
+export function tribPill(s: State, want: boolean): 'phaCanh' | 'doKiep' | null {
+  if (!want) return null
+  if (s.items.phaCanh) return 'phaCanh'
+  return s.items.doKiep ? 'doKiep' : null
+}
 
 // Ba đợt lôi kiếp nối nhau; đệ tử còn đứng được đi tiếp sang đợt sau. mul: hộ pháp / phá kiếp (kiếp vân công khai)
 export function tribulation(s: State, elder: ElderId, army: Army, p: PillId | null, seed: number, mul = 1) {

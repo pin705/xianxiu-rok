@@ -11,6 +11,7 @@
     coolKey,
     marchSlots,
     targetError,
+    type Err,
     type Target,
   } from '@rok/rules'
   import { Icon, Portrait, type Emblem } from '@rok/art'
@@ -65,17 +66,16 @@
     { t: { kind: 'tower', i: 0 }, x: TOWER.x, y: TOWER.y, emblem: EMBLEM.tower[0], name: L.tower.name },
   ]
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
+  // chấm trên bản đồ theo lỗi xuất quân tới đó; lỗi khác (thiếu quân…) vẫn là mở
+  const STATUS: Partial<Record<Err, 'locked' | 'cool' | 'done' | 'busy'>> = {
+    locked: 'locked',
+    cooldown: 'cool',
+    max_level: 'done',
+    busy: 'busy',
+  }
   const status = (n: Node) => {
     const e = targetError(game, n.t, now)
-    return e === 'locked'
-      ? 'locked'
-      : e === 'cooldown'
-        ? 'cool'
-        : e === 'max_level'
-          ? 'done'
-          : e === 'busy'
-            ? 'busy'
-            : 'open'
+    return (e && STATUS[e]) ?? 'open'
   }
   // Mục tiêu nên đánh tiếp: yêu thú cấp cao nhất đang mở
   const next = $derived(game.beast < BEASTS.length ? game.beast : -1)

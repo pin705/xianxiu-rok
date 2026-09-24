@@ -6,6 +6,8 @@ import { advance } from '../core/time.ts'
 import { type Result, type State } from '../core/types.ts'
 import { alchemyActions, type AlchemyAction } from './alchemy.ts'
 import { armyActions, type ArmyAction } from './army.ts'
+import { bagActions, type BagAction } from './bag.ts'
+import { festActions, type FestAction } from './fest.ts'
 import { buildingActions, type BuildingAction } from './buildings.ts'
 import { elderActions, type ElderAction } from './elders.ts'
 import { expeditionActions, type ExpeditionAction } from './expedition.ts'
@@ -28,6 +30,8 @@ export type Action =
   | TaskAction
   | RebirthAction
   | InboxAction
+  | BagAction
+  | FestAction
 
 const ACTIONS: Actions<Action> = {
   ...buildingActions,
@@ -41,6 +45,8 @@ const ACTIONS: Actions<Action> = {
   ...taskActions,
   ...rebirthActions,
   ...inboxActions,
+  ...bagActions,
+  ...festActions,
 }
 
 export const ACTION_TYPES = Object.keys(ACTIONS) as Action['type'][]

@@ -38,8 +38,11 @@ export function rng(seed: number) {
 
 export const advantage = (att: UnitType, def: UnitType) => (BEATS[att] === def ? ADV : BEATS[def] === att ? DISADV : 1)
 // Ngũ hành: một bên không có hành (mọi nội dung P1) thì 1 — nhân 1 giữ nguyên từng bit, trận cũ ra đúng kết quả cũ
-export const elAdv = (att?: Element, def?: Element) =>
-  !att || !def ? 1 : OVERCOMES[att] === def ? EL_ADV : OVERCOMES[def] === att ? EL_DISADV : 1
+export function elAdv(att?: Element, def?: Element) {
+  if (!att || !def) return 1
+  if (OVERCOMES[att] === def) return EL_ADV
+  return OVERCOMES[def] === att ? EL_DISADV : 1
+}
 
 export function fight(a: Side, b: Side, seed: number): Fight {
   const rand = rng(seed)

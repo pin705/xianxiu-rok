@@ -91,6 +91,14 @@ export function buildStorm(h: Home) {
   })
 }
 
+// Độ đậm tia sét theo thời gian (giây): chớp — tắt — chớp lại — tàn
+function zapAlpha(e: number) {
+  if (e < 0.07) return 1
+  if (e < 0.12) return 0.12
+  if (e < 0.26) return 0.95
+  return Math.max(0, 1 - (e - 0.26) / 0.25)
+}
+
 // Một đợt sét từ mắt bão xuống mái Chủ điện: chớp — tắt — chớp lại theo nhánh khác, loé trắng, rung cảnh
 export function strike(h: Home, big: boolean) {
   const [x, y] = SLOT.chuDien
@@ -132,7 +140,7 @@ export function strike(h: Home, big: boolean) {
         g.visible = false
         g2.visible = true
       }
-      g.alpha = g2.alpha = e < 0.07 ? 1 : e < 0.12 ? 0.12 : e < 0.26 ? 0.95 : Math.max(0, 1 - (e - 0.26) / 0.25)
+      g.alpha = g2.alpha = zapAlpha(e)
       bloom.alpha = Math.max(0, 1 - e / 0.5)
       bloom.scale.set(((big ? 150 : 100) / 64) * (0.6 + e))
       for (const p of parts) {

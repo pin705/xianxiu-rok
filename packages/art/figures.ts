@@ -188,6 +188,10 @@ export function portrait(look: Look): Asset {
 
 // ---------- Quân trên sân trận (neo ở chân, cao ~20 DU) ----------
 export type Troop = 'kiem' | 'phap' | 'the'
+// màu theo hệ của quân ta ở bậc thường: áo, đai, cổ áo
+const ROBE: Record<Troop, string> = { kiem: C.silk, phap: mix(C.azurite, C.silk, 0.15), the: C.silk }
+const SASH: Record<Troop, string> = { kiem: C.azurite, phap: C.gold, the: C.ochre }
+const COLLAR: Record<Troop, string> = { kiem: C.azuriteD, phap: C.silk, the: C.azuriteD }
 
 // Đệ tử ra trận. foe: áo tối, đai son (quân địch). tier 1–3 cùng một dáng; 4 (Hạch tâm): giáp viền vàng, linh khí mờ
 // quanh người; 5 (Thánh tử): áo trắng viền vàng, hào quang sau đầu
@@ -197,8 +201,8 @@ export function soldier(type: Troop, foe = false, tier = 1): Asset {
     x: -12, y: hi ? -30 : -24, w: 24, h: hi ? 32 : 26,
     draw(g) {
       const saint = tier >= 5 && !foe
-      const robe = saint ? mix(C.silk, C.goldL, 0.22) : foe ? mix(C.lacquer2, C.ink2, 0.3) : type === 'phap' ? mix(C.azurite, C.silk, 0.15) : C.silk
-      const sash = tier >= 5 || (hi && !foe) ? C.gold : foe ? C.cinnabar : type === 'kiem' ? C.azurite : type === 'phap' ? C.gold : C.ochre
+      const robe = saint ? mix(C.silk, C.goldL, 0.22) : foe ? mix(C.lacquer2, C.ink2, 0.3) : ROBE[type]
+      const sash = tier >= 5 || (hi && !foe) ? C.gold : foe ? C.cinnabar : SASH[type]
       const shade = saint ? mix(robe, C.goldD, 0.3) : mix(robe, C.ink, foe ? 0.3 : 0.2)
       const glow = foe ? C.cinnabarL : tier >= 5 ? C.goldL : C.spirit
       const ol = { color: C.ink, press: 'taper' as const, alpha: 0.9, rough: 0.3 }
@@ -255,7 +259,7 @@ export function soldier(type: Troop, foe = false, tier = 1): Asset {
         stroke(g, [[-1.8, -9.4], [-4.4, -8.4], [-6.8, -9.2], [-8.8, -8]], { w: 0.95, color: sash, press: 'fade', alpha: 0.95, rough: 0.3, seed: 18 })
         stroke(g, [[-1.4, -9], [-3.6, -6.8], [-6, -6.6], [-7.2, -5.4]], { w: 0.7, color: sash, press: 'fade', alpha: 0.85, rough: 0.3, seed: 19 })
         // cổ áo: vạt trái đè vạt phải
-        const collar = tier >= 5 ? C.gold : foe ? C.ink : type === 'phap' ? C.silk : C.azuriteD
+        const collar = tier >= 5 ? C.gold : foe ? C.ink : COLLAR[type]
         stroke(g, [[-2.3, -14.8], [0.3, -12.3], [1.5, -10]], { w: 0.75, color: collar, press: 'taper', alpha: 0.9, seed: 17 })
         stroke(g, [[2.3, -14.8], [0.9, -13.1]], { w: 0.5, color: collar, press: 'taper', alpha: 0.8, seed: 27 })
         fold([[-1.2, -8.6], [-1.9, -4.4], [-3, -0.6]], 28)

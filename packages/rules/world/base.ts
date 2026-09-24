@@ -108,6 +108,9 @@ export const turnBack = (s: State, m: March, at: number): State => ({
 })
 // Phe của một người: tiên minh (mã > 0) hoặc chính mình (−mã người chơi)
 export const sideKey = (w: World, pid: number) => allyOf(w, pid)?.id ?? -pid
+// Tên một phe: tiên minh "[tag] tên" (side > 0) hoặc người đi một mình (side = -pid)
+export const sideName = (w: World, ps: Players, side: number) =>
+  side > 0 ? w.allies[side] && `[${w.allies[side].tag}] ${w.allies[side].name}` : ps.get(-side)?.name
 // Quân đang đóng ở điểm i
 export const garrison = (ps: Players, i: number): [number, March][] =>
   [...ps].flatMap(([pid, s]) =>

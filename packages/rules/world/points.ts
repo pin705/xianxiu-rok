@@ -5,7 +5,7 @@ import { type Side } from '../combat.ts'
 import { mob } from '../core/battle.ts'
 import { HOUR } from '../core/util.ts'
 import { BEATS, BOSSES, MINE_STOCK, SEASON_GATE, SEASON_HEAVEN, SEASON_VEIN, TYPES } from '../data.ts'
-import { setSpot, type MapCtx, type Players, type Spot, type Task, type World } from './base.ts'
+import { setSpot, sideName, type MapCtx, type Players, type Spot, type Task, type World } from './base.ts'
 
 export const TASK_OF: Record<PointKind, Task> = {
   vein: 'take',
@@ -67,10 +67,8 @@ export function seasonPts(w: World, map: MapCtx, now: number): Record<number, nu
 }
 export type SeasonRow = { side: number; name: string; pts: number } // side > 0: tiên minh; < 0: người đi một mình
 export function seasonBoard(w: World, ps: Players, map: MapCtx, now: number): SeasonRow[] {
-  const name = (side: number) =>
-    side > 0 ? w.allies[side] && `[${w.allies[side].tag}] ${w.allies[side].name}` : ps.get(-side)?.name
   return Object.entries(seasonPts(w, map, now))
-    .map(([k, pts]) => ({ side: Number(k), name: name(Number(k)) ?? '', pts: Math.floor(pts) }))
+    .map(([k, pts]) => ({ side: Number(k), name: sideName(w, ps, Number(k)) ?? '', pts: Math.floor(pts) }))
     .filter(r => r.name && r.pts > 0)
     .sort((a, b) => b.pts - a.pts || a.side - b.side)
 }

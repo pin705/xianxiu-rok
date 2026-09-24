@@ -43,6 +43,7 @@ import {
   REVENGE_TIME,
   SHIELD_TIME,
   type Bonus,
+  type BagFamily,
   type BuildingId,
   type ElderId,
   type Element,
@@ -478,19 +479,13 @@ export const en: Text = {
     },
   ],
   target(t: Target) {
-    return t.kind === 'beast'
-      ? en.beasts[t.i]
-      : t.kind === 'sect'
-        ? en.sects[t.i].name
-        : t.kind === 'tower'
-          ? en.tower.name
-          : t.kind === 'pvp'
-            ? en.pvp.kind
-            : t.kind === 'spot'
-              ? en.world.point.vein
-              : t.kind === 'trib'
-                ? en.trib.cloud
-                : en.realms[t.i].name
+    if (t.kind === 'beast') return en.beasts[t.i]
+    if (t.kind === 'sect') return en.sects[t.i].name
+    if (t.kind === 'tower') return en.tower.name
+    if (t.kind === 'pvp') return en.pvp.kind
+    if (t.kind === 'spot') return en.world.point.vein
+    if (t.kind === 'trib') return en.trib.cloud
+    return en.realms[t.i].name
   },
   weekend: {
     title: 'Weekend event',
@@ -1203,6 +1198,48 @@ export const en: Text = {
     deleted: 'Account deleted',
     deletedHint: 'This account has been deleted on request.',
     p1Gone: 'The online version starts fresh — saves from the offline test build cannot be carried over.',
+  },
+  bag: {
+    title: 'Items',
+    tabs: { speed: 'Speed-ups', res: 'Resources', buff: 'Boosts', other: 'Other' },
+    empty: 'No items of this kind yet. Earn them from quests, events and chests.',
+    use: 'Use',
+    useAll: (n: number) => `Use ${n}`,
+    owned: (n: number) => `Owned ${n}`,
+    pickJob: 'Use on which task?',
+    pickElder: 'For which elder?',
+    noJob: 'Nothing waiting that this talisman can speed up.',
+    left: (t: string) => `${t} left`,
+    speedTitle: 'Speed up',
+    remaining: 'Remaining',
+    speedHint: 'Pick talismans to cut the time. Specific talismans (Builder, Drill…) only work on their own task.',
+    saves: (t: string) => `Cuts ${t}`,
+    finish: 'Finish now',
+    denom: {
+      min: (m: number) => (m < 60 ? `${m}m` : `${m / 60}h`),
+      hours: (h: number) => `${h}h`,
+      n: (n: number) => (n < 1000 ? `${n}` : `${n / 1000}K`),
+    },
+    family: {
+      thoiQuang: { name: 'Time-Flow Talisman', desc: 'Cuts the time of any waiting task (except alchemy).' },
+      loBan: { name: "Builder's Talisman", desc: 'Cuts construction and upgrade time.' },
+      luyenBinh: { name: 'Drill Talisman', desc: 'Cuts disciple recruitment time.' },
+      ngoDao: { name: 'Insight Talisman', desc: 'Cuts technique research time.' },
+      dieuThu: { name: 'Healing Talisman', desc: 'Cuts healing time for wounded disciples.' },
+      tuLinh: { name: 'Gathering Qi Talisman', desc: 'All production +50%. Using more extends the time.' },
+      thanHanh: { name: 'Swift March Talisman', desc: 'Marches 25% faster. Using more extends the time.' },
+      chienY: { name: 'Battle Will Talisman', desc: 'Attack of every army +10%. Using more extends the time.' },
+      kimCuong: { name: 'Vajra Talisman', desc: 'Defense of every army +10%. Using more extends the time.' },
+      hoThe: { name: 'Body Ward Talisman', desc: 'Health of every army +10%. Using more extends the time.' },
+      hoSon: {
+        name: 'Mountain Ward Talisman',
+        desc: 'Peace shield: nobody can raid your sect. Breaks if you raid someone.',
+      },
+      thachNang: { name: 'Spirit Stone Pouch', desc: 'Open to receive spirit stone (ignores storage capacity).' },
+      thaoNang: { name: 'Spirit Herb Pouch', desc: 'Open to receive spirit herb (ignores storage capacity).' },
+      khoangNang: { name: 'Spirit Ore Pouch', desc: 'Open to receive spirit ore (ignores storage capacity).' },
+      kinhThu: { name: 'Insight Scripture', desc: "A senior's notes: one elder gains extra experience." },
+    } satisfies Record<BagFamily, { name: string; desc: string }>,
   },
   ago(ms: number) {
     const m = Math.floor(ms / 60_000),

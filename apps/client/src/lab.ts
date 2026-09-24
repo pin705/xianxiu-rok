@@ -2,6 +2,8 @@
 import {
   ITEMS,
   GEAR_ICONS,
+  GOOD_ICONS,
+  goodIcon,
   colorIcon,
   badgeSkin,
   bake,
@@ -271,6 +273,15 @@ const VIEWS: Record<string, () => void> = {
     // icon nhiều màu (actions.ts), góc dưới phải
     ;[56, 32, 22].forEach((px, k) => put(colorIcon('shield'), 290, [640, 700, 740][k], px))
   },
+  goods: () => {
+    // vật phẩm túi đồ (goods.ts): 6 họ mỗi hàng, mỗi thứ bốn cỡ 56/32/22/16
+    const rows = [GOOD_ICONS.slice(0, 6), GOOD_ICONS.slice(6, 12), GOOD_ICONS.slice(12)]
+    rows.forEach((names, r) =>
+      names.forEach((n, i) =>
+        [56, 32, 22, 16].forEach((px, k) => put(goodIcon(n), 36 + i * 64, 44 + r * 200 + [0, 60, 104, 140][k], px)),
+      ),
+    )
+  },
   troops: () => {
     put(battlefield(390, 844, 'wild'), 0, 0, 844)
     // hàng dưới: bậc 1–3 (một dáng) · bậc 4 · bậc 5; hàng trên: quân địch cùng thứ tự
@@ -491,7 +502,11 @@ const VIEWS: Record<string, () => void> = {
         app.stage.addChild(scene.root)
         scene.setData(
           { seats, marches, chron: [], spots: [{ i: vein.i, own: '[VK] Vạn Kiếm', n: 2 }] },
-          pid => (pid === 1 ? 'me' : pid === 2 ? 'ally' : seats[pid - 1].npc ? 'npc' : 'other'),
+          pid => {
+            if (pid === 1) return 'me'
+            if (pid === 2) return 'ally'
+            return seats[pid - 1].npc ? 'npc' : 'other'
+          },
           1,
           now,
         )

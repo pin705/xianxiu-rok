@@ -43,6 +43,7 @@ import {
   REVENGE_TIME,
   SHIELD_TIME,
   type Bonus,
+  type BagFamily,
   type BuildingId,
   type ElderId,
   type Element,
@@ -464,19 +465,13 @@ export const vi = {
     { name: 'Hỗn Độn Bí Cảnh', lore: 'Khe nứt dẫn về thuở trời đất chưa phân, ngũ hành đảo lộn.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast'
-      ? vi.beasts[t.i]
-      : t.kind === 'sect'
-        ? vi.sects[t.i].name
-        : t.kind === 'tower'
-          ? vi.tower.name
-          : t.kind === 'pvp'
-            ? vi.pvp.kind
-            : t.kind === 'spot'
-              ? vi.world.point.vein
-              : t.kind === 'trib'
-                ? vi.trib.cloud
-                : vi.realms[t.i].name
+    if (t.kind === 'beast') return vi.beasts[t.i]
+    if (t.kind === 'sect') return vi.sects[t.i].name
+    if (t.kind === 'tower') return vi.tower.name
+    if (t.kind === 'pvp') return vi.pvp.kind
+    if (t.kind === 'spot') return vi.world.point.vein
+    if (t.kind === 'trib') return vi.trib.cloud
+    return vi.realms[t.i].name
   },
   weekend: {
     title: 'Sự kiện cuối tuần',
@@ -1184,6 +1179,50 @@ export const vi = {
     deleted: 'Tài khoản đã xoá',
     deletedHint: 'Tài khoản này đã được xoá theo yêu cầu.',
     p1Gone: 'Bản online bắt đầu lại từ đầu — save của bản thử nghiệm offline không chuyển sang được.',
+  },
+  // Túi đồ (như túi đồ RoK): phù, nang, kinh thư — chỉ đến từ nhiệm vụ, sự kiện, rương
+  bag: {
+    title: 'Túi đồ',
+    tabs: { speed: 'Tăng tốc', res: 'Tài nguyên', buff: 'Tăng ích', other: 'Khác' },
+    empty: 'Chưa có vật phẩm loại này. Nhận từ nhiệm vụ, sự kiện và rương.',
+    use: 'Dùng',
+    useAll: (n: number) => `Dùng ${n}`,
+    owned: (n: number) => `Có ${n}`,
+    pickJob: 'Dùng cho việc nào?',
+    pickElder: 'Cho trưởng lão nào?',
+    noJob: 'Không có việc nào đang chờ mà phù này rút ngắn được.',
+    left: (t: string) => `Còn ${t}`,
+    speedTitle: 'Tăng tốc',
+    remaining: 'Còn lại',
+    speedHint: 'Chọn phù để bớt thời gian. Phù riêng (Lỗ Ban, Luyện Binh…) chỉ dùng cho đúng việc.',
+    saves: (t: string) => `Bớt ${t}`,
+    finish: 'Xong ngay',
+    // mệnh giá ghi trên góc icon
+    denom: {
+      min: (m: number) => (m < 60 ? `${m}p` : `${m / 60}g`),
+      hours: (h: number) => `${h}g`,
+      n: (n: number) => (n < 1000 ? `${n}` : `${n / 1000}K`),
+    },
+    family: {
+      thoiQuang: { name: 'Thời Quang Phù', desc: 'Bớt thời gian một việc đang chờ bất kỳ (trừ luyện đan).' },
+      loBan: { name: 'Lỗ Ban Phù', desc: 'Bớt thời gian xây, nâng công trình.' },
+      luyenBinh: { name: 'Luyện Binh Phù', desc: 'Bớt thời gian tuyển đệ tử.' },
+      ngoDao: { name: 'Ngộ Đạo Phù', desc: 'Bớt thời gian nghiên cứu công pháp.' },
+      dieuThu: { name: 'Diệu Thủ Phù', desc: 'Bớt thời gian chữa thương binh.' },
+      tuLinh: { name: 'Tụ Linh Phù', desc: 'Sản lượng mọi công trình +50%. Dùng thêm thì kéo dài.' },
+      thanHanh: { name: 'Thần Hành Phù', desc: 'Hành quân nhanh hơn 25%. Dùng thêm thì kéo dài.' },
+      chienY: { name: 'Chiến Ý Phù', desc: 'Công mọi đội +10%. Dùng thêm thì kéo dài.' },
+      kimCuong: { name: 'Kim Cương Phù', desc: 'Thủ mọi đội +10%. Dùng thêm thì kéo dài.' },
+      hoThe: { name: 'Hộ Thể Phù', desc: 'Sinh lực mọi đội +10%. Dùng thêm thì kéo dài.' },
+      hoSon: {
+        name: 'Hộ Sơn Phù',
+        desc: 'Khiên hộ sơn: không ai cướp được tông môn. Tự tan khi bạn đi cướp người khác.',
+      },
+      thachNang: { name: 'Linh Thạch Nang', desc: 'Mở ra nhận linh thạch (không tính vào sức chứa kho).' },
+      thaoNang: { name: 'Linh Thảo Nang', desc: 'Mở ra nhận linh thảo (không tính vào sức chứa kho).' },
+      khoangNang: { name: 'Linh Khoáng Nang', desc: 'Mở ra nhận linh khoáng (không tính vào sức chứa kho).' },
+      kinhThu: { name: 'Tâm Đắc Kinh Thư', desc: 'Tâm đắc của tiền bối: một trưởng lão nhận thêm kinh nghiệm.' },
+    } satisfies Record<BagFamily, { name: string; desc: string }>,
   },
   ago(ms: number) {
     const m = Math.floor(ms / 60_000),

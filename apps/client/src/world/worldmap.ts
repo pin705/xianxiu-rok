@@ -27,6 +27,8 @@ const KEEP = 9
 const MARK = 28 // px CSS một huy hiệu
 export type Cam = { x: number; y: number; z: number } // tâm nhìn (DU) và px CSS mỗi DU
 export type Rel = 'me' | 'ally' | 'npc' | 'other'
+// màu huy hiệu theo quan hệ với mình
+const TONE: Record<Rel, MedalTone> = { me: 'gold', ally: 'jade', npc: 'ink', other: 'red' }
 export type Pick =
   | { kind: 'seat'; pid: number }
   | { kind: 'point'; i: number }
@@ -189,7 +191,7 @@ export class WorldScene {
       const m = add(
         s,
         r === 'npc' ? faction : 'crest',
-        r === 'me' ? 'gold' : r === 'ally' ? 'jade' : r === 'npc' ? 'ink' : 'red',
+        TONE[r],
         r === 'me' ? 1.3 : 1,
       )
       if (s.shield) {

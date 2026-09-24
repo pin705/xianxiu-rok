@@ -14,7 +14,10 @@ export type Land = 'water' | 'plain' | 'forest' | 'hill' | 'mount'
 export function landAt(seed: number, x: number, y: number): Land {
   const h = fbm(x * 0.06, y * 0.06, seed, 4)
   const m = fbm(x * 0.09 + 31, y * 0.09 + 77, seed + 5, 3)
-  return h < 0.33 ? 'water' : h > 0.66 ? 'mount' : h > 0.58 ? 'hill' : m > 0.55 ? 'forest' : 'plain'
+  if (h < 0.33) return 'water'
+  if (h > 0.66) return 'mount'
+  if (h > 0.58) return 'hill'
+  return m > 0.55 ? 'forest' : 'plain'
 }
 
 const LAND: Record<Land, string> = {

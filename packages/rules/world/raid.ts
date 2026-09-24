@@ -201,7 +201,7 @@ function attacker({ at, att, def, defPid, m, win, loot, delta, fights }: Bout, b
     },
     foes: win ? att.foes.filter(x => x.pid !== defPid) : att.foes, // báo thù xong
   }
-  return win ? evBump(bump(a, 'win'), 'raid') : a
+  return win ? evBump(bump({ ...a, stats: { ...a.stats, raided: (a.stats.raided ?? 0) + 1 } }, 'win'), 'raid') : a
 }
 
 // Bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên
