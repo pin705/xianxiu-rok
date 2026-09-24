@@ -217,7 +217,7 @@ export const vi = {
     { name: 'Hỗn Độn Bí Cảnh', lore: 'Khe nứt dẫn về thuở trời đất chưa phân, ngũ hành đảo lộn.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : t.kind === 'pvp' ? vi.pvp.kind : vi.realms[t.i].name
+    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : t.kind === 'pvp' ? vi.pvp.kind : t.kind === 'spot' ? vi.world.point.vein : vi.realms[t.i].name
   },
   weekend: {
     title: 'Sự kiện cuối tuần',
@@ -355,6 +355,21 @@ export const vi = {
     you: 'Tông môn của bạn',
     npc: 'Phân đà',
     soon: 'Chiếm điểm, khai mỏ, đánh yêu vương: sắp mở',
+    stay: 'Đang đóng quân',
+    held: 'Đang giữ',
+    free: 'Chưa ai giữ — đóng quân để chiếm',
+    left: 'Còn',
+    refill: (t: string) => `Mỏ cạn, đầy lại sau ${t}`,
+    hp: 'Máu',
+    respawn: (t: string) => `Đã bị hạ, hồi sinh sau ${t}`,
+    take: 'Xuất quân chiếm',
+    gather: 'Xuất quân khai mỏ',
+    hit: 'Xuất quân đánh yêu vương',
+    shielded: 'Đang có khiên',
+    land: { water: 'Sông hồ', plain: 'Đồng bằng', forest: 'Rừng', hill: 'Đồi', mount: 'Núi' },
+    weather: { clear: 'Trời quang', mist: 'Sương mù', rain: 'Mưa', snow: 'Tuyết' },
+    gathering: 'Đang khai mỏ',
+    recall: 'Gọi về',
     chron: 'Biên niên',
     msg: {
       found: (name: string) => `${name} lập tông môn trong giới`,

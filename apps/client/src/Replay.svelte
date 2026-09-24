@@ -108,7 +108,9 @@
   })
 
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
-  const foeEmblem: Emblem = $derived(!report || report.kind === 'trib' ? 'thunder' : report.kind === 'pvp' ? 'crest' : EMBLEM[report.kind][report.i])
+  const foeEmblem: Emblem = $derived(
+    !report || report.kind === 'trib' ? 'thunder' : report.kind === 'pvp' ? 'crest' : report.kind === 'spot' ? (EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus') : EMBLEM[report.kind][report.i],
+  )
   const retreat = $derived(!!report && !report.win && !!f && f.rounds.length >= 10 && counts(1, f.rounds.length).some(x => x > 0) && counts(0, f.rounds.length).some(x => x > 0))
   const dead = $derived(report ? count(report.dead) : 0)
 </script>

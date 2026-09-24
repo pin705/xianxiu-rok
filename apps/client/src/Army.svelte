@@ -16,8 +16,8 @@
     onrecruit,
   }: {
     game: State
-    foe: number // lực chiến địch
-    chance: (elder: ElderId, army: Army) => number // tỉ lệ thắng ước lượng (rules.winChance)
+    foe?: number // lực chiến địch (không biết thì bỏ: chỉ hiện lực chiến của mình)
+    chance?: (elder: ElderId, army: Army) => number // tỉ lệ thắng ước lượng (rules.winChance); không có: không đoán
     cta: string
     time?: string
     disabled?: boolean
@@ -36,7 +36,7 @@
   const army = $derived(Object.fromEntries(home.map(u => [u, Math.min(game.troops[u], touched ? (picks[u] ?? 0) : game.troops[u])])) as Army)
   const ours = $derived(lead ? might(sideOf(game, lead, army)) : 0)
   // Nhận định dựa trên đánh thử (tính hệ khắc, công pháp), không dựa lực chiến thô
-  const p = $derived(lead ? chance(lead, army) : 0)
+  const p = $derived(lead && chance ? chance(lead, army) : 0)
   const verdict = $derived(p >= 0.8 ? 'strong' : p >= 0.35 ? 'even' : 'weak')
 
   function set(u: UnitId, n: number) {
@@ -98,16 +98,20 @@
   {/if}
 </Section>
 
-<div class="row mt-4">
-  <span class="stack" style:--gap="0"><small class="t-tiny t-soft">{L.army.ours}</small><b class="t-num">{num(ours)}</b></span>
-  <span class="grow"><Meter value={p} tone={verdict === 'weak' ? 'bad' : verdict === 'even' ? 'gold' : 'good'} size="lg" /></span>
-  <span class="stack center" style:--gap="0"><small class="t-tiny t-soft">{L.army.theirs}</small><b class="t-num">{num(foe)}</b></span>
-</div>
-<p class="center t-small t-strong mt-2" class:t-good={verdict === 'strong'} class:t-gold={verdict === 'even'} class:t-bad={verdict === 'weak'}>
-  {L.army.verdict[verdict]} · {L.army.chance(Math.round(p * 100))}
-</p>
+{#if chance && foe !== undefined}
+  <div class="row mt-4">
+    <span class="stack" style:--gap="0"><small class="t-tiny t-soft">{L.army.ours}</small><b class="t-num">{num(ours)}</b></span>
+    <span class="grow"><Meter value={p} tone={verdict === 'weak' ? 'bad' : verdict === 'even' ? 'gold' : 'good'} size="lg" /></span>
+    <span class="stack center" style:--gap="0"><small class="t-tiny t-soft">{L.army.theirs}</small><b class="t-num">{num(foe)}</b></span>
+  </div>
+  <p class="center t-small t-strong mt-2" class:t-good={verdict === 'strong'} class:t-gold={verdict === 'even'} class:t-bad={verdict === 'weak'}>
+    {L.army.verdict[verdict]} · {L.army.chance(Math.round(p * 100))}
+  </p>
+{:else}
+  <p class="center t-small mt-4"><span class="t-soft">{L.army.might}:</span> <b class="t-num">{num(ours)}</b></p>
+{/if}
 <!-- yếu thế mà vẫn còn quân: chỉ đường đi tuyển thêm (không quân thì nút đã có ở trên) -->
-{#if verdict === 'weak' && home.length && onrecruit}
+{#if chance && verdict === 'weak' && home.length && onrecruit}
   <div class="row center mt-2"><Button variant="ghost" size="sm" icon="people" onclick={onrecruit}>{L.army.recruit}</Button></div>
 {/if}
 

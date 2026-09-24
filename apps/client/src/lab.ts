@@ -242,6 +242,41 @@ if (view === 'chrome') {
     app.render()
     document.title = 'ready'
   })
+} else if (view === 'world') {
+  // Bản đồ giới thật trên WebGL với ảnh chụp giả: &seed= (mặc định 7), &z= độ phóng (px CSS mỗi DU), &x=&y= tâm (ô)
+  cv.remove()
+  const q = new URLSearchParams(location.search)
+  const seed = Number(q.get('seed') ?? 7)
+  Promise.all([getApp(), import('./world/worldmap'), import('@rok/rules/world')]).then(async ([app, W, R]) => {
+    document.body.append(app.canvas)
+    const a = R.atlas(seed)
+    const taken: { x: number; y: number }[] = []
+    let k = 1
+    const rand = () => ((k = (Math.imul(k, 1103515245) + 12345) >>> 0) / 4294967296)
+    for (let i = 0; i < 120; i++) taken.push(R.spawn(a, taken, rand)!)
+    const seats = taken.map((p, i) => ({ pid: i + 1, name: `Tông ${i + 1}`, x: p.x, y: p.y, hall: 5 + (i % 15), power: 5000 + i * 300, npc: i % 4 === 0, shield: i % 7 === 0 }))
+    const vein = a.points.find(p => p.kind === 'vein')!
+    const now = 1_000_000
+    const marches = [0, 1, 2].map(i => {
+      const r = R.route(a, taken[i], i === 2 ? vein : taken[i + 3], 3)!
+      return { pid: i + 1, id: i + 1, path: r.path, startAt: now - 60_000, arriveAt: now + 120_000, returnAt: 0 }
+    })
+    const scene = new W.WorldScene(seed)
+    app.stage.addChild(scene.root)
+    scene.setData({ seats, marches, chron: [], spots: [{ i: vein.i, own: '[VK] Vạn Kiếm', n: 2 }] }, pid => (pid === 1 ? 'me' : pid === 2 ? 'ally' : seats[pid - 1].npc ? 'npc' : 'other'), 1, now)
+    const z = Number(q.get('z') ?? 0.16)
+    const cx = (Number(q.get('x') ?? 75) + 0.5) * 16, cy = (Number(q.get('y') ?? 75) + 0.5) * 16
+    // chờ worker nướng xong ảnh tổng quan (và mảnh nét nếu phóng to) rồi vẽ
+    const t0 = performance.now()
+    await Promise.race([scene.ready, new Promise(r => setTimeout(r, 30_000))])
+    console.log('overview ms', Math.round(performance.now() - t0))
+    for (let t = 0; t < 40; t++) {
+      scene.tick({ x: cx, y: cy, z }, innerWidth / 2, innerHeight / 2, now)
+      await new Promise(r => setTimeout(r, 150))
+    }
+    app.render()
+    document.title = 'ready'
+  })
 } else if (view === 'result') {
   // Màn Kết quả (đột phá / thất bại / luân hồi) với theme thật: &kind=win|fail|rebirth
   cv.remove()

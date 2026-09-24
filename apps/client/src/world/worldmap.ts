@@ -27,35 +27,43 @@ export type Pick =
 class Bakery {
   private worker: Worker | null = null
   private n = 0
-  private wait = new Map<number, (b: ImageBitmap | null) => void>()
+  private wait = new Map<number, { job: Omit<BakeJob, 'id'>; ok: (b: ImageBitmap | HTMLCanvasElement | null) => void }>()
   constructor() {
     try {
       if (typeof OffscreenCanvas !== 'undefined') {
         this.worker = new Worker(new URL('./bake.worker.ts', import.meta.url), { type: 'module' })
         this.worker.onmessage = (e: MessageEvent<{ id: number; bmp: ImageBitmap }>) => {
-          this.wait.get(e.data.id)?.(e.data.bmp)
+          this.wait.get(e.data.id)?.ok(e.data.bmp)
           this.wait.delete(e.data.id)
+        }
+        // worker hỏng (trình duyệt không cho canvas trong worker…): nướng các việc đang chờ trên luồng chính
+        this.worker.onerror = e => {
+          console.warn('bake worker failed, baking on main thread', e.message)
+          this.worker?.terminate()
+          this.worker = null
+          for (const [id, w] of this.wait) this.wait.delete(id), w.ok(this.here(w.job))
         }
       }
     } catch {
       this.worker = null
     }
   }
+  private here(j: Omit<BakeJob, 'id'>) {
+    const a = atlas(j.seed)
+    const piece = worldPiece({ seed: j.seed, tiles: a.tiles, rings: a.regions.map(r => r.ring), w: MAP_W }, j.x0, j.y0, j.n, j.fine)
+    return bake(piece, j.px / (j.n * T)).canvas as HTMLCanvasElement
+  }
   bake(j: Omit<BakeJob, 'id'>): Promise<ImageBitmap | HTMLCanvasElement | null> {
-    if (!this.worker) {
-      const a = atlas(j.seed)
-      const piece = worldPiece({ seed: j.seed, tiles: a.tiles, rings: a.regions.map(r => r.ring), w: MAP_W }, j.x0, j.y0, j.n, j.fine)
-      return Promise.resolve(bake(piece, j.px / (j.n * T)).canvas as HTMLCanvasElement)
-    }
+    if (!this.worker) return Promise.resolve(this.here(j))
     const id = ++this.n
     return new Promise(ok => {
-      this.wait.set(id, ok)
+      this.wait.set(id, { job: j, ok })
       this.worker!.postMessage({ ...j, id })
     })
   }
   destroy() {
     this.worker?.terminate()
-    for (const f of this.wait.values()) f(null)
+    for (const w of this.wait.values()) w.ok(null)
   }
 }
 
@@ -88,7 +96,7 @@ function along(path: Pos[], k: number): Pos {
   return path[0]
 }
 // Vị trí đội lúc now: đi (startAt → arriveAt), về theo đường ngược (arriveAt → returnAt); chưa hẹn giờ về thì ở đích
-export function marchAt(m: Pick extends never ? never : MapMarch, now: number): Pos {
+export function marchAt(m: MapMarch, now: number): Pos {
   if (now < m.arriveAt) return along(m.path, (now - m.startAt) / Math.max(1, m.arriveAt - m.startAt))
   if (!m.returnAt) return m.path[m.path.length - 1]
   return along(m.path, 1 - (now - m.arriveAt) / Math.max(1, m.returnAt - m.arriveAt))
@@ -103,17 +111,20 @@ export class WorldScene {
   private bakery = new Bakery()
   private roads = new Graphics()
   private glow = new Graphics()
-  private marks = new Container() // huy hiệu: điểm, cổng, tông môn (sprite, co giãn theo camera để giữ cỡ trên màn)
+  private marks = new Container() // huy hiệu: điểm, cổng, tông môn
+  // sprite, cỡ gốc (DU ở z = 1, chia z mỗi khung để giữ cỡ trên màn), độ phóng tối thiểu để hiện (mức chi tiết)
+  private sized: [Container, number, number][] = []
   private tokens = new Container()
   private marches: MapMarch[] = []
   private roadZ = 0
   private overviewTex: Texture | null = null
   private dead = false
+  readonly ready: Promise<void> // ảnh tổng quan đã lên
 
   constructor(seed: number) {
     this.atlas = atlas(seed)
     this.root.addChild(this.land, this.glow, this.roads, this.marks, this.tokens)
-    void this.bakery.bake({ seed, x0: 0, y0: 0, n: MAP_W, px: OVERVIEW_PX, fine: false }).then(b => {
+    this.ready = this.bakery.bake({ seed, x0: 0, y0: 0, n: MAP_W, px: OVERVIEW_PX, fine: false }).then(b => {
       if (!b || this.dead) return
       this.overviewTex = Texture.from(b)
       const s = new Sprite(this.overviewTex)
@@ -125,22 +136,23 @@ export class WorldScene {
   // Dữ liệu đổi (ảnh chụp mới, pha mùa, quan hệ): dựng lại huy hiệu. rel: quan hệ của từng tông môn với mình.
   setData(snap: MapSnap, rel: (pid: number) => Rel, phase: number, now: number) {
     this.marks.removeChildren().forEach(c => c.destroy())
-    const add = (p: Pos, emblem: Emblem, tone: MedalTone, size = 1, alpha = 1) => {
+    this.sized = []
+    const add = (p: Pos, emblem: Emblem, tone: MedalTone, size = 1, alpha = 1, minZ = 0) => {
       const t = markTex(emblem, tone)
       const s = new Sprite(t.tex)
       s.anchor.set(0.5)
       s.position.set((p.x + 0.5) * T, (p.y + 0.5) * T)
       s.alpha = alpha
-      ;(s as Sprite & { k: number }).k = (size * MARK) / (t.tex.width / (DPR * 1.5)) // hệ số cỡ: nhân 1/z khi vẽ
+      this.sized.push([s, (size * MARK) / (t.tex.width / (DPR * 1.5)), minZ])
       this.marks.addChild(s)
       return s
     }
     const spots = new Map(snap.spots.map(s => [s.i, s]))
     for (const p of this.atlas.points) {
       const sp = spots.get(p.i)
-      if (p.kind === 'gate') add(p, 'tower', p.lv <= phase ? 'jade' : 'ink', 0.7, p.lv <= phase ? 1 : 0.6)
-      else if (p.kind === 'vein') add(p, 'lotus', sp?.own ? 'jade' : 'realm', 0.8)
-      else if (p.kind === 'mine') add(p, 'earth', 'gold', 0.7, sp?.until && sp.until > now ? 0.4 : 1)
+      if (p.kind === 'gate') add(p, 'tower', p.lv <= phase ? 'jade' : 'ink', 0.7, p.lv <= phase ? 1 : 0.6, 0.3)
+      else if (p.kind === 'vein') add(p, 'lotus', sp?.own ? 'jade' : 'realm', 0.8, 1, 0.22)
+      else if (p.kind === 'mine') add(p, 'earth', 'gold', 0.7, sp?.until && sp.until > now ? 0.4 : 1, 0.34)
       else if (p.kind === 'boss') add(p, 'dragon', 'beast', p.lv === 3 ? 1.3 : 1.05, sp?.until && sp.until > now ? 0.4 : 1)
       else add(p, 'rebirth', 'gold', 1.5)
     }
@@ -153,7 +165,7 @@ export class WorldScene {
         const ring = new Sprite(ringTex('#8cc09d'))
         ring.anchor.set(0.5)
         ring.position.copyFrom(m.position)
-        ;(ring as Sprite & { k: number }).k = ((r === 'me' ? 1.3 : 1) * MARK * 1.25) / 96
+        this.sized.push([ring, ((r === 'me' ? 1.3 : 1) * MARK * 1.25) / 96, 0])
         this.marks.addChild(ring)
       }
     }
@@ -177,9 +189,14 @@ export class WorldScene {
   tick(cam: Cam, sx: number, sy: number, now: number) {
     this.root.scale.set(cam.z)
     this.root.position.set(sx - cam.x * cam.z, sy - cam.y * cam.z)
-    for (const c of this.marks.children) c.scale.set((c as Container & { k: number }).k / cam.z)
+    // thu nhỏ thì huy hiệu nhỏ theo (tới 30 %), điểm phụ (mỏ, cổng) ẩn bớt — cả giới vẫn đọc được
+    const lod = Math.min(1, Math.max(0.3, cam.z / 0.6))
+    for (const [c, k, minZ] of this.sized) {
+      c.visible = cam.z >= minZ
+      c.scale.set((k * lod) / cam.z)
+    }
     if (Math.abs(this.roadZ - cam.z) / cam.z > 0.15) this.drawRoads(cam.z)
-    this.drawTokens(cam.z, now)
+    this.drawTokens(cam.z, now, lod)
     this.drawTide(now)
     if (cam.z >= FINE_Z) this.fine(cam, sx, sy)
   }
@@ -194,7 +211,7 @@ export class WorldScene {
     }
     g.stroke({ width: 2.2 / z, color: 0xb8382a, alpha: 0.7 })
   }
-  private drawTokens(z: number, now: number) {
+  private drawTokens(z: number, now: number, lod: number) {
     const tok = painted('wtoken', marchToken, DPR * 1.5)
     while (this.tokens.children.length < this.marches.length) {
       const s = new Sprite(tok.tex)
@@ -207,7 +224,7 @@ export class WorldScene {
       if (!m) return
       const p = marchAt(m, now)
       c.position.set((p.x + 0.5) * T, (p.y + 0.5) * T)
-      c.scale.set(22 / (tok.tex.width / (DPR * 1.5)) / z)
+      c.scale.set((22 * Math.max(0.55, lod)) / (tok.tex.width / (DPR * 1.5)) / z)
     })
   }
   // Linh triều: quầng sáng trên vùng đang có triều

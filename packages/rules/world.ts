@@ -431,7 +431,7 @@ export const eventTop = (ps: Players, week: number) =>
 
 export type Chron = { at: number; k: string; a: (string | number)[] } // biên niên của giới: chữ dựng ở client theo khoá
 export type Seat = { pid: number; name: string; x: number; y: number; hall: number; power: number; npc: boolean; shield: boolean }
-export type MapMarch = { pid: number; id: number; path: Pos[]; startAt: number; arriveAt: number; returnAt: number; foe?: string }
+export type MapMarch = { pid: number; id: number; path: Pos[]; startAt: number; arriveAt: number; returnAt: number; foe?: string; spot?: string }
 // Điểm khác mặc định: phe giữ (tên minh/tông môn), số đội đóng, mỏ còn bao nhiêu, yêu vương còn máu, lúc hồi
 export type SpotView = { i: number; own?: string; n?: number; left?: number; hp?: number; until?: number }
 export type MapSnap = { seats: Seat[]; marches: MapMarch[]; chron: Chron[]; spots: SpotView[] }
@@ -441,7 +441,8 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
   for (const [pid, s] of ps) {
     if (!s.seat) continue
     seats.push({ pid, name: s.name, x: s.seat.x, y: s.seat.y, hall: s.levels.chuDien, power: Math.round(power(s)), npc: npc.has(pid), shield: s.shield > now })
-    for (const m of s.marches) if (m.path) marches.push({ pid, id: m.id, path: m.path, startAt: m.startAt, arriveAt: m.arriveAt, returnAt: m.returnAt, ...(m.foe && { foe: m.foe }) })
+    for (const m of s.marches)
+      if (m.path) marches.push({ pid, id: m.id, path: m.path, startAt: m.startAt, arriveAt: m.arriveAt, returnAt: m.returnAt, ...(m.foe && { foe: m.foe }), ...(m.spot && { spot: m.spot }) })
   }
   const spots: SpotView[] = []
   for (const [k, sp] of Object.entries(w.spots)) {
@@ -468,6 +469,13 @@ export function spotOf(w: World, map: MapCtx, i: number, now: number): Spot {
   if (p.kind === 'mine') return sp.until && sp.until <= now ? { left: MINE_STOCK[p.lv - 1] } : { ...sp, left: sp.left ?? MINE_STOCK[p.lv - 1] }
   if (p.kind === 'boss') return sp.until && sp.until <= now ? { hp: BOSSES[p.lv]!.str } : { ...sp, hp: sp.hp ?? BOSSES[p.lv]?.str }
   return sp
+}
+// Một "lát" của yêu vương ở điểm i: đội đánh gặp đúng chừng này (client dùng để ước lượng tỉ lệ thắng)
+export function bossSlice(a: Atlas, i: number): Side | null {
+  const p = a.points[i], boss = p && BOSSES[p.lv]
+  if (!boss || p.kind !== 'boss') return null
+  const type = TYPES[i % TYPES.length]
+  return mob(boss.str / boss.slices, boss.tier, [[type, 0.5], [BEATS[type], 0.3], [BEATS[BEATS[type]], 0.2]], 1 + p.lv * 10)
 }
 const setSpot = (w: World, i: number, sp: Spot): World => ({ ...w, spots: { ...w.spots, [i]: sp } })
 const carryOf = (army: Army) => UNITS.reduce((sum, u) => sum + (army[u] ?? 0) * CARRY * TIER[unitOf(u).tier].stat, 0)
@@ -557,8 +565,7 @@ function spotArrive(ps: Players, w: World, map: MapCtx, pid: number, att: State,
   if (m.task === 'hit') {
     const boss = BOSSES[p.lv]
     if (!boss || (sp.until ?? 0) > at) return { changed: one(turnBack(att, m, at)), world: w }
-    const type = TYPES[i % TYPES.length]
-    const slice = mob(boss.str / boss.slices, boss.tier, [[type, 0.5], [BEATS[type], 0.3], [BEATS[BEATS[type]], 0.2]], 1 + p.lv * 10)
+    const slice = bossSlice(map.atlas, i)!
     const me2 = sideOf(att, m.elder, m.army)
     const f = fight(me2, slice, m.seed)
     const last = f.rounds.at(-1)

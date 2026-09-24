@@ -31,7 +31,7 @@ const ringT = (f: number, k: number) => ringTex(256, 80, 7, 3, DRY[f], k)
 const burstT = (n: number) => (f: number, k: number) => burstTex(128, 5 + n * 7, DRY[f], k)
 const streakT = (f: number, k: number) => streakTex(24, 128, 11, DRY[f], k)
 const boltT = (n: number) => (_: number, k: number) => boltTex(160, 640, n, k)
-const THEME: Record<Report['kind'], Theme> = { beast: 'wild', sect: 'sect', realm: 'forest', tower: 'tower', trib: 'storm', pvp: 'sect' }
+const THEME: Record<Report['kind'], Theme> = { beast: 'wild', sect: 'sect', realm: 'forest', tower: 'tower', trib: 'storm', pvp: 'sect', spot: 'wild' }
 const REALM: Theme[] = ['forest', 'fire', 'ice', 'storm', 'storm'] // Lôi Trì, Hỗn Độn: trời tối như lôi kiếp
 const REALM_TINT = [C.malachite, C.cinnabarL, C.azuriteL]
 

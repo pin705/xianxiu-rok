@@ -11,7 +11,7 @@
   import Daily from './Daily.svelte'
   import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
-  import MapView from './world/MapView.svelte'
+  import MapTab from './world/MapTab.svelte'
   import Alliance from './Alliance.svelte'
   import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
@@ -408,7 +408,20 @@
   {#if tab === 'monHa'}
     <Disciples {game} {now} {act} onfocus={focus} />
   {:else if tab === 'banDo'}
-    <MapView {game} {now} onpick={t => (target = t)} onreports={openReports} onrivals={() => openRivals()} />
+    <MapTab
+      {game}
+      {now}
+      {info}
+      {me}
+      {busy}
+      allies={ally ? ally.people.map(p => p.pid) : []}
+      watch={watchMap}
+      onpick={t => (target = t)}
+      onreports={openReports}
+      onrivals={() => openRivals()}
+      onraid={pid => openRivals(pid)}
+      send={sendWorld}
+    />
   {:else if tab === 'baoKho'}
     <Vault {game} {now} {act} onfocus={focus} />
   {:else if tab === 'tienMinh'}

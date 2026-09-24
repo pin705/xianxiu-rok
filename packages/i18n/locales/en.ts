@@ -221,7 +221,7 @@ export const en: Text = {
     { name: 'Chaos Realm', lore: 'A rift back to the time before heaven and earth parted, where the five elements turn over.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : t.kind === 'pvp' ? en.pvp.kind : en.realms[t.i].name
+    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : t.kind === 'pvp' ? en.pvp.kind : t.kind === 'spot' ? en.world.point.vein : en.realms[t.i].name
   },
   weekend: {
     title: 'Weekend event',
@@ -359,6 +359,21 @@ export const en: Text = {
     you: 'Your sect',
     npc: 'Branch',
     soon: 'Seizing points, mining and demon kings: coming soon',
+    stay: 'Garrisoned',
+    held: 'Held by',
+    free: 'Unclaimed — garrison it to seize it',
+    left: 'Left',
+    refill: (t: string) => `Depleted, refills in ${t}`,
+    hp: 'HP',
+    respawn: (t: string) => `Slain, returns in ${t}`,
+    take: 'Send to seize',
+    gather: 'Send to mine',
+    hit: 'Attack the demon king',
+    shielded: 'Shielded',
+    land: { water: 'Waters', plain: 'Plains', forest: 'Forest', hill: 'Hills', mount: 'Mountains' },
+    weather: { clear: 'Clear', mist: 'Mist', rain: 'Rain', snow: 'Snow' },
+    gathering: 'Mining',
+    recall: 'Recall',
     chron: 'Chronicle',
     msg: {
       found: (name: string) => `${name} founded a sect in this world`,
