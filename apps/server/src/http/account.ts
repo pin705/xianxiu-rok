@@ -19,7 +19,7 @@ import {
   newCode,
   newToken,
 } from '../lib/auth.ts'
-import { ErrorReply, requireSession } from './auth.ts'
+import { ErrorReply, authed, clearSession, socketPath } from './session.ts'
 
 export type AccountOptions = {
   db: Database
@@ -45,6 +45,7 @@ const Signed = z.object({
 const errors = { 400: ErrorReply, 401: ErrorReply, 403: ErrorReply, 409: ErrorReply, 429: ErrorReply }
 
 export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, o) => {
+  const auth = authed(o.db)
   // 5 lần sai mỗi email / 15 phút (thêm vào giới hạn theo IP của route): dò mật khẩu một tài khoản từ nhiều IP cũng bị chặn
   const perEmail = new RateLimiterMemory({ points: 5, duration: 15 * 60 })
   const strict = { rateLimit: { max: 10, timeWindow: '1 minute' } }
@@ -55,8 +56,12 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     await store.newSession(o.db, account, hashToken(token), req.ip, req.headers['user-agent'])
     const s = await store.findSession(o.db, hashToken(token))
     reply.setCookie(COOKIE, token, cookieOptions(o.secure))
-    const path = (s?.world && (await store.worldPath(o.db, s.world))) || o.path
-    return { token, pid: s?.pid ?? null, world: s?.world ?? null, path }
+    return {
+      token,
+      pid: s?.pid ?? null,
+      world: s?.world ?? null,
+      path: await socketPath(o.db, s?.world ?? null, o.path),
+    }
   }
   const refuse = (reply: FastifyReply, a: store.Login | null) =>
     a?.banned ? reply.code(403).send({ error: 'banned' }) : reply.code(401).send({ error: 'wrong' })
@@ -92,21 +97,24 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
   app.get(
     '/account',
     {
+      preHandler: auth,
       schema: { response: { 200: z.object({ email: z.string().nullable(), push: z.string().nullable() }), ...errors } },
     },
-    async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+    async req => {
+      const s = req.session
       return { email: (await store.accountOf(o.db, s.account))?.email ?? null, push: o.pushKey }
     },
   )
 
   app.post(
     '/account/link',
-    { config: strict, schema: { body: z.object({ email: Email, pass: Pass }), response: { 200: Ok, ...errors } } },
+    {
+      preHandler: auth,
+      config: strict,
+      schema: { body: z.object({ email: Email, pass: Pass }), response: { 200: Ok, ...errors } },
+    },
     async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+      const s = req.session
       try {
         if (!(await store.linkEmail(o.db, s.account, req.body.email, await hashPass(req.body.pass))))
           return reply.code(409).send({ error: 'linked' })
@@ -122,12 +130,12 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
   app.post(
     '/account/password',
     {
+      preHandler: auth,
       config: strict,
       schema: { body: z.object({ old: z.string().max(128), pass: Pass }), response: { 200: Ok, ...errors } },
     },
     async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+      const s = req.session
       const a = await store.accountOf(o.db, s.account)
       if (!a?.pass || !(await checkPass(req.body.old, a.pass))) return reply.code(401).send({ error: 'wrong' })
       await store.setPass(o.db, s.account, await hashPass(req.body.pass))
@@ -136,21 +144,27 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     },
   )
 
-  app.post('/account/logout-all', { schema: { response: { 200: Ok, ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    await store.dropSessions(o.db, s.account)
-    reply.clearCookie(COOKIE, { path: '/' })
-    return { ok: true }
-  })
+  app.post(
+    '/account/logout-all',
+    { preHandler: auth, schema: { response: { 200: Ok, ...errors } } },
+    async (req, reply) => {
+      const s = req.session
+      await store.dropSessions(o.db, s.account)
+      clearSession(reply)
+      return { ok: true }
+    },
+  )
 
   // Mã chuyển máy: mở game ở máy khác (hoặc sau khi trình duyệt xoá dữ liệu) mà không cần email
   app.post(
     '/account/code',
-    { config: strict, schema: { response: { 200: z.object({ code: z.string(), until: z.number() }), ...errors } } },
-    async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+    {
+      preHandler: auth,
+      config: strict,
+      schema: { response: { 200: z.object({ code: z.string(), until: z.number() }), ...errors } },
+    },
+    async req => {
+      const s = req.session
       const code = newCode(),
         until = Date.now() + CODE_TTL
       await store.putCode(o.db, s.account, hashToken(code), new Date(until))
@@ -162,17 +176,17 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
   app.post(
     '/account/delete',
     {
+      preHandler: auth,
       config: strict,
       schema: { body: z.object({ pass: z.string().max(128).optional() }), response: { 200: Ok, ...errors } },
     },
     async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+      const s = req.session
       const a = await store.accountOf(o.db, s.account)
       if (a?.pass && !(await checkPass(req.body.pass ?? '', a.pass))) return reply.code(401).send({ error: 'wrong' })
       await store.markDeleted(o.db, s.account, s.pid, s.world)
       req.log.info({ account: s.account, pid: s.pid }, 'account deleted')
-      reply.clearCookie(COOKIE, { path: '/' })
+      clearSession(reply)
       return { ok: true }
     },
   )
@@ -188,19 +202,24 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     endpoint: z.url().max(1024).refine(pushHost),
     keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }),
   })
-  app.post('/push/sub', { schema: { body: Sub, response: { 200: Ok, ...errors } } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return reply
-    if (!o.pushKey) return reply.code(400).send({ error: 'push_off' })
-    await store.addPushSub(o.db, s.account, { endpoint: req.body.endpoint, ...req.body.keys })
-    return { ok: true }
-  })
+  app.post(
+    '/push/sub',
+    { preHandler: auth, schema: { body: Sub, response: { 200: Ok, ...errors } } },
+    async (req, reply) => {
+      const s = req.session
+      if (!o.pushKey) return reply.code(400).send({ error: 'push_off' })
+      await store.addPushSub(o.db, s.account, { endpoint: req.body.endpoint, ...req.body.keys })
+      return { ok: true }
+    },
+  )
   app.post(
     '/push/unsub',
-    { schema: { body: z.object({ endpoint: z.string().max(1024) }), response: { 200: Ok, ...errors } } },
-    async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+    {
+      preHandler: auth,
+      schema: { body: z.object({ endpoint: z.string().max(1024) }), response: { 200: Ok, ...errors } },
+    },
+    async req => {
+      const s = req.session
       await store.dropPushSub(o.db, req.body.endpoint, s.account)
       return { ok: true }
     },

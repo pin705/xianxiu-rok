@@ -6,12 +6,14 @@ import { z } from 'zod'
 import { ELDER_IDS, PILL_IDS, RESOURCES, type ElderId, type PillId, type Res } from '@rok/rules'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
+import { ErrorReply } from './session.ts'
 
 const Gift = z.object({
   res: z.partialRecord(z.enum(RESOURCES as unknown as [Res, ...Res[]]), z.number().int().min(0).max(1e7)).optional(),
   items: z.partialRecord(z.enum(PILL_IDS as [PillId, ...PillId[]]), z.number().int().min(0).max(100)).optional(),
   elder: z.enum(ELDER_IDS as [ElderId, ...ElderId[]]).optional(),
 })
+const Ok = z.object({ ok: z.boolean() })
 const Mail = z.object({
   world: z.number().int().positive(),
   pid: z.number().int().positive().optional(), // không có: cả giới
@@ -37,21 +39,31 @@ export const adminRoutes: FastifyPluginAsyncZod<{ db: Database; token: string }>
           pid: z.number().int().positive(),
           minutes: z.number().int().min(0).max(525_600),
         }),
+        response: { 200: Ok, 401: ErrorReply, 404: ErrorReply },
       },
     },
-    async req => {
+    async (req, reply) => {
+      if ((await store.findPlayer(o.db, req.body.pid))?.worldId !== req.body.world)
+        return reply.code(404).send({ error: 'player' })
       const until = req.body.minutes ? Date.now() + req.body.minutes * 60_000 : 0
       await store.setMute(o.db, req.body.pid, until ? new Date(until) : null)
       await store.addInbox(o.db, req.body.world, 'mute', { pid: req.body.pid, until })
       return { ok: true }
     },
   )
-  app.post('/mail', { schema: { body: Mail } }, async req => {
-    const { world, pid, title, body, gift } = req.body
-    const [row] = await store.addInbox(o.db, world, 'mail', {
-      pid,
-      mail: { k: 'admin', a: [title, body], ...(gift && { gift }) },
-    })
-    return { id: row.id }
-  })
+  app.post(
+    '/mail',
+    { schema: { body: Mail, response: { 200: z.object({ id: z.number() }), 401: ErrorReply, 404: ErrorReply } } },
+    async (req, reply) => {
+      const { world, pid, title, body, gift } = req.body
+      if (!(await store.worldExists(o.db, world))) return reply.code(404).send({ error: 'world' })
+      if (pid && (await store.findPlayer(o.db, pid))?.worldId !== world)
+        return reply.code(404).send({ error: 'player' })
+      const [row] = await store.addInbox(o.db, world, 'mail', {
+        pid,
+        mail: { k: 'admin', a: [title, body], ...(gift && { gift }) },
+      })
+      return { id: row.id }
+    },
+  )
 }

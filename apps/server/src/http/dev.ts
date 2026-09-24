@@ -5,9 +5,10 @@ import { migrate } from '@rok/rules'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
 import type { Host } from '../game/host.ts'
-import { ErrorReply, requireSession } from './auth.ts'
+import { ErrorReply, authed } from './session.ts'
 
 export const devRoutes: FastifyPluginAsyncZod<{ db: Database; host: Host }> = async (app, { db, host }) => {
+  const auth = authed(db)
   const worldOf = async (world: number | null) => {
     if (!world) return null
     const w = await host.ensure(world)
@@ -17,6 +18,7 @@ export const devRoutes: FastifyPluginAsyncZod<{ db: Database; host: Host }> = as
   app.post(
     '/warp',
     {
+      preHandler: auth,
       schema: {
         body: z.object({
           min: z
@@ -28,8 +30,7 @@ export const devRoutes: FastifyPluginAsyncZod<{ db: Database; host: Host }> = as
       },
     },
     async (req, reply) => {
-      const s = await requireSession(db, req, reply)
-      if (!s) return reply
+      const s = req.session
       const w = await worldOf(s.world)
       if (!w) return reply.code(409).send({ error: 'moved' })
       await store.addWarp(db, w.id, req.body.min * 60_000)
@@ -38,21 +39,19 @@ export const devRoutes: FastifyPluginAsyncZod<{ db: Database; host: Host }> = as
     },
   )
 
-  app.get('/state', async (req, reply) => {
-    const s = await requireSession(db, req, reply)
-    if (!s) return reply
+  app.get('/state', { preHandler: auth }, async (req, reply) => {
+    const s = req.session
     const w = await worldOf(s.world)
     if (!w || !s.pid) return reply.code(409).send({ error: 'moved' })
     return { now: w.now(), state: w.state(s.pid) }
   })
 
-  app.post('/state', { schema: { body: z.object({ state: z.unknown() }) } }, async (req, reply) => {
-    const s = await requireSession(db, req, reply)
-    if (!s) return reply
+  app.post('/state', { preHandler: auth, schema: { body: z.object({ state: z.unknown() }) } }, async (req, reply) => {
+    const s = req.session
     const w = await worldOf(s.world)
     const state = migrate(req.body.state)
     if (!w || !s.pid) return reply.code(409).send({ error: 'moved' })
     if (!state) return reply.code(400).send({ error: 'state' })
-    return reply.code(w.setState(s.pid, state) ? 200 : 404).send({ ok: true })
+    return w.setState(s.pid, state) ? { ok: true } : reply.code(404).send({ error: 'gone' })
   })
 }

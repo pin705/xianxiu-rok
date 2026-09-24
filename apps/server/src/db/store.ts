@@ -53,9 +53,19 @@ export async function findSession(db: Database, hash: Buffer): Promise<Session |
   return s
 }
 
+const sessionRow = (account: number, hash: Buffer, ip?: string, ua?: string) => ({
+  hash,
+  accountId: account,
+  ip: ip ?? null,
+  ua: ua?.slice(0, 200) ?? null,
+})
 export const deleteSession = (db: Database, hash: Buffer) => db.delete(sessions).where(eq(sessions.hash, hash))
 
 export class NameTaken extends Error {}
+// Lỗi của Postgres (driver bọc trong cause): mã SQLSTATE + tên ràng buộc
+type PgError = { code?: string; constraint_name?: string }
+const pgError = (e: unknown): PgError => (e as { cause?: PgError }).cause ?? (e as PgError)
+const UNIQUE = '23505'
 
 // Khách mới: tài khoản + tông môn + phiên trong một transaction. Giới: giới mở id nhỏ nhất còn chỗ; hết chỗ thì mở giới mới.
 export async function createGuest(
@@ -98,21 +108,24 @@ export async function createGuest(
         .insert(players)
         .values({ accountId: a.id, worldId: world, name: g.name, nameKey: g.nameKey, crest: g.crest, state: g.state })
         .returning({ id: players.id })
-      await tx
-        .insert(sessions)
-        .values({ hash: g.hash, accountId: a.id, ip: g.ip ?? null, ua: g.ua?.slice(0, 200) ?? null })
+      await tx.insert(sessions).values(sessionRow(a.id, g.hash, g.ip, g.ua))
       return { account: a.id, pid: p.id, world }
     })
   } catch (e) {
-    const cause =
-      (e as { cause?: { code?: string; constraint_name?: string } }).cause ??
-      (e as { code?: string; constraint_name?: string })
-    if (cause.code === '23505' && cause.constraint_name === 'players_world_name') throw new NameTaken()
+    const cause = pgError(e)
+    if (cause.code === UNIQUE && cause.constraint_name === 'players_world_name') throw new NameTaken()
     throw e
   }
 }
 
 // ---------- Giới: nhận / nhả (lease + epoch) ----------
+
+// Lease của giới (ms): mỗi commit / heartbeat gia hạn thêm ttl. Node khác chỉ nhận giới khi lease đã hết quá grace (DB chập chờn
+// không làm giới chuyển oan). Node đang giữ tự chuyển chỉ đọc khi quá readOnly không gia hạn được — trước lúc lease hết — nên
+// không bao giờ có hai node cùng ghi. Heartbeat mỗi beat; quá renew chưa commit thì heartbeat tự gia hạn.
+export const LEASE = { ttl: 15_000, grace: 15_000, readOnly: 12_000, renew: 5_000, beat: 2_000 }
+const leaseEnd = sql`now() + make_interval(secs => ${LEASE.ttl / 1000})`
+const graceEnd = sql`now() - make_interval(secs => ${LEASE.grace / 1000})`
 
 export type Claimed = {
   id: number
@@ -124,7 +137,7 @@ export type Claimed = {
   warp: number
   opensAt: Date
 }
-// Nhận giới nếu chưa ai giữ, hoặc chính node này giữ (khởi động lại), hoặc lease đã hết quá 15 giây
+// Nhận giới nếu chưa ai giữ, hoặc chính node này giữ (khởi động lại), hoặc lease đã hết quá LEASE.grace
 // (grace: DB chập chờn không làm giới chuyển oan sang node khác)
 export async function claimWorld(db: Database, id: number, node: string): Promise<Claimed | { owner: string | null }> {
   const [w] = await db
@@ -132,14 +145,14 @@ export async function claimWorld(db: Database, id: number, node: string): Promis
     .set({
       owner: node,
       epoch: sql`${worlds.epoch} + 1`,
-      leaseUntil: sql`now() + interval '15 seconds'`,
+      leaseUntil: leaseEnd,
       updatedAt: sql`now()`,
     })
     .where(
       and(
         eq(worlds.id, id),
         sql`${worlds.status} <> 'ended'`,
-        or(isNull(worlds.owner), eq(worlds.owner, node), lt(worlds.leaseUntil, sql`now() - interval '15 seconds'`)),
+        or(isNull(worlds.owner), eq(worlds.owner, node), lt(worlds.leaseUntil, graceEnd)),
       ),
     )
     .returning({
@@ -179,7 +192,7 @@ export async function worldOwners(db: Database) {
       id: worlds.id,
       owner: worlds.owner,
       live: sql<boolean>`${worlds.leaseUntil} > now()`,
-      orphan: sql<boolean>`${worlds.owner} is null or ${worlds.leaseUntil} < now() - interval '15 seconds'`,
+      orphan: sql<boolean>`${worlds.owner} is null or ${worlds.leaseUntil} < ${graceEnd}`,
     })
     .from(worlds)
     .where(sql`${worlds.status} <> 'ended'`)
@@ -206,6 +219,8 @@ const playerCols = {
 }
 export const worldPlayers = (db: Database, world: number): Promise<PlayerRow[]> =>
   db.select(playerCols).from(players).where(eq(players.worldId, world))
+export const worldExists = async (db: Database, id: number) =>
+  (await db.select({ id: worlds.id }).from(worlds).where(eq(worlds.id, id))).length > 0
 export const findPlayer = async (db: Database, pid: number): Promise<PlayerRow | null> =>
   (await db.select(playerCols).from(players).where(eq(players.id, pid)))[0] ?? null
 
@@ -251,7 +266,7 @@ export async function flushWorld(db: Database, b: Batch) {
       tx
         .update(worlds)
         .set({
-          leaseUntil: sql`now() + interval '15 seconds'`,
+          leaseUntil: leaseEnd,
           online: b.online,
           updatedAt: sql`now()`,
           ...(b.state && { state: b.state }),
@@ -421,13 +436,14 @@ export async function stats(db: Database) {
   return { cohorts: [...cohorts], halls, tribs: [...tribs] }
 }
 
+export const REPORTS_PAGE = 30 // chiến báo mỗi lần hỏi (cuộn xuống thì hỏi tiếp trước id cũ nhất)
 export async function playerReports(db: Database, pid: number, before?: number) {
   const rows = await db
     .select({ body: reports.body })
     .from(reports)
     .where(and(eq(reports.playerId, pid), before === undefined ? undefined : lt(reports.id, before)))
     .orderBy(desc(reports.id))
-    .limit(30)
+    .limit(REPORTS_PAGE)
   return rows.map(r => r.body)
 }
 
@@ -477,8 +493,7 @@ export async function linkEmail(db: Database, account: number, email: string, pa
       .returning({ id: accounts.id })
     return r.length > 0
   } catch (e) {
-    const cause = (e as { cause?: { code?: string } }).cause ?? (e as { code?: string })
-    if (cause.code === '23505') throw new EmailTaken()
+    if (pgError(e).code === UNIQUE) throw new EmailTaken()
     throw e
   }
 }
@@ -486,7 +501,7 @@ export const setPass = (db: Database, account: number, pass: string) =>
   db.update(accounts).set({ pass }).where(eq(accounts.id, account))
 
 export const newSession = (db: Database, account: number, hash: Buffer, ip?: string, ua?: string) =>
-  db.insert(sessions).values({ hash, accountId: account, ip: ip ?? null, ua: ua?.slice(0, 200) ?? null })
+  db.insert(sessions).values(sessionRow(account, hash, ip, ua))
 // Xoá mọi phiên của tài khoản (trừ `keep` nếu có): đăng xuất mọi nơi, đổi mật khẩu
 export const dropSessions = (db: Database, account: number, keep?: Buffer) =>
   db.delete(sessions).where(and(eq(sessions.accountId, account), keep ? sql`${sessions.hash} <> ${keep}` : undefined))

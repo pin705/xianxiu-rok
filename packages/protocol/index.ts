@@ -58,10 +58,9 @@ export type ServerErr = 'rate' | 'unavailable' | 'moving' | 'maintenance' | 'rud
 export type Ack = { ok: true; v?: number; p?: Patch; rep?: Report[] } | { ok: false; err: Err | ServerErr }
 export type Push = { v: number; p: Patch; rep?: Report[] } // state đổi do server (trận tới nơi…) hoặc do tab khác của cùng người
 export type Snap = { v: number; state: View }
-// reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) → Rival[] · map: ảnh chụp bản đồ giới → MapSnap,
-// kèm theo dõi 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn)
-// allies: danh sách tiên minh → AllyRow[] · ally: minh của mình → AllyInfo | null · season: điểm mùa → Season
-// market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình → Market | null (chợ tắt)
+// reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) · map: ảnh chụp bản đồ giới, kèm theo dõi
+// 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn) · allies: danh sách tiên minh · ally: minh của mình
+// season: điểm mùa · market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình. Trả lời: Answer[k].
 export type Query =
   | { k: 'reports'; before?: number }
   | { k: 'rivals'; pid?: number }
@@ -79,6 +78,18 @@ export type Channel = 'world' | 'ally'
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
 export type { AllyInfo, AllyRow, MapSnap, Rival }
+// Trả lời từng truy vấn. Server trả null khi không trả lời được (truy vấn sai, lỗi) — client coi như không có.
+export type Answer = {
+  reports: Report[]
+  rivals: Rival[]
+  map: MapSnap
+  allies: AllyRow[]
+  ally: AllyInfo | null
+  chat: ChatMsg[]
+  season: Season
+  market: Market | null // chợ tắt
+}
+export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }
 export type Bye = 'moved' | 'restart' | 'replaced' | 'rate' | 'banned' | 'deleted' | 'season' // season: hết mùa, nối lại nhận bản đồ mới
 
@@ -94,7 +105,7 @@ export interface ServerToClient {
 }
 export interface ClientToServer {
   act(a: Action | WorldAction, ack: (r: Ack) => void): void
-  get(q: Query, ack: (r: unknown) => void): void
+  get(q: Query, ack: (r: Answer[Query['k']] | null) => void): void
   sync(ack: (s: Snap) => void): void
   time(ack: (now: number) => void): void
   say(m: { ch: Channel; text: string }, ack: (r: { ok: true } | { ok: false; err: SayErr }) => void): void

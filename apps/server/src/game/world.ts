@@ -13,7 +13,6 @@ import {
   apply,
   dayOf,
   eventOf,
-  jobOf,
   mail,
   migrate,
   power,
@@ -51,8 +50,6 @@ import {
   spawn,
   worldAct,
   type Chron,
-  type ChronArgs,
-  type ChronKind,
   type MapCtx,
   type World as Shared,
   type WorldAction,
@@ -68,25 +65,30 @@ import {
   type Ack,
   type Bye,
   type Channel,
-  type ChatMsg,
   type ClientToServer,
   type Fame,
   type Push,
+  type Answer,
   type Query,
+  type QueryOf,
   type SayErr,
   type Seen,
   type ServerToClient,
   type Snap,
   type WorldInfo,
 } from '@rok/protocol'
-import { hasBad, mask, clean as tidy } from '../lib/filter.ts'
+import { hasBad } from '../lib/filter.ts'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
-import { commitErrors, commitSeconds, fenced, intents } from '../lib/metrics.ts'
+import { fenced, intents } from '../lib/metrics.ts'
+import { Chat } from './chat.ts'
+import { Committer } from './committer.ts'
 import { Heap } from './heap.ts'
+import { nextRemind, remindNote, reportNote } from './notify.ts'
+import { milestones } from './track.ts'
 import type { Pusher } from '../lib/push.ts'
 
-export type SocketData = { pid: number; world: number; lang: string }
+export type SocketData = { pid: number; world: number }
 export type Sock = Socket<ClientToServer, ServerToClient, Record<string, never>, SocketData>
 export type Env = {
   db: Database
@@ -113,23 +115,10 @@ type Slot = {
 }
 // remind: nhắc qua Web Push lúc việc dài xong (người chơi đang offline); không có thì là vé đẩy kết quả trận
 type Wake = { at: number; n: number; pid: number; gen: number; remind?: { k: JobKind | 'march'; away: number } }
-type Pending = {
-  reports: store.Batch['reports']
-  events: store.Batch['events']
-  inboxDone: number[]
-  chat: store.ChatRow[]
-  gone: number[]
-}
-const empty = (): Pending => ({ reports: [], events: [], inboxDone: [], chat: [], gone: [] })
 const MAX_TABS = 5
 const CHRON_MAX = 50
-const REMIND_MIN = 20 * 60_000 // việc xong sau ít nhất chừng này kể từ lúc rời game mới nhắc qua push
 const MAP_WATCH = 60_000 // theo dõi bản đồ: hết hạn nếu không hỏi lại
-// Chat: 3 tin liền, rồi 1 tin mỗi 3 giây; lặp lại tin vừa gửi trong 30 giây thì từ chối; kênh giới mở từ tầng 3
-const CHAT_BURST = 3
-const CHAT_EVERY = 3_000
-const CHAT_DUP = 30_000
-const CHAT_KEEP = 50
+const SEASON_ROWS = 20 // bảng điểm mùa gửi client: top này
 const seed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước mọi thao tác: client không đoán trước được trận
 // Chữ người chơi tự đặt mà cả giới thấy: lọc từ tục trước khi vào luật (chat lọc riêng bằng mask)
 const publicText = (a: WorldAction) =>
@@ -146,30 +135,21 @@ export class World {
   renewedAt = performance.now()
 
   private readonly env: Env
+  private readonly persist: Committer
   private readonly ps = new Map<number, State>()
   private readonly slots = new Map<number, Slot>()
-  private readonly dirty = new Set<number>()
-  private readonly seenDirty = new Set<number>()
-  private pending: Pending = empty()
-  private inflight: Pending | null = null
-  private outbox: (() => void)[] = []
-  private committing = false
-  private commitTimer: NodeJS.Timeout | null = null
-  private retries = 0
   private readonly wakes = new Heap<Wake>()
   private n = 0
   private timer: NodeJS.Timeout | null = null
   private timerAt = Infinity
   private bad = new Set<number>() // người chơi bị cách ly (state hỏng)
   private week: number // tuần sự kiện đang chạy (lật tuần: trao quà top rồi sang tuần mới) — lưu ở worlds.state
-  private worldDirty = false
   private polling = false
   // lệnh inbox đã áp vào RAM (chờ commit đánh dấu xong): không áp lại dù lần đọc sau còn thấy.
   // ponytail: giữ mãi (lệnh admin hiếm); dọn theo tuổi nếu dùng inbox cho việc thường xuyên.
   private readonly applied = new Set<number>()
   private seed: number
   private opened: number
-  private seasonDirty = false // hết mùa: seed, số mùa, lúc mở đổi — ghi cột của worlds trong commit kế
   private fame: Fame[] // bảng phong thần: top các mùa trước
   private readonly npc = new Set<number>() // tông môn NPC (không tài khoản): tự chơi, chỉ phản kích kẻ đã đánh mình
   private npcAt = 0
@@ -178,14 +158,26 @@ export class World {
   private shared: Shared // tiên minh… (luật giới, rules/world.ts)
   private readonly watchers = new Map<Sock, number>() // đang mở bản đồ giới → hết hạn
   private mapTimer: NodeJS.Timeout | null = null
-  private readonly chats = new Map<string, ChatMsg[]>() // 'w' | 'a<mã minh>' → tin gần nhất
-  private chatId = 0
-  private readonly buckets = new Map<number, { tokens: number; at: number; last: string; lastAt: number }>()
-  private readonly muted = new Map<number, number>()
+  private readonly chat = new Chat()
   private buffAt = 0 // buff bản đồ (linh mạch, linh triều) tính lại lúc này, hoặc ngay khi phần chung đổi
 
   constructor(c: store.Claimed, rows: store.PlayerRow[], env: Env) {
     this.env = env
+    this.persist = new Committer({
+      commitMs: env.commitMs,
+      lost: () => this.lost,
+      batch: (ids, seen, world, season) => this.batch(ids, seen, world, season),
+      write: b => store.flushWorld(env.db, b),
+      written: () => {
+        this.renewedAt = performance.now()
+        if (this.readOnly) {
+          this.readOnly = false
+          this.broadcast('status', { ro: false })
+        }
+      },
+      fenced: () => this.fence(),
+      warn: (err, msg) => env.log.warn({ err, world: this.id }, msg),
+    })
     this.id = c.id
     this.epoch = c.epoch
     this.warp = env.warpAllowed ? c.warp : 0
@@ -261,14 +253,14 @@ export class World {
     const at = spawn(atlas(this.seed), taken, Math.random)
     if (!at) return this.env.log.warn({ world: this.id }, 'world map full: no seat')
     this.commit(slot, { ...s, seat: at })
-    if (!this.npc.has(slot.id)) this.record(now, 'found', [s.name])
+    if (!this.npc.has(slot.id)) this.record({ at: now, k: 'found', a: [s.name] })
   }
 
-  private record<K extends ChronKind>(at: number, k: K, a: ChronArgs[K]) {
-    this.chron = [...this.chron, { at, k, a } as Chron].slice(-CHRON_MAX)
-    this.worldDirty = true
+  private record(c: Chron) {
+    this.chron = [...this.chron, c].slice(-CHRON_MAX)
+    this.persist.worldDirty = true
     this.mapChanged()
-    this.schedule()
+    this.persist.schedule()
   }
 
   // Lần đầu nhận giới: 2 phân đà NPC mỗi vùng ngoài, thế lực = vùng % 5 (tên 5 tông môn đối địch của P1). Tạo đúng một lần:
@@ -294,9 +286,9 @@ export class World {
     const made = await store.createNpcs(this.env.db, this.id, rows)
     for (const r of made) this.adopt(r)
     this.npcsMade = true
-    this.worldDirty = true
+    this.persist.worldDirty = true
     this.mapChanged()
-    this.schedule()
+    this.persist.schedule()
   }
 
   // NPC một lượt: giữ linh mạch trong vùng, chơi như người thường (bot), phản kích kẻ vừa cướp mình nếu chắc thắng
@@ -334,7 +326,7 @@ export class World {
       if (!this.watchers.size) return
       const snap = mapOf(this.ps, now, this.npc, this.chron, this.shared)
       const to = [...this.watchers.keys()]
-      this.deliver(() => {
+      this.persist.deliver(() => {
         for (const sock of to) if (sock.connected) sock.emit('w', snap)
       }, true)
     }, 1_000)
@@ -369,7 +361,7 @@ export class World {
     const state = view(this.ps.get(pid)!)
     const v = slot.v
     const at = this.ps.get(pid)!.seat
-    this.deliver(
+    this.persist.deliver(
       () =>
         sock.emit('welcome', {
           now,
@@ -395,26 +387,18 @@ export class World {
     this.commit(slot, advance(this.ps.get(slot.id)!, this.now()))
     const s = this.ps.get(slot.id)!
     slot.seen = { time: s.time, res: s.res, levels: s.levels, tech: s.tech, stats: s.stats }
-    this.seenDirty.add(slot.id)
-    this.dirty.add(slot.id)
+    this.persist.seenDirty.add(slot.id)
+    this.persist.dirty.add(slot.id)
     this.remind(slot, s)
-    this.schedule()
+    this.persist.schedule()
   }
 
-  // Rời game khi còn việc dài (≥ REMIND_MIN): hẹn nhắc qua Web Push lúc việc xong sớm nhất (tạp dịch rảnh, đệ tử tuyển xong…)
+  // Rời game khi còn việc dài: hẹn nhắc qua Web Push lúc việc xong sớm nhất (game/notify.ts)
   private remind(slot: Slot, s: State) {
     if (!this.env.push || this.npc.has(slot.id)) return
-    const now = this.now()
-    const jobs: [JobKind | 'march', number][] = [
-      ...(['build', 'train', 'study', 'forge'] as const).flatMap(k => {
-        const j = jobOf(s, k)
-        return j ? [[k, j.finishAt] as [JobKind, number]] : []
-      }),
-      ...s.marches.filter(m => m.returnAt).map(m => ['march', m.returnAt] as ['march', number]),
-    ]
-    const next = jobs.filter(([, at]) => at - now >= REMIND_MIN).sort((a, b) => a[1] - b[1])[0]
+    const next = nextRemind(s, this.now())
     if (!next) return
-    this.wakes.push({ at: next[1], n: this.n++, pid: slot.id, gen: slot.gen, remind: { k: next[0], away: slot.away } })
+    this.wakes.push({ at: next.at, n: this.n++, pid: slot.id, gen: slot.gen, remind: { k: next.k, away: slot.away } })
     this.arm()
   }
 
@@ -429,9 +413,9 @@ export class World {
   intent(sock: Sock, a: Action | WorldAction, ack: (r: Ack) => void) {
     const slot = this.slots.get(sock.data.pid)
     if (!slot) return ack({ ok: false, err: 'moving' })
-    if (this.closing || this.lost) return this.deliver(() => ack({ ok: false, err: 'moving' }))
-    if (this.readOnly) return this.deliver(() => ack({ ok: false, err: 'unavailable' }))
-    if (slot.broken) return this.deliver(() => ack({ ok: false, err: 'maintenance' }))
+    if (this.closing || this.lost) return this.persist.deliver(() => ack({ ok: false, err: 'moving' }))
+    if (this.readOnly) return this.persist.deliver(() => ack({ ok: false, err: 'unavailable' }))
+    if (slot.broken) return this.persist.deliver(() => ack({ ok: false, err: 'maintenance' }))
     const now = this.now()
     this.tick(now)
     if ((WORLD_ACTIONS as readonly string[]).includes(a.type)) return this.social(slot, sock, a, now, ack)
@@ -451,7 +435,7 @@ export class World {
     intents.inc({ result: r.ok ? 'ok' : r.error })
     if (!r.ok) {
       const err = r.error
-      return this.deliver(() => ack({ ok: false, err }))
+      return this.persist.deliver(() => ack({ ok: false, err }))
     }
     this.commit(slot, r.state, { sock, ack })
     if (a.type === 'trib') this.armRaid() // có chỗ trên bản đồ: kiếp vân tụ, giải lúc giáng như trận giới
@@ -462,7 +446,7 @@ export class World {
     const a = parseWorldAction(raw)
     if (a && publicText(a).some(hasBad)) {
       intents.inc({ result: 'rude' })
-      return this.deliver(() => ack({ ok: false, err: 'rude' }))
+      return this.persist.deliver(() => ack({ ok: false, err: 'rude' }))
     }
     let r: WorldResult
     try {
@@ -476,7 +460,7 @@ export class World {
     intents.inc({ result: r.ok ? 'ok' : r.error })
     if (!r.ok) {
       const err = r.error
-      return this.deliver(() => ack({ ok: false, err }))
+      return this.persist.deliver(() => ack({ ok: false, err }))
     }
     if (r.world !== this.shared) this.share(r.world)
     const mine = r.changed.has(slot.id)
@@ -484,7 +468,7 @@ export class World {
       const other = this.slots.get(pid)
       if (other) this.commit(other, s, pid === slot.id ? { sock, ack } : undefined)
     }
-    if (!mine) this.deliver(() => ack({ ok: true }), true) // chỉ đổi phần chung (tiên minh): ack sau khi ghi
+    if (!mine) this.persist.deliver(() => ack({ ok: true }), true) // chỉ đổi phần chung (tiên minh): ack sau khi ghi
     this.armRaid()
   }
 
@@ -492,7 +476,7 @@ export class World {
   private share(next: Shared) {
     const prev = this.shared
     this.shared = next
-    this.worldDirty = true
+    this.persist.worldDirty = true
     this.buffAt = 0 // linh mạch / người trong minh có thể đã đổi
     if (prev.spots !== next.spots) {
       this.mapChanged()
@@ -500,93 +484,94 @@ export class World {
       for (const [k, sp] of Object.entries(next.spots)) {
         const p = a.points[Number(k)]
         if (p?.kind === 'boss' && sp.until && sp.until !== prev.spots[Number(k)]?.until)
-          this.record(this.now(), 'boss', [p.lv])
+          this.record({ at: this.now(), k: 'boss', a: [p.lv] })
       }
     }
     const touched = new Set<number>()
     for (const al of [...Object.values(prev.allies), ...Object.values(next.allies)])
       if (prev.allies[al.id] !== next.allies[al.id]) for (const pid of Object.keys(al.members)) touched.add(Number(pid))
     for (const pid of touched)
-      for (const c of this.slots.get(pid)?.conns ?? []) this.deliver(() => c.emit('ally'), true)
-    this.schedule()
+      for (const c of this.slots.get(pid)?.conns ?? []) this.persist.deliver(() => c.emit('ally'), true)
+    this.persist.schedule()
   }
 
-  async query(sock: Sock, q: Query, ack: (d: unknown) => void) {
-    const pid = sock.data.pid
-    if (q.k === 'rivals') {
-      this.tick(this.now())
-      return this.deliver(() =>
-        ack(rivals(this.ps, pid, this.now(), Math.random, this.map(this.now()), q.pid, this.shared)),
-      )
-    }
-    if (q.k === 'chat') {
-      const key = this.channel(pid, q.ch)
-      return this.deliver(() => ack(key ? (this.chats.get(key) ?? []) : []))
-    }
-    if (q.k === 'allies') return this.deliver(() => ack(allyRows(this.shared, this.ps)))
-    if (q.k === 'market')
-      return this.deliver(() => ack(this.info.market ? marketOf(this.ps, this.shared, pid, this.now(), q.good) : null))
-    if (q.k === 'season') {
+  // Truy vấn chỉ đọc: mỗi khoá một hàm, trả đúng kiểu Answer[k] (@rok/protocol)
+  private readonly answers: { [K in Query['k']]: (sock: Sock, q: QueryOf<K>) => Answer[K] | Promise<Answer[K]> } = {
+    rivals: (sock, q) => {
+      const now = this.now()
+      this.tick(now)
+      return rivals(this.ps, sock.data.pid, now, Math.random, this.map(now), q.pid, this.shared)
+    },
+    chat: (sock, q) => {
+      const key = this.channel(sock.data.pid, q.ch)
+      return key ? this.chat.history(key) : []
+    },
+    allies: () => allyRows(this.shared, this.ps),
+    ally: sock => allyInfo(this.shared, this.ps, sock.data.pid, p => !!this.slots.get(p)?.conns.size),
+    market: (sock, q) => (this.info.market ? marketOf(this.ps, this.shared, sock.data.pid, this.now(), q.good) : null),
+    season: sock => {
       const rows = seasonBoard(this.shared, this.ps, this.map(this.now()), this.now())
-      const side = sideKey(this.shared, pid),
+      const side = sideKey(this.shared, sock.data.pid),
         k = rows.findIndex(r => r.side === side)
-      return this.deliver(() =>
-        ack({
-          rows: rows.slice(0, 20).map(({ name, pts }) => ({ name, pts })),
-          me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts },
-          fame: this.fame,
-        }),
-      )
-    }
-    if (q.k === 'ally')
-      return this.deliver(() => ack(allyInfo(this.shared, this.ps, pid, p => !!this.slots.get(p)?.conns.size)))
-    if (q.k === 'map') {
+      return {
+        rows: rows.slice(0, SEASON_ROWS).map(({ name, pts }) => ({ name, pts })),
+        me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts },
+        fame: this.fame,
+      }
+    },
+    map: sock => {
       const now = this.now()
       this.watchers.set(sock, now + MAP_WATCH)
-      return this.deliver(() => ack(mapOf(this.ps, now, this.npc, this.chron, this.shared)))
-    }
+      return mapOf(this.ps, now, this.npc, this.chron, this.shared)
+    },
     // chiến báo chưa kịp ghi DB (đang chờ / đang commit) cộng chiến báo đã ghi
-    const mem = [...(this.inflight?.reports ?? []), ...this.pending.reports]
-      .filter(r => r.pid === pid && (q.before === undefined || r.id < q.before))
-      .map(r => r.body as Report)
-    const rows = (await store.playerReports(this.env.db, pid, q.before)) as Report[]
-    const byId = new Map<number, Report>()
-    for (const r of [...rows, ...mem]) byId.set(r.id, r)
-    const list = [...byId.values()].sort((x, y) => y.id - x.id).slice(0, 30)
-    this.deliver(() => ack(list))
+    reports: async (sock, q) => {
+      const pid = sock.data.pid
+      const mem = [...(this.persist.inflight?.reports ?? []), ...this.persist.pending.reports]
+        .filter(r => r.pid === pid && (q.before === undefined || r.id < q.before))
+        .map(r => r.body as Report)
+      const rows = (await store.playerReports(this.env.db, pid, q.before)) as Report[]
+      const byId = new Map<number, Report>()
+      for (const r of [...rows, ...mem]) byId.set(r.id, r)
+      return [...byId.values()].sort((x, y) => y.id - x.id).slice(0, store.REPORTS_PAGE)
+    },
+  }
+  async query<K extends Query['k']>(sock: Sock, q: QueryOf<K>, ack: (d: Answer[K]) => void) {
+    const d = await this.answers[q.k](sock, q)
+    this.persist.deliver(() => ack(d))
   }
 
   sync(sock: Sock, ack: (s: Snap) => void) {
     const slot = this.slots.get(sock.data.pid)
     if (!slot) return
     const snap = { v: slot.v, state: view(this.ps.get(slot.id)!) }
-    this.deliver(() => ack(snap), true)
+    this.persist.deliver(() => ack(snap), true)
   }
 
   // Đường duy nhất làm đổi state của người chơi
   commit(slot: Slot, next: State, origin?: { sock: Sock; ack: (r: Ack) => void }) {
     const prev = this.ps.get(slot.id)!
     const ack = origin?.ack
-    if (next === prev) return ack && this.deliver(() => ack({ ok: true }))
+    if (next === prev) return ack && this.persist.deliver(() => ack({ ok: true }))
     // Chiến báo mới (hoặc vừa sửa: home() ghi số tử trận) → bảng reports. State chỉ giữ chiến báo mà hành quân đang đi còn tham chiếu.
     const rep = next.reports.filter(r => !prev.reports.includes(r))
     const keep = next.reports.filter(r => next.marches.some(m => m.report === r.id))
     const stored = keep.length === next.reports.length ? next : { ...next, reports: keep }
     this.ps.set(slot.id, stored)
     const p = diff(prev, stored)
-    if (!rep.length && !Object.keys(p).length) return ack && this.deliver(() => ack({ ok: true })) // chỉ mầm đổi
+    if (!rep.length && !Object.keys(p).length) return ack && this.persist.deliver(() => ack({ ok: true })) // chỉ mầm đổi
     const v = ++slot.v
-    this.dirty.add(slot.id)
+    this.persist.dirty.add(slot.id)
     for (const r of rep)
-      this.pending.reports.push({ pid: slot.id, id: r.id, at: r.at, kind: r.kind, win: r.win, body: r })
+      this.persist.pending.reports.push({ pid: slot.id, id: r.id, at: r.at, kind: r.kind, win: r.win, body: r })
     this.track(slot.id, prev, stored, rep)
     if (rep.length && !slot.conns.size) this.notify(slot, rep)
     const push: Push = rep.length ? { v, p, rep } : { v, p }
     const others = [...slot.conns].filter(c => c !== origin?.sock)
-    this.deliver(() => {
+    this.persist.deliver(() => {
       for (const s of others) if (s.connected) s.emit('s', push)
     }, true)
-    if (ack) this.deliver(() => ack({ ok: true, ...push }), true)
+    if (ack) this.persist.deliver(() => ack({ ok: true, ...push }), true)
     if (prev.marches !== stored.marches) this.wake(slot)
     if (
       prev.seat !== stored.seat ||
@@ -596,50 +581,27 @@ export class World {
         [...prev.marches, ...stored.marches].some(m => m.path || m.target.kind === 'trib'))
     )
       this.mapChanged()
-    this.schedule()
+    this.persist.schedule()
   }
 
-  // Offline mà bị cướp / kiếp vân vừa giáng: báo qua Web Push (chữ theo ngôn ngữ tài khoản)
+  // Offline mà bị cướp / kiếp vân vừa giáng: báo qua Web Push
   private notify(slot: Slot, rep: Report[]) {
     if (!this.env.push || this.npc.has(slot.id)) return
     for (const r of rep) {
-      if (r.kind === 'pvp' && r.def)
-        this.env.push(slot.id, L => ({
-          title: L.push.title,
-          body: r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''),
-          tag: 'raid',
-        }))
-      if (r.kind === 'trib')
-        this.env.push(slot.id, L => ({ title: L.trib.title, body: r.win ? L.trib.success : L.trib.fail, tag: 'trib' }))
+      const note = reportNote(r)
+      if (note) this.env.push(slot.id, note)
     }
   }
 
-  // Analytics phía server: client không phải gửi gì
+  // Analytics + biên niên từ một lần state đổi (game/track.ts)
   private track(pid: number, prev: State, next: State, rep: Report[]) {
-    const at = next.time
-    if (next.levels.chuDien > prev.levels.chuDien)
-      this.event(pid, 'hall', at, { n: next.levels.chuDien, rebirths: next.rebirths })
-    if (next.rebirths > prev.rebirths) this.event(pid, 'rebirth', at, { n: next.rebirths })
-    for (const r of rep)
-      if (r.kind === 'trib' && r.id >= prev.nextId)
-        this.event(pid, 'trib', at, { win: r.win, hall: next.levels.chuDien })
-    for (const r of rep)
-      if (r.kind === 'pvp' && !r.def && r.id >= prev.nextId) {
-        this.event(pid, 'raid', at, { win: r.win, foe: r.i, hall: next.levels.chuDien })
-        this.record(r.at, 'raid', [next.name, r.foe ?? '', r.win ? 1 : 0])
-      }
-    // đột phá từ Kim Đan trở lên là chuyện cả giới biết
-    if (
-      next.levels.chuDien > prev.levels.chuDien &&
-      next.levels.chuDien >= 11 &&
-      next.trib > prev.trib &&
-      !this.npc.has(pid)
-    )
-      this.record(at, 'trib', [next.name, next.levels.chuDien])
+    const m = milestones(prev, next, rep, this.npc.has(pid))
+    for (const e of m.events) this.event(pid, e.name, e.at, e.props)
+    for (const c of m.chron) this.record(c)
   }
   event(pid: number, name: string, at: number, props: object = {}) {
-    this.pending.events.push({ pid, name, day: dayOf(at), at, props })
-    this.schedule()
+    this.persist.pending.events.push({ pid, name, day: dayOf(at), at, props })
+    this.persist.schedule()
   }
 
   // ---------- Hẹn giờ: đẩy kết quả trận PvE cho người đang xem ----------
@@ -691,7 +653,7 @@ export class World {
     this.seed = randomInt(1, 2 ** 31)
     this.opened = now
     this.info = { ...this.info, season: season + 1, map: this.seed, opened: now }
-    this.seasonDirty = true
+    this.persist.seasonDirty = true
     this.share(r.world)
     this.chron = []
     const a = atlas(this.seed),
@@ -703,9 +665,9 @@ export class World {
       taken.push(seat)
       this.commit(slot, this.npc.has(pid) ? npcState(now, slot.name, seat) : { ...s, seat })
     }
-    this.record(now, 'season', [season + 1])
+    this.record({ at: now, k: 'season', a: [season + 1] })
     this.env.log.info({ world: this.id, season: season + 1, top: this.fame[0].top }, 'season ended')
-    this.deliver(() => {
+    this.persist.deliver(() => {
       for (const slot of this.slots.values())
         for (const c of slot.conns) {
           c.emit('bye', { reason: 'season' })
@@ -751,8 +713,8 @@ export class World {
       )
     })
     this.week = weekOf(now)
-    this.worldDirty = true
-    this.schedule()
+    this.persist.worldDirty = true
+    this.persist.schedule()
   }
 
   // ---------- Chat ----------
@@ -760,13 +722,7 @@ export class World {
   // Nạp tin gần đây + danh sách cấm chat lúc nhận giới
   async loadChat() {
     const [rows, m] = await Promise.all([store.recentChat(this.env.db, this.id), store.mutes(this.env.db, this.id)])
-    for (const r of rows) this.keep(r.ch, { id: r.id, pid: r.pid, name: r.name, text: r.text, at: r.at })
-    this.chatId = Math.max(this.chatId, ...rows.map(r => r.id))
-    for (const x of m) if (x.until) this.muted.set(x.pid, x.until.getTime())
-  }
-  private keep(ch: string, m: ChatMsg) {
-    const list = [...(this.chats.get(ch) ?? []), m].slice(-CHAT_KEEP)
-    this.chats.set(ch, list)
+    this.chat.load(rows, m)
   }
   private channel(pid: number, ch: Channel) {
     const s = this.ps.get(pid)
@@ -784,48 +740,34 @@ export class World {
 
   say(sock: Sock, m: { ch: Channel; text: string }, ack: (r: { ok: true } | { ok: false; err: SayErr }) => void) {
     const pid = sock.data.pid
-    const no = (err: SayErr) => this.deliver(() => ack({ ok: false, err }))
+    const no = (err: SayErr) => this.persist.deliver(() => ack({ ok: false, err }))
     if (this.closing || this.lost || this.readOnly) return no('unavailable')
     const now = this.now()
-    if ((this.muted.get(pid) ?? 0) > now) return no('muted')
-    const key = this.channel(pid, m.ch)
-    if (!key) return no('locked')
-    const text = tidy(m.text)
-    if (!text || [...text].length > 200) return no('bad')
-    const b = this.buckets.get(pid) ?? { tokens: CHAT_BURST, at: now, last: '', lastAt: 0 }
-    b.tokens = Math.min(CHAT_BURST, b.tokens + (now - b.at) / CHAT_EVERY)
-    b.at = now
-    if (b.tokens < 1) return no('rate')
-    if (b.last === text && now - b.lastAt < CHAT_DUP) return no('dup')
-    b.tokens -= 1
-    b.last = text
-    b.lastAt = now
-    this.buckets.set(pid, b)
-    const msg: ChatMsg = { id: ++this.chatId, pid, name: this.ps.get(pid)!.name, text: mask(text), at: now }
-    this.keep(key, msg)
-    this.pending.chat.push({ ...msg, ch: key })
-    const to = this.listeners(key)
-    this.deliver(() => {
+    if (this.chat.isMuted(pid, now)) return no('muted')
+    const room = this.channel(pid, m.ch)
+    if (!room) return no('locked')
+    const msg = this.chat.post(pid, this.ps.get(pid)!.name, room, m.text, now)
+    if (typeof msg === 'string') return no(msg)
+    this.persist.pending.chat.push({ ...msg, ch: room })
+    const to = this.listeners(room)
+    this.persist.deliver(() => {
       for (const slot of to) for (const c of slot.conns) if (c.connected) c.emit('chat', { ch: m.ch, ms: [msg] })
       ack({ ok: true })
     }, true)
-    this.schedule()
+    this.persist.schedule()
   }
 
   async report(sock: Sock, id: number) {
-    for (const [key, list] of this.chats) {
-      const m = list.find(x => x.id === id)
-      if (!m || !this.listeners(key).some(s => s.id === sock.data.pid)) continue
-      await store.reportChat(this.env.db, {
-        world: this.id,
-        msgId: id,
-        reporter: sock.data.pid,
-        author: m.pid,
-        text: m.text,
-      })
-      return true
-    }
-    return false
+    const hit = this.chat.find(id)
+    if (!hit || !this.listeners(hit.room).some(s => s.id === sock.data.pid)) return false
+    await store.reportChat(this.env.db, {
+      world: this.id,
+      msgId: id,
+      reporter: sock.data.pid,
+      author: hit.msg.pid,
+      text: hit.msg.text,
+    })
+    return true
   }
 
   // ---------- Hộp lệnh giữa các node (thư admin, bồi thường…): chủ giới đọc định kỳ, áp đúng một lần ----------
@@ -847,11 +789,10 @@ export class World {
 
   private command(r: store.InboxRow, now: number) {
     this.applied.add(r.id)
-    this.pending.inboxDone.push(r.id) // cùng commit với thay đổi state: sập giữa chừng thì cả hai cùng chưa có, lần sau áp lại
+    this.persist.pending.inboxDone.push(r.id) // cùng commit với thay đổi state: sập giữa chừng thì cả hai cùng chưa có, lần sau áp lại
     const b = r.body as { pid?: number; mail?: Omit<Extract<NewMail, { k: 'admin' }>, 'at'>; until?: number }
     if (r.kind === 'mute' && b.pid) {
-      if (b.until && b.until > now) this.muted.set(b.pid, b.until)
-      else this.muted.delete(b.pid)
+      this.chat.mute(b.pid, b.until ?? 0, now)
     } else if (r.kind === 'mail' && b.mail) {
       for (const pid of b.pid ? [b.pid] : [...this.slots.keys()]) {
         const slot = this.slots.get(pid),
@@ -860,7 +801,7 @@ export class World {
       }
     } else if (r.kind === 'delete' && b.pid) this.remove(b.pid, now)
     else this.env.log.warn({ id: r.id, kind: r.kind }, 'unknown inbox command, skipped')
-    this.schedule()
+    this.persist.schedule()
   }
 
   // Xoá tài khoản (API đã chặn đăng nhập): rời tiên minh như tự rời (truyền minh chủ / giải tán), đá mọi kết nối, bỏ khỏi RAM.
@@ -878,9 +819,9 @@ export class World {
     }
     this.slots.delete(pid)
     this.ps.delete(pid)
-    this.dirty.delete(pid)
-    this.seenDirty.delete(pid)
-    this.pending.gone.push(pid)
+    this.persist.dirty.delete(pid)
+    this.persist.seenDirty.delete(pid)
+    this.persist.pending.gone.push(pid)
     this.mapChanged()
   }
 
@@ -897,8 +838,7 @@ export class World {
       const slot = this.slots.get(ev.pid)
       if (slot && ev.remind) {
         const k = ev.remind.k
-        if (slot.away === ev.remind.away && !slot.conns.size)
-          this.env.push?.(slot.id, L => ({ title: L.push.title, body: L.push.done[k], tag: 'done' }))
+        if (slot.away === ev.remind.away && !slot.conns.size) this.env.push?.(slot.id, remindNote(k))
         continue
       }
       if (!slot || slot.gen !== ev.gen) continue // vé cũ
@@ -914,146 +854,56 @@ export class World {
 
   // ---------- Gửi ----------
 
-  // durable: phản ánh state chưa ghi → chờ commit. Cái khác (lỗi, truy vấn) đi ngay — trừ khi còn gói trước đang chờ (giữ thứ tự).
-  private deliver(send: () => void, durable = false) {
-    if (this.outbox.length || (durable && (this.dirty.size || this.committing))) {
-      this.outbox.push(send)
-      this.schedule()
-    } else send()
-  }
-
   broadcast<E extends 'status' | 'clock'>(event: E, payload: Parameters<ServerToClient[E]>[0]) {
     for (const s of this.slots.values())
-      for (const c of s.conns) this.deliver(() => (c.emit as (e: E, p: typeof payload) => void)(event, payload))
+      for (const c of s.conns) this.persist.deliver(() => (c.emit as (e: E, p: typeof payload) => void)(event, payload))
   }
 
-  // ---------- Commit gộp ----------
-
-  private schedule(delay = this.env.commitMs) {
-    if (this.commitTimer || this.committing || this.lost) return
-    this.commitTimer = setTimeout(() => {
-      this.commitTimer = null
-      void this.flush()
-    }, delay)
-  }
-
-  async flush(renew = false) {
-    if (this.committing || this.lost) return
-    const p = this.pending
-    if (
-      !renew &&
-      !this.dirty.size &&
-      !this.outbox.length &&
-      !p.events.length &&
-      !p.inboxDone.length &&
-      !p.chat.length &&
-      !p.gone.length &&
-      !this.worldDirty
-    )
-      return
-    if (this.commitTimer) clearTimeout(this.commitTimer)
-    this.commitTimer = null
-    const ids = [...this.dirty].filter(id => this.ps.has(id)) // người vừa xoá tài khoản: không ghi lại
-    const seenIds = new Set(this.seenDirty)
-    this.dirty.clear()
-    this.seenDirty.clear()
-    this.pending = empty()
-    const outbox = this.outbox
-    this.outbox = []
-    const players = ids.map(id => {
-      const s = this.ps.get(id)!
-      const slot = this.slots.get(id)!
-      return {
-        id,
-        state: s,
-        name: slot.name,
-        power: Math.round(power(s)),
-        hall: s.levels.chuDien,
-        tower: s.tower,
-        rebirths: s.rebirths,
-        pvp: s.pvp.pts,
-        weekNo: s.ev.week,
-        weekPts: s.ev.pts,
-        ...(seenIds.has(id) && slot.seen ? { seen: slot.seen } : {}),
-      }
-    })
-    const worldState = this.worldDirty
-      ? { week: this.week, npcs: this.npcsMade, chron: this.chron, world: this.shared, fame: this.fame }
-      : undefined
-    const season = this.seasonDirty
-      ? { seed: this.seed, season: this.info.season, opensAt: new Date(this.opened) }
-      : undefined
-    this.seasonDirty = false
-    this.worldDirty = false
-    this.committing = true
-    this.inflight = p
-    const stop = commitSeconds.startTimer()
-    try {
-      await store.flushWorld(this.env.db, {
-        world: this.id,
-        epoch: this.epoch,
-        node: this.env.node,
-        online: this.online,
-        sync: this.env.sync,
-        state: worldState,
-        season,
-        players,
-        reports: p.reports,
-        events: p.events,
-        inboxDone: p.inboxDone,
-        chat: p.chat,
-        gone: p.gone,
+  // Lô ghi của một commit (Committer gọi): người chơi đã đổi (bỏ người vừa xoá tài khoản), phần chung / cột mùa nếu đổi
+  private batch(ids: number[], seen: Set<number>, world: boolean, season: boolean) {
+    const players = ids
+      .filter(id => this.ps.has(id))
+      .map(id => {
+        const s = this.ps.get(id)!
+        const slot = this.slots.get(id)!
+        return {
+          id,
+          state: s,
+          name: slot.name,
+          power: Math.round(power(s)),
+          hall: s.levels.chuDien,
+          tower: s.tower,
+          rebirths: s.rebirths,
+          pvp: s.pvp.pts,
+          weekNo: s.ev.week,
+          weekPts: s.ev.pts,
+          ...(seen.has(id) && slot.seen ? { seen: slot.seen } : {}),
+        }
       })
-      stop()
-      this.renewedAt = performance.now()
-      this.retries = 0
-      if (this.readOnly) {
-        this.readOnly = false
-        this.broadcast('status', { ro: false })
-      }
-      for (const send of outbox) send()
-    } catch (e) {
-      if (e instanceof store.Fenced) return this.fence()
-      commitErrors.inc()
-      this.env.log.warn({ err: e, world: this.id }, 'commit failed, retrying')
-      for (const id of ids) this.dirty.add(id) // lần sau ghi state MỚI NHẤT của họ
-      if (worldState) this.worldDirty = true
-      if (season) this.seasonDirty = true
-      for (const id of seenIds) this.seenDirty.add(id)
-      this.pending = {
-        reports: [...p.reports, ...this.pending.reports],
-        events: [...p.events, ...this.pending.events],
-        inboxDone: [...p.inboxDone, ...this.pending.inboxDone],
-        chat: [...p.chat, ...this.pending.chat],
-        gone: [...p.gone, ...this.pending.gone],
-      }
-      this.outbox = [...outbox, ...this.outbox]
-      this.retries++
-    } finally {
-      this.committing = false
-      this.inflight = null
-    }
-    if (this.lost) return
-    if (this.retries) this.schedule(Math.min(5000, 100 * 2 ** this.retries))
-    else if (this.dirty.size) this.schedule()
-    else if (this.outbox.length) {
-      // xếp hàng trong lúc commit mà không kèm thay đổi mới: phần chúng phản ánh đã ghi xong
-      const o = this.outbox
-      this.outbox = []
-      for (const send of o) send()
+    return {
+      world: this.id,
+      epoch: this.epoch,
+      node: this.env.node,
+      online: this.online,
+      sync: this.env.sync,
+      players,
+      state: world
+        ? { week: this.week, npcs: this.npcsMade, chron: this.chron, world: this.shared, fame: this.fame }
+        : undefined,
+      season: season ? { seed: this.seed, season: this.info.season, opensAt: new Date(this.opened) } : undefined,
     }
   }
 
-  // Gia hạn lease định kỳ (không có thay đổi vẫn phải báo "còn sống"). Quá 12 giây không gia hạn được: tự rào, chỉ đọc.
+  // Gia hạn lease định kỳ (không có thay đổi vẫn phải báo "còn sống"). Quá LEASE.readOnly không gia hạn được: tự rào, chỉ đọc.
   heartbeat() {
     if (this.lost) return
     const idle = performance.now() - this.renewedAt
-    if (idle > 12_000 && !this.readOnly) {
+    if (idle > store.LEASE.readOnly && !this.readOnly) {
       this.readOnly = true
       this.env.log.warn({ world: this.id }, 'world read-only: lease not renewed')
       this.broadcast('status', { ro: true })
     }
-    if (idle > 5_000) void this.flush(true)
+    if (idle > store.LEASE.renew) void this.persist.flush(true)
     void this.pollInbox() // kèm lật tuần sự kiện đúng giờ dù không ai đang chơi (pollInbox gọi tick)
   }
 
@@ -1073,20 +923,16 @@ export class World {
   stop() {
     if (this.mapTimer) clearTimeout(this.mapTimer)
     if (this.timer) clearTimeout(this.timer)
-    if (this.commitTimer) clearTimeout(this.commitTimer)
-    this.timer = this.commitTimer = null
+    this.timer = null
+    this.persist.stop()
   }
 
   // Deploy / tắt node: commit lần cuối, nhả lease, báo client nối lại (tới node khác nhận giới)
   async close() {
     this.closing = true
-    for (
-      let i = 0;
-      i < 100 && !this.lost && (this.committing || this.dirty.size || this.outbox.length || this.pending.events.length);
-      i++
-    ) {
-      if (this.committing) await new Promise(r => setTimeout(r, 20))
-      else await this.flush(true)
+    for (let i = 0; i < 100 && !this.lost && this.persist.busy; i++) {
+      if (this.persist.committing) await new Promise(r => setTimeout(r, 20))
+      else await this.persist.flush(true)
     }
     for (const s of this.slots.values())
       for (const c of s.conns) {

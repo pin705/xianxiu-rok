@@ -7,12 +7,14 @@ import { advance, apply, type Action, type Report, type State } from '@rok/rules
 import type { WorldAction } from '@rok/rules/world'
 import type {
   Ack,
+  Answer,
   Channel,
   ChatMsg,
   ClientToServer,
   MapSnap,
   Push,
   Query,
+  QueryOf,
   Refuse,
   SayErr,
   ServerToClient,
@@ -136,7 +138,7 @@ export function createNet(h: Handlers, lang: string) {
       ping()
       clearInterval(pingTimer)
       pingTimer = setInterval(ping, 25_000)
-      void ask({ k: 'reports' }).then(list => Array.isArray(list) && merge(list as Report[]))
+      void ask({ k: 'reports' }).then(list => list && merge(list))
       if (mapWatch.size) void askMap() // nối lại: theo dõi lại bản đồ
     })
     s.on('w', m => mapWatch.forEach(f => f(m)))
@@ -287,11 +289,14 @@ export function createNet(h: Handlers, lang: string) {
     }
   }
 
-  const ask = (q: Query) =>
-    new Promise<unknown>(ok =>
-      socket?.connected ? socket.timeout(10_000).emit('get', q, (err, d) => ok(err ? null : d)) : ok(null),
+  // Truy vấn: trả lời đúng kiểu theo khoá (Answer[k]); mất kết nối / quá 10 giây / server không trả lời được → null
+  const ask = <K extends Query['k']>(q: QueryOf<K>) =>
+    new Promise<Answer[K] | null>(ok =>
+      socket?.connected
+        ? socket.timeout(10_000).emit('get', q, (err, d) => ok(err ? null : (d as Answer[K] | null)))
+        : ok(null),
     )
-  const askMap = () => ask({ k: 'map' }).then(m => m && mapWatch.forEach(f => f(m as MapSnap)))
+  const askMap = () => ask({ k: 'map' }).then(m => m && mapWatch.forEach(f => f(m)))
 
   return {
     now,

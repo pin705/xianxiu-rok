@@ -2,17 +2,13 @@
   // Dải chat (chỉ ở tab Bản đồ và Tiên minh): một dòng tin mới nhất, chạm để mở kênh giới / tiên minh.
   // Chữ đã lọc ở server; người mình chặn thì ẩn ở đây (danh sách chặn nằm trong state của mình).
   import type { Action, State } from '@rok/rules'
-  import type { Channel, ChatMsg, Query, SayErr } from '@rok/protocol'
+  import type { Channel, ChatMsg } from '@rok/protocol'
+  import type { Net } from './net'
   import { Icon } from '@rok/art'
   import { Button, Sheet, Tabs } from './ui'
   import { L, clock } from './lib'
 
-  type Api = {
-    ask: (q: Query) => Promise<unknown>
-    say: (ch: Channel, text: string) => Promise<{ ok: true } | { ok: false; err: SayErr }>
-    report: (id: number) => Promise<boolean>
-    onChat: (f: (ch: Channel, ms: ChatMsg[]) => void) => () => void
-  }
+  type Api = Pick<Net, 'ask' | 'say' | 'report' | 'onChat'>
   let {
     game,
     me,
@@ -40,9 +36,9 @@
   $effect(() => {
     if (!api) return
     for (const c of channels)
-      void api
-        .ask({ k: 'chat', ch: c })
-        .then(list => Array.isArray(list) && (logs = { ...logs, [c]: list as ChatMsg[] }))
+      void api.ask({ k: 'chat', ch: c }).then(list => {
+        if (list) logs = { ...logs, [c]: list }
+      })
     return api.onChat((c, ms) => (logs = { ...logs, [c]: [...logs[c], ...ms].slice(-50) }))
   })
   const shown = $derived(logs[ch].filter(m => !game.blocks.includes(m.pid)))

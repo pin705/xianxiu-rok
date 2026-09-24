@@ -4,24 +4,28 @@ import { z } from 'zod'
 import { weekOf } from '@rok/rules'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
-import { requireSession } from './auth.ts'
+import { authed } from './session.ts'
 
 // ponytail: cache top trong RAM mỗi node (30 giây, theo giới + bảng) — N node thì N lần truy vấn; bảng tính sẵn khi giới lớn
 const TTL = 30_000
 type Top = Awaited<ReturnType<typeof store.topOf>>
 
 export const gameRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, o) => {
+  const auth = authed(o.db)
   const cache = new Map<string, { at: number; rows: Top }>()
-  app.get('/ranks/:board', { schema: { params: z.object({ board: z.enum(store.BOARDS) }) } }, async (req, reply) => {
-    const s = await requireSession(o.db, req, reply)
-    if (!s) return
-    if (!s.pid || !s.world) return reply.code(404).send({ error: 'nosect' })
-    const { board } = req.params
-    const week = weekOf(Date.now())
-    const key = `${s.world}:${board}:${week}`
-    let hit = cache.get(key)
-    if (!hit || Date.now() - hit.at > TTL)
-      cache.set(key, (hit = { at: Date.now(), rows: await store.topOf(o.db, s.world, board, week) }))
-    return { rows: hit.rows, me: await store.rankOf(o.db, s.world, board, s.pid, week) }
-  })
+  app.get(
+    '/ranks/:board',
+    { preHandler: auth, schema: { params: z.object({ board: z.enum(store.BOARDS) }) } },
+    async (req, reply) => {
+      const s = req.session
+      if (!s.pid || !s.world) return reply.code(404).send({ error: 'nosect' })
+      const { board } = req.params
+      const week = weekOf(Date.now())
+      const key = `${s.world}:${board}:${week}`
+      let hit = cache.get(key)
+      if (!hit || Date.now() - hit.at > TTL)
+        cache.set(key, (hit = { at: Date.now(), rows: await store.topOf(o.db, s.world, board, week) }))
+      return { rows: hit.rows, me: await store.rankOf(o.db, s.world, board, s.pid, week) }
+    },
+  )
 }

@@ -28,7 +28,7 @@
     type State,
     type Target,
   } from '@rok/rules'
-  import type { MapSnap, Season, Seen, WorldInfo } from '@rok/protocol'
+  import type { MapSnap, Seen, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Sheet, Toasts, fly, type ToastItem } from './ui'
   import Conn from './Conn.svelte'
@@ -51,7 +51,7 @@
   import Vault from './Vault.svelte'
   import { createNet, type Net, type Status } from './net'
   import { setMood } from './music'
-  import type { AllyInfo, AllyRow, Rival, WorldAction } from '@rok/rules/world'
+  import type { AllyInfo, AllyRow, WorldAction } from '@rok/rules/world'
   import { DESK, L, LANG, TABS, forgetP1, isMuted, read, reportName, setMuted, sfx, write, type Tab } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
@@ -433,8 +433,8 @@
   // Tiên minh: của mình (server báo khi đổi), hoặc danh sách để vào
   async function loadAlly() {
     if (!net) return
-    ally = ((await net.ask({ k: 'ally' })) as AllyInfo | null) ?? null
-    allyRows = ally ? null : (((await net.ask({ k: 'allies' })) as AllyRow[] | null) ?? [])
+    ally = await net.ask({ k: 'ally' })
+    allyRows = ally ? null : ((await net.ask({ k: 'allies' })) ?? [])
   }
   // Thao tác tiên minh: chờ server (luật giới), rồi tải lại minh
   async function sendWorld(a: WorldAction) {
@@ -598,7 +598,7 @@
       {busy}
       open={rivalsOpen}
       focus={rivalsFocus}
-      load={pid => (net?.ask({ k: 'rivals', pid }) ?? Promise.resolve(null)) as Promise<Rival[] | null>}
+      load={pid => net?.ask({ k: 'rivals', pid }) ?? Promise.resolve(null)}
       onclose={() => ((rivalsOpen = false), (rivalsFocus = null))}
       onraid={raid}
       onrecruit={() => ((rivalsOpen = false), focus('dienVoTruong', 'train'))}
@@ -607,7 +607,7 @@
       open={ranksOpen}
       {me}
       load={b => net?.ranks(b).then(r => (r.ok ? r.data : null)) ?? Promise.resolve(null)}
-      season={info ? () => (net?.ask({ k: 'season' }) ?? Promise.resolve(null)) as Promise<Season | null> : undefined}
+      season={info ? () => net?.ask({ k: 'season' }) ?? Promise.resolve(null) : undefined}
       onclose={() => (ranksOpen = false)}
     />
     <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />

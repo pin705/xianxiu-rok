@@ -7,7 +7,7 @@ import { Server } from 'socket.io'
 import { z } from 'zod'
 import type { Action } from '@rok/rules'
 import { GOODS, type Good } from '@rok/rules/world'
-import type { ClientToServer, Refuse, ServerToClient } from '@rok/protocol'
+import type { Channel, ClientToServer, Query as Q, Refuse, ServerToClient } from '@rok/protocol'
 import type { Database } from '../db/index.ts'
 import { findSession } from '../db/store.ts'
 import type { Host } from '../game/host.ts'
@@ -21,17 +21,19 @@ const Handshake = z.object({
   build: z.string().max(64),
   lang: z.string().max(16),
 })
+// Khuôn Zod khớp kiểu của @rok/protocol (satisfies): giao kèo đổi mà quên sửa ở đây là lỗi biên dịch
+const Chan = z.enum(['world', 'ally']) satisfies z.ZodType<Channel>
 const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }),
   z.object({ k: z.literal('rivals'), pid: z.number().int().positive().optional() }),
   z.object({ k: z.literal('map') }),
   z.object({ k: z.literal('allies') }),
   z.object({ k: z.literal('ally') }),
-  z.object({ k: z.literal('chat'), ch: z.enum(['world', 'ally']) }),
+  z.object({ k: z.literal('chat'), ch: Chan }),
   z.object({ k: z.literal('season') }),
   z.object({ k: z.literal('market'), good: z.enum(GOODS as [Good, ...Good[]]).optional() }),
-])
-const Say = z.object({ ch: z.enum(['world', 'ally']), text: z.string().max(400) })
+]) satisfies z.ZodType<Q>
+const Say = z.object({ ch: Chan, text: z.string().max(400) }) // độ dài thật (200 ký tự) world.say kiểm sau khi chuẩn hoá
 const Report = z.object({ id: z.number().int().positive() })
 const ActionShape = z.object({ type: z.string().max(32) }).loose() // khung; từng trường do rules.parseAction kiểm
 
@@ -79,7 +81,7 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
       const w = await o.host.ensure(s.world)
       if (!(w instanceof World)) return refuse(w.owner ? 'moved' : 'unavailable', w.owner ?? undefined)
       if (w.quarantined(s.pid)) return refuse('unavailable')
-      socket.data = { pid: s.pid, world: s.world, lang: h.data.lang }
+      socket.data = { pid: s.pid, world: s.world }
       next()
     } catch (err) {
       o.log.error({ err }, 'handshake failed')
@@ -118,7 +120,8 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
       w.intent(socket, a as Action, ack)
     })
     socket.on('get', async (q, ack) => {
-      if (typeof ack !== 'function' || !(await allowed())) return
+      if (typeof ack !== 'function') return
+      if (!(await allowed())) return ack(null)
       const parsed = Query.safeParse(q)
       if (!parsed.success) return ack(null)
       await world()
@@ -138,14 +141,16 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
       w.say(socket, p.data, ack)
     })
     socket.on('report', async (m, ack) => {
-      if (typeof ack !== 'function' || !(await allowed())) return
+      if (typeof ack !== 'function') return
       const p = Report.safeParse(m)
-      if (!p.success) return ack(false)
-      ack(
-        (await world()
-          ?.report(socket, p.data.id)
-          .catch(() => false)) ?? false,
-      )
+      if (!(await allowed()) || !p.success) return ack(false)
+      const done = await world()
+        ?.report(socket, p.data.id)
+        .catch(err => {
+          o.log.warn({ err }, 'chat report failed')
+          return false
+        })
+      ack(done ?? false)
     })
     socket.on('sync', async ack => {
       if (typeof ack === 'function' && (await allowed())) world()?.sync(socket, ack)

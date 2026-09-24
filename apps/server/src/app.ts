@@ -45,6 +45,7 @@ export async function buildServer(c: Config, hooks: { push?: Pusher } = {}) {
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
 
+  app.decorateRequest('session', null as never) // rỗng cho tới khi preHandler authed() gắn phiên (http/session.ts)
   await app.register(cookie)
   await app.register(cors, { origin: c.ORIGINS.length ? c.ORIGINS : false, credentials: true })
   if (c.LIMITS) await app.register(rateLimit, { max: 60, timeWindow: '1 minute' }) // LIMITS=off (load test): không giới hạn gì

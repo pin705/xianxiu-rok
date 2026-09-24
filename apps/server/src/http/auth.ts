@@ -1,35 +1,19 @@
 // Tài khoản & phiên: khách (tạo tông môn luôn), xem phiên, đăng xuất. Liên kết email ở M9.
 import { randomInt } from 'node:crypto'
-import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { newGame, type State } from '@rok/rules'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
 import { COOKIE, cleanName, cookieOptions, hashToken, newToken } from '../lib/auth.ts'
-
-export const ErrorReply = z.object({ error: z.string() })
-
-// Token phiên: header Authorization (khác origin, vd. itch.io) hoặc cookie HttpOnly (cùng origin)
-export const tokenOf = (req: FastifyRequest) => {
-  const h = req.headers.authorization
-  return h?.startsWith('Bearer ') ? h.slice(7) : req.cookies[COOKIE]
-}
-
-// Phiên hợp lệ hoặc trả 401/403 (null: đã trả lời, route dừng)
-export async function requireSession(db: Database, req: FastifyRequest, reply: FastifyReply) {
-  const token = tokenOf(req)
-  const s = token ? await store.findSession(db, hashToken(token)) : null
-  if (!s || s.deleted) return void reply.code(401).send({ error: 'auth' })
-  if (s.banned) return void reply.code(403).send({ error: 'banned' })
-  return { ...s, token: token! }
-}
+import { ErrorReply, authed, clearSession, sessionOf, socketPath } from './session.ts'
 
 // path: đường Socket.IO của node này — trả cho client khi giới chưa ai giữ (node này sẽ nhận giới lúc bắt tay)
 // pickWorld: cho khách tự chọn giới (chỉ test/dev: bỏ qua giới hạn người mỗi giới và hạn vào giới)
 export type AuthOptions = { db: Database; worldCap: number; secure: boolean; path: string; pickWorld: boolean }
 
 export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => {
+  const auth = authed(o.db)
   app.post(
     '/guest',
     {
@@ -71,7 +55,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
         })
         req.log.info({ pid: g.pid, world: g.world }, 'guest created')
         reply.setCookie(COOKIE, token, cookieOptions(o.secure))
-        return { token, pid: g.pid, world: g.world, path: (await store.worldPath(o.db, g.world)) ?? o.path }
+        return { token, pid: g.pid, world: g.world, path: await socketPath(o.db, g.world, o.path) }
       } catch (e) {
         if (e instanceof store.NameTaken) return reply.code(409).send({ error: 'name_taken' })
         throw e
@@ -96,23 +80,23 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
     },
     // Chưa có phiên là chuyện bình thường (lần đầu mở game): trả 200 với account null thay vì 401 (trình duyệt coi 401 là lỗi đỏ)
     async (req, reply) => {
-      const token = tokenOf(req)
-      const s = token ? await store.findSession(o.db, hashToken(token)) : null
+      const s = await sessionOf(o.db, req)
       if (s?.banned) return reply.code(403).send({ error: 'banned' })
       if (!s || s.deleted) return { account: null, pid: null, world: null, path: o.path }
-      const path = (s.world && (await store.worldPath(o.db, s.world))) || o.path
-      return { account: s.account, pid: s.pid, world: s.world, path }
+      return { account: s.account, pid: s.pid, world: s.world, path: await socketPath(o.db, s.world, o.path) }
     },
   )
 
   app.post(
     '/logout',
-    { schema: { response: { 200: z.object({ ok: z.boolean() }), 401: ErrorReply, 403: ErrorReply } } },
+    {
+      preHandler: auth,
+      schema: { response: { 200: z.object({ ok: z.boolean() }), 401: ErrorReply, 403: ErrorReply } },
+    },
     async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+      const s = req.session
       await store.deleteSession(o.db, hashToken(s.token))
-      reply.clearCookie(COOKIE, { path: '/' })
+      clearSession(reply)
       return { ok: true }
     },
   )

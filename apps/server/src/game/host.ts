@@ -56,7 +56,7 @@ export class Host {
           if (w.lost) this.worlds.delete(id)
           else w.heartbeat()
         }
-      }, 2_000),
+      }, store.LEASE.beat),
     )
     if (rebalance)
       this.timers.push(
