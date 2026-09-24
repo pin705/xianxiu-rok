@@ -6,8 +6,8 @@ import { randomInt } from 'node:crypto'
 import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
 import {
-  BUILDINGS, EVENT_PRIZES, IDS, REVENGE_TIME, UNITS, advance, apply, dayOf, eventOf, expAt, migrate, newGame, power, weekOf,
-  type Action, type ElderId, type Mail, type Report, type State,
+  BUILDINGS, EVENT_PRIZES, IDS, REVENGE_TIME, UNITS, advance, apply, dayOf, eventOf, expAt, jobOf, migrate, newGame, power, weekOf,
+  type Action, type ElderId, type JobKind, type Mail, type Report, type State,
 } from '@rok/rules'
 import {
   MARKET_ACTIONS, SEASON_DAYS, WORLD_ACTIONS, advanceAll, allyInfo, allyOf, allyRows, endSeason, worldBuffs, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
@@ -27,10 +27,11 @@ import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
 import { commitErrors, commitSeconds, fenced, intents } from '../lib/metrics.ts'
 import { Heap } from './heap.ts'
+import type { Pusher } from '../lib/push.ts'
 
 export type SocketData = { pid: number; world: number; lang: string }
 export type Sock = Socket<ClientToServer, ServerToClient, Record<string, never>, SocketData>
-export type Env = { db: Database; node: string; commitMs: number; sync: boolean; warpAllowed: boolean; market?: boolean; log: FastifyBaseLogger }
+export type Env = { db: Database; node: string; commitMs: number; sync: boolean; warpAllowed: boolean; market?: boolean; log: FastifyBaseLogger; push?: Pusher | null }
 
 type Slot = {
   id: number
@@ -42,14 +43,17 @@ type Slot = {
   errors: number
   broken: boolean
   day: number // ngày cuối đã ghi sự kiện 'login' (D1/D7)
+  away: number // +1 mỗi lần vào game: nhắc (push) hẹn lúc rời đi chỉ gửi nếu chưa quay lại
 }
-type Wake = { at: number; n: number; pid: number; gen: number }
-type Pending = { reports: store.Batch['reports']; events: store.Batch['events']; inboxDone: number[]; chat: store.ChatRow[] }
-const empty = (): Pending => ({ reports: [], events: [], inboxDone: [], chat: [] })
+// remind: nhắc qua Web Push lúc việc dài xong (người chơi đang offline); không có thì là vé đẩy kết quả trận
+type Wake = { at: number; n: number; pid: number; gen: number; remind?: { k: JobKind | 'march'; away: number } }
+type Pending = { reports: store.Batch['reports']; events: store.Batch['events']; inboxDone: number[]; chat: store.ChatRow[]; gone: number[] }
+const empty = (): Pending => ({ reports: [], events: [], inboxDone: [], chat: [], gone: [] })
 const MAX_TABS = 5
 const NPC_PER = 2 // phân đà NPC mỗi vùng ngoài
 const NPC_EVERY = 4 * 3_600_000 // NPC chơi một lượt mỗi 4 giờ (như người chơi thường)
 const CHRON_MAX = 50
+const REMIND_MIN = 20 * 60_000 // việc xong sau ít nhất chừng này kể từ lúc rời game mới nhắc qua push
 const MAP_WATCH = 60_000 // theo dõi bản đồ: hết hạn nếu không hỏi lại
 // Chat: 3 tin liền, rồi 1 tin mỗi 3 giây; lặp lại tin vừa gửi trong 30 giây thì từ chối; kênh giới mở từ tầng 3
 const CHAT_BURST = 3
@@ -148,7 +152,7 @@ export class World {
     }
     this.ps.set(r.id, s)
     if (r.accountId === null) this.npc.add(r.id)
-    this.slots.set(r.id, { id: r.id, name: r.name, v: 1, conns: new Set(), seen: r.seen, gen: 0, errors: 0, broken: false, day: -1 })
+    this.slots.set(r.id, { id: r.id, name: r.name, v: 1, conns: new Set(), seen: r.seen, gen: 0, errors: 0, broken: false, day: -1, away: 0 })
   }
   quarantined(pid: number) {
     return this.bad.has(pid)
@@ -280,6 +284,7 @@ export class World {
     this.commit(slot, advance(this.ps.get(pid)!, now))
     this.seat(slot, now)
     slot.conns.add(sock)
+    slot.away++
     const today = dayOf(now)
     if (slot.day !== today) {
       slot.day = today
@@ -304,7 +309,25 @@ export class World {
     slot.seen = { time: s.time, res: s.res, levels: s.levels, tech: s.tech, stats: s.stats }
     this.seenDirty.add(slot.id)
     this.dirty.add(slot.id)
+    this.remind(slot, s)
     this.schedule()
+  }
+
+  // Rời game khi còn việc dài (≥ REMIND_MIN): hẹn nhắc qua Web Push lúc việc xong sớm nhất (tạp dịch rảnh, đệ tử tuyển xong…)
+  private remind(slot: Slot, s: State) {
+    if (!this.env.push || this.npc.has(slot.id)) return
+    const now = this.now()
+    const jobs: [JobKind | 'march', number][] = [
+      ...(['build', 'train', 'study', 'forge'] as const).flatMap(k => {
+        const j = jobOf(s, k)
+        return j ? [[k, j.finishAt] as [JobKind, number]] : []
+      }),
+      ...s.marches.filter(m => m.returnAt).map(m => ['march', m.returnAt] as ['march', number]),
+    ]
+    const next = jobs.filter(([, at]) => at - now >= REMIND_MIN).sort((a, b) => a[1] - b[1])[0]
+    if (!next) return
+    this.wakes.push({ at: next[1], n: this.n++, pid: slot.id, gen: slot.gen, remind: { k: next[0], away: slot.away } })
+    this.arm()
   }
 
   drop(sock: Sock, reason: Bye) {
@@ -446,6 +469,7 @@ export class World {
     this.dirty.add(slot.id)
     for (const r of rep) this.pending.reports.push({ pid: slot.id, id: r.id, at: r.at, kind: r.kind, win: r.win, body: r })
     this.track(slot.id, prev, stored, rep)
+    if (rep.length && !slot.conns.size) this.notify(slot, rep)
     const push: Push = rep.length ? { v, p, rep } : { v, p }
     const others = [...slot.conns].filter(c => c !== origin?.sock)
     this.deliver(() => {
@@ -456,6 +480,15 @@ export class World {
     if (prev.seat !== stored.seat || prev.name !== stored.name || prev.levels.chuDien !== stored.levels.chuDien || (prev.marches !== stored.marches && [...prev.marches, ...stored.marches].some(m => m.path || m.target.kind === 'trib')))
       this.mapChanged()
     this.schedule()
+  }
+
+  // Offline mà bị cướp / kiếp vân vừa giáng: báo qua Web Push (chữ theo ngôn ngữ tài khoản)
+  private notify(slot: Slot, rep: Report[]) {
+    if (!this.env.push || this.npc.has(slot.id)) return
+    for (const r of rep) {
+      if (r.kind === 'pvp' && r.def) this.env.push(slot.id, L => ({ title: L.push.title, body: r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''), tag: 'raid' }))
+      if (r.kind === 'trib') this.env.push(slot.id, L => ({ title: L.trib.title, body: r.win ? L.trib.success : L.trib.fail, tag: 'trib' }))
+    }
   }
 
   // Analytics phía server: client không phải gửi gì
@@ -678,8 +711,30 @@ export class World {
         const slot = this.slots.get(pid), s = this.ps.get(pid)
         if (slot && s) this.commit(slot, mail(s, { ...b.mail, at: now }))
       }
-    } else this.env.log.warn({ id: r.id, kind: r.kind }, 'unknown inbox command, skipped')
+    } else if (r.kind === 'delete' && b.pid) this.remove(b.pid, now)
+    else this.env.log.warn({ id: r.id, kind: r.kind }, 'unknown inbox command, skipped')
     this.schedule()
+  }
+
+  // Xoá tài khoản (API đã chặn đăng nhập): rời tiên minh như tự rời (truyền minh chủ / giải tán), đá mọi kết nối, bỏ khỏi RAM.
+  // Commit kèm theo xoá dòng tài khoản — dây chuyền: tông môn, chiến báo, mã chuyển máy, đăng ký push.
+  private remove(pid: number, now: number) {
+    const slot = this.slots.get(pid)
+    if (!slot || this.npc.has(pid)) return
+    if (allyOf(this.shared, pid)) {
+      const r = worldAct(this.ps, pid, { type: 'allyLeave' }, now, 0, this.map(now), this.shared)
+      if (r.ok) this.share(r.world)
+    }
+    for (const c of slot.conns) {
+      c.emit('bye', { reason: 'deleted' })
+      c.disconnect(true)
+    }
+    this.slots.delete(pid)
+    this.ps.delete(pid)
+    this.dirty.delete(pid)
+    this.seenDirty.delete(pid)
+    this.pending.gone.push(pid)
+    this.mapChanged()
   }
 
   // Xử lý mọi sự kiện đã tới hạn, theo thứ tự thời gian. Gọi trước mỗi thao tác: không ai thao tác trên state cũ hơn sự kiện.
@@ -693,6 +748,11 @@ export class World {
     for (let ev = this.wakes.peek(); ev && ev.at <= now; ev = this.wakes.peek()) {
       this.wakes.pop()
       const slot = this.slots.get(ev.pid)
+      if (slot && ev.remind) {
+        const k = ev.remind.k
+        if (slot.away === ev.remind.away && !slot.conns.size) this.env.push?.(slot.id, L => ({ title: L.push.title, body: L.push.done[k], tag: 'done' }))
+        continue
+      }
       if (!slot || slot.gen !== ev.gen) continue // vé cũ
       try {
         const s = this.ps.get(ev.pid)!
@@ -732,10 +792,10 @@ export class World {
   async flush(renew = false) {
     if (this.committing || this.lost) return
     const p = this.pending
-    if (!renew && !this.dirty.size && !this.outbox.length && !p.events.length && !p.inboxDone.length && !p.chat.length && !this.worldDirty) return
+    if (!renew && !this.dirty.size && !this.outbox.length && !p.events.length && !p.inboxDone.length && !p.chat.length && !p.gone.length && !this.worldDirty) return
     if (this.commitTimer) clearTimeout(this.commitTimer)
     this.commitTimer = null
-    const ids = [...this.dirty]
+    const ids = [...this.dirty].filter(id => this.ps.has(id)) // người vừa xoá tài khoản: không ghi lại
     const seenIds = new Set(this.seenDirty)
     this.dirty.clear()
     this.seenDirty.clear()
@@ -761,7 +821,7 @@ export class World {
     try {
       await store.flushWorld(this.env.db, {
         world: this.id, epoch: this.epoch, node: this.env.node, online: this.online, sync: this.env.sync, state: worldState, season,
-        players, reports: p.reports, events: p.events, inboxDone: p.inboxDone, chat: p.chat,
+        players, reports: p.reports, events: p.events, inboxDone: p.inboxDone, chat: p.chat, gone: p.gone,
       })
       stop()
       this.renewedAt = performance.now()
@@ -781,7 +841,7 @@ export class World {
       for (const id of seenIds) this.seenDirty.add(id)
       this.pending = {
         reports: [...p.reports, ...this.pending.reports], events: [...p.events, ...this.pending.events],
-        inboxDone: [...p.inboxDone, ...this.pending.inboxDone], chat: [...p.chat, ...this.pending.chat],
+        inboxDone: [...p.inboxDone, ...this.pending.inboxDone], chat: [...p.chat, ...this.pending.chat], gone: [...p.gone, ...this.pending.gone],
       }
       this.outbox = [...outbox, ...this.outbox]
       this.retries++

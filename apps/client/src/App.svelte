@@ -1,7 +1,7 @@
 <script lang="ts">
   import { flushSync, onMount } from 'svelte'
   import {
-    BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, TRIBS, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, cost, newGame, questDone, questOf, storage, storeNeed,
+    BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, TRIBS, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, cost, jobOf, newGame, questDone, questOf, storage, storeNeed,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import type { MapSnap, Season, Seen, WorldInfo } from '@rok/protocol'
@@ -28,7 +28,7 @@
   import { createNet, type Net, type Status } from './net'
   import { setMood } from './music'
   import type { AllyInfo, AllyRow, Rival, WorldAction } from '@rok/rules/world'
-  import { DESK, L, LANG, TABS, forgetP1, isMuted, reportName, setMuted, sfx, type Tab } from './lib'
+  import { DESK, L, LANG, TABS, forgetP1, isMuted, read, reportName, setMuted, sfx, write, type Tab } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
 
@@ -92,11 +92,27 @@
   }
 
   let tid = 0
-  function toast(text: string, opt: { bad?: boolean; report?: Report } = {}) {
+  function toast(text: string, opt: { bad?: boolean; report?: Report; act?: [string, () => void] } = {}) {
     const id = ++tid
     const r = opt.report
-    toasts = [...toasts.slice(-2), { id, text, bad: opt.bad, ...(r && { action: L.report.replay, onaction: () => (replay = r) }) }]
-    setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), r ? 6000 : 2600)
+    const act = opt.act ?? (r && [L.report.replay, () => (replay = r)])
+    toasts = [...toasts.slice(-2), { id, text, bad: opt.bad, ...(act && { action: act[0], onaction: act[1] }) }]
+    setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), act ? 6000 : 2600)
+  }
+
+  // Hỏi bật thông báo đúng lúc: vừa giao một việc dài (≥ 30 phút) mà trình duyệt chưa được hỏi — mỗi máy một lần.
+  // Quyền chỉ xin được khi người chơi bấm, nên hỏi bằng toast có nút "Bật" chứ không bật hộp thoại của trình duyệt ngay.
+  let pushKey: string | null = null
+  function askPush(prev: State, next: State) {
+    if (!pushKey || typeof Notification === 'undefined' || Notification.permission !== 'default' || read('rok.push')) return
+    const long = (k: 'build' | 'train' | 'study' | 'forge') => {
+      const j = jobOf(next, k)
+      return !!j && j !== jobOf(prev, k) && j.finishAt - next.time >= 30 * 60_000
+    }
+    if (!(['build', 'train', 'study', 'forge'] as const).some(long)) return
+    write('rok.push', '1')
+    const key = pushKey
+    toast(L.push.ask, { act: [L.push.on, () => void net?.account.push(key).then(r => r === 'denied' && toast(L.push.denied, { bad: true }))] })
   }
 
   // So state trước/sau để mừng việc vừa xong — dù xong theo giờ, nhờ Tụ Khí Đan hay do server đẩy xuống.
@@ -132,10 +148,11 @@
         state(prev, next, why) {
           if (why === 'first' && seen) away = summarize(seen, next)
           if (prev && screen === 'game' && why !== 'first' && !quiet) notice(prev, next, why !== 'mine')
+          if (prev && why === 'mine') askPush(prev, next)
           game = next
         },
         status: s => (status = s),
-        welcome: w => ((seen = w.seen), (me = w.me.pid), (info = w.world), void loadAlly()),
+        welcome: w => ((seen = w.seen), (me = w.me.pid), (info = w.world), void loadAlly(), void n.account.info().then(r => r.ok && (pushKey = r.data.push))),
         reports: () => {},
         error(code) {
           sfx('err')
@@ -480,8 +497,11 @@
   <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
   <Settings
     {game}
+    {now}
     open={settingsOpen}
     {muted}
+    account={net?.account}
+    onout={() => location.reload()}
     onclose={() => (settingsOpen = false)}
     onmute={() => {
       muted = !muted
@@ -524,7 +544,7 @@
 {:else}
   <Home game={game ?? preview} {now} still />
   {#if status !== 'boot'}
-    <Title mode={status === 'nosect' ? 'first' : 'splash'} wait={entered && !game} onstart={found} ondone={() => (entered = true)} />
+    <Title mode={status === 'nosect' ? 'first' : 'splash'} wait={entered && !game} onstart={found} onlogin={how => (net ? net.login(how) : Promise.resolve('offline'))} ondone={() => (entered = true)} />
   {/if}
 {/if}
 </svelte:boundary>

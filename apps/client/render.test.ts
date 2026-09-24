@@ -438,6 +438,10 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
         L.guide.items.every(([q]: [string]) => settings.includes(q)),
         'Cài đặt phải có đủ mục Cẩm nang',
       )
+      // bản online: mục tài khoản (SSR chưa có thông tin tài khoản — chỉ cần vẽ không lỗi, vẫn có tiêu đề mục)
+      const ok = async () => ({ ok: true as const, data: { ok: true } })
+      const account = { info: ok, link: ok, password: ok, code: ok, logout: ok, remove: ok, push: async () => 'on' as const }
+      assert.ok(paint('Settings', { game: s, now: s.time, open: true, muted: false, onclose: noop, onmute: noop, account, onout: noop }, `${label}, online`).includes(L.settings.account))
     }
   }
 })

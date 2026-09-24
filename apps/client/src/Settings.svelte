@@ -6,19 +6,27 @@
   import { LOCALES, LOCALE_IDS, type Locale } from '@rok/i18n'
   import { L, LANG, isMusicOn, setLang, setMusicOn } from './lib'
   import { startMusic, stopMusic } from './music'
+  import Account from './Account.svelte'
+  import type { Net } from './net'
 
   let {
     game,
+    now,
     open,
     muted,
+    account,
     onclose,
     onmute,
+    onout,
   }: {
     game: State
+    now: number
     open: boolean
     muted: boolean
+    account?: Net['account'] // online: màn tài khoản (gắn email, mã chuyển máy, đăng xuất, xoá)
     onclose: () => void
     onmute: () => void
+    onout?: () => void
     toast?: (t: string) => void
   } = $props()
 
@@ -57,9 +65,13 @@
     </div>
   </Section>
 
-  <Section title={L.settings.account}>
-    <p class="t-small t-lore">{L.settings.accountHint(game.name)}</p>
-  </Section>
+  {#if account && open}
+    <Account {account} {now} onout={() => onout?.()} />
+  {:else}
+    <Section title={L.settings.account}>
+      <p class="t-small t-lore">{L.settings.accountHint(game.name)}</p>
+    </Section>
+  {/if}
 
   <Section title={L.settings.about}>
     <p class="t-small t-soft">{L.settings.version(__VERSION__)}</p>

@@ -10,7 +10,10 @@ import * as store from '../db/store.ts'
 import { CODE_TTL, COOKIE, checkPass, cleanCode, cleanEmail, cookieOptions, hashPass, hashToken, newCode, newToken } from '../lib/auth.ts'
 import { ErrorReply, requireSession } from './auth.ts'
 
-export type AccountOptions = { db: Database; secure: boolean; path: string; limits: boolean; pushKey: string | null }
+export type AccountOptions = { db: Database; secure: boolean; path: string; limits: boolean; pushKey: string | null; localPush: boolean }
+
+// Dịch vụ push của các trình duyệt (Chrome/Edge qua FCM, Firefox, Safari, Windows)
+const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com']
 
 const Email = z.string().max(254).transform(cleanEmail).pipe(z.email())
 const Pass = z.string().min(8).max(128)
@@ -113,8 +116,14 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     return { ok: true }
   })
 
-  // Web Push (chỉ khi server có khoá VAPID): trình duyệt đăng ký / huỷ; GET /account trả khoá công khai
-  const Sub = z.object({ endpoint: z.url().max(1024), keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }) })
+  // Web Push (chỉ khi server có khoá VAPID): trình duyệt đăng ký / huỷ; GET /account trả khoá công khai.
+  // Endpoint chỉ nhận dịch vụ push thật (https): server sẽ gửi request tới đó — URL tuỳ ý là lỗ SSRF vào mạng nội bộ
+  const pushHost = (u: string) => {
+    const url = new URL(u)
+    if (o.localPush && url.hostname === '127.0.0.1') return true // test, dev
+    return url.protocol === 'https:' && PUSH_HOSTS.some(h => url.hostname === h || url.hostname.endsWith(`.${h}`))
+  }
+  const Sub = z.object({ endpoint: z.url().max(1024).refine(pushHost), keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }) })
   app.post('/push/sub', { schema: { body: Sub, response: { 200: Ok, ...errors } } }, async (req, reply) => {
     const s = await requireSession(o.db, req, reply)
     if (!s) return reply

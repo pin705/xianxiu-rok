@@ -38,3 +38,22 @@ self.addEventListener('fetch', e => {
       : hit(req).then(r => r || fetchAndKeep(req)),
   )
 })
+
+// Thông báo đẩy (Web Push, server gửi khi người chơi không mở game): hiện thông báo; cùng tag thì thay cái cũ, không chồng
+self.addEventListener('push', e => {
+  let n = {}
+  try {
+    n = e.data?.json() ?? {}
+  } catch {}
+  e.waitUntil(self.registration.showNotification(n.title || 'Sơn Hà Tiên Tông', { body: n.body, tag: n.tag, icon: 'icons/icon-192.png', badge: 'favicon.png' }))
+})
+// Chạm thông báo: đưa tab game đang mở lên trước, không có thì mở game
+self.addEventListener('notificationclick', e => {
+  e.notification.close()
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const tab = list.find(c => new URL(c.url).origin === location.origin)
+      return tab ? tab.focus() : self.clients.openWindow('./')
+    }),
+  )
+})

@@ -13,13 +13,16 @@ import { createDb, migrate } from './db/index.ts'
 import { prune } from './db/store.ts'
 import { Host } from './game/host.ts'
 import { adminRoutes } from './http/admin.ts'
+import { accountRoutes } from './http/account.ts'
 import { authRoutes } from './http/auth.ts'
+import { makePusher, type Pusher } from './lib/push.ts'
 import { devRoutes } from './http/dev.ts'
 import { gameRoutes } from './http/game.ts'
 import { healthRoutes } from './http/health.ts'
 import { attachRealtime } from './realtime/gateway.ts'
 
-export async function buildServer(c: Config) {
+// push: thay bộ gửi Web Push (test ghi lại thông báo thay vì gửi ra mạng)
+export async function buildServer(c: Config, hooks: { push?: Pusher } = {}) {
   const dev = c.NODE_ENV === 'development'
   const app = Fastify({
     logger: {
@@ -46,7 +49,8 @@ export async function buildServer(c: Config) {
   const d = createDb(c.DATABASE_URL)
   await migrate(d)
   const protocol = protocolHash()
-  const host = new Host({ db: d.db, node: c.NODE_PATH, commitMs: c.COMMIT_MS, sync: c.SYNC_COMMIT, warpAllowed: c.ALLOW_WARP, market: c.MARKET, log: app.log })
+  const push = hooks.push ?? makePusher(d.db, { pub: c.VAPID_PUBLIC_KEY, priv: c.VAPID_PRIVATE_KEY, subject: c.VAPID_SUBJECT }, app.log)
+  const host = new Host({ db: d.db, node: c.NODE_PATH, commitMs: c.COMMIT_MS, sync: c.SYNC_COMMIT, warpAllowed: c.ALLOW_WARP, market: c.MARKET, log: app.log, push })
 
   await app.register(healthRoutes, { host })
   await app.register(
@@ -56,6 +60,7 @@ export async function buildServer(c: Config) {
         if (req.method === 'POST' && req.headers['x-rok'] !== '1') return reply.code(403).send({ error: 'csrf' })
       })
       await api.register(authRoutes, { db: d.db, worldCap: c.WORLD_CAP, secure: c.NODE_ENV === 'production', path: c.NODE_PATH })
+      await api.register(accountRoutes, { db: d.db, secure: c.NODE_ENV === 'production', path: c.NODE_PATH, limits: c.LIMITS, pushKey: push ? c.VAPID_PUBLIC_KEY! : null, localPush: c.NODE_ENV !== 'production' })
       await api.register(gameRoutes, { db: d.db })
       if (c.ALLOW_WARP) await api.register(devRoutes, { prefix: '/dev', db: d.db, host })
       if (c.ADMIN_TOKEN) await api.register(adminRoutes, { prefix: '/admin', db: d.db, token: c.ADMIN_TOKEN })

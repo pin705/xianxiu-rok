@@ -2,7 +2,7 @@
 // Chạy: npm run db && npm run build && npm run e2e   (Chrome ở chỗ khác: CHROME=…; Postgres khác: E2E_DATABASE_URL=…)
 // Mỗi lần chạy: database tạm riêng, cổng trống riêng, bản sao dist riêng — chạy song song hay build lại giữa chừng không giẫm nhau.
 // Kiểm: lập tông môn → 14 nhiệm vụ đầu chỉ bằng click (tua giờ giới qua API dev) → tải lại vẫn còn tiến độ (từ server) →
-// hai tab đồng bộ → ngăn kéo desktop → bị người chơi khác cướp: thông báo, xem lại trận, báo thù → bản đồ giới: chạm tông môn mở bảng thông tin → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
+// hai tab đồng bộ → ngăn kéo desktop → bị người chơi khác cướp: thông báo, xem lại trận, báo thù → bản đồ giới: chạm tông môn mở bảng thông tin → tài khoản: gắn email, đăng xuất, đăng nhập lại → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
 // màn "không có mạng", đổi ngôn ngữ vẫn được (service worker) → console sạch.
 import { spawn, type ChildProcess } from 'node:child_process'
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
@@ -253,6 +253,36 @@ try {
   await a.js(closeAll)
   await a.js(`[...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Vùng')?.click()`) // trả lại bản đồ vùng cho các bước sau
   console.log('✓ bản đồ giới: cảnh WebGL, ghim tông môn, chạm mở bảng thông tin')
+  assert.deepEqual(errors, [], 'console có lỗi')
+
+  // Tài khoản: Cài đặt → gắn email + mật khẩu → đăng xuất → màn mở đầu → "Đã có tài khoản? Đăng nhập" → vào đúng tông môn cũ
+  const sect = (await a.js(truth)).name as string
+  const type = (sel: string, v: string) => `(() => { const e = document.querySelector(${JSON.stringify(sel)}); e.value = ${JSON.stringify(v)}; e.dispatchEvent(new Event('input', { bubbles: true })); return true })()`
+  const tap = (text: string, scope = 'dialog[open]') => `[...document.querySelectorAll('${scope} button')].find(b => b.innerText.trim().startsWith(${JSON.stringify(text)}) && !b.disabled)?.click() ?? false`
+  const mail = `e2e${Date.now().toString(36)}@example.com`
+  await a.js(`document.querySelector('button[aria-label="Cài đặt"]').click()`)
+  assert.ok(await a.until(`!!document.querySelector('dialog[open] input[type=email]')`), `Cài đặt không có ô gắn email — ${await seen()}`)
+  await a.js(type('dialog[open] input[type=email]', mail))
+  await a.js(type('dialog[open] input[autocomplete=new-password]', 'mat-khau-e2e'))
+  await a.js(tap('Gắn email'))
+  assert.ok(await a.until(`document.querySelector('dialog[open]')?.innerText.includes(${JSON.stringify(`Đã gắn với ${mail}`)})`), `gắn email không xong — ${await seen()}`)
+  await a.js(tap('Đăng xuất'))
+  await sleep(300)
+  await a.js(`document.querySelector('dialog[open] button.btn.danger')?.click()`) // xác nhận
+  assert.ok(await a.until(`!!document.querySelector('button.cover')`, 15000), `đăng xuất không về màn mở đầu — ${await seen()}`)
+  await a.js(`document.querySelector('button.cover').click()`)
+  assert.ok(await a.until(`!!document.querySelector('.skip button')`))
+  await a.js(`document.querySelector('.skip button').click()`)
+  assert.ok(await a.until(`[...document.querySelectorAll('button')].some(b => b.innerText.includes('Đăng nhập'))`), 'màn đặt tên không có lối đăng nhập')
+  await a.js(`[...document.querySelectorAll('button')].find(b => b.innerText.includes('Đăng nhập')).click()`)
+  assert.ok(await a.until(`!!document.querySelector('form input[type=email]')`))
+  await a.js(type('form input[type=email]', mail))
+  await a.js(type('form input[type=password]', 'mat-khau-e2e'))
+  await a.js(tap('Vào game', 'form'))
+  assert.ok(await a.until(inGame, 20000), `đăng nhập lại không vào game — ${await seen()}`)
+  assert.equal((await a.js(truth)).name, sect, 'đăng nhập vào đúng tông môn cũ')
+  await a.js(closeAll)
+  console.log('✓ tài khoản: gắn email, đăng xuất, đăng nhập lại đúng tông môn')
   assert.deepEqual(errors, [], 'console có lỗi')
 
   // Server sập giữa chừng (SIGKILL, không kịp xả): client báo đang nối lại, server lên thì tự nối, thao tác đã ack còn nguyên

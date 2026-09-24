@@ -6,6 +6,8 @@ const bool = (def: boolean) =>
     .enum(['1', '0', 'true', 'false', 'on', 'off'])
     .optional()
     .transform(v => (v === undefined ? def : v === '1' || v === 'true' || v === 'on'))
+// biến để trống (docker compose `${X:-}`) coi như chưa đặt
+const unset = <T extends z.ZodType>(t: T) => z.preprocess(v => (v === '' ? undefined : v), t.optional())
 const list = z
   .string()
   .optional()
@@ -31,8 +33,8 @@ const Env = z
     ADMIN_TOKEN: z.string().min(24).optional(), // bật /api/admin/* (header x-admin-token); không đặt thì không có route admin
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
     // Web Push: khoá VAPID (npx web-push generate-vapid-keys) + liên hệ (mailto:…); không đặt thì không có thông báo đẩy
-    VAPID_PUBLIC_KEY: z.string().min(40).optional(),
-    VAPID_PRIVATE_KEY: z.string().min(20).optional(),
+    VAPID_PUBLIC_KEY: unset(z.string().min(40)),
+    VAPID_PRIVATE_KEY: unset(z.string().min(20)),
     VAPID_SUBJECT: z.string().regex(/^(mailto:|https:)/).default('mailto:admin@localhost'),
   })
   .refine(e => !(e.NODE_ENV === 'production' && e.ALLOW_WARP), 'ALLOW_WARP bị cấm ở production')

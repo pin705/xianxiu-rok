@@ -234,6 +234,33 @@ export function createNet(h: Handlers, lang: string) {
     })
   }
 
+  function forget<T extends { ok: boolean }>(r: T) {
+    if (!r.ok) return r
+    try {
+      localStorage.removeItem(AUTH)
+    } catch {}
+    socket?.removeAllListeners()
+    socket?.disconnect()
+    socket = null
+    return r
+  }
+
+  // Bật thông báo đẩy (gọi từ thao tác của người chơi — trình duyệt chỉ hỏi quyền lúc đó): đăng ký với dịch vụ push của trình
+  // duyệt bằng khoá VAPID của server, rồi gửi đăng ký cho server. Chưa có service worker (bản dev) thì không hỗ trợ.
+  async function enablePush(key: string): Promise<'on' | 'denied' | 'unsupported' | 'error'> {
+    const reg = 'PushManager' in globalThis && 'Notification' in globalThis ? await navigator.serviceWorker?.getRegistration() : undefined
+    if (!reg) return 'unsupported'
+    if ((await Notification.requestPermission()) !== 'granted') return 'denied'
+    try {
+      const key8 = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+      const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key8 }))
+      const j = sub.toJSON()
+      return (await api('/push/sub', { endpoint: j.endpoint, keys: j.keys })).ok ? 'on' : 'error'
+    } catch {
+      return 'error'
+    }
+  }
+
   const ask = (q: Query) =>
     new Promise<unknown>(ok => (socket?.connected ? socket.timeout(10_000).emit('get', q, (err, d) => ok(err ? null : d)) : ok(null)))
   const askMap = () => ask({ k: 'map' }).then(m => m && mapWatch.forEach(f => f(m as MapSnap)))
@@ -259,6 +286,26 @@ export function createNet(h: Handlers, lang: string) {
       path = r.data.path
       connect()
       return null
+    },
+    // Vào tông môn đã có từ máy khác: email + mật khẩu, hoặc mã chuyển máy (dùng một lần), rồi nối như người cũ
+    async login(how: { email: string; pass: string } | { code: string }): Promise<string | null> {
+      const r = await api<{ token: string; path: string }>('code' in how ? '/login/code' : '/login', how)
+      if (!r.ok) return r.error
+      if (CROSS) write(AUTH, r.data.token)
+      path = r.data.path
+      connect()
+      return null
+    },
+    // Tài khoản: gắn email, đổi mật khẩu, mã chuyển máy, đăng xuất (mọi nơi), xoá. Đăng xuất / xoá xong: quên phiên, ngắt nối
+    // (App tải lại trang về màn mở đầu)
+    account: {
+      info: () => api<{ email: string | null; push: string | null }>('/account'),
+      link: (email: string, pass: string) => api<{ ok: boolean }>('/account/link', { email, pass }),
+      password: (old: string, pass: string) => api<{ ok: boolean }>('/account/password', { old, pass }),
+      code: () => api<{ code: string; until: number }>('/account/code', {}),
+      logout: (all: boolean) => api<{ ok: boolean }>(all ? '/account/logout-all' : '/logout', {}).then(forget),
+      remove: (pass?: string) => api<{ ok: boolean }>('/account/delete', { pass }).then(forget),
+      push: (key: string) => enablePush(key),
     },
     tick() {
       show('tick', false)

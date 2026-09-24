@@ -10,9 +10,19 @@
     wait = false,
     onstart,
     ondone,
-  }: { mode: 'first' | 'splash'; wait?: boolean; onstart: (name: string) => Promise<string | null>; ondone: () => void } = $props()
+    onlogin,
+  }: {
+    mode: 'first' | 'splash'
+    wait?: boolean
+    onstart: (name: string) => Promise<string | null>
+    ondone: () => void
+    onlogin?: (how: { email: string; pass: string } | { code: string }) => Promise<string | null> // vào tông môn đã có (máy khác)
+  } = $props()
 
-  let step: 'title' | 'intro' | 'name' | 'stamp' = $state('title')
+  let step: 'title' | 'intro' | 'name' | 'stamp' | 'email' | 'code' = $state('title')
+  let email = $state('')
+  let pass = $state('')
+  let code = $state('')
   let line = $state(0)
   const [first, ...rest] = suggestNames(4)
   let name = $state(first)
@@ -55,6 +65,17 @@
     sfx('done')
     setTimeout(ondone, 1300)
   }
+  async function login(e: SubmitEvent) {
+    e.preventDefault()
+    if (sending || !onlogin) return
+    sending = true
+    const err = await onlogin(step === 'code' ? { code } : { email, pass })
+    sending = false
+    if (err) return void (error = step === 'code' && err === 'wrong' ? L.account.err.code : (L.account.err[err] ?? L.account.err.server))
+    sfx('done')
+    ondone()
+  }
+  const to = (s: typeof step) => () => ((error = ''), (step = s))
 </script>
 
 <div class="title-screen">
@@ -73,6 +94,21 @@
       <span class="tap">{L.tapToContinue}</span>
     </button>
     <span class="skip"><Button variant="ghost" size="sm" onclick={() => (step = 'name')}>{L.skip}</Button></span>
+  {:else if step === 'email' || step === 'code'}
+    <div class="cover dim">
+      <form class="card scroll-skin stack center" onsubmit={login}>
+        <h2 class="t-title">{step === 'code' ? L.account.enterCode : L.account.login}</h2>
+        {#if step === 'code'}
+          <input bind:value={code} maxlength="12" autocomplete="one-time-code" autocapitalize="characters" aria-label={L.account.codeLabel} placeholder={L.account.codeLabel} oninput={() => (error = '')} />
+        {:else}
+          <input type="email" bind:value={email} autocomplete="email" aria-label={L.account.email} placeholder={L.account.email} oninput={() => (error = '')} />
+          <input type="password" bind:value={pass} autocomplete="current-password" aria-label={L.account.pass} placeholder={L.account.pass} oninput={() => (error = '')} />
+        {/if}
+        {#if error}<p class="t-small t-bad">{error}</p>{/if}
+        <Button variant="gold" size="lg" wide type="submit" silent disabled={sending || (step === 'code' ? code.replace(/[^0-9a-z]/gi, '').length !== 8 : !email.includes('@') || pass.length < 8)}>{sending ? L.net.connecting : L.account.go}</Button>
+        <Button variant="quiet" size="sm" onclick={to('name')}>{L.account.back}</Button>
+      </form>
+    </div>
   {:else}
     <div class="cover dim">
       <form class="card scroll-skin stack center" class:gone={step === 'stamp'} onsubmit={found}>
@@ -87,6 +123,12 @@
         </div>
         {#if error}<p class="t-small t-bad">{error}</p>{/if}
         <Button variant="gold" size="lg" wide type="submit" silent disabled={sending}>{sending ? L.net.connecting : L.naming.found}</Button>
+        {#if onlogin}
+          <div class="row wrap center">
+            <Button variant="quiet" size="sm" onclick={to('email')}>{L.account.have} {L.account.login}</Button>
+            <Button variant="quiet" size="sm" onclick={to('code')}>{L.account.enterCode}</Button>
+          </div>
+        {/if}
       </form>
       {#if step === 'stamp'}
         <div class="stamp stack center">

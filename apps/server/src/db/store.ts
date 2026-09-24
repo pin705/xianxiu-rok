@@ -119,6 +119,7 @@ export type Batch = {
   sync: boolean
   state?: object // phần chung của giới, khi đổi
   season?: { seed: number; season: number; opensAt: Date } // hết mùa: bản đồ mới, mùa mới, mở lại từ lúc này
+  gone?: number[] // tông môn vừa xoá tài khoản: xoá dòng tài khoản (dây chuyền tông môn, chiến báo, mã, push)
   players: { id: number; state: State; name: string; power: number; hall: number; tower: number; rebirths: number; pvp: number; weekNo: number; weekPts: number; seen?: Seen }[]
   reports: { pid: number; id: number; at: number; kind: string; win: boolean; body: object }[]
   events: { pid: number; name: string; day: number; at: number; props: object }[]
@@ -173,6 +174,8 @@ export async function flushWorld(db: Database, b: Batch) {
           from jsonb_to_recordset(${JSON.stringify(b.chat)}::jsonb) as c(id int, ch text, pid int, name text, text text, at float8)
           on conflict do nothing`),
       )
+    if (b.gone?.length)
+      q.push(tx.delete(accounts).where(inArray(accounts.id, tx.select({ id: sql<number>`${players.accountId}` }).from(players).where(and(eq(players.worldId, b.world), inArray(players.id, b.gone))))))
     if (b.inboxDone.length) q.push(tx.update(inbox).set({ doneAt: sql`now()` }).where(and(eq(inbox.worldId, b.world), inArray(inbox.id, b.inboxDone))))
     const [fence] = (await Promise.all(q)) as [unknown[]]
     if (!fence.length) throw new Fenced()

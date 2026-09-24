@@ -3,14 +3,14 @@ import type { ElderId, Element, Report, UnitType } from '@rok/rules'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
 // Lưu trên máy (trình duyệt chặn storage thì vẫn chơi được, chỉ không lưu)
-const read = (k: string) => {
+export const read = (k: string) => {
   try {
     return localStorage.getItem(k)
   } catch {
     return null // trình duyệt chặn storage: vẫn chơi được, chỉ không lưu
   }
 }
-const write = (k: string, v: string) => {
+export const write = (k: string, v: string) => {
   try {
     localStorage.setItem(k, v)
   } catch {}

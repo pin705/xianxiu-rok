@@ -23,6 +23,10 @@ services:
       NODE_PATH: /n1/socket.io
       TRUST_PROXY: '1'
       ORIGINS: '${ORIGINS:-}'
+      # Web Push: npx web-push generate-vapid-keys → đặt trong .env (bỏ trống: không có thông báo đẩy)
+      VAPID_PUBLIC_KEY: '${VAPID_PUBLIC_KEY:-}'
+      VAPID_PRIVATE_KEY: '${VAPID_PRIVATE_KEY:-}'
+      VAPID_SUBJECT: '${VAPID_SUBJECT:-mailto:admin@localhost}'
   n2:
     <<: *node
     environment:

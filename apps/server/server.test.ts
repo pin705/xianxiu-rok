@@ -26,9 +26,9 @@ const skip = !up && 'không có Postgres (npm run db)'
 
 type Node = Awaited<ReturnType<typeof buildServer>> & { port: number; path: string }
 const nodes: Node[] = []
-async function boot(name: string, env: Record<string, string> = {}): Promise<Node> {
+async function boot(name: string, env: Record<string, string> = {}, hooks: Parameters<typeof buildServer>[1] = {}): Promise<Node> {
   const path = `/${name}/socket.io`
-  const s = await buildServer(loadConfig({ NODE_ENV: 'test', DATABASE_URL: URL, NODE_PATH: path, ALLOW_WARP: '1', COMMIT_MS: '5', LOG_LEVEL: process.env.TEST_LOG ?? 'silent', REBALANCE: 'off', LIMITS: 'off', ...env }))
+  const s = await buildServer(loadConfig({ NODE_ENV: 'test', DATABASE_URL: URL, NODE_PATH: path, ALLOW_WARP: '1', COMMIT_MS: '5', LOG_LEVEL: process.env.TEST_LOG ?? 'silent', REBALANCE: 'off', LIMITS: 'off', ...env }), hooks)
   await s.app.listen({ port: 0, host: '127.0.0.1' })
   const n = { ...s, port: (s.app.server.address() as { port: number }).port, path }
   nodes.push(n)
@@ -464,4 +464,104 @@ test('chợ: treo bán, người khác thấy và mua, người bán nhận thư
   assert.equal(!no.ok && no.err, 'locked')
   assert.equal(await cc.s.timeout(5000).emitWithAck('get', { k: 'market' }), null)
   cc.close()
+})
+
+test('tài khoản: gắn email, đăng nhập, đổi mật khẩu đá phiên khác, mã chuyển máy một lần, đăng xuất mọi nơi, xoá tài khoản', { skip }, async () => {
+  const n = await boot('acc')
+  const w = await newWorld(n)
+  const A = await guest(n, undefined, w)
+  const json = async (r: Response): Promise<Record<string, any>> => ({ status: r.status, ...((await r.json()) as object) })
+  const email = `a${randomBytes(3).toString('hex')}@Example.com`
+  assert.equal((await json(await api(n, '/account/link', { email, pass: 'short' }, A.token))).status, 400, 'mật khẩu quá ngắn')
+  assert.equal((await json(await api(n, '/account/link', { email, pass: 'mat-khau-1' }, A.token))).ok, true)
+  assert.equal((await json(await api(n, '/account/link', { email: 'x@y.zz', pass: 'mat-khau-1' }, A.token))).error, 'linked')
+  const B = await guest(n, undefined, w)
+  assert.equal((await json(await api(n, '/account/link', { email: email.toUpperCase(), pass: 'mat-khau-2' }, B.token))).error, 'email_taken', 'email không phân biệt hoa thường')
+  assert.equal((await json(await api(n, '/account', undefined, A.token))).email, email.toLowerCase())
+  // đăng nhập bằng email (chuẩn hoá hoa thường, khoảng trắng); sai mật khẩu thì 401 như email lạ
+  assert.equal((await json(await api(n, '/login', { email: 'nobody@example.com', pass: 'mat-khau-1' }))).status, 401)
+  assert.equal((await json(await api(n, '/login', { email, pass: 'sai-mat-khau' }))).status, 401)
+  const L1 = await json(await api(n, '/login', { email: ` ${email.toUpperCase()} `, pass: 'mat-khau-1' }))
+  assert.equal(L1.pid, A.pid, 'đăng nhập vào đúng tông môn')
+  // đổi mật khẩu từ phiên đầu: phiên L1 mất hiệu lực, phiên đổi vẫn còn
+  assert.equal((await json(await api(n, '/account/password', { old: 'sai', pass: 'mat-khau-3' }, A.token))).status, 401)
+  assert.equal((await json(await api(n, '/account/password', { old: 'mat-khau-1', pass: 'mat-khau-3' }, A.token))).ok, true)
+  assert.equal((await api(n, '/account', undefined, L1.token)).status, 401, 'phiên khác bị đăng xuất')
+  assert.equal((await api(n, '/account', undefined, A.token)).status, 200)
+  // mã chuyển máy: dùng một lần
+  const code = await json(await api(n, '/account/code', {}, A.token))
+  assert.match(code.code, /^[2-9A-HJKMNP-Z]{8}$/)
+  const C1 = await json(await api(n, '/login/code', { code: code.code.toLowerCase().replace(/(.{4})/, '$1-') }))
+  assert.equal(C1.pid, A.pid)
+  assert.equal((await api(n, '/login/code', { code: code.code })).status, 401, 'mã đã dùng')
+  // đăng xuất mọi nơi
+  assert.ok((await json(await api(n, '/account/logout-all', {}, C1.token))).ok)
+  for (const t of [A.token, C1.token]) assert.equal((await api(n, '/account', undefined, t)).status, 401)
+
+  // xoá tài khoản: B lập minh, A vào minh; B xoá → A thành minh chủ, dòng tài khoản B biến mất, đăng nhập lại không được
+  const A2 = await json(await api(n, '/login', { email, pass: 'mat-khau-3' }))
+  const ca = client(n, A2.token), cb = client(n, B.token)
+  await Promise.all([ca.welcome, cb.welcome])
+  const st = (await (await api(n, '/dev/state', undefined, B.token)).json()) as { state: any }
+  await api(n, '/dev/state', { state: { ...st.state, levels: Object.fromEntries(Object.keys(st.state.levels).map(k => [k, 10])), res: { linhThach: 1e5, linhThao: 1e5, linhKhoang: 1e5 } } }, B.token)
+  assert.ok((await cb.act({ type: 'allyFound', name: 'Xoá Thử', tag: 'XT' })).ok)
+  const ally = (await ca.s.timeout(5000).emitWithAck('get', { k: 'allies' })) as { id: number }[]
+  assert.ok((await ca.act({ type: 'allyJoin', id: ally[0].id })).ok)
+  const bye = new Promise<string>(ok => cb.s.once('bye', m => ok(m.reason)))
+  assert.equal((await json(await api(n, '/account/delete', {}, B.token))).ok, true)
+  assert.equal((await api(n, '/account', undefined, B.token)).status, 401, 'phiên bị bỏ ngay')
+  assert.equal(await bye, 'deleted')
+  let gone = false
+  for (let i = 0; i < 50 && !gone; i++, await new Promise(r => setTimeout(r, 100))) gone = !(await n.db.client`select 1 from players where id = ${B.pid}`).length
+  assert.ok(gone, 'tông môn bị xoá khỏi DB')
+  const mine = (await ca.s.timeout(5000).emitWithAck('get', { k: 'ally' })) as { members: Record<number, number> } | null
+  assert.deepEqual(mine?.members, { [A.pid]: 2 }, 'người còn lại thành minh chủ')
+  ca.close()
+  cb.close()
+})
+
+test('Web Push: offline thì nhắc khi việc dài xong và báo khi bị cướp (chữ theo ngôn ngữ tài khoản); chỉ nhận dịch vụ push thật', { skip }, async () => {
+  const en = await (await import('@rok/i18n')).loadText('en')
+  const got: { pid: number; title: string; body: string; tag: string }[] = []
+  const n = await boot('push', { VAPID_PUBLIC_KEY: 'B'.repeat(87), VAPID_PRIVATE_KEY: 'k'.repeat(43) }, { push: (pid, note) => got.push({ pid, ...note(en) }) })
+  const w = await newWorld(n)
+  const V = await guest(n, undefined, w)
+  const sub = { endpoint: 'https://fcm.googleapis.com/fcm/send/abc', keys: { p256dh: 'BPk', auth: 'x' } }
+  assert.equal((await api(n, '/push/sub', { ...sub, endpoint: 'https://evil.example.com/x' }, V.token)).status, 400, 'endpoint lạ: lỗ SSRF')
+  assert.equal((await api(n, '/push/sub', { ...sub, endpoint: 'http://fcm.googleapis.com/x' }, V.token)).status, 400, 'phải https')
+  assert.equal((await api(n, '/push/sub', sub, V.token)).status, 200)
+  assert.equal(((await (await api(n, '/account', undefined, V.token)).json()) as { push: string }).push, 'B'.repeat(87), 'client lấy khoá công khai VAPID')
+  const until = async (f: () => boolean, ms = 5000) => {
+    for (const t0 = Date.now(); Date.now() - t0 < ms && !f(); ) await new Promise(r => setTimeout(r, 50))
+    return f()
+  }
+
+  // V giao việc xây 30 phút rồi rời game → tới giờ xong thì được nhắc; đang chơi thì không
+  const cv = client(n, V.token)
+  await cv.welcome
+  const st = ((await (await api(n, '/dev/state', undefined, V.token)).json()) as { state: any }).state
+  const strong = { ...st, levels: Object.fromEntries(Object.keys(st.levels).map(k => [k, 10])), shield: 0, troops: { ...st.troops, the1: 200 }, res: { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 } }
+  await api(n, '/dev/state', { state: { ...strong, queue: [{ building: 'linhDien', level: 11, startAt: st.time, finishAt: st.time + 30 * 60_000 }] } }, V.token)
+  await cv.push()
+  cv.close()
+  await new Promise(r => setTimeout(r, 200))
+  await api(n, '/dev/warp', { min: 31 }, V.token)
+  assert.ok(await until(() => got.length >= 1), 'không nhắc khi việc xong')
+  assert.deepEqual(got[0], { pid: V.pid, title: en.push.title, body: en.push.done.build, tag: 'done' })
+
+  // người khác cướp V lúc V offline → báo ngay khi trận giải
+  const T = await guest(n, undefined, w)
+  const ct = client(n, T.token)
+  await ct.welcome
+  const ts = ((await (await api(n, '/dev/state', undefined, T.token)).json()) as { state: any }).state
+  const vs = ((await (await api(n, '/dev/state', undefined, V.token)).json()) as { state: any }).state
+  await api(n, '/dev/state', { state: { ...strong, time: ts.time, name: ts.name, seat: { x: vs.seat.x + 1, y: vs.seat.y }, troops: { ...ts.troops, kiem3: 1100 }, queue: [] } }, T.token)
+  await ct.push()
+  const raid = await ct.act({ type: 'raid', pid: V.pid, elder: 'thanhPhong', army: { kiem3: 1100 } })
+  assert.ok(raid.ok, JSON.stringify(raid))
+  await api(n, '/dev/warp', { min: 15 }, T.token)
+  assert.ok(await until(() => got.some(g => g.tag === 'raid')), 'bị cướp lúc offline mà không được báo')
+  assert.equal(got.find(g => g.tag === 'raid')!.pid, V.pid)
+  assert.ok(!got.some(g => g.pid === T.pid), 'người đang chơi không nhận push')
+  ct.close()
 })
