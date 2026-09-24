@@ -92,7 +92,6 @@ export async function applyTheme() {
     '--sk-card-silk': nine('card-silk', () => cardSkin(S, 'silk', 13)),
     '--sk-tag-silk': nine('tag-silk', () => tagSkin(S, 'silk', 17)),
     '--sk-capsule': nine('capsule', () => capsuleSkin(S)),
-    '--sk-capsule-silk': nine('capsule-silk', () => capsuleSkin(S, 'silk', 47)),
     '--sk-plate': nine('plate', () => plateSkin(S)),
     '--sk-slip': nine('slip', () => slipSkin(S)),
     '--sk-slip-bad': nine('slip-bad', () => slipSkin(S, true, 49)),

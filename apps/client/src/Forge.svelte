@@ -9,13 +9,14 @@
     gearCap,
     gearCost,
     gearTime,
+    isMarching,
     type ElderId,
     type GearId,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Bag, Button, Card, Section, Tag } from './ui'
   import JobRow from './JobRow.svelte'
-  import { L, LOOK, clock, sfx } from './lib'
+  import { L, LOOK, clock } from './lib'
   import { useGame } from './game'
 
   const g = useGame()
@@ -25,9 +26,9 @@
   let picking = $state<GearId | null>(null)
   const cap = $derived(gearCap(game))
   const elders = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined))
-  const away = (e: ElderId) => game.marches.some(m => m.elder === e)
-  const equip = (gear: GearId, elder: ElderId | null) =>
-    act({ type: 'equip', gear, elder }) && (sfx('reward'), (picking = null))
+  const equip = (gear: GearId, elder: ElderId | null) => {
+    if (act({ type: 'equip', gear, elder }, 'reward')) picking = null
+  }
 </script>
 
 {#if game.forge}
@@ -70,7 +71,7 @@
                   <span class="row t-small" style:--gap="6px"
                     ><Portrait look={LOOK[on]} size={24} />{L.forge.worn(L.elders[on].name)}</span
                   >
-                  <Button variant="quiet" size="sm" disabled={away(on)} onclick={() => equip(g, null)}
+                  <Button variant="quiet" size="sm" disabled={isMarching(game, on)} onclick={() => equip(g, null)}
                     >{L.forge.unequip}</Button
                   >
                 {:else}
@@ -85,8 +86,8 @@
                   {#each elders as e (e)}
                     <li>
                       <Card
-                        onclick={away(e) ? undefined : () => equip(g, e)}
-                        disabled={away(e)}
+                        onclick={isMarching(game, e) ? undefined : () => equip(g, e)}
+                        disabled={isMarching(game, e)}
                         label={L.elders[e].name}
                       >
                         <span class="row" style:--gap="6px"
@@ -111,7 +112,7 @@
                   size="sm"
                   trail={clock(gearTime(game, g, lv + 1))}
                   disabled={!!err}
-                  onclick={() => act({ type: 'forge', gear: g }) && sfx('build')}>{L.forge.go}</Button
+                  onclick={() => act({ type: 'forge', gear: g }, 'build')}>{L.forge.go}</Button
                 >
               </div>
             {/if}

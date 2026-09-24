@@ -47,7 +47,7 @@
     pointer-events: auto;
     border: 0 solid transparent;
     border-image: var(--sk-slip);
-    filter: drop-shadow(0 4px 8px rgb(20 14 10 / 0.35));
+    filter: drop-shadow(0 4px 8px rgb(var(--shade) / 0.35));
     -webkit-mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
     mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
     animation:

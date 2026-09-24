@@ -45,7 +45,7 @@
   import Library from './Library.svelte'
   import Train from './Train.svelte'
   import Trade from './Trade.svelte'
-  import { L, clock, num } from './lib'
+  import { L, clock, num, type PanelTab } from './lib'
   import { useGame } from './game'
 
   let {
@@ -58,10 +58,10 @@
     onrebirth,
   }: {
     id: BuildingId | null
-    view: string | null
+    view: PanelTab | null
     onupgrade: (id: BuildingId) => void
     onclose: () => void
-    onselect: (id: BuildingId, view?: string | null) => void
+    onselect: (id: BuildingId, view?: PanelTab | null) => void
     ontrib: (elder: ElderId, army: Army, pill: boolean) => void
     onrebirth: () => void
   } = $props()
@@ -70,7 +70,7 @@
   const now = $derived(g.now)
   const busy = $derived(g.busy)
 
-  const FN: Partial<Record<BuildingId, [string, string]>> = {
+  const FN: Partial<Record<BuildingId, [PanelTab, string]>> = {
     dienVoTruong: ['train', L.train.tab],
     danPhong: ['alchemy', L.b.danPhong.name],
     tangKinhCac: ['library', L.library.tab],
@@ -79,7 +79,7 @@
     hoSonDaiTran: ['guard', L.pvp.defense],
   }
   // Thẻ người chơi đã chọn, nhớ theo công trình: mở công trình khác thì về thẻ mặc định
-  let picked = $state<{ id: BuildingId | null; tab: string } | null>(null)
+  let picked = $state<{ id: BuildingId | null; tab: PanelTab } | null>(null)
   const fn = $derived(id && game.levels[id] > 0 ? FN[id] : undefined)
   const tab = $derived(picked?.id === id ? picked.tab : fn ? (view ?? fn[0]) : 'upgrade')
   let pill = $state(true)

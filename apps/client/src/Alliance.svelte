@@ -40,7 +40,11 @@
     ally ? ally.helps.filter(h => h.pid !== me && me !== null && !h.by.includes(me) && h.by.length < ALLY_HELPS) : [],
   )
   const nameOf = (pid: number) => ally?.people.find(p => p.pid === pid)?.name ?? '?'
-  const go = async (a: WorldAction, sound: 'reward' | 'tap' = 'tap') => (await send(a)).ok && (sfx(sound), true)
+  const go = async (a: WorldAction, sound: 'reward' | 'tap' = 'tap') => {
+    const ok = (await send(a)).ok
+    if (ok) sfx(sound)
+    return ok
+  }
 </script>
 
 <Page title={L.ally.title} icon="tienMinh">

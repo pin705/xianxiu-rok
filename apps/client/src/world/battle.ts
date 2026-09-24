@@ -13,22 +13,18 @@ import {
   cloud,
   crackTex,
   flyingSword,
-  glowTex,
   mistTex,
   orbTex,
-  paper,
-  puffTex,
   ringTex,
   slashTex,
   soldier,
-  sparkTex,
   splashTex,
   streakTex,
   type Theme,
   type Troop,
 } from '@rok/art'
 import type { Report, Skill } from '@rok/rules'
-import { DRY, back, ink, last, painted, texOf, warm, type Hue, type Painted } from './stage'
+import { DRY, THUNDER, back, hex, ink, last, painted, sprite, texOf, warm, type Hue, fxTex } from './stage'
 
 type Kind = 'man' | 'beast' | 'spirit'
 type Squad = {
@@ -44,7 +40,6 @@ type Squad = {
 }
 type Tween = { t0: number; dur: number; fn: (k: number) => void; end?: () => void }
 
-const hex = (c: string) => parseInt(c.slice(1), 16)
 const ease = (k: number) => 1 - (1 - k) ** 3
 
 // Màu theo bên: quân ta lam/vàng, địch son
@@ -65,7 +60,6 @@ const HIT: Hue[] = [
   [C.ink, C.cinnabar, '#ffb4a4'],
 ] // theo bên ra đòn
 const CLAW: Hue = [C.lacquer, C.cinnabar, '#ffd0c0']
-const THUNDER: Hue = ['#7a5cff', '#cbb8ff', '#ffffff'] // trời tối: lớp ngoài tím sáng làm quầng
 const slashT = (f: number, k: number) => slashTex(128, 64, 1, DRY[f], k)
 const orbT = (f: number, k: number) => orbTex(96, 64, 7, DRY[f], k)
 const clawT = (f: number, k: number) => clawTex(96, 2, DRY[f], k)
@@ -142,7 +136,7 @@ export class Battle {
 
   private paint() {
     const { w, h } = this
-    const pap = new TilingSprite({ texture: texOf('paper', () => paper(256)), width: w + 400, height: h + 400 })
+    const pap = new TilingSprite({ texture: fxTex.paper(), width: w + 400, height: h + 400 })
     pap.position.set(-200, -200)
     pap.tileScale.set(0.5)
     const bg = painted(
@@ -161,7 +155,7 @@ export class Battle {
     this.field.addChild(mist)
     this.tick_.push(dt => (mist.tilePosition.x += dt * 8))
     // hạt theo cảnh: lá rơi, tàn lửa, tuyết, mưa
-    const sparkT = texOf('spark', () => sparkTex(24))
+    const sparkT = fxTex.spark()
     const color = {
       forest: C.malachiteL,
       fire: '#ffb35c',
@@ -190,14 +184,6 @@ export class Battle {
     }
   }
   private tick_: ((dt: number) => void)[] = []
-
-  private sprite(p: Painted, x = 0, y = 0) {
-    const s = new Sprite(p.tex)
-    s.anchor.set(p.anchor[0], p.anchor[1])
-    s.scale.set(1 / p.scale)
-    s.position.set(x, y)
-    return s
-  }
 
   // Dựng hai đội cho đợt `fi` (độ kiếp có 3 đợt; đệ tử sống sót đi tiếp)
   wave(fi: number) {
@@ -240,13 +226,13 @@ export class Battle {
         // đợt lôi kiếp: đám mây đen, lõi sét tím chớp nháy
         s = new Container()
         const cl = painted(`thunder:${i % 3}`, () => cloud(46, 61 + (i % 3), true))
-        const core = new Sprite(texOf('glow', () => glowTex(64)))
+        const core = new Sprite(fxTex.glow())
         core.anchor.set(0.5)
         core.width = core.height = 34
         core.tint = 0xb9a4ff
         core.blendMode = 'add'
         core.y = -12
-        s.addChild(core, this.sprite(cl))
+        s.addChild(core, sprite(cl))
         this.tick_.push(() => (core.alpha = 0.55 + 0.45 * Math.abs(Math.sin(this.t * 5 + i))))
       } else {
         // bậc 1–3 chung một dáng đệ tử
@@ -254,7 +240,7 @@ export class Battle {
           kind === 'man'
             ? painted(`sold:${type}:${side}:${Math.max(3, tier)}`, () => soldier(type, side === 1, tier))
             : painted(`beast:${type}:${this.tint}`, () => beast(type, this.tint))
-        s = this.sprite(p)
+        s = sprite(p)
         const scale = (kind === 'beast' ? 1.7 : 1.75) * (1 - row * 0.06)
         s.scale.set(scale / p.scale)
         if (side === 1 && kind === 'beast') s.scale.x *= -1 // yêu thú nhìn xuống phía quân ta
@@ -322,6 +308,7 @@ export class Battle {
     )
   }
 
+  // Một đòn đánh: hồn (sét), thú (vuốt), thể tu (dậm đất), kiếm tu / pháp tu (kiếm khí / hoả cầu bay tới)
   private attack(side: number, from: Squad, to: Squad, dur: number) {
     const kind: Kind = side ? this.enemy : 'man'
     const sx = from.c.x,
@@ -332,64 +319,84 @@ export class Battle {
     const start = dur * 0.12 + Math.random() * dur * 0.08
     if (kind === 'spirit') return this.bolt(tx, ty, start + travel)
     if (kind === 'beast') {
-      // vuốt: ba vết cào xuống thật nhanh rồi khô tan
-      const claw = ink('claw', clawT, CLAW, 40)
-      claw.c.position.set(tx, ty)
-      claw.c.rotation = (Math.random() - 0.5) * 0.5
-      claw.c.visible = false
-      this.fx.addChild(claw.c)
-      const s0 = claw.c.scale.x
-      this.add(
-        0.34,
-        k => {
-          claw.c.visible = true
-          claw.c.scale.set(s0 * (k < 0.15 ? 0.75 + back(k / 0.15) * 0.3 : 1.05))
-          claw.frame(k < 0.3 ? 0 : ((k - 0.3) / 0.7) * (last + 0.99))
-          claw.c.alpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25
-        },
-        () => claw.c.destroy({ children: true }),
-        start + travel,
-      )
+      this.claw(tx, ty, start + travel)
       this.impact(tx, ty, start + travel, side, to)
       return
     }
     if (from.type === 'the') {
-      // thể tu: dậm đất, sóng chấn nổ ở chỗ địch
-      const ring = ink('ring', ringT, QUAKE[side], 20)
-      ring.c.position.set(tx, to.c.y + 2)
-      ring.c.visible = false
-      this.fx.addChild(ring.c)
-      const r0 = ring.c.scale.x
-      this.add(
-        dur * 0.45,
-        k => {
-          ring.c.visible = true
-          ring.c.scale.set(r0 * (1 + ease(k) * 3.6))
-          ring.frame(k * (last + 0.99))
-          ring.c.alpha = k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4
-        },
-        () => ring.c.destroy({ children: true }),
-        start + travel * 0.7,
-      )
-      // đất nứt toả tia dưới chân địch, mờ dần
-      const crack = new Sprite(texOf(`crack:${side}`, () => crackTex(128, 4 + side)))
-      crack.anchor.set(0.5)
-      crack.tint = hex(C.ink)
-      crack.width = 64
-      crack.height = 22
-      crack.position.set(tx, to.c.y + 2)
-      crack.alpha = 0
-      this.decal.addChild(crack)
-      this.add(
-        1.4,
-        k => (crack.alpha = k < 0.08 ? (k / 0.08) * 0.7 : 0.7 * (1 - (k - 0.08) / 0.92)),
-        () => crack.destroy(),
-        start + travel * 0.7,
-      )
+      this.quake(side, to, tx, dur, start + travel * 0.7)
       this.impact(tx, ty, start + travel * 0.7, side, to)
       this.punch(0.02, start + travel * 0.7)
       return
     }
+    this.missile(side, from, [sx, sy], [tx, ty], start, travel)
+    this.impact(tx, ty, start + travel, side, to)
+  }
+
+  // Vuốt: ba vết cào xuống thật nhanh rồi khô tan
+  private claw(tx: number, ty: number, at: number) {
+    const claw = ink('claw', clawT, CLAW, 40)
+    claw.c.position.set(tx, ty)
+    claw.c.rotation = (Math.random() - 0.5) * 0.5
+    claw.c.visible = false
+    this.fx.addChild(claw.c)
+    const s0 = claw.c.scale.x
+    this.add(
+      0.34,
+      k => {
+        claw.c.visible = true
+        claw.c.scale.set(s0 * (k < 0.15 ? 0.75 + back(k / 0.15) * 0.3 : 1.05))
+        claw.frame(k < 0.3 ? 0 : ((k - 0.3) / 0.7) * (last + 0.99))
+        claw.c.alpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25
+      },
+      () => claw.c.destroy({ children: true }),
+      at,
+    )
+  }
+
+  // Thể tu dậm đất: sóng chấn nổ ở chỗ địch, đất nứt toả tia dưới chân rồi mờ dần
+  private quake(side: number, to: Squad, tx: number, dur: number, at: number) {
+    const ring = ink('ring', ringT, QUAKE[side], 20)
+    ring.c.position.set(tx, to.c.y + 2)
+    ring.c.visible = false
+    this.fx.addChild(ring.c)
+    const r0 = ring.c.scale.x
+    this.add(
+      dur * 0.45,
+      k => {
+        ring.c.visible = true
+        ring.c.scale.set(r0 * (1 + ease(k) * 3.6))
+        ring.frame(k * (last + 0.99))
+        ring.c.alpha = k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4
+      },
+      () => ring.c.destroy({ children: true }),
+      at,
+    )
+    // đất nứt toả tia dưới chân địch, mờ dần
+    const crack = new Sprite(texOf(`crack:${side}`, () => crackTex(128, 4 + side)))
+    crack.anchor.set(0.5)
+    crack.tint = hex(C.ink)
+    crack.width = 64
+    crack.height = 22
+    crack.position.set(tx, to.c.y + 2)
+    crack.alpha = 0
+    this.decal.addChild(crack)
+    this.add(
+      1.4,
+      k => (crack.alpha = k < 0.08 ? (k / 0.08) * 0.7 : 0.7 * (1 - (k - 0.08) / 0.92)),
+      () => crack.destroy(),
+      at,
+    )
+  }
+
+  private missile(
+    side: number,
+    from: Squad,
+    [sx, sy]: readonly [number, number],
+    [tx, ty]: readonly [number, number],
+    start: number,
+    travel: number,
+  ) {
     // kiếm khí (kiếm tu) hoặc hoả cầu (pháp tu) bay tới: bung ra khỏi tay (vượt cỡ rồi thu), bay, trúng thì
     // lướt thêm một đoạn và khô tan. Kiếm khí để lại vệt nét khô phía sau.
     const sword = from.type === 'kiem'
@@ -404,7 +411,7 @@ export class Battle {
       : []
     for (const o of [p, ...ghosts.map(g => g.g)]) ((o.c.visible = false), this.fx.addChild(o.c))
     ghosts.forEach(o => o.g.frame(o.f))
-    const sparkT = texOf('spark', () => sparkTex(24))
+    const sparkT = fxTex.spark()
     const arc = sword ? 8 : 28
     const at = (k: number) => {
       const e = ease(k)
@@ -468,7 +475,6 @@ export class Battle {
       () => p.c.destroy({ children: true }),
       start + travel,
     )
-    this.impact(tx, ty, start + travel, side, to)
   }
 
   // Trúng đòn: loé sáng, mực văng (son nếu quân ta trúng), tia lửa toé, đội bị đánh bật lùi, rung màn
@@ -508,7 +514,7 @@ export class Battle {
       () => sp.destroy(),
       at,
     )
-    const sparkT = texOf('spark', () => sparkTex(24))
+    const sparkT = fxTex.spark()
     for (let i = 0; i < 6; i++) {
       const s = new Sprite(sparkT)
       s.anchor.set(0.5)
@@ -576,7 +582,7 @@ export class Battle {
     for (const q of this.squads[0]) this.bolt(q.c.x, q.c.y - 10, 0.1 + Math.random() * 0.2)
   }
   private flash(at: number, a: number) {
-    const f = new Sprite(texOf('glow', () => glowTex(64)))
+    const f = new Sprite(fxTex.glow())
     f.anchor.set(0.5)
     f.position.set(this.w / 2, this.h / 2)
     f.width = this.w * 3
@@ -594,17 +600,20 @@ export class Battle {
   }
 
   // Công pháp của trưởng lão bên `side`
+  // Công pháp của trưởng lão bên side: mỗi loại một hiệu ứng (thêm loại công pháp ở rules thì thêm một dòng — thiếu là lỗi biên dịch)
   private cast(side: number, dur: number) {
     const sk = this.skills[side]
-    const own = this.squads[side],
-      foe = this.squads[1 - side]
-    if (!sk) return
-    if (sk.kind === 'burst') {
+    if (sk) this.casts[sk.kind](side, dur)
+  }
+  private readonly casts: Record<Skill['kind'], (side: number, dur: number) => void> = {
+    // Mưa kiếm: phi kiếm cắm xuống từng đội địch, vệt nét khô kéo sau chuôi
+    burst: (side, dur) => {
+      const foe = this.squads[1 - side]
       const swordP = painted('flysword', flyingSword)
       for (const q of foe) {
         if (!q.n) continue
         for (let i = 0; i < 6; i++) {
-          const s = this.sprite(swordP, q.c.x + (Math.random() - 0.5) * 40, -20)
+          const s = sprite(swordP, q.c.x + (Math.random() - 0.5) * 40, -20)
           s.scale.set(1.4 / swordP.scale, (side ? -1.4 : 1.4) / swordP.scale)
           if (side === 0) s.rotation = Math.PI
           // vệt nét khô kéo sau chuôi kiếm (37 DU, đầu vệt ở đáy texture)
@@ -630,7 +639,10 @@ export class Battle {
       }
       this.punch(0.04, dur * 0.3)
       this.flash(dur * 0.3, 0.25)
-    } else if (sk.kind === 'shield') {
+    },
+    // Khiên vàng: vòng mực vàng dựng quanh từng đội mình, khô tan ở cuối
+    shield: (side, dur) => {
+      const own = this.squads[side]
       for (const q of own) {
         if (!q.n) continue
         // khiên vàng: vòng mực vàng dựng quanh đội, khô tan ở cuối
@@ -644,10 +656,13 @@ export class Battle {
           () => d.c.destroy({ children: true }),
         )
       }
-    } else if (sk.kind === 'heal') {
+    },
+    // Hồi sinh: linh khí xanh bốc lên từ đội mình
+    heal: (side, dur) => {
+      const own = this.squads[side]
       for (const q of own)
         for (let i = 0; i < 8; i++) {
-          const m = new Sprite(texOf('spark', () => sparkTex(24)))
+          const m = new Sprite(fxTex.spark())
           m.anchor.set(0.5)
           m.tint = hex(C.malachiteL)
           m.blendMode = 'add'
@@ -661,10 +676,13 @@ export class Battle {
             i * 0.05,
           )
         }
-    } else if (sk.kind === 'weaken') {
+    },
+    // Độc vụ: khói tím phủ đội địch
+    weaken: (side, dur) => {
+      const foe = this.squads[1 - side]
       for (const q of foe) {
         if (!q.n) continue
-        const m = new Sprite(texOf('puff', () => puffTex()))
+        const m = new Sprite(fxTex.puff())
         m.anchor.set(0.5)
         m.tint = 0x6a4a9a
         m.position.set(q.c.x, q.c.y - 10)
@@ -675,7 +693,7 @@ export class Battle {
           () => m.destroy(),
         )
       }
-    }
+    },
   }
 
   // Cập nhật số quân: hình ngã xuống (hoặc hồi sinh), số nổi lên
@@ -713,7 +731,7 @@ export class Battle {
 
   // Hình ngã tan thành mực: vài vệt mực bốc lên rồi loãng dần
   private dissolve(x: number, y: number) {
-    const puffT = texOf('puff', () => puffTex())
+    const puffT = fxTex.puff()
     for (let i = 0; i < 4; i++) {
       const m = new Sprite(puffT)
       m.anchor.set(0.5)

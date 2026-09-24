@@ -2,22 +2,9 @@
 // bóng mây lướt qua, hạc bay ngang; đường tới các nơi đã mở (nét đứt mực), đường hành quân (nét son chạy),
 // cờ quân nội suy theo giờ, nhún bước và tung bụi.
 import { Container, Sprite, TilingSprite } from 'pixi.js'
-import {
-  PIGMENT as C,
-  building,
-  crane,
-  dashTex,
-  glowTex,
-  mapTerrain,
-  marchToken,
-  mistTex,
-  paper,
-  puffTex,
-  sparkTex,
-  type Pt,
-} from '@rok/art'
+import { PIGMENT as C, building, crane, dashTex, mapTerrain, marchToken, mistTex, type Pt } from '@rok/art'
 import { HOME, place, type March, type State, type Target } from '@rok/rules'
-import { painted, texOf } from './stage'
+import { hex, painted, texOf, fxTex } from './stage'
 import type { Scene } from './View.svelte'
 
 export const MAP = { w: 400, h: 1000, top: 110, bottom: 170 }
@@ -149,7 +136,7 @@ export class MapScene implements Scene {
   private t = 0
 
   constructor() {
-    const pap = new TilingSprite({ texture: texOf('paper', () => paper(256)), width: 3000, height: MAP_H + 600 })
+    const pap = new TilingSprite({ texture: fxTex.paper(), width: 3000, height: MAP_H + 600 })
     pap.position.set(-1300, -300)
     pap.tileScale.set(0.5)
     pap.tint = 0xf3ead6
@@ -160,7 +147,7 @@ export class MapScene implements Scene {
     terrain.scale.set(1 / t.scale)
     this.body.addChild(terrain, this.routes, this.lines)
     // ánh nước: đốm sáng trôi xuôi dòng, lấp lánh
-    const sparkT = texOf('spark', () => sparkTex(24))
+    const sparkT = fxTex.spark()
     for (let i = 0; i < 22; i++) {
       const g = new Sprite(sparkT)
       g.anchor.set(0.5)
@@ -192,7 +179,7 @@ export class MapScene implements Scene {
     hs.position.set(HOME.x, HOME.y)
     this.body.addChild(hs, this.dust, this.troops)
     // bóng mây lướt chậm qua bản đồ (nhìn từ trên cao xuống)
-    const glowT = texOf('glow', () => glowTex(64))
+    const glowT = fxTex.glow()
     for (const [x0, y0, w, sp] of [
       [60, 250, 260, 5],
       [300, 620, 300, -4],
@@ -276,7 +263,7 @@ export class MapScene implements Scene {
   }
 
   private puff(x: number, y: number) {
-    const d = Object.assign(new Sprite(texOf('puff', () => puffTex())), { t0: this.t })
+    const d = Object.assign(new Sprite(fxTex.puff()), { t0: this.t })
     d.anchor.set(0.5)
     d.tint = hex(C.ochre)
     d.position.set(x + (Math.random() - 0.5) * 4, y)
@@ -287,5 +274,3 @@ export class MapScene implements Scene {
     this.root.destroy({ children: true })
   }
 }
-
-const hex = (c: string) => parseInt(c.slice(1), 16)

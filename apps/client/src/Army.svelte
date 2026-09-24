@@ -11,6 +11,7 @@
     type Army,
     type ElderId,
     type UnitId,
+    isMarching,
   } from '@rok/rules'
   import { Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Section, Slider } from './ui'
@@ -40,9 +41,8 @@
   const idle = $derived(
     ELDER_IDS.filter(e => game.elders[e] !== undefined).sort((a, b) => (game.elders[b] ?? 0) - (game.elders[a] ?? 0)),
   )
-  const busy = (e: ElderId) => game.marches.some(m => m.elder === e)
   let elder = $state<ElderId | null>(null)
-  const lead = $derived(elder && !busy(elder) ? elder : (idle.find(e => !busy(e)) ?? null))
+  const lead = $derived(elder && !isMarching(game, elder) ? elder : (idle.find(e => !isMarching(game, e)) ?? null))
   const home = $derived(UNITS.filter(u => game.troops[u] > 0))
   let picks = $state<Partial<Record<UnitId, number>>>({})
   let touched = $state(false)
@@ -72,7 +72,7 @@
   {#if idle.length}
     <div class="row scroll">
       {#each idle as e (e)}
-        {@const out = busy(e)}
+        {@const out = isMarching(game, e)}
         <span class="pick">
           <Card selected={lead === e} disabled={out} onclick={() => (elder = e)} label={L.elders[e].name}>
             <span class="row">

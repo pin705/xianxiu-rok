@@ -34,7 +34,7 @@
     overscroll-behavior: contain;
     border: 0 solid transparent;
     border-image: var(--sk-scroll);
-    box-shadow: 0 0 40px rgb(20 14 10 / 0.35);
+    box-shadow: 0 0 40px rgb(var(--shade) / 0.35);
   }
   /* desktop: vùng bên phải cột trái, dưới thanh trên; nội dung rộng tối đa ~1040px, lưới mặc định 3 cột */
   @media (min-width: 1024px) and (min-height: 600px) {

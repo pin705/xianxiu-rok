@@ -21,6 +21,7 @@ import type {
   Welcome,
 } from '@rok/protocol'
 import { fold, offsetOf, withReports, type Pending } from './sync'
+import { read, write } from './storage'
 
 export type Ranks = {
   rows: { pid: number; name: string; v: number; hall: number; rank: number }[]
@@ -85,6 +86,16 @@ export function createNet(h: Handlers, lang: string) {
     const byId = new Map(reports.map(r => [r.id, r]))
     for (const r of rep) byId.set(r.id, r)
     reports = [...byId.values()].sort((a, b) => a.id - b.id).slice(-50)
+  }
+
+  // Có phiên mới (khách mới / đăng nhập): giữ token (khác origin), nối tới node đang giữ giới. Trả mã lỗi hoặc null
+  type Signed = { token: string; path: string }
+  function enter(r: Awaited<ReturnType<typeof api<Signed>>>): string | null {
+    if (!r.ok) return r.error
+    if (CROSS) write(AUTH, r.data.token)
+    path = r.data.path
+    connect()
+    return null
   }
 
   async function api<T>(
@@ -310,23 +321,10 @@ export function createNet(h: Handlers, lang: string) {
       connect()
     },
     // Lập tông môn (tài khoản khách + tông môn + phiên), rồi nối
-    async found(name: string): Promise<string | null> {
-      const r = await api<{ token: string; path: string }>('/guest', { name, lang })
-      if (!r.ok) return r.error
-      if (CROSS) write(AUTH, r.data.token)
-      path = r.data.path
-      connect()
-      return null
-    },
+    found: async (name: string) => enter(await api<Signed>('/guest', { name, lang })),
     // Vào tông môn đã có từ máy khác: email + mật khẩu, hoặc mã chuyển máy (dùng một lần), rồi nối như người cũ
-    async login(how: { email: string; pass: string } | { code: string }): Promise<string | null> {
-      const r = await api<{ token: string; path: string }>('code' in how ? '/login/code' : '/login', how)
-      if (!r.ok) return r.error
-      if (CROSS) write(AUTH, r.data.token)
-      path = r.data.path
-      connect()
-      return null
-    },
+    login: async (how: { email: string; pass: string } | { code: string }) =>
+      enter(await api<Signed>('code' in how ? '/login/code' : '/login', how)),
     // Tài khoản: gắn email, đổi mật khẩu, mã chuyển máy, đăng xuất (mọi nơi), xoá. Đăng xuất / xoá xong: quên phiên, ngắt nối
     // (App tải lại trang về màn mở đầu)
     account: {
@@ -409,16 +407,3 @@ export function createNet(h: Handlers, lang: string) {
   }
 }
 export type Net = ReturnType<typeof createNet>
-
-function read(k: string) {
-  try {
-    return localStorage.getItem(k)
-  } catch {
-    return null
-  }
-}
-function write(k: string, v: string) {
-  try {
-    localStorage.setItem(k, v)
-  } catch {}
-}

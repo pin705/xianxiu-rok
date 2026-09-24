@@ -22,16 +22,17 @@
     type BuildingId,
     type ElderId,
     type UnitId,
+    isMarching,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Page, Section, Sheet, Tag } from './ui'
-  import { EMBLEM, L, LOOK, clock, num, sfx } from './lib'
+  import { EMBLEM, L, LOOK, clock, num, type PanelTab } from './lib'
   import { useGame } from './game'
 
   let {
     onfocus,
   }: {
-    onfocus: (id: BuildingId, view?: string | null) => void
+    onfocus: (id: BuildingId, view?: PanelTab | null) => void
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -52,7 +53,6 @@
     TIERS.filter(t => t <= 3 || tierOpen(game, t) || TYPES.some(ty => game.troops[`${ty}${t}`] || out[`${ty}${t}`])),
   )
   const owned = $derived(GEAR_IDS.filter(g => game.gear[g]?.lv))
-  const marching = (e: ElderId) => game.marches.some(m => m.elder === e)
 </script>
 
 <Page title={L.monHa.title} icon="monHa">
@@ -189,7 +189,7 @@
       {/each}
     </Section>
     {@const g = gearOf(game, e)}
-    {@const busy = marching(e)}
+    {@const busy = isMarching(game, e)}
     <Section title={L.forge.slot}>
       <Card>
         <div class="row">
@@ -222,10 +222,12 @@
         {#each owned.filter(x => x !== g) as x (x)}
           {@const on = game.gear[x]!.on}
           <Card
-            onclick={on && marching(on)
+            onclick={on && isMarching(game, on)
               ? undefined
-              : () => act({ type: 'equip', gear: x, elder: e }) && (sfx('reward'), (picking = false))}
-            disabled={!!on && marching(on)}
+              : () => {
+                  if (act({ type: 'equip', gear: x, elder: e }, 'reward')) picking = false
+                }}
+            disabled={!!on && isMarching(game, on)}
             label={L.gear[x]}
           >
             <span class="row">
@@ -257,8 +259,7 @@
             <Button
               size="sm"
               disabled={!pts || tal[i] >= TALENT_MAX || busy}
-              onclick={() => act({ type: 'talent', elder: e, branch: i as 0 | 1 | 2 }) && sfx('reward')}
-              >{L.talent.add}</Button
+              onclick={() => act({ type: 'talent', elder: e, branch: i as 0 | 1 | 2 }, 'reward')}>{L.talent.add}</Button
             >
           </div>
         </Card>
@@ -269,17 +270,13 @@
           wide
           icon="taiTuy"
           disabled={busy}
-          onclick={() => act({ type: 'wash', elder: e }) && sfx('reward')}>{L.talent.wash(game.items.taiTuy)}</Button
+          onclick={() => act({ type: 'wash', elder: e }, 'reward')}>{L.talent.wash(game.items.taiTuy)}</Button
         >
       {/if}
     </Section>
     {#if game.items.boiNguyen && lv < ELDER_MAX}
       <div class="mt-4">
-        <Button
-          variant="gold"
-          wide
-          icon="boiNguyen"
-          onclick={() => act({ type: 'feed', elder: e, n: 1 }) && sfx('reward')}
+        <Button variant="gold" wide icon="boiNguyen" onclick={() => act({ type: 'feed', elder: e, n: 1 }, 'reward')}
           >{L.monHa.feed(game.items.boiNguyen)}</Button
         >
       </div>

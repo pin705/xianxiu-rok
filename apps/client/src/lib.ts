@@ -11,19 +11,8 @@ import {
 import type { ElderId, Element, Report, UnitType } from '@rok/rules'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
-// Lưu trên máy (trình duyệt chặn storage thì vẫn chơi được, chỉ không lưu)
-export const read = (k: string) => {
-  try {
-    return localStorage.getItem(k)
-  } catch {
-    return null // trình duyệt chặn storage: vẫn chơi được, chỉ không lưu
-  }
-}
-export const write = (k: string, v: string) => {
-  try {
-    localStorage.setItem(k, v)
-  } catch {}
-}
+import { read, write } from './storage'
+export { read, write }
 
 // Ngôn ngữ: chọn một lần lúc nạp trang (đổi thì tải lại), chỉ tải bộ chữ của ngôn ngữ đó
 const nav = globalThis.navigator
@@ -144,6 +133,8 @@ export const LOOK: Record<ElderId, Look> = {
   },
 }
 
+// Thẻ trong bảng công trình (mở sẵn từ HUD, nhiệm vụ, trang khác)
+export type PanelTab = 'upgrade' | 'train' | 'alchemy' | 'library' | 'trade' | 'forge' | 'guard'
 export const TABS: readonly { id: TabIcon; unlock: number }[] = [
   { id: 'tongMon', unlock: 1 },
   { id: 'monHa', unlock: 2 },
@@ -187,6 +178,8 @@ export const reportName = (r: Report) =>
         ? spotName(r.spot)
         : L.target({ kind: r.kind, i: r.i })
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE
+// Trận PvP nhìn từ bên thủ: đẩy lui được, hay bị cướp
+export const defended = (r: Report) => (r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''))
 export const marchName = (m: { target: { kind: string; i: number }; foe?: string; spot?: string }) =>
   m.foe ?? (m.target.kind === 'spot' ? spotName(m.spot) : L.target(m.target as Parameters<typeof L.target>[0]))
 
@@ -233,18 +226,55 @@ export function setMuted(m: boolean) {
   write('rok.mute', m ? '1' : '0')
 }
 
-export type Sfx =
-  'tap' | 'build' | 'done' | 'reward' | 'march' | 'hit' | 'win' | 'lose' | 'thunder' | 'err' | 'stamp' | 'whoosh'
+// Tiếng hiệu ứng (tổng hợp bằng Web Audio, không file âm thanh). Thêm tiếng: thêm một dòng vào SOUNDS.
+type Voice = {
+  t: number // lúc bắt đầu (giây, đồng hồ AudioContext)
+  note: (f: number, at: number, dur: number, type: OscillatorType, vol: number) => void
+  // tiếng ồn trắng qua bộ lọc: sấm, va chạm; to: lọc quét tới tần số này (tiếng gió vút)
+  noise: (at: number, dur: number, freq: number, vol: number, to?: number) => void
+}
+const SOUNDS = {
+  tap: ({ note, t }: Voice) => note(980, t, 0.05, 'triangle', 0.04),
+  err: ({ note, t }: Voice) => note(220, t, 0.12, 'square', 0.03),
+  // gõ mõ: hai tiếng trầm
+  build: ({ note, t }: Voice) => {
+    note(392, t, 0.09, 'triangle', 0.08)
+    note(523, t + 0.1, 0.09, 'triangle', 0.08)
+  },
+  // chuông: bồi âm lệch
+  done: ({ note, t }: Voice) => [587, 1620, 3170].forEach((f, i) => note(f, t, 1.6 / (i + 1), 'sine', 0.1 / (i + 1))),
+  reward: ({ note, t }: Voice) => [523, 659, 784, 1047].forEach((f, i) => note(f, t + i * 0.08, 0.4, 'triangle', 0.05)),
+  // trống trận
+  march: ({ note, t }: Voice) => [196, 196, 262].forEach((f, i) => note(f, t + i * 0.16, 0.14, 'triangle', 0.09)),
+  hit: ({ noise, t }: Voice) => noise(t, 0.12, 1800, 0.12),
+  win: ({ note, t }: Voice) =>
+    [392, 523, 659, 784, 1047].forEach((f, i) => note(f, t + i * 0.1, 0.6, 'triangle', 0.06)),
+  lose: ({ note, t }: Voice) => [392, 330, 262].forEach((f, i) => note(f, t + i * 0.22, 0.5, 'sine', 0.07)),
+  thunder: ({ noise, t }: Voice) => noise(t, 1.4, 420, 0.5),
+  // ấn gỗ dập xuống giấy: tiếng thịch trầm
+  stamp: ({ note, noise, t }: Voice) => {
+    noise(t, 0.16, 380, 0.5)
+    note(92, t, 0.14, 'sine', 0.22)
+  },
+  whoosh: ({ noise, t }: Voice) => noise(t, 0.38, 500, 0.35, 3200),
+}
+export type Sfx = keyof typeof SOUNDS
+// rung (điện thoại) kèm vài tiếng
+const BUZZ: Partial<Record<Sfx, number | number[]>> = {
+  done: 18,
+  reward: 18,
+  win: 18,
+  thunder: [40, 30, 80],
+  stamp: 24,
+}
+
 export function sfx(kind: Sfx) {
-  const buzz = (p: number | number[]) => navigator.userActivation?.hasBeenActive && navigator.vibrate?.(p)
-  if (kind === 'done' || kind === 'reward' || kind === 'win') buzz(18)
-  if (kind === 'thunder') buzz([40, 30, 80])
-  if (kind === 'stamp') buzz(24)
+  const buzz = BUZZ[kind]
+  if (buzz !== undefined && navigator.userActivation?.hasBeenActive) navigator.vibrate?.(buzz)
   if (muted) return
   try {
     const ac = audio()
-    const t = ac.currentTime + 0.01
-    const note = (f: number, at: number, dur: number, type: OscillatorType, vol: number) => {
+    const note: Voice['note'] = (f, at, dur, type, vol) => {
       const o = ac.createOscillator()
       const g = ac.createGain()
       o.type = type
@@ -255,8 +285,7 @@ export function sfx(kind: Sfx) {
       o.start(at)
       o.stop(at + dur)
     }
-    // Tiếng ồn trắng qua bộ lọc: sấm, tiếng va chạm. to: lọc quét tới tần số này (tiếng gió vút)
-    const noise = (at: number, dur: number, freq: number, vol: number, to?: number) => {
+    const noise: Voice['noise'] = (at, dur, freq, vol, to) => {
       const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate)
       const d = buf.getChannelData(0)
       for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) ** 2
@@ -271,23 +300,6 @@ export function sfx(kind: Sfx) {
       src.connect(f).connect(g).connect(ac.destination)
       src.start(at)
     }
-    if (kind === 'tap') note(980, t, 0.05, 'triangle', 0.04)
-    if (kind === 'err') note(220, t, 0.12, 'square', 0.03)
-    if (kind === 'build') {
-      note(392, t, 0.09, 'triangle', 0.08) // gõ mõ: hai tiếng trầm
-      note(523, t + 0.1, 0.09, 'triangle', 0.08)
-    }
-    if (kind === 'done') [587, 1620, 3170].forEach((f, i) => note(f, t, 1.6 / (i + 1), 'sine', 0.1 / (i + 1))) // chuông: bồi âm lệch
-    if (kind === 'reward') [523, 659, 784, 1047].forEach((f, i) => note(f, t + i * 0.08, 0.4, 'triangle', 0.05))
-    if (kind === 'march') [196, 196, 262].forEach((f, i) => note(f, t + i * 0.16, 0.14, 'triangle', 0.09)) // trống trận
-    if (kind === 'hit') noise(t, 0.12, 1800, 0.12)
-    if (kind === 'win') [392, 523, 659, 784, 1047].forEach((f, i) => note(f, t + i * 0.1, 0.6, 'triangle', 0.06))
-    if (kind === 'lose') [392, 330, 262].forEach((f, i) => note(f, t + i * 0.22, 0.5, 'sine', 0.07))
-    if (kind === 'thunder') noise(t, 1.4, 420, 0.5)
-    if (kind === 'stamp') {
-      noise(t, 0.16, 380, 0.5) // ấn gỗ dập xuống giấy: tiếng thịch trầm
-      note(92, t, 0.14, 'sine', 0.22)
-    }
-    if (kind === 'whoosh') noise(t, 0.38, 500, 0.35, 3200)
+    SOUNDS[kind]({ t: ac.currentTime + 0.01, note, noise })
   } catch {}
 }

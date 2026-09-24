@@ -32,7 +32,7 @@
     place-items: center;
     width: var(--s);
     height: var(--s);
-    filter: drop-shadow(0 1.5px 2px rgb(20 14 10 / 0.35));
+    filter: drop-shadow(0 1.5px 2px rgb(var(--shade) / 0.35));
   }
   img {
     display: block;

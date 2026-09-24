@@ -1,7 +1,7 @@
 // Một ứng dụng WebGL (PixiJS) cho cả game: cảnh núi, bản đồ… là các Container gắn vào stage.
 // Hình vẽ tay nướng một lần ra texture (bake), sau đó GPU chỉ việc ghép và diễn chuyển động.
 import { Application, Container, Sprite, Texture } from 'pixi.js'
-import { bake, type Asset } from '@rok/art'
+import { bake, beamTex, glowTex, paper, puffTex, rayTex, ringTex, sparkTex, type Asset } from '@rok/art'
 
 export const DPR = Math.min(globalThis.devicePixelRatio || 1, 2)
 // Cảnh rộng 400 DU. Màn hẹp: cả bề ngang, tối đa bề rộng cột (--col: 480px điện thoại, 620px máy tính bảng).
@@ -24,7 +24,6 @@ export const sceneX = (k: number) => railPx() + (innerWidth - railPx() - dockPx(
 // Độ phân giải texture: đủ nét cho màn hình hiện tại, làm tròn để cache không vỡ khi đổi cỡ nhỏ
 export const texScale = () => Math.ceil(cssPerDU() * DPR * 4) / 4
 
-let app: Application | undefined
 let booting: Promise<Application> | undefined
 
 export function getApp() {
@@ -41,11 +40,58 @@ export function getApp() {
     })
     a.canvas.setAttribute('aria-hidden', 'true')
     Object.assign(a.canvas.style, { position: 'fixed', inset: '0', width: '100%', height: '100%', touchAction: 'none' })
-    return (app = a)
+    return a
   })()
   return booting
 }
-export const appNow = () => app
+
+// Gắn một cảnh vào ứng dụng WebGL chung, chạy tick mỗi khung; trả hàm gỡ (gọi được cả khi app chưa kịp khởi động).
+// host: canvas vào đây, phủ lên mọi cảnh khác (xem trận) — gỡ ra thì trả về làm nền trang. Không có: canvas là nền trang.
+// Mất context WebGL (máy yếu, nhiều tab): ẩn cảnh tới khi có lại.
+type Scene = { root: Container; destroy(): void }
+export function mountScene<S extends Scene>(o: {
+  make: (app: Application) => S
+  tick: (s: S, app: Application) => void
+  ready?: (s: S) => void
+  host?: HTMLElement
+}): () => void {
+  let dead = false
+  let off = () => {}
+  void getApp().then(app => {
+    if (dead) return
+    const covered = o.host ? app.stage.children.filter(c => c.visible) : []
+    const s = o.make(app)
+    for (const c of covered) c.visible = false
+    app.stage.addChild(s.root)
+    if (o.host) o.host.prepend(app.canvas)
+    else if (!app.canvas.isConnected) document.body.prepend(app.canvas)
+    const run = () => o.tick(s, app)
+    app.ticker.add(run)
+    let shown = true
+    const lost = () => {
+      shown = s.root.visible
+      s.root.visible = false
+    }
+    const restored = () => {
+      s.root.visible = shown
+    }
+    app.canvas.addEventListener('webglcontextlost', lost)
+    app.canvas.addEventListener('webglcontextrestored', restored)
+    o.ready?.(s)
+    off = () => {
+      app.ticker.remove(run)
+      app.canvas.removeEventListener('webglcontextlost', lost)
+      app.canvas.removeEventListener('webglcontextrestored', restored)
+      s.destroy()
+      for (const c of covered) c.visible = true
+      if (o.host) document.body.prepend(app.canvas)
+    }
+  })
+  return () => {
+    dead = true
+    off()
+  }
+}
 
 // ---------- Texture ----------
 
@@ -72,10 +118,32 @@ export function texOf(key: string, make: () => HTMLCanvasElement | OffscreenCanv
   return t
 }
 
+export const hex = (c: string) => parseInt(c.slice(1), 16) // '#rrggbb' → số màu (tint)
+// Sprite từ texture nướng sẵn: đúng điểm neo, đúng cỡ DU
+export function sprite(p: Painted, x = 0, y = 0) {
+  const s = new Sprite(p.tex)
+  s.anchor.set(p.anchor[0], p.anchor[1])
+  s.scale.set(1 / p.scale)
+  s.position.set(x, y)
+  return s
+}
+
+// Texture chung của các cảnh: mỗi khoá đúng một cỡ (cùng khoá khác cỡ thì cache trả nhầm) — gọi fxTex.spark()…
+export const fxTex = {
+  spark: () => texOf('spark', () => sparkTex(24)),
+  glow: () => texOf('glow', () => glowTex(64)),
+  puff: () => texOf('puff', () => puffTex()),
+  paper: () => texOf('paper', () => paper(256)),
+  ring: () => texOf('ring', () => ringTex(160, 48, 2.5)),
+  ray: () => texOf('ray', () => rayTex()),
+  beam: () => texOf('beam', () => beamTex()),
+}
+
 // ---------- Nét VFX ba lớp ----------
 // Cùng một hình trắng vẽ ba bề ngang: bóng mực (thường) → sắc khoáng (thường) → lõi sáng (cộng).
 // Trên nền giấy sáng mà chỉ cộng sáng thì hình bị loá mất; lớp mực giữ dáng, chỉ lõi mới phát sáng.
 export type Hue = readonly [ink: string, pigment: string, glow: string]
+export const THUNDER: Hue = ['#7a5cff', '#cbb8ff', '#ffffff'] // sét: lớp ngoài tím sáng làm quầng trên trời tối
 type Canvas = HTMLCanvasElement | OffscreenCanvas
 const LAYERS = [
   [1, 'normal', 0.9],
@@ -101,7 +169,7 @@ export function ink(
   const layers = LAYERS.map(([, blend, alpha], li) => {
     const s = new Sprite(tex(li, 0))
     s.anchor.set(0.5)
-    s.tint = parseInt(hue[li].slice(1), 16)
+    s.tint = hex(hue[li])
     s.blendMode = blend
     s.alpha = alpha
     return c.addChild(s)

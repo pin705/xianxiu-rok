@@ -4,7 +4,7 @@
   import { Icon, Portrait, paintedUrl, portraitRing, type Emblem } from '@rok/art'
   import { Bag, Button, Card, Medal, Stat } from './ui'
   import { Battle } from './world/battle'
-  import { cssPerDU, getApp } from './world/stage'
+  import { cssPerDU, mountScene } from './world/stage'
   import { EMBLEM, L, LOOK, num, reportName, sfx } from './lib'
 
   let {
@@ -50,40 +50,31 @@
   $effect(() => {
     const rep = shown
     if (!rep || !host) return
-    let dead = false
-    let undo = () => {}
-    getApp().then(app => {
-      if (dead) return
-      const k = cssPerDU()
-      const skills: [Skill | undefined, Skill | undefined] = [
-        rep.fights[0]?.a.elder ? ELDERS[rep.fights[0].a.elder].skill : undefined,
-        rep.kind === 'sect'
-          ? SECTS[rep.i]?.elder.skill
-          : rep.fights[0]?.b.elder
-            ? ELDERS[rep.fights[0].b.elder].skill
-            : undefined, // PvP: trưởng lão bên kia
-      ]
-      const b = new Battle(rep, skills, innerWidth / k, innerHeight / k)
-      b.root.scale.set(k)
-      const shownBefore = app.stage.children.filter(c => c.visible)
-      shownBefore.forEach(c => (c.visible = false))
-      app.stage.addChild(b.root)
-      host!.prepend(app.canvas)
-      const tick = () => b.tick(app.ticker.deltaMS / 1000)
-      app.ticker.add(tick)
-      battle = b
-      if (import.meta.env.DEV) Object.assign(globalThis, { rokBattle: b })
-      undo = () => {
-        app.ticker.remove(tick)
-        b.destroy()
-        shownBefore.forEach(c => (c.visible = true))
-        document.body.prepend(app.canvas)
-        battle = undefined
-      }
+    const unmount = mountScene({
+      host,
+      make: () => {
+        const k = cssPerDU()
+        const skills: [Skill | undefined, Skill | undefined] = [
+          rep.fights[0]?.a.elder ? ELDERS[rep.fights[0].a.elder].skill : undefined,
+          rep.kind === 'sect'
+            ? SECTS[rep.i]?.elder.skill
+            : rep.fights[0]?.b.elder
+              ? ELDERS[rep.fights[0].b.elder].skill
+              : undefined, // PvP: trưởng lão bên kia
+        ]
+        const b = new Battle(rep, skills, innerWidth / k, innerHeight / k)
+        b.root.scale.set(k)
+        return b
+      },
+      tick: (b, app) => b.tick(app.ticker.deltaMS / 1000),
+      ready: b => {
+        battle = b
+        if (import.meta.env.DEV) Object.assign(globalThis, { rokBattle: b })
+      },
     })
     return () => {
-      dead = true
-      undo()
+      unmount()
+      battle = undefined
     }
   })
   const pace = $derived(fast ? 0.42 : 0.85)
@@ -286,7 +277,8 @@
     outline: none;
   }
   /* mọi phần HTML nằm trên canvas */
-  .replay > :not(.stage) {
+  /* :where: không cộng độ ưu tiên, để .mid / .cutin phía dưới đặt lại vị trí mà không cần !important */
+  .replay > :where(:not(.stage)) {
     position: absolute;
     z-index: 1;
     left: 50%;
@@ -304,7 +296,7 @@
     display: grid;
     justify-items: center;
     gap: var(--sp-2);
-    translate: -50% -50% !important;
+    translate: -50% -50%;
   }
   .foe b,
   .ours b,
@@ -319,10 +311,10 @@
   /* ---- Xuất chiêu: dải xiên quét ngang cả màn ---- */
   .cutin {
     top: 64%;
-    left: 0 !important;
-    width: 100% !important;
+    left: 0;
+    width: 100%;
     height: 104px;
-    translate: 0 -50% !important;
+    translate: 0 -50%;
     display: flex;
     align-items: center;
     gap: var(--sp-3);
@@ -342,7 +334,7 @@
     z-index: -1;
     border: 0 solid transparent;
     border-image: var(--sk-toast);
-    filter: drop-shadow(0 6px 10px rgb(20 14 10 / 0.4));
+    filter: drop-shadow(0 6px 10px rgb(var(--shade) / 0.4));
     rotate: -3deg;
     animation: band-in var(--d) var(--ease) both;
   }
@@ -356,7 +348,7 @@
     position: relative;
     display: grid;
     place-items: center;
-    filter: drop-shadow(0 4px 8px rgb(20 14 10 / 0.45));
+    filter: drop-shadow(0 4px 8px rgb(var(--shade) / 0.45));
     animation: slide-in var(--d) var(--spring) both;
   }
   .who::after {

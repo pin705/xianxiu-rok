@@ -14,16 +14,17 @@
     type BuildingId,
     type JobKind,
     type PillId,
+    isMarching,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Page, Section, Stat } from './ui'
-  import { L, LOOK, clock, num, sfx } from './lib'
+  import { L, LOOK, clock, num, sfx, type PanelTab } from './lib'
   import { useGame } from './game'
 
   let {
     onfocus,
   }: {
-    onfocus: (id: BuildingId, view?: string | null) => void
+    onfocus: (id: BuildingId, view?: PanelTab | null) => void
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -47,7 +48,7 @@
   } as const satisfies Record<PillId, string>
   const pickFrom = $derived({
     feed: ELDER_IDS.filter(e => has(e) && elderLevel(game.elders[e]) < ELDER_MAX),
-    wash: ELDER_IDS.filter(e => has(e) && talentUsed(game, e) && !game.marches.some(m => m.elder === e)),
+    wash: ELDER_IDS.filter(e => has(e) && talentUsed(game, e) && !isMarching(game, e)),
   })
   const focus = $derived(game.buffs.find(b => b.src === 'ngungThan'))
   // Hồi Xuân chỉ chữa thương binh chưa nằm trong đợt đang chữa
@@ -82,17 +83,14 @@
                 <p class="t-small t-soft t-lore">{L.baoKho.auto}</p>
               {:else if n && mode === 'cure'}
                 <div class="row">
-                  <Button
-                    size="sm"
-                    icon="heal"
-                    disabled={!curable}
-                    onclick={() => act({ type: 'cure' }) && sfx('reward')}>{L.baoKho.cure}</Button
+                  <Button size="sm" icon="heal" disabled={!curable} onclick={() => act({ type: 'cure' }, 'reward')}
+                    >{L.baoKho.cure}</Button
                   >
                 </div>
               {:else if mode === 'focus' && (n || focus)}
                 {#if focus}<p class="t-small t-good">{L.baoKho.focusLeft(clock(focus.until - now))}</p>{/if}
                 {#if n}<div class="row">
-                    <Button size="sm" onclick={() => act({ type: 'focus' }) && sfx('reward')}>{L.baoKho.focus}</Button>
+                    <Button size="sm" onclick={() => act({ type: 'focus' }, 'reward')}>{L.baoKho.focus}</Button>
                   </div>{/if}
               {:else if n && using === p}
                 <p class="t-small t-strong t-gold">
@@ -107,7 +105,7 @@
                       wide
                       trail={clock(j.finishAt - now)}
                       onclick={() =>
-                        act({ type: 'speed', job: k, n: 1, ...(p === 'daiTuKhi' && { pill: p }) }) && sfx('reward')}
+                        act({ type: 'speed', job: k, n: 1, ...(p === 'daiTuKhi' && { pill: p }) }, 'reward')}
                       >{L.jobs[k]}</Button
                     >
                   {/each}

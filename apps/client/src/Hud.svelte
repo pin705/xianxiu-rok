@@ -21,7 +21,7 @@
   } from '@rok/rules'
   import { Icon, Portrait, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon, type Look } from '@rok/art'
   import { Badge, Bag, IconButton, Meter, Tag } from './ui'
-  import { L, TABS, clock, num, progress, sfx, visitTab, visitedTabs, type Tab } from './lib'
+  import { L, TABS, clock, num, progress, sfx, visitTab, visitedTabs, type Tab, type PanelTab } from './lib'
 
   let {
     game,
@@ -52,7 +52,7 @@
     ondaily: () => void
     onranks?: () => void // chạm chân dung: xếp hạng
     onmail?: () => void
-    onfocus: (id: BuildingId, view?: string) => void // mở bảng công trình (danh sách việc đang chạy)
+    onfocus: (id: BuildingId, view?: PanelTab) => void // mở bảng công trình (danh sách việc đang chạy)
   } = $props()
 
   const MASTER: Look = {
@@ -348,7 +348,7 @@
     display: grid;
     gap: var(--sp-2);
     padding: calc(var(--sp-2) + var(--safe-t)) 20px 18px;
-    filter: drop-shadow(0 4px 10px rgb(20 14 10 / 0.18));
+    filter: drop-shadow(0 4px 10px rgb(var(--shade) / 0.18));
   }
   .who {
     gap: var(--sp-2);
@@ -489,7 +489,7 @@
     color: var(--text);
     border: 0 solid transparent;
     border-image: var(--sk-card);
-    filter: drop-shadow(0 4px 8px rgb(20 14 10 / 0.3));
+    filter: drop-shadow(0 4px 8px rgb(var(--shade) / 0.3));
   }
   .quest small {
     --gap: 6px;
@@ -505,7 +505,7 @@
   }
   .done {
     border-image: var(--sk-card-glow);
-    filter: drop-shadow(0 0 12px rgb(236 208 138 / 0.75));
+    filter: drop-shadow(0 0 12px rgb(var(--gold-glow) / 0.75));
   }
   .claim {
     pointer-events: none;
@@ -562,11 +562,11 @@
   }
   @keyframes glow {
     0% {
-      filter: drop-shadow(0 0 0 rgb(236 208 138 / 0.9));
+      filter: drop-shadow(0 0 0 rgb(var(--gold-glow) / 0.9));
     }
     60%,
     100% {
-      filter: drop-shadow(0 0 9px rgb(236 208 138 / 0));
+      filter: drop-shadow(0 0 9px rgb(var(--gold-glow) / 0));
     }
   }
 
@@ -633,7 +633,7 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     padding: 12px 14px calc(14px + var(--safe-b));
-    filter: drop-shadow(0 -4px 10px rgb(20 14 10 / 0.18));
+    filter: drop-shadow(0 -4px 10px rgb(var(--shade) / 0.18));
   }
   .tabs button {
     display: grid;
@@ -748,7 +748,7 @@
       align-content: start;
       gap: 2px;
       padding: var(--sp-4) var(--sp-4) 0;
-      filter: drop-shadow(4px 0 10px rgb(20 14 10 / 0.18));
+      filter: drop-shadow(4px 0 10px rgb(var(--shade) / 0.18));
     }
     .tabs button {
       display: flex;
@@ -791,7 +791,7 @@
       cursor: pointer;
     }
     .quest:hover:not(.done) {
-      filter: drop-shadow(0 4px 12px rgb(236 208 138 / 0.35));
+      filter: drop-shadow(0 4px 12px rgb(var(--gold-glow) / 0.35));
     }
     .daily {
       align-self: flex-start;

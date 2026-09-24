@@ -1,10 +1,10 @@
 <script lang="ts">
   // Hộp thư: thư (quà nhận ngay tại đây) và chiến báo (chạm để xem lại trận), mới nhất trên cùng.
   import { mailText } from '@rok/i18n'
-  import { RESOURCES, count, type Mail, type Report } from '@rok/rules'
+  import { RESOURCES, count, type Mail, type Report, type Res } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Sheet, Tabs, fly } from './ui'
-  import { L, num, reportName, sfx } from './lib'
+  import { L, defended, num, reportName, sfx } from './lib'
   import { useGame } from './game'
 
   let {
@@ -29,6 +29,19 @@
   const list = $derived([...game.reports].reverse())
   const mails = $derived([...game.mail].reverse())
   const text = (m: Mail) => mailText(L, m)
+  const total = (b?: Partial<Record<Res, number>>) => RESOURCES.reduce((n, x) => n + (b?.[x] ?? 0), 0)
+  // Dòng phụ: thắng / thua (PvP: đẩy lui hay bị cướp), tài nguyên mất, bao lâu trước, thương vong, chiến lợi phẩm
+  function line(r: Report) {
+    const parts = [r.def ? defended(r) : r.win ? L.report.win : L.report.lose]
+    const lost = total(r.lost),
+      hurt = count(r.hurt),
+      loot = total(r.gain.res)
+    if (lost) parts.push(`${L.pvp.lost} −${num(lost)}`)
+    parts.push(L.ago(Math.max(60_000, game.time - r.at)))
+    if (hurt) parts.push(`${L.report.hurt} ${num(hurt)}`)
+    if (loot) parts.push(`+${num(loot)}`)
+    return parts.join(' · ')
+  }
 </script>
 
 <Sheet {open} {onclose} title={tab === 'mail' ? L.mail.title : L.report.title}>
@@ -79,27 +92,13 @@
     {#if !list.length}<p class="center t-lore mt-4">{L.report.none}</p>{/if}
     <ul class="stack mt-2">
       {#each list as r (r.id)}
-        {@const loot = RESOURCES.reduce((s, x) => s + (r.gain.res[x] ?? 0), 0)}
         <li>
           <Card onclick={() => onopen(r)} label={reportName(r)}>
             <span class="row">
               <Medal emblem={r.win ? 'win' : 'lose'} tone={r.win ? 'red' : 'ink'} size={38} />
               <span class="grow stack" style:--gap="1px">
                 <b>{reportName(r)}{r.f !== undefined ? ` · ${L.level(r.f + 1)}` : ''}</b>
-                <small class="t-small t-soft">
-                  {r.def
-                    ? r.win
-                      ? L.pvp.repelled(r.foe ?? '')
-                      : L.pvp.raided(r.foe ?? '')
-                    : r.win
-                      ? L.report.win
-                      : L.report.lose}{#if r.lost && RESOURCES.some(x => r.lost?.[x])}
-                    · {L.pvp.lost} −{num(RESOURCES.reduce((sum, x) => sum + (r.lost?.[x] ?? 0), 0))}{/if} · {L.ago(
-                    Math.max(60_000, game.time - r.at),
-                  )}{#if count(r.hurt)}
-                    · {L.report.hurt} {num(count(r.hurt))}{/if}{#if loot}
-                    · +{num(loot)}{/if}
-                </small>
+                <small class="t-small t-soft">{line(r)}</small>
               </span>
               <Icon name="arrow" size={16} />
             </span>

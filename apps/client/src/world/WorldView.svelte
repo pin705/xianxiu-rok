@@ -8,7 +8,7 @@
   import { Icon } from '@rok/art'
   import { Button, Card } from '../ui'
   import { L, clock, keyBlocked } from '../lib'
-  import { getApp, railPx } from './stage'
+  import { mountScene, railPx } from './stage'
   import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Pick, type Rel } from './worldmap'
   import { useGame } from '../game'
 
@@ -123,16 +123,11 @@
   }
 
   onMount(() => {
-    let dead = false
-    let off = () => {}
     addEventListener('keydown', keys)
-    getApp().then(app => {
-      if (dead) return
-      if (!app.canvas.isConnected) document.body.prepend(app.canvas)
-      const s = new WorldScene(info.map)
-      app.stage.addChild(s.root)
-      scene = s
-      const tick = () => {
+    const unmount = mountScene({
+      make: () => new WorldScene(info.map),
+      ready: s => (scene = s),
+      tick: s => {
         // quán tính: trượt tiếp rồi chậm dần khi thả tay
         if (!pts.size && (Math.abs(vel.x) > 0.3 || Math.abs(vel.y) > 0.3)) {
           cam = clamp({ ...cam, x: cam.x - vel.x / cam.z, y: cam.y - vel.y / cam.z })
@@ -140,24 +135,11 @@
         }
         const c = center()
         s.tick(cam, c.x, c.y, now)
-      }
-      app.ticker.add(tick)
-      // mất context WebGL (máy yếu, nhiều tab): dựng lại cảnh khi có lại
-      const lost = () => (s.root.visible = false)
-      const back = () => (s.root.visible = true)
-      app.canvas.addEventListener('webglcontextlost', lost)
-      app.canvas.addEventListener('webglcontextrestored', back)
-      off = () => {
-        app.ticker.remove(tick)
-        app.canvas.removeEventListener('webglcontextlost', lost)
-        app.canvas.removeEventListener('webglcontextrestored', back)
-        s.destroy()
-      }
+      },
     })
     return () => {
-      dead = true
       removeEventListener('keydown', keys)
-      off()
+      unmount()
     }
   })
 
@@ -244,7 +226,7 @@
     position: absolute;
     translate: -50% 0;
     padding: 0 5px;
-    font-size: 11px;
+    font-size: var(--fs-1);
     font-weight: 700;
     color: var(--silk);
     white-space: nowrap;

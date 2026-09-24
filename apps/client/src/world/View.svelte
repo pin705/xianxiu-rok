@@ -10,7 +10,7 @@
   // lớp `hits` (nút vô hình, cuộn theo) cho chạm/bàn phím/trình đọc màn hình, lớp `pins` (HTML hiển thị)
   // dịch theo camera trong cùng khung hình với WebGL nên không lệch. k = px CSS mỗi DU.
   import { onMount, type Snippet } from 'svelte'
-  import { cssPerDU, getApp, sceneX } from './stage'
+  import { cssPerDU, mountScene, sceneX } from './stage'
 
   let {
     make,
@@ -51,8 +51,6 @@
   let left = -1
 
   onMount(() => {
-    let dead = false
-    let off = () => {}
     const resize = () => (k = cssPerDU() * zoom)
     addEventListener('resize', resize)
     const wheel = (e: WheelEvent) => {
@@ -70,13 +68,10 @@
     requestAnimationFrame(
       () => scroller && (scroller.scrollTop = (scroller.scrollHeight - scroller.clientHeight) * start),
     )
-    getApp().then(app => {
-      if (dead) return
-      if (!app.canvas.isConnected) document.body.prepend(app.canvas)
-      const s = make()
-      app.stage.addChild(s.root)
-      scene = s
-      const tick = () => {
+    const unmount = mountScene({
+      make,
+      ready: s => (scene = s),
+      tick: (s, app) => {
         if (!s.root.visible) return
         const kk = cssPerDU() * zoom
         const top = scroller?.scrollTop ?? 0
@@ -91,19 +86,13 @@
         }
         if (layer) layer.style.transform = `translate3d(0, ${-top}px, 0)`
         s.tick(app.ticker.deltaMS / 1000, top / kk)
-      }
-      app.ticker.add(tick)
-      off = () => {
-        app.ticker.remove(tick)
-        s.destroy()
-      }
+      },
     })
     return () => {
-      dead = true
       removeEventListener('resize', resize)
       removeEventListener('keydown', keys)
       scroller?.removeEventListener('wheel', wheel)
-      off()
+      unmount()
     }
   })
 

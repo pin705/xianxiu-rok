@@ -1,10 +1,10 @@
 <script lang="ts">
   // Hộ Sơn Đại Trận: khiên, trưởng lão trấn thủ, quân giữ nhà (mọi đệ tử đang ở tông môn), thành tích tranh đoạt.
-  import { ELDER_IDS, GUARD_STEP, count, elderLevel, might } from '@rok/rules'
+  import { ELDER_IDS, GUARD_STEP, count, elderLevel, might, isMarching } from '@rok/rules'
   import { defense, guardOf } from '@rok/rules/world'
   import { Icon, Portrait } from '@rok/art'
   import { Card, Section, Stat } from './ui'
-  import { L, LOOK, clock, num, sfx } from './lib'
+  import { L, LOOK, clock, num } from './lib'
   import { useGame } from './game'
 
   const g = useGame()
@@ -14,7 +14,6 @@
 
   const elders = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined))
   const on = $derived(guardOf(game))
-  const away = (e: string) => game.marches.some(m => m.elder === e)
 </script>
 
 <Card>
@@ -50,14 +49,14 @@
       <li>
         <Card
           selected={game.guard === e}
-          onclick={() => act({ type: 'guard', elder: e }) && sfx('tap')}
+          onclick={() => act({ type: 'guard', elder: e }, 'tap')}
           label={L.elders[e].name}
         >
           <span class="row" style:--gap="6px">
-            <Portrait look={LOOK[e]} size={30} dim={away(e)} />
+            <Portrait look={LOOK[e]} size={30} dim={isMarching(game, e)} />
             <span class="stack" style:--gap="0"
               ><small class="t-small t-strong t-ellipsis">{L.elders[e].name}</small><small class="t-tiny t-soft"
-                >{L.lv(elderLevel(game.elders[e]))}{away(e) ? ` · ${L.monHa.out}` : ''}</small
+                >{L.lv(elderLevel(game.elders[e]))}{isMarching(game, e) ? ` · ${L.monHa.out}` : ''}</small
               ></span
             >
           </span>

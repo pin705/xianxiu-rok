@@ -62,7 +62,11 @@
             variant="gold"
             size="sm"
             disabled={!done}
-            onclick={e => claim() && (sfx('reward'), fly(e.currentTarget as Element, each))}>{L.quest.claim}</Button
+            onclick={e => {
+              if (!claim()) return
+              sfx('reward')
+              fly(e.currentTarget as Element, each)
+            }}>{L.quest.claim}</Button
           >
         {/if}
       </div>
@@ -89,7 +93,11 @@
             variant="gold"
             size="sm"
             disabled={!ready}
-            onclick={e => claim() && (sfx('win'), fly(e.currentTarget as Element, items))}>{L.daily.open}</Button
+            onclick={e => {
+              if (!claim()) return
+              sfx('win')
+              fly(e.currentTarget as Element, items)
+            }}>{L.daily.open}</Button
           >
         {/if}
       </div>
@@ -138,9 +146,9 @@
                     variant="gold"
                     size="sm"
                     disabled={!ready}
-                    onclick={e =>
-                      act({ type: 'event', i }) && (sfx('reward'), fly(e.currentTarget as Element, r.res ?? {}))}
-                    >{L.event.claim}</Button
+                    onclick={e => {
+                      if (act({ type: 'event', i }, 'reward')) fly(e.currentTarget as Element, r.res ?? {})
+                    }}>{L.event.claim}</Button
                   >
                 {/if}
               </div>

@@ -196,7 +196,7 @@
     padding: 0 var(--sp-5) calc(56px + var(--safe-b));
     color: var(--silk);
     text-align: center;
-    background: linear-gradient(transparent 45%, rgb(20 14 10 / 0.72));
+    background: linear-gradient(transparent 45%, rgb(var(--shade) / 0.72));
   }
   /* desktop: trải toàn màn hình, chữ lớn hơn */
   @media (min-width: 1024px) and (min-height: 600px) {
@@ -212,7 +212,7 @@
   }
   .dim {
     justify-content: center;
-    background: rgb(20 14 10 / 0.66);
+    background: rgb(var(--shade) / 0.66);
   }
   /* Huy hiệu tông môn (núi, mặt trời son) đập xuống như ấn, rồi tên game hiện ra */
   .logo {
@@ -220,7 +220,7 @@
     top: calc(64px + var(--safe-t));
     left: 50%;
     translate: -50% 0;
-    filter: drop-shadow(0 6px 14px rgb(20 14 10 / 0.45));
+    filter: drop-shadow(0 6px 14px rgb(var(--shade) / 0.45));
     animation: slam 0.55s 0.5s var(--spring) both;
   }
   .name {

@@ -20,7 +20,7 @@
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Section, Stepper, Tag } from './ui'
   import JobRow from './JobRow.svelte'
-  import { EMBLEM, L, clock, num, sfx } from './lib'
+  import { EMBLEM, L, clock, num } from './lib'
   import { useGame } from './game'
 
   const g = useGame()
@@ -59,7 +59,7 @@
         icon="heal"
         trail={clock(healTime(game, game.wounded))}
         disabled={!!healErr}
-        onclick={() => act({ type: 'heal' }) && sfx('reward')}>{L.alchemy.healAll}</Button
+        onclick={() => act({ type: 'heal' }, 'reward')}>{L.alchemy.healAll}</Button
       >
     {/if}
   {:else if !game.heal}
@@ -105,6 +105,6 @@
     icon="cauldron"
     trail={clock(brewTime(game, pill, n))}
     disabled={!!brewErr}
-    onclick={() => act({ type: 'brew', pill, n }) && sfx('build')}>{L.alchemy.go} {n}</Button
+    onclick={() => act({ type: 'brew', pill, n }, 'build')}>{L.alchemy.go} {n}</Button
   >
 </Section>

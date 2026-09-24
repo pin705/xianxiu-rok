@@ -4,7 +4,7 @@
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Section } from './ui'
   import JobRow from './JobRow.svelte'
-  import { L, clock, sfx } from './lib'
+  import { L, clock } from './lib'
   import { useGame } from './game'
 
   const g = useGame()
@@ -55,7 +55,7 @@
                     size="sm"
                     trail={clock(techTime(t, lv + 1))}
                     disabled={!!err}
-                    onclick={() => act({ type: 'study', tech: t }) && sfx('build')}>{L.library.go}</Button
+                    onclick={() => act({ type: 'study', tech: t }, 'build')}>{L.library.go}</Button
                   >
                 </div>
               {/if}

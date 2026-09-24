@@ -28,8 +28,6 @@
   --good-inv: var(--malachite-l);
   --bad: var(--cinnabar);
   --bad-inv: var(--cinnabar-l);
-  --accent: var(--gold);
-  --accent-inv: var(--gold-l);
 
   /* Khoảng cách, hình khối */
   --sp-1: 4px;
@@ -37,9 +35,7 @@
   --sp-3: 12px;
   --sp-4: 16px;
   --sp-5: 24px;
-  --sp-6: 32px;
   --cut: 7px; /* góc vát của thẻ bài, nút */
-  --hair: 1.5px;
   --col: 480px; /* cột game trên màn hẹp, bảng giữa màn hình */
   /* Desktop (khối @media cuối file đặt lại): cột trái điều hướng, thanh trên, ngăn kéo phải */
   --rail: 0px;
@@ -48,10 +44,10 @@
   --safe-t: env(safe-area-inset-top);
   --safe-b: env(safe-area-inset-bottom);
 
-  /* Bóng mực */
-  --shadow-1: 0 2px 4px rgb(33 28 23 / 0.25);
-  --shadow-2: 0 8px 22px rgb(33 28 23 / 0.35);
-  --shadow-3: 0 18px 48px rgb(20 14 10 / 0.5);
+  /* Bóng mực, quầng vàng: kênh rgb để component tự đặt độ đậm — rgb(var(--shade) / 0.35) */
+  --shade: 20 14 10;
+  --gold-glow: 236 208 138;
+  --shadow-3: 0 18px 48px rgb(var(--shade) / 0.5);
   --text-shadow-inv: 0 1px 2px rgb(0 0 0 / 0.6);
 
   /* Chuyển động */
@@ -142,7 +138,7 @@ dialog {
   overflow: visible;
 }
 dialog::backdrop {
-  background: rgb(20 14 10 / 0.5);
+  background: rgb(var(--shade) / 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {

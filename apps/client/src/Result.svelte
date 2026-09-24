@@ -76,7 +76,7 @@
   .big {
     display: grid;
     justify-items: center;
-    filter: drop-shadow(0 0 18px rgb(236 208 138 / 0.75));
+    filter: drop-shadow(0 0 18px rgb(var(--gold-glow) / 0.75));
     animation: stamp 0.7s 0.1s var(--spring) both;
   }
   .spin {

@@ -59,13 +59,16 @@
     TABS,
     forgetP1,
     isMuted,
+    defended,
     keyBlocked,
     read,
     reportName,
     setMuted,
     sfx,
     write,
+    type Sfx,
     type Tab,
+    type PanelTab,
   } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
@@ -78,7 +81,7 @@
   let entered = $state(false) // màn tiêu đề đã xong (đợi thêm welcome của server nếu mạng chậm)
   let tab: Tab = $state('tongMon')
   let selected: BuildingId | null = $state(null)
-  let view: string | null = $state(null) // thẻ mở sẵn trong bảng công trình
+  let view: PanelTab | null = $state(null) // thẻ mở sẵn trong bảng công trình
   let target: Target | null = $state(null)
   let replay: Report | null = $state(null)
   let outcome: Outcome | null = $state(null) // kết quả độ kiếp / luân hồi
@@ -194,14 +197,7 @@
     }
     if (reports)
       for (const r of next.reports.filter(r => r.id >= prev.nextId && r !== tr))
-        toast(
-          r.def
-            ? r.win
-              ? L.pvp.repelled(r.foe ?? '')
-              : L.pvp.raided(r.foe ?? '')
-            : L.report.fresh(reportName(r), r.win),
-          { report: r, bad: !r.win },
-        )
+        toast(r.def ? defended(r) : L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
     const newest = next.mail.at(-1)
     if (newest && newest.id >= prev.nextId) toast(`${L.mail.title}: ${mailText(L, newest)[0]}`)
     if (next.stats.trained > prev.stats.trained) toast(L.away.trained(next.stats.trained - prev.stats.trained))
@@ -289,8 +285,10 @@
   })
 
   // Mọi thao tác tất định đi qua đây: đoán trước ngay, server xác nhận sau (lỗi thì net báo và rút lại)
-  function act(a: Action): State | null {
-    return net?.act(a) ?? null
+  function act(a: Action, sound?: Sfx): State | null {
+    const s = net?.act(a) ?? null
+    if (s && sound) sfx(sound)
+    return s
   }
 
   // null: đã lập xong (đang nối tới server); chuỗi: mã lỗi để màn đặt tên báo
@@ -298,14 +296,14 @@
     return net ? net.found(name) : 'offline'
   }
 
-  function select(id: BuildingId, v: string | null = null) {
+  function select(id: BuildingId, v: PanelTab | null = null) {
     sfx('tap')
     view = v
     selected = id
   }
 
   // Từ HUD, nhiệm vụ, trang khác: về núi, cuộn tới công trình rồi mở bảng
-  function focus(id: BuildingId, v: string | null = null) {
+  function focus(id: BuildingId, v: PanelTab | null = null) {
     tab = 'tongMon'
     target = null
     requestAnimationFrame(() =>
