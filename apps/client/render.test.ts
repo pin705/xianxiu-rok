@@ -317,6 +317,7 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
       }).body
     assert.ok(panel(trib5, 'chuDien').includes(L.trib.title), 'Chủ điện tầng 5 phải hiện độ kiếp')
     assert.ok(panel(late, 'chuDien').includes(L.rebirth.title), 'Chủ điện tầng 15 phải hiện luân hồi')
+    assert.ok(panel({ ...late, seat: { x: 3, y: 3 } }, 'chuDien').includes(L.rebirth.season), 'trong giới: luân hồi khi hết mùa, không có nút')
     const gathering = panel(cloud, 'chuDien')
     assert.ok(gathering.includes(L.trib.gathering('').slice(0, 14)) && gathering.includes(L.trib.foiled(1)), 'kiếp vân đang tụ: đếm ngược, số lần bị phá kiếp')
     assert.ok(!gathering.includes(L.trib.need), 'đã trả chi phí lúc tụ: không hỏi tài nguyên nữa')

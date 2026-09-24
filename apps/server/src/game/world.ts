@@ -10,8 +10,8 @@ import {
   type Action, type ElderId, type Mail, type Report, type State,
 } from '@rok/rules'
 import {
-  SEASON_DAYS, WORLD_ACTIONS, advanceAll, allyInfo, allyOf, allyRows, endSeason, worldBuffs, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
-  seasonBoard, sideKey, spawn, worldAct,
+  MARKET_ACTIONS, SEASON_DAYS, WORLD_ACTIONS, advanceAll, allyInfo, allyOf, allyRows, endSeason, worldBuffs, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
+  marketOf, seasonBoard, sideKey, spawn, worldAct,
   type Chron, type MapCtx, type World as Shared, type WorldAction, type WorldResult,
 } from '@rok/rules/world'
 import { turn } from '@rok/rules/bot'
@@ -30,7 +30,7 @@ import { Heap } from './heap.ts'
 
 export type SocketData = { pid: number; world: number; lang: string }
 export type Sock = Socket<ClientToServer, ServerToClient, Record<string, never>, SocketData>
-export type Env = { db: Database; node: string; commitMs: number; sync: boolean; warpAllowed: boolean; log: FastifyBaseLogger }
+export type Env = { db: Database; node: string; commitMs: number; sync: boolean; warpAllowed: boolean; market?: boolean; log: FastifyBaseLogger }
 
 type Slot = {
   id: number
@@ -115,7 +115,7 @@ export class World {
     this.warp = env.warpAllowed ? c.warp : 0
     this.seed = c.seed
     this.opened = c.opensAt.getTime()
-    this.info = { id: c.id, name: c.name, season: c.season, map: c.seed, opened: this.opened }
+    this.info = { id: c.id, name: c.name, season: c.season, map: c.seed, opened: this.opened, market: env.market !== false }
     for (const r of rows) this.adopt(r)
     const st = (c.state ?? {}) as { week?: number; npcs?: boolean; chron?: Chron[]; world?: Shared; fame?: Fame[] }
     this.shared = { ...freshWorld(), ...st.world } // blob cũ thiếu trường mới: lấy mặc định
@@ -348,7 +348,7 @@ export class World {
     const a = parseWorldAction(raw)
     let r: WorldResult
     try {
-      r = a ? worldAct(this.ps, slot.id, a, now, seed(), this.map(now), this.shared) : { ok: false, error: 'bad' }
+      r = !a ? { ok: false, error: 'bad' } : !this.info.market && MARKET_ACTIONS.includes(a.type) ? { ok: false, error: 'locked' } : worldAct(this.ps, slot.id, a, now, seed(), this.map(now), this.shared)
     } catch (e) {
       r = { ok: false, error: 'bad' }
       this.env.log.error({ err: e, world: this.id, pid: slot.id }, 'worldAct threw')
@@ -400,6 +400,7 @@ export class World {
       return this.deliver(() => ack(key ? (this.chats.get(key) ?? []) : []))
     }
     if (q.k === 'allies') return this.deliver(() => ack(allyRows(this.shared, this.ps)))
+    if (q.k === 'market') return this.deliver(() => ack(this.info.market ? marketOf(this.ps, this.shared, pid, this.now(), q.good) : null))
     if (q.k === 'season') {
       const rows = seasonBoard(this.shared, this.ps, this.map(this.now()), this.now())
       const side = sideKey(this.shared, pid), k = rows.findIndex(r => r.side === side)

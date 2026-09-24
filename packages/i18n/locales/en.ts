@@ -1,7 +1,7 @@
 import {
   ADV, BEATS, CURE, DISADV, DO_KIEP, ELDER_STEP, EL_ADV, EL_DISADV, FOCUS, FOCUS_TIME, OVERCOMES, PHA_CANH, REBIRTH_BUILD, REBIRTH_HALL, REBIRTH_PROD,
   TALENT_EVERY, TALENT_MAX, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIBS, TRIB_COOLDOWN, WEEKEND, rebirthLevels,
-  ALLY_COST, ALLY_HALL, ALLY_HELPS, ALLY_MAX, EVENT_PTS, EVENT_TOP, NEWBIE_SHIELD, PROTECT, PVP_HALL, RAID_SHARE, REVENGE_TIME, SHIELD_TIME,
+  ASCEND, ASCEND_HALL, MAX_LEVEL, MARKET_BAND, MARKET_BUYS, MARKET_TAX, MARKET_TTL, ALLY_COST, ALLY_HALL, ALLY_HELPS, ALLY_MAX, EVENT_PTS, EVENT_TOP, NEWBIE_SHIELD, PROTECT, PVP_HALL, RAID_SHARE, REVENGE_TIME, SHIELD_TIME,
   type Bonus, type BuildingId, type ElderId, type Element, type EventId, type GearId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
@@ -11,6 +11,8 @@ import type { Text } from './vi.ts'
 // Glossary (PLAN.md §4): Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core,
 // Nguyên Anh = Nascent Soul, Hóa Thần = Deity Transformation.
 const pct = (v: number) => `${Math.round(v * 100)}%`
+// hàng trên chợ: tài nguyên hoặc đan (khoá lạ vẫn hiện được)
+const goodName = (g: string): string => (en.res as Record<string, string>)[g] ?? (en.pills as Record<string, { name: string }>)[g]?.name ?? g
 const perks = (n: number) =>
   `start with buildings at level ${rebirthLevels(n).chuDien}, output +${pct(n * REBIRTH_PROD)}, building ${pct(n * REBIRTH_BUILD)} faster`
 const units = { kiem: 'Sword Cultivators', phap: 'Spell Cultivators', the: 'Body Cultivators' } satisfies Record<UnitType, string>
@@ -228,6 +230,25 @@ export const en: Text = {
     body: `Saturday and Sunday: repeat battle loot and elder experience ×${WEEKEND}`,
     tag: `Weekend ×${WEEKEND}`,
   },
+  market: {
+    tab: 'Market',
+    hint: `The world market: list herbs, ore and pills for spirit stones. A lot's price must be ${pct(MARKET_BAND[0])}–${pct(MARKET_BAND[1])} of its base value, with a ${pct(MARKET_TAX)} tax (destroyed). You can buy ${MARKET_BUYS} times a day; listings last ${MARKET_TTL / 3_600_000} hours, then unsold goods come back by mail.`,
+    locked: (n: number) => `The market opens at Main Hall level ${n}`,
+    off: 'The world market is closed.',
+    buy: 'Buy',
+    sell: 'List for sale',
+    cancel: 'Withdraw',
+    all: 'All',
+    none: 'Nobody is selling.',
+    mine: 'Your listings',
+    by: (name: string) => `from ${name}`,
+    good: 'Goods',
+    amount: 'Amount',
+    price: 'Lot price (spirit stones)',
+    net: (n: string) => `If it sells you receive ${n} spirit stones (after tax)`,
+    left: (buys: number, cap: string) => `Today: ${buys} purchases left · you can list ${cap} more spirit stones' worth`,
+    expires: (t: string) => `${t} left`,
+  },
   trade: {
     tab: 'Trading house',
     give: 'Give',
@@ -347,7 +368,7 @@ export const en: Text = {
       'Gates into the middle ring are open.',
       'The Heaven Gate at the heart of the world is open.',
     ],
-    day: (n: number) => `World day ${n + 1}`,
+    day: (n: number, total: number) => `Day ${n + 1}/${total}`,
     regions: [
       'Northern Abyss', 'Cold Mountain', 'Snow Ridge', 'Ice River', 'Frost Wind', 'Western Sands', 'Azure Hills', 'Cloud Dream', 'Setting Sun', 'Eastern Sea', 'Red Earth', 'Qilin',
       'Heaven Gate', 'Phoenix', 'Jade Sea', 'Southern Border', 'White Tiger', 'Black Tortoise', 'Vermilion Bird', 'Blue Waves', 'Blazing Land', 'Myriad Poison', 'Long Sands',
@@ -478,8 +499,10 @@ export const en: Text = {
       comp: () => ['Compensation', 'The server hit a problem. Our apologies — here is something to make up for it.'],
       season: (n: number, rank: number, up: number) =>
         up
-          ? [`Ascended · season ${n}`, `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. Your sect ascends: two extra foundation levels next life and the Ascended title.`]
+          ? [`Ascended · season ${n}`, `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. Your sect ascends: ${ASCEND} lives of foundation at once and the Ascended title.`]
           : [`Season ${n} is over`, `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. The whole world is reborn once: buildings return to their foundation; elders, techniques, artifacts and pills stay. A new season has begun.`],
+      sold: (g: string, n: number, net: number) => ['Sold on the market', `Someone bought ${n} ${goodName(g)}; you receive ${net} spirit stones (after tax).`],
+      unsold: (g: string, n: number) => ['Market listing expired', `Nobody bought ${n} ${goodName(g)} — your goods are returned below.`],
       unknown: () => ['System mail', 'You have new mail. Update the game to read all of it.'],
     } as Record<string, (...a: any[]) => [string, string]>,
   },
@@ -502,7 +525,7 @@ export const en: Text = {
     none: 'No one yet.',
     open: 'View rankings',
     season: 'Season',
-    seasonHint: 'Season points go to sides (an alliance, or anyone playing solo): every hour holding a spirit vein, formation gate or the Heaven Gate, and every demon king slain. When the season ends, the top alliance (members at level 16+) and anyone at level 25 ascend — two extra foundation levels; everyone else is reborn once.',
+    seasonHint: `Season points go to sides (an alliance, or anyone playing solo): every hour holding a spirit vein, formation gate or the Heaven Gate, and every demon king slain. When the season ends, the top alliance (members at level ${ASCEND_HALL}+) and anyone at level ${MAX_LEVEL} ascend — reborn ${ASCEND} lives at once; everyone else is reborn once.`,
     fame: 'Hall of Immortals',
     fameRow: (n: number) => `Season ${n}`,
     pts: (n: string) => `${n} pts`,

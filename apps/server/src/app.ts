@@ -46,7 +46,7 @@ export async function buildServer(c: Config) {
   const d = createDb(c.DATABASE_URL)
   await migrate(d)
   const protocol = protocolHash()
-  const host = new Host({ db: d.db, node: c.NODE_PATH, commitMs: c.COMMIT_MS, sync: c.SYNC_COMMIT, warpAllowed: c.ALLOW_WARP, log: app.log })
+  const host = new Host({ db: d.db, node: c.NODE_PATH, commitMs: c.COMMIT_MS, sync: c.SYNC_COMMIT, warpAllowed: c.ALLOW_WARP, market: c.MARKET, log: app.log })
 
   await app.register(healthRoutes, { host })
   await app.register(

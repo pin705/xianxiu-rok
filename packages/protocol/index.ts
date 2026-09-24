@@ -4,7 +4,7 @@
 //   1. mầm ngẫu nhiên (seed) không bao giờ rời server — mọi seed gửi đi đều là 0 (rules: mầm 0 = ẩn, không tự giải trận)
 //   2. chiến báo (reports) không nằm trong state gửi đi — đi riêng qua `rep` và truy vấn `reports` (state nhỏ, patch nhỏ)
 import type { Action, Err, March, Report, State } from '@rok/rules'
-import type { AllyInfo, AllyRow, MapSnap, Rival, WorldAction } from '@rok/rules/world'
+import type { AllyInfo, AllyRow, Good, MapSnap, OrderView, Rival, Trades, WorldAction } from '@rok/rules/world'
 
 export type View = Omit<State, 'reports'>
 export type Patch = Partial<View>
@@ -39,7 +39,7 @@ export type Refuse = { reason: 'protocol' | 'auth' | 'banned' | 'deleted' | 'mov
 
 export type Me = { pid: number; name: string; world: number; x: number | null; y: number | null }
 // map: seed sinh bản đồ giới (công khai — khác mầm trận, thứ không bao giờ rời server) · opened: lúc mở giới (ms), tính pha mùa
-export type WorldInfo = { id: number; name: string; season: number; map: number; opened: number }
+export type WorldInfo = { id: number; name: string; season: number; map: number; opened: number; market: boolean } // market: chợ đang bật
 // Lát state lúc rời game (server lưu khi kết nối cuối đóng): màn Xuất quan so với state lúc quay lại
 export type Seen = Pick<State, 'time' | 'res' | 'levels' | 'tech' | 'stats'>
 export type Welcome = { now: number; v: number; state: View; me: Me; world: WorldInfo; seen?: Seen; ro: boolean; warp: boolean }
@@ -52,7 +52,8 @@ export type Snap = { v: number; state: View }
 // reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) → Rival[] · map: ảnh chụp bản đồ giới → MapSnap,
 // kèm theo dõi 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn)
 // allies: danh sách tiên minh → AllyRow[] · ally: minh của mình → AllyInfo | null · season: điểm mùa → Season
-export type Query = { k: 'reports'; before?: number } | { k: 'rivals'; pid?: number } | { k: 'map' } | { k: 'allies' } | { k: 'ally' } | { k: 'chat'; ch: Channel } | { k: 'season' }
+// market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình → Market | null (chợ tắt)
+export type Query = { k: 'reports'; before?: number } | { k: 'rivals'; pid?: number } | { k: 'map' } | { k: 'allies' } | { k: 'ally' } | { k: 'chat'; ch: Channel } | { k: 'season' } | { k: 'market'; good?: Good }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
 export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
 export type Season = { rows: { name: string; pts: number }[]; me: { rank: number; pts: number } | null; fame: Fame[] }
@@ -61,6 +62,7 @@ export type Channel = 'world' | 'ally'
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
 export type { AllyInfo, AllyRow, MapSnap, Rival }
+export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }
 export type Bye = 'moved' | 'restart' | 'replaced' | 'rate' | 'banned' | 'deleted' | 'season' // season: hết mùa, nối lại nhận bản đồ mới
 
 export interface ServerToClient {

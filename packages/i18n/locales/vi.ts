@@ -1,13 +1,15 @@
 import {
   ADV, BEATS, CURE, DISADV, DO_KIEP, ELDER_STEP, EL_ADV, EL_DISADV, FOCUS, FOCUS_TIME, OVERCOMES, PHA_CANH, REBIRTH_BUILD, REBIRTH_HALL, REBIRTH_PROD,
   TALENT_EVERY, TALENT_MAX, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIBS, TRIB_COOLDOWN, WEEKEND, rebirthLevels,
-  ALLY_COST, ALLY_HALL, ALLY_HELPS, ALLY_MAX, EVENT_PTS, EVENT_TOP, NEWBIE_SHIELD, PROTECT, PVP_HALL, RAID_SHARE, REVENGE_TIME, SHIELD_TIME,
+  ASCEND, ASCEND_HALL, MAX_LEVEL, MARKET_BAND, MARKET_BUYS, MARKET_TAX, MARKET_TTL, ALLY_COST, ALLY_HALL, ALLY_HELPS, ALLY_MAX, EVENT_PTS, EVENT_TOP, NEWBIE_SHIELD, PROTECT, PVP_HALL, RAID_SHARE, REVENGE_TIME, SHIELD_TIME,
   type Bonus, type BuildingId, type ElderId, type Element, type EventId, type GearId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
 
 // Chữ hiển thị tiếng Việt. Bản tiếng Anh ở en.ts, cùng khuôn (kiểu Text).
 const pct = (v: number) => `${Math.round(v * 100)}%`
+// hàng trên chợ: tài nguyên hoặc đan (khoá lạ vẫn hiện được)
+const goodName = (g: string): string => (vi.res as Record<string, string>)[g] ?? (vi.pills as Record<string, { name: string }>)[g]?.name ?? g
 const perks = (n: number) =>
   `khởi đầu với công trình tầng ${rebirthLevels(n).chuDien}, sản lượng +${pct(n * REBIRTH_PROD)}, xây nhanh hơn ${pct(n * REBIRTH_BUILD)}`
 const units = { kiem: 'Kiếm tu', phap: 'Pháp tu', the: 'Thể tu' } satisfies Record<UnitType, string>
@@ -224,6 +226,25 @@ export const vi = {
     body: `Thứ Bảy, Chủ nhật: chiến lợi phẩm đánh lại và kinh nghiệm trưởng lão ×${String(WEEKEND).replace('.', ',')}`,
     tag: `Cuối tuần ×${String(WEEKEND).replace('.', ',')}`,
   },
+  market: {
+    tab: 'Chợ',
+    hint: `Chợ của giới: treo bán linh thảo, linh khoáng, đan lấy linh thạch. Giá cả lô trong ${pct(MARKET_BAND[0])}–${pct(MARKET_BAND[1])} giá gốc, thuế ${pct(MARKET_TAX)} (đốt đi). Mỗi ngày mua được ${MARKET_BUYS} lần; lệnh treo ${MARKET_TTL / 3_600_000} giờ, hết hạn thì hàng về qua thư.`,
+    locked: (n: number) => `Chợ mở khi Chủ điện tầng ${n}`,
+    off: 'Chợ của giới đang đóng.',
+    buy: 'Mua',
+    sell: 'Treo bán',
+    cancel: 'Gỡ',
+    all: 'Tất cả',
+    none: 'Chưa có ai bán.',
+    mine: 'Lệnh của bạn',
+    by: (name: string) => `của ${name}`,
+    good: 'Hàng',
+    amount: 'Số lượng',
+    price: 'Giá cả lô (linh thạch)',
+    net: (n: string) => `Bán được thì nhận ${n} linh thạch (sau thuế)`,
+    left: (buys: number, cap: string) => `Hôm nay: còn ${buys} lần mua · treo bán thêm được ${cap} linh thạch`,
+    expires: (t: string) => `còn ${t}`,
+  },
   trade: {
     tab: 'Thương hội',
     give: 'Đổi đi',
@@ -343,7 +364,7 @@ export const vi = {
       'Cổng vào vòng giữa đã mở.',
       'Thiên Môn ở tâm giới đã mở.',
     ],
-    day: (n: number) => `Ngày ${n + 1} của giới`,
+    day: (n: number, total: number) => `Ngày ${n + 1}/${total}`,
     regions: [
       'Bắc Minh', 'Hàn Sơn', 'Tuyết Lĩnh', 'Băng Hà', 'Sóc Phong', 'Tây Mạc', 'Thanh Khâu', 'Vân Mộng', 'Lạc Nhật', 'Đông Hải', 'Xích Thổ', 'Kỳ Lân',
       'Thiên Môn', 'Phượng Hoàng', 'Bích Hải', 'Nam Cương', 'Bạch Hổ', 'Huyền Vũ', 'Chu Tước', 'Thương Lan', 'Viêm Châu', 'Vạn Độc', 'Trường Sa',
@@ -475,8 +496,10 @@ export const vi = {
       comp: () => ['Quà bồi thường', 'Máy chủ vừa gặp sự cố. Xin lỗi đạo hữu — quà bù ở dưới.'],
       season: (n: number, rank: number, up: number) =>
         up
-          ? [`Phi thăng · mùa ${n}`, `Hết mùa ${n}${rank ? `, phe của bạn đứng hạng ${rank}` : ''}. Tông môn phi thăng: kiếp sau thêm hai tầng căn cơ và danh hiệu Phi thăng.`]
+          ? [`Phi thăng · mùa ${n}`, `Hết mùa ${n}${rank ? `, phe của bạn đứng hạng ${rank}` : ''}. Tông môn phi thăng: luân hồi ${ASCEND} kiếp một lúc (căn cơ cao hơn) và danh hiệu Phi thăng.`]
           : [`Hết mùa ${n}`, `Hết mùa ${n}${rank ? `, phe của bạn đứng hạng ${rank}` : ''}. Cả giới luân hồi một kiếp: công trình về căn cơ; trưởng lão, công pháp, pháp bảo, đan còn nguyên. Mùa mới đã mở.`],
+      sold: (g: string, n: number, net: number) => ['Đã bán trên chợ', `${n} ${goodName(g)} đã có người mua; nhận ${net} linh thạch (sau thuế).`],
+      unsold: (g: string, n: number) => ['Lệnh chợ hết hạn', `${n} ${goodName(g)} chưa ai mua — hàng trả lại ở dưới.`],
       unknown: () => ['Thư hệ thống', 'Có thư mới. Cập nhật bản mới để đọc đủ nội dung.'],
     } as Record<string, (...a: any[]) => [string, string]>,
   },
@@ -499,7 +522,7 @@ export const vi = {
     none: 'Chưa có ai.',
     open: 'Xem xếp hạng',
     season: 'Mùa',
-    seasonHint: 'Điểm mùa tính theo phe (tiên minh; ai đi một mình là một phe): mỗi giờ giữ linh mạch, trận nhãn, Thiên Môn, và khi hạ yêu vương. Hết mùa, minh đứng đầu (người từ tầng 16) và ai tới tầng 25 được phi thăng — thêm hai tầng căn cơ; còn lại luân hồi một kiếp.',
+    seasonHint: `Điểm mùa tính theo phe (tiên minh; ai đi một mình là một phe): mỗi giờ giữ linh mạch, trận nhãn, Thiên Môn, và khi hạ yêu vương. Hết mùa, minh đứng đầu (người từ tầng ${ASCEND_HALL}) và ai tới tầng ${MAX_LEVEL} được phi thăng — luân hồi ${ASCEND} kiếp một lúc; còn lại luân hồi một kiếp.`,
     fame: 'Bảng phong thần',
     fameRow: (n: number) => `Mùa ${n}`,
     pts: (n: string) => `${n} điểm`,

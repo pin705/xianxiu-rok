@@ -27,8 +27,13 @@ const Env = z
     SYNC_COMMIT: bool(true), // off: bớt fsync, đổi lấy rủi ro mất ~200 ms thao tác nếu Postgres sập
     WORLD_CAP: z.coerce.number().int().min(1).default(300),
     REBALANCE: bool(true),
+    MARKET: bool(true), // chợ giữa người chơi (tắt được nếu bị lạm dụng — PLAN §11)
     ADMIN_TOKEN: z.string().min(24).optional(), // bật /api/admin/* (header x-admin-token); không đặt thì không có route admin
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+    // Web Push: khoá VAPID (npx web-push generate-vapid-keys) + liên hệ (mailto:…); không đặt thì không có thông báo đẩy
+    VAPID_PUBLIC_KEY: z.string().min(40).optional(),
+    VAPID_PRIVATE_KEY: z.string().min(20).optional(),
+    VAPID_SUBJECT: z.string().regex(/^(mailto:|https:)/).default('mailto:admin@localhost'),
   })
   .refine(e => !(e.NODE_ENV === 'production' && e.ALLOW_WARP), 'ALLOW_WARP bị cấm ở production')
 

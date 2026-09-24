@@ -7,11 +7,12 @@ import {
   RAID_SHARE, RESOURCES, REVENGE_TIME, SHIELD_TIME, TIER, UNITS, BEATS, BOSSES, GARRISON_MAX, MINE_RATE, MINE_RESPAWN, MINE_STOCK, TIDE_MINE,
   TIDE_PROD, TYPES, VEIN_BUFF, VEIN_CAP, RALLY_MAX, RALLY_WAIT, REINFORCE_MAX, HO_PHAP, HO_PHAP_EXP, PHA_KIEP, TRIB_AID, TRIB_EXP, might,
   ASCEND, ASCEND_HALL, MAX_LEVEL, SEASON_BOSS, SEASON_GATE, SEASON_HEAVEN, SEASON_VEIN,
+  MARKET_BAND, MARKET_BUYS, MARKET_CAP, MARKET_HALL, MARKET_ORDERS, MARKET_TAX, MARKET_TTL, PILLS, PILL_IDS, dayOf,
   admit, advance, armyError, bump, elderLevel, evBump, fight, lead, marchSlots, marchTime, minus, mob, pickArmy, power, pushReport, sideOf,
   snap, storage, unitOf, cutOf, hasten, jobOf, giveExp, tribEnd, seasonEnd,
   type Buff, type Reward,
   type JobKind,
-  type Army, type Bag, type ElderId, type Err, type Mail, type March, type Report, type Side, type State,
+  type Army, type Bag, type ElderId, type Err, type Mail, type March, type PillId, type Report, type Side, type State,
 } from './index.ts'
 import { TILE_TIME, regionOf, route, tide, type Atlas, type Point, type PointKind, type Pos } from './atlas.ts'
 
@@ -38,9 +39,16 @@ export type Alliance = { id: number; name: string; tag: string; members: Record<
 export type Spot = { own?: number; since?: number; left?: number; until?: number; hp?: number; dmg?: Record<number, number> }
 // Kết trận: người trong minh góp đội, mọi đội tới điểm i cùng lúc `at` rồi đánh như một bên
 export type Rally = { id: number; ally: number; by: number; i: number; task: 'take' | 'hit'; at: number }
+// Chợ: lệnh bán đang treo (hàng đã rời người bán; price: cả lô, linh thạch), mua / treo bán trong ngày của từng người
+export type Good = 'linhThao' | 'linhKhoang' | PillId
+export type Order = { id: number; pid: number; good: Good; n: number; price: number; at: number }
+export type Trades = { day: number; buys: number; sold: number }
 // pts: điểm mùa đã chốt theo phe (sideKey) — phần đang giữ tính thêm ở seasonPts
-export type World = { allies: Record<number, Alliance>; nextAlly: number; spots: Record<number, Spot>; rallies: Record<number, Rally>; nextRally: number; pts: Record<number, number> }
-export const freshWorld = (): World => ({ allies: {}, nextAlly: 1, spots: {}, rallies: {}, nextRally: 1, pts: {} })
+export type World = {
+  allies: Record<number, Alliance>; nextAlly: number; spots: Record<number, Spot>; rallies: Record<number, Rally>; nextRally: number; pts: Record<number, number>
+  orders: Record<number, Order>; nextOrder: number; mkt: Record<number, Trades>
+}
+export const freshWorld = (): World => ({ allies: {}, nextAlly: 1, spots: {}, rallies: {}, nextRally: 1, pts: {}, orders: {}, nextOrder: 1, mkt: {} })
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
 
 export type WorldAction =
@@ -58,10 +66,16 @@ export type WorldAction =
   | { type: 'rally'; i: number; wait: 0 | 1 | 2; elder: ElderId; army: Army } // mở kết trận ở điểm i (chiếm / đánh yêu vương)
   | { type: 'rallyJoin'; id: number; elder: ElderId; army: Army } // góp đội vào kết trận
   | { type: 'aid'; pid: number; elder: ElderId; army: Army } // viện binh: đóng quân ở nhà đồng minh
+  | { type: 'sell'; good: Good; n: number; price: number } // chợ: treo một lô
+  | { type: 'buy'; id: number }
+  | { type: 'cancel'; id: number } // gỡ lệnh của mình, hàng về ngay
 export type Task = 'take' | 'gather' | 'hit'
 export const WORLD_ACTIONS: readonly WorldAction['type'][] = [
   'raid', 'allyFound', 'allyJoin', 'allyLeave', 'allyKick', 'allyRole', 'allyNotice', 'helpAsk', 'helpAll', 'go', 'recall', 'rally', 'rallyJoin', 'aid',
+  'sell', 'buy', 'cancel',
 ]
+export const MARKET_ACTIONS: readonly WorldAction['type'][] = ['sell', 'buy', 'cancel']
+export const GOODS: readonly Good[] = ['linhThao', 'linhKhoang', ...PILL_IDS]
 const TASKS: readonly Task[] = ['take', 'gather', 'hit']
 
 const id = (x: unknown): x is number => Number.isSafeInteger(x) && (x as number) >= 1
@@ -109,6 +123,11 @@ export function parseWorldAction(raw: unknown): WorldAction | null {
       if (a.type === 'aid') return id(a.pid) ? { type: 'aid', pid: a.pid, elder: a.elder as ElderId, army } : null
       return id(a.id) ? { type: 'rallyJoin', id: a.id, elder: a.elder as ElderId, army } : null
     }
+    case 'sell':
+      return GOODS.includes(a.good as Good) && id(a.n) && id(a.price) ? { type: 'sell', good: a.good as Good, n: a.n, price: a.price } : null
+    case 'buy':
+    case 'cancel':
+      return id(a.id) ? { type: a.type, id: a.id } : null
   }
   return null
 }
@@ -162,6 +181,7 @@ export function worldAct(ps: Players, pid: number, raw: WorldAction, now: number
   if (a.type === 'recall') return recallAct(ps, w, pid, a.id, now, map)
   if (a.type === 'rally' || a.type === 'rallyJoin') return rallyAct(ps, w, pid, a, now, seed, map)
   if (a.type === 'aid') return aidAct(ps, w, pid, a, now, seed, map)
+  if (a.type === 'sell' || a.type === 'buy' || a.type === 'cancel') return marketAct(ps, w, pid, a, now)
   if (a.type !== 'raid') return allyAct(w, ps, pid, a, now)
   const att = advance(me, now)
   const t = att.time
@@ -214,7 +234,7 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
 
 export const helpMs = (job: { startAt: number; finishAt: number }) => Math.max(HELP_MIN, Math.round((job.finishAt - job.startAt) * HELP_SHARE))
 
-function allyAct(w: World, ps: Players, pid: number, a: Exclude<WorldAction, { type: 'raid' | 'go' | 'recall' | 'rally' | 'rallyJoin' | 'aid' }>, now: number): WorldResult {
+function allyAct(w: World, ps: Players, pid: number, a: Exclude<WorldAction, { type: 'raid' | 'go' | 'recall' | 'rally' | 'rallyJoin' | 'aid' | 'sell' | 'buy' | 'cancel' }>, now: number): WorldResult {
   const mine = allyOf(w, pid)
   const role = mine?.members[pid] ?? -1
   const same = (x: WorldResult) => x
@@ -314,6 +334,13 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
   const due: [at: number, pid: number, id: number][] = []
   for (const [pid, s] of ps) for (const m of s.marches) if (waiting(m) && m.arriveAt <= now) due.push([m.arriveAt, pid, m.id])
   const changed: Players = new Map()
+  // lệnh chợ hết hạn: trả hàng qua thư
+  const old = Object.values(w.orders).filter(o => o.at + MARKET_TTL <= now)
+  if (old.length) {
+    const r = unsold(ps, w, old)
+    w = r.world
+    for (const [k, v] of r.changed) changed.set(k, v)
+  }
   due.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2])
   const cur = (id: number) => changed.get(id) ?? ps.get(id)
   const view = (): Players => new Map([...ps.keys()].map(id => [id, cur(id)!])) // cả giới như lúc này (quân đóng ở điểm)
@@ -584,8 +611,10 @@ export function endSeason(ps: Players, w: World, map: MapCtx, now: number, seaso
     const up = (side === first && s.levels.chuDien >= ASCEND_HALL) || s.levels.chuDien >= MAX_LEVEL
     changed.set(pid, mail(seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined), { at: now, k: 'season', a: [season, rank.get(side) ?? 0, up ? 1 : 0] }))
   }
+  // hàng đang treo trên chợ: trả về qua thư (thư giữ qua luân hồi)
+  for (const [k, v] of unsold(new Map([...ps, ...changed]), w, Object.values(w.orders)).changed) changed.set(k, v)
   const allies = Object.fromEntries(Object.entries(w.allies).map(([k, a]) => [k, { ...a, helps: [] }]))
-  return { changed, world: { ...freshWorld(), allies, nextAlly: w.nextAlly, nextRally: w.nextRally }, top }
+  return { changed, world: { ...freshWorld(), allies, nextAlly: w.nextAlly, nextRally: w.nextRally, nextOrder: w.nextOrder }, top }
 }
 const carryOf = (army: Army) => UNITS.reduce((sum, u) => sum + (army[u] ?? 0) * CARRY * TIER[unitOf(u).tier].stat, 0)
 const withMarch = (s: State, m: March): State => ({ ...s, marches: s.marches.map(x => (x.id === m.id ? m : x)) })
@@ -835,4 +864,73 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     changed.set(pid, { ...st, buffs: [...keep, ...want] })
   }
   return changed
+}
+
+// ---------- Chợ ----------
+
+const isRes = (g: Good): g is 'linhThao' | 'linhKhoang' => g === 'linhThao' || g === 'linhKhoang'
+// Giá gốc một đơn vị (linh thạch): tài nguyên 1; đan = tài nguyên để luyện, cộng cả đan làm nguyên liệu
+export const basePrice = (g: Good): number =>
+  isRes(g) ? 1 : RESOURCES.reduce((sum, r) => sum + PILLS[g].cost[r], 0) + Object.entries(PILLS[g].need ?? {}).reduce((sum, [q, k]) => sum + basePrice(q as Good) * (k ?? 0), 0)
+export const priceBand = (g: Good, n: number): [number, number] => [Math.ceil(basePrice(g) * n * MARKET_BAND[0]), Math.floor(basePrice(g) * n * MARKET_BAND[1])]
+export const goodOf = (s: State, g: Good) => (isRes(g) ? s.res[g] : (s.items[g] ?? 0))
+const addGood = (s: State, g: Good, n: number): State => (isRes(g) ? { ...s, res: { ...s.res, [g]: s.res[g] + n } } : { ...s, items: { ...s.items, [g]: (s.items[g] ?? 0) + n } })
+const giftOf = (g: Good, n: number): Reward => (isRes(g) ? { res: { [g]: n } } : { items: { [g]: n } })
+export const tradesOf = (w: World, pid: number, t: number): Trades => (w.mkt[pid]?.day === dayOf(t) ? w.mkt[pid] : { day: dayOf(t), buys: 0, sold: 0 })
+export const sellCap = (s: State) => Math.floor(MARKET_CAP * storage(s))
+const without = (w: World, id: number): World => ({ ...w, orders: Object.fromEntries(Object.entries(w.orders).filter(([k]) => Number(k) !== id)) })
+
+function marketAct(ps: Players, w: World, pid: number, a: Extract<WorldAction, { type: 'sell' | 'buy' | 'cancel' }>, now: number): WorldResult {
+  const s = advance(ps.get(pid)!, now)
+  const t = s.time
+  if (s.levels.chuDien < MARKET_HALL) return no('locked')
+  const day = tradesOf(w, pid, t)
+  if (a.type === 'sell') {
+    if (Object.values(w.orders).filter(o => o.pid === pid).length >= MARKET_ORDERS) return no('slots')
+    const [lo, hi] = priceBand(a.good, a.n)
+    if (a.price < lo || a.price > hi) return no('bad')
+    if (goodOf(s, a.good) < a.n) return no(isRes(a.good) ? 'not_enough' : 'no_item')
+    if (day.sold + a.price > sellCap(s)) return no('limit') // tính cả lệnh đã gỡ: treo / gỡ không lách được trần
+    const o: Order = { id: w.nextOrder, pid, good: a.good, n: a.n, price: a.price, at: t }
+    return {
+      ok: true, changed: new Map([[pid, addGood(s, a.good, -a.n)]]),
+      world: { ...w, orders: { ...w.orders, [o.id]: o }, nextOrder: o.id + 1, mkt: { ...w.mkt, [pid]: { ...day, sold: day.sold + a.price } } },
+    }
+  }
+  const o = w.orders[a.id]
+  if (!o || o.at + MARKET_TTL <= t) return no('gone')
+  if (a.type === 'cancel') return o.pid === pid ? { ok: true, changed: new Map([[pid, addGood(s, o.good, o.n)]]), world: without(w, o.id) } : no('bad')
+  if (o.pid === pid) return no('bad')
+  if (day.buys >= MARKET_BUYS) return no('limit')
+  if (s.res.linhThach < o.price) return no('not_enough')
+  // người mua nhận hàng ngay; người bán nhận linh thạch (trừ thuế) qua thư
+  const changed: Players = new Map([[pid, addGood({ ...s, res: { ...s.res, linhThach: s.res.linhThach - o.price } }, o.good, o.n)]])
+  const seller = ps.get(o.pid), net = Math.floor(o.price * (1 - MARKET_TAX))
+  if (seller) changed.set(o.pid, mail(seller, { at: t, k: 'sold', a: [o.good, o.n, net], gift: { res: { linhThach: net } } }))
+  const next = without(w, o.id)
+  return { ok: true, changed, world: { ...next, mkt: { ...next.mkt, [pid]: { ...day, buys: day.buys + 1 } } } }
+}
+
+// Lệnh hết hạn / hết mùa: trả hàng cho người bán qua thư
+function unsold(ps: Players, w: World, list: Order[]): { changed: Players; world: World } {
+  const changed: Players = new Map()
+  for (const o of list) {
+    const s = changed.get(o.pid) ?? ps.get(o.pid)
+    if (s) changed.set(o.pid, mail(s, { at: Math.min(o.at + MARKET_TTL, s.time), k: 'unsold', a: [o.good, o.n], gift: giftOf(o.good, o.n) }))
+    w = without(w, o.id)
+  }
+  return { changed, world: w }
+}
+
+// Chợ để hiện: lệnh còn hạn (một loại hàng nếu chọn; rẻ nhất theo giá gốc trước) + lệnh của mình; kèm tên người bán
+export type OrderView = Order & { name: string }
+export function marketOf(ps: Players, w: World, pid: number, now: number, good?: Good): { orders: OrderView[]; mine: OrderView[]; day: Trades } {
+  const view = (o: Order): OrderView => ({ ...o, name: ps.get(o.pid)?.name ?? '' })
+  const live = Object.values(w.orders).filter(o => o.at + MARKET_TTL > now)
+  const unit = (o: Order) => o.price / (basePrice(o.good) * o.n)
+  return {
+    orders: live.filter(o => o.pid !== pid && (!good || o.good === good)).sort((a, b) => unit(a) - unit(b) || a.id - b.id).slice(0, 40).map(view),
+    mine: live.filter(o => o.pid === pid).map(view),
+    day: tradesOf(w, pid, now),
+  }
 }

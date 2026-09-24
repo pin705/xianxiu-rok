@@ -11,7 +11,7 @@ const ts = (name: string) => timestamp(name, { withTimezone: true })
 export const accounts = pgTable('accounts', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   email: text().unique(), // lower(trim()); null = khách
-  pass: text(), // argon2id
+  pass: text(), // scrypt$muối$khoá (lib/auth.ts)
   locale: text().notNull().default('en'),
   cosmetics: jsonb().notNull().default({}), // danh hiệu, khung (giữ qua mùa)
   createdAt: ts('created_at').notNull().defaultNow(),
@@ -138,4 +138,24 @@ export const events = pgTable(
     props: jsonb().notNull().default({}),
   },
   t => [index().on(t.playerId, t.day), index().on(t.name, t.at)],
+)
+
+// Mã chuyển máy (một lần, hết hạn sau 15 phút): sha256 của mã → tài khoản
+export const codes = pgTable('codes', {
+  hash: bytea().primaryKey(),
+  accountId: integer().notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  expiresAt: ts('expires_at').notNull(),
+})
+
+// Web Push: mỗi trình duyệt / thiết bị đã bật thông báo là một đăng ký (endpoint của dịch vụ push + khoá mã hoá của trình duyệt)
+export const pushSubs = pgTable(
+  'push_subs',
+  {
+    endpoint: text().primaryKey(),
+    accountId: integer().notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+    p256dh: text().notNull(),
+    auth: text().notNull(),
+    createdAt: ts('created_at').notNull().defaultNow(),
+  },
+  t => [index().on(t.accountId)],
 )

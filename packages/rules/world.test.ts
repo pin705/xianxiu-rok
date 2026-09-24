@@ -596,3 +596,74 @@ test('mùa: điểm mùa theo giờ giữ điểm (chốt khi đổi phe), cổn
   // trong giới thì luân hồi chỉ diễn ra khi hết mùa
   assert.equal(apply({ ...ps.get(1)!, levels: { ...ps.get(1)!.levels, chuDien: 16 }, marches: [] }, { type: 'rebirth' }, T0).ok, false)
 })
+
+test('chợ: ký gửi trong biên giá, mua nhận hàng ngay, người bán nhận linh thạch trừ thuế qua thư; giới hạn; gỡ lệnh; hết hạn và hết mùa trả hàng', async () => {
+  const { freshWorld, advanceAll, basePrice, priceBand, marketOf, sellCap, endSeason, atlas } = await import('./world.ts')
+  const { MARKET_BUYS, MARKET_ORDERS, MARKET_TAX, MARKET_TTL } = await import('./index.ts')
+  const ps = world({ ...sect('Bán', 10), items: { doKiep: 3 } }, sect('Mua', 10), sect('Nhỏ', 5))
+  let w = freshWorld()
+  const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {
+    const r = worldAct(ps, pid, x, at, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  assert.equal(basePrice('doKiep'), 6000)
+  assert.equal(basePrice('phaCanh'), 44000 + 2 * 6000, 'đan cần đan khác: cộng giá nguyên liệu')
+  const [lo, hi] = priceBand('doKiep', 2)
+  assert.deepEqual([lo, hi], [9600, 15000])
+  assert.equal(act(1, { type: 'sell', good: 'doKiep', n: 2, price: hi + 1 }), 'bad', 'đắt quá biên: chặn dồn của qua acc phụ')
+  assert.equal(act(1, { type: 'sell', good: 'doKiep', n: 2, price: lo - 1 }), 'bad')
+  assert.equal(act(1, { type: 'sell', good: 'doKiep', n: 9, price: 9 * 6000 }), 'no_item')
+  assert.equal(act(3, { type: 'sell', good: 'linhThao', n: 100, price: 100 }), 'locked', 'dưới tầng 10')
+  assert.equal(act(1, { type: 'sell', good: 'linhThach' as never, n: 100, price: 100 }), 'bad', 'linh thạch là tiền, không bán')
+  assert.equal(act(1, { type: 'sell', good: 'doKiep', n: 2, price: 12000 }), null)
+  assert.equal(ps.get(1)!.items.doKiep, 1, 'hàng ký gửi ngay')
+  const [o] = Object.values(w.orders)
+  assert.deepEqual(marketOf(ps, w, 2, T0).orders.map(x => [x.id, x.name]), [[o.id, 'Bán']])
+  assert.deepEqual(marketOf(ps, w, 1, T0).mine.map(x => x.id), [o.id])
+
+  // mua: trả linh thạch, nhận đan ngay; người bán nhận 90 % qua thư, nhận đúng một lần
+  const before = ps.get(2)!.res.linhThach
+  assert.equal(act(1, { type: 'buy', id: o.id }), 'bad', 'không tự mua của mình')
+  assert.equal(act(2, { type: 'buy', id: o.id }), null)
+  assert.equal(ps.get(2)!.items.doKiep, 2)
+  assert.equal(ps.get(2)!.res.linhThach, before - 12000)
+  const m = ps.get(1)!.mail.at(-1)!
+  assert.equal(m.k, 'sold')
+  assert.equal(m.gift?.res?.linhThach, Math.floor(12000 * (1 - MARKET_TAX)))
+  const claim = apply(ps.get(1)!, { type: 'mail', id: m.id }, T0)
+  assert.ok(claim.ok && !apply(claim.state, { type: 'mail', id: m.id }, T0).ok, 'nhận tiền đúng một lần')
+  assert.equal(act(2, { type: 'buy', id: o.id }), 'gone', 'đã bán')
+
+  // giới hạn: số lệnh treo, trần treo bán trong ngày (tính cả lệnh đã gỡ), số lần mua
+  for (let k = 0; k < MARKET_ORDERS; k++) assert.equal(act(2, { type: 'sell', good: 'linhThao', n: 100, price: 100 }), null)
+  assert.equal(act(2, { type: 'sell', good: 'linhThao', n: 100, price: 100 }), 'slots')
+  const mine = marketOf(ps, w, 2, T0).mine
+  assert.equal(act(2, { type: 'cancel', id: mine[0].id }), null)
+  assert.equal(act(1, { type: 'cancel', id: mine[1].id }), 'bad', 'không gỡ lệnh người khác')
+  const big = sellCap(ps.get(2)!)
+  assert.equal(act(2, { type: 'sell', good: 'linhThao', n: big, price: big }), 'limit')
+  assert.equal(act(3, { type: 'buy', id: mine[4].id }), 'locked', 'dưới tầng 10 cũng không mua')
+  for (const x of mine.slice(1)) assert.equal(act(1, { type: 'buy', id: x.id }), null) // 4 lần + 1 lần mua đan ở trên là của người 2
+  act(2, { type: 'sell', good: 'linhThao', n: 100, price: 100 })
+  act(2, { type: 'sell', good: 'linhThao', n: 100, price: 100 })
+  const more = marketOf(ps, w, 2, T0).mine
+  assert.equal(act(1, { type: 'buy', id: more[0].id }), null, `lần mua thứ ${MARKET_BUYS}`)
+  assert.equal(act(1, { type: 'buy', id: more[1].id }), 'limit', 'quá số lần mua trong ngày')
+  assert.equal(act(1, { type: 'buy', id: more[1].id }, T0 + 15 * HOUR), null, 'sang ngày thì mua tiếp được')
+  act(2, { type: 'sell', good: 'linhThao', n: 100, price: 100 }, T0 + 15 * HOUR)
+
+  // hết hạn: trả hàng qua thư; hết mùa: lệnh còn treo cũng trả
+  const left = marketOf(ps, w, 2, T0).mine
+  const r = advanceAll(ps, w, T0 + 15 * HOUR + MARKET_TTL + 1)
+  for (const [k, v] of r.changed) ps.set(k, v)
+  w = r.world
+  assert.deepEqual(w.orders, {})
+  assert.equal(ps.get(2)!.mail.filter(x => x.k === 'unsold').length, left.length)
+  assert.equal(act(1, { type: 'sell', good: 'doKiep', n: 1, price: 6000 }, T0 + 15 * HOUR + MARKET_TTL + 2), null)
+  const end = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, T0 + 15 * HOUR + MARKET_TTL + 3, 1, new Set())
+  assert.equal(end.changed.get(1)!.mail.at(-1)!.k, 'unsold')
+  assert.deepEqual(end.world.orders, {})
+})

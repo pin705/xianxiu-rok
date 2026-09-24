@@ -163,7 +163,7 @@ export type Action =
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'
 export type Err =
   | 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done' | 'locked' | 'cooldown'
-  | 'empty' | 'no_item' | 'slots' | 'trib' | 'bad' | 'shield' | 'weak' | 'gone' | 'far' | 'friend' | 'taken' | 'full'
+  | 'empty' | 'no_item' | 'slots' | 'trib' | 'bad' | 'shield' | 'weak' | 'gone' | 'far' | 'friend' | 'taken' | 'full' | 'limit'
 export type Result = { ok: true; state: State } | { ok: false; error: Err }
 
 const HOUR = 3_600_000

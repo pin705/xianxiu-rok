@@ -3,7 +3,7 @@
   // + dải trên (ngày, pha mùa, biên niên). Dữ liệu sống: ảnh chụp server đẩy khi đổi (watch). Chạm: cờ hành quân → tông môn → điểm → ô.
   import { onMount, type Snippet } from 'svelte'
   import type { State } from '@rok/rules'
-  import { MAP_W, dayIn, phaseOf, type MapSnap } from '@rok/rules/world'
+  import { MAP_W, SEASON_DAYS, dayIn, phaseOf, type MapSnap } from '@rok/rules/world'
   import type { WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Button, Card } from '../ui'
@@ -198,7 +198,7 @@
   <Card tone="silk">
     <div class="row">
       <span class="grow stack" style:--gap="0">
-        <b class="t-small">{L.rank.fameRow(info.season)} · {L.world.day(day)} · {L.world.phase[phase]}</b>
+        <b class="t-small">{L.rank.fameRow(info.season)} · {L.world.day(day, SEASON_DAYS)} · {L.world.phase[phase]}</b>
         <small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>
       </span>
       <Button size="sm" variant="ghost" onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}><Icon name="flag" size={14} />{L.world.you}</Button>

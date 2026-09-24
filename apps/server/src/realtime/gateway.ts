@@ -6,6 +6,7 @@ import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { Server } from 'socket.io'
 import { z } from 'zod'
 import type { Action } from '@rok/rules'
+import { GOODS, type Good } from '@rok/rules/world'
 import type { ClientToServer, Refuse, ServerToClient } from '@rok/protocol'
 import type { Database } from '../db/index.ts'
 import { findSession } from '../db/store.ts'
@@ -20,7 +21,7 @@ const Handshake = z.object({
   build: z.string().max(64),
   lang: z.string().max(16),
 })
-const Query = z.discriminatedUnion('k', [z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }), z.object({ k: z.literal('rivals'), pid: z.number().int().positive().optional() }), z.object({ k: z.literal('map') }), z.object({ k: z.literal('allies') }), z.object({ k: z.literal('ally') }), z.object({ k: z.literal('chat'), ch: z.enum(['world', 'ally']) }), z.object({ k: z.literal('season') })])
+const Query = z.discriminatedUnion('k', [z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }), z.object({ k: z.literal('rivals'), pid: z.number().int().positive().optional() }), z.object({ k: z.literal('map') }), z.object({ k: z.literal('allies') }), z.object({ k: z.literal('ally') }), z.object({ k: z.literal('chat'), ch: z.enum(['world', 'ally']) }), z.object({ k: z.literal('season') }), z.object({ k: z.literal('market'), good: z.enum(GOODS as [Good, ...Good[]]).optional() })])
 const Say = z.object({ ch: z.enum(['world', 'ally']), text: z.string().max(400) })
 const Report = z.object({ id: z.number().int().positive() })
 const ActionShape = z.object({ type: z.string().max(32) }).loose() // khung; từng trường do rules.parseAction kiểm

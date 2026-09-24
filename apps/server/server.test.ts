@@ -432,3 +432,36 @@ test('hết mùa: tới ngày 49 mọi người luân hồi, bản đồ mới, 
   assert.equal(row.state.fame[0].season, 1)
   c2.close()
 })
+
+test('chợ: treo bán, người khác thấy và mua, người bán nhận thư tiền; tắt chợ (MARKET=off) thì từ chối', { skip }, async () => {
+  const n = await boot('mk')
+  const w = await newWorld(n)
+  const [A, B] = [await guest(n, undefined, w), await guest(n, undefined, w)]
+  const [ca, cb] = [client(n, A.token), client(n, B.token)]
+  const wa = await ca.welcome
+  await cb.welcome
+  assert.equal(wa.world.market, true)
+  for (const [g, extra] of [[A, { items: { doKiep: 2 } }], [B, {}]] as const) {
+    const { state } = (await (await api(n, '/dev/state', undefined, g.token)).json()) as { state: any }
+    await api(n, '/dev/state', { state: { ...state, levels: Object.fromEntries(Object.keys(state.levels).map(k => [k, 10])), res: { linhThach: 5e4, linhThao: 5e4, linhKhoang: 5e4 }, ...extra } }, g.token)
+  }
+  const sell = await ca.act({ type: 'sell', good: 'doKiep', n: 1, price: 6000 })
+  assert.ok(sell.ok, JSON.stringify(sell))
+  const m = (await cb.s.timeout(5000).emitWithAck('get', { k: 'market', good: 'doKiep' })) as { orders: { id: number; name: string; price: number }[] }
+  assert.equal(m.orders.length, 1)
+  const buy = await cb.act({ type: 'buy', id: m.orders[0].id })
+  assert.ok(buy.ok && buy.p?.items?.doKiep === 1, JSON.stringify(buy))
+  const paid = await ca.push(p => !!p.p.mail?.some(x => x.k === 'sold'))
+  assert.equal(paid.p.mail!.at(-1)!.gift?.res?.linhThach, 5400)
+  ca.close()
+  cb.close()
+
+  const off = await boot('mo', { MARKET: 'off' })
+  const C = await guest(off, undefined, await newWorld(off))
+  const cc = client(off, C.token)
+  assert.equal((await cc.welcome).world.market, false)
+  const no = await cc.act({ type: 'sell', good: 'linhThao', n: 100, price: 100 })
+  assert.equal(!no.ok && no.err, 'locked')
+  assert.equal(await cc.s.timeout(5000).emitWithAck('get', { k: 'market' }), null)
+  cc.close()
+})

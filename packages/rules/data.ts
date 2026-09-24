@@ -388,6 +388,19 @@ export const JOIN_DAYS = 21
 export const ASCEND_HALL = 16
 export const ASCEND = 2
 
+// ---------- Chợ (giữa người chơi trong một giới; server có cờ bật/tắt) ----------
+// Chỉ lệnh bán, trả bằng linh thạch; hàng (linh thảo, linh khoáng, đan) ký gửi ngay. Giá cả lô trong MARKET_BAND × giá gốc
+// (tài nguyên 1; đan = tài nguyên để luyện, cộng cả đan làm nguyên liệu) nên không dồn được của qua acc phụ; thuế MARKET_TAX đốt đi.
+// Mỗi người: MARKET_ORDERS lệnh treo, MARKET_BUYS lần mua / ngày, treo bán tối đa MARKET_CAP × sức chứa kho (theo giá) / ngày;
+// lệnh sống MARKET_TTL rồi trả hàng qua thư. Không có hàng premium để bán (PLAN §9).
+export const MARKET_HALL = 10
+export const MARKET_TAX = 0.1
+export const MARKET_BAND = [0.8, 1.25] as const
+export const MARKET_ORDERS = 5
+export const MARKET_BUYS = 5
+export const MARKET_CAP = 0.5
+export const MARKET_TTL = 24 * 3_600_000
+
 // ---------- Nhiệm vụ ngày ----------
 
 // Làm mới lúc 0h giờ Việt Nam (UTC+7), cố định như giờ máy chủ — không theo múi giờ máy người chơi (chỉnh giờ máy
