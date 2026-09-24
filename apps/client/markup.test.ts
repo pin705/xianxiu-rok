@@ -36,3 +36,19 @@ test('template .svelte: không chuỗi dấu phẩy, ternary lồng tối đa 2 
   }
   assert.deepEqual(bad, [])
 })
+
+// CSS không có custom media: bố cục desktop viết lại cùng một truy vấn ở từng component — phải khớp DESK (lib.ts, phía JS)
+test('@media desktop ở mọi component khớp đúng DESK trong lib.ts', () => {
+  const desk = readFileSync(join(root, 'apps/client/src/lib.ts'), 'utf8').match(/DESK = [^(]*\('([^']+)'\)/)?.[1]
+  assert.ok(desk, 'không tìm thấy DESK trong lib.ts')
+  const files = readdirSync(join(root, 'apps/client/src'), { recursive: true, encoding: 'utf8' }).filter(f =>
+    /\.(svelte|css)$/.test(f),
+  )
+  const bad = files.flatMap(f =>
+    [...readFileSync(join(root, 'apps/client/src', f), 'utf8').matchAll(/@media ([^{]*min-width: 1024px[^{]*)\{/g)]
+      .map(m => m[1].trim())
+      .filter(q => q !== desk)
+      .map(q => `${f}: ${q}`),
+  )
+  assert.deepEqual(bad, [])
+})
