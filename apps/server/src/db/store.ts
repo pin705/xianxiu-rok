@@ -84,6 +84,12 @@ export async function claimWorld(db: Database, id: number, node: string): Promis
   return { owner: o?.owner ?? null }
 }
 
+// Đường Socket.IO của node đang giữ giới (null: chưa ai giữ, hoặc lease đã hết)
+export async function worldPath(db: Database, id: number) {
+  const [w] = await db.select({ owner: worlds.owner }).from(worlds).where(and(eq(worlds.id, id), sql`${worlds.leaseUntil} > now()`))
+  return w?.owner ?? null
+}
+
 export const releaseWorld = (db: Database, id: number, node: string, epoch: number) =>
   db.update(worlds).set({ owner: null, leaseUntil: null }).where(and(eq(worlds.id, id), eq(worlds.owner, node), eq(worlds.epoch, epoch)))
 

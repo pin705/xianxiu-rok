@@ -17,7 +17,6 @@ const Env = z
     PORT: z.coerce.number().int().min(0).max(65535).default(8787),
     HOST: z.string().default('0.0.0.0'),
     DATABASE_URL: z.string().default('postgres://rok:rok@127.0.0.1:5439/rok'), // npm run db
-    PGSCHEMA: z.string().regex(/^\w+$/).optional(), // schema riêng cho test
     // Định danh công khai của node: đường Socket.IO mà Caddy trỏ thẳng về node này (/n1/socket.io). Hai node không được trùng.
     NODE_PATH: z.string().regex(/^\/[\w/-]*socket\.io$/).default('/socket.io'),
     ORIGINS: list, // origin khác được gọi API/socket (itch.io…)

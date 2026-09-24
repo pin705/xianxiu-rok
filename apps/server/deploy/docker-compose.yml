@@ -1,0 +1,40 @@
+# Triển khai một máy: Postgres + 2 node game + Caddy (HTTPS tự động, file tĩnh của client, định tuyến theo node).
+#   cp .env.example .env && docker compose -f apps/server/deploy/docker-compose.yml up -d --build
+# Thêm node: nhân bản khối n2 thành n3 (NODE_PATH=/n3/socket.io) và thêm một dòng handle trong Caddyfile.
+name: rok-prod
+x-node: &node
+  build: { context: ../../.., dockerfile: apps/server/Dockerfile }
+  restart: unless-stopped
+  stop_grace_period: 30s # xả: commit lần cuối, nhả lease (server tự thoát sau tối đa 25 giây)
+  depends_on: { db: { condition: service_healthy } }
+  ulimits: { nofile: 65536 }
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment: { POSTGRES_USER: rok, POSTGRES_PASSWORD: '${DB_PASSWORD:?đặt DB_PASSWORD trong .env}', POSTGRES_DB: rok }
+    command: [postgres, -c, wal_compression=lz4, -c, default_toast_compression=lz4, -c, max_wal_size=8GB, -c, checkpoint_timeout=15min, -c, shared_buffers=1GB]
+    volumes: [db:/var/lib/postgresql/data]
+    healthcheck: { test: pg_isready -U rok, interval: 2s, retries: 30 }
+  n1:
+    <<: *node
+    environment: &env
+      DATABASE_URL: 'postgres://rok:${DB_PASSWORD}@db:5432/rok'
+      NODE_PATH: /n1/socket.io
+      TRUST_PROXY: '1'
+      ORIGINS: '${ORIGINS:-}'
+  n2:
+    <<: *node
+    environment:
+      <<: *env
+      NODE_PATH: /n2/socket.io
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ['80:80', '443:443', '443:443/udp']
+    environment: { DOMAIN: '${DOMAIN:?đặt DOMAIN trong .env}' }
+    volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, ../../client/dist:/srv:ro, caddy:/data]
+    depends_on: [n1, n2]
+volumes:
+  db:
+  caddy:

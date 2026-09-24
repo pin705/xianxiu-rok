@@ -1,0 +1,87 @@
+// Tài khoản & phiên: khách (tạo tông môn luôn), xem phiên, đăng xuất. Liên kết email ở M9.
+import { randomInt } from 'node:crypto'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import { newGame, type State } from '@rok/rules'
+import type { Database } from '../db/index.ts'
+import * as store from '../db/store.ts'
+import { COOKIE, cleanName, cookieOptions, hashToken, newToken } from '../lib/auth.ts'
+
+export const ErrorReply = z.object({ error: z.string() })
+
+// Token phiên: header Authorization (khác origin, vd. itch.io) hoặc cookie HttpOnly (cùng origin)
+export const tokenOf = (req: FastifyRequest) => {
+  const h = req.headers.authorization
+  return h?.startsWith('Bearer ') ? h.slice(7) : req.cookies[COOKIE]
+}
+
+// Phiên hợp lệ hoặc trả 401/403 (null: đã trả lời, route dừng)
+export async function requireSession(db: Database, req: FastifyRequest, reply: FastifyReply) {
+  const token = tokenOf(req)
+  const s = token ? await store.findSession(db, hashToken(token)) : null
+  if (!s || s.deleted) return void reply.code(401).send({ error: 'auth' })
+  if (s.banned) return void reply.code(403).send({ error: 'banned' })
+  return { ...s, token: token! }
+}
+
+// path: đường Socket.IO của node này — trả cho client khi giới chưa ai giữ (node này sẽ nhận giới lúc bắt tay)
+export type AuthOptions = { db: Database; worldCap: number; secure: boolean; path: string }
+
+export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => {
+  app.post(
+    '/guest',
+    {
+      config: { rateLimit: { max: 20, timeWindow: '1 hour' } },
+      schema: {
+        body: z.object({
+          name: z.string().max(64),
+          lang: z.string().regex(/^[a-z]{2}(-[A-Za-z]{2})?$/).catch('en'),
+          world: z.number().int().positive().optional(),
+        }),
+        response: { 200: z.object({ token: z.string(), pid: z.number(), world: z.number(), path: z.string() }), 400: ErrorReply, 409: ErrorReply },
+      },
+    },
+    async (req, reply) => {
+      const n = cleanName(req.body.name)
+      if (!n) return reply.code(400).send({ error: 'name' })
+      const token = newToken()
+      const state: State = { ...newGame(Date.now(), n.name), seed: randomInt(1, 2 ** 32 - 1) }
+      try {
+        const g = await store.createGuest(o.db, {
+          hash: hashToken(token), locale: req.body.lang, name: n.name, nameKey: n.key, crest: randomInt(0, 2 ** 31 - 1), state, cap: o.worldCap,
+          world: req.body.world, ip: req.ip, ua: req.headers['user-agent'], seed: randomInt(1, 2 ** 31 - 1),
+        })
+        req.log.info({ pid: g.pid, world: g.world }, 'guest created')
+        reply.setCookie(COOKIE, token, cookieOptions(o.secure))
+        return { token, pid: g.pid, world: g.world, path: (await store.worldPath(o.db, g.world)) ?? o.path }
+      } catch (e) {
+        if (e instanceof store.NameTaken) return reply.code(409).send({ error: 'name_taken' })
+        throw e
+      }
+    },
+  )
+
+  app.get(
+    '/me',
+    {
+      schema: {
+        response: { 200: z.object({ account: z.number(), pid: z.number().nullable(), world: z.number().nullable(), locale: z.string(), path: z.string() }), 401: ErrorReply, 403: ErrorReply },
+      },
+    },
+    async (req, reply) => {
+      const s = await requireSession(o.db, req, reply)
+      if (!s) return reply
+      const path = (s.world && (await store.worldPath(o.db, s.world))) || o.path
+      return { account: s.account, pid: s.pid, world: s.world, locale: s.locale, path }
+    },
+  )
+
+  app.post('/logout', { schema: { response: { 200: z.object({ ok: z.boolean() }), 401: ErrorReply, 403: ErrorReply } } }, async (req, reply) => {
+    const s = await requireSession(o.db, req, reply)
+    if (!s) return reply
+    await store.deleteSession(o.db, hashToken(s.token))
+    reply.clearCookie(COOKIE, { path: '/' })
+    return { ok: true }
+  })
+}

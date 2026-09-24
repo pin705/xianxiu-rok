@@ -1,0 +1,35 @@
+# HTTPS tự động (Let's Encrypt) cho {$DOMAIN}. Client tĩnh + API + Socket.IO theo từng node.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Mỗi node một đường Socket.IO: người chơi nối thẳng tới node đang giữ giới của mình (API cho biết đường nào)
+	handle /n1/* {
+		reverse_proxy n1:8787
+	}
+	handle /n2/* {
+		reverse_proxy n2:8787
+	}
+
+	# API không trạng thái: node nào cũng được; node đang xả (deploy) trả /readyz 503 thì bị bỏ qua
+	handle /api/* {
+		reverse_proxy n1:8787 n2:8787 {
+			lb_policy round_robin
+			health_uri /readyz
+			health_interval 3s
+			fail_duration 10s
+		}
+	}
+
+	# Không mở ra ngoài: số đo (Prometheus kéo qua mạng nội bộ) và tài liệu API
+	@private path /metrics /docs* /healthz /readyz
+	respond @private 404
+
+	handle {
+		root * /srv
+		@immutable path /assets/* /fonts/*
+		header @immutable Cache-Control "public, max-age=31536000, immutable"
+		header /sw.js Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
