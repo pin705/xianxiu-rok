@@ -4,7 +4,7 @@ import {
   EVENT_GOALS, NEWBIE_SHIELD, PROTECT, PVP_START, REVENGE_TIME, SHIELD_TIME, advance, apply, count, eventOf, expAt, newGame, storage, weekOf,
   type Action, type State,
 } from './index.ts'
-import { advanceWorld, defense, eventTop, mail, nextRaid, parseWorldAction, raidError, rivals, scout, worldAct, type Players } from './world.ts'
+import { advanceWorld, defense, eventTop, mail, nextRaid, parseWorldAction, raidError, rivals, scout, worldAct, type Players, type World } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
 const HOUR = 3_600_000
@@ -267,4 +267,109 @@ test('tiên minh giúp đỡ: nhờ một việc, mỗi người giúp một l�
   for (let p = 3; p <= 12; p++) act(p, { type: 'helpAll' })
   assert.equal(ps.get(1)!.queue[0].finishAt, job.finishAt - 10 * helpMs(job), 'tối đa 10 lần')
   assert.equal(allyOf(w, 1)!.helps.length, 0, 'đủ 10 lần thì lời nhờ tự gỡ')
+})
+
+test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác đánh bật, gọi về thì mất điểm; buff cho cả minh', async () => {
+  const { atlas, advanceAll, freshWorld, worldBuffs, garrison } = await import('./world.ts')
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const vein = a.points.find(p => p.kind === 'vein' && p.region === 0)!
+  const near = { x: a.regions[0].cx, y: a.regions[0].cy }
+  const ps = world({ ...sect('A', 10, { kiem3: 400 }), seat: near }, { ...sect('B', 10, { kiem3: 1500 }), seat: near }, { ...sect('C', 10), seat: near })
+  let w = freshWorld()
+  const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {
+    const r = worldAct(ps, pid, x, at, 5 + pid, map, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  const step = (at: number) => {
+    const r = advanceAll(ps, w, at, map)
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+  }
+  // A và C cùng minh
+  act(1, { type: 'allyFound', name: 'Vạn Kiếm', tag: 'VK' })
+  act(3, { type: 'allyJoin', id: 1 })
+  assert.equal(act(1, { type: 'go', i: vein.i, task: 'gather', elder: 'thanhPhong', army: { kiem3: 10 } }), 'bad', 'linh mạch thì chiếm, không khai')
+  assert.equal(act(1, { type: 'go', i: vein.i, task: 'take', elder: 'thanhPhong', army: { kiem3: 400 } }), null)
+  const m = ps.get(1)!.marches[0]
+  assert.ok(m.path && m.arriveAt > T0)
+  assert.equal(advance(ps.get(1)!, m.arriveAt + HOUR).marches[0].stay, undefined, 'client không tự giải')
+  step(m.arriveAt)
+  assert.equal(ps.get(1)!.marches[0].stay, true)
+  assert.equal(w.spots[vein.i].own, 1, 'điểm thuộc minh')
+  // buff linh mạch cho cả minh (A và C), B không có
+  for (const [k, v] of worldBuffs(ps, w, map, m.arriveAt)) ps.set(k, v)
+  assert.ok(ps.get(1)!.buffs.some(b => b.src === 'vein') && ps.get(3)!.buffs.some(b => b.src === 'vein'))
+  assert.ok(!ps.get(2)!.buffs.some(b => b.src === 'vein'))
+  // B (một mình, mạnh hơn) đánh bật A
+  assert.equal(act(2, { type: 'go', i: vein.i, task: 'take', elder: 'thanhPhong', army: { kiem3: 1500 } }, m.arriveAt), null)
+  const mb = ps.get(2)!.marches[0]
+  step(mb.arriveAt)
+  assert.equal(w.spots[vein.i].own, -2, 'người giữ một mình')
+  assert.equal(ps.get(1)!.marches[0].stay, false, 'A bị đánh bật, đang về')
+  assert.ok(ps.get(1)!.marches[0].returnAt > mb.arriveAt)
+  assert.equal(ps.get(1)!.reports.at(-1)!.def, true)
+  assert.deepEqual(garrison(ps, vein.i).map(([p]) => p), [2])
+  for (const [k, v] of worldBuffs(ps, w, map, mb.arriveAt)) ps.set(k, v)
+  assert.ok(!ps.get(1)!.buffs.some(b => b.src === 'vein') && ps.get(2)!.buffs.some(b => b.src === 'vein'), 'buff theo người giữ')
+  // B gọi về: điểm trống
+  assert.equal(act(2, { type: 'recall', id: mb.id }, mb.arriveAt + 1000), null)
+  assert.equal(w.spots[vein.i].own, undefined)
+  assert.equal(act(2, { type: 'recall', id: mb.id }, mb.arriveAt + 2000), 'bad', 'đang về rồi')
+})
+
+test('khai mỏ: mang về theo sức mang, hết giờ khai rồi về; gọi về sớm thì chia theo thời gian, phần còn lại trả mỏ', async () => {
+  const { atlas, advanceAll, freshWorld } = await import('./world.ts')
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const mine = a.points.find(p => p.kind === 'mine' && p.region === 0)!
+  const ps = world({ ...sect('A', 10, { kiem2: 100 }), seat: { x: a.regions[0].cx, y: a.regions[0].cy } })
+  let w = freshWorld()
+  const r = worldAct(ps, 1, { type: 'go', i: mine.i, task: 'gather', elder: 'thanhPhong', army: { kiem2: 100 } }, T0, 1, map, w)
+  assert.ok(r.ok)
+  for (const [k, v] of r.changed) ps.set(k, v)
+  const m = ps.get(1)!.marches[0]
+  const done = advanceAll(ps, w, m.arriveAt, map)
+  for (const [k, v] of done.changed) ps.set(k, v)
+  w = done.world
+  const g = ps.get(1)!.marches[0]
+  assert.equal(g.mine!.amount, Math.min(100 * 40 * 2.2, 20_000), 'sức mang của 100 đệ tử bậc 2')
+  assert.equal(w.spots[mine.i].left, 20_000 - g.mine!.amount)
+  assert.ok(g.returnAt > g.mine!.end)
+  // gọi về giữa chừng: được nửa, nửa kia trả mỏ
+  const half = Math.round((g.arriveAt + g.mine!.end) / 2)
+  const rc = worldAct(ps, 1, { type: 'recall', id: g.id }, half, 1, map, w)
+  assert.ok(rc.ok)
+  const back = rc.changed.get(1)!.marches[0]
+  assert.ok(Math.abs(back.mine!.amount - g.mine!.amount / 2) <= 2)
+  assert.equal(rc.world.spots[mine.i].left, 20_000 - back.mine!.amount)
+  const home = advance(rc.changed.get(1)!, back.returnAt)
+  assert.ok(home.res[back.mine!.res] >= ps.get(1)!.res[back.mine!.res] + back.mine!.amount)
+})
+
+test('yêu vương: kho máu chung, mỗi đội đánh một lát; hạ thì thưởng chia theo sát thương qua thư, rồi hồi sinh', async () => {
+  const { atlas, advanceAll, freshWorld, spotOf } = await import('./world.ts')
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const boss = a.points.find(p => p.kind === 'boss' && p.lv === 2)!
+  const seat = { x: a.regions[boss.region].cx + 3, y: a.regions[boss.region].cy }
+  const ps = world(...[1, 2, 3].map(k => ({ ...sect(`S${k}`, 20, { kiem4: 3000, phap4: 3000, the4: 3000 }), seat, elders: { thanhPhong: expAt(40) } })))
+  let w: World = { ...freshWorld(), spots: { [boss.i]: { hp: 20_000 } } } // còn 20k: một lát tối đa 12k, phải hai đội
+  for (const pid of [1, 2]) {
+    const r = worldAct(ps, pid, { type: 'go', i: boss.i, task: 'hit', elder: 'thanhPhong', army: { kiem4: 3000, phap4: 3000, the4: 3000 } }, T0 + pid, 9 + pid, map, w)
+    assert.ok(r.ok, JSON.stringify(r))
+    for (const [k, v] of r.changed) ps.set(k, v)
+  }
+  const at = Math.max(...[1, 2].map(p => ps.get(p)!.marches[0].arriveAt))
+  const r = advanceAll(ps, w, at, map)
+  for (const [k, v] of r.changed) ps.set(k, v)
+  w = r.world
+  assert.ok((w.spots[boss.i].until ?? 0) > at, 'đã hạ, chờ hồi sinh')
+  const gifts = [1, 2].map(p => ps.get(p)!.mail.find(m => m.k === 'boss'))
+  assert.ok(gifts.every(Boolean), 'ai đánh cũng có quà')
+  assert.equal(worldAct(ps, 3, { type: 'go', i: boss.i, task: 'hit', elder: 'thanhPhong', army: { kiem4: 10 } }, at + 1, 1, map, w).ok, false, 'đang hồi sinh')
+  assert.equal(spotOf(w, map, boss.i, w.spots[boss.i].until!).hp, 60_000, 'hồi sinh đầy máu')
 })

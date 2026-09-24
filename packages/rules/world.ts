@@ -4,13 +4,15 @@
 import {
   ALLY_COST, ALLY_ELDERS, ALLY_HALL, ALLY_HELPS, ALLY_MAX, HELP_MIN, HELP_SHARE, RESOURCES as RES,
   CARRY, ELDER_IDS, ELO_K, EVENT_TOP, FOES_MAX, GUARD_STEP, MAIL_MAX, MATCH_PICK, MATCH_POOL, PROTECT, PVP_FLOOR, PVP_HALL,
-  RAID_SHARE, RESOURCES, REVENGE_TIME, SHIELD_TIME, TIER, UNITS,
-  admit, advance, armyError, bump, elderLevel, evBump, fight, lead, marchSlots, marchTime, minus, pickArmy, power, pushReport, sideOf,
+  RAID_SHARE, RESOURCES, REVENGE_TIME, SHIELD_TIME, TIER, UNITS, BEATS, BOSSES, GARRISON_MAX, MINE_RATE, MINE_RESPAWN, MINE_STOCK, TIDE_MINE,
+  TIDE_PROD, TYPES, VEIN_BUFF, VEIN_CAP,
+  admit, advance, armyError, bump, elderLevel, evBump, fight, lead, marchSlots, marchTime, minus, mob, pickArmy, power, pushReport, sideOf,
   snap, storage, unitOf, cutOf, hasten, jobOf,
+  type Buff, type Reward,
   type JobKind,
   type Army, type Bag, type ElderId, type Err, type Mail, type March, type Report, type Side, type State,
 } from './index.ts'
-import { TILE_TIME, route, type Atlas, type Pos } from './atlas.ts'
+import { TILE_TIME, regionOf, route, tide, type Atlas, type PointKind, type Pos } from './atlas.ts'
 
 export * from './atlas.ts'
 
@@ -30,8 +32,11 @@ export type Players = Map<number, State>
 export type Role = 0 | 1 | 2 // thành viên · trưởng lão · minh chủ
 export type Help = { pid: number; job: JobKind; startAt: number; ms: number; by: number[] } // một việc đang nhờ giúp; ms: mỗi lần giúp bớt (chốt lúc nhờ)
 export type Alliance = { id: number; name: string; tag: string; members: Record<number, Role>; notice: string; at: number; helps: Help[] }
-export type World = { allies: Record<number, Alliance>; nextAlly: number }
-export const freshWorld = (): World => ({ allies: {}, nextAlly: 1 })
+// Trạng thái một điểm trên bản đồ giới. own: phe giữ (mã minh > 0, người giữ một mình = −mã người chơi), since: từ lúc nào.
+// Mỏ: còn left, cạn thì hồi đầy lúc until. Yêu vương: còn hp, sát thương từng người; chết thì hồi sinh lúc until.
+export type Spot = { own?: number; since?: number; left?: number; until?: number; hp?: number; dmg?: Record<number, number> }
+export type World = { allies: Record<number, Alliance>; nextAlly: number; spots: Record<number, Spot> }
+export const freshWorld = (): World => ({ allies: {}, nextAlly: 1, spots: {} })
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
 
 export type WorldAction =
@@ -44,7 +49,11 @@ export type WorldAction =
   | { type: 'allyNotice'; text: string }
   | { type: 'helpAsk'; job: JobKind }
   | { type: 'helpAll' }
-export const WORLD_ACTIONS: readonly WorldAction['type'][] = ['raid', 'allyFound', 'allyJoin', 'allyLeave', 'allyKick', 'allyRole', 'allyNotice', 'helpAsk', 'helpAll']
+  | { type: 'go'; i: number; task: Task; elder: ElderId; army: Army } // tới một điểm trên bản đồ giới
+  | { type: 'recall'; id: number } // gọi đội đang đóng quân / đang khai mỏ về
+export type Task = 'take' | 'gather' | 'hit'
+export const WORLD_ACTIONS: readonly WorldAction['type'][] = ['raid', 'allyFound', 'allyJoin', 'allyLeave', 'allyKick', 'allyRole', 'allyNotice', 'helpAsk', 'helpAll', 'go', 'recall']
+const TASKS: readonly Task[] = ['take', 'gather', 'hit']
 
 const id = (x: unknown): x is number => Number.isSafeInteger(x) && (x as number) >= 1
 const clean = (x: unknown) => (typeof x === 'string' ? x.normalize('NFC').trim().replace(/\s+/g, ' ') : '')
@@ -71,6 +80,13 @@ export function parseWorldAction(raw: unknown): WorldAction | null {
     }
     case 'helpAsk': return JOBS.includes(a.job as JobKind) ? { type: 'helpAsk', job: a.job as JobKind } : null
     case 'helpAll': return { type: 'helpAll' }
+    case 'go': {
+      const army = pickArmy(a.army)
+      return Number.isSafeInteger(a.i) && (a.i as number) >= 0 && TASKS.includes(a.task as Task) && army && ELDER_IDS.includes(a.elder as ElderId)
+        ? { type: 'go', i: a.i as number, task: a.task as Task, elder: a.elder as ElderId, army }
+        : null
+    }
+    case 'recall': return id(a.id) ? { type: 'recall', id: a.id } : null
   }
   return null
 }
@@ -120,6 +136,8 @@ export function worldAct(ps: Players, pid: number, raw: WorldAction, now: number
   if (!a) return { ok: false, error: 'bad' }
   const me = ps.get(pid)
   if (!me) return { ok: false, error: 'gone' }
+  if (a.type === 'go') return goAct(ps, w, pid, a, now, seed, map)
+  if (a.type === 'recall') return recallAct(ps, w, pid, a.id, now, map)
   if (a.type !== 'raid') return allyAct(w, ps, pid, a, now)
   const att = advance(me, now)
   const t = att.time
@@ -172,7 +190,7 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
 
 export const helpMs = (job: { startAt: number; finishAt: number }) => Math.max(HELP_MIN, Math.round((job.finishAt - job.startAt) * HELP_SHARE))
 
-function allyAct(w: World, ps: Players, pid: number, a: Exclude<WorldAction, { type: 'raid' }>, now: number): WorldResult {
+function allyAct(w: World, ps: Players, pid: number, a: Exclude<WorldAction, { type: 'raid' | 'go' | 'recall' }>, now: number): WorldResult {
   const mine = allyOf(w, pid)
   const role = mine?.members[pid] ?? -1
   const same = (x: WorldResult) => x
@@ -249,35 +267,51 @@ function allyAct(w: World, ps: Players, pid: number, a: Exclude<WorldAction, { t
 
 // ---------- Giải trận cướp (server) ----------
 
-// Lúc trận cướp kế tiếp tới nơi (để server hẹn giờ). ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
+// Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
+// ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
+const waiting = (m: March) => (m.target.kind === 'pvp' || m.target.kind === 'spot') && !m.returnAt && !m.stay && !m.back
 export function nextRaid(ps: Players) {
   let at = Infinity
-  for (const s of ps.values()) for (const m of s.marches) if (m.target.kind === 'pvp' && !m.returnAt && m.arriveAt < at) at = m.arriveAt
+  for (const s of ps.values()) for (const m of s.marches) if (waiting(m) && m.arriveAt < at) at = m.arriveAt
   return at
 }
 
-// Giải mọi trận cướp đã tới nơi (≤ now) theo thứ tự thời gian; trả về các state đã đổi (cả bên đánh lẫn bên thủ)
-export function advanceWorld(ps: Players, now: number): Players {
+// Đội quay về tay không (mục tiêu không còn, vừa có khiên, điểm đầy quân)
+const turnBack = (s: State, m: March, at: number): State => ({
+  ...s, marches: s.marches.map(x => (x.id === m.id ? { ...m, stay: false, back: m.army, hurt: m.hurt ?? {}, gain: { res: {}, items: {}, exp: 0 }, returnAt: at + (at - m.startAt) } : x)),
+})
+
+// Giải mọi đội đã tới nơi (≤ now) theo thứ tự thời gian: trận cướp (đổi state cả hai bên), điểm trên bản đồ (đổi phần chung)
+export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { changed: Players; world: World } {
   const due: [at: number, pid: number, id: number][] = []
-  for (const [pid, s] of ps) for (const m of s.marches) if (m.target.kind === 'pvp' && !m.returnAt && m.arriveAt <= now) due.push([m.arriveAt, pid, m.id])
+  for (const [pid, s] of ps) for (const m of s.marches) if (waiting(m) && m.arriveAt <= now) due.push([m.arriveAt, pid, m.id])
   const changed: Players = new Map()
   due.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2])
-  const cur = (pid: number) => changed.get(pid) ?? ps.get(pid)
+  const cur = (id: number) => changed.get(id) ?? ps.get(id)
+  const view = (): Players => new Map([...ps.keys()].map(id => [id, cur(id)!])) // cả giới như lúc này (quân đóng ở điểm)
   for (const [at, pid, id] of due) {
     const att = advance(cur(pid)!, at)
     const m = att.marches.find(x => x.id === id)!
+    if (m.target.kind === 'spot') {
+      const r = map ? spotArrive(view(), w, map, pid, att, m, at) : { changed: new Map([[pid, turnBack(att, m, at)]]), world: w }
+      for (const [k, v] of r.changed) changed.set(k, v)
+      w = r.world
+      continue
+    }
     const d = cur(m.target.i)
     // tông môn kia không còn (xoá tài khoản), hoặc vừa có khiên (người khác cướp trước): quay về tay không
     if (!d || d.shield > at) {
-      changed.set(pid, { ...att, marches: att.marches.map(x => (x === m ? { ...m, back: m.army, hurt: {}, gain: { res: {}, items: {}, exp: 0 }, returnAt: at + (at - m.startAt) } : x)) })
+      changed.set(pid, turnBack(att, m, at))
       continue
     }
     const r = raid(att, pid, advance(d, at), m.target.i, m, at)
     changed.set(pid, r.att)
     changed.set(m.target.i, r.def)
   }
-  return changed
+  return { changed, world: w }
 }
+// Chỉ trận cướp, không bản đồ (sim, test P2)
+export const advanceWorld = (ps: Players, now: number): Players => advanceAll(ps, freshWorld(), now).changed
 
 // Điểm kiểu Elo cho bên đánh (bên thủ mất/được đúng bấy nhiêu). Chỉ server tính nên không cần tất định giữa các engine.
 const elo = (a: number, d: number, win: boolean) => Math.round(ELO_K * ((win ? 1 : 0) - 1 / (1 + 10 ** ((d - a) / 400))))
@@ -398,14 +432,217 @@ export const eventTop = (ps: Players, week: number) =>
 export type Chron = { at: number; k: string; a: (string | number)[] } // biên niên của giới: chữ dựng ở client theo khoá
 export type Seat = { pid: number; name: string; x: number; y: number; hall: number; power: number; npc: boolean; shield: boolean }
 export type MapMarch = { pid: number; id: number; path: Pos[]; startAt: number; arriveAt: number; returnAt: number; foe?: string }
-export type MapSnap = { seats: Seat[]; marches: MapMarch[]; chron: Chron[] }
+// Điểm khác mặc định: phe giữ (tên minh/tông môn), số đội đóng, mỏ còn bao nhiêu, yêu vương còn máu, lúc hồi
+export type SpotView = { i: number; own?: string; n?: number; left?: number; hp?: number; until?: number }
+export type MapSnap = { seats: Seat[]; marches: MapMarch[]; chron: Chron[]; spots: SpotView[] }
 
-export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]): MapSnap {
+export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[], w: World = freshWorld()): MapSnap {
   const seats: Seat[] = [], marches: MapMarch[] = []
   for (const [pid, s] of ps) {
     if (!s.seat) continue
     seats.push({ pid, name: s.name, x: s.seat.x, y: s.seat.y, hall: s.levels.chuDien, power: Math.round(power(s)), npc: npc.has(pid), shield: s.shield > now })
     for (const m of s.marches) if (m.path) marches.push({ pid, id: m.id, path: m.path, startAt: m.startAt, arriveAt: m.arriveAt, returnAt: m.returnAt, ...(m.foe && { foe: m.foe }) })
   }
-  return { seats, marches, chron }
+  const spots: SpotView[] = []
+  for (const [k, sp] of Object.entries(w.spots)) {
+    const i = Number(k)
+    const own = sp.own === undefined ? undefined : sp.own > 0 ? (w.allies[sp.own] ? `[${w.allies[sp.own].tag}] ${w.allies[sp.own].name}` : undefined) : ps.get(-sp.own)?.name
+    spots.push({ i, own, n: garrison(ps, i).length, left: sp.left, hp: sp.hp, until: sp.until })
+  }
+  return { seats, marches, chron, spots }
+}
+
+// ---------- Điểm trên bản đồ giới: chiếm, khai mỏ, đánh yêu vương ----------
+
+const HOUR = 3_600_000
+const TASK_OF: Record<PointKind, Task> = { vein: 'take', gate: 'take', heaven: 'take', mine: 'gather', boss: 'hit' }
+// Phe của một người: tiên minh (mã > 0) hoặc chính mình (−mã người chơi)
+export const sideKey = (w: World, pid: number) => allyOf(w, pid)?.id ?? -pid
+// Quân đang đóng ở điểm i
+export const garrison = (ps: Players, i: number): [number, March][] =>
+  [...ps].flatMap(([pid, s]) => s.marches.filter(m => m.stay && m.target.kind === 'spot' && m.target.i === i).map(m => [pid, m] as [number, March]))
+// Trạng thái điểm lúc now (mỏ cạn / yêu vương chết đã tới giờ hồi thì như mới)
+export function spotOf(w: World, map: MapCtx, i: number, now: number): Spot {
+  const p = map.atlas.points[i]
+  const sp = w.spots[i] ?? {}
+  if (p.kind === 'mine') return sp.until && sp.until <= now ? { left: MINE_STOCK[p.lv - 1] } : { ...sp, left: sp.left ?? MINE_STOCK[p.lv - 1] }
+  if (p.kind === 'boss') return sp.until && sp.until <= now ? { hp: BOSSES[p.lv]!.str } : { ...sp, hp: sp.hp ?? BOSSES[p.lv]?.str }
+  return sp
+}
+const setSpot = (w: World, i: number, sp: Spot): World => ({ ...w, spots: { ...w.spots, [i]: sp } })
+const carryOf = (army: Army) => UNITS.reduce((sum, u) => sum + (army[u] ?? 0) * CARRY * TIER[unitOf(u).tier].stat, 0)
+const withMarch = (s: State, m: March): State => ({ ...s, marches: s.marches.map(x => (x.id === m.id ? m : x)) })
+const travel = (m: March) => m.arriveAt - m.startAt
+
+function goAct(ps: Players, w: World, pid: number, a: Extract<WorldAction, { type: 'go' }>, now: number, seed: number, map?: MapCtx): WorldResult {
+  const s = advance(ps.get(pid)!, now)
+  const t = s.time
+  const p = map?.atlas.points[a.i]
+  if (!map || !p) return no('gone')
+  if (TASK_OF[p.kind] !== a.task) return no('bad')
+  if (!s.seat) return no('far')
+  const r = route(map.atlas, s.seat, p, map.phase)
+  if (!r) return no('far')
+  const sp = spotOf(w, map, a.i, t)
+  if (a.task === 'hit' && (!BOSSES[p.lv] || (sp.until ?? 0) > t)) return no('cooldown')
+  if (a.task === 'gather' && ((sp.until ?? 0) > t || !sp.left)) return no('empty')
+  if (a.task === 'take' && garrison(ps, a.i).filter(([id]) => sideKey(w, id) === sideKey(w, pid)).length >= GARRISON_MAX) return no('full')
+  if (s.marches.some(m => m.target.kind === 'spot' && m.target.i === a.i)) return no('busy') // mỗi người một đội mỗi điểm
+  const e = armyError(s, a.elder, a.army) ?? (s.marches.length >= marchSlots(s) ? 'slots' : null)
+  if (e) return no(e)
+  const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
+  const m: March = {
+    id: s.nextId, elder: a.elder, army, target: { kind: 'spot', i: a.i }, task: a.task, spot: p.kind, seed, startAt: t,
+    arriveAt: t + Math.round(r.len * TILE_TIME * cutOf(s, 'march')), returnAt: 0, path: r.path,
+  }
+  return { ok: true, world: w, changed: new Map([[pid, { ...s, troops: minus(s.troops, army), marches: [...s.marches, m], nextId: s.nextId + 1 }]]) }
+}
+
+// Gọi về: đội đóng quân về nhà (còn ai của phe mình ở đó thì điểm vẫn giữ); đội đang khai mỏ mang về phần đã khai theo tỉ lệ thời gian
+function recallAct(ps: Players, w: World, pid: number, mid: number, now: number, map?: MapCtx): WorldResult {
+  const s = advance(ps.get(pid)!, now)
+  const t = s.time
+  const m = s.marches.find(x => x.id === mid)
+  if (!m || m.target.kind !== 'spot' || !(m.stay || (m.mine && m.mine.end > t))) return no('bad')
+  const i = m.target.i
+  if (m.stay) {
+    const next = withMarch(s, { ...m, stay: false, back: m.army, hurt: m.hurt ?? {}, gain: { res: {}, items: {}, exp: 0 }, returnAt: t + travel(m) })
+    const left = garrison(new Map([...ps, [pid, next]]), i).filter(([id]) => sideKey(w, id) === w.spots[i]?.own)
+    return { ok: true, changed: new Map([[pid, next]]), world: left.length ? w : setSpot(w, i, {}) }
+  }
+  const mine = m.mine!
+  const got = Math.floor((mine.amount * (t - m.arriveAt)) / Math.max(1, mine.end - m.arriveAt))
+  const next = withMarch(s, { ...m, mine: { ...mine, end: t, amount: got }, gain: { res: { [mine.res]: got }, items: {}, exp: 0 }, returnAt: t + travel(m) })
+  const sp = map ? spotOf(w, map, i, t) : (w.spots[i] ?? {})
+  return { ok: true, changed: new Map([[pid, next]]), world: setSpot(w, i, { left: (sp.left ?? 0) + (mine.amount - got) }) }
+}
+
+// Gộp nhiều đội thành một bên (quân đóng ở điểm, kết trận): nối các nhóm quân; công pháp và hành của đội đầu
+// at[j]: nhóm quân đầu tiên của đội j trong bên gộp
+function combine(parts: Side[]): { side: Side; at: number[] } {
+  const at: number[] = []
+  let k = 0
+  for (const p of parts) at.push(k), (k += p.troops.length)
+  return { side: { troops: parts.flatMap(p => p.troops), skill: parts[0]?.skill, el: parts[0]?.el }, at }
+}
+const armyOf = (m: March) => Object.fromEntries(UNITS.filter(u => (m.army[u] ?? 0) > 0).map(u => [u, m.army[u]!])) as Army
+// số còn lại của đội thứ j (nhóm quân theo thứ tự UNITS có mặt) từ mảng n của trận gộp
+function split(m: March, n: number[], from: number): { left: Army; hurt: Army } {
+  const ids = UNITS.filter(u => (m.army[u] ?? 0) > 0)
+  const left = Object.fromEntries(ids.map((u, k) => [u, n[from + k]])) as Army
+  const hurt = Object.fromEntries(ids.map((u, k) => [u, m.army[u]! - n[from + k]])) as Army
+  return { left, hurt }
+}
+const addArmy = (a: Army = {}, b: Army) => Object.fromEntries(UNITS.filter(u => (a[u] ?? 0) + (b[u] ?? 0) > 0).map(u => [u, (a[u] ?? 0) + (b[u] ?? 0)])) as Army
+
+function spotArrive(ps: Players, w: World, map: MapCtx, pid: number, att: State, m: March, at: number): { changed: Players; world: World } {
+  const i = m.target.i, p = map.atlas.points[i]
+  const one = (s: State): Players => new Map([[pid, s]])
+  const me = sideKey(w, pid)
+  const sp = spotOf(w, map, i, at)
+  const empty = { res: {}, items: {}, exp: 0 }
+
+  if (m.task === 'gather') {
+    if (!sp.left || (sp.until ?? 0) > at) return { changed: one(turnBack(att, m, at)), world: w }
+    const amount = Math.min(carryOf(m.army), sp.left)
+    const t = tide(map.atlas, at)
+    const rate = MINE_RATE[p.lv - 1] * (t.active && t.region === p.region ? 1 + TIDE_MINE : 1)
+    const end = at + Math.round((amount / rate) * HOUR)
+    const res = RESOURCES[i % RESOURCES.length]
+    const next = withMarch(att, { ...m, mine: { end, amount, res }, back: m.army, hurt: {}, gain: { res: { [res]: amount }, items: {}, exp: 0 }, returnAt: end + travel(m) })
+    const left = sp.left - amount
+    return { changed: one(next), world: setSpot(w, i, left > 0 ? { left } : { left: 0, until: at + MINE_RESPAWN }) }
+  }
+
+  if (m.task === 'hit') {
+    const boss = BOSSES[p.lv]
+    if (!boss || (sp.until ?? 0) > at) return { changed: one(turnBack(att, m, at)), world: w }
+    const type = TYPES[i % TYPES.length]
+    const slice = mob(boss.str / boss.slices, boss.tier, [[type, 0.5], [BEATS[type], 0.3], [BEATS[BEATS[type]], 0.2]], 1 + p.lv * 10)
+    const me2 = sideOf(att, m.elder, m.army)
+    const f = fight(me2, slice, m.seed)
+    const last = f.rounds.at(-1)
+    const k = TIER[boss.tier].stat
+    const dmg = Math.round(slice.troops.reduce((sum, t, g) => sum + (t.n - (last?.n[1][g] ?? t.n)) * k, 0))
+    const { left, hurt } = split(m, last?.n[0] ?? UNITS.filter(u => m.army[u]).map(u => m.army[u]!), 0)
+    const exp = Math.round((dmg / 20) * (1 + lead(att, m.elder, 'exp')))
+    let s = pushReport(att, { at, kind: 'spot', i, spot: p.kind, win: f.win, hurt, dead: {}, gain: { ...empty, exp }, fights: [{ a: snap(me2, m.elder, elderLevel(att.elders[m.elder])), b: snap(slice, undefined, 1 + p.lv * 10), rounds: f.rounds }] })
+    s = withMarch(s, { ...m, back: left, hurt, gain: { ...empty, exp }, report: s.nextId - 1, returnAt: at + travel(m) })
+    const hp = (sp.hp ?? boss.str) - dmg
+    const dmgs = { ...sp.dmg, [pid]: (sp.dmg?.[pid] ?? 0) + dmg }
+    const changed = one(s)
+    if (hp > 0) return { changed, world: setSpot(w, i, { hp, dmg: dmgs }) }
+    // hạ yêu vương: thưởng chia theo sát thương (qua thư); người đánh nhiều nhất nhận trưởng lão (nếu có)
+    const total = Object.values(dmgs).reduce((a, b) => a + b, 0)
+    const rank = Object.entries(dmgs).sort((a, b) => b[1] - a[1])
+    rank.forEach(([id, d], n) => {
+      const who = Number(id), st = changed.get(who) ?? ps.get(who)
+      if (!st) return
+      const share = d / total
+      const gift: Reward = {
+        res: Object.fromEntries(RESOURCES.map(r => [r, Math.floor((boss.reward.res?.[r] ?? 0) * share)])),
+        items: Object.fromEntries(Object.entries(boss.reward.items ?? {}).map(([pk, v]) => [pk, Math.max(n === 0 ? 1 : 0, Math.floor(v! * share))])),
+        ...(n === 0 && boss.reward.elder && st.elders[boss.reward.elder] === undefined && { elder: boss.reward.elder }),
+      }
+      changed.set(who, mail(st, { at, k: 'boss', a: [p.lv, n + 1, Math.round(share * 100)], gift }))
+    })
+    return { changed, world: setSpot(w, i, { until: at + boss.respawn }) }
+  }
+
+  // take: điểm trống hoặc của phe mình → đóng quân; của phe khác → đánh cả quân đang đóng
+  const gar = garrison(ps, i)
+  const foes = gar.filter(([id]) => sideKey(w, id) !== me)
+  if (!foes.length) {
+    if (gar.length >= GARRISON_MAX) return { changed: one(turnBack(att, m, at)), world: w }
+    const own = sp.own === me ? sp : { own: me, since: at }
+    return { changed: one(withMarch(att, { ...m, stay: true })), world: setSpot(w, i, own) }
+  }
+  const mine = sideOf(att, m.elder, m.army)
+  const parts = foes.map(([id, x]) => sideOf(ps.get(id)!, x.elder, armyOf(x)))
+  const { side: def, at: offs } = combine(parts)
+  const f = fight(mine, def, m.seed)
+  const last = f.rounds.at(-1)
+  const n0 = last?.n[0] ?? mine.troops.map(t => t.n), n1 = last?.n[1] ?? def.troops.map(t => t.n)
+  const a = split(m, n0, 0)
+  const changed: Players = new Map()
+  const aSnap = snap(mine, m.elder, elderLevel(att.elders[m.elder])), dSnap = snap(def, foes[0][1].elder, elderLevel(ps.get(foes[0][0])!.elders[foes[0][1].elder]))
+  let s = pushReport(att, { at, kind: 'spot', i, spot: p.kind, foe: ps.get(foes[0][0])!.name, win: f.win, hurt: a.hurt, dead: {}, gain: empty, fights: [{ a: aSnap, b: dSnap, rounds: f.rounds }] })
+  s = withMarch(s, f.win ? { ...m, army: a.left, hurt: a.hurt, stay: true } : { ...m, back: a.left, hurt: a.hurt, gain: empty, returnAt: at + travel(m) })
+  changed.set(pid, s)
+  const flip = f.rounds.map(r => ({ n: [r.n[1], r.n[0]] as [number[], number[]], cast: [r.cast[1], r.cast[0]] as [boolean, boolean] }))
+  foes.forEach(([id, x], j) => {
+    const st = changed.get(id) ?? ps.get(id)!
+    const d = split({ ...x, army: armyOf(x) }, n1, offs[j])
+    const hurt = addArmy(x.hurt, d.hurt)
+    let ds = pushReport(st, { at, kind: 'spot', i, spot: p.kind, foe: att.name, def: true, win: !f.win, hurt: d.hurt, dead: {}, gain: empty, fights: [{ a: dSnap, b: aSnap, rounds: flip }] })
+    // bị đánh bật: về nhà với phần còn lại; giữ được: ở lại, bớt quân
+    ds = withMarch(ds, f.win ? { ...x, stay: false, back: d.left, hurt, gain: empty, report: ds.nextId - 1, returnAt: at + travel(x) } : { ...x, army: d.left, hurt })
+    changed.set(id, ds)
+  })
+  return { changed, world: f.win ? setSpot(w, i, { own: me, since: at }) : w }
+}
+
+// Buff của bản đồ giới cho mỗi tông môn: linh mạch phe mình đang giữ (cả minh), linh triều ở vùng mình. Trả về state cần đổi.
+export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Players {
+  const veins = new Map<number, number>()
+  for (const [k, sp] of Object.entries(w.spots)) {
+    const p = map.atlas.points[Number(k)]
+    if (p?.kind === 'vein' && sp.own !== undefined) veins.set(sp.own, (veins.get(sp.own) ?? 0) + VEIN_BUFF[p.lv - 1])
+  }
+  const t = tide(map.atlas, at)
+  const changed: Players = new Map()
+  for (const [pid, s] of ps) {
+    if (!s.seat) continue
+    const v = Math.min(VEIN_CAP, veins.get(sideKey(w, pid)) ?? 0)
+    const want: Buff[] = [
+      ...(v ? [{ key: 'prod' as const, v, until: 0, src: 'vein' }] : []),
+      ...(t.active && regionOf(map.atlas, s.seat) === t.region ? [{ key: 'prod' as const, v: TIDE_PROD, until: t.end, src: `tide${t.cycle}` }] : []),
+    ]
+    const keep = s.buffs.filter(b => b.src !== 'vein' && !b.src.startsWith('tide'))
+    const have = s.buffs.filter(b => b.src === 'vein' || b.src.startsWith('tide'))
+    if (JSON.stringify(have) === JSON.stringify(want)) continue
+    const st = advance(s, at) // sản lượng trước lúc đổi tính theo buff cũ
+    changed.set(pid, { ...st, buffs: [...keep, ...want] })
+  }
+  return changed
 }

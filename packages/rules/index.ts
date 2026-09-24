@@ -30,7 +30,8 @@ export type Gear = { lv: number; on?: ElderId } // on: trưởng lão đang đeo
 export type Talent = [atk: number, hp: number, skill: number]
 // until: lúc hết (due() gỡ đúng giờ, nên sản lượng trước/sau tính đúng); 0 = giữ tới khi server gỡ. src: nguồn, mỗi nguồn một buff
 export type Buff = { key: Bonus; v: number; until: number; src: string }
-export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp'; i: number } // pvp: i = mã người chơi bị cướp
+// pvp: i = mã người chơi bị cướp · spot: i = chỉ số điểm trên bản đồ giới (atlas.points)
+export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp' | 'spot'; i: number }
 export type Gain = { res: Partial<Bag>; items: Items; elder?: ElderId; exp: number }
 export type March = {
   id: number
@@ -43,6 +44,10 @@ export type March = {
   returnAt: number // 0: chưa hẹn (đi cướp: server giải trận lúc tới nơi rồi mới biết giờ về)
   foe?: string // đi cướp: tên tông môn bên kia (để hiện)
   path?: { x: number; y: number }[] // đi trên bản đồ giới: các điểm dừng (đi, …cổng, tới) — theo ô
+  task?: 'take' | 'gather' | 'hit' // tới điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương
+  spot?: string // loại điểm (để hiện tên): vein, mine, boss, gate, heaven
+  stay?: boolean // đang đóng quân ở điểm (chỉ về khi bị đánh bật hoặc gọi về)
+  mine?: { end: number; amount: number; res: Res } // đang khai mỏ tới end, mang về amount
   back?: Army // sau trận: đệ tử còn đứng được, thương binh và chiến lợi phẩm mang về
   hurt?: Army
   gain?: Gain
@@ -52,8 +57,9 @@ export type Snap = { elder?: ElderId; level: number; troops: { type: UnitType; t
 export type Report = {
   id: number
   at: number
-  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp'
+  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot'
   i: number
+  spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
   foe?: string // PvP: tên tông môn bên kia
   def?: boolean // PvP: mình là bên thủ
@@ -353,7 +359,7 @@ export const beastStr = (level: number) => grow(BEAST_STR[0], BEAST_STR[1], leve
 export const beastLoot = (level: number) => grow(BEAST_LOOT[0], BEAST_LOOT[1], level - 1)
 export const beastExp = (level: number) => grow(BEAST_EXP[0], BEAST_EXP[1], level - 1)
 export const place = (t: Target) =>
-  t.kind === 'beast' ? BEASTS[t.i] : t.kind === 'sect' ? SECTS[t.i] : t.kind === 'tower' ? TOWER : t.kind === 'pvp' ? PVP_GATE : REALMS[t.i]
+  t.kind === 'beast' ? BEASTS[t.i] : t.kind === 'sect' ? SECTS[t.i] : t.kind === 'tower' ? TOWER : t.kind === 'pvp' || t.kind === 'spot' ? PVP_GATE : REALMS[t.i]
 export const marchTime = (s: State, t: Target) => {
   const p = place(t)
   return Math.round(Math.max(MARCH_MIN, Math.hypot(p.x - HOME.x, p.y - HOME.y) * MARCH_SPEED) * cut(s, 'march')) * 1000
@@ -624,7 +630,7 @@ function due(s: State, now: number): Due[] {
     if (x.until && x.until <= now) ev.push([x.until, st => ({ ...st, buffs: st.buffs.filter(y => y.src !== x.src || y.until !== x.until) })])
   for (const m of s.marches) {
     // đi cướp: trận cần state của người kia — server giải (world.ts), ở đây chỉ chờ
-    if (!m.back && m.seed && m.arriveAt <= now && m.target.kind !== 'pvp') ev.push([m.arriveAt, st => arrive(st, m.id)])
+    if (!m.back && m.seed && m.arriveAt <= now && (m.target.kind === 'beast' || m.target.kind === 'sect')) ev.push([m.arriveAt, st => arrive(st, m.id)])
     if (m.returnAt && m.returnAt <= now) ev.push([m.returnAt, st => home(st, m.id)])
   }
   return ev.sort((a, b) => a[0] - b[0])
@@ -1127,7 +1133,7 @@ function valid(s: any): s is State {
     obj(s.gear) && Object.entries(s.gear).every(([g, x]: [string, any]) => Object.hasOwn(GEAR, g) && obj(x) && num(x.lv) && (x.on === undefined || Object.hasOwn(ELDERS, x.on))) &&
     Array.isArray(s.buffs) && s.buffs.every((b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string') &&
     Array.isArray(s.marches) &&
-    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect', 'pvp'].includes(m.target.kind) &&
+    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect', 'pvp', 'spot'].includes(m.target.kind) &&
       num(m.target.i) && num(m.seed) && num(m.startAt) && num(m.arriveAt) && num(m.returnAt)) &&
     Array.isArray(s.reports) && s.reports.every((r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead)) &&
     num(s.seen) && num(s.beast) && obj(s.cool) &&

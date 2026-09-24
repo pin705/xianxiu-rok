@@ -3,6 +3,7 @@
 // Vòng ngoài 16 vùng, vòng giữa 8, tâm 1. Giữa hai vùng kề nhau là một cổng (trận nhãn), mở theo pha mùa — không theo chủ.
 // Điểm trên bản đồ: linh mạch, mỏ, yêu vương, cổng, Thiên Môn ở tâm. Đi 12 giây mỗi ô.
 import { rng } from './combat.ts'
+import { TIDE_EVERY, TIDE_LEN } from './data.ts'
 
 export const MAP_W = 150
 export const GRID = 5
@@ -147,4 +148,12 @@ export function weather(a: Atlas, region: number, t: number): Weather {
   const r = rng((a.seed * 31 + region * 997 + Math.floor(t / 10_800_000)) >>> 0)()
   const cold = a.regions[region].cy < MAP_W * 0.25 // phương bắc lạnh
   return r < 0.55 ? 'clear' : r < 0.75 ? 'mist' : cold ? 'snow' : 'rain'
+}
+
+// Linh triều: mỗi TIDE_EVERY một vùng (theo seed + số chu kỳ) có triều trong TIDE_LEN đầu chu kỳ
+export function tide(a: Atlas, t: number) {
+  const cycle = Math.floor(t / TIDE_EVERY)
+  const start = cycle * TIDE_EVERY
+  const region = Math.floor(rng((a.seed * 7919 + cycle * 104729) >>> 0)() * a.regions.length)
+  return { cycle, region, start, end: start + TIDE_LEN, active: t < start + TIDE_LEN }
 }

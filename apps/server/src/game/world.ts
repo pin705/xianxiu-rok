@@ -10,7 +10,7 @@ import {
   type Action, type ElderId, type Mail, type Report, type State,
 } from '@rok/rules'
 import {
-  WORLD_ACTIONS, advanceWorld, allyInfo, allyOf, allyRows, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
+  WORLD_ACTIONS, advanceAll, allyInfo, allyOf, allyRows, worldBuffs, atlas, dayIn, eventTop, freshWorld, mail, mapOf, nextRaid, parseWorldAction, phaseOf, raidChance, regionOf, rivals, scout,
   spawn, worldAct,
   type Chron, type MapCtx, type World as Shared, type WorldAction, type WorldResult,
 } from '@rok/rules/world'
@@ -104,6 +104,7 @@ export class World {
   private chatId = 0
   private readonly buckets = new Map<number, { tokens: number; at: number; last: string; lastAt: number }>()
   private readonly muted = new Map<number, number>()
+  private buffAt = 0 // buff bản đồ (linh mạch, linh triều) tính lại lúc này, hoặc ngay khi phần chung đổi
 
   constructor(c: store.Claimed, rows: store.PlayerRow[], env: Env) {
     this.env = env
@@ -115,7 +116,7 @@ export class World {
     this.info = { id: c.id, name: c.name, season: c.season, map: c.seed, opened: this.opened }
     for (const r of rows) this.adopt(r)
     const st = (c.state ?? {}) as { week?: number; npcs?: boolean; chron?: Chron[]; world?: Shared }
-    this.shared = st.world ?? freshWorld()
+    this.shared = { ...freshWorld(), ...st.world } // blob cũ thiếu trường mới: lấy mặc định
     this.week = st.week ?? weekOf(this.now())
     this.npcsMade = !!st.npcs
     this.chron = st.chron ?? []
@@ -231,7 +232,7 @@ export class World {
       const now = this.now()
       for (const [sock, until] of this.watchers) if (until < now || !sock.connected) this.watchers.delete(sock)
       if (!this.watchers.size) return
-      const snap = mapOf(this.ps, now, this.npc, this.chron)
+      const snap = mapOf(this.ps, now, this.npc, this.chron, this.shared)
       const to = [...this.watchers.keys()]
       this.deliver(() => {
         for (const sock of to) if (sock.connected) sock.emit('w', snap)
@@ -350,6 +351,15 @@ export class World {
     const prev = this.shared
     this.shared = next
     this.worldDirty = true
+    this.buffAt = 0 // linh mạch / người trong minh có thể đã đổi
+    if (prev.spots !== next.spots) {
+      this.mapChanged()
+      const a = atlas(this.seed)
+      for (const [k, sp] of Object.entries(next.spots)) {
+        const p = a.points[Number(k)]
+        if (p?.kind === 'boss' && sp.until && sp.until !== prev.spots[Number(k)]?.until) this.record(this.now(), 'boss', [p.lv])
+      }
+    }
     const touched = new Set<number>()
     for (const al of [...Object.values(prev.allies), ...Object.values(next.allies)])
       if (prev.allies[al.id] !== next.allies[al.id]) for (const pid of Object.keys(al.members)) touched.add(Number(pid))
@@ -372,7 +382,7 @@ export class World {
     if (q.k === 'map') {
       const now = this.now()
       this.watchers.set(sock, now + MAP_WATCH)
-      return this.deliver(() => ack(mapOf(this.ps, now, this.npc, this.chron)))
+      return this.deliver(() => ack(mapOf(this.ps, now, this.npc, this.chron, this.shared)))
     }
     // chiến báo chưa kịp ghi DB (đang chờ / đang commit) cộng chiến báo đã ghi
     const mem = [...(this.inflight?.reports ?? []), ...this.pending.reports]
@@ -478,17 +488,26 @@ export class World {
   // Sự kiện của cả giới: lật tuần sự kiện, rồi mọi trận cướp đã tới nơi (một trận đổi state của cả hai bên)
   private worldStep(now: number) {
     if (weekOf(now) > this.week) this.rollWeek(now)
-    let changed: Map<number, State>
     try {
-      changed = advanceWorld(this.ps, now)
+      const map = this.map(now)
+      const r = advanceAll(this.ps, this.shared, now, map)
+      if (r.world !== this.shared) this.share(r.world)
+      this.commitAll(r.changed)
+      if (r.changed.size) this.armRaid()
+      // buff bản đồ: khi phần chung đổi (share đặt buffAt = 0), và mỗi 30 giây (linh triều bắt đầu/đổi vùng)
+      if (now >= this.buffAt) {
+        this.buffAt = now + 30_000
+        this.commitAll(worldBuffs(this.ps, this.shared, map, now))
+      }
     } catch (e) {
-      return this.env.log.error({ err: e, world: this.id }, 'advanceWorld threw')
+      this.env.log.error({ err: e, world: this.id }, 'world step threw')
     }
+  }
+  private commitAll(changed: Map<number, State>) {
     for (const [pid, s] of changed) {
       const slot = this.slots.get(pid)
       if (slot) this.commit(slot, s)
     }
-    if (changed.size) this.armRaid()
   }
 
   // Hết tuần: top sự kiện của tuần cũ nhận quà qua thư (điểm vẫn còn trong state vì worldStep chạy trước mọi advance của tuần mới)
