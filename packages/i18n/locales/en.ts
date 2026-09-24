@@ -789,6 +789,7 @@ export const en: Text = {
     unsaved: 'The connection dropped before the server saved it — check your last action',
     unavailable: 'The server is busy, try again in a moment',
     rate: 'Too fast — slow down a little',
+    rude: 'That contains words that are not allowed',
     moving: 'The realm is moving to another server, one moment',
     maintenance: 'Your sect is being checked, try again later',
     shield: 'That sect is under a protection shield',

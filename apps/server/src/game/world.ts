@@ -22,7 +22,7 @@ import {
   diff, view,
   type Ack, type Bye, type Channel, type ChatMsg, type ClientToServer, type Fame, type Push, type Query, type SayErr, type Seen, type ServerToClient, type Snap, type WorldInfo,
 } from '@rok/protocol'
-import { mask, clean as tidy } from '../lib/filter.ts'
+import { hasBad, mask, clean as tidy } from '../lib/filter.ts'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
 import { commitErrors, commitSeconds, fenced, intents } from '../lib/metrics.ts'
@@ -62,6 +62,8 @@ const CHAT_DUP = 30_000
 const CHAT_HALL = 3
 const CHAT_KEEP = 50
 const seed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước mọi thao tác: client không đoán trước được trận
+// Chữ người chơi tự đặt mà cả giới thấy: lọc từ tục trước khi vào luật (chat lọc riêng bằng mask)
+const publicText = (a: WorldAction) => (a.type === 'allyFound' ? [a.name, a.tag] : a.type === 'allyNotice' ? [a.text] : [])
 
 export class World {
   readonly id: number
@@ -369,9 +371,15 @@ export class World {
   // Thao tác chạm tới tông môn khác (đi cướp): luật giới, có thể đổi state của nhiều người trong một bước
   private social(slot: Slot, sock: Sock, raw: unknown, now: number, ack: (r: Ack) => void) {
     const a = parseWorldAction(raw)
+    if (a && publicText(a).some(hasBad)) {
+      intents.inc({ result: 'rude' })
+      return this.deliver(() => ack({ ok: false, err: 'rude' }))
+    }
     let r: WorldResult
     try {
-      r = !a ? { ok: false, error: 'bad' } : !this.info.market && MARKET_ACTIONS.includes(a.type) ? { ok: false, error: 'locked' } : worldAct(this.ps, slot.id, a, now, seed(), this.map(now), this.shared)
+      if (!a) r = { ok: false, error: 'bad' }
+      else if (!this.info.market && MARKET_ACTIONS.includes(a.type)) r = { ok: false, error: 'locked' }
+      else r = worldAct(this.ps, slot.id, a, now, seed(), this.map(now), this.shared)
     } catch (e) {
       r = { ok: false, error: 'bad' }
       this.env.log.error({ err: e, world: this.id, pid: slot.id }, 'worldAct threw')

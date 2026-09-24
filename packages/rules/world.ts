@@ -220,7 +220,7 @@ export type Member = { pid: number; name: string; role: Role; hall: number; powe
 export type AllyInfo = Alliance & { people: Member[]; rallies: Rally[] }
 export const allyRows = (w: World, ps: Players): AllyRow[] =>
   Object.values(w.allies)
-    .map(al => ({ id: al.id, name: al.name, tag: al.tag, n: Object.keys(al.members).length, power: Object.keys(al.members).reduce((sum, p) => sum + Math.round(power(ps.get(Number(p)) ?? ps.values().next().value!)), 0) }))
+    .map(al => ({ id: al.id, name: al.name, tag: al.tag, n: Object.keys(al.members).length, power: Object.keys(al.members).reduce((sum, p) => { const s = ps.get(Number(p)); return sum + (s ? Math.round(power(s)) : 0) }, 0) }))
     .sort((a, b) => b.power - a.power || a.id - b.id)
 export function allyInfo(w: World, ps: Players, pid: number, online: (pid: number) => boolean): AllyInfo | null {
   const al = allyOf(w, pid)

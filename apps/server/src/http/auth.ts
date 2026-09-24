@@ -26,7 +26,8 @@ export async function requireSession(db: Database, req: FastifyRequest, reply: F
 }
 
 // path: đường Socket.IO của node này — trả cho client khi giới chưa ai giữ (node này sẽ nhận giới lúc bắt tay)
-export type AuthOptions = { db: Database; worldCap: number; secure: boolean; path: string }
+// pickWorld: cho khách tự chọn giới (chỉ test/dev: bỏ qua giới hạn người mỗi giới và hạn vào giới)
+export type AuthOptions = { db: Database; worldCap: number; secure: boolean; path: string; pickWorld: boolean }
 
 export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => {
   app.post(
@@ -50,7 +51,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
       try {
         const g = await store.createGuest(o.db, {
           hash: hashToken(token), locale: req.body.lang, name: n.name, nameKey: n.key, crest: randomInt(0, 2 ** 31 - 1), state, cap: o.worldCap,
-          world: req.body.world, ip: req.ip, ua: req.headers['user-agent'], seed: randomInt(1, 2 ** 31 - 1),
+          world: o.pickWorld ? req.body.world : undefined, ip: req.ip, ua: req.headers['user-agent'], seed: randomInt(1, 2 ** 31 - 1),
         })
         req.log.info({ pid: g.pid, world: g.world }, 'guest created')
         reply.setCookie(COOKIE, token, cookieOptions(o.secure))

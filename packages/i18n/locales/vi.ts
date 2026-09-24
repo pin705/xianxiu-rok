@@ -788,6 +788,7 @@ export const vi = {
     unsaved: 'Mất kết nối trước khi máy chủ ghi — kiểm tra lại thao tác vừa rồi',
     unavailable: 'Máy chủ đang bận, thử lại sau giây lát',
     rate: 'Thao tác quá nhanh, chậm lại một chút',
+    rude: 'Có từ ngữ không phù hợp — đổi cách viết khác',
     moving: 'Giới đang chuyển máy chủ, đợi một chút',
     maintenance: 'Tông môn đang được kiểm tra, thử lại sau',
     shield: 'Đối thủ đang có khiên bảo hộ',

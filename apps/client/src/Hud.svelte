@@ -521,8 +521,6 @@
   }
   .on .medal img {
     opacity: 1;
-  }
-  .on .medal img {
     filter: none;
   }
   .on .tl {
@@ -588,15 +586,13 @@
       max-width: 640px;
       margin: 0 auto;
       gap: var(--sp-3);
+      order: 2;
     }
     .pow {
       order: 3;
     }
     .who > :global(:last-child) {
       order: 4;
-    }
-    .res {
-      order: 2;
     }
 
     .tabs {

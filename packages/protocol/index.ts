@@ -44,7 +44,7 @@ export type WorldInfo = { id: number; name: string; season: number; map: number;
 export type Seen = Pick<State, 'time' | 'res' | 'levels' | 'tech' | 'stats'>
 export type Welcome = { now: number; v: number; state: View; me: Me; world: WorldInfo; seen?: Seen; ro: boolean; warp: boolean }
 
-export type ServerErr = 'rate' | 'unavailable' | 'moving' | 'maintenance'
+export type ServerErr = 'rate' | 'unavailable' | 'moving' | 'maintenance' | 'rude'
 // Trả lời một thao tác (ack của socket.io, gửi SAU khi đã ghi DB): có v/p nếu state đổi; rep = chiến báo mới
 export type Ack = { ok: true; v?: number; p?: Patch; rep?: Report[] } | { ok: false; err: Err | ServerErr }
 export type Push = { v: number; p: Patch; rep?: Report[] } // state đổi do server (trận tới nơi…) hoặc do tab khác của cùng người

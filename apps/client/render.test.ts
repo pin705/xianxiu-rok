@@ -429,7 +429,6 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
           muted: false,
           onclose: noop,
           onmute: noop,
-          onload: noop,
           toast: noop,
         },
         label,

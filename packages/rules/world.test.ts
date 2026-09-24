@@ -1,10 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  EVENT_GOALS, NEWBIE_SHIELD, PROTECT, PVP_START, REVENGE_TIME, SHIELD_TIME, advance, apply, count, eventOf, expAt, newGame, storage, weekOf,
+  EVENT_GOALS, NEWBIE_SHIELD, PROTECT, PVP_START, REVENGE_TIME, SHIELD_TIME, advance, apply, count, eventOf, expAt, newGame, power, storage, weekOf,
   type Action, type State,
 } from './index.ts'
-import { advanceWorld, defense, eventTop, mail, nextRaid, parseWorldAction, raidError, rivals, scout, worldAct, type Players, type World } from './world.ts'
+import { advanceWorld, allyRows, defense, eventTop, mail, nextRaid, parseWorldAction, raidError, rivals, scout, worldAct, type Players, type World } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
 const HOUR = 3_600_000
@@ -235,6 +235,11 @@ test('tiên minh: lập (tầng 10, tốn phí, tên/tag không trùng), vào, c
   assert.equal(act(1, { type: 'allyRole', pid: 2, role: 1 }), null)
   assert.equal(act(1, { type: 'allyNotice', text: '  Họp  lúc 8h  ' }), null)
   assert.equal(allyOf(w, 1)!.notice, 'Họp lúc 8h')
+  const pw = (id: number) => Math.round(power(ps.get(id)!))
+  assert.equal(allyRows(w, ps)[0].power, pw(1) + pw(2))
+  const gone = new Map(ps)
+  gone.delete(2)
+  assert.equal(allyRows(w, gone)[0].power, pw(1), 'thành viên không còn state: cộng 0, không cộng nhầm người khác')
   // minh chủ rời: trưởng lão lên thay; người cuối rời: giải tán
   assert.equal(act(1, { type: 'allyLeave' }), null)
   assert.equal(allyOf(w, 2)!.members[2], 2)

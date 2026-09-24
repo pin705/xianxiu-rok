@@ -9,6 +9,7 @@ import type { Action } from '@rok/rules'
 import type { Ack, ClientToServer, Push, Refuse, ServerToClient, Welcome } from '@rok/protocol'
 import { buildServer } from './src/app.ts'
 import { loadConfig } from './src/config.ts'
+import { prune } from './src/db/store.ts'
 
 const ADMIN = process.env.DATABASE_URL ?? 'postgres://rok:rok@127.0.0.1:5439/rok'
 const NAME = `rok_t_${randomBytes(4).toString('hex')}`
@@ -119,9 +120,27 @@ test('tên trùng trong cùng giới, tên bẩn, thiếu header chống CSRF đ
   assert.equal((await guest(a, 'trùng   tên tông')).status, 409)
   assert.equal((await guest(a, 'x')).status, 400)
   assert.equal((await guest(a, '<script>')).status, 400)
+  assert.equal((await guest(a, 'Tông Đéo Gì')).status, 400, 'tên có từ tục')
   const r = await fetch(`http://127.0.0.1:${a.port}/api/guest`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"name":"Không Header"}' })
   assert.equal(r.status, 403)
   assert.deepEqual(await (await api(a, '/me')).json(), { account: null, pid: null, world: null, path: a.path })
+})
+
+test('phiên còn dùng thì dọn đêm không xoá (seen_at dời lên); phiên bỏ quá 180 ngày thì xoá', { skip }, async () => {
+  const used = await guest(a), left = await guest(a)
+  await a.db.client`update sessions set seen_at = now() - interval '200 days' where account_id in (select account_id from players where id in (${used.pid}, ${left.pid}))`
+  assert.equal(((await (await api(a, '/me', undefined, used.token)).json()) as { pid: number }).pid, used.pid)
+  await prune(a.db.db)
+  assert.equal(((await (await api(a, '/me', undefined, used.token)).json()) as { pid: number | null }).pid, used.pid)
+  assert.equal(((await (await api(a, '/me', undefined, left.token)).json()) as { pid: number | null }).pid, null)
+})
+
+test('khách chỉ tự chọn giới được khi bật công cụ dev (ALLOW_WARP): production luôn xếp theo chỗ trống', { skip }, async () => {
+  const n = await boot('pick', { ALLOW_WARP: '0' })
+  const w = await newWorld(n)
+  const g = await guest(n, undefined, w)
+  assert.equal(g.status, 200)
+  assert.notEqual(g.world, w)
 })
 
 test('hai tab: tab gửi nhận ack, tab kia nhận patch cùng version; sai mã giao thức bị mời tải bản mới', { skip }, async () => {
@@ -310,7 +329,9 @@ test('tiên minh + chat: lập minh, người khác vào, nhờ giúp, kênh gi�
   await api(n, '/dev/state', { state: { ...state, levels: { ...state.levels, chuDien: 10 }, res: { linhThach: 5e4, linhThao: 5e4, linhKhoang: 5e4 } } }, A.token)
   const allyEvents: number[] = []
   cb.s.on('ally', () => allyEvents.push(Date.now()))
+  assert.deepEqual(await ca.act({ type: 'allyFound', name: 'Minh Vcl', tag: 'TVM' }), { ok: false, err: 'rude' }, 'tên minh có từ tục')
   assert.ok((await ca.act({ type: 'allyFound', name: 'Thanh Vân Minh', tag: 'TVM' })).ok)
+  assert.deepEqual(await ca.act({ type: 'allyNotice', text: 'đm cả minh' }), { ok: false, err: 'rude' }, 'bố cáo có từ tục')
   const list = (await cb.s.timeout(5000).emitWithAck('get', { k: 'allies' })) as { id: number; name: string }[]
   assert.equal(list[0].name, 'Thanh Vân Minh')
   assert.ok((await cb.act({ type: 'allyJoin', id: list[0].id })).ok)

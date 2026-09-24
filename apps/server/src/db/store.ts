@@ -8,6 +8,7 @@ import { accounts, chat, chatReports, codes, events, inbox, players, pushSubs, r
 // ---------- Phiên ----------
 
 export type Session = { account: number; locale: string; banned: boolean; deleted: boolean; pid: number | null; world: number | null }
+// Mọi lối vào (HTTP, socket) đều qua đây: phiên còn dùng thì dời seen_at (tối đa một lần mỗi ngày) để prune không xoá oan
 export async function findSession(db: Database, hash: Buffer): Promise<Session | null> {
   const [r] = await db
     .select({
@@ -17,12 +18,16 @@ export async function findSession(db: Database, hash: Buffer): Promise<Session |
       deleted: sql<boolean>`${accounts.deletedAt} is not null`,
       pid: players.id,
       world: players.worldId,
+      stale: sql<boolean>`${sessions.seenAt} < now() - interval '1 day'`,
     })
     .from(sessions)
     .innerJoin(accounts, eq(accounts.id, sessions.accountId))
     .leftJoin(players, eq(players.accountId, accounts.id))
     .where(eq(sessions.hash, hash))
-  return r ?? null
+  if (!r) return null
+  const { stale, ...s } = r
+  if (stale) await db.update(sessions).set({ seenAt: sql`now()` }).where(eq(sessions.hash, hash))
+  return s
 }
 
 export const deleteSession = (db: Database, hash: Buffer) => db.delete(sessions).where(eq(sessions.hash, hash))

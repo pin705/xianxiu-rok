@@ -59,7 +59,7 @@ export async function buildServer(c: Config, hooks: { push?: Pusher } = {}) {
       api.addHook('onRequest', async (req, reply) => {
         if (req.method === 'POST' && req.headers['x-rok'] !== '1') return reply.code(403).send({ error: 'csrf' })
       })
-      await api.register(authRoutes, { db: d.db, worldCap: c.WORLD_CAP, secure: c.NODE_ENV === 'production', path: c.NODE_PATH })
+      await api.register(authRoutes, { db: d.db, worldCap: c.WORLD_CAP, secure: c.NODE_ENV === 'production', path: c.NODE_PATH, pickWorld: c.ALLOW_WARP })
       await api.register(accountRoutes, { db: d.db, secure: c.NODE_ENV === 'production', path: c.NODE_PATH, limits: c.LIMITS, pushKey: push ? c.VAPID_PUBLIC_KEY! : null, localPush: c.NODE_ENV !== 'production' })
       await api.register(gameRoutes, { db: d.db })
       if (c.ALLOW_WARP) await api.register(devRoutes, { prefix: '/dev', db: d.db, host })
