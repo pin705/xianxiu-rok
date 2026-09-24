@@ -22,6 +22,7 @@
     id,
     view,
     act,
+    busy = false,
     onupgrade,
     onclose,
     onselect,
@@ -33,6 +34,7 @@
     id: BuildingId | null
     view: string | null
     act: (a: Action) => State | null
+    busy?: boolean // đang chờ server (độ kiếp, luân hồi)
     onupgrade: (id: BuildingId) => void
     onclose: () => void
     onselect: (id: BuildingId, view?: string | null) => void
@@ -159,7 +161,7 @@
           foe={tr.waves.reduce((s, w) => s + waveMight(w.str, tr.tier, w.type), 0)}
           chance={(e, a) => winChance(game, e, a, 'trib', pill && !!game.items.doKiep)}
           cta={L.trib.go}
-          disabled={!!terr}
+          disabled={!!terr || busy}
           onsubmit={(e, a) => ontrib(e, a, pill && !!game.items.doKiep)}
           onrecruit={() => onselect('dienVoTruong', 'train')}
         />
@@ -184,7 +186,7 @@
               <p class="t-small t-bad t-strong">{L.rebirth.confirm}</p>
               <div class="grid">
                 <Button variant="ghost" onclick={() => (sure = false)}>{L.panel.close}</Button>
-                <Button variant="danger" onclick={() => ((sure = false), onrebirth())}>{L.rebirth.go}</Button>
+                <Button variant="danger" disabled={busy} onclick={() => ((sure = false), onrebirth())}>{L.rebirth.go}</Button>
               </div>
             {:else}
               <Button variant="gold" wide disabled={!!game.marches.length} onclick={() => (sure = true)}>{L.rebirth.go}</Button>

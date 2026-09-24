@@ -14,6 +14,7 @@
     game,
     now,
     target,
+    busy = false,
     onclose,
     onmarch,
     onrecruit,
@@ -21,6 +22,7 @@
     game: State
     now: number
     target: Target | null
+    busy?: boolean // đang chờ server giải trận
     onclose: () => void
     onmarch: (t: Target, elder: ElderId, army: Army) => void
     onrecruit: () => void
@@ -123,7 +125,7 @@
           chance={(e, a) => winChance(game, e, a, target!)}
           cta={realm ? L.map.enter : L.map.go}
           time={realm ? undefined : clock(marchTime(game, target))}
-          disabled={full}
+          disabled={full || busy}
           onsubmit={(e, a) => onmarch(target!, e, a)}
           {onrecruit}
         />

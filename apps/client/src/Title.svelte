@@ -1,10 +1,16 @@
 <script lang="ts">
-  // Màn tiêu đề. 'first': tiêu đề → lời dẫn → đặt tên. 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
+  // Màn tiêu đề. 'first': tiêu đề → lời dẫn → đặt tên (server lập tông môn). 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
+  // wait: đã xong màn tiêu đề nhưng server chưa gửi state (mạng chậm) — hiện dòng "đang kết nối".
   import { onMount } from 'svelte'
   import { Button, Medal } from './ui'
   import { L, sfx, suggestNames } from './lib'
 
-  let { mode, onstart, ondone }: { mode: 'first' | 'splash'; onstart: (name: string) => void; ondone: () => void } = $props()
+  let {
+    mode,
+    wait = false,
+    onstart,
+    ondone,
+  }: { mode: 'first' | 'splash'; wait?: boolean; onstart: (name: string) => Promise<string | null>; ondone: () => void } = $props()
 
   let step: 'title' | 'intro' | 'name' | 'stamp' = $state('title')
   let line = $state(0)
@@ -12,6 +18,7 @@
   let name = $state(first)
   let ideas = $state(rest)
   let error = $state('')
+  let sending = $state(false)
 
   onMount(() => {
     if (mode !== 'splash') return
@@ -29,16 +36,24 @@
     if (line < L.intro.length - 1) line++
     else step = 'name'
   }
-  function found(e: SubmitEvent) {
+  async function found(e: SubmitEvent) {
     e.preventDefault()
+    if (sending) return
     const n = name.trim().replace(/\s+/g, ' ')
-    if (n.length < 2 || n.length > 20) {
+    if ([...n].length < 2 || [...n].length > 20) {
       error = L.naming.tooShort
+      return
+    }
+    sending = true
+    const err = await onstart(n)
+    sending = false
+    if (err) {
+      error = err === 'name_taken' ? L.naming.taken : err === 'name' ? L.naming.bad : L.err.offline
       return
     }
     step = 'stamp'
     sfx('done')
-    setTimeout(() => onstart(n), 1300)
+    setTimeout(ondone, 1300)
   }
 </script>
 
@@ -48,7 +63,7 @@
       <span class="logo"><Medal emblem="crest" tone="gold" size={104} /></span>
       <span class="name">{L.game}</span>
       <span class="tag">{L.tagline}</span>
-      <span class="tap">{L.tapToStart}</span>
+      <span class="tap">{wait ? L.net.connecting : L.tapToStart}</span>
     </button>
   {:else if step === 'intro'}
     <button class="cover dim" onclick={tapIntro}>
@@ -71,12 +86,13 @@
           <Button variant="quiet" size="sm" onclick={() => (ideas = suggestNames(3))}>{L.naming.reroll}</Button>
         </div>
         {#if error}<p class="t-small t-bad">{error}</p>{/if}
-        <Button variant="gold" size="lg" wide type="submit" silent>{L.naming.found}</Button>
+        <Button variant="gold" size="lg" wide type="submit" silent disabled={sending}>{sending ? L.net.connecting : L.naming.found}</Button>
       </form>
       {#if step === 'stamp'}
         <div class="stamp stack center">
           <span class="slam"><Medal emblem="crest" tone="red" size={136} /></span>
           <span class="sectname">{name.trim()}</span>
+          {#if wait}<span class="tap">{L.net.connecting}</span>{/if}
         </div>
       {/if}
     </div>

@@ -16,7 +16,7 @@ addEventListener('pointerdown', () => isMusicOn() && startMusic(), { once: true 
 await applyTheme()
 mount(App, { target: document.getElementById('app')! })
 
-// PWA: chơi offline sau lần tải đầu. Bản dev không đăng ký để khỏi dính cache cũ.
+// PWA: mở nhanh từ bộ nhớ sau lần tải đầu (chơi thì cần mạng: server là trọng tài). Bản dev không đăng ký để khỏi dính cache cũ.
 // Mỗi bản build một tên cache (sw.js đọc từ ?v=), bản mới kích hoạt thì xoá cache của bản cũ.
 // File tải trước khi service worker kịp chạy thì trang tự cất vào cache.
 if (import.meta.env.PROD && 'serviceWorker' in navigator)
@@ -24,7 +24,8 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator)
     .register(`./sw.js?v=${__BUILD__}`)
     .then(() => caches.open(`rok-${__BUILD__}`))
     .then(c => {
-      const mine = performance.getEntriesByType('resource').map(e => e.name).filter(u => u.startsWith(location.origin))
+      // chỉ file tĩnh: các lần gọi API (fetch cũng nằm trong danh sách này) mà lọt vào thì addAll hỏng cả lô
+      const mine = performance.getEntriesByType('resource').map(e => e.name).filter(u => u.startsWith(location.origin) && /\/(assets|fonts|icons)\/|manifest|favicon/.test(u))
       return c.addAll([location.href.split('#')[0], ...mine])
     })
     // tải sẵn bộ chữ các ngôn ngữ khác (vài KB mỗi bộ) để service worker cất: offline vẫn đổi được ngôn ngữ

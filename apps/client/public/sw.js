@@ -1,4 +1,4 @@
-// Chơi offline: lưu mọi file tĩnh đã tải về. Trang HTML lấy mạng trước (để nhận bản mới), mất mạng thì dùng bản đã lưu.
+// Mở nhanh (và hiện được màn mất mạng khi offline): lưu mọi file tĩnh đã tải về. Trang HTML lấy mạng trước (để nhận bản mới), mất mạng thì dùng bản đã lưu.
 // File trong assets/ có hash trong tên nên lấy từ bộ nhớ trước là an toàn.
 // Tên cache theo mã build (main.ts đăng ký sw.js?v=<mã>). Bản mới kích hoạt (chậm nhất ở lần mở kế tiếp) thì xoá cache
 // bản cũ → bộ nhớ chỉ giữ tối đa 2 bản.
@@ -26,9 +26,12 @@ const fetchAndKeep = req =>
 // ignoreVary: nhiều host gửi `Vary: Origin`; script module và font gửi kèm Origin còn bản đã cất thì không → khớp trượt, offline trắng màn
 const hit = req => caches.match(req, { ignoreVary: true })
 
+// Chỉ cất file tĩnh của game. API và Socket.IO (dữ liệu sống của server) luôn đi thẳng ra mạng, không bao giờ lấy bản cũ.
+const STATIC = new Set(['script', 'style', 'font', 'image', 'manifest'])
 self.addEventListener('fetch', e => {
   const req = e.request
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return
+  if (req.mode !== 'navigate' && !STATIC.has(req.destination)) return
   e.respondWith(
     req.mode === 'navigate'
       ? fetchAndKeep(req).catch(() => hit(req).then(r => r || hit('./')))

@@ -1,11 +1,13 @@
 <script lang="ts">
   import { flushSync, onMount } from 'svelte'
   import {
-    BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, advance, apply, cost, newGame, questDone, questOf, storage, storeNeed,
+    BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, cost, newGame, questDone, questOf, storage, storeNeed,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
+  import type { Seen } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Sheet, Toasts, fly, type ToastItem } from './ui'
+  import Conn from './Conn.svelte'
   import Daily from './Daily.svelte'
   import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
@@ -19,17 +21,17 @@
   import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
   import Vault from './Vault.svelte'
-  import { DESK, L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, watchSave, wipe, type Tab } from './lib'
+  import { createNet, type Net, type Status } from './net'
+  import { DESK, L, LANG, TABS, forgetP1, isMuted, reportName, setMuted, sfx, type Tab } from './lib'
 
-  const saved = load(nowMs())
-  const start = saved && advance(saved, nowMs())
-  const away = saved && start ? summarize(saved, start) : null
-  if (start) save(start) // mở rồi tắt ngay thì lần sau không hiện lại Xuất quan cũ
-  const preview = newGame(nowMs()) // cảnh nền cho người mới ở màn tiêu đề
+  const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
 
-  let game: State | null = $state.raw(start)
-  let now = $state(nowMs())
+  let net: Net | undefined
+  let status: Status = $state('boot')
+  let game: State | null = $state.raw(null)
+  let now = $state(Date.now())
   let screen: 'title' | 'game' = $state('title')
+  let entered = $state(false) // màn tiêu đề đã xong (đợi thêm welcome của server nếu mạng chậm)
   let tab: Tab = $state('tongMon')
   let selected: BuildingId | null = $state(null)
   let view: string | null = $state(null) // thẻ mở sẵn trong bảng công trình
@@ -37,12 +39,16 @@
   let replay: Report | null = $state(null)
   let outcome: Outcome | null = $state(null) // kết quả độ kiếp / luân hồi
   let storm = $state<{ hall: number; strikes: number } | null>(null) // đang độ kiếp: tầng Chủ điện trước khi đột phá (giấu kết quả tới khi sét đánh xong), số đợt sét
+  let busy = $state(false) // đang chờ server giải trận (bí cảnh, tháp, độ kiếp)
+  let quiet = false // độ kiếp tự diễn phần mừng sau khi sét đánh xong: tạm không báo
   let reportsOpen = $state(false)
   let settingsOpen = $state(false)
   let dailyOpen = $state(false)
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
   let gain: { bag: Partial<Res>; t: number } | null = $state(null)
   let toasts: ToastItem[] = $state([])
+  let away: ReturnType<typeof summarize> = $state.raw(null)
+  let seen: Seen | undefined
   let awayOpen = $state(false)
   let muted = $state(isMuted())
   let world = $state<HTMLDivElement>()
@@ -78,13 +84,13 @@
     setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), r ? 6000 : 2600)
   }
 
-  // So state trước/sau để mừng việc vừa xong — dù xong theo giờ hay nhờ Tụ Khí Đan.
+  // So state trước/sau để mừng việc vừa xong — dù xong theo giờ, nhờ Tụ Khí Đan hay do server đẩy xuống.
   // reports: báo chiến báo mới (trận ở bí cảnh/độ kiếp người chơi đang xem tận mắt thì không cần)
   function notice(prev: State, next: State, reports: boolean) {
     for (const id of IDS) {
       if (next.levels[id] > prev.levels[id]) {
-        bursts = [...bursts, { id, level: next.levels[id], t: nowMs() }]
-        sfx('done')
+        bursts = [...bursts, { id, level: next.levels[id], t: now }]
+        if (!document.hidden) sfx('done') // tab ẩn (tab khác cùng người chơi đang bấm) thì im
         if (id === 'chuDien') unlocks(next.levels[id])
       }
     }
@@ -96,22 +102,31 @@
   }
 
   onMount(() => {
+    const n = createNet(
+      {
+        state(prev, next, why) {
+          if (why === 'first' && seen) away = summarize(seen, next)
+          if (prev && screen === 'game' && why !== 'first' && !quiet) notice(prev, next, why !== 'mine')
+          game = next
+        },
+        status: s => (status = s),
+        welcome: w => (seen = w.seen),
+        reports: () => {},
+        error(code) {
+          sfx('err')
+          toast((L.err as Record<string, string>)[code] ?? L.err.unavailable, { bad: true })
+        },
+      },
+      LANG,
+    )
+    net = n
+    void n.start()
+    if (forgetP1()) toast(L.net.p1Gone)
     const tick = setInterval(() => {
-      now = nowMs()
-      if (!game) return
-      const next = advance(game, now)
-      if (next === game || next.time === game.time) return
-      notice(game, next, true)
-      const events = next.nextId !== game.nextId || next.stats !== game.stats || next.tech !== game.tech || next.levels !== game.levels
-      game = next
-      if (events) save(next)
+      now = n.now()
+      n.tick()
       if (bursts.length && now - bursts[0].t > 2000) bursts = bursts.filter(b => now - b.t < 2000)
     }, 250)
-    const hide = () => document.hidden && game && save(game)
-    const leave = () => game && save(game) // Safari iOS có lúc bỏ qua visibilitychange khi tắt app
-    document.addEventListener('visibilitychange', hide)
-    addEventListener('pagehide', leave)
-    const unwatch = watchSave(s => (s ? (game = s) : location.reload()))
     // Phím 1–5: chuyển tab (không khi đang gõ chữ hay có hộp thoại modal che)
     const keys = (e: KeyboardEvent) => {
       const t = TABS[Number(e.key) - 1]
@@ -120,21 +135,21 @@
       if (game.levels.chuDien >= t.unlock && t.id !== tab) switchTab(t.id, new MouseEvent('click', { clientX: innerWidth / 2, clientY: innerHeight / 2 }))
     }
     addEventListener('keydown', keys)
+    // Bản dev (server bật ALLOW_WARP): rok.warp(60) tua giới 60 phút, rok.get() / rok.set(state)
     if (import.meta.env.DEV)
-      Object.assign((globalThis as any).rok, {
-        get: () => game,
-        set: (s: State) => {
-          game = s
-          save(s)
-        },
+      Object.assign(globalThis, {
+        rok: { get: () => game, warp: (min: number) => n.dev('warp', { min }), set: (s: State) => n.dev('state', { state: s }) },
       })
     return () => {
       clearInterval(tick)
-      document.removeEventListener('visibilitychange', hide)
-      removeEventListener('pagehide', leave)
       removeEventListener('keydown', keys)
-      unwatch()
+      n.close()
     }
+  })
+
+  // Màn tiêu đề xong và server đã gửi state: vào game
+  $effect(() => {
+    if (entered && game && screen === 'title') screen = 'game'
   })
 
   // Bố cục desktop (cột trái, thanh trên) chỉ khi đang chơi; báo resize để cảnh WebGL đo lại khung
@@ -143,31 +158,19 @@
     dispatchEvent(new Event('resize'))
   })
 
-  // Vào game: cuộn tới giữa núi, rồi mở Xuất quan nếu vắng lâu
+  // Vào game: mở Xuất quan nếu vắng lâu
   $effect(() => {
     if (screen !== 'game' || !world) return
     if (away) awayOpen = true
   })
 
-  // Mọi thao tác đi qua đây: áp luật, lưu, báo lỗi nếu có. quiet: độ kiếp tự diễn phần mừng sau khi sét đánh xong
-  function act(a: Action, quiet = false): State | null {
-    if (!game) return null
-    const r = apply(game, a, nowMs())
-    if (!r.ok) {
-      sfx('err')
-      toast(L.err[r.error], { bad: true })
-      return null
-    }
-    if (!quiet) notice(game, r.state, false)
-    game = r.state
-    save(game)
-    return game
+  // Mọi thao tác tất định đi qua đây: đoán trước ngay, server xác nhận sau (lỗi thì net báo và rút lại)
+  function act(a: Action): State | null {
+    return net?.act(a) ?? null
   }
 
-  function found(name: string) {
-    game = newGame(nowMs(), name)
-    save(game)
-    screen = 'game'
+  async function found(name: string) {
+    return (await net?.found(name)) ?? 'offline'
   }
 
   function select(id: BuildingId, v: string | null = null) {
@@ -214,7 +217,7 @@
   function claim(e: MouseEvent) {
     const q = game && questOf(game)
     if (!q || !act({ type: 'claim' })) return
-    gain = { bag: q.reward, t: nowMs() }
+    gain = { bag: q.reward, t: now }
     fly(e.currentTarget as Element, { ...q.reward, ...q.items })
     sfx('reward')
   }
@@ -237,20 +240,28 @@
     focus(job?.building ?? guide ?? 'chuDien', 'upgrade')
   }
 
-  // Trận đánh ngay (bí cảnh, độ kiếp) người chơi xem tận mắt: không tính là chiến báo chưa đọc
-  function fightNow(a: Action) {
+  // Trận đánh ngay (bí cảnh, tháp, độ kiếp): server giải bằng mầm bí mật, client chờ kết quả rồi diễn.
+  // Người chơi xem tận mắt nên không tính là chiến báo chưa đọc.
+  async function fightNow(a: Action) {
+    if (!net || busy) return null
     const fresh = !!game && game.reports.every(r => r.id <= game!.seen)
-    const s = act(a, a.type === 'trib')
-    return s && fresh ? (act({ type: 'seen' }) ?? s) : s
+    busy = true
+    quiet = a.type === 'trib'
+    const r = await net.send(a)
+    quiet = false
+    busy = false
+    const rep = r.ok ? (r.rep?.at(-1) ?? null) : null
+    if (rep && fresh) act({ type: 'seen' })
+    return rep
   }
 
-  function march(t: Target, elder: ElderId, army: Army) {
+  async function march(t: Target, elder: ElderId, army: Army) {
     // bí cảnh, tháp: đánh ngay tại chỗ, xem trận luôn
     if (t.kind === 'realm' || t.kind === 'tower') {
-      const s = fightNow(t.kind === 'tower' ? { type: 'tower', elder, army } : { type: 'realm', i: t.i, elder, army })
-      if (!s) return
+      const rep = await fightNow(t.kind === 'tower' ? { type: 'tower', elder, army } : { type: 'realm', i: t.i, elder, army })
+      if (!rep) return
       target = null
-      replay = s.reports.at(-1)!
+      replay = rep
       return
     }
     if (!act({ type: 'march', target: t, elder, army })) return
@@ -259,11 +270,15 @@
   }
 
   // Độ kiếp: về núi, trời tối, ba đợt sét đánh xuống Chủ điện, rồi hiện kết quả
-  function trib(elder: ElderId, army: Army, pill: boolean) {
+  async function trib(elder: ElderId, army: Army, pill: boolean) {
     const from = game?.levels.chuDien ?? null
-    const s = fightNow({ type: 'trib', elder, army, pill })
-    if (!s) return
-    const r = s.reports.at(-1)!
+    storm = from === null ? null : { hall: from, strikes: 0 } // giấu tầng mới ngay khi server trả kết quả
+    const r = await fightNow({ type: 'trib', elder, army, pill })
+    if (!r || !game) {
+      storm = null
+      return
+    }
+    const hall = game.levels.chuDien
     selected = null
     tab = 'tongMon'
     requestAnimationFrame(() => world?.querySelector('[data-b="chuDien"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
@@ -274,18 +289,21 @@
       outcome = { kind: 'trib', report: r }
       sfx(r.win ? 'win' : 'lose')
       if (r.win) {
-        bursts = [...bursts, { id: 'chuDien', level: s.levels.chuDien, t: nowMs() }]
-        unlocks(s.levels.chuDien)
+        bursts = [...bursts, { id: 'chuDien', level: hall, t: now }]
+        unlocks(hall)
       }
     }, 800 + r.fights.length * 1200)
   }
 
-  function rebirth() {
-    const s = act({ type: 'rebirth' })
-    if (!s) return
+  async function rebirth() {
+    if (!net || busy) return
+    busy = true
+    const r = await net.send({ type: 'rebirth' })
+    busy = false
+    if (!r.ok || !game) return
     selected = null
     tab = 'tongMon'
-    outcome = { kind: 'rebirth', n: s.rebirths }
+    outcome = { kind: 'rebirth', n: game.rebirths }
     sfx('done')
   }
 
@@ -294,7 +312,8 @@
     if (game && game.seen < game.nextId - 1) act({ type: 'seen' })
   }
 
-  function summarize(before: State, after: State) {
+  // Xuất quan: so lát state lúc rời game (server lưu khi kết nối cuối đóng) với state lúc quay lại
+  function summarize(before: Seen, after: State) {
     const ms = after.time - before.time
     if (ms < 60_000) return null
     const d = (k: keyof State['stats']) => after.stats[k] - before.stats[k]
@@ -322,16 +341,6 @@
         <h2 class="t-title">{L.crash.title}</h2>
         <p class="t-lore">{L.crash.body}</p>
         <Button variant="gold" wide onclick={() => location.reload()}>{L.crash.reload}</Button>
-        <Button
-          variant="ghost"
-          wide
-          onclick={() => {
-            const a = document.createElement('a')
-            a.href = URL.createObjectURL(new Blob([rawSave() ?? ''], { type: 'application/json' }))
-            a.download = 'son-ha-tien-tong-save.json'
-            a.click()
-          }}>{L.settings.export}</Button
-        >
         <small class="t-tiny t-faint t-ellipsis">{String(error)}</small>
       </div>
     </Card>
@@ -364,8 +373,8 @@
     onfocus={focus}
   />
   <Daily {game} {now} open={dailyOpen} onclose={() => (dailyOpen = false)} {act} />
-  <Panel {game} {now} id={selected} {view} {act} onupgrade={upgrade} onclose={() => (selected = null)} onselect={focus} ontrib={trib} onrebirth={rebirth} />
-  <TargetSheet {game} {now} {target} onclose={() => (target = null)} onmarch={march} onrecruit={() => focus('dienVoTruong', 'train')} />
+  <Panel {game} {now} id={selected} {view} {act} {busy} onupgrade={upgrade} onclose={() => (selected = null)} onselect={focus} ontrib={trib} onrebirth={rebirth} />
+  <TargetSheet {game} {now} {target} {busy} onclose={() => (target = null)} onmarch={march} onrecruit={() => focus('dienVoTruong', 'train')} />
   <Reports {game} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
   <Replay report={replay} onclose={() => (replay = null)} />
   <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
@@ -377,12 +386,6 @@
     onmute={() => {
       muted = !muted
       setMuted(muted)
-    }}
-    onload={s => {
-      game = s
-      save(s)
-      settingsOpen = false
-      toast(L.settings.imported)
     }}
     toast={t => toast(t)}
   />
@@ -410,7 +413,7 @@
           wide
           onclick={e => {
             const from = e.currentTarget as Element
-            const bag = Object.fromEntries(away.gains.map(g => [g.r, g.n]))
+            const bag = Object.fromEntries((away?.gains ?? []).map(g => [g.r, g.n]))
             awayOpen = false
             requestAnimationFrame(() => fly(from, bag, document.body)) // bay sau khi hộp thoại đóng
           }}>{L.away.enter}</Button
@@ -420,9 +423,12 @@
   </Sheet>
 {:else}
   <Home game={game ?? preview} {now} still />
-  <Title mode={game ? 'splash' : 'first'} onstart={found} ondone={() => (screen = 'game')} />
+  {#if status !== 'boot'}
+    <Title mode={status === 'nosect' ? 'first' : 'splash'} wait={entered && !game} onstart={found} ondone={() => (entered = true)} />
+  {/if}
 {/if}
 </svelte:boundary>
+<Conn {status} onretry={() => net?.retry()} onfresh={() => (status = 'nosect')} />
 
 <style>
   .crash {

@@ -1,5 +1,5 @@
 import { BEAST_EMBLEMS, REALM_EMBLEMS, SECT_EMBLEMS, UNIT_EMBLEMS, type Emblem, type Look, type TabIcon } from '@rok/art'
-import { DEFAULT_NAME, migrate, type BuildingId, type ElderId, type Report, type State, type UnitType } from '@rok/rules'
+import type { ElderId, Report, UnitType } from '@rok/rules'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
 // Lưu trên máy (trình duyệt chặn storage thì vẫn chơi được, chỉ không lưu)
@@ -81,57 +81,23 @@ export function suggestNames(n: number) {
 
 export const reportName = (r: Report) => (r.kind === 'trib' ? L.trib.title : L.target({ kind: r.kind, i: r.i }))
 
-// Đồng hồ game. Bản dev có thể tua: rok.warp(60) → nhanh 60 phút (nhớ qua lần tải lại trong phiên).
-let warp = import.meta.env.DEV ? Number(globalThis.sessionStorage?.getItem('rok.warp') ?? 0) : 0 // ngoài trình duyệt (test render) không có sessionStorage
-export const nowMs = () => Date.now() + warp
-if (import.meta.env.DEV)
-  Object.assign(globalThis, {
-    rok: { warp: (min: number) => sessionStorage.setItem('rok.warp', String((warp += min * 60_000))) },
-  })
-
-// Lưu trên máy. Không có save → trả null để chạy màn mở đầu.
-const KEY = 'rok.save'
-
-export function load(now: number): State | null {
-  const raw = read(KEY)
-  if (!raw) return null
-  const s = parse(raw)
-  if (s) return s
-  write(`${KEY}.hong.${now}`, raw) // save hỏng: cất bản sao rồi chơi mới, không ghi đè mất
-  return null
-}
-export function parse(raw: string): State | null {
-  try {
-    return migrate(JSON.parse(raw))
-  } catch {
-    return null
-  }
-}
-// Sau khi xoá thì khoá ghi: trang sắp tải lại, sự kiện rời trang không được lưu đè save cũ.
-let frozen = false
-export const save = (s: State) => frozen || write(KEY, JSON.stringify(s))
 // Tab đã từng mở (để đánh dấu "!" trên tab vừa mở khóa mà người chơi chưa ghé)
 export const visitedTabs = (): string[] => (read('rok.tabs') ?? 'tongMon').split(',')
 export const visitTab = (id: string) => write('rok.tabs', [...new Set([...visitedTabs(), id])].join(','))
-export const rawSave = () => read(KEY)
-// Tab khác vừa lưu (s) hoặc xoá save (null). Không nhận thì lần lưu sau của tab này đè mất tiến độ bên kia.
-export function watchSave(fn: (s: State | null) => void) {
-  const on = (e: StorageEvent) => {
-    if (e.key !== KEY) return
-    const s = e.newValue ? parse(e.newValue) : null
-    if (!s) frozen = true // save bị xoá hoặc của bản game mới hơn: khoá ghi để người gọi tải lại mà không đè
-    fn(s)
-  }
-  addEventListener('storage', on)
-  return () => removeEventListener('storage', on)
-}
-export const wipe = () => {
-  frozen = true
+
+// Bản online: tiến độ nằm trên server. Save offline của P1 không chuyển sang được (không kiểm được gian lận — PLAN §An toàn):
+// dọn một lần, báo cho người chơi biết. true: vừa dọn một save cũ.
+export function forgetP1() {
+  let had = false
   try {
-    localStorage.removeItem(KEY)
+    for (const k of Object.keys(localStorage))
+      if (k === 'rok.save' || k.startsWith('rok.save.') || k === 'rok.anon') {
+        had ||= k === 'rok.save'
+        localStorage.removeItem(k)
+      }
   } catch {}
+  return had
 }
-export { DEFAULT_NAME }
 
 // Âm thanh tổng hợp bằng WebAudio — không cần file. Chỉ phát sau lần chạm đầu tiên (luật trình duyệt).
 let ctx: AudioContext | undefined
