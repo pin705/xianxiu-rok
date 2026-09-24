@@ -4,7 +4,18 @@
 //   1. mầm ngẫu nhiên (seed) không bao giờ rời server — mọi seed gửi đi đều là 0 (rules: mầm 0 = ẩn, không tự giải trận)
 //   2. chiến báo (reports) không nằm trong state gửi đi — đi riêng qua `rep` và truy vấn `reports` (state nhỏ, patch nhỏ)
 import type { Action, Err, March, Report, State } from '@rok/rules'
-import type { AllyInfo, AllyRow, Good, MapSnap, OrderView, Profile, Rival, Trades, WorldAction } from '@rok/rules/world'
+import type {
+  AllyInfo,
+  AllyRow,
+  ArenaFoe,
+  Good,
+  MapSnap,
+  OrderView,
+  Profile,
+  Rival,
+  Trades,
+  WorldAction,
+} from '@rok/rules/world'
 
 export type View = Omit<State, 'reports'>
 export type Patch = Partial<View>
@@ -61,7 +72,7 @@ export type Snap = { v: number; state: View }
 // reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) · map: ảnh chụp bản đồ giới, kèm theo dõi
 // 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn) · allies: danh sách tiên minh · ally: minh của mình
 // season: điểm mùa · market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình · profile: hồ sơ một người
-// · dms: các cuộc truyền âm gần đây của mình. Trả lời: Answer[k].
+// · dms: các cuộc truyền âm gần đây của mình · arena: Luận Kiếm Đài. Trả lời: Answer[k].
 export type Query =
   | { k: 'reports'; before?: number }
   | { k: 'rivals'; pid?: number }
@@ -73,6 +84,9 @@ export type Query =
   | { k: 'market'; good?: Good }
   | { k: 'profile'; pid: number }
   | { k: 'dms' }
+  | { k: 'arena' }
+// Luận Kiếm Đài: đối thủ gợi ý, bảng tuần (top), hạng của mình (null: chưa có trận tuần này)
+export type ArenaView = { foes: ArenaFoe[]; board: { pid: number; name: string; pts: number }[]; rank: number | null }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
 export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
 export type Season = { rows: { name: string; pts: number }[]; me: { rank: number; pts: number } | null; fame: Fame[] }
@@ -95,6 +109,7 @@ export type Answer = {
   market: Market | null // chợ tắt
   profile: Profile | null // người không còn trong giới
   dms: Dm[]
+  arena: ArenaView
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }

@@ -1,13 +1,25 @@
 // Truy vấn chỉ đọc của client: mỗi khoá một hàm, trả đúng kiểu Answer[k] (@rok/protocol). Thêm truy vấn: thêm khoá vào
 // Query/Answer ở protocol — thiếu hàm ở đây là lỗi biên dịch.
 import type { Report } from '@rok/rules'
-import { allyInfo, allyRows, marketOf, profileOf, rivals, seasonBoard, sideKey } from '@rok/rules/world'
+import { weekOf } from '@rok/rules'
+import {
+  allyInfo,
+  allyRows,
+  arenaBoard,
+  arenaFoes,
+  marketOf,
+  profileOf,
+  rivals,
+  seasonBoard,
+  sideKey,
+} from '@rok/rules/world'
 import type { Answer, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
 import { channel, dmsOf } from './talk.ts'
 import type { Sock, World } from './world.ts'
 
 const SEASON_ROWS = 20 // bảng điểm mùa gửi client: top này
+const ARENA_ROWS = 20 // bảng tuần Luận Kiếm Đài: top này
 
 export type Answers = { [K in Query['k']]: (sock: Sock, q: QueryOf<K>) => Answer[K] | Promise<Answer[K]> }
 
@@ -24,6 +36,17 @@ export const answersOf = (w: World): Answers => ({
   allies: () => allyRows(w.shared, w.ps),
   profile: (_, q) => (w.npc.has(q.pid) ? null : profileOf(w.shared, w.ps, q.pid, !!w.slots.get(q.pid)?.conns.size)),
   dms: sock => dmsOf(w, sock.data.pid),
+  arena: sock => {
+    const now = w.now()
+    w.tick(now)
+    const board = arenaBoard(w.ps, weekOf(now))
+    const k = board.findIndex(([pid]) => pid === sock.data.pid)
+    return {
+      foes: arenaFoes(w.ps, sock.data.pid, now, Math.random),
+      board: board.slice(0, ARENA_ROWS).map(([pid, s]) => ({ pid, name: s.name, pts: s.arena!.pts })),
+      rank: k < 0 ? null : k + 1,
+    }
+  },
   ally: sock => allyInfo(w.shared, w.ps, sock.data.pid, p => !!w.slots.get(p)?.conns.size),
   market: (sock, q) => (w.info.market ? marketOf(w.ps, w.shared, sock.data.pid, w.now(), q.good) : null),
   season: sock => {

@@ -37,6 +37,7 @@ const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('market'), good: z.enum(GOODS as [Good, ...Good[]]).optional() }),
   z.object({ k: z.literal('profile'), pid: z.number().int().positive() }),
   z.object({ k: z.literal('dms') }),
+  z.object({ k: z.literal('arena') }),
 ]) satisfies z.ZodType<Q>
 const Say = z.object({ ch: Chan, text: z.string().max(400) }) // độ dài thật (200 ký tự) world.say kiểm sau khi chuẩn hoá
 const Report = z.object({ id: z.number().int().positive() })

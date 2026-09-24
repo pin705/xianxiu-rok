@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   ASCEND,
   ASCEND_HALL,
+  ARENA_TRIES,
   MOB_GOALS,
   MOB_MIN,
   MOB_TAKES,
@@ -31,6 +32,8 @@ import {
   TRIB_EXP,
   advance,
   apply,
+  arenaOf,
+  lineupOf,
   cost,
   count,
   eventOf,
@@ -53,6 +56,8 @@ import {
   allyOf,
   allyRows,
   atlas,
+  arenaBoard,
+  arenaFoes,
   basePrice,
   boardOf,
   mobTask,
@@ -551,6 +556,54 @@ test('Minh vụ đường: nhận việc trên bảng (việc mới thế chỗ)
   }
   // tuần sau: bảng mới
   assert.equal(boardOf(al(), T0 + 7 * 24 * HOUR).pts, 0)
+})
+
+test('Luận Kiếm Đài: đội hình thủ (tự xếp nếu chưa đặt), trận xa luân không mất quân, Elo cả hai bên, nhật ký, 5 lượt/ngày, rương ngày, tuần mới nén điểm', () => {
+  const strong = { ...sect('Mạnh', 16), elders: { thanhPhong: expAt(40), nhuYen: expAt(35), thachKien: expAt(30) } }
+  const weak = { ...sect('Yếu', 16), elders: { thanhPhong: expAt(5) } }
+  const ps = world(strong, weak, sect('Non', 3))
+  assert.deepEqual(
+    lineupOf(ps.get(1)!).map(x => x.elder),
+    ['thanhPhong', 'nhuYen', 'thachKien'],
+    'chưa xếp: trưởng lão cấp cao trước',
+  )
+  assert.equal(run(ps.get(1)!, { type: 'arenaSet', lineup: [{ elder: 'nhuYen', type: 'phap' }] }).arena!.lineup.length, 1)
+  assert.throws(() => run(ps.get(2)!, { type: 'arenaSet', lineup: [{ elder: 'nhuYen', type: 'phap' }] }), /locked/)
+  const foes = arenaFoes(ps, 1, T0, () => 0.5)
+  assert.deepEqual(
+    foes.map(f => f.pid),
+    [2],
+    'chỉ người đã tới tầng mở Tranh đoạt',
+  )
+  const act = (pid: number, a: Parameters<typeof worldAct>[2], now = T0) => {
+    const r = worldAct(ps, pid, a, now, 99, undefined, freshWorld())
+    if (!r.ok) return r.error
+    for (const [id, s] of r.changed) ps.set(id, s)
+    return null
+  }
+  const troops = { ...ps.get(1)!.troops }
+  assert.equal(act(1, { type: 'arena', pid: 3 }), 'weak')
+  assert.equal(act(1, { type: 'arena', pid: 2 }), null)
+  const a = arenaOf(ps.get(1)!, T0),
+    d = arenaOf(ps.get(2)!, T0)
+  assert.ok(a.pts > 1000 && a.pts + d.pts === 2000, 'mạnh thắng, điểm chuyển đúng bấy nhiêu')
+  assert.deepEqual(ps.get(1)!.troops, troops, 'không mất quân')
+  assert.equal(ps.get(1)!.reports.at(-1)!.kind, 'arena')
+  assert.ok(ps.get(1)!.reports.at(-1)!.fights.length >= 1)
+  assert.deepEqual([a.log[0].def, d.log[0].def, d.log[0].win], [false, true, false], 'nhật ký cả hai bên')
+  for (let i = 1; i < ARENA_TRIES; i++) assert.equal(act(1, { type: 'arena', pid: 2 }), null)
+  assert.equal(act(1, { type: 'arena', pid: 2 }), 'limit', 'hết lượt trong ngày')
+  assert.equal(act(1, { type: 'arena', pid: 2 }, T0 + 24 * HOUR), null, 'ngày mới đủ lượt lại')
+  assert.deepEqual(
+    arenaBoard(ps, a.week).map(([id]) => id),
+    [1, 2],
+  )
+  // rương ngày theo bậc: một lần mỗi ngày
+  const opened = run(ps.get(1)!, { type: 'arenaChest' })
+  assert.throws(() => run(opened, { type: 'arenaChest' }), /claimed/)
+  // tuần mới: điểm nén về giữa
+  const pts = arenaOf(ps.get(1)!, T0).pts
+  assert.equal(arenaOf(ps.get(1)!, T0 + 7 * 24 * HOUR).pts, Math.round(1000 + (pts - 1000) / 2))
 })
 
 test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác đánh bật, gọi về thì mất điểm; buff cho cả minh', async () => {

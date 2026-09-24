@@ -1,7 +1,7 @@
 // Lật mùa và lật tuần của cả giới. Chạy trong actor như mọi việc khác (worldStep gọi trước mọi thao tác), ghi trong một commit.
 import { randomInt } from 'node:crypto'
 import { eventOf, mail, weekOf } from '@rok/rules'
-import { atlas, endSeason, eventPrize, eventTop, spawn } from '@rok/rules/world'
+import { arenaPrize, arenaTop, atlas, endSeason, eventPrize, eventTop, spawn } from '@rok/rules/world'
 import { npcState } from '@rok/rules/bot'
 import type { World } from './world.ts'
 
@@ -44,6 +44,11 @@ export function rollWeek(w: World, now: number) {
   eventTop(w.ps, week).forEach((pid, i) => {
     const gift = eventPrize(i)
     w.commit(w.slots.get(pid)!, mail(w.ps.get(pid)!, { at: now, k: 'eventTop', a: [i + 1, eventOf(week)], gift }))
+  })
+  // Luận Kiếm Đài: top tuần cũ nhận quà (điểm đài của tuần cũ còn nguyên — mỗi người tự nén lúc sang tuần)
+  arenaTop(w.ps, week).forEach((pid, i) => {
+    const s = w.ps.get(pid)!
+    w.commit(w.slots.get(pid)!, mail(s, { at: now, k: 'arenaTop', a: [i + 1], gift: arenaPrize(i) }))
   })
   w.week = weekOf(now)
   w.persist.worldDirty = true
