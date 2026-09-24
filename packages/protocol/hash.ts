@@ -4,11 +4,11 @@ import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const SKIP = /\.test\.ts$|^(simulate|simpvp|bot|hash)\.ts$/ // công cụ chạy riêng, client không dùng
+const SKIP = /\.test\.ts$|(^|\/)(simulate|simpvp|bot|hash)\.ts$|(^|\/)node_modules\// // công cụ chạy riêng, client không dùng
 export function protocolHash(root = join(import.meta.dirname, '..')) {
   const h = createHash('sha256')
   for (const dir of ['rules', 'protocol'])
-    for (const f of readdirSync(join(root, dir))
+    for (const f of readdirSync(join(root, dir), { recursive: true, encoding: 'utf8' })
       .filter(f => f.endsWith('.ts') && !SKIP.test(f))
       .sort())
       h.update(`${dir}/${f}\n`).update(readFileSync(join(root, dir, f)))

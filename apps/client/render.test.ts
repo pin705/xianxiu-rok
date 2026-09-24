@@ -19,9 +19,10 @@ import {
   type BuildingId,
   type Report,
   type State,
+  mail,
   type Target,
 } from '@rok/rules'
-import { advanceWorld, atlas, freshWorld, mail, mapOf, spawn, worldAct } from '@rok/rules/world'
+import { advanceWorld, atlas, freshWorld, mapOf, spawn, worldAct } from '@rok/rules/world'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 let vite: ViteDevServer

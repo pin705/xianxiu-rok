@@ -1,0 +1,47 @@
+// Chiến báo đã đọc, nhận quà trong thư, chặn người chơi (chat).
+import { no, ok, type Actions } from '../core/action.ts'
+import { grant } from '../core/battle.ts'
+import { int } from '../core/parse.ts'
+import { type Mail, type State } from '../core/types.ts'
+import { MAIL_MAX } from '../data.ts'
+
+const BLOCKS_MAX = 100
+
+export type InboxAction =
+  | { type: 'seen' } // đã đọc mọi chiến báo
+  | { type: 'mail'; id: number } // nhận quà trong thư
+  | { type: 'block'; pid: number; on: boolean } // chặn / bỏ chặn một người (chat)
+
+export const inboxActions: Actions<InboxAction> = {
+  seen: {
+    pick: () => ({ type: 'seen' }),
+    run: s => ok({ ...s, seen: s.nextId - 1 }),
+  },
+  mail: {
+    pick: a => (int(0, 1e12)(a.id) ? { type: 'mail', id: a.id } : null),
+    run: (s, a) => {
+      const m = s.mail.find(x => x.id === a.id)
+      if (!m?.gift) return no('empty')
+      if (m.got) return no('max_level')
+      return ok({ ...grant(s, m.gift), mail: s.mail.map(x => (x === m ? { ...x, got: true } : x)) })
+    },
+  },
+  block: {
+    pick: a => (int(1, 1e12)(a.pid) && typeof a.on === 'boolean' ? { type: 'block', pid: a.pid, on: a.on } : null),
+    run: (s, a) => {
+      const rest = s.blocks.filter(p => p !== a.pid)
+      if (a.on && rest.length >= BLOCKS_MAX) return no('full')
+      return ok({ ...s, blocks: a.on ? [...rest, a.pid] : rest })
+    },
+  },
+}
+
+// Mọi phần thưởng từ ngoài (admin, sự kiện, xếp hạng, bồi thường) chỉ đi qua đây. Đầy thì bỏ thư cũ đã nhận (hoặc không có quà) trước.
+export function mail(s: State, m: Omit<Mail, 'id'>): State {
+  const box = [...s.mail, { ...m, id: s.nextId }]
+  while (box.length > MAIL_MAX) {
+    const i = box.findIndex(x => !x.gift || x.got)
+    box.splice(i >= 0 ? i : 0, 1)
+  }
+  return { ...s, mail: box, nextId: s.nextId + 1 }
+}

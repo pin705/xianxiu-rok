@@ -1,0 +1,130 @@
+// Nhiệm vụ chính (hướng dẫn), nhiệm vụ ngày / tuần, quà mốc sự kiện tuần.
+import { no, ok, type Actions } from '../core/action.ts'
+import { grant } from '../core/battle.ts'
+import { dailyDone, dailyReward, weeklyDone, weeklyReward } from '../core/calendar.ts'
+import { int } from '../core/parse.ts'
+import { gearSum, techSum, totalTroops } from '../core/stats.ts'
+import { type State } from '../core/types.ts'
+import { addBag, addItems, bag } from '../core/util.ts'
+import {
+  DAILY,
+  DAILY_BONUS,
+  DAILY_HALL,
+  EVENT_GOALS,
+  EVENT_REWARDS,
+  QUESTS,
+  WEEKLY,
+  WEEKLY_BONUS,
+  type BuildingId,
+  type Quest,
+} from '../data.ts'
+
+export const questOf = (s: State): Quest | undefined => QUESTS[s.quest]
+export function questProgress(s: State, q: Quest): [number, number] {
+  switch (q.k) {
+    case 'build':
+      return [s.levels[q.id as BuildingId], q.n]
+    case 'train':
+      return [totalTroops(s), q.n]
+    case 'hunt':
+      return [s.beast, q.n]
+    case 'sect':
+      return [s.sects[Number(q.id)] ? 1 : 0, 1]
+    case 'realm':
+      return [s.realms[Number(q.id)], q.n]
+    case 'tech':
+      return [techSum(s), q.n]
+    case 'brew':
+      return [s.stats.brewed + (s.brew?.n ?? 0), q.n] // tính cả mẻ đang luyện: không bắt người mới chờ 20 phút giữa hướng dẫn
+    case 'tower':
+      return [s.tower, q.n]
+    case 'forge':
+      return [gearSum(s) + (s.forge ? 1 : 0), q.n] // như luyện đan: tính cả món đang luyện
+  }
+}
+export const questDone = (s: State) => {
+  const q = QUESTS[s.quest]
+  if (!q) return false
+  const [cur, need] = questProgress(s, q)
+  return cur >= need
+}
+
+export type TaskAction =
+  | { type: 'claim' } // nhiệm vụ chính
+  | { type: 'daily'; i: number }
+  | { type: 'dailyBonus' }
+  | { type: 'weekly'; i: number }
+  | { type: 'weeklyBonus' }
+  | { type: 'event'; i: number } // quà mốc sự kiện tuần
+
+export const taskActions: Actions<TaskAction> = {
+  claim: {
+    pick: () => ({ type: 'claim' }),
+    run: s => {
+      const q = QUESTS[s.quest]
+      if (!q || !questDone(s)) return no('not_done')
+      return ok({ ...s, quest: s.quest + 1, res: addBag(s.res, q.reward), items: addItems(s.items, q.items ?? {}) })
+    },
+  },
+  daily: {
+    pick: a => (int(0, DAILY.length - 1)(a.i) ? { type: 'daily', i: a.i } : null),
+    run: (s, a) => {
+      if (s.levels.chuDien < DAILY_HALL || !DAILY[a.i]) return no('locked')
+      if (s.daily.got[a.i]) return no('max_level')
+      if (!dailyDone(s, a.i)) return no('not_done')
+      const n = dailyReward(s)
+      return ok({
+        ...s,
+        res: bag(r => s.res[r] + n),
+        daily: { ...s.daily, got: s.daily.got.map((x, k) => x || k === a.i) },
+      })
+    },
+  },
+  dailyBonus: {
+    pick: () => ({ type: 'dailyBonus' }),
+    run: s => {
+      if (s.levels.chuDien < DAILY_HALL) return no('locked')
+      if (s.daily.bonus) return no('max_level')
+      if (!s.daily.got.every(Boolean)) return no('not_done')
+      const w = s.weekly
+      return ok({
+        ...s,
+        items: addItems(s.items, DAILY_BONUS),
+        daily: { ...s.daily, bonus: true },
+        weekly: { ...w, n: { ...w.n, days: w.n.days + 1 } },
+      })
+    },
+  },
+  weekly: {
+    pick: a => (int(0, WEEKLY.length - 1)(a.i) ? { type: 'weekly', i: a.i } : null),
+    run: (s, a) => {
+      if (s.levels.chuDien < DAILY_HALL || !WEEKLY[a.i]) return no('locked')
+      if (s.weekly.got[a.i]) return no('max_level')
+      if (!weeklyDone(s, a.i)) return no('not_done')
+      const n = weeklyReward(s)
+      return ok({
+        ...s,
+        res: bag(r => s.res[r] + n),
+        weekly: { ...s.weekly, got: s.weekly.got.map((x, k) => x || k === a.i) },
+      })
+    },
+  },
+  weeklyBonus: {
+    pick: () => ({ type: 'weeklyBonus' }),
+    run: s => {
+      if (s.levels.chuDien < DAILY_HALL) return no('locked')
+      if (s.weekly.bonus) return no('max_level')
+      if (!s.weekly.got.every(Boolean)) return no('not_done')
+      return ok({ ...s, items: addItems(s.items, WEEKLY_BONUS), weekly: { ...s.weekly, bonus: true } })
+    },
+  },
+  event: {
+    pick: a => (int(0, EVENT_GOALS.length - 1)(a.i) ? { type: 'event', i: a.i } : null),
+    run: (s, a) => {
+      if (s.levels.chuDien < DAILY_HALL || !EVENT_GOALS[a.i]) return no('locked')
+      if (s.ev.got[a.i]) return no('max_level')
+      if (s.ev.pts < EVENT_GOALS[a.i]) return no('not_done')
+      return ok({ ...grant(s, EVENT_REWARDS[a.i]), ev: { ...s.ev, got: s.ev.got.map((x, k) => x || k === a.i) } })
+    },
+  },
+}

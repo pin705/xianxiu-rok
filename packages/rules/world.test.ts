@@ -17,6 +17,7 @@ import {
   storage,
   weekOf,
   type Action,
+  mail,
   type State,
 } from './index.ts'
 import {
@@ -24,7 +25,6 @@ import {
   allyRows,
   defense,
   eventTop,
-  mail,
   nextRaid,
   parseWorldAction,
   raidError,
