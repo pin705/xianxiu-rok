@@ -121,7 +121,7 @@ test('tên trùng trong cùng giới, tên bẩn, thiếu header chống CSRF đ
   assert.equal((await guest(a, '<script>')).status, 400)
   const r = await fetch(`http://127.0.0.1:${a.port}/api/guest`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"name":"Không Header"}' })
   assert.equal(r.status, 403)
-  assert.equal((await api(a, '/me')).status, 401)
+  assert.deepEqual(await (await api(a, '/me')).json(), { account: null, pid: null, world: null, path: a.path })
 })
 
 test('hai tab: tab gửi nhận ack, tab kia nhận patch cùng version; sai mã giao thức bị mời tải bản mới', { skip }, async () => {

@@ -66,14 +66,17 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
     '/me',
     {
       schema: {
-        response: { 200: z.object({ account: z.number(), pid: z.number().nullable(), world: z.number().nullable(), locale: z.string(), path: z.string() }), 401: ErrorReply, 403: ErrorReply },
+        response: { 200: z.object({ account: z.number().nullable(), pid: z.number().nullable(), world: z.number().nullable(), path: z.string() }), 403: ErrorReply },
       },
     },
+    // Chưa có phiên là chuyện bình thường (lần đầu mở game): trả 200 với account null thay vì 401 (trình duyệt coi 401 là lỗi đỏ)
     async (req, reply) => {
-      const s = await requireSession(o.db, req, reply)
-      if (!s) return reply
+      const token = tokenOf(req)
+      const s = token ? await store.findSession(o.db, hashToken(token)) : null
+      if (s?.banned) return reply.code(403).send({ error: 'banned' })
+      if (!s || s.deleted) return { account: null, pid: null, world: null, path: o.path }
       const path = (s.world && (await store.worldPath(o.db, s.world))) || o.path
-      return { account: s.account, pid: s.pid, world: s.world, locale: s.locale, path }
+      return { account: s.account, pid: s.pid, world: s.world, path }
     },
   )
 

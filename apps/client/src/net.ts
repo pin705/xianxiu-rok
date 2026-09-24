@@ -257,7 +257,7 @@ export function createNet(h: Handlers, lang: string) {
     // Khởi động: có phiên (cookie hoặc token) thì nối; chưa có tông môn thì chờ màn đặt tên
     async start() {
       const me = await api<{ pid: number | null; path: string }>('/me')
-      if (!me.ok) return set(me.status === 0 ? 'offline' : 'nosect')
+      if (!me.ok) return set(me.status === 403 ? 'banned' : 'offline')
       if (!me.data.pid) return set('nosect')
       path = me.data.path
       connect()

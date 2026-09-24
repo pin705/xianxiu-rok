@@ -169,8 +169,9 @@
     return net?.act(a) ?? null
   }
 
+  // null: đã lập xong (đang nối tới server); chuỗi: mã lỗi để màn đặt tên báo
   async function found(name: string) {
-    return (await net?.found(name)) ?? 'offline'
+    return net ? net.found(name) : 'offline'
   }
 
   function select(id: BuildingId, v: string | null = null) {
