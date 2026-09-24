@@ -14,6 +14,7 @@ export const SLOT: Record<BuildingId, [number, number, number]> = {
   khoangMach: [326, 624, 120],
   linhDien: [118, 718, 128],
   luyenKhiPhong: [306, 770, 116],
+  hoSonDaiTran: [160, 814, 124],
 }
 
 // Đỉnh núi có mặt bằng: tâm x, y mép trước, bề ngang mặt bằng, độ sâu tới lúc tan vào sương, seed
@@ -25,7 +26,8 @@ export const LEDGES: [number, number, number, number, number][] = [
   [142, 616, 206, 86, 13],
   [122, 718, 232, 96, 17],
   [330, 626, 128, 70, 19],
-  [308, 770, 150, 66, 23], // Luyện Khí Phòng: mỏm thấp nhất bên phải, dưới Khoáng mạch
+  [308, 770, 150, 66, 23], // Luyện Khí Phòng: mỏm thấp bên phải, dưới Khoáng mạch
+  [164, 814, 178, 50, 29], // Hộ Sơn Đại Trận: chân núi, trấn cửa sơn môn
 ]
 
 // Dải sương giữa các tầng: y, độ cao, tốc độ trôi (DU/giây), độ đậm

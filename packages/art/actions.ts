@@ -1,6 +1,6 @@
 // Icon thao tác vẽ bằng bút lông (thay cho nét vector): khung 24 × 24 DU, góc trên trái (0, 0).
 // Đơn sắc (MONO): vẽ màu trắng làm mặt nạ — giao diện tô bằng currentColor nên theo màu chữ của chỗ đặt.
-// Nhiều màu (COLOR): cuộn sách, lò đan, cờ, bầu thuốc, sét, sao — vẽ đủ màu như icon vật phẩm.
+// Nhiều màu (COLOR): cuộn sách, lò đan, cờ, bầu thuốc, sét, sao, khiên hộ thân — vẽ đủ màu như icon vật phẩm.
 import { blot, grain, stroke, wash, type Asset, type G, type Press, type Pt } from './brush'
 import { ring } from './chrome'
 import { PIGMENT as C, mix } from './palette'
@@ -9,7 +9,7 @@ export const MONO = [
   'hammer', 'lock', 'check', 'cross', 'close', 'power', 'sound', 'mute', 'music', 'clock', 'arrow', 'back', 'plus', 'minus',
   'gear', 'people', 'swords', 'skull', 'download', 'upload', 'globe',
 ] as const
-export const COLOR = ['scroll', 'cauldron', 'flag', 'heal', 'bolt', 'star'] as const
+export const COLOR = ['scroll', 'cauldron', 'flag', 'heal', 'bolt', 'star', 'shield'] as const
 export type Mono = (typeof MONO)[number]
 export type Colored = (typeof COLOR)[number]
 export const isColored = (n: string): n is Colored => (COLOR as readonly string[]).includes(n)
@@ -200,6 +200,18 @@ const COLOR_DRAW: Record<Colored, (g: G) => void> = {
     wash(g, s, { fill: C.goldL, alpha: 1, layers: 2, jitter: 0.25, edge: 1, sharp: true, seed: 118 })
     ln(g, [[10.6, 7.4], [9.6, 11.4]], 1.1, 'taper', '#ffffff', 0.6, 119)
     inkLine(g, s, 1, 120)
+  },
+  shield: g => {
+    // khiên hộ thân (bảo hộ PvP): mặt lam viền vàng, ba ngọn núi vàng giữa khiên (hộ sơn), quầng linh khí bao ngoài
+    const sh: Pt[] = [[4.4, 4.6], [8, 3.4], [12, 2.6], [16, 3.4], [19.6, 4.6], [19.8, 9], [19, 13.4], [16.6, 17.4], [12, 21.4], [7.4, 17.4], [5, 13.4], [4.2, 9]]
+    ln(g, [...sh, sh[0], sh[1]].map(([x, y]) => [12 + (x - 12) * 1.12, 11.8 + (y - 11.8) * 1.1] as Pt), 1.4, 'even', C.spirit, 0.55, 121)
+    wash(g, sh, { fill: g2 => { const r = g2.createLinearGradient(0, 3, 0, 21); r.addColorStop(0, C.azuriteL); r.addColorStop(1, C.azuriteD); return r }, alpha: 1, layers: 2, jitter: 0.2, edge: 1, seed: 122 })
+    ln(g, [...sh, sh[0], sh[1]], 1.8, 'even', C.gold, 1, 123)
+    ln(g, [[12, 3.4], [12, 20.4]], 0.7, 'even', mix(C.azuriteD, C.ink, 0.3), 0.6, 124)
+    ln(g, [[7.2, 6], [6.8, 11], [8.4, 15]], 1.1, 'taper', '#ffffff', 0.5, 125)
+    ln(g, [[7.4, 14.6], [9.4, 11.2], [10.8, 12.8], [12, 8.4], [13.2, 12.8], [14.6, 11.2], [16.6, 14.6]], 1.4, 'even', C.goldL, 1, 126)
+    ln(g, [[8.6, 16.4], [12, 16], [15.4, 16.4]], 0.9, 'taper', C.goldL, 0.9, 127)
+    inkLine(g, sh, 1, 128)
   },
 }
 

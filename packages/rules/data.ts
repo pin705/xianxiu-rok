@@ -48,6 +48,7 @@ const defs = {
   danPhong:     { unlock: 3, time: 45, power: 16, cost: b(100, 150, 100) },
   tangKinhCac:  { unlock: 4, time: 45, power: 16, cost: b(150, 80, 150) },
   luyenKhiPhong: { unlock: 8, time: 45, power: 16, cost: b(110, 70, 140) },
+  hoSonDaiTran: { unlock: 6, time: 40, power: 18, cost: b(120, 90, 130) }, // Hộ Sơn Đại Trận: bên thủ mạnh hơn GUARD_STEP mỗi tầng
 } satisfies Record<string, BuildingDef>
 
 export type BuildingId = keyof typeof defs

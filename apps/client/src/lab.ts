@@ -1,6 +1,6 @@
 // Phòng thử art (chỉ bản dev): /lab.html — xem hình vẽ tay trên giấy. ?view=icons|faces|troops|decor|chrome|medals|fx|battle|result|home|tiers|buildings (mặc định)
 import {
-  ITEMS, GEAR_ICONS, badgeSkin, bake, buttonSkin, cardSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, knobSkin, lacquerSkin, plankSkin, rodSkin, scrollSkin, switchSkin,
+  ITEMS, GEAR_ICONS, colorIcon, badgeSkin, bake, buttonSkin, cardSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, knobSkin, lacquerSkin, plankSkin, rodSkin, scrollSkin, switchSkin,
   tagSkin, toastSkin, trackSkin, type Skin, PIGMENT, BEAST_EMBLEMS, SECT_EMBLEMS, REALM_EMBLEMS, ELEMENT_EMBLEMS, medal, emblemArt, type Emblem, type MedalTone, bamboo, battlefield, beast, blossom, building, butterfly, flyingSword, itemIcon, paper, portrait, soldier, splashTex, stairway, stoneLantern, vortexTex, type Asset, type Kind, type Look,
   PIGMENT as C, boltTex, burstTex, canvas, clawTex, mix, orbTex, puffTex, ringTex, rng, slashTex, type G } from '@rok/art'
 import type { Report, Skill } from '@rok/rules'
@@ -26,7 +26,7 @@ const put = <M,>(a: Asset<M>, x: number, y: number, px = Math.max(a.w, a.h)) => 
   out.drawImage(b.canvas as HTMLCanvasElement, (x + a.x * k) * S, (y + a.y * k) * S, a.w * k * S, a.h * k * S)
 }
 const view = new URLSearchParams(location.search).get('view') ?? 'buildings'
-const KINDS: Kind[] = ['chuDien', 'tangKinhCac', 'danPhong', 'tangBaoCac', 'dienVoTruong', 'tuLinhTran', 'khoangMach', 'linhDien', 'luyenKhiPhong']
+const KINDS: Kind[] = ['chuDien', 'tangKinhCac', 'danPhong', 'tangBaoCac', 'dienVoTruong', 'tuLinhTran', 'khoangMach', 'linhDien', 'luyenKhiPhong', 'hoSonDaiTran']
 const t0 = performance.now()
 if (view === 'chrome') {
   // da giao diện ghép thật bằng border-image (xem giãn 9 mảnh có lộ không)
@@ -115,6 +115,8 @@ if (view === 'chrome') {
   // vật phẩm + đan (hàng 1–2), pháp bảo (hàng 3–4), mỗi thứ bốn cỡ 56/32/22/16
   const rows = [ITEMS.slice(0, 6), ITEMS.slice(6), GEAR_ICONS.slice(0, 5), GEAR_ICONS.slice(5)]
   rows.forEach((names, r) => names.forEach((n, i) => [56, 32, 22, 16].forEach((px, k) => put(itemIcon(n), 36 + i * 64, 44 + r * 200 + [0, 60, 104, 140][k], px))))
+  // icon nhiều màu (actions.ts), góc dưới phải
+  ;[56, 32, 22].forEach((px, k) => put(colorIcon('shield'), 290, [640, 700, 740][k], px))
 } else if (view === 'troops') {
   put(battlefield(390, 844, 'wild'), 0, 0, 844)
   // hàng dưới: bậc 1–3 (một dáng) · bậc 4 · bậc 5; hàng trên: quân địch cùng thứ tự
@@ -261,11 +263,11 @@ if (view === 'chrome') {
 } else if (view === 'tiers') {
   // Một công trình qua 5 bậc (&id=, mặc định Chủ điện), mỗi bậc một hàng, cỡ thật; &id=all: lưới mọi công trình × bậc, thu nhỏ
   const id = (new URLSearchParams(location.search).get('id') ?? 'chuDien') as Kind | 'all'
-  if (id === 'all') KINDS.forEach((k, r) => [1, 6, 11, 16, 21].forEach((lv, c) => put(building(k, lv).art, 39 + c * 78, 84 + r * 92, 76)))
+  if (id === 'all') KINDS.forEach((k, r) => [1, 6, 11, 16, 21].forEach((lv, c) => put(building(k, lv).art, 39 + c * 78, 76 + r * 83, 74)))
   else [1, 6, 11, 16, 21].forEach((lv, i) => put(building(id, lv).art, 195, 130 + i * 160))
 } else {
   const lv = Number(new URLSearchParams(location.search).get('lv') ?? 1)
-  const pos: [number, number][] = [[195, 120], [80, 250], [290, 250], [80, 400], [270, 400], [100, 560], [290, 560], [100, 720], [290, 720]]
+  const pos: [number, number][] = [[195, 110], [80, 235], [290, 235], [80, 370], [270, 370], [100, 500], [290, 500], [100, 640], [290, 640], [195, 800]]
   KINDS.forEach((id, i) => put(building(id, lv).art, ...pos[i]))
 }
 console.log('bake ms', (performance.now() - t0).toFixed(1))

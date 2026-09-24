@@ -55,6 +55,7 @@ export type Report = {
   f?: number // bí cảnh: tầng
   foe?: string // PvP: tên tông môn bên kia
   def?: boolean // PvP: mình là bên thủ
+  lost?: Partial<Bag> // PvP bên thủ: tài nguyên bị cướp
   win: boolean
   fights: { a: Snap; b: Snap; rounds: Round[] }[]
   hurt: Army // thương vong
@@ -219,7 +220,7 @@ const rollDay = (s: State, t: number): State => {
 // Điểm sự kiện tuần khi làm đúng việc của chủ đề tuần này (tuyển: mỗi 5 đệ tử một lần)
 export const evBump = (s: State, id: EventId, k = 1): State =>
   eventOf(s.ev.week) !== id ? s : { ...s, ev: { ...s.ev, pts: s.ev.pts + EVENT_PTS[id] * (id === 'train' ? Math.floor(k / 5) : k) } }
-const bump = (s: State, id: DailyId, k = 1): State =>
+export const bump = (s: State, id: DailyId, k = 1): State =>
   evBump({
     ...s,
     daily: { ...s.daily, n: { ...s.daily.n, [id]: s.daily.n[id] + k } },
@@ -748,7 +749,7 @@ const oneOf = <T extends string>(ids: readonly T[]) => (x: unknown): x is T => t
 const int = (lo: number, hi: number) => (x: unknown): x is number => Number.isSafeInteger(x) && (x as number) >= lo && (x as number) <= hi
 const isElder = oneOf(ELDER_IDS)
 const JOB_KINDS: readonly JobKind[] = ['build', 'train', 'heal', 'study', 'brew', 'forge']
-function pickArmy(x: unknown): Army | null {
+export function pickArmy(x: unknown): Army | null {
   if (!obj(x)) return null
   const out: Army = {}
   for (const [k, n] of Object.entries(x)) {
