@@ -3,7 +3,8 @@
 // Kiểm: lập tông môn → 14 nhiệm vụ đầu chỉ bằng click (xây, tuyển, săn, luyện đan, bí cảnh), 2 tab không đè save nhau,
 // mất mạng vẫn chơi và đổi ngôn ngữ được (service worker), console không có lỗi. Đồng hồ trang được tua (Date.now) để khỏi chờ thật.
 import { spawn } from 'node:child_process'
-import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
+import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import assert from 'node:assert/strict'
@@ -13,18 +14,34 @@ if (!existsSync(CHROME)) {
   console.log(`bỏ qua e2e: không thấy Chrome ở ${CHROME} (đặt CHROME=...)`)
   process.exit(0)
 }
-const URL = 'http://localhost:4178/'
+// Bộ nén CSS có lúc biến giá trị hợp lệ thành khai báo rỗng (`border-image: none` → `border-image:;`), chỉ lộ ở bản build
+for (const f of readdirSync(join(import.meta.dirname, 'dist/assets')).filter(f => f.endsWith('.css'))) {
+  const empty = readFileSync(join(import.meta.dirname, 'dist/assets', f), 'utf8').match(/[\w-]+:;/g)
+  assert.equal(empty, null, `${f}: khai báo CSS rỗng sau khi nén: ${empty}`)
+}
+
+// Mỗi lần chạy: cổng trống riêng và bản sao dist riêng — nhiều phiên chạy song song hay ai build lại giữa chừng cũng không giẫm nhau
+const freePort = () =>
+  new Promise<number>(ok => {
+    const s = createServer().listen(0, () => {
+      const { port } = s.address() as { port: number }
+      s.close(() => ok(port))
+    })
+  })
+const [WEB, DEBUG] = [await freePort(), await freePort()]
+const URL = `http://localhost:${WEB}/`
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 const profile = mkdtempSync(join(tmpdir(), 'rok-e2e-'))
-const server = spawn('npx', ['vite', 'preview', '--port', '4178', '--strictPort'], { cwd: import.meta.dirname, stdio: 'ignore' })
-const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=9334', `--user-data-dir=${profile}`, '--no-first-run', ...(process.env.CI ? ['--no-sandbox'] : []), 'about:blank'], { stdio: 'ignore' })
+cpSync(join(import.meta.dirname, 'dist'), join(profile, 'dist'), { recursive: true })
+const server = spawn('npx', ['vite', 'preview', '--port', String(WEB), '--strictPort', '--outDir', join(profile, 'dist')], { cwd: import.meta.dirname, stdio: 'ignore' })
+const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${DEBUG}`, `--user-data-dir=${profile}/chrome`, '--no-first-run', ...(process.env.CI ? ['--no-sandbox'] : []), 'about:blank'], { stdio: 'ignore' })
 const errors: string[] = []
 
 async function tab() {
   let t: any
   for (let i = 0; i < 50 && !t; i++) {
     try {
-      t = await (await fetch('http://127.0.0.1:9334/json/new?about:blank', { method: 'PUT' })).json()
+      t = await (await fetch(`http://127.0.0.1:${DEBUG}/json/new?about:blank`, { method: 'PUT' })).json()
     } catch {
       await sleep(200)
     }
@@ -66,7 +83,7 @@ async function tab() {
     for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(200)) if (await js(expression).catch(() => false)) return true
     return false
   }
-  return { js, until }
+  return { js, until, send }
 }
 
 const closeAll = `document.querySelectorAll('dialog[open]').forEach(d => [...d.querySelectorAll('button')].find(b => b.matches('.x') || b.innerText.trim() === 'Đóng')?.click())`
@@ -109,6 +126,17 @@ try {
   await a.js(`dispatchEvent(new Event('pagehide'))`)
   assert.equal((await a.js(save)).name, 'Tab hai', 'tab cũ lưu đè save của tab mới')
   console.log('✓ hai tab không đè save nhau')
+
+  // Desktop: bảng công trình là ngăn kéo không modal — cảnh vẫn bấm được, chọn công trình khác thì ngăn kéo đổi theo
+  await a.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await a.js(`location.reload()`)
+  assert.ok(await a.until(`!!document.querySelector('button.quest')`), 'desktop: game không lên')
+  const pick = (name: string) => `[...document.querySelectorAll('[aria-label]')].find(e => e.getAttribute('aria-label').startsWith('${name}'))?.click()`
+  await a.js(pick('Chủ điện'))
+  assert.ok(await a.until(`[...document.querySelectorAll('dialog[open]')].some(d => !d.matches(':modal') && d.innerText.includes('Chủ điện'))`), 'desktop: bảng không mở thành ngăn kéo')
+  await a.js(pick('Tụ Linh Trận'))
+  assert.ok(await a.until(`[...document.querySelectorAll('dialog[open]')].some(d => d.querySelector('h2')?.innerText === 'Tụ Linh Trận')`), 'desktop: ngăn kéo mở mà không chọn được công trình khác')
+  console.log('✓ desktop: ngăn kéo bên phải, vẫn chọn được công trình trên núi')
 
   // Mất mạng: tắt máy chủ, tải lại — game phải lên từ cache của service worker, cả khi đổi sang ngôn ngữ chưa từng mở
   server.kill()

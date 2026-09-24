@@ -136,45 +136,76 @@ export function soldier(type: Troop, foe = false): Asset {
     draw(g) {
       const robe = foe ? mix(C.lacquer2, C.ink2, 0.3) : type === 'phap' ? mix(C.azurite, C.silk, 0.15) : C.silk
       const sash = foe ? C.cinnabar : type === 'kiem' ? C.azurite : type === 'phap' ? C.gold : C.ochre
+      const shade = mix(robe, C.ink, foe ? 0.3 : 0.2)
       const ol = { color: C.ink, press: 'taper' as const, alpha: 0.9, rough: 0.3 }
+      // nếp áo, đường cơ: nét mảnh đầu đinh, khô ở cuối
+      const fold = (pts: Pt[], seed: number, a = 0.45) => stroke(g, pts, { ...ol, w: 0.42, press: 'nail', alpha: a, dry: 0.4, seed })
       blot(g, 0, 0.6, 6.5, C.ink, 0.18, 2, 0.3)
       if (type === 'the') {
-        // thể tu: chân tấn, quần son, mình trần, nắm đấm
-        wash(g, [[-5, 0], [-3.4, -8], [3.4, -8], [5, 0], [1.6, 0], [0, -4], [-1.6, 0]], { fill: foe ? C.ink2 : C.ochre, alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: 3 })
+        // thể tu: chân tấn, quần son, mình trần, nắm đấm; tay có viền mực (vẽ viền trước, da đè lên)
+        const pants: Pt[] = [[-5, 0], [-3.4, -8], [3.4, -8], [5, 0], [1.6, 0], [0, -4], [-1.6, 0]]
+        wash(g, pants, { fill: foe ? C.ink2 : C.ochre, alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: 3 })
+        wash(g, [[0.4, -8], [3.4, -8], [5, 0], [1.6, 0]], { fill: mix(foe ? C.ink2 : C.ochre, C.ink, 0.3), alpha: 0.5, jitter: 0.1, layers: 1, sharp: true, seed: 20 })
         wash(g, [[-3.6, -8], [-3.2, -14.6], [3.2, -14.6], [3.6, -8]], { fill: SKIN, alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: 4 })
+        wash(g, [[1.2, -14.6], [3.2, -14.6], [3.6, -8], [1.6, -8]], { fill: mix(SKIN, C.ochre, 0.35), alpha: 0.55, jitter: 0.1, layers: 1, sharp: true, seed: 21 })
         wash(g, [[-3.8, -8.8], [3.8, -8.8], [3.8, -7.4], [-3.8, -7.4]], { fill: sash, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: 5 })
-        stroke(g, [[-3.2, -13.6], [-6.2, -11], [-6.8, -8]], { ...ol, w: 1.6, color: SKIN, alpha: 1 })
-        stroke(g, [[3.2, -13.6], [6.4, -14.6], [8, -17]], { ...ol, w: 1.6, color: SKIN, alpha: 1 })
-        blot(g, -6.8, -7.6, 1.4, SKIN, 1, 6, 1)
-        blot(g, 8.2, -17.4, 1.4, SKIN, 1, 7, 1)
-        stroke(g, [[-5, 0], [-3.4, -8], [-3.2, -14.6]], { ...ol, w: 0.8 })
-        stroke(g, [[5, 0], [3.4, -8], [3.2, -14.6]], { ...ol, w: 0.8 })
+        for (const [arm, fist] of [[[[-3.2, -13.6], [-6.2, -11], [-6.8, -8]], [-6.8, -7.6]], [[[3.2, -13.6], [6.4, -14.6], [8, -17]], [8.2, -17.4]]] as [Pt[], Pt][]) {
+          stroke(g, arm, { ...ol, w: 2.3, alpha: 0.85 })
+          stroke(g, arm, { ...ol, w: 1.5, color: SKIN, alpha: 1 })
+          blot(g, fist[0], fist[1], 1.75, C.ink, 0.85, 6 + fist[0], 1)
+          blot(g, fist[0], fist[1], 1.35, SKIN, 1, 7 + fist[0], 1)
+        }
+        fold([[-2.3, -13.1], [-1.2, -12.3], [-0.3, -12.5]], 22, 0.5)
+        fold([[2.3, -13.1], [1.2, -12.3], [0.3, -12.5]], 23, 0.5)
+        fold([[0, -11.8], [0.1, -10.4], [0, -9.3]], 24, 0.35)
+        fold([[-2.4, -6.6], [-2.9, -3.6], [-3.6, -0.8]], 25)
+        fold([[2.4, -6.6], [3, -3.2], [3.8, -0.8]], 26)
+        stroke(g, [[-3.2, -14.6], [-3.4, -8], [-5, 0]], { ...ol, w: 0.6, press: 'nail', dry: 0.25 })
+        stroke(g, [[3.2, -14.6], [3.4, -8], [5, 0]], { ...ol, w: 1, press: 'nail', dry: 0.25 })
+        stroke(g, [[-1.6, 0], [0, -4], [1.6, 0]], { ...ol, w: 0.5, press: 'even', alpha: 0.7 })
       } else {
-        // kiếm tu / pháp tu: áo dài
-        const hem = type === 'phap' ? 6 : 4.4
-        const body: Pt[] = [[-hem, 0], [-3.4, -9], [-3, -14.8], [3, -14.8], [3.4, -9], [hem, 0]]
-        wash(g, body, { fill: robe, alpha: 1, jitter: 0.2, layers: 2, seed: 8 })
+        // kiếm tu / pháp tu: áo dài giao lĩnh, vạt áo bị gió thổi lệch sang trái, dải đai bay (飘带)
+        const hem = type === 'phap' ? 6 : 4.4, sway = 0.9
+        const L: Pt = [-hem - sway, 0.2], R: Pt = [hem - sway * 0.4, -0.2]
+        wash(g, [L, [-3.4, -9], [-3, -14.8], [3, -14.8], [3.4, -9], R], { fill: robe, alpha: 1, jitter: 0.2, layers: 2, seed: 8 })
+        wash(g, [[0.8, -14.8], [3, -14.8], [3.4, -9], R, [1.4, 0.1]], { fill: shade, alpha: 0.55, jitter: 0.15, layers: 1, seed: 16 }) // bóng khối: sáng từ trái
         wash(g, [[-3.3, -10], [3.3, -10], [3.3, -8.8], [-3.3, -8.8]], { fill: sash, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: 9 })
-        stroke(g, [[-hem, 0], [-3.4, -9], [-3, -14.8]], { ...ol, w: 0.8 })
-        stroke(g, [[hem, 0], [3.4, -9], [3, -14.8]], { ...ol, w: 0.8 })
-        stroke(g, [[-hem + 0.6, 0.2], [hem - 0.6, 0.2]], { ...ol, w: 0.7, press: 'even' })
+        stroke(g, [[-1.8, -9.4], [-4.4, -8.4], [-6.8, -9.2], [-8.8, -8]], { w: 0.95, color: sash, press: 'fade', alpha: 0.95, rough: 0.3, seed: 18 })
+        stroke(g, [[-1.4, -9], [-3.6, -6.8], [-6, -6.6], [-7.2, -5.4]], { w: 0.7, color: sash, press: 'fade', alpha: 0.85, rough: 0.3, seed: 19 })
+        // cổ áo: vạt trái đè vạt phải
+        const collar = foe ? C.ink : type === 'phap' ? C.silk : C.azuriteD
+        stroke(g, [[-2.3, -14.8], [0.3, -12.3], [1.5, -10]], { w: 0.75, color: collar, press: 'taper', alpha: 0.9, seed: 17 })
+        stroke(g, [[2.3, -14.8], [0.9, -13.1]], { w: 0.5, color: collar, press: 'taper', alpha: 0.8, seed: 27 })
+        fold([[-1.2, -8.6], [-1.9, -4.4], [-3, -0.6]], 28)
+        fold([[1.4, -8.6], [1.8, -4.2], [2.1, -0.4]], 29)
+        if (type === 'phap') fold([[-3, -6.8], [-4.2, -3], [-5.4, -0.2]], 30, 0.35)
+        stroke(g, [[-3, -14.8], [-3.4, -9], L], { ...ol, w: 0.6, press: 'nail', dry: 0.3, seed: 31 })
+        stroke(g, [[3, -14.8], [3.4, -9], R], { ...ol, w: 1, press: 'nail', dry: 0.3, seed: 32 })
+        stroke(g, [[L[0] + 0.6, 0.2], [0, 0.5], [R[0] - 0.6, 0]], { ...ol, w: 0.6, press: 'even', seed: 33 })
         if (type === 'kiem') {
-          // tay cầm kiếm giơ chéo
-          stroke(g, [[2.6, -13.4], [5.2, -12.4], [6.6, -14.4]], { ...ol, w: 1.3, color: robe, alpha: 1 })
+          // tay áo chéo lên cầm kiếm
+          const sleeve: Pt[] = [[2.4, -14.2], [5.6, -14], [7, -12.6], [3.2, -11.6]]
+          wash(g, sleeve, { fill: robe, alpha: 1, jitter: 0.1, layers: 1, seed: 34 })
+          wash(g, sleeve.slice(1).concat([[4.4, -12.2]]), { fill: shade, alpha: 0.45, jitter: 0.1, layers: 1, seed: 35 })
+          stroke(g, [[2.4, -14.2], [5.6, -14], [7, -12.6], [3.2, -11.6]], { ...ol, w: 0.55, press: 'nail', seed: 36 })
+          blot(g, 6.6, -13.6, 0.9, SKIN, 1, 37, 1)
           stroke(g, [[6.2, -13.8], [11.4, -22.4]], { w: 1, color: mix(C.silk, C.ink3, 0.25), press: 'even', alpha: 1 })
           stroke(g, [[6.2, -13.8], [11.4, -22.4]], { w: 0.35, color: C.ink, press: 'even', alpha: 0.6 })
           stroke(g, [[5, -14.9], [7.6, -12.9]], { w: 0.9, color: C.gold, press: 'even', alpha: 1 })
         } else {
           // tay áo rộng, quả cầu pháp lực
           wash(g, [[2.6, -13.6], [7.2, -11.8], [6.4, -9.2], [2.8, -10.6]], { fill: robe, alpha: 1, jitter: 0.1, layers: 1, seed: 10 })
-          stroke(g, [[2.6, -13.6], [7.2, -11.8], [6.4, -9.2]], { ...ol, w: 0.7 })
+          wash(g, [[4.6, -12.6], [7.2, -11.8], [6.4, -9.2], [4.2, -10]], { fill: shade, alpha: 0.45, jitter: 0.1, layers: 1, seed: 38 })
+          stroke(g, [[2.6, -13.6], [7.2, -11.8], [6.4, -9.2]], { ...ol, w: 0.7, press: 'nail', seed: 39 })
           blot(g, 8.4, -12.8, 3.2, foe ? C.cinnabarL : C.spirit, 0.35, 11, 1)
           blot(g, 8.4, -12.8, 1.6, foe ? C.cinnabarL : C.spirit, 1, 12, 1)
         }
       }
-      // đầu, tóc búi
+      // đầu: mặt, mắt (hai nét mực nhỏ), tóc búi
       blot(g, 0, -17.2, 2.6, SKIN, 1, 13, 1.05)
       stroke(g, [[-2.5, -16.6], [-2, -15], [0, -14.6], [2, -15], [2.5, -16.6]], { ...ol, w: 0.5, alpha: 0.7 })
+      stroke(g, [[-1.75, -17], [-1.1, -16.55], [-0.45, -16.6]], { w: 0.55, color: C.ink, press: 'taper', alpha: 1, rough: 0.2, seed: 40 })
+      stroke(g, [[0.45, -16.6], [1.1, -16.55], [1.75, -17]], { w: 0.55, color: C.ink, press: 'taper', alpha: 1, rough: 0.2, seed: 41 })
       wash(g, [[-2.7, -17.4], [-2.2, -19.4], [0, -20.1], [2.2, -19.4], [2.7, -17.4], [1.2, -18.4], [-1.2, -18.4]], { fill: C.ink, alpha: 1, jitter: 0.1, layers: 1, seed: 14 })
       blot(g, 0, -20.6, 1.3, C.ink, 1, 15, 1)
       if (foe) stroke(g, [[-2.6, -18.9], [0, -19.5], [2.6, -18.9], [4.2, -17.4]], { w: 0.8, color: C.cinnabar, press: 'even', alpha: 1 })

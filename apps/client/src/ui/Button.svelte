@@ -141,7 +141,7 @@
     color: var(--cinnabar);
     text-decoration: underline 1.5px;
     text-underline-offset: 3px;
-    border-image: none;
+    --sk: none; /* không viết border-image: none — bộ nén CSS của Vite biến thành `border-image:;` (bỏ qua) */
   }
   .quiet .label {
     text-shadow: none;

@@ -26,7 +26,7 @@
   $effect(() => scene?.set(game, game.levels.chuDien >= MAP_HALL ? nodes.filter(n => status(n) !== 'locked').map(n => n.t) : [], now))
 </script>
 
-<View make={() => new MapScene()} height={MAP_H} start={1} bind:scene={scene as never}>
+<View make={() => new MapScene()} height={MAP_H} start={1} zoomable bind:scene={scene as never}>
   {#snippet hits(k)}
     {#each nodes as n (n.name + n.t.kind)}
       <button class="hit" style="left:{(n.x - 24) * k}px;top:{(n.y + MAP.top - 24) * k}px;width:{48 * k}px;height:{56 * k}px" aria-label="{n.name}{n.lv ? `, ${L.lv(n.lv)}` : ''}" onclick={() => onpick(n.t)}></button>
@@ -168,6 +168,14 @@
   .top > * {
     pointer-events: auto;
   }
+  /* dải giấy mờ dần sau hàng nút: nhãn mục tiêu cuộn qua thì chìm dần, không bị cắt ngang giữa chữ */
+  .top::before {
+    content: '';
+    position: absolute;
+    inset: -14px 0 -22px;
+    z-index: -1;
+    background: linear-gradient(color-mix(in srgb, var(--paper) 88%, transparent) 55%, transparent);
+  }
   .rep {
     position: relative;
   }
@@ -178,5 +186,20 @@
     z-index: var(--z-page);
     width: min(100% - 24px, 456px);
     translate: -50% 0;
+  }
+  /* desktop: căn theo vùng bản đồ (bên phải cột trái), không có thanh tab dưới */
+  @media (min-width: 1024px) and (min-height: 600px) {
+    .top,
+    .marches {
+      left: calc(var(--rail) + (100% - var(--rail)) / 2);
+    }
+    .top {
+      top: calc(var(--top) + var(--sp-4));
+      width: min(100% - var(--rail), 640px);
+    }
+    .marches {
+      bottom: var(--sp-5);
+      width: min(100% - var(--rail) - 48px, 520px);
+    }
   }
 </style>

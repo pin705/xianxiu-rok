@@ -319,8 +319,9 @@
   }
 
   /* ---- Đợt kiếp mới ---- */
+  /* neo mép dưới ngay trên nhãn lượt (tâm ở 56%): huy hiệu + tên đợt không đè chữ, màn cao hay thấp cũng vậy */
   .wave {
-    top: 42%;
+    bottom: calc(44% + 26px);
     justify-items: center;
     color: var(--silk);
     text-shadow: 0 2px 10px rgb(0 0 0 / 0.6);

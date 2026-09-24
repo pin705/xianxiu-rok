@@ -40,7 +40,11 @@
   --sp-6: 32px;
   --cut: 7px; /* góc vát của thẻ bài, nút */
   --hair: 1.5px;
-  --col: 480px; /* cột game trên màn hình rộng */
+  --col: 480px; /* cột game trên màn hẹp, bảng giữa màn hình */
+  /* Desktop (khối @media cuối file đặt lại): cột trái điều hướng, thanh trên, ngăn kéo phải */
+  --rail: 0px;
+  --top: 0px;
+  --dock: 440px;
   --safe-t: env(safe-area-inset-top);
   --safe-b: env(safe-area-inset-bottom);
 
@@ -193,12 +197,14 @@ dialog::backdrop {
 /* Da vẽ tay: cuộn tranh bồi lụa (bảng lớn — khung lụa + giấy ghép), thẻ giấy mép xơ, ván sơn mài viền vàng.
    border-width 0: da vẽ đè lên vùng đệm, bố cục do padding quyết định. */
 .scroll-skin {
+  color: var(--text);
   background: var(--paper) var(--paper-tex);
   background-size: 128px;
   border: 0 solid transparent;
   border-image: var(--sk-scroll);
 }
 .card-skin {
+  color: var(--text);
   border: 0 solid transparent;
   border-image: var(--sk-card);
 }
@@ -317,4 +323,27 @@ dialog::backdrop {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* ---------- Máy tính bảng dọc, điện thoại ngang lớn: cột rộng hơn ---------- */
+@media (min-width: 700px) {
+  :root {
+    --col: 620px;
+  }
+}
+
+/* ---------- Desktop: màn rộng và đủ cao ----------
+   Thanh trên trải ngang, cột trái (điều hướng + nhiệm vụ + việc đang chạy), cảnh ở giữa, bảng mở thành ngăn kéo bên phải.
+   Breakpoint đồng bộ với DESK trong lib.ts. */
+@media (min-width: 1024px) and (min-height: 600px) {
+  :root {
+    --fs-1: 12px;
+    --fs-2: 13.5px;
+    --fs-3: 15.5px;
+  }
+  /* cột trái + thanh trên chỉ khi đã vào game (App gắn .game lên <html>); màn tiêu đề dùng trọn màn hình */
+  :root.game {
+    --rail: 300px;
+    --top: 84px;
+  }
 }

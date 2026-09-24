@@ -2,8 +2,10 @@
   // HUD: ván sơn mài viền vàng trên cùng (chưởng môn, thế lực, tài nguyên), thẻ nhiệm vụ giấy, nút tạp dịch,
   // ván tab dưới cùng — mọi mặt đều vẽ tay (da từ theme.ts, icon/huy hiệu từ @rok/art).
   import { Tween } from 'svelte/motion'
-  import { DAILY_HALL, RESOURCES, count, dailyReady, power, questDone, questOf, questProgress, storage, type Bag as Res, type State } from '@rok/rules'
-  import { Icon, Portrait, emblemArt, paintedUrl, portraitRing, tabIcon, type Look } from '@rok/art'
+  import {
+    DAILY_HALL, RESOURCES, count, dailyReady, power, questDone, questOf, questProgress, rate, storage, unitOf, type Bag as Res, type BuildingId, type State,
+  } from '@rok/rules'
+  import { Icon, Portrait, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon, type Look } from '@rok/art'
   import { Badge, Bag, IconButton, Meter, Tag } from './ui'
   import { L, TABS, clock, num, progress, sfx, visitTab, visitedTabs, type Tab } from './lib'
 
@@ -19,6 +21,7 @@
     ontab,
     onsettings,
     ondaily,
+    onfocus,
   }: {
     game: State
     now: number
@@ -31,6 +34,7 @@
     ontab: (t: Tab, e: MouseEvent) => void
     onsettings: () => void
     ondaily: () => void
+    onfocus: (id: BuildingId, view?: string) => void // mở bảng công trình (danh sách việc đang chạy)
   } = $props()
 
   const MASTER: Look = { robe: '#1b4566', trim: '#c9a14a', hair: '#211c17', style: 'bun', bg: '#78a6c2', mark: '#b8382a' }
@@ -64,6 +68,24 @@
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
   const hurt = $derived(!game.heal && count(game.wounded) > 0)
 
+  // Cột trái desktop: mọi việc có đồng hồ, bấm là mở đúng công trình (hành quân → bản đồ)
+  type Run = { key: string; icon: IconName; text: string; end: number; go: (e: MouseEvent) => void }
+  const runs = $derived.by(() => {
+    const out: Run[] = []
+    for (const j of game.queue)
+      out.push({ key: `b${j.building}`, icon: 'hammer', text: `${L.b[j.building].name} · ${L.level(j.level)}`, end: j.finishAt, go: () => onfocus(j.building, 'upgrade') })
+    if (game.train) {
+      const u = unitOf(game.train.unit)
+      out.push({ key: 't', icon: 'people', text: L.train.doing(game.train.n, `${L.units[u.type]} ${L.tiers[u.tier]}`), end: game.train.finishAt, go: () => onfocus('dienVoTruong', 'train') })
+    }
+    if (game.heal) out.push({ key: 'h', icon: 'heal', text: L.alchemy.healing(count(game.heal.troops)), end: game.heal.finishAt, go: () => onfocus('danPhong', 'alchemy') })
+    if (game.brew) out.push({ key: 'p', icon: 'cauldron', text: L.alchemy.brewing(game.brew.n, L.pills[game.brew.pill].name), end: game.brew.finishAt, go: () => onfocus('danPhong', 'alchemy') })
+    if (game.study) out.push({ key: 's', icon: 'scroll', text: L.library.doing(L.techs[game.study.tech], game.study.level), end: game.study.finishAt, go: () => onfocus('tangKinhCac', 'library') })
+    for (const m of game.marches)
+      out.push({ key: `m${m.id}`, icon: 'flag', text: L.activity.march(L.elders[m.elder].name, L.target(m.target)), end: now < m.arriveAt ? m.arriveAt : m.returnAt, go: e => ontab('banDo', e) })
+    return out.sort((a, b) => a.end - b.end)
+  })
+
   // Số chạy mượt khi tăng/giảm
   const powerT = Tween.of(() => power(game), { duration: 700 })
   const resT = RESOURCES.map(r => Tween.of(() => game.res[r], { duration: 450 }))
@@ -83,7 +105,7 @@
     <ul class="res">
       {#each RESOURCES as r, i (r)}
         {@const full = game.res[r] >= cap}
-        <li class:full data-res={r}>
+        <li class:full data-res={r} title="{L.res[r]}: {num(game.res[r])} / {num(cap)} · +{num(rate(game, r))}{L.panel.perHour}">
           <Icon name={r} size={22} />
           <span class="stack">
             <b class="t-num">{num(Math.round(resT[i].current))}<span class="sr"> {L.res[r]}</span></b>
@@ -98,8 +120,9 @@
     </ul>
   </header>
 
-  {#if tab === 'tongMon' && !storm}
-    <div class="side">
+  <!-- màn hẹp: chỉ ở tab Tông môn; desktop: luôn nằm trong cột trái (CSS .away) -->
+  {#if !storm}
+    <div class="side" class:away={tab !== 'tongMon'}>
       {#if quest}
         <button class="quest" class:done class:enter={!held} onclick={done ? claim : onquest}>
           <span class="stack grow" style:--gap="3px">
@@ -123,9 +146,17 @@
           <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}><Badge n={ready} /></IconButton>
         </span>
       {/if}
+      <section class="runs" aria-label={L.activity.title}>
+        <h3>{L.activity.title}</h3>
+        {#each runs as r (r.key)}
+          <button class="run" onclick={r.go}><Icon name={r.icon} size={16} /><span class="grow t-ellipsis">{r.text}</span><b class="t-num">{clock(r.end - now)}</b></button>
+        {:else}
+          <p class="t-small">{L.activity.empty}</p>
+        {/each}
+      </section>
     </div>
 
-    <button class="builder" class:idle={!job} onclick={onbuilder} aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}">
+    <button class="builder" class:away={tab !== 'tongMon'} class:idle={!job} onclick={onbuilder} aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}">
       <svg class="ring" viewBox="0 0 60 60" aria-hidden="true">
         <circle class="rbg" cx="30" cy="30" r="26" />
         <circle class="rfg" cx="30" cy="30" r="26" stroke-dasharray="{ring * 163.4} 163.4" />
@@ -478,5 +509,152 @@
   .tabs small {
     font-size: 10px;
     color: color-mix(in srgb, var(--silk) 50%, transparent);
+  }
+  .away,
+  .runs {
+    display: none;
+  }
+  /* điện thoại rất hẹp (320px): nút nhận thưởng xuống dòng, phần thưởng dàn ngang — thẻ không cao lên che biển tên Chủ điện */
+  @media (max-width: 360px) {
+    .quest {
+      flex-wrap: wrap;
+      row-gap: 6px;
+    }
+    .quest > .stack {
+      flex-basis: 100%;
+    }
+  }
+
+  /* ---------- Desktop: thanh trên một hàng, cột trái dọc (điều hướng, nhiệm vụ, tạp dịch) ---------- */
+  @media (min-width: 1024px) and (min-height: 600px) {
+    .hud {
+      max-width: none;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-4);
+      height: var(--top);
+      padding: 0 28px;
+    }
+    .who {
+      display: contents;
+    }
+    .id {
+      width: calc(var(--rail) - 120px);
+    }
+    .res {
+      flex: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      gap: var(--sp-3);
+    }
+    .pow {
+      order: 3;
+    }
+    .who > :global(:last-child) {
+      order: 4;
+    }
+    .res {
+      order: 2;
+    }
+
+    .tabs {
+      top: var(--top);
+      right: auto;
+      bottom: 0;
+      width: var(--rail);
+      grid-template-columns: 1fr;
+      grid-auto-rows: 58px;
+      align-content: start;
+      gap: 2px;
+      padding: var(--sp-4) var(--sp-4) 0;
+      filter: drop-shadow(6px 0 12px rgb(20 14 10 / 0.3));
+    }
+    .tabs button {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: 0 var(--sp-3);
+      font-size: var(--fs-4);
+      border-radius: 10px;
+      transition: background var(--dur-2) var(--ease);
+    }
+    .tabs button:not(:disabled):hover {
+      background: rgb(236 208 138 / 0.08);
+    }
+    .on .medal {
+      transform: scale(1.12);
+    }
+    .tabs small {
+      margin-left: auto;
+      font-size: var(--fs-1);
+    }
+
+    .side,
+    .side.away {
+      position: absolute;
+      top: calc(var(--top) + var(--sp-4) + 5 * 60px + var(--sp-4));
+      left: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      bottom: 0;
+      justify-content: flex-start;
+      width: var(--rail);
+      padding: 0 var(--sp-4) var(--sp-4);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .quest {
+      max-width: none;
+      cursor: pointer;
+    }
+    .quest:hover:not(.done) {
+      filter: drop-shadow(0 4px 12px rgb(236 208 138 / 0.35));
+    }
+    .daily {
+      align-self: flex-start;
+    }
+    .runs {
+      display: grid;
+      gap: 2px;
+      margin-top: var(--sp-3);
+      color: var(--text-inv-soft);
+    }
+    .runs h3 {
+      margin-bottom: var(--sp-1);
+      font-size: var(--fs-1);
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold-l);
+    }
+    .run {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      min-width: 0;
+      padding: 7px var(--sp-2);
+      font-size: var(--fs-2);
+      text-align: left;
+      color: var(--silk);
+      border-radius: 8px;
+    }
+    .run:hover {
+      background: rgb(236 208 138 / 0.1);
+    }
+    .run b {
+      color: var(--gold-l);
+    }
+    /* góc dưới phải vùng cảnh, tránh ngăn kéo đang mở */
+    .builder,
+    .builder.away {
+      right: calc(var(--sp-5) + var(--dockw, 0px));
+      bottom: var(--sp-5);
+      display: grid;
+      transition: right var(--dur-2) var(--ease);
+    }
   }
 </style>

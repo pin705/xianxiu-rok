@@ -1,0 +1,17 @@
+# systemd: chạy máy nhận analytics, tự khởi động lại khi lỗi hoặc máy khởi động lại.
+#   sudo cp rok-analytics.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now rok-analytics
+# Sửa: đường dẫn repo (WorkingDirectory), STATS_TOKEN (chuỗi bí mật dài), ORIGIN (tên miền game, vd https://<tên>.itch.io hoặc *).
+[Unit]
+Description=Son Ha Tien Tong analytics
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/rok/apps/server
+ExecStart=/usr/bin/node analytics.ts
+Environment=PORT=8787 DB=/var/lib/rok/analytics.db TRUST_PROXY=1 STATS_TOKEN=doi-chuoi-bi-mat-nay ORIGIN=*
+StateDirectory=rok
+DynamicUser=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

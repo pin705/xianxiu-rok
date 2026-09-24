@@ -1,5 +1,6 @@
 // Texture cho phần chuyển động của cảnh (GPU diễn): sương, thác, hào quang, khói, cờ, hạc, đệ tử, tia sáng.
 import { blot, canvas, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
+import { ring } from './chrome'
 import { ellipse, vgrad } from './landscape'
 import { fbm, noise2, rng } from './noise'
 import { PIGMENT as C, mix, rgba } from './palette'
@@ -71,37 +72,6 @@ export function beamTex(w = 32, h = 256) {
   return cv
 }
 
-// Cụm khói: vài vòng mờ chồng nhau, lệch nhau
-export function puffTex(size = 64, seed = 5) {
-  const cv = canvas(size, size)
-  const g = cv.getContext('2d') as G
-  const r = rng(seed)
-  for (let i = 0; i < 6; i++) {
-    const x = size * (0.35 + r() * 0.3), y = size * (0.35 + r() * 0.3), rr = size * (0.18 + r() * 0.14)
-    const gr = g.createRadialGradient(x, y, 0, x, y, rr)
-    gr.addColorStop(0, 'rgba(255,255,255,0.5)')
-    gr.addColorStop(1, 'rgba(255,255,255,0)')
-    g.fillStyle = gr
-    g.fillRect(0, 0, size, size)
-  }
-  return cv
-}
-
-// Vòng sáng hình elip (phù văn Tụ Linh Trận, vòng chọn công trình) — nét mảnh, sáng
-export function ringTex(w = 128, h = 40, width = 2) {
-  const cv = canvas(w, h)
-  const g = cv.getContext('2d') as G
-  g.strokeStyle = 'rgba(255,255,255,0.95)'
-  g.lineWidth = width
-  g.beginPath()
-  g.ellipse(w / 2, h / 2, w / 2 - width * 2, h / 2 - width * 2, 0, 0, Math.PI * 2)
-  g.stroke()
-  g.filter = 'blur(2px)'
-  g.globalAlpha = 0.6
-  g.stroke()
-  return cv
-}
-
 // ---------- Hình nhỏ vẽ tay (neo ở chân) ----------
 
 // Cờ đuôi nheo đỏ — neo ở đầu cán
@@ -145,6 +115,50 @@ export const crane = (up: boolean): Asset => ({
   },
 })
 
+// Mặt trời son (朱砂日): đĩa loang nhiều lớp, sáng lệch về một góc, mép sắc tố dồn đậm, ăn hạt giấy — neo ở tâm
+export const sun = (r = 22): Asset => ({
+  x: -r - 3, y: -r - 3, w: r * 2 + 6, h: r * 2 + 6,
+  draw(g) {
+    const fill = (g2: G) => {
+      const gr = g2.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r * 1.05)
+      gr.addColorStop(0, C.cinnabarL)
+      gr.addColorStop(1, C.cinnabar)
+      return gr
+    }
+    wash(g, ellipse(0, 0, r, r * 0.98, 16), { fill, alpha: 0.95, layers: 4, jitter: r * 0.05, edge: r * 0.09, seed: 3 })
+    grain(g, 0.45)
+  },
+})
+
+// Trăng: đĩa trắng chì loang, vài mảng bóng ngả vàng giấy, viền mực nhạt khô đứt quãng — neo ở tâm
+export const moon = (r = 20): Asset => ({
+  x: -r - 3, y: -r - 3, w: r * 2 + 6, h: r * 2 + 6,
+  draw(g) {
+    wash(g, ellipse(0, 0, r, r, 16), { fill: C.silk, alpha: 1, layers: 3, jitter: r * 0.04, edge: r * 0.05, seed: 5 })
+    for (const [x, y, rr, sd] of [[-0.32, -0.12, 0.3, 1], [0.28, 0.22, 0.22, 2], [0.04, -0.48, 0.14, 3], [-0.1, 0.5, 0.12, 4]])
+      wash(g, ellipse(x * r, y * r, rr * r, rr * r * 0.8, 9), { fill: C.paper3, alpha: 0.32, layers: 2, jitter: rr * r * 0.25, seed: 10 + sd })
+    const rim = ellipse(0, 0, r, r, 18)
+    stroke(g, [...rim, rim[0], rim[1]], { w: r * 0.07, color: C.ink3, press: 'taper', alpha: 0.4, dry: 0.55, seed: 8 })
+    grain(g, 0.3)
+  },
+})
+
+// Linh châu trên cột Tụ Linh Trận: hạt ngọc lam, mép đậm, chấm sáng lệch góc, viền mực mảnh — neo ở tâm
+export const pearl = (r = 3): Asset => ({
+  x: -r - 1, y: -r - 1, w: r * 2 + 2, h: r * 2 + 2,
+  draw(g) {
+    const fill = (g2: G) => {
+      const gr = g2.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r)
+      gr.addColorStop(0, mix(C.spirit, C.silk, 0.5))
+      gr.addColorStop(1, C.azurite)
+      return gr
+    }
+    wash(g, ellipse(0, 0, r, r, 12), { fill, alpha: 1, layers: 2, jitter: r * 0.04, edge: r * 0.12, seed: 21 })
+    blot(g, -r * 0.35, -r * 0.38, r * 0.26, C.silk, 0.95, 22, 0.8)
+    stroke(g, [...ellipse(0, 0, r, r, 12), [r, 0]], { w: r * 0.16, color: C.ink, press: 'even', alpha: 0.6 })
+  },
+})
+
 // Tia lửa/linh khí nhỏ hình thoi
 export function sparkTex(size = 24) {
   const cv = canvas(size, size)
@@ -162,35 +176,6 @@ export function sparkTex(size = 24) {
   g.quadraticCurveTo(r, r, 0, r)
   g.quadraticCurveTo(r, r, r, 0)
   g.fill()
-  return cv
-}
-
-// Tia sét: đường gãy khúc có nhánh, vẽ sẵn nhiều biến thể
-export function boltTex(w = 64, h = 256, seed = 1) {
-  const cv = canvas(w, h)
-  const g = cv.getContext('2d') as G
-  const r = rng(seed)
-  const branch = (x: number, y: number, len: number, width: number, depth: number) => {
-    const pts: Pt[] = [[x, y]]
-    let cx = x, cy = y
-    const steps = 10
-    for (let i = 0; i < steps; i++) {
-      cx += (r() - 0.5) * w * 0.28
-      cy += len / steps
-      cx = Math.max(4, Math.min(w - 4, cx))
-      pts.push([cx, cy])
-      if (depth < 1 && r() < 0.18) branch(cx, cy, len * 0.35, width * 0.5, depth + 1)
-    }
-    g.strokeStyle = 'rgba(255,255,255,1)'
-    g.lineWidth = width
-    g.lineJoin = 'miter'
-    g.beginPath()
-    pts.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py)))
-    g.stroke()
-  }
-  g.shadowColor = 'rgba(200,180,255,1)'
-  g.shadowBlur = 8
-  branch(w / 2, 0, h - 4, 3, 0)
   return cv
 }
 
@@ -217,50 +202,6 @@ export function farRange(w: number, h: number, seed: number, tone: string, alpha
       grain(g, 0.3)
     },
   }
-}
-
-// Kiếm khí hình trăng khuyết (bay ngang, tô màu bằng tint)
-export function slashTex(w = 96, h = 48) {
-  const cv = canvas(w, h)
-  const g = cv.getContext('2d') as G
-  const gr = g.createLinearGradient(0, 0, w, 0)
-  gr.addColorStop(0, 'rgba(255,255,255,0)')
-  gr.addColorStop(0.7, 'rgba(255,255,255,0.9)')
-  gr.addColorStop(1, 'rgba(255,255,255,1)')
-  g.fillStyle = gr
-  g.beginPath()
-  g.moveTo(w * 0.05, h * 0.5)
-  g.quadraticCurveTo(w * 0.7, -h * 0.05, w * 0.98, h * 0.5)
-  g.quadraticCurveTo(w * 0.7, h * 0.28, w * 0.05, h * 0.5)
-  g.fill()
-  g.globalAlpha = 0.5
-  g.beginPath()
-  g.moveTo(w * 0.1, h * 0.5)
-  g.quadraticCurveTo(w * 0.72, h * 1.02, w * 0.96, h * 0.52)
-  g.quadraticCurveTo(w * 0.7, h * 0.7, w * 0.1, h * 0.5)
-  g.fill()
-  return cv
-}
-
-// Vết vuốt: ba đường cong song song
-export function clawTex(size = 64) {
-  const cv = canvas(size, size)
-  const g = cv.getContext('2d') as G
-  g.lineCap = 'round'
-  for (let i = 0; i < 3; i++) {
-    const o = (i - 1) * size * 0.2
-    const gr = g.createLinearGradient(size * 0.2, 0, size * 0.8, size)
-    gr.addColorStop(0, 'rgba(255,255,255,0)')
-    gr.addColorStop(0.5, 'rgba(255,255,255,1)')
-    gr.addColorStop(1, 'rgba(255,255,255,0)')
-    g.strokeStyle = gr
-    g.lineWidth = size * 0.07
-    g.beginPath()
-    g.moveTo(size * 0.25 + o, size * 0.1)
-    g.quadraticCurveTo(size * 0.62 + o, size * 0.45, size * 0.55 + o, size * 0.92)
-    g.stroke()
-  }
-  return cv
 }
 
 // Thanh phi kiếm nhỏ (mưa kiếm của công pháp)
@@ -471,3 +412,143 @@ export function petalTex(size = 16) {
   blot(g, size / 2 - 1, size / 2 - 1, size * 0.14, '#fbe3e8', 1, 3, 0.8)
   return cv
 }
+
+// ---------- VFX nét bút (trắng — tô màu bằng tint) ----------
+// dry: độ khô của nét. Khung sau vẽ khô hơn → đuôi nét tước sợi rồi tan (飞白), thay cho mờ dần đều.
+// k: hệ số bề ngang. Cùng hình vẽ mảnh hơn làm lõi sáng đè lên bóng mực (battle.ts ghép ba lớp).
+const W = '#ffffff'
+function blank(w: number, h: number) {
+  const cv = canvas(w, h)
+  return { cv, g: cv.getContext('2d') as G }
+}
+
+// Kiếm khí trăng khuyết: đầu (phải, hướng bay) nhọn rồi phình nhanh, đuôi dài vuốt nhỏ; một nét phụ khô bám dưới
+export function slashTex(w = 128, h = 64, seed = 1, dry = 0.3, k = 1) {
+  const { cv, g } = blank(w, h)
+  const arc: Pt[] = [[w * 0.95, h * 0.6], [w * 0.8, h * 0.36], [w * 0.52, h * 0.27], [w * 0.24, h * 0.35], [w * 0.05, h * 0.55]]
+  const press = (t: number) => (t < 0.12 ? 0.2 + 0.8 * Math.sin(((t / 0.12) * Math.PI) / 2) : (1 - (t - 0.12) / 0.88) ** 0.8)
+  stroke(g, arc, { w: h * 0.3 * k, color: W, alpha: 1, press, dry, ink: 0.3, rough: 0.4, seed })
+  const low = arc.slice(0, 4).map(([x, y], i): Pt => [x - w * 0.04, y + h * (0.13 + i * 0.02)])
+  stroke(g, low, { w: h * 0.1 * k, color: W, alpha: 0.8, press: 'nail', dry: Math.min(1, dry + 0.25), rough: 0.5, seed: seed + 7 })
+  return cv
+}
+
+// Ba vết vuốt: nhọn hai đầu, khô dần về cuối. n: số vết đã hiện (vuốt lần lượt từng vết)
+export function clawTex(size = 96, seed = 2, dry = 0.4, k = 1, n = 3) {
+  const { cv, g } = blank(size, size)
+  ;[0.82, 1, 0.88].slice(0, n).forEach((len, i) => {
+    const o = (i - 1) * size * 0.2
+    stroke(g, [[size * 0.24 + o, size * 0.1], [size * 0.6 + o, size * 0.46], [size * 0.52 + o, size * 0.1 + size * 0.8 * len]], {
+      w: size * 0.13 * k, color: W, alpha: 1, press: 'taper', dry, rough: 0.45, seed: seed + i,
+    })
+  })
+  return cv
+}
+
+// Vòng mực một nét (圆相) ép dẹt thành elip nằm trên đất + vòng mảnh lệch pha: sóng chấn, vòng chọn, trận văn, khiên
+export function ringTex(w = 160, h = 48, width = 2.5, seed = 3, dry = 0.5, k = 1) {
+  const { cv, g } = blank(w, h)
+  g.translate(w / 2, h / 2)
+  g.scale(1, h / w)
+  ring(g, 0, 0, w * 0.43, width * 2.4 * k, W, seed, 1, 0.1, dry)
+  ring(g, 0, 0, w * 0.34, width * 0.9 * k, W, seed + 5, 0.7, 0.4, Math.min(1, dry + 0.2))
+  return cv
+}
+
+// Trúng đòn: tâm loang + tia bút toả ra dài ngắn không đều, đầu đậm ở tâm
+export function burstTex(size = 128, seed = 5, dry = 0.3, k = 1) {
+  const { cv, g } = blank(size, size)
+  const c = size / 2, r = rng(seed)
+  blot(g, c, c, size * 0.13 * k, W, 1, seed, 0.85)
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + (r() - 0.5) * 0.6, l = size * (0.2 + r() * 0.24), bend = (r() - 0.5) * 0.3
+    stroke(g, [[c + Math.cos(a) * size * 0.05, c + Math.sin(a) * size * 0.05], [c + Math.cos(a + bend) * l * 0.55, c + Math.sin(a + bend) * l * 0.55], [c + Math.cos(a) * l, c + Math.sin(a) * l]], {
+      w: size * (0.05 + r() * 0.05) * k, color: W, alpha: 1, press: 'nail', dry, rough: 0.45, seed: seed + i,
+    })
+  }
+  return cv
+}
+
+// Hoả cầu / cầu linh khí đang bay: đầu tròn (phải, hướng bay), năm lưỡi lửa uốn sóng vuốt về sau, lưỡi giữa dài nhất
+export function orbTex(w = 96, h = 64, seed = 7, dry = 0.25, k = 1) {
+  const { cv, g } = blank(w, h)
+  const hx = w * 0.7, hy = h * 0.5, R = h * 0.26, r = rng(seed)
+  ;[-2, -1, 0, 1, 2].forEach((s, i) => {
+    const a = Math.abs(s), len = w * (0.6 - a * 0.1 + r() * 0.06), ph = r() * 6, amp = h * (0.04 + a * 0.01)
+    const pts: Pt[] = []
+    // lưỡi lửa toả ra từ đầu rồi chụm về đuôi (hình giọt), uốn sóng mạnh dần về cuối
+    for (let j = 0; j <= 5; j++) {
+      const u = j / 5
+      pts.push([hx + R * 0.3 - len * u, hy + s * R * 0.45 * (1 - u * 0.7) + Math.sin(u * 5 + ph) * amp * u])
+    }
+    stroke(g, pts, { w: R * (1.5 - a * 0.35) * k, color: W, alpha: 1, press: 'nail', dry: Math.min(1, dry + a * 0.1), ink: 0.45, rough: 0.45, seed: seed + i })
+  })
+  blot(g, hx, hy, R * k, W, 1, seed + 9, 0.95)
+  return cv
+}
+
+// Sét: đường chia đôi nhiều lần (giữ góc gãy), thân to ở gốc nhỏ dần, vài nhánh; mép sần như nét bút quật.
+// Nướng đúng tỉ lệ nơi dùng (cao hẹp ~1:4) để khỏi kéo giãn làm góc gãy thành sợi thẳng.
+export function boltTex(w = 160, h = 640, seed = 1, k = 1) {
+  const { cv, g } = blank(w, h)
+  const r = rng(seed)
+  const jag = (a: Pt, b: Pt, rough: number, depth: number) => {
+    let pts: Pt[] = [a, b]
+    let off = Math.hypot(b[0] - a[0], b[1] - a[1]) * rough
+    for (let d = 0; d < depth; d++, off /= 2)
+      pts = pts.flatMap((p, i): Pt[] => {
+        if (!i) return [p]
+        const q = pts[i - 1], nx = q[1] - p[1], ny = p[0] - q[0], l = Math.hypot(nx, ny) || 1, o = (r() - 0.5) * off
+        return [[(p[0] + q[0]) / 2 + (nx / l) * o, (p[1] + q[1]) / 2 + (ny / l) * o], p]
+      })
+    return pts.map(([x, y]): Pt => [Math.max(w * 0.08, Math.min(w * 0.92, x)), y])
+  }
+  const main = jag([w * 0.5, 0], [w * (0.4 + r() * 0.2), h], 0.12, 6)
+  stroke(g, main, { w: w * 0.09 * k, color: W, alpha: 1, press: 'nail', rough: 0.55, dry: 0.08, wobble: 0, seed })
+  for (let i = 0; i < 4; i++) {
+    const from = main[Math.floor((0.1 + r() * 0.6) * (main.length - 1))]
+    const an = Math.PI / 2 + (r() < 0.5 ? -1 : 1) * (0.5 + r() * 0.45), l = h * (0.1 + r() * 0.14)
+    stroke(g, jag(from, [from[0] + Math.cos(an) * l, from[1] + Math.sin(an) * l], 0.25, 4), { w: w * 0.045 * k, color: W, alpha: 1, press: 'nail', rough: 0.5, dry: 0.2, wobble: 0, seed: seed + i + 1 })
+  }
+  return cv
+}
+
+// Khói, bụi, mực tan: vài mảng loang chồng lệch, mép mềm có vệt sắc tố (墨晕) — không phải quầng tròn đều
+export function puffTex(size = 64, seed = 5) {
+  const { cv, g } = blank(size, size)
+  const r = rng(seed)
+  for (let i = 0; i < 4; i++) {
+    const x = size * (0.38 + r() * 0.24), y = size * (0.4 + r() * 0.22), rr = size * (0.14 + r() * 0.1)
+    wash(g, ellipse(x, y, rr, rr * 0.86, 9), { fill: W, alpha: 0.4, layers: 4, jitter: rr * 0.3, edge: size * 0.025, seed: seed + i * 3 })
+  }
+  return cv
+}
+
+// Vệt bay thẳng (mưa kiếm, vật rơi nhanh): đầu (dưới) đậm, kéo lên trên khô tước sợi
+export function streakTex(w = 24, h = 128, seed = 11, dry = 0.55, k = 1) {
+  const { cv, g } = blank(w, h)
+  stroke(g, [[w * 0.5, h * 0.95], [w * 0.54, h * 0.5], [w * 0.5, h * 0.04]], { w: w * 0.5 * k, color: W, alpha: 1, press: 'nail', dry, ink: 0.5, rough: 0.4, seed })
+  return cv
+}
+
+// Một vệt mực ngắn của nét đứt (đường đi trên bản đồ): hai đầu thu nhỏ, mép sần — tô màu bằng tint
+export function dashTex(w = 32, h = 10, seed = 3) {
+  const { cv, g } = blank(w, h)
+  stroke(g, [[w * 0.1, h * 0.55], [w * 0.5, h * 0.42], [w * 0.9, h * 0.52]], { w: h * 0.55, color: W, alpha: 1, press: 'taper', rough: 0.5, dry: 0.2, seed })
+  return cv
+}
+
+// Cờ quân hành quân trên bản đồ: đĩa sơn mài viền vàng một nét (圆相), cán vàng, lá cờ son — neo ở tâm đĩa
+export const marchToken = (): Asset => ({
+  x: -10, y: -10, w: 20, h: 21,
+  draw(g) {
+    blot(g, 0.4, 1.2, 8.6, C.ink, 0.22, 3, 0.9)
+    wash(g, ellipse(0, 0, 8, 8, 14), { fill: C.lacquer, alpha: 1, layers: 2, jitter: 0.25, edge: 0.8, seed: 4 })
+    ring(g, 0, 0, 7.5, 1.3, C.gold, 5, 0.95, 0.06)
+    stroke(g, [[-2.5, 5], [-2.4, -6.2]], { w: 1.1, color: C.goldL, press: 'nail', alpha: 1 })
+    const flag: Pt[] = [[-2.2, -6], [5.2, -4.6], [3.6, -3.3], [5, -1.6], [-2.2, -1.1]]
+    wash(g, flag, { fill: C.cinnabar, alpha: 1, layers: 2, jitter: 0.15, seed: 6 })
+    stroke(g, [...flag, flag[0]], { w: 0.4, color: C.ink, press: 'even', alpha: 0.6 })
+    grain(g, 0.3)
+  },
+})

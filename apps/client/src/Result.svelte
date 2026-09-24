@@ -6,7 +6,8 @@
 <script lang="ts">
   // Khoảnh khắc lớn: đột phá cảnh giới sau độ kiếp (chữ Hán lớn, hào quang), thất bại, hoặc luân hồi.
   import { marchSlots, type State } from '@rok/rules'
-  import { Button, Medal, Sheet, Tag } from './ui'
+  import { radiance } from '@rok/art'
+  import { Button, Medal, Painting, Sheet, Tag } from './ui'
   import { L } from './lib'
 
   let { outcome, game, onclose, onreplay }: { outcome: Outcome | null; game: State; onclose: () => void; onreplay: (r: Report) => void } =
@@ -17,7 +18,7 @@
 
 <Sheet open={!!outcome} {onclose} center label={L.trib.title}>
   <div class="moment center stack" class:glory>
-    {#if glory}<div class="rays" aria-hidden="true"></div>{/if}
+    {#if glory}<div class="rays" aria-hidden="true"><Painting key="radiance" make={() => radiance()} w={440} h={440} /></div>{/if}
     {#if outcome?.kind === 'rebirth'}
       <span class="big spin"><Medal emblem="rebirth" tone="gold" size={116} /></span>
       <h2 class="t-title">{L.rebirth.done(outcome.n)}</h2>
@@ -54,10 +55,12 @@
   .moment > :global(*:not(.rays)) {
     position: relative;
   }
+  /* hào quang nét bút vàng (vẽ tay), tâm trùng tâm huy hiệu, xoay chậm */
   .rays {
     position: absolute;
-    inset: -60%;
-    background: repeating-conic-gradient(from 0deg, rgb(201 161 74 / 0.16) 0 8deg, transparent 8deg 22deg);
+    left: 50%;
+    top: calc(var(--sp-3) + 58px);
+    translate: -50% -50%;
     animation: turn 18s linear infinite;
     pointer-events: none;
   }

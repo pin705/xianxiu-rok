@@ -4,7 +4,7 @@
 >
 > Lệnh: `npm run dev` (chạy game) · `npm test` · `npm run check` (kiểm tra kiểu) · `npm run sim` (bot chơi 30 ngày, in nhịp) · `npm run build`
 >
-> **Trạng thái (23/09/2026): P1 đã đủ tính năng** — xem mục 5 › P1 và mục 13. Việc còn lại để qua cổng P1 là phát hành demo và đo người thật.
+> **Trạng thái (24/09/2026): P1 đủ tính năng, đủ điều kiện phát hành demo** — xem mục 13 › Đánh giá sẵn sàng phát hành. Việc còn lại để qua cổng P1 là việc ngoài mã: thử máy thật, dựng máy nhận analytics, đăng tải, đo người thật.
 
 ## 0. Giả định (sửa nếu sai)
 
@@ -316,13 +316,34 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 **Build:** `npm run build` → thư mục tĩnh `apps/client/dist/` (đường dẫn tương đối, chạy được ở gốc domain lẫn thư mục con).
 
 - **Cloudflare Pages:** build command `npm run build`, output `apps/client/dist`.
-- **itch.io:** nén `apps/client/dist/` thành zip, chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
+- **itch.io:** `npm run package` → `release.zip` (build + nén `apps/client/dist/`), chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
 - **PWA:** có manifest + icon huy hiệu vẽ tay + service worker (`apps/client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
 - **Analytics:** build với `VITE_ANALYTICS_URL=https://<máy chủ>/e` thì client gửi beacon JSON `{id, name, props, v, t}` (id ngẫu nhiên của máy, không có dữ liệu cá nhân) cho các sự kiện `open`, `found`, `hall`, `trib`, `rebirth`. Không đặt biến thì không gửi gì.
-  Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`apps/server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS sau Caddy/nginx (đặt `TRUST_PROXY=1`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
+  Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`apps/server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS (Node 24) sau Caddy: cấu hình sẵn ở `apps/server/deploy/` (`Caddyfile` tự lấy HTTPS, `rok-analytics.service` cho systemd, đã đặt `TRUST_PROXY=1`; sửa tên miền, `STATS_TOKEN`, `ORIGIN`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
 - **Font:** giấy phép OFL nằm cạnh font trong `apps/client/public/fonts/`.
 
 **Kiểm thử trước khi phát hành:** `npm test` (luật, server analytics, và `apps/client/render.test.ts`: vẽ mọi màn hình × 6 trạng thái game × 2 ngôn ngữ bằng SSR của Svelte qua Vite — bắt lỗi vỡ lúc vẽ và chữ hỏng `NaN`/`undefined` mà không cần trình duyệt), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi `npm run build && npm run e2e` (Chrome headless bấm như người chơi trên bản build: lập tông môn, 14 nhiệm vụ đầu chỉ bằng click, hai tab không đè save nhau, tắt máy chủ vẫn chơi và đổi ngôn ngữ được, console sạch — cần Chrome trên máy, không có thì tự bỏ qua; đặt `CHROME=` nếu Chrome ở chỗ khác) và chơi thử bản build (`npm run preview -w @rok/client`). CI (`.github/workflows/ci.yml`) chạy tất cả các bước này, kể cả e2e bằng Chrome có sẵn trên máy ảo, ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
 
-**Việc còn lại để qua cổng P1:** thử trên điện thoại thật (Android tầm trung, iPhone Safari), thuê VPS chạy máy nhận analytics, đăng itch.io + nhóm Facebook/Discord, gom ≥ 300 người thử, đọc D1/D7 ở `/stats`.
+### Đánh giá sẵn sàng phát hành demo P1 (24/09/2026)
+
+**Kết luận: đủ điều kiện phát hành bản demo cho người thử** (không phải bản thương mại). Phần mã không còn việc chặn; phần còn lại là việc ngoài mã (bảng dưới).
+
+| Hạng mục | Trạng thái | Bằng chứng |
+|---|---|---|
+| Vòng chơi trọn vẹn | ✅ | Lập tông môn → 46 nhiệm vụ → 2 lần độ kiếp → Chủ điện 15 → luân hồi. Bot bấm UI đi được tới nhiệm vụ 42 (tầng 11); luân hồi kiểm riêng qua UI |
+| Nhịp (bot giỏi / người chơi thường) | ✅ | Tầng 10: ngày 5 / ngày 10 · tầng 15: ngày 11 / ngày 19 · kiếp 2 ngắn hơn: 12,8 → 9 → 5,6 ngày |
+| Không kẹt cứng | ✅ | Linh khí tự nhiên (BASE_RATE); chi phí vượt kho thì chỉ đường tới Tàng Bảo Các; thế yếu thì có nút tuyển; bảng tuyển chọn hệ đỡ cạn một loại tài nguyên |
+| Save an toàn | ✅ | Kiểm khuôn khi nhập, cất bản hỏng, xuất/nhập file, 2 tab không đè nhau, màn lỗi có nút xuất save |
+| Offline / PWA | ✅ | Tắt máy chủ vẫn chơi và đổi ngôn ngữ được (e2e); cache bỏ qua `Vary` của host |
+| Màn hình | ✅ | Điện thoại (360–480px), máy tính bảng (cột 620px), desktop (cột trái, ngăn kéo phải, phím 1–5, chú thích khi rê chuột) |
+| Ngôn ngữ | ✅ | Tiếng Việt, English; thêm ngôn ngữ = 1 file + 1 dòng (README) |
+| Tự động kiểm | ✅ | CI mỗi lần push: test (luật, i18n, ranh giới package, vẽ mọi màn hình), kiểu, sim, build, e2e trên Chrome |
+| Thử trên máy thật | ⬜ | Android tầm trung (Chrome), iPhone (Safari, cài PWA), iPad — chưa làm, giả lập không thay được |
+| Máy nhận analytics | ⬜ | Mã + cấu hình triển khai xong (`apps/server/deploy/`); cần thuê VPS, trỏ tên miền, build với `VITE_ANALYTICS_URL` |
+| Đăng tải + cộng đồng | ⬜ | `npm run package` → tải `release.zip` lên itch.io; nhóm Facebook/Discord |
+| Cổng P1 | ⬜ | ≥ 300 người thử, D1 ≥ 30 %, D7 ≥ 10 %, đọc ở `/stats` |
+
+**Rủi ro đã biết (không chặn demo):** chưa có âm thanh/rung được kiểm trên iOS thật; bản đồ chưa phóng to/thu nhỏ bằng con lăn chuột; người chơi chỉ bấm theo nhiệm vụ mà không nâng công pháp, công trình tài nguyên sẽ chậm dần ở tầng 11+ (sim có chiến thuật vẫn tới tầng 15 ngày 19) — theo dõi bằng phân bố cảnh giới ở `/stats`.
+
+**Ưu tiên sau khi có số liệu người thật:** (1) chỗ người chơi bỏ cuộc nhiều nhất theo phân bố cảnh giới; (2) tỉ lệ độ kiếp thành công lần đầu; (3) có ai luân hồi và chơi tiếp không — đúng câu hỏi của cổng P1.
 6. Spike PixiJS 100×100 ô trên điện thoại thật.

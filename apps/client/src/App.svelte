@@ -19,7 +19,7 @@
   import TargetSheet from './Target.svelte'
   import Title from './Title.svelte'
   import Vault from './Vault.svelte'
-  import { L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, track, watchSave, wipe, type Tab } from './lib'
+  import { DESK, L, TABS, isMuted, load, nowMs, num, rawSave, reportName, save, setMuted, sfx, track, watchSave, wipe, type Tab } from './lib'
 
   const saved = load(nowMs())
   const start = saved && advance(saved, nowMs())
@@ -115,6 +115,14 @@
     document.addEventListener('visibilitychange', hide)
     addEventListener('pagehide', leave)
     const unwatch = watchSave(s => (s ? (game = s) : location.reload()))
+    // Phím 1–5: chuyển tab (không khi đang gõ chữ hay có hộp thoại modal che)
+    const keys = (e: KeyboardEvent) => {
+      const t = TABS[Number(e.key) - 1]
+      if (!t || !game || screen !== 'game' || e.metaKey || e.ctrlKey || e.altKey) return
+      if ((e.target as Element).closest?.('input, textarea, select') || document.querySelector('dialog:modal')) return
+      if (game.levels.chuDien >= t.unlock && t.id !== tab) switchTab(t.id, new MouseEvent('click', { clientX: innerWidth / 2, clientY: innerHeight / 2 }))
+    }
+    addEventListener('keydown', keys)
     if (import.meta.env.DEV)
       Object.assign((globalThis as any).rok, {
         get: () => game,
@@ -127,8 +135,15 @@
       clearInterval(tick)
       document.removeEventListener('visibilitychange', hide)
       removeEventListener('pagehide', leave)
+      removeEventListener('keydown', keys)
       unwatch()
     }
+  })
+
+  // Bố cục desktop (cột trái, thanh trên) chỉ khi đang chơi; báo resize để cảnh WebGL đo lại khung
+  $effect(() => {
+    document.documentElement.classList.toggle('game', screen === 'game')
+    dispatchEvent(new Event('resize'))
   })
 
   // Vào game: cuộn tới giữa núi, rồi mở Xuất quan nếu vắng lâu
@@ -351,6 +366,7 @@
     ontab={switchTab}
     onsettings={() => (settingsOpen = true)}
     ondaily={() => (dailyOpen = true)}
+    onfocus={focus}
   />
   <Daily {game} {now} open={dailyOpen} onclose={() => (dailyOpen = false)} {act} />
   <Panel {game} {now} id={selected} {view} {act} onupgrade={upgrade} onclose={() => (selected = null)} onselect={focus} ontrib={trib} onrebirth={rebirth} />
@@ -376,7 +392,7 @@
     toast={t => toast(t)}
   />
 
-  <Toasts list={toasts} top="calc({tab === 'tongMon' ? 236 : 150}px + var(--safe-t))" />
+  <Toasts list={toasts} top={DESK?.matches ? 'calc(var(--top) + 16px)' : `calc(${tab === 'tongMon' ? 236 : 150}px + var(--safe-t))`} />
 
   <Sheet open={awayOpen && !!away} onclose={() => (awayOpen = false)} center title={L.away.title} sub={away ? L.away.for(L.ago(away.ms)) : ''}>
     {#if away}

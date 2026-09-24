@@ -1,9 +1,14 @@
+<script module lang="ts">
+  // Số ngăn kéo desktop đang mở — còn thì <html> giữ --dockw để cảnh núi/bản đồ dịch sang trái
+  let docks = 0
+</script>
+
 <script lang="ts">
   // Bảng trượt từ dưới lên như một cuộn tranh mở ra: trục gỗ sơn mài đầu đồng, giấy bồi lụa, khung mực kẻ tay — vẽ bằng bút lông.
   // Dùng <dialog> gốc: có sẵn bẫy focus, Esc để đóng, nằm trên cùng. Đầu bảng chuẩn: hình (art), tiêu đề, phụ đề, lời dẫn.
   import type { Snippet } from 'svelte'
   import { Icon } from '@rok/art'
-  import { L, sfx } from '../lib'
+  import { DESK, L, sfx } from '../lib'
 
   let {
     open,
@@ -29,10 +34,31 @@
 
   let dlg = $state<HTMLDialogElement>()
   let panel = $state<HTMLDivElement>()
+  // Desktop: bảng thường thành ngăn kéo bên phải, không modal — cảnh vẫn nhìn và bấm được (chọn công trình khác là đổi bảng)
+  let dock = $state(false)
   $effect(() => {
     if (!dlg) return
-    if (open && !dlg.open) dlg.showModal()
+    if (open && !dlg.open) {
+      dock = !center && !!DESK?.matches
+      if (dock) dlg.show()
+      else dlg.showModal()
+    }
     if (!open && dlg.open) dlg.close()
+  })
+  $effect(() => {
+    if (!open || !dock) return
+    const root = document.documentElement
+    if (docks++ === 0) root.style.setProperty('--dockw', getComputedStyle(root).getPropertyValue('--dock'))
+    return () => {
+      if (--docks === 0) root.style.removeProperty('--dockw')
+    }
+  })
+  // dialog không modal không tự đóng bằng Esc
+  $effect(() => {
+    if (!open || !dock) return
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && !e.defaultPrevented && dismiss()
+    addEventListener('keydown', esc)
+    return () => removeEventListener('keydown', esc)
   })
 
   // Người chơi đóng (nút ×, chạm nền, Esc, vuốt): cuộn giấy trượt xuống rồi mới đóng hẳn
@@ -40,7 +66,11 @@
   function dismiss(from = 0) {
     if (!dlg?.open || leaving || !panel) return
     leaving = true
-    const off = center ? [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.92)' }] : [{ transform: `translateY(${from}px)` }, { transform: 'translateY(105%)' }]
+    const off = center
+      ? [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.92)' }]
+      : dock
+        ? [{ transform: 'translateX(0)' }, { transform: 'translateX(105%)' }]
+        : [{ transform: `translateY(${from}px)` }, { transform: 'translateY(105%)' }]
     panel.animate(off, { duration: 200, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }).finished.finally(() => {
       leaving = false
       dlg?.close()
@@ -51,7 +81,7 @@
   let drag: { y: number; t: number; dy: number } | null = null
   function down(e: PointerEvent) {
     const t = e.target as Element
-    if (center || !t.closest('.rod, .head') || t.closest('button, input, textarea')) return
+    if (center || dock || !t.closest('.rod, .head') || t.closest('button, input, textarea')) return
     drag = { y: e.clientY, t: performance.now(), dy: 0 }
     try {
       ;(e.currentTarget as Element).setPointerCapture(e.pointerId)
@@ -76,6 +106,7 @@
   bind:this={dlg}
   class="sheet"
   class:modal={center}
+  class:dock
   aria-label={label ?? title}
   {onclose}
   oncancel={e => (e.preventDefault(), dismiss())}
@@ -198,6 +229,37 @@
     font-weight: 800;
     letter-spacing: 0.03em;
     color: var(--cinnabar);
+  }
+  /* ---------- Desktop: ngăn kéo ghim bên phải, dưới thanh trên ---------- */
+  .dock {
+    position: fixed;
+    inset: var(--top) 0 0 auto;
+    z-index: var(--z-hud);
+    width: var(--dock);
+    height: auto;
+    max-height: none;
+    margin: 0;
+    padding: 18px 0 0;
+    background: transparent;
+  }
+  .dock .scroll {
+    height: 100%;
+    animation: slide 0.3s var(--spring);
+  }
+  .dock .body {
+    height: 100%;
+    max-height: none;
+    padding-bottom: 28px;
+  }
+  .dock .rod {
+    left: -10px;
+    right: -6px;
+  }
+  @keyframes slide {
+    from {
+      transform: translateX(60%);
+      opacity: 0;
+    }
   }
   @keyframes rise {
     from {

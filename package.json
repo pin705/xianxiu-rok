@@ -14,7 +14,8 @@
     "sim": "node packages/rules/simulate.ts",
     "e2e": "node apps/client/e2e.ts",
     "fonts": "npm run fonts -w @rok/client",
-    "analytics": "npm start -w @rok/server"
+    "analytics": "npm start -w @rok/server",
+    "package": "npm run build && rm -f release.zip && cd apps/client/dist && zip -qr ../../../release.zip . && echo 'release.zip: tải lên itch.io (HTML, chơi trên trình duyệt)'"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

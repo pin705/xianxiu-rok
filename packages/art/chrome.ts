@@ -308,15 +308,12 @@ export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
     g.fillRect(0, 0, W, H)
   } else age(g, pad, pad, W - pad, H - pad, 10, tone === 'glow' ? C.gold : C.ochre, tone === 'glow' ? 0.22 : 0.1)
   g.restore()
-  // viền: bốn nét kẻ tay, vượt góc
+  // viền: một nét bút đi vòng theo mép giấy — lượn tay, dày ở phía khuất sáng (dưới, phải), mảnh và khô ở phía sáng
   const i = pad + 3.2
   const col = { paper: C.ink, plain: C.ink, glow: C.goldD, selected: C.cinnabar, lacquer: C.gold }[tone]
-  const w = tone === 'selected' ? 1.9 : tone === 'plain' ? 0.8 : 1.1
-  const al = tone === 'plain' ? 0.35 : tone === 'paper' ? 0.55 : 0.9
-  rule(g, [i, i], [W - i, i], w, col, seed + 1, al, 0.6)
-  rule(g, [W - i, i], [W - i, H - i], w * 1.4, col, seed + 2, al, 0.6)
-  rule(g, [W - i, H - i], [i, H - i], w * 1.4, col, seed + 3, al, 0.6)
-  rule(g, [i, H - i], [i, i], w, col, seed + 4, al, 0.6)
+  const w = tone === 'selected' ? 1.8 : tone === 'plain' ? 0.95 : 1.25
+  const al = tone === 'plain' ? 0.5 : tone === 'paper' ? 0.72 : 0.9
+  outline(g, rounded(i, i, W - i, H - i, 2.5, seed + 1, 0.45), w, col, seed + 2, al, 0.3, 0.95)
   if (tone === 'glow' || tone === 'lacquer')
     for (const [x, y, rot] of [[i + 4, i + 4, Math.PI * 1.25], [W - i - 4, i + 4, -Math.PI * 0.25], [W - i - 4, H - i - 4, Math.PI * 0.25], [i + 4, H - i - 4, Math.PI * 0.75]] as const)
       curl(g, x, y, 2.2, rot, tone === 'glow' ? C.goldD : C.goldL, 0.85, seed + x + y, 0.85)
@@ -434,10 +431,11 @@ export function tagSkin(s: number, tone: TagTone, seed = 11): Skin {
     gold: mix(C.goldL, C.paper, 0.35), dark: mix(C.lacquer, C.ink, 0.2), red: C.cinnabar,
   }[tone]
   const line = { plain: C.ink2, good: C.malachiteD, bad: C.cinnabar, gold: C.goldD, dark: C.gold, red: mix(C.cinnabar, C.ink, 0.5) }[tone]
-  const shape = rounded(1.5, 1.5, W - 1.5, H - 1.5, 5, seed, 0.35)
-  wash(g, shape, { fill, alpha: tone === 'dark' ? 0.85 : 1, layers: 3, jitter: 0.35, edge: 1.4, seed })
-  outline(g, shape, 0.9, line, seed + 3, tone === 'plain' ? 0.45 : 0.75, 0.2)
-  if (tone === 'red' || tone === 'gold') stroke(g, [[8, 4], [W / 2, 3.4], [W - 10, 4.2]], { w: 1, color: '#ffffff', alpha: 0.35, press: 'swell', seed: seed + 5 })
+  const shape = rounded(1.5, 1.5, W - 1.5, H - 1.5, 5, seed, 0.5)
+  wash(g, shape, { fill, alpha: tone === 'dark' ? 0.85 : 1, layers: 3, jitter: 0.45, edge: 1.9, seed })
+  // gờ sáng khô ở mép trên (như nút), rồi viền mực dày mỏng theo hướng sáng
+  if (tone !== 'dark') stroke(g, [[8, 4.2], [W * 0.4, 3.6], [W * 0.62, 4.1]], { w: 1, color: '#ffffff', alpha: tone === 'plain' ? 0.35 : 0.45, press: 'swell', dry: 0.6, seed: seed + 5 })
+  outline(g, shape, 1.15, line, seed + 3, tone === 'plain' ? 0.62 : 0.8, 0.3, 0.9)
   grain(g, 0.2)
   return { cv, w: W, h: H, slice: [9, 10, 9, 10] }
 }
@@ -571,7 +569,7 @@ export function knobSkin(s: number, seed = 29): Skin {
 }
 
 // Vòng mực một nét (圆相): đi gần trọn vòng, đầu đậm đuôi khô
-export function ring(g: G, cx: number, cy: number, r: number, w: number, color: string, seed: number, alpha = 0.9, gap = 0.12) {
+export function ring(g: G, cx: number, cy: number, r: number, w: number, color: string, seed: number, alpha = 0.9, gap = 0.12, dry = 0.5) {
   const pts: Pt[] = []
   const a0 = -Math.PI * 0.35 + (noise1(1, seed) - 0.5) * 0.6
   for (let i = 0; i <= 40; i++) {
@@ -579,7 +577,7 @@ export function ring(g: G, cx: number, cy: number, r: number, w: number, color: 
     const rr = r * (1 + (noise1(t * 3, seed + 1) - 0.5) * 0.06)
     pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr])
   }
-  stroke(g, pts, { w, color, alpha, press: 'nail', dry: 0.5, rough: 0.35, seed })
+  stroke(g, pts, { w, color, alpha, press: 'nail', dry, rough: 0.35, seed })
 }
 
 // ---------- Chấm dẫn sổ sách (lặp ngang) ----------

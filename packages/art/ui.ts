@@ -1,7 +1,7 @@
 // Chất liệu nền cho giao diện, vẽ bằng cùng bút lông với cảnh: sơn mài, nét gạch chân, vết mực loang (chuyển cảnh).
 // Da giao diện 9 mảnh (khung, nút, nhãn…) ở chrome.ts.
 // Trả về canvas (px thật); client biến thành biến CSS (border-image, mask, background).
-import { canvas, stroke, type G } from './brush'
+import { canvas, stroke, type Asset, type G } from './brush'
 import { noise2, rng } from './noise'
 import { PIGMENT as C } from './palette'
 
@@ -63,3 +63,18 @@ export function inkBlot(size = 256, seed = 17) {
   }
   return cv
 }
+
+// Hào quang toả tia (背光) sau huy hiệu của khoảnh khắc lớn: tia bút vàng mảnh, dài ngắn xen kẽ, đầu đậm ở tâm,
+// đuôi khô tước sợi — thay cho nêm gradient đều tăm tắp. Neo ở tâm.
+export const radiance = (r = 100, n = 26, seed = 3): Asset => ({
+  x: -r, y: -r, w: r * 2, h: r * 2,
+  draw(g) {
+    const rn = rng(seed)
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + (rn() - 0.5) * 0.1, long = i % 2 === 0, bend = (rn() - 0.5) * 0.06
+      const r0 = r * (0.22 + rn() * 0.06), r1 = r * (long ? 0.95 : 0.66) * (0.88 + rn() * 0.12)
+      const at = (d: number, da = 0): [number, number] => [Math.cos(a + da) * d, Math.sin(a + da) * d]
+      stroke(g, [at(r0), at((r0 + r1) / 2, bend), at(r1)], { w: r * (long ? 0.055 : 0.038), color: long ? C.gold : C.goldL, alpha: 0.55, press: 'nail', dry: 0.5, rough: 0.4, seed: seed + i })
+    }
+  },
+})

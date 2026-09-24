@@ -76,6 +76,8 @@ export const vi = {
     allDone: 'Đã xong chuỗi nhiệm vụ. Chủ điện tầng 15 có thể luân hồi để mạnh hơn.',
   },
   builder: { idle: 'Rảnh', label: 'Tạp dịch' },
+  // cột trái desktop: mọi việc đang chạy
+  activity: { title: 'Đang diễn ra', empty: 'Không có việc nào đang chạy.', march: (elder: string, target: string) => `${elder} → ${target}` },
 
   panel: {
     output: 'Sản lượng',

@@ -1,8 +1,8 @@
 // Bản đồ vùng trên WebGL: giấy + địa hình vẽ tay (một texture), sương trôi ở rìa xa, ánh nước trôi theo sông,
 // bóng mây lướt qua, hạc bay ngang; đường tới các nơi đã mở (nét đứt mực), đường hành quân (nét son chạy),
 // cờ quân nội suy theo giờ, nhún bước và tung bụi.
-import { Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
-import { PIGMENT as C, building, crane, glowTex, mapTerrain, mistTex, paper, puffTex, sparkTex, type Pt } from '@rok/art'
+import { Container, Sprite, TilingSprite } from 'pixi.js'
+import { PIGMENT as C, building, crane, dashTex, glowTex, mapTerrain, marchToken, mistTex, paper, puffTex, sparkTex, type Pt } from '@rok/art'
 import { HOME, place, type March, type State, type Target } from '@rok/rules'
 import { painted, texOf } from './stage'
 import type { Scene } from './View.svelte'
@@ -34,29 +34,44 @@ export function along(x: number, y: number, k: number): [number, number] {
 export const marchK = (m: March, now: number) =>
   Math.max(0, Math.min(1, now < m.arriveAt ? (now - m.startAt) / (m.arriveAt - m.startAt) : 1 - (now - m.arriveAt) / (m.returnAt - m.arriveAt)))
 
-function dashed(g: Graphics, x: number, y: number, dash: number, gap: number, offset = 0) {
-  const n = 60
-  let acc = -offset, prev = along(x, y, 0), on = true, run = dash
-  g.moveTo(prev[0], prev[1])
-  for (let i = 1; i <= n; i++) {
-    const p = along(x, y, i / n)
-    const d = Math.hypot(p[0] - prev[0], p[1] - prev[1])
-    acc += d
-    while (acc > run) {
-      acc -= run
-      on = !on
-      run = on ? dash : gap
-    }
-    on ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])
-    prev = p
+// Nét đứt dọc đường cong, chia theo độ dài (không theo tham số): tâm + hướng của từng vệt
+function dashes(x: number, y: number, dash: number, gap: number, offset = 0) {
+  const n = 80
+  const pts = Array.from({ length: n + 1 }, (_, i) => along(x, y, i / n))
+  const acc = [0]
+  for (let i = 1; i <= n; i++) acc.push(acc[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
+  const out: [number, number, number][] = []
+  let i = 0
+  for (let s = offset % (dash + gap); s + dash <= acc[n]; s += dash + gap) {
+    const m = s + dash / 2
+    while (acc[i + 1] < m) i++
+    const u = (m - acc[i]) / (acc[i + 1] - acc[i] || 1), a = pts[i], b = pts[i + 1]
+    out.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, Math.atan2(b[1] - a[1], b[0] - a[0])])
   }
+  return out
+}
+// Vệt mực của nét đứt: ba dáng xen nhau cho khỏi đều tăm tắp
+const dashT = (i: number) => texOf(`dash:${i % 3}`, () => dashTex(32, 10, 3 + (i % 3)))
+function lay(layer: Container, marks: [number, number, number][], len: number, thick: number, color: string, alpha: number, from = 0) {
+  marks.forEach(([x, y, a], i) => {
+    const s = (layer.children[from + i] as Sprite | undefined) ?? layer.addChild(new Sprite(dashT(from + i)))
+    s.anchor.set(0.5)
+    s.visible = true
+    s.position.set(x, y)
+    s.rotation = a
+    s.width = len
+    s.height = thick
+    s.tint = hex(color)
+    s.alpha = alpha
+  })
+  return from + marks.length
 }
 
 export class MapScene implements Scene {
   readonly root = new Container()
   private body = new Container()
-  private routes = new Graphics()
-  private lines = new Graphics()
+  private routes = new Container()
+  private lines = new Container()
   private troops = new Container()
   private marches: March[] = []
   private dust = new Container()
@@ -143,17 +158,17 @@ export class MapScene implements Scene {
   set(game: State, open: Target[], now: number) {
     this.now = now
     this.marches = game.marches
-    this.routes.clear()
+    this.routes.removeChildren().forEach(c => c.destroy())
     for (const tg of open) {
       const p = place(tg)
-      dashed(this.routes, p.x, p.y, 3, 5)
+      lay(this.routes, dashes(p.x, p.y, 3, 5), 4, 3, C.ink2, 0.45, this.routes.children.length)
     }
-    this.routes.stroke({ width: 1.3, color: C.ink2, alpha: 0.35 })
     while (this.troops.children.length > this.marches.length) this.troops.removeChildAt(0).destroy({ children: true })
     while (this.troops.children.length < this.marches.length) {
-      const c = new Container()
-      c.addChild(new Graphics().circle(0, 0, 8).fill({ color: hex(C.lacquer) }).stroke({ width: 1.3, color: hex(C.gold) }))
-      c.addChild(new Graphics().moveTo(-2.5, 5).lineTo(-2.5, -6).stroke({ width: 1.2, color: hex(C.goldL) }).poly([-2, -6, 5, -4, -2, -1]).fill({ color: hex(C.cinnabar) }))
+      const tk = painted('march', marchToken)
+      const c = new Sprite(tk.tex)
+      c.anchor.set(tk.anchor[0], tk.anchor[1])
+      c.scale.set(1 / tk.scale)
       this.troops.addChild(c)
     }
   }
@@ -163,16 +178,16 @@ export class MapScene implements Scene {
     this.now += dt * 1000
     for (const f of this.tickers) f(dt)
     // nét son hành quân chạy về phía mục tiêu
-    this.lines.clear()
+    let used = 0
     this.marches.forEach((m, i) => {
       const p = place(m.target)
-      dashed(this.lines, p.x, p.y, 5, 5, (this.t * 12) % 10)
+      used = lay(this.lines, dashes(p.x, p.y, 5, 5, (this.t * 12) % 10), 6.5, 4, C.cinnabar, 0.8, used)
       const [x, y] = along(p.x, p.y, marchK(m, this.now))
       this.troops.children[i]?.position.set(x, y - Math.abs(Math.sin(this.t * 6 + i)) * 1.5)
       if (this.t > this.dustAt) this.puff(x, y + 6)
     })
     if (this.t > this.dustAt) this.dustAt = this.t + 0.35
-    if (this.marches.length) this.lines.stroke({ width: 2, color: hex(C.cinnabar), alpha: 0.75 })
+    for (let i = used; i < this.lines.children.length; i++) this.lines.children[i].visible = false
     // bụi sau bước quân: bung ra, mờ dần
     for (const d of [...this.dust.children] as Sprite[]) {
       const e = this.t - (d as Sprite & { t0: number }).t0

@@ -105,6 +105,18 @@
     text-align: center;
     background: linear-gradient(transparent 45%, rgb(20 14 10 / 0.72));
   }
+  /* desktop: trải toàn màn hình, chữ lớn hơn */
+  @media (min-width: 1024px) and (min-height: 600px) {
+    .title-screen {
+      max-width: none;
+    }
+    .cover {
+      padding-bottom: 88px;
+    }
+    .name {
+      font-size: calc(var(--fs-7) * 1.5);
+    }
+  }
   .dim {
     justify-content: center;
     background: rgb(20 14 10 / 0.66);
@@ -165,6 +177,7 @@
   }
   .card {
     --gap: var(--sp-3);
+    color: var(--text); /* hộp giấy nằm trong .cover chữ sáng: đặt lại màu mực */
     width: min(100%, 360px);
     padding: 30px 28px;
     box-shadow: var(--shadow-3);

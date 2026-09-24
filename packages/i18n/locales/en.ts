@@ -80,6 +80,7 @@ export const en: Text = {
     allDone: 'Quest chain complete. At Main Hall level 15 you can reincarnate to grow stronger.',
   },
   builder: { idle: 'Idle', label: 'Builder' },
+  activity: { title: 'In progress', empty: 'Nothing is running.', march: (elder: string, target: string) => `${elder} → ${target}` },
 
   panel: {
     output: 'Output',

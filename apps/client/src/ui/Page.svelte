@@ -28,6 +28,16 @@
     border-image: var(--sk-scroll);
     box-shadow: 0 0 40px rgb(20 14 10 / 0.35);
   }
+  /* desktop: vùng bên phải cột trái, dưới thanh trên; nội dung rộng tối đa ~1040px, lưới mặc định 3 cột */
+  @media (min-width: 1024px) and (min-height: 600px) {
+    .page {
+      inset: var(--top) 0 0 var(--rail);
+      max-width: none;
+      margin: 0;
+      padding: 32px max(40px, (100% - 1040px) / 2) 48px;
+      --cols: 3;
+    }
+  }
   h2 {
     --gap: var(--sp-2);
     font-size: var(--fs-6);

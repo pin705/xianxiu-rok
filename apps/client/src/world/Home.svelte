@@ -51,8 +51,9 @@
     for (const b of bursts) if (scene && !seen.has(b.t)) (seen.add(b.t), scene.burst(b.id))
   })
 
-  // Bong bóng đồng hồ nằm trên nóc; nóc nào ngang tầm biển tên công trình bên cạnh (tầng núi so le) thì nhấc
-  // bong bóng lên trên biển tên đó. Bề ngang biển tên ước theo độ dài tên (~7px mỗi chữ), bong bóng ~84 DU.
+  // Bong bóng đồng hồ nằm trên nóc; nóc nào ngang tầm biển tên công trình bên cạnh (tầng núi so le) thì dời
+  // bong bóng xuống dưới biển tên đó (đè lên chính nóc mình, vẫn rõ là của mình), không đủ chỗ thì nhấc lên trên.
+  // Bề ngang biển tên ước theo độ dài tên (~7px mỗi chữ), bong bóng ~84 DU.
   function bubbleY(id: BuildingId, h: number) {
     const [x, y] = SLOT[id]
     let by = y - h - 14
@@ -60,7 +61,8 @@
       for (const o of IDS) {
         const [ox, oy] = SLOT[o]
         const py = oy + 13
-        if (o !== id && Math.abs(ox - x) < L.b[o].name.length * 3.6 + 26 + 42 && by > py - 30 && by < py + 26) by = py - 30
+        if (o !== id && Math.abs(ox - x) < L.b[o].name.length * 3.6 + 26 + 42 && by > py - 30 && by < py + 26)
+          by = py + 26 < y - 24 ? py + 26 : py - 30
       }
     return by
   }

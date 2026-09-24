@@ -10,6 +10,7 @@ npm run check      # kiểm tra kiểu (tsc + svelte-check mọi package)
 npm run sim        # bot chơi 30 ngày ảo, in nhịp tiến độ (CI báo lỗi nếu không tới tầng 15)
 npm run build      # bản tĩnh ở apps/client/dist
 npm run e2e        # sau build: Chrome headless bấm như người chơi
+npm run package    # build + nén release.zip để tải lên itch.io
 npm run fonts      # tải lại font tự host (sau khi thêm hệ chữ mới)
 npm run analytics  # máy nhận analytics (cần STATS_TOKEN)
 ```

@@ -9,7 +9,7 @@
   // lớp `hits` (nút vô hình, cuộn theo) cho chạm/bàn phím/trình đọc màn hình, lớp `pins` (HTML hiển thị)
   // dịch theo camera trong cùng khung hình với WebGL nên không lệch. k = px CSS mỗi DU.
   import { onMount, type Snippet } from 'svelte'
-  import { cssPerDU, getApp } from './stage'
+  import { cssPerDU, getApp, sceneX } from './stage'
 
   let {
     make,
@@ -20,6 +20,7 @@
     scene = $bindable(),
     hits,
     pins,
+    zoomable = false,
   }: {
     make: () => Scene
     height: number // chiều cao cảnh (DU)
@@ -29,16 +30,43 @@
     scene?: Scene
     hits?: Snippet<[number]>
     pins?: Snippet<[number]>
+    zoomable?: boolean // Ctrl + con lăn / chụm touchpad / phím +−: thu nhỏ tới 55% (không phóng quá 100% — texture nướng ở 100%)
   } = $props()
 
+  let zoom = $state(1)
   let k = $state(cssPerDU())
+  // Đổi độ thu phóng, giữ nguyên điểm giữa khung nhìn
+  function zoomTo(z: number) {
+    z = Math.min(1, Math.max(0.55, z))
+    if (z === zoom || !scroller) return
+    const mid = scroller.scrollTop + scroller.clientHeight / 2
+    const ratio = z / zoom
+    zoom = z
+    k = cssPerDU() * zoom
+    requestAnimationFrame(() => scroller && (scroller.scrollTop = mid * ratio - scroller.clientHeight / 2))
+  }
   let layer = $state<HTMLDivElement>()
+  let space = $state<HTMLDivElement>()
+  let left = -1
 
   onMount(() => {
     let dead = false
     let off = () => {}
-    const resize = () => (k = cssPerDU())
+    const resize = () => (k = cssPerDU() * zoom)
     addEventListener('resize', resize)
+    const wheel = (e: WheelEvent) => {
+      if (!zoomable || !e.ctrlKey) return
+      e.preventDefault() // không để trình duyệt phóng cả trang
+      zoomTo(zoom * Math.exp(-e.deltaY * 0.004))
+    }
+    const keys = (e: KeyboardEvent) => {
+      if (!zoomable || hidden || e.metaKey || e.ctrlKey || document.querySelector('dialog:modal')) return
+      if ((e.target as Element).closest?.('input, textarea, select')) return
+      if (e.key === '+' || e.key === '=') zoomTo(zoom * 1.15)
+      if (e.key === '-') zoomTo(zoom / 1.15)
+    }
+    scroller?.addEventListener('wheel', wheel, { passive: false })
+    addEventListener('keydown', keys)
     requestAnimationFrame(() => scroller && (scroller.scrollTop = (scroller.scrollHeight - scroller.clientHeight) * start))
     getApp().then(app => {
       if (dead) return
@@ -48,10 +76,17 @@
       scene = s
       const tick = () => {
         if (!s.root.visible) return
-        const kk = cssPerDU()
+        const kk = cssPerDU() * zoom
         const top = scroller?.scrollTop ?? 0
         s.root.scale.set(kk)
-        s.root.position.set((innerWidth - 400 * kk) / 2, -top)
+        const x = sceneX(kk)
+        s.root.position.set(x, -top)
+        // lớp chạm và lớp ghim bám đúng mép cảnh (đổi khi cột trái / ngăn kéo desktop thay đổi)
+        if (x !== left && space && layer) {
+          left = x
+          const m = `${x - (scroller?.getBoundingClientRect().left ?? 0)}px`
+          space.style.marginLeft = layer.style.marginLeft = m
+        }
         if (layer) layer.style.transform = `translate3d(0, ${-top}px, 0)`
         s.tick(app.ticker.deltaMS / 1000, top / kk)
       }
@@ -64,6 +99,8 @@
     return () => {
       dead = true
       removeEventListener('resize', resize)
+      removeEventListener('keydown', keys)
+      scroller?.removeEventListener('wheel', wheel)
       off()
     }
   })
@@ -74,7 +111,7 @@
 </script>
 
 <div class="scroller" class:off={hidden} bind:this={scroller}>
-  <div class="space" style:width="{400 * k}px" style:height="{height * k}px">{@render hits?.(k)}</div>
+  <div class="space" bind:this={space} style:width="{400 * k}px" style:height="{height * k}px">{@render hits?.(k)}</div>
 </div>
 {#if pins}
   <div class="overlay" class:off={hidden} aria-hidden="true">
@@ -84,23 +121,23 @@
 {/if}
 
 <style>
+  /* desktop: chừa cột trái (--rail), cảnh căn giữa phần còn lại — khớp sceneX() */
   .scroller {
     position: fixed;
-    inset: 0;
+    inset: 0 0 0 var(--rail);
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
   .space {
     position: relative;
-    margin: 0 auto;
   }
   .off {
     visibility: hidden;
   }
   .overlay {
     position: fixed;
-    inset: 0;
+    inset: 0 0 0 var(--rail);
     z-index: var(--z-overlay);
     overflow: hidden;
     pointer-events: none;
@@ -114,7 +151,6 @@
   .layer {
     position: relative;
     height: 100%;
-    margin: 0 auto;
     will-change: transform;
   }
   /* Ghim HTML theo toạ độ cảnh: style="left:…;top:…" */

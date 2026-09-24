@@ -22,6 +22,9 @@ export const LANG: Locale = pick(read('rok.lang'), nav?.languages?.length ? nav.
 // không tải được (offline mà bộ chữ chưa từng được cất): dùng bộ mặc định thay vì trắng màn hình
 export const L: Text = await loadText(LANG).catch(() => loadText(FALLBACK))
 export const DIR = LOCALES[LANG].dir
+
+// Bố cục desktop (cột trái, ngăn kéo phải) — cùng điều kiện với khối @media cuối ui/theme.css
+export const DESK = globalThis.matchMedia?.('(min-width: 1024px) and (min-height: 600px)')
 export function setLang(l: Locale) {
   write('rok.lang', l)
   location.reload()

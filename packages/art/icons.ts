@@ -2,6 +2,7 @@
 // Nét viền đậm, hình khối rõ để vẫn đọc được khi hiện nhỏ 14–22 px.
 import { blot, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
 import { spiral } from './landscape'
+import { rng } from './noise'
 import { PIGMENT as C, mix } from './palette'
 
 export const ITEMS = ['linhThach', 'linhThao', 'linhKhoang', 'tuKhi', 'boiNguyen', 'doKiep'] as const
@@ -40,17 +41,32 @@ const sparkle = (g: G, x: number, y: number, r: number, color: string) => {
   g.restore()
 }
 
-function pill(g: G, light: string, deep: string, mark: (g: G) => void) {
-  blot(g, 0, 0.5, 11, light, 0.25, 3, 1)
-  const gr = g.createRadialGradient(-2.5, -2.5, 1, 0, 0.5, 8.5)
-  gr.addColorStop(0, mix(light, '#ffffff', 0.55))
-  gr.addColorStop(0.55, light)
-  gr.addColorStop(1, deep)
-  const ring: Pt[] = Array.from({ length: 14 }, (_, i) => [Math.cos((i / 14) * Math.PI * 2) * 8, 0.5 + Math.sin((i / 14) * Math.PI * 2) * 8])
-  wash(g, ring, { fill: () => gr, alpha: 1, jitter: 0.25, layers: 2, seed: 5 })
+// Viên đan: sắc tố loang nhiều lớp (không bóng nhựa), bóng khối trăng khuyết, lấm tấm hạt đan, chấm sáng loang,
+// viền mực đầu đinh khô tước sợi, hai làn đan khí uốn lên từ đỉnh
+function pill(g: G, light: string, deep: string, mark: (g: G) => void, seed = 5) {
+  blot(g, 0, 0.5, 10.5, light, 0.16, 3, 1)
+  stroke(g, [[-0.8, -7.3], [1, -8.8], [-0.2, -10.2], [1.4, -11.6]], { w: 1.3, color: light, press: 'fade', alpha: 0.75, dry: 0.25, seed: seed + 20 })
+  stroke(g, [[2.6, -6.9], [4, -8.3], [3.3, -9.6]], { w: 0.9, color: light, press: 'fade', alpha: 0.5, dry: 0.25, seed: seed + 21 })
+  const at = (a: number, r: number, cx = 0, cy = 0.5): Pt => [cx + Math.cos(a) * r, cy + Math.sin(a) * r]
+  const ring: Pt[] = Array.from({ length: 14 }, (_, i) => at((i / 14) * Math.PI * 2, 8))
+  const body = () => {
+    const gr = g.createRadialGradient(-2.8, -2.4, 0.5, 0, 0.5, 9)
+    gr.addColorStop(0, mix(light, C.silk, 0.35))
+    gr.addColorStop(0.5, light)
+    gr.addColorStop(1, deep)
+    return gr
+  }
+  wash(g, ring, { fill: body, alpha: 1, jitter: 0.3, layers: 3, edge: 0.9, seed })
+  const arc = (a0: number, a1: number, r: number, cx: number, cy: number) => Array.from({ length: 8 }, (_, i) => at(a0 + ((a1 - a0) * i) / 7, r, cx, cy))
+  wash(g, [...arc(-0.2 * Math.PI, 0.85 * Math.PI, 7.9, 0, 0.5), ...arc(0.85 * Math.PI, -0.2 * Math.PI, 6.6, -1.3, -0.7)], { fill: deep, alpha: 0.42, jitter: 0.2, layers: 2, seed: seed + 1 })
+  const r = rng(seed)
+  for (let i = 0; i < 7; i++) {
+    const a = r() * Math.PI * 2, d = 2 + r() * 4.2
+    blot(g, Math.cos(a) * d, 0.5 + Math.sin(a) * d, 0.4 + r() * 0.35, deep, 0.35, seed + 30 + i, 0.8)
+  }
   mark(g)
-  stroke(g, [[-5.2, -3.2], [-3.6, -5.2], [-1, -6.2]], { w: 1.5, color: C.silk, press: 'taper', alpha: 0.9 })
-  ink(g, ring, 1.3, 0.9)
+  blot(g, -3.1, -2.9, 1.7, mix(light, '#ffffff', 0.7), 0.85, seed + 2, 0.65, -0.7)
+  stroke(g, [...ring, ring[0], ring[1]], { w: 1.4, color: C.ink, press: 'nail', dry: 0.35, rough: 0.35, alpha: 0.9, seed: seed + 3 })
 }
 
 export function itemIcon(name: Item): Asset {
@@ -103,12 +119,12 @@ export function itemIcon(name: Item): Asset {
         pill(g, '#f7d774', '#9a6a18', g2 => {
           stroke(g2, Array.from({ length: 13 }, (_, i) => [Math.cos((i / 12) * Math.PI * 2) * 3.6, 0.8 + Math.sin((i / 12) * Math.PI * 2) * 3.6] as Pt), { w: 1, color: '#7a4f0f', press: 'even', alpha: 0.8 })
           blot(g2, 0, 0.8, 1.2, '#7a4f0f', 0.8, 3, 1)
-        })
+        }, 13)
       } else if (name === 'doKiep') {
         pill(g, '#c7a3f5', '#4a2d8c', g2 => {
           wash(g2, [[1.6, -4.6], [-2.4, 1.4], [0.2, 1.4], [-1.4, 5.6], [3, -0.8], [0.4, -0.8]], { fill: '#f3edff', alpha: 1, jitter: 0.05, layers: 1, sharp: true, seed: 12 })
           stroke(g2, [[1.6, -4.6], [-2.4, 1.4], [0.2, 1.4], [-1.4, 5.6], [3, -0.8], [0.4, -0.8], [1.6, -4.6]], { w: 0.6, color: '#2e1a63', press: 'even', alpha: 0.9 })
-        })
+        }, 21)
       }
       grain(g, 0.25)
     },

@@ -2,13 +2,13 @@
 // (sương trôi, thác chảy, hạc bay, khói, lửa, linh khí, đèn đêm) do GPU diễn mỗi khung hình.
 import { Container, Graphics, Sprite, TilingSprite, type Texture } from 'pixi.js'
 import {
-  PIGMENT as C, bamboo, beamTex, bird, blossom, building, butterfly, cloud, crane, disciple, fallTex, farRange, flag, glowTex, ledge, mistTex, mix, paper,
-  itemIcon, peak, petalTex, pine, plot, puffTex, rainTex, rayTex, ringTex, rng, rock, scaffold, sparkTex, stairway, stoneLantern, tierOf, vortexTex,
-  type Fx, type Kind, type Pt,
+  PIGMENT as C, bamboo, beamTex, bird, blossom, boltTex, building, burstTex, butterfly, cloud, crane, disciple, fallTex, farRange, flag, glowTex, ledge, mistTex, mix, moon,
+  orbTex, paper, pearl, itemIcon, peak, petalTex, pine, plot, puffTex, rainTex, rayTex, ringTex, rng, rock, scaffold, sparkTex, stairway, stoneLantern, sun,
+  tierOf, vortexTex, type Fx, type Kind, type Pt,
 } from '@rok/art'
 import { BUILDINGS, IDS, storage, type BuildingId, type State } from '@rok/rules'
 import { DECOR, HOME, LEDGES, MISTS, PINES, SLOT, STAIRS } from './layout'
-import { painted, texOf, type Painted } from './stage'
+import { DRY, back, ink, last, painted, texOf, type Hue, type Painted } from './stage'
 
 export type Phase = 'dawn' | 'day' | 'dusk' | 'night'
 export type HomeView = {
@@ -42,32 +42,9 @@ const lerpC = (a: number, b: number, k: number) => {
   return (ch(16) << 16) | (ch(8) << 8) | ch(0)
 }
 
-// Tia sét phân nhánh: chia đôi đoạn thẳng nhiều lần, lệch ngẫu nhiên; vẽ ba lớp (quầng tím, thân sáng, lõi trắng)
-function lightning(g: Graphics, a: Pt, b: Pt, seed: number, size = 1) {
-  const r = rng(seed)
-  const jag = (p0: Pt, p1: Pt, rough: number, depth: number) => {
-    let pts: Pt[] = [p0, p1]
-    let off = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) * rough
-    for (let d = 0; d < depth; d++, off /= 2)
-      pts = pts.flatMap((p, i): Pt[] => {
-        if (!i) return [p]
-        const q = pts[i - 1], nx = q[1] - p[1], ny = p[0] - q[0], l = Math.hypot(nx, ny) || 1, k = (r() - 0.5) * off
-        return [[(p[0] + q[0]) / 2 + (nx / l) * k, (p[1] + q[1]) / 2 + (ny / l) * k], p]
-      })
-    return pts
-  }
-  const main = jag(a, b, 0.28, 6)
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]), dir = Math.atan2(b[1] - a[1], b[0] - a[0])
-  const paths: [Pt[], number][] = [[main, 1]]
-  for (let i = 0; i < 4; i++) {
-    const k = 0.12 + r() * 0.6, from = main[Math.floor(k * (main.length - 1))]
-    const l = len * (0.18 + r() * 0.25) * (1 - k * 0.5), an = dir + (r() < 0.5 ? -1 : 1) * (0.45 + r() * 0.6)
-    paths.push([jag(from, [from[0] + Math.cos(an) * l, from[1] + Math.sin(an) * l], 0.35, 4), 0.45])
-  }
-  g.clear()
-  for (const [w, color, alpha] of [[10, 0x8d6bff, 0.2], [3.6, 0xcbb8ff, 0.7], [1.4, 0xffffff, 1]] as const)
-    for (const [pts, s] of paths) g.poly(pts.flat(), false).stroke({ width: w * s * size, color, alpha, cap: 'round', join: 'round' })
-}
+const THUNDER: Hue = ['#7a5cff', '#cbb8ff', '#ffffff']
+const FIRE: Hue = [C.cinnabar, '#f08a4a', C.gamboge]
+const GOLD: Hue = [C.goldD, C.gold, C.goldL]
 
 // Bầu trời là giấy; trên đó quệt một lớp màu theo giờ
 const SKY: Record<Phase | 'storm', [string, number, string, number]> = {
@@ -128,11 +105,12 @@ export class Home {
   private far: Container[] = []
   private sky = new Sprite()
   private stormSky = new Sprite()
-  private sun: Sprite
-  private moon: Sprite
+  private sun: Container
+  private moon: Container
   private stars = new Container()
   private slots = new Map<BuildingId, Slot>()
   private bLayer = new Container()
+  private aura = new Container() // sau công trình: tia vàng lúc lên tầng (背光)
   private ring: Sprite
   private scene = new Container() // mọi thứ rung khi sét đánh
   private vortex = new Container() // xoáy kiếp vân: sau núi, không nhuộm theo giờ
@@ -181,10 +159,16 @@ export class Home {
     this.stormSky.height = HOME.h + 800
     this.stormSky.alpha = 0
     this.root.addChild(this.world, this.sky, this.stormSky)
-    this.sun = soft(glowT, '#f7cf9a', 64)
-    this.sun.position.set(318, 150)
-    this.moon = soft(glowT, '#f2efe2', 60)
-    this.moon.position.set(86, 140)
+    // mặt trời son, trăng trắng chì: đĩa vẽ tay, quầng sáng mờ phía sau
+    const disc = (p: Painted, halo: string, hs: number, x: number, y: number) => {
+      const c = new Container()
+      c.addChild(soft(glowT, halo, hs, 0.4), sprite(p))
+      c.position.set(x, y)
+      return c
+    }
+    // cùng một khoảng trời trống giữa thẻ nhiệm vụ và nút cuộn sổ (mặt trời và trăng không hiện cùng lúc)
+    this.sun = disc(painted('sun', () => sun(21)), '#f7cf9a', 120, 296, 152)
+    this.moon = disc(painted('moon', () => moon(19)), '#f2efe2', 110, 298, 150)
     this.root.addChild(this.sun, this.moon, this.stars)
     this.land = new Container()
     this.scene.addChild(this.land)
@@ -198,8 +182,9 @@ export class Home {
     }
 
     // Núi xa: hai lớp mực nhạt, trôi chậm hơn khi cuộn (thị sai)
-    const far1 = sprite(painted('far1', () => farRange(1400, 150, 21, C.azuriteL, 0.55), 1), -500, 330)
-    const far2 = sprite(painted('far2', () => farRange(1400, 120, 22, mix(C.azurite, C.indigo, 0.5), 0.5), 1), -500, 410)
+    // rộng -1100…1500 DU: desktop (cảnh phóng 1,5×, dịch trái khi ngăn kéo mở) trên màn 2560 px vẫn không lộ mép cắt
+    const far1 = sprite(painted('far1', () => farRange(2600, 150, 21, C.azuriteL, 0.55), 1), -1100, 330)
+    const far2 = sprite(painted('far2', () => farRange(2600, 120, 22, mix(C.azurite, C.indigo, 0.5), 0.5), 1), -1100, 410)
     for (const f of [far1, far2]) {
       const c = new Container()
       c.addChild(f)
@@ -234,7 +219,7 @@ export class Home {
     this.land.addChild(sprite(painted('peak:l', () => peak(220, 130, 33, -0.1)), 96, 400))
     this.land.addChild(sprite(painted('peak:r', () => peak(230, 150, 35, 0.12)), 318, 404))
     this.land.addChild(sprite(painted('peak:main', () => peak(300, 190, 31, 0.03)), 205, 396))
-    this.mist(262, 70, 3, 0.85, 700)
+    this.mist(262, 70, 3, 0.85)
 
     // Các tầng núi, xen sương; vách thác ở phải
     const byLedge = (i: number) => {
@@ -281,7 +266,7 @@ export class Home {
     this.ring.anchor.set(0.5)
     this.ring.tint = hex(C.goldL)
     this.ring.visible = false
-    this.land.addChild(this.ring, this.bLayer, this.dust)
+    this.land.addChild(this.ring, this.aura, this.bLayer, this.dust)
     this.bLayer.sortableChildren = true
     for (const id of IDS) {
       const [x, y] = SLOT[id]
@@ -322,8 +307,8 @@ export class Home {
     // Kiếp vân, mưa (không nhuộm theo giờ), rồi lớp cộng sáng
     const rainT = texOf('rain', () => rainTex(128))
     this.rain = [0.9, 0.55].map(sc => {
-      const r = new TilingSprite({ texture: rainT, width: 1400, height: HOME.h + 800 })
-      r.position.set(-500, -400)
+      const r = new TilingSprite({ texture: rainT, width: 2600, height: HOME.h + 800 })
+      r.position.set(-1100, -400)
       r.tileScale.set(sc)
       r.visible = false
       return r
@@ -455,7 +440,7 @@ export class Home {
   }
 
   // Dải sương ghép liền trôi ngang
-  private mist(y: number, h: number, speed: number, alpha: number, w = 1400) {
+  private mist(y: number, h: number, speed: number, alpha: number, w = 2600) {
     const m = new TilingSprite({ texture: texOf(`mist:${Math.round(y) % 3}`, () => mistTex(512, 96, 1 + (Math.round(y) % 3))), width: w, height: h * 1.6 })
     m.position.set(-(w - 400) / 2, y - h * 0.8)
     m.tileScale.set(1.1, (h * 1.6) / 96)
@@ -591,15 +576,32 @@ export class Home {
         slot.lights.push(l)
         slot.glow.addChild(l)
       } else if (f.k === 'fire') {
-        const l = soft(glowT, '#ff9a3c', 34 * f.s, 0.7)
+        // lửa lò: ba khung lưỡi lửa vẽ tay thay nhau (như hoạt hoạ vẽ tay), phụt lên từ miệng đỉnh; quầng ấm hắt qua bụng đỉnh
+        const l = soft(glowT, '#ff9a3c', 34 * f.s, 0.5)
         l.position.set(f.x, f.y)
-        slot.glow.addChild(l)
-        slot.anims.push(t => (l.alpha = 0.55 + 0.25 * Math.sin(t * 7) * Math.sin(t * 3.1)))
+        const size = 17 * f.s
+        const fl = ink('flame', (i, k) => orbTex(96, 64, 7 + i * 6, 0.2, k), FIRE, size, 3)
+        fl.c.rotation = Math.PI / 2 // đầu hoả cầu xuống dưới: lưỡi lửa bốc lên
+        fl.c.position.set(f.x, f.y - 9 * f.s - size * 0.2)
+        const s0 = fl.c.scale.x
+        slot.glow.addChild(l, fl.c)
+        slot.anims.push(t => {
+          fl.frame(Math.floor(t * 9) % 3)
+          fl.c.scale.x = s0 * (1 + 0.1 * Math.sin(t * 13) * Math.sin(t * 5.3))
+          l.alpha = 0.4 + 0.2 * Math.sin(t * 7) * Math.sin(t * 3.1)
+        })
       } else if (f.k === 'orb') {
-        const l = soft(glowT, C.spirit, 14 * f.s, 0.8)
-        l.position.set(f.x, f.y)
+        // linh châu vẽ tay lơ lửng; quầng linh khí mờ ban ngày, sáng dần khi tối
+        const p = sprite(painted(`pearl:${f.s}`, () => pearl(2.6 * f.s)), f.x, f.y)
+        slot.fx.addChild(p)
+        const l = soft(glowT, C.spirit, 16 * f.s, 0)
         slot.glow.addChild(l)
-        slot.anims.push(t => (l.alpha = 0.55 + 0.4 * Math.sin(t * 2 + f.x)))
+        slot.anims.push(t => {
+          const y = f.y + Math.sin(t * 2 + f.x) * 0.8
+          p.y = y
+          l.position.set(f.x, y)
+          l.alpha = (0.2 + 0.8 * this.lightsLevel) * (0.7 + 0.3 * Math.sin(t * 2 + f.x))
+        })
       } else if (f.k === 'beam') {
         const l = new Sprite(texOf('beam', () => beamTex()))
         l.anchor.set(0.5, 1)
@@ -655,7 +657,9 @@ export class Home {
   // chớp loé trong mây; sét đánh theo lịch trong tick()
   private buildStorm() {
     const [x, y] = SLOT.chuDien
-    const eye: Pt = [x, y - 150]
+    // mắt bão lệch sang khoảng trời trống bên phải (chỗ mặt trời/trăng, đã tắt khi trời kiếp): trên điện thoại
+    // thẻ nhiệm vụ che ngay phía trên Chủ điện; sét quật chéo xuống mái cũng dữ hơn đánh thẳng
+    const eye: Pt = [x + 100, y - 165]
     this.storm.eye = eye
     const glowT = texOf('glow', () => glowTex(64))
     const disk = new Container()
@@ -704,10 +708,19 @@ export class Home {
     const glowT = texOf('glow', () => glowTex(64))
     const sparkT = texOf('spark', () => sparkTex(24))
     const c = new Container()
-    const g = new Graphics()
-    g.blendMode = 'add'
-    const seed = Math.floor(Math.random() * 1e6)
-    lightning(g, this.storm.eye, hit, seed, big ? 1.5 : 1)
+    // tia sét nét bút từ mắt bão xuống mái: hai dáng khác nhau thay phiên (chớp — tắt — chớp lại)
+    const eye = this.storm.eye, len = Math.hypot(hit[0] - eye[0], hit[1] - eye[1])
+    const n = Math.floor(Math.random() * 3)
+    const [g, g2] = [n, (n + 1) % 3].map(v => {
+      // đoạn ngắn (~80 DU): texture 1:2, bề ngang cố định để thân sét không mảnh như chỉ
+      const b = ink(`hbolt:${v}`, (_, k) => boltTex(160, 320, 20 + v, k), THUNDER, big ? 84 : 60)
+      b.c.pivot.set(0, -160) // neo ở đỉnh tia (trong mây)
+      b.c.scale.y = len / 320
+      b.c.rotation = Math.atan2(hit[1] - eye[1], hit[0] - eye[0]) - Math.PI / 2
+      b.c.position.set(...eye)
+      return b.c
+    })
+    g2.visible = false
     const bloom = soft(glowT, '#e6dcff', big ? 150 : 100, 0)
     bloom.position.set(...hit)
     const parts = Array.from({ length: big ? 22 : 12 }, (_, i) => {
@@ -716,14 +729,14 @@ export class Home {
       c.addChild(s)
       return { s, vx: Math.cos(a) * v, vy: Math.sin(a) * v }
     })
-    c.addChild(g, bloom)
+    c.addChild(g, g2, bloom)
     let re = false
     this.play(
       c,
       0.9,
       e => {
-        if (!re && e > 0.12) (re = true), lightning(g, this.storm.eye, hit, seed + 1, big ? 1.5 : 1)
-        g.alpha = e < 0.07 ? 1 : e < 0.12 ? 0.12 : e < 0.26 ? 0.95 : Math.max(0, 1 - (e - 0.26) / 0.25)
+        if (!re && e > 0.12) (re = true), (g.visible = false), (g2.visible = true)
+        g.alpha = g2.alpha = e < 0.07 ? 1 : e < 0.12 ? 0.12 : e < 0.26 ? 0.95 : Math.max(0, 1 - (e - 0.26) / 0.25)
         bloom.alpha = Math.max(0, 1 - e / 0.5)
         bloom.scale.set(((big ? 150 : 100) / 64) * (0.6 + e))
         for (const p of parts) {
@@ -756,10 +769,16 @@ export class Home {
     const pillar = add(new Sprite(texOf('beam', () => beamTex())), 0.5, 1)
     pillar.height = big ? 760 : 260
     pillar.tint = hex(C.gold)
-    const halo = soft(glowT, C.gold, w * (big ? 2.4 : 1.5), 0)
+    const halo = soft(glowT, C.gold, w * (big ? 2 : 1.3), 0)
     halo.position.set(0, mid)
-    const ring = add(new Sprite(texOf('ring', () => ringTex(160, 48, 2.5))))
-    c.addChild(...rays, pillar, halo, ring)
+    // tia bút vàng mảnh toả sau lưng công trình (背光) + vòng mực vàng lan trên đất: bung vượt cỡ rồi thu, khô tan dần
+    const star = ink('lvstar', (f, k) => burstTex(128, 17, DRY[f], k * 0.5), GOLD, w * (big ? 1.7 : 1.15))
+    star.c.position.set(x, y + mid)
+    this.aura.addChild(star.c)
+    const s0 = star.c.scale.x
+    const ring = ink('lvring', (f, k) => ringTex(256, 80, 7, 5, DRY[f], k), GOLD, 24)
+    const r0 = ring.c.scale.x
+    c.addChild(...rays, pillar, halo, ring.c)
     const r = rng(Math.floor(this.rt * 1000) + 1)
     const parts = Array.from({ length: big ? 60 : 24 }, () => {
       const s = soft(sparkT, r() < 0.3 ? '#ffffff' : C.goldL, 5 + r() * 6, 0)
@@ -772,10 +791,17 @@ export class Home {
       const k = e / dur
       pillar.width = (big ? 80 : 34) * Math.min(1, e / 0.12) * (1 - k * 0.75)
       pillar.alpha = Math.min(1, e / 0.08) * (1 - k) ** 1.6
-      halo.alpha = Math.min(1, e / 0.1) * Math.max(0, 1 - e / (dur * 0.6))
-      ring.width = 24 + e * (big ? 460 : 240)
-      ring.height = ring.width * 0.3
-      ring.alpha = Math.max(0, 1 - e / (big ? 1.3 : 0.9))
+      halo.alpha = 0.5 * Math.min(1, e / 0.1) * Math.max(0, 1 - e / (dur * 0.6))
+      const sk = Math.min(1, e / 0.18)
+      star.c.scale.set(s0 * (sk < 1 ? 0.3 + back(sk) * 0.7 : 1 + (e - 0.18) * 0.1))
+      star.c.rotation = e * 0.25
+      star.frame(Math.max(0, (k - 0.15) / 0.6) * (last + 0.99))
+      star.c.alpha = k < 0.55 ? 1 : Math.max(0, 1 - (k - 0.55) / 0.35)
+      if (e >= dur) star.c.destroy({ children: true })
+      const rk = e / (big ? 1.3 : 0.9)
+      ring.c.scale.set(r0 * (1 + e * (big ? 19 : 10)))
+      ring.frame(rk * (last + 0.99))
+      ring.c.alpha = Math.max(0, 1 - rk)
       rays.forEach((ry, i) => {
         ry.rotation = (i / rays.length) * Math.PI * 2 + e * 0.3
         ry.width = 34
