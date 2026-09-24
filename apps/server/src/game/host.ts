@@ -2,6 +2,9 @@
 // Mọi node giống hệt nhau; mỗi giới chỉ do đúng một node giữ tại một thời điểm (fencing trong store.flushWorld).
 import * as store from '../db/store.ts'
 import { hosts } from '../lib/metrics.ts'
+import { close, heartbeat } from './lease.ts'
+import { ensureNpcs } from './npc.ts'
+import { loadChat } from './talk.ts'
 import { World, type Env } from './world.ts'
 
 export class Host {
@@ -43,8 +46,8 @@ export class Host {
     const w = new World(c, rows, this.env)
     this.worlds.set(id, w)
     this.env.log.info({ world: id, epoch: c.epoch, players: rows.length }, 'world claimed')
-    await w.ensureNpcs().catch(err => this.env.log.warn({ err, world: id }, 'npc seeding failed')) // lần đầu: phân đà NPC
-    await w.loadChat().catch(err => this.env.log.warn({ err, world: id }, 'chat load failed'))
+    await ensureNpcs(w).catch(err => this.env.log.warn({ err, world: id }, 'npc seeding failed')) // lần đầu: phân đà NPC
+    await loadChat(w).catch(err => this.env.log.warn({ err, world: id }, 'chat load failed'))
     w.tick(w.now()) // đuổi kịp sự kiện đã tới hạn lúc giới không có chủ
     return w
   }
@@ -54,7 +57,7 @@ export class Host {
       setInterval(() => {
         for (const [id, w] of this.worlds) {
           if (w.lost) this.worlds.delete(id)
-          else w.heartbeat()
+          else heartbeat(w)
         }
       }, store.LEASE.beat),
     )
@@ -81,7 +84,7 @@ export class Host {
   async drain() {
     this.draining = true
     for (const t of this.timers) clearInterval(t)
-    await Promise.all([...this.worlds.values()].map(w => w.close()))
+    await Promise.all([...this.worlds.values()].map(w => close(w)))
     this.worlds.clear()
     hosts.delete(this)
   }

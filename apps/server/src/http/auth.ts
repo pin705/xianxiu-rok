@@ -4,7 +4,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { newGame, type State } from '@rok/rules'
 import type { Database } from '../db/index.ts'
-import * as store from '../db/store.ts'
+import * as accounts from '../db/accounts.ts'
 import { COOKIE, cleanName, cookieOptions, hashToken, newToken } from '../lib/auth.ts'
 import { ErrorReply, authed, clearSession, sessionOf, socketPath } from './session.ts'
 
@@ -40,7 +40,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
       const token = newToken()
       const state: State = { ...newGame(Date.now(), n.name), seed: randomInt(1, 2 ** 32 - 1) }
       try {
-        const g = await store.createGuest(o.db, {
+        const g = await accounts.createGuest(o.db, {
           hash: hashToken(token),
           locale: req.body.lang,
           name: n.name,
@@ -57,7 +57,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
         reply.setCookie(COOKIE, token, cookieOptions(o.secure))
         return { token, pid: g.pid, world: g.world, path: await socketPath(o.db, g.world, o.path) }
       } catch (e) {
-        if (e instanceof store.NameTaken) return reply.code(409).send({ error: 'name_taken' })
+        if (e instanceof accounts.NameTaken) return reply.code(409).send({ error: 'name_taken' })
         throw e
       }
     },
@@ -95,7 +95,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
     },
     async (req, reply) => {
       const s = req.session
-      await store.deleteSession(o.db, hashToken(s.token))
+      await accounts.deleteSession(o.db, hashToken(s.token))
       clearSession(reply)
       return { ok: true }
     },

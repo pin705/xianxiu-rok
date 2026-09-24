@@ -3,12 +3,13 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import type { Database } from '../db/index.ts'
+import * as accounts from '../db/accounts.ts'
 import * as store from '../db/store.ts'
 import { COOKIE, hashToken } from '../lib/auth.ts'
 
 export const ErrorReply = z.object({ error: z.string() })
 
-export type Authed = store.Session & { token: string }
+export type Authed = accounts.Session & { token: string }
 declare module 'fastify' {
   interface FastifyRequest {
     session: Authed // chỉ có ở route dùng preHandler authed()
@@ -23,7 +24,7 @@ export const tokenOf = (req: FastifyRequest) => {
 // Phiên hiện tại; null: chưa có phiên hoặc phiên không còn
 export async function sessionOf(db: Database, req: FastifyRequest): Promise<Authed | null> {
   const token = tokenOf(req)
-  const s = token ? await store.findSession(db, hashToken(token)) : null
+  const s = token ? await accounts.findSession(db, hashToken(token)) : null
   return s && token ? { ...s, token } : null
 }
 

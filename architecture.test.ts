@@ -44,20 +44,31 @@ test('mỗi package chỉ import đúng các package được phép, không vớ
   assert.deepEqual(bad, [])
 })
 
-// Bên trong rules chỉ import xuống: core ← sect ← world. Mỗi file sect/ là một tính năng độc lập (chỉ dùng core/, data, combat);
-// chỉ sect/apply.ts gộp chúng — thêm tính năng không phải sửa tính năng khác.
-test('rules: core không import sect/world, tính năng trong sect/ không import lẫn nhau hay world', () => {
+// Bên trong rules chỉ import xuống: core ← sect ← world. File tính năng (sect/<tên>, world/<tên>) chỉ dùng tầng dưới và
+// phần dùng chung của tầng mình, không import tính năng khác. Chỉ file điều phối gộp các tính năng lại.
+// Thêm tính năng không phải sửa tính năng khác.
+const LOW = ['data.ts', 'combat.ts', 'atlas.ts']
+const LAYERS: Record<string, { below: string[]; shared: string[]; gather: string[] }> = {
+  core: { below: [], shared: ['*'], gather: [] },
+  sect: { below: ['core/'], shared: [], gather: ['apply.ts'] },
+  world: {
+    below: ['core/', 'sect/'],
+    shared: ['base.ts', 'fight.ts', 'points.ts'],
+    gather: ['act.ts', 'advance.ts', 'season.ts'],
+  },
+}
+test('rules: chỉ import xuống (core ← sect ← world), tính năng không import tính năng khác', () => {
   const rules = join(root, 'packages/rules')
   const bad: string[] = []
-  for (const layer of ['core', 'sect'])
+  for (const [layer, { below, shared, gather }] of Object.entries(LAYERS))
     for (const f of readdirSync(join(rules, layer)).filter(f => f.endsWith('.ts'))) {
       for (const spec of importsOf(join(rules, layer, f)).filter(s => s.startsWith('.'))) {
         const to = relative(rules, resolve(rules, layer, spec))
+        const own = to.startsWith(`${layer}/`) && to.slice(layer.length + 1)
         const ok =
-          to.startsWith('core/') ||
-          to === 'data.ts' ||
-          to === 'combat.ts' ||
-          (layer === 'sect' && f === 'apply.ts' && to.startsWith('sect/'))
+          LOW.includes(to) ||
+          below.some(b => to.startsWith(b)) ||
+          (own && (shared.includes('*') || shared.includes(own) || gather.includes(f)))
         if (!ok) bad.push(`rules/${layer}/${f}: không được import ${to}`)
       }
     }

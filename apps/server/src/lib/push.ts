@@ -4,7 +4,7 @@ import type { FastifyBaseLogger } from 'fastify'
 import webpush from 'web-push'
 import { loadText, pick, type Text } from '@rok/i18n'
 import type { Database } from '../db/index.ts'
-import * as store from '../db/store.ts'
+import * as accounts from '../db/accounts.ts'
 
 export type Note = { title: string; body: string; tag: string } // tag: thông báo cùng loại thay nhau, không chồng
 export type Pusher = (pid: number, note: (L: Text) => Note) => void
@@ -19,7 +19,7 @@ export function makePusher(
   // bắn rồi quên: actor không chờ mạng ngoài; lỗi chỉ ghi log
   return (pid, note) =>
     void (async () => {
-      for (const s of await store.pushSubsOf(db, pid)) {
+      for (const s of await accounts.pushSubsOf(db, pid)) {
         const body = JSON.stringify(note(await loadText(pick(s.locale, []))))
         await webpush
           .sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, {
@@ -28,7 +28,7 @@ export function makePusher(
           })
           .catch(e => {
             const code = (e as { statusCode?: number }).statusCode
-            if (code === 404 || code === 410) return store.dropPushSub(db, s.endpoint)
+            if (code === 404 || code === 410) return accounts.dropPushSub(db, s.endpoint)
             log.warn({ err: e, pid, code }, 'push send failed')
           })
       }

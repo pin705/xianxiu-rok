@@ -6,7 +6,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { z } from 'zod'
 import type { Database } from '../db/index.ts'
-import * as store from '../db/store.ts'
+import * as accounts from '../db/accounts.ts'
 import {
   CODE_TTL,
   COOKIE,
@@ -44,17 +44,27 @@ const Signed = z.object({
 })
 const errors = { 400: ErrorReply, 401: ErrorReply, 403: ErrorReply, 409: ErrorReply, 429: ErrorReply }
 
+type App = Parameters<FastifyPluginAsyncZod<AccountOptions>>[0]
+type Auth = ReturnType<typeof authed>
+const strict = { rateLimit: { max: 10, timeWindow: '1 minute' } }
+
 export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, o) => {
   const auth = authed(o.db)
+  loginRoutes(app, o)
+  profileRoutes(app, o, auth)
+  pushRoutes(app, o, auth)
+}
+
+// Đăng nhập bằng email + mật khẩu, hoặc bằng mã chuyển máy
+function loginRoutes(app: App, o: AccountOptions) {
   // 5 lần sai mỗi email / 15 phút (thêm vào giới hạn theo IP của route): dò mật khẩu một tài khoản từ nhiều IP cũng bị chặn
   const perEmail = new RateLimiterMemory({ points: 5, duration: 15 * 60 })
-  const strict = { rateLimit: { max: 10, timeWindow: '1 minute' } }
 
   // Mở phiên mới cho tài khoản (đăng nhập bằng mật khẩu hoặc mã chuyển máy)
   async function signIn(req: FastifyRequest, reply: FastifyReply, account: number) {
     const token = newToken()
-    await store.newSession(o.db, account, hashToken(token), req.ip, req.headers['user-agent'])
-    const s = await store.findSession(o.db, hashToken(token))
+    await accounts.newSession(o.db, account, hashToken(token), req.ip, req.headers['user-agent'])
+    const s = await accounts.findSession(o.db, hashToken(token))
     reply.setCookie(COOKIE, token, cookieOptions(o.secure))
     return {
       token,
@@ -63,7 +73,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
       path: await socketPath(o.db, s?.world ?? null, o.path),
     }
   }
-  const refuse = (reply: FastifyReply, a: store.Login | null) =>
+  const refuse = (reply: FastifyReply, a: accounts.Login | null) =>
     a?.banned ? reply.code(403).send({ error: 'banned' }) : reply.code(401).send({ error: 'wrong' })
 
   app.post(
@@ -73,7 +83,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
       const { email, pass } = req.body
       const tries = o.limits ? await perEmail.get(email) : null
       if (tries && tries.consumedPoints >= 5) return reply.code(429).send({ error: 'rate' })
-      const a = await store.accountByEmail(o.db, email)
+      const a = await accounts.accountByEmail(o.db, email)
       const good = await checkPass(pass, a?.pass ?? null) // email lạ vẫn băm: thời gian như nhau
       if (!a || !good || a.deleted || a.banned) {
         if (o.limits) await perEmail.consume(email).catch(() => {})
@@ -87,13 +97,16 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     '/login/code',
     { config: strict, schema: { body: z.object({ code: z.string().max(32) }), response: { 200: Signed, ...errors } } },
     async (req, reply) => {
-      const id = await store.takeCode(o.db, hashToken(cleanCode(req.body.code)))
-      const a = id ? await store.accountOf(o.db, id) : null
+      const id = await accounts.takeCode(o.db, hashToken(cleanCode(req.body.code)))
+      const a = id ? await accounts.accountOf(o.db, id) : null
       if (!a || a.deleted || a.banned) return refuse(reply, a)
       return signIn(req, reply, a.account)
     },
   )
+}
 
+// Tài khoản của người đang chơi: xem, gắn email, đổi mật khẩu, đăng xuất mọi nơi, mã chuyển máy, xoá
+function profileRoutes(app: App, o: AccountOptions, auth: Auth) {
   app.get(
     '/account',
     {
@@ -102,7 +115,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     },
     async req => {
       const s = req.session
-      return { email: (await store.accountOf(o.db, s.account))?.email ?? null, push: o.pushKey }
+      return { email: (await accounts.accountOf(o.db, s.account))?.email ?? null, push: o.pushKey }
     },
   )
 
@@ -116,10 +129,10 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     async (req, reply) => {
       const s = req.session
       try {
-        if (!(await store.linkEmail(o.db, s.account, req.body.email, await hashPass(req.body.pass))))
+        if (!(await accounts.linkEmail(o.db, s.account, req.body.email, await hashPass(req.body.pass))))
           return reply.code(409).send({ error: 'linked' })
       } catch (e) {
-        if (e instanceof store.EmailTaken) return reply.code(409).send({ error: 'email_taken' })
+        if (e instanceof accounts.EmailTaken) return reply.code(409).send({ error: 'email_taken' })
         throw e
       }
       return { ok: true }
@@ -136,10 +149,10 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     },
     async (req, reply) => {
       const s = req.session
-      const a = await store.accountOf(o.db, s.account)
+      const a = await accounts.accountOf(o.db, s.account)
       if (!a?.pass || !(await checkPass(req.body.old, a.pass))) return reply.code(401).send({ error: 'wrong' })
-      await store.setPass(o.db, s.account, await hashPass(req.body.pass))
-      await store.dropSessions(o.db, s.account, hashToken(s.token))
+      await accounts.setPass(o.db, s.account, await hashPass(req.body.pass))
+      await accounts.dropSessions(o.db, s.account, hashToken(s.token))
       return { ok: true }
     },
   )
@@ -149,7 +162,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     { preHandler: auth, schema: { response: { 200: Ok, ...errors } } },
     async (req, reply) => {
       const s = req.session
-      await store.dropSessions(o.db, s.account)
+      await accounts.dropSessions(o.db, s.account)
       clearSession(reply)
       return { ok: true }
     },
@@ -167,7 +180,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
       const s = req.session
       const code = newCode(),
         until = Date.now() + CODE_TTL
-      await store.putCode(o.db, s.account, hashToken(code), new Date(until))
+      await accounts.putCode(o.db, s.account, hashToken(code), new Date(until))
       return { code, until }
     },
   )
@@ -182,16 +195,18 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     },
     async (req, reply) => {
       const s = req.session
-      const a = await store.accountOf(o.db, s.account)
+      const a = await accounts.accountOf(o.db, s.account)
       if (a?.pass && !(await checkPass(req.body.pass ?? '', a.pass))) return reply.code(401).send({ error: 'wrong' })
-      await store.markDeleted(o.db, s.account, s.pid, s.world)
+      await accounts.markDeleted(o.db, s.account, s.pid, s.world)
       req.log.info({ account: s.account, pid: s.pid }, 'account deleted')
       clearSession(reply)
       return { ok: true }
     },
   )
+}
 
-  // Web Push (chỉ khi server có khoá VAPID): trình duyệt đăng ký / huỷ; GET /account trả khoá công khai.
+// Web Push (chỉ khi server có khoá VAPID): trình duyệt đăng ký / huỷ; GET /account trả khoá công khai.
+function pushRoutes(app: App, o: AccountOptions, auth: Auth) {
   // Endpoint chỉ nhận dịch vụ push thật (https): server sẽ gửi request tới đó — URL tuỳ ý là lỗ SSRF vào mạng nội bộ
   const pushHost = (u: string) => {
     const url = new URL(u)
@@ -208,7 +223,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     async (req, reply) => {
       const s = req.session
       if (!o.pushKey) return reply.code(400).send({ error: 'push_off' })
-      await store.addPushSub(o.db, s.account, { endpoint: req.body.endpoint, ...req.body.keys })
+      await accounts.addPushSub(o.db, s.account, { endpoint: req.body.endpoint, ...req.body.keys })
       return { ok: true }
     },
   )
@@ -220,7 +235,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
     },
     async req => {
       const s = req.session
-      await store.dropPushSub(o.db, req.body.endpoint, s.account)
+      await accounts.dropPushSub(o.db, req.body.endpoint, s.account)
       return { ok: true }
     },
   )

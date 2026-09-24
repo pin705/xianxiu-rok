@@ -17,7 +17,7 @@ import {
 } from './base.ts'
 import { unsold } from './market.ts'
 import { raid } from './raid.ts'
-import { spotArrive } from './spots.ts'
+import { spotArrive } from './arrive.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.

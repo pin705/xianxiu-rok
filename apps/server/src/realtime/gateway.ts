@@ -9,9 +9,9 @@ import type { Action } from '@rok/rules'
 import { GOODS, type Good } from '@rok/rules/world'
 import type { Channel, ClientToServer, Query as Q, Refuse, ServerToClient } from '@rok/protocol'
 import type { Database } from '../db/index.ts'
-import { findSession } from '../db/store.ts'
+import { findSession } from '../db/accounts.ts'
 import type { Host } from '../game/host.ts'
-import { World, type SocketData } from '../game/world.ts'
+import { World, type Sock, type SocketData } from '../game/world.ts'
 import { hashToken, tokenFromCookie } from '../lib/auth.ts'
 import { refused, socketsOpen } from '../lib/metrics.ts'
 
@@ -64,7 +64,16 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
     },
   })
 
-  io.use(async (socket, next) => {
+  io.use(handshake(o))
+  // 40 khung, nạp 10/giây mỗi kết nối; bị chặn liên tục là đang spam → cắt
+  const limiter = new RateLimiterMemory({ points: 40, duration: 4 })
+  io.on('connection', socket => serve(socket, o, limiter))
+  return io
+}
+
+// Bắt tay: đúng mã giao thức, phiên còn hiệu lực, giới đang ở node này (không thì chỉ đường sang node giữ giới)
+function handshake(o: RealtimeOptions) {
+  return async (socket: Sock, next: (err?: Error) => void) => {
     const refuse = (reason: Refuse['reason'], path?: string) => {
       refused.inc({ reason })
       next(Object.assign(new Error(reason), { data: { reason, path } satisfies Refuse }))
@@ -87,83 +96,81 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
       o.log.error({ err }, 'handshake failed')
       refuse('unavailable')
     }
-  })
+  }
+}
 
-  // 40 khung, nạp 10/giây mỗi kết nối; bị chặn liên tục là đang spam → cắt
-  const limiter = new RateLimiterMemory({ points: 40, duration: 4 })
-  io.on('connection', socket => {
-    socketsOpen.inc()
-    const world = () => o.host.worlds.get(socket.data.world)
-    let strikes = 0
-    const allowed = async () => {
-      if (!o.limits) return true
-      try {
-        await limiter.consume(socket.id)
-        strikes = 0
-        return true
-      } catch {
-        if (++strikes > 100) {
-          socket.emit('bye', { reason: 'rate' })
-          socket.disconnect(true)
-        }
-        return false
+// Một kết nối: giới hạn tần suất, kiểm khuôn gói tin, giao cho world actor đang giữ giới
+function serve(socket: Sock, o: RealtimeOptions, limiter: RateLimiterMemory) {
+  socketsOpen.inc()
+  const world = () => o.host.worlds.get(socket.data.world)
+  let strikes = 0
+  const allowed = async () => {
+    if (!o.limits) return true
+    try {
+      await limiter.consume(socket.id)
+      strikes = 0
+      return true
+    } catch {
+      if (++strikes > 100) {
+        socket.emit('bye', { reason: 'rate' })
+        socket.disconnect(true)
       }
+      return false
     }
-    void world()?.attach(socket)
+  }
+  void world()?.attach(socket)
 
-    socket.on('act', async (a, ack) => {
-      if (typeof ack !== 'function') return
-      if (!(await allowed())) return ack({ ok: false, err: 'rate' })
-      if (!ActionShape.safeParse(a).success) return ack({ ok: false, err: 'bad' })
-      const w = world()
-      if (!w) return ack({ ok: false, err: 'moving' })
-      w.intent(socket, a as Action, ack)
-    })
-    socket.on('get', async (q, ack) => {
-      if (typeof ack !== 'function') return
-      if (!(await allowed())) return ack(null)
-      const parsed = Query.safeParse(q)
-      if (!parsed.success) return ack(null)
-      await world()
-        ?.query(socket, parsed.data, ack)
-        .catch(err => {
-          o.log.warn({ err }, 'query failed')
-          ack(null)
-        })
-    })
-    socket.on('say', async (m, ack) => {
-      if (typeof ack !== 'function') return
-      if (!(await allowed())) return ack({ ok: false, err: 'rate' })
-      const p = Say.safeParse(m)
-      if (!p.success) return ack({ ok: false, err: 'bad' })
-      const w = world()
-      if (!w) return ack({ ok: false, err: 'unavailable' })
-      w.say(socket, p.data, ack)
-    })
-    socket.on('report', async (m, ack) => {
-      if (typeof ack !== 'function') return
-      const p = Report.safeParse(m)
-      if (!(await allowed()) || !p.success) return ack(false)
-      const done = await world()
-        ?.report(socket, p.data.id)
-        .catch(err => {
-          o.log.warn({ err }, 'chat report failed')
-          return false
-        })
-      ack(done ?? false)
-    })
-    socket.on('sync', async ack => {
-      if (typeof ack === 'function' && (await allowed())) world()?.sync(socket, ack)
-    })
-    socket.on('time', ack => {
-      if (typeof ack === 'function') ack(world()?.now() ?? Date.now())
-    })
-    socket.on('disconnect', () => {
-      socketsOpen.dec()
-      world()?.detach(socket)
-    })
+  socket.on('act', async (a, ack) => {
+    if (typeof ack !== 'function') return
+    if (!(await allowed())) return ack({ ok: false, err: 'rate' })
+    if (!ActionShape.safeParse(a).success) return ack({ ok: false, err: 'bad' })
+    const w = world()
+    if (!w) return ack({ ok: false, err: 'moving' })
+    w.intent(socket, a as Action, ack)
   })
-  return io
+  socket.on('get', async (q, ack) => {
+    if (typeof ack !== 'function') return
+    if (!(await allowed())) return ack(null)
+    const parsed = Query.safeParse(q)
+    if (!parsed.success) return ack(null)
+    await world()
+      ?.query(socket, parsed.data, ack)
+      .catch(err => {
+        o.log.warn({ err }, 'query failed')
+        ack(null)
+      })
+  })
+  socket.on('say', async (m, ack) => {
+    if (typeof ack !== 'function') return
+    if (!(await allowed())) return ack({ ok: false, err: 'rate' })
+    const p = Say.safeParse(m)
+    if (!p.success) return ack({ ok: false, err: 'bad' })
+    const w = world()
+    if (!w) return ack({ ok: false, err: 'unavailable' })
+    w.say(socket, p.data, ack)
+  })
+  socket.on('report', async (m, ack) => {
+    if (typeof ack !== 'function') return
+    const p = Report.safeParse(m)
+    if (!(await allowed()) || !p.success) return ack(false)
+    const done = await world()
+      ?.report(socket, p.data.id)
+      .catch(err => {
+        o.log.warn({ err }, 'chat report failed')
+        return false
+      })
+    ack(done ?? false)
+  })
+  socket.on('sync', async ack => {
+    if (typeof ack === 'function' && (await allowed())) world()?.sync(socket, ack)
+  })
+  socket.on('time', ack => {
+    if (typeof ack === 'function') ack(world()?.now() ?? Date.now())
+  })
+  socket.on('disconnect', () => {
+    socketsOpen.dec()
+    world()?.detach(socket)
+  })
 }
 
 const sameHost = (origin: string, host: string | undefined) => {

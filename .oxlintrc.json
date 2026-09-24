@@ -27,7 +27,7 @@
       "rules": { "max-lines": "off", "max-lines-per-function": "off" }
     },
     // Mức trần của các file lớn hiện có: chỉ được nhỏ đi. Thêm tính năng mà vượt trần thì tách file
-    // (gợi ý: home.ts → sky/water/buildings, battle.ts → skills, game/world.ts → lease/inbox/rollover).
+    // (gợi ý: home.ts → sky/water/buildings, battle.ts → skills).
     {
       "files": ["apps/client/src/world/home.ts"],
       "rules": { "max-lines": ["error", { "max": 1100, "skipBlankLines": true, "skipComments": true }] }
@@ -37,32 +37,12 @@
       "rules": { "max-lines": ["error", { "max": 800, "skipBlankLines": true, "skipComments": true }] }
     },
     {
-      "files": ["apps/server/src/game/world.ts"],
-      "rules": { "max-lines": ["error", { "max": 870, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
-      "files": ["apps/server/src/db/store.ts"],
-      "rules": { "max-lines": ["error", { "max": 500, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
-      "files": ["packages/rules/world/spots.ts"],
-      "rules": { "max-lines": ["error", { "max": 480, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
       "files": ["apps/client/src/App.svelte"],
       "rules": { "max-lines": ["error", { "max": 450, "skipBlankLines": true, "skipComments": true }] }
     },
     {
       "files": ["apps/client/src/net.ts"],
       "rules": { "max-lines-per-function": ["error", { "max": 340, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
-      "files": ["apps/server/src/http/account.ts"],
-      "rules": { "max-lines-per-function": ["error", { "max": 170, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
-      "files": ["apps/server/src/realtime/gateway.ts"],
-      "rules": { "max-lines-per-function": ["error", { "max": 120, "skipBlankLines": true, "skipComments": true }] }
     },
     {
       "files": ["packages/rules/bot.ts"],
