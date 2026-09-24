@@ -1,11 +1,10 @@
 // Xuất chinh PvE: hành quân đánh yêu thú / tông môn tà đạo (giải lúc tới nơi), bí cảnh và Thông Thiên Tháp (đánh ngay).
 import { no, ok, type Actions } from '../core/action.ts'
-import { addGain, admit, armyError, battle, marchTime, targetError } from '../core/battle.ts'
+import { addGain, admit, armyError, battle, marchTime, targetError, marchError, launch } from '../core/battle.ts'
 import { int, isElder, pickArmy, pickTarget } from '../core/parse.ts'
-import { marchSlots } from '../core/stats.ts'
 import { type Army, type March, type Result, type State, type Target } from '../core/types.ts'
-import { minus, nextSeed } from '../core/util.ts'
-import { REALMS, UNITS, type ElderId } from '../data.ts'
+import { minus, nextSeed, compact } from '../core/util.ts'
+import { REALMS, type ElderId } from '../data.ts'
 
 export type ExpeditionAction =
   | { type: 'march'; target: Target; elder: ElderId; army: Army }
@@ -30,10 +29,9 @@ export const expeditionActions: Actions<ExpeditionAction> = {
       return target && army && isElder(a.elder) ? { type: 'march', target, elder: a.elder, army } : null
     },
     run: (s, a) => {
-      const e = targetError(s, a.target) ?? armyError(s, a.elder, a.army)
+      const e = targetError(s, a.target) ?? marchError(s, a.elder, a.army)
       if (e) return no(e)
-      if (s.marches.length >= marchSlots(s)) return no('slots')
-      const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
+      const army = compact(a.army)
       const t = s.time,
         dt = marchTime(s, a.target)
       const m: March = {
@@ -46,13 +44,7 @@ export const expeditionActions: Actions<ExpeditionAction> = {
         arriveAt: t + dt,
         returnAt: t + 2 * dt,
       }
-      return ok({
-        ...s,
-        troops: minus(s.troops, army),
-        marches: [...s.marches, m],
-        nextId: s.nextId + 1,
-        seed: nextSeed(s.seed),
-      })
+      return ok({ ...launch(s, army, m), seed: nextSeed(s.seed) })
     },
   },
   realm: {

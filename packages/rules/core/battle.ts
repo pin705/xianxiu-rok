@@ -1,9 +1,9 @@
 // Trận PvE: mục tiêu, đội địch, đội mình, thương binh, phần thưởng, chiến báo; lôi kiếp; tỉ lệ thắng ước lượng.
 import { fight, type Side } from '../combat.ts'
 import { bump, eventMul } from './calendar.ts'
-import { bonus, cutOf, elderLevel, expAt, hospital, lead, unitOf } from './stats.ts'
-import { type Army, type Err, type Gain, type Report, type Snap, type State, type Target } from './types.ts'
-import { addBag, addItems, bag, count, grow, nextSeed } from './util.ts'
+import { HIGH_FIRST, bonus, cutOf, elderLevel, expAt, hospital, lead, marchSlots, unitOf, isMarching } from './stats.ts'
+import { type Army, type Err, type Gain, type March, type Report, type Snap, type State, type Target } from './types.ts'
+import { addBag, addItems, bag, count, grow, mark, minus, nextSeed, noGain } from './util.ts'
 import {
   BEAST_COOLDOWN,
   BEAST_EXP,
@@ -166,7 +166,7 @@ export function sideOf(s: State, elder: ElderId | null, army: Army): Side {
 
 export function armyError(s: State, elder: ElderId, army: Army): Err | null {
   if (!(elder in ELDERS) || s.elders[elder] === undefined) return 'locked'
-  if (s.marches.some(m => m.elder === elder)) return 'busy'
+  if (isMarching(s, elder)) return 'busy'
   for (const u of Object.keys(army)) if (!UNITS.includes(u as UnitId)) return 'bad'
   for (const u of UNITS) {
     const n = army[u] ?? 0
@@ -187,7 +187,7 @@ export function admit(s: State, hurt: Army): { state: State; dead: Army } {
   let room = Math.max(0, hospital(s) - count(s.wounded))
   const wounded = { ...s.wounded }
   const dead: Army = {}
-  for (const u of [...UNITS].sort((a, b) => unitOf(b).tier - unitOf(a).tier)) {
+  for (const u of HIGH_FIRST) {
     const n = hurt[u] ?? 0
     const inn = Math.min(n, room)
     room -= inn
@@ -203,11 +203,7 @@ export function giveExp(s: State, elder: ElderId, exp: number): State {
   return { ...s, elders: { ...s.elders, [elder]: Math.min(expAt(ELDER_MAX), cur + exp) } }
 }
 
-export function addGain(s: State, elder: ElderId, g: Gain): State {
-  let st: State = { ...s, res: addBag(s.res, g.res), items: addItems(s.items, g.items) }
-  if (g.elder && st.elders[g.elder] === undefined) st = { ...st, elders: { ...st.elders, [g.elder]: 0 } }
-  return giveExp(st, elder, g.exp)
-}
+export const addGain = (s: State, elder: ElderId, g: Gain): State => giveExp(grant(s, g), elder, g.exp)
 
 // Quà từ ngoài (thư, mốc sự kiện): tài nguyên, đan, trưởng lão — không có kinh nghiệm
 export function grant(s: State, r: Reward): State {
@@ -242,7 +238,7 @@ export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: nu
   const loot = (1 + lead(s, elder, 'loot')) * eventMul(at)
   const expMul = (1 + lead(s, elder, 'exp')) * (f.win ? 1 : LOSS_EXP) * eventMul(at)
   let st = s
-  let g: Gain = { res: {}, items: {}, exp: 0 }
+  let g = noGain()
   let floor: number | undefined
   let foeLevel = 1
 
@@ -261,7 +257,7 @@ export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: nu
       g = st.sects[t.i] ? fromReward({ res: bag(() => d.loot) }, loot, g.exp) : fromReward(d.first, 1, g.exp)
       st = {
         ...st,
-        sects: st.sects.map((x, k) => x || k === t.i),
+        sects: mark(st.sects, t.i),
         cool: { ...st.cool, [coolKey(t)]: at + SECT_COOLDOWN },
       }
     }
@@ -328,19 +324,29 @@ export function tribulation(s: State, elder: ElderId, army: Army, p: PillId | nu
 }
 
 // Tỉ lệ thắng ước lượng để hiện cho người chơi: đánh thử với 9 mầm cố định, khác mầm thật (không lộ đúng kết quả).
+export function chance(win: (seed: number) => boolean) {
+  let won = 0
+  for (let k = 1; k <= 9; k++) if (win(Math.imul(k, 0x9e3779b1) >>> 0)) won++
+  return won / 9
+}
 // Tính đủ hệ khắc, công pháp trưởng lão, lôi kiếp — lực chiến thô thì không (đội bị khắc hệ hiện "áp đảo" mà thua 1/4).
 export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'trib', pill = false) {
   if (!count(army) || s.elders[elder] === undefined) return 0
   if (t === 'trib' && !TRIBS[s.trib]) return 0
-  let won = 0
-  for (let k = 1; k <= 9; k++) {
-    const seed = Math.imul(k, 0x9e3779b1) >>> 0
-    if (
-      t === 'trib'
-        ? tribulation(s, elder, army, tribPill(s, pill), seed).win
-        : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win
-    )
-      won++
-  }
-  return won / 9
+  return chance(seed =>
+    t === 'trib'
+      ? tribulation(s, elder, army, tribPill(s, pill), seed).win
+      : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win,
+  )
 }
+
+// Đội xuất quân được: trưởng lão rảnh, đủ quân, còn lượt xuất quân
+export const marchError = (s: State, elder: ElderId, army: Army) =>
+  armyError(s, elder, army) ?? (s.marches.length >= marchSlots(s) ? 'slots' : null)
+// Đội rời nhà: trừ quân ở nhà, thêm hành quân
+export const launch = (s: State, army: Army, m: March): State => ({
+  ...s,
+  troops: minus(s.troops, army),
+  marches: [...s.marches, m],
+  nextId: s.nextId + 1,
+})

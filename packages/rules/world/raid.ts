@@ -1,15 +1,14 @@
 // Cướp giữa các tông môn: điều kiện, xuất quân, giải trận (server), điểm Elo, ghép đối thủ.
 import { fight } from '../combat.ts'
 import { no } from '../core/action.ts'
-import { admit, armyError, pushReport, sideOf, snap } from '../core/battle.ts'
+import { admit, pushReport, sideOf, snap, marchError, launch } from '../core/battle.ts'
 import { bump, evBump } from '../core/calendar.ts'
 import { id, isElder, pickArmy } from '../core/parse.ts'
-import { elderLevel, lead, marchSlots, power, storage, unitOf } from '../core/stats.ts'
+import { elderLevel, lead, power, storage } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Err, type March, type Report, type State } from '../core/types.ts'
-import { minus } from '../core/util.ts'
+import { minus, compact, noGain } from '../core/util.ts'
 import {
-  CARRY,
   ELO_K,
   FOES_MAX,
   MATCH_PICK,
@@ -21,7 +20,6 @@ import {
   RESOURCES,
   REVENGE_TIME,
   SHIELD_TIME,
-  TIER,
   UNITS,
   type Bag,
   type ElderId,
@@ -37,7 +35,7 @@ import {
   type World,
   type WorldActions,
 } from './base.ts'
-import { addArmy, armyOf, combine, defense, guardOf, scout, split, type Scout } from './fight.ts'
+import { addArmy, combine, defense, guardOf, scout, split, type Scout, carryOf, flipRounds } from './fight.ts'
 
 const revenge = (att: State, pid: number, now: number) => att.foes.some(f => f.pid === pid && f.at + REVENGE_TIME > now)
 
@@ -71,12 +69,9 @@ export const raidActions: WorldActions<RaidAction> = {
     run: ({ ps, w, pid, s: att, now, seed, map }, a) => {
       const t = att.time
       const other = ps.get(a.pid)
-      const e =
-        raidError(att, other && advance(other, now), pid, a.pid, t, map, w) ??
-        armyError(att, a.elder, a.army) ??
-        (att.marches.length >= marchSlots(att) ? 'slots' : null)
+      const e = raidError(att, other && advance(other, now), pid, a.pid, t, map, w) ?? marchError(att, a.elder, a.army)
       if (e) return no(e)
-      const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
+      const army = compact(a.army)
       const go = raidPath(att, other!, map)!
       const m: March = {
         id: att.nextId,
@@ -91,14 +86,7 @@ export const raidActions: WorldActions<RaidAction> = {
         ...(go.path && { path: go.path }),
       }
       // đi đánh người khác thì mất khiên
-      const next = {
-        ...att,
-        troops: minus(att.troops, army),
-        marches: [...att.marches, m],
-        nextId: att.nextId + 1,
-        shield: 0,
-      }
-      return { ok: true, world: w, changed: new Map([[pid, next]]) }
+      return { ok: true, world: w, changed: new Map([[pid, { ...launch(att, army, m), shield: 0 }]]) }
     },
   },
 }
@@ -109,7 +97,7 @@ const elo = (a: number, d: number, win: boolean) =>
 
 // Phần cướp được: RAID_SHARE phần vượt kho bảo hộ (bonus chiến lợi phẩm của người dẫn), không quá sức mang của đội còn đứng
 function plunder(att: State, def: State, elder: ElderId, back: Army): Partial<Bag> {
-  const room = UNITS.reduce((sum, u) => sum + (back[u] ?? 0) * CARRY * TIER[unitOf(u).tier].stat, 0)
+  const room = carryOf(back)
   const keep = PROTECT * storage(def)
   const want = RESOURCES.map(r => {
     const over = Math.max(0, def.res[r] - keep)
@@ -134,7 +122,7 @@ export function raid(
   const me = sideOf(att, m.elder, m.army)
   const { side: foe, at: hOffs } = combine([
     defense(def),
-    ...helpers.map(([, hs, hm]) => sideOf(hs, hm.elder, armyOf(hm))),
+    ...helpers.map(([, hs, hm]) => sideOf(hs, hm.elder, compact(hm.army))),
   ])
   const f = fight(me, foe, m.seed)
   const last = f.rounds.at(-1)
@@ -198,9 +186,7 @@ export function raid(
     },
     dHurt,
   )
-  const flip: Report['fights'] = [
-    { a: dSnap, b: aSnap, rounds: f.rounds.map(r => ({ n: [r.n[1], r.n[0]], cast: [r.cast[1], r.cast[0]] })) },
-  ]
+  const flip: Report['fights'] = [{ a: dSnap, b: aSnap, rounds: flipRounds(f.rounds) }]
   let dd: State = pushReport(adm.state, {
     at,
     kind: 'pvp',
@@ -211,7 +197,7 @@ export function raid(
     hurt: dHurt,
     dead: adm.dead,
     lost: loot,
-    gain: { res: {}, items: {}, exp: 0 },
+    gain: noGain(),
     fights: flip,
   })
   dd = {
@@ -229,7 +215,7 @@ export function raid(
   }
   const hs: Players = new Map()
   helpers.forEach(([hp, st, hm], j) => {
-    const d = split({ ...hm, army: armyOf(hm) }, n1, hOffs[j + 1])
+    const d = split(hm, n1, hOffs[j + 1])
     let x = pushReport(st, {
       at,
       kind: 'pvp',
@@ -239,7 +225,7 @@ export function raid(
       win: !f.win,
       hurt: d.hurt,
       dead: {},
-      gain: { res: {}, items: {}, exp: 0 },
+      gain: noGain(),
       fights: flip,
     })
     x = withMarch(
@@ -250,7 +236,7 @@ export function raid(
             stay: false,
             back: d.left,
             hurt: addArmy(hm.hurt, d.hurt),
-            gain: { res: {}, items: {}, exp: 0 },
+            gain: noGain(),
             returnAt: at + travel(hm),
           }
         : { ...hm, army: d.left, hurt: addArmy(hm.hurt, d.hurt) },

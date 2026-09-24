@@ -727,6 +727,18 @@ export const MATCH_POOL = 10 // ghép cặp: MATCH_PICK người ngẫu nhiên t
 export const MATCH_PICK = 3
 export const PVP_GATE = { x: 200, y: -60 } // tới P3 (bản đồ giới): đội đi cướp rời vùng qua mép trên bản đồ
 export const GUARD_STEP = 0.04 // Hộ Sơn Đại Trận: thủ và máu bên thủ mỗi tầng
+// Tỉ lệ thắng ước lượng coi là chắc thắng: giao diện báo "áp đảo"; bot và NPC chỉ đánh từ mức này
+export const SURE_WIN = 0.8
+export const CHAT_HALL = 3 // kênh giới mở từ tầng Chủ điện này
+
+// Phân đà NPC: tà phái giữ vùng ngoài (server điều khiển, rules/bot.ts), NPC_PER mỗi vùng, chơi một lượt mỗi NPC_EVERY
+// như người chơi thường. Lúc lập: Chủ điện NPC_HALL, trưởng lão cấp NPC_ELDER, NPC_TROOPS đệ tử bậc 2 mỗi hệ, NPC_RES mỗi loại.
+export const NPC_PER = 2
+export const NPC_EVERY = 4 * 3_600_000
+export const NPC_HALL = 7
+export const NPC_ELDER = 10
+export const NPC_TROOPS = 120
+export const NPC_RES = 20_000
 
 // ---------- Tiên minh ----------
 

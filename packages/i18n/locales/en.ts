@@ -58,7 +58,7 @@ import {
   type UnitId,
   type UnitType,
 } from '@rok/rules'
-import type { Text } from './vi.ts'
+import type { ChronTexts, MailTexts, Text } from './vi.ts'
 
 // English text. Same shape as vi.ts (type Text) — TypeScript flags any missing key.
 // Glossary (PLAN.md §4): Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core,
@@ -703,11 +703,11 @@ export const en: Text = {
     msg: {
       found: (name: string) => `${name} founded a sect in this world`,
       raid: (a: string, b: string, win: number) => (win ? `${a} raided ${b}` : `${b} drove off ${a}`),
-      trib: (name: string, hall: number) => `${name} survived a tribulation and reached ${en.realmName(hall)}`,
+      trib: (name: string, hall: number): string => `${name} survived a tribulation and reached ${en.realmName(hall)}`,
       season: (n: number) => `Season ${n} begins: a new world map, every sect resettled`,
       boss: (lv: number) => `A level ${lv} demon king has been slain`,
       unknown: () => 'Something stirred in the world',
-    } as Record<string, (...a: any[]) => string>,
+    } satisfies ChronTexts,
   },
   npc: { branch: (n: number) => `branch ${n}` },
   pvp: {
@@ -796,9 +796,9 @@ export const en: Text = {
     claim: 'Claim gift',
     got: 'Claimed',
     msg: {
-      eventTop: (rank: number, theme: string) => [
+      eventTop: (rank: number, theme: EventId): [string, string] => [
         `Weekly event rank ${rank}`,
-        `Your sect placed ${rank} in this world's "${theme}" event. Your prize is attached.`,
+        `Your sect placed ${rank} in this world's "${en.event.theme[theme] ?? theme}" event. Your prize is attached.`,
       ],
       admin: (title: string, body: string) => [title, body],
       gift: () => ['A gift from the world elders', 'A small gift for you, fellow cultivator. Claim it below.'],
@@ -826,7 +826,7 @@ export const en: Text = {
         `Nobody bought ${n} ${goodName(g)} — your goods are returned below.`,
       ],
       unknown: () => ['System mail', 'You have new mail. Update the game to read all of it.'],
-    } as Record<string, (...a: any[]) => [string, string]>,
+    } satisfies MailTexts,
   },
   event: {
     title: 'Weekly event',
@@ -1162,6 +1162,7 @@ export const en: Text = {
   },
   err: {
     max_level: 'Already at max',
+    claimed: 'Already claimed',
     need_main_hall: 'Upgrade the Main Hall first',
     busy: 'Busy',
     queue_full: 'The builder is busy',

@@ -3,8 +3,8 @@ import { no, ok, pay, use, type Actions } from '../core/action.ts'
 import { bump } from '../core/calendar.ts'
 import { int, JOB_KINDS, oneOf } from '../core/parse.ts'
 import { buildTime, cost, tradeKeep } from '../core/stats.ts'
-import { advance, jobOf } from '../core/time.ts'
-import { type Err, type Job, type JobKind, type State } from '../core/types.ts'
+import { advance, jobOf, shorten } from '../core/time.ts'
+import { type Err, type JobKind, type State } from '../core/types.ts'
 import { afford, IDS } from '../core/util.ts'
 import {
   BUILDINGS,
@@ -53,12 +53,8 @@ export const buildingActions: Actions<BuildingAction> = {
       if (a.job === 'brew') return no('bad') // đan không rút ngắn việc luyện đan: có giảm thời gian từ công pháp là thành vòng lặp đẻ đan
       const pill = a.pill ?? 'tuKhi'
       if (a.n > (s.items[pill] ?? 0)) return no('no_item')
-      const job = jobOf(s, a.job)
-      if (!job) return no('empty')
-      const cut = (pill === 'daiTuKhi' ? SPEEDUP_BIG : SPEEDUP) * a.n
-      const sped = { ...job, finishAt: Math.max(s.time, job.finishAt - cut) }
-      const next: State =
-        a.job === 'build' ? { ...s, queue: s.queue.map(j => (j === job ? (sped as Job) : j)) } : { ...s, [a.job]: sped }
+      if (!jobOf(s, a.job)) return no('empty')
+      const next = shorten(s, a.job, (pill === 'daiTuKhi' ? SPEEDUP_BIG : SPEEDUP) * a.n)
       return ok(advance({ ...next, items: use(s, pill, a.n) }, s.time))
     },
   },

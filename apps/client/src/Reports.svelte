@@ -1,5 +1,6 @@
 <script lang="ts">
   // Hộp thư: thư (quà nhận ngay tại đây) và chiến báo (chạm để xem lại trận), mới nhất trên cùng.
+  import { mailText } from '@rok/i18n'
   import { RESOURCES, count, type Action, type Mail, type Report, type State } from '@rok/rules'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Sheet, Tabs, fly } from './ui'
@@ -27,12 +28,7 @@
   const tab = $derived(picked ?? (game.mail.some(m => m.gift && !m.got) ? 'mail' : 'reports'))
   const list = $derived([...game.reports].reverse())
   const mails = $derived([...game.mail].reverse())
-  // Chữ thư dựng ở client theo khoá (bản cũ không biết khoá thì vẫn có chữ chung)
-  const text = (m: Mail) => {
-    const a =
-      m.k === 'eventTop' ? [m.a?.[0], L.event.theme[m.a?.[1] as keyof typeof L.event.theme] ?? m.a?.[1]] : (m.a ?? [])
-    return (L.mail.msg[m.k] ?? L.mail.msg.unknown)(...a)
-  }
+  const text = (m: Mail) => mailText(L, m)
 </script>
 
 <Sheet {open} {onclose} title={tab === 'mail' ? L.mail.title : L.report.title}>

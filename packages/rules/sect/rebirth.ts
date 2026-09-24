@@ -45,10 +45,10 @@ export function seasonEnd(s: State, t: number, n: number, season?: number): Stat
 }
 
 // Căn cơ của kiếp thứ n + 1 (n = số lần đã luân hồi): Chủ điện và mọi công trình đã mở ở tầng đó
-export function rebirthLevels(n: number) {
-  const hall = Math.min(REBIRTH_HEAD_MAX, 1 + REBIRTH_HEAD * n)
-  return Object.fromEntries(IDS.map(id => [id, BUILDINGS[id].unlock <= hall ? hall : 0])) as Record<BuildingId, number>
-}
+export const rebirthLevels = (n: number) => levelsAt(Math.min(REBIRTH_HEAD_MAX, 1 + REBIRTH_HEAD * n))
+// Chủ điện và mọi công trình đã mở ở tầng hall (căn cơ luân hồi, phân đà NPC)
+export const levelsAt = (hall: number) =>
+  Object.fromEntries(IDS.map(id => [id, BUILDINGS[id].unlock <= hall ? hall : 0])) as Record<BuildingId, number>
 
 export type RebirthAction = { type: 'rebirth' }
 

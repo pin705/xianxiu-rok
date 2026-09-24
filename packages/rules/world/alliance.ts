@@ -1,11 +1,11 @@
 // Tiên minh: lập, vào, chức vị, bố cáo, nhờ giúp / giúp việc, viện binh (đóng quân ở nhà đồng minh).
 import { no } from '../core/action.ts'
-import { armyError } from '../core/battle.ts'
+import { marchError, launch } from '../core/battle.ts'
 import { cleanText, id, int, isElder, JOB_KINDS, oneOf, pickArmy } from '../core/parse.ts'
-import { marchSlots, power } from '../core/stats.ts'
+import { power } from '../core/stats.ts'
 import { advance, hasten, jobOf } from '../core/time.ts'
 import { type Army, type JobKind, type March, type State } from '../core/types.ts'
-import { minus } from '../core/util.ts'
+import { compact } from '../core/util.ts'
 import {
   ALLY_COST,
   ALLY_ELDERS,
@@ -16,7 +16,6 @@ import {
   HELP_SHARE,
   REINFORCE_MAX,
   RESOURCES,
-  UNITS,
   type ElderId,
 } from '../data.ts'
 import {
@@ -246,9 +245,9 @@ function aidAct({ ps, w, pid, s, seed, map }: Ctx, a: { pid: number; elder: Elde
   if (s.marches.some(m => m.task === 'aid' && m.target.i === a.pid)) return no('busy')
   const go = raidPath(s, to, map)
   if (!go) return no('far')
-  const e = armyError(s, a.elder, a.army) ?? (s.marches.length >= marchSlots(s) ? 'slots' : null)
+  const e = marchError(s, a.elder, a.army)
   if (e) return no(e)
-  const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
+  const army = compact(a.army)
   const m: March = {
     id: s.nextId,
     elder: a.elder,
@@ -262,11 +261,5 @@ function aidAct({ ps, w, pid, s, seed, map }: Ctx, a: { pid: number; elder: Elde
     returnAt: 0,
     ...(go.path && { path: go.path }),
   }
-  return {
-    ok: true,
-    world: w,
-    changed: new Map([
-      [pid, { ...s, troops: minus(s.troops, army), marches: [...s.marches, m], nextId: s.nextId + 1 }],
-    ]),
-  }
+  return { ok: true, world: w, changed: new Map([[pid, launch(s, army, m)]]) }
 }

@@ -170,6 +170,7 @@ test('thư: quà nhận đúng một lần; hộp thư đầy thì bỏ thư cũ
   let s = mail(sect('A', 5), {
     at: T0,
     k: 'gift',
+    a: [],
     gift: { res: { linhThach: 500 }, items: { tuKhi: 2 }, elder: 'nhuYen' },
   })
   const id = s.mail[0].id
@@ -179,7 +180,8 @@ test('thư: quà nhận đúng một lần; hộp thư đầy thì bỏ thư cũ
   assert.equal(got.elders.nhuYen, 0)
   assert.equal(apply(got, { type: 'mail', id }, T0).ok, false)
   assert.equal(apply(got, { type: 'mail', id: 999 }, T0).ok, false)
-  for (let i = 0; i < 40; i++) s = mail(s, { at: T0, k: 'gift', ...(i === 0 && { gift: { res: { linhThao: 1 } } }) })
+  for (let i = 0; i < 40; i++)
+    s = mail(s, { at: T0, k: 'gift', a: [], ...(i === 0 && { gift: { res: { linhThao: 1 } } }) })
   assert.equal(s.mail.length, 30)
   assert.ok(
     s.mail.some(m => m.id === id),

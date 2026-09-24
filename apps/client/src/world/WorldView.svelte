@@ -1,6 +1,7 @@
 <script lang="ts">
   // Bản đồ giới: cảnh WebGL (worldmap.ts) + lớp HTML nhận cử chỉ (kéo có quán tính, chụm, con lăn, phím) + ghim tên tông môn
   // + dải trên (ngày, pha mùa, biên niên). Dữ liệu sống: ảnh chụp server đẩy khi đổi (watch). Chạm: cờ hành quân → tông môn → điểm → ô.
+  import { chronText } from '@rok/i18n'
   import { onMount, type Snippet } from 'svelte'
   import type { State } from '@rok/rules'
   import { MAP_W, SEASON_DAYS, dayIn, phaseOf, type MapSnap } from '@rok/rules/world'
@@ -183,7 +184,6 @@
       .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))
       .slice(0, 60)
   })
-  const chronText = (k: string, a: (string | number)[]) => (L.world.msg[k] ?? L.world.msg.unknown)(...a)
 </script>
 
 <div
@@ -217,13 +217,13 @@
     </div>
     {#if snap?.chron.length}
       <button class="chron" onclick={() => (chronOpen = !chronOpen)} aria-expanded={chronOpen}>
-        <small class="t-tiny"><b>{L.world.chron}:</b> {chronText(snap.chron.at(-1)!.k, snap.chron.at(-1)!.a)}</small>
+        <small class="t-tiny"><b>{L.world.chron}:</b> {chronText(L, snap.chron.at(-1)!)}</small>
       </button>
       {#if chronOpen}
         <ol class="stack" style:--gap="2px">
           {#each [...snap.chron].reverse().slice(0, 8) as c, i (i)}
             <li class="t-tiny">
-              {chronText(c.k, c.a)} ·
+              {chronText(L, c)} ·
               <span class="t-faint">{clock(Math.max(0, now - c.at)).replace(/:\d\d$/, '')}</span>
             </li>
           {/each}

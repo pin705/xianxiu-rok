@@ -1,7 +1,7 @@
 // Khung cho thao tác: mỗi tính năng (sect/*.ts) khai báo kiểu thao tác, cách đọc từ JSON (pick) và luật (run).
 import { type Err, type Items, type Result, type State } from './types.ts'
 import { bag } from './util.ts'
-import { type Bag, type ElderId, type PillId } from '../data.ts'
+import { type Bag, type PillId } from '../data.ts'
 
 export const ok = (state: State): Result => ({ ok: true, state })
 export const no = (error: Err): { ok: false; error: Err } => ({ ok: false, error })
@@ -14,5 +14,3 @@ export type Actions<A extends { type: string }> = {
 
 export const pay = (s: State, c: Bag): Bag => bag(r => s.res[r] - c[r])
 export const use = (s: State, p: PillId, n = 1): Items => ({ ...s.items, [p]: (s.items[p] ?? 0) - n })
-// Đội đang xuất chinh mang theo trưởng lão như lúc xuất quân: không đổi pháp bảo, thiên phú giữa đường
-export const isMarching = (s: State, e?: ElderId | null) => !!e && s.marches.some(m => m.elder === e)

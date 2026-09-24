@@ -1,20 +1,23 @@
 // Độ kiếp: ba đợt lôi kiếp để lên tầng Chủ điện kế; trong giới thì kiếp vân tụ công khai, server giải lúc giáng.
-import { no, ok, use, type Actions } from '../core/action.ts'
+import { no, ok, use, type Actions, pay } from '../core/action.ts'
 import { admit, armyError, giveExp, pushReport, tribPill, tribulation } from '../core/battle.ts'
 import { bump } from '../core/calendar.ts'
 import { isElder, pickArmy } from '../core/parse.ts'
 import { cost, lead, marchSlots } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Err, type March, type State } from '../core/types.ts'
-import { addBag, afford, bag, minus, nextSeed, plus } from '../core/util.ts'
+import { addBag, afford, minus, nextSeed, plus, compact } from '../core/util.ts'
 import { LOSS_EXP, TRIB_CLOUD, TRIB_COOLDOWN, TRIB_EXP, TRIBS, UNITS, type ElderId, type PillId } from '../data.ts'
+
+// Chi phí độ kiếp: bằng chi phí lên tầng Chủ điện kế
+export const tribPrice = (s: State) => cost('chuDien', TRIBS[s.trib].hall + 1)
 
 export function tribError(s: State): Err | null {
   const tr = TRIBS[s.trib]
   if (!tr || s.levels.chuDien !== tr.hall) return 'locked'
   if (s.marches.some(m => m.target.kind === 'trib')) return 'busy'
   if (s.tribCool > s.time) return 'cooldown'
-  return afford(s.res, cost('chuDien', tr.hall + 1)) ? null : 'not_enough'
+  return afford(s.res, tribPrice(s)) ? null : 'not_enough'
 }
 
 // Kiếp giáng lúc at: đội độ kiếp (đã rời khỏi s.troops) đánh ba đợt, người còn đứng về nhà, thương binh vào Đan phòng.
@@ -37,13 +40,13 @@ function settle(
   const adm = admit({ ...s, troops: plus(s.troops, Object.fromEntries(ids.map((u, i) => [u, r.left[i]]))) }, hurt)
   const exp = Math.round(TRIB_EXP[k] * (1 + lead(s, elder, 'exp')) * (r.win ? 1 : LOSS_EXP))
   const st = giveExp(adm.state, elder, exp)
-  const price = cost('chuDien', tr.hall + 1)
+  const price = tribPrice(s)
   const next = r.win
     ? bump(
         {
           ...st,
           trib: k + 1,
-          res: paid ? st.res : bag(x => st.res[x] - price[x]),
+          res: paid ? st.res : pay(st, price),
           levels: { ...st.levels, chuDien: tr.hall + 1 },
         },
         'win',
@@ -97,7 +100,7 @@ export const tribActions: Actions<TribAction> = {
       const p = tribPill(s, a.pill)
       if (a.pill && !p) return no('no_item')
       const t = s.time
-      const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
+      const army = compact(a.army)
       const sent: State = { ...s, troops: minus(s.troops, army), items: p ? use(s, p) : s.items }
       if (!s.seat) {
         const r = settle(sent, a.elder, army, p, s.seed, t, 1, false)
@@ -107,7 +110,6 @@ export const tribActions: Actions<TribAction> = {
       // Đội độ kiếp là một đội xuất quân (chiếm một lượt)
       if (s.marches.length >= marchSlots(s)) return no('slots')
       const k = s.trib
-      const price = cost('chuDien', TRIBS[k].hall + 1)
       const m: March = {
         id: s.nextId,
         elder: a.elder,
@@ -121,7 +123,7 @@ export const tribActions: Actions<TribAction> = {
       }
       return ok({
         ...sent,
-        res: bag(r => sent.res[r] - price[r]),
+        res: pay(s, tribPrice(s)),
         marches: [...sent.marches, m],
         nextId: s.nextId + 1,
         seed: nextSeed(s.seed),

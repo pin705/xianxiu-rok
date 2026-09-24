@@ -22,7 +22,7 @@ import {
   mail,
   type Target,
 } from '@rok/rules'
-import { advanceWorld, atlas, freshWorld, mapOf, spawn, worldAct } from '@rok/rules/world'
+import { advanceWorld, atlas, freshWorld, mapOf, spawn, worldAct, type Chron } from '@rok/rules/world'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 let vite: ViteDevServer
@@ -216,12 +216,11 @@ function raided(): [State, State] {
   for (const [id, x] of advanceWorld(ps, at)) ps.set(id, x)
   const gift = { res: { linhThach: 5000 }, items: { daiTuKhi: 1 } }
   const b = mail(
-    mail(
-      { ...ps.get(2)!, ev: { ...late.ev, pts: 320, got: [true, false, false, false, false] } },
-      { at, k: 'eventTop', a: [2, 'raid'], gift },
-    ),
-    { at, k: 'khoáLạ', a: [1] },
+    { ...ps.get(2)!, ev: { ...late.ev, pts: 320, got: [true, false, false, false, false] } },
+    { at, k: 'eventTop', a: [2, 'raid'], gift },
   )
+  // thư từ server mới hơn: khoá client chưa biết vẫn phải hiện được
+  b.mail.push({ id: b.nextId++, at, k: 'khoáLạ', a: [1] })
   return [ps.get(1)!, b]
 }
 const [raider, victim] = raided()
@@ -637,7 +636,7 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
     new Set([2]),
     [
       { at: late.time, k: 'found', a: ['Lạc Hà Tông'] },
-      { at: late.time, k: 'khoáLạ', a: [] },
+      { at: late.time, k: 'khoáLạ', a: [] } as unknown as Chron, // server mới hơn client: khoá lạ vẫn hiện được
     ],
     w,
   )

@@ -5,6 +5,7 @@ import { marchTime } from '../core/battle.ts'
 import { cutOf } from '../core/stats.ts'
 import { type Err, type JobKind, type March, type State } from '../core/types.ts'
 import { type PillId } from '../data.ts'
+import { noGain } from '../core/util.ts'
 
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
 export type MapCtx = { atlas: Atlas; phase: number }
@@ -12,8 +13,10 @@ export type MapCtx = { atlas: Atlas; phase: number }
 export function raidPath(att: State, def: State, map?: MapCtx): { path?: Pos[]; ms: number } | null {
   if (!map || !att.seat || !def.seat) return { ms: marchTime(att, { kind: 'pvp', i: 0 }) }
   const r = route(map.atlas, att.seat, def.seat, map.phase)
-  return r && { path: r.path, ms: Math.round(r.len * TILE_TIME * cutOf(att, 'march')) }
+  return r && { path: r.path, ms: routeMs(att, r.len) }
 }
+// Thời gian đi hết len ô đường trên bản đồ giới (công pháp hành quân rút ngắn)
+export const routeMs = (s: State, len: number) => Math.round(len * TILE_TIME * cutOf(s, 'march'))
 
 export type Players = Map<number, State>
 
@@ -97,7 +100,7 @@ export const turnBack = (s: State, m: March, at: number): State => ({
           stay: false,
           back: m.army,
           hurt: m.hurt ?? {},
-          gain: { res: {}, items: {}, exp: 0 },
+          gain: noGain(),
           returnAt: at + (at - m.startAt),
         }
       : x,

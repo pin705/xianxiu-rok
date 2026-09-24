@@ -25,13 +25,14 @@ import {
 } from '../data.ts'
 
 export const DEFAULT_NAME = 'Thanh Vân Tông'
+export const SAVE_VERSION = 4 // đổi khuôn State: tăng số này, thêm một bước nâng bản trong upgradeSave
 
 export function newGame(now: number, name = DEFAULT_NAME): State {
   const levels = Object.fromEntries(IDS.map(id => [id, 0])) as Record<BuildingId, number>
   levels.chuDien = 1
   const clean = name.trim().replace(/\s+/g, ' ').slice(0, 20) || DEFAULT_NAME
   return {
-    v: 4,
+    v: SAVE_VERSION,
     name: clean,
     quest: 0,
     time: now,
@@ -100,7 +101,7 @@ const V2_QUESTS: [BuildingId, number][] = [
 ]
 export function migrate(raw: unknown): State | null {
   try {
-    const s = upgrade(raw)
+    const s = upgradeSave(raw)
     return s && valid(s) ? s : null
   } catch {
     return null // khuôn lạ tới mức nâng bản cũng vỡ
@@ -115,7 +116,7 @@ const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >=
 const isTimed = (j: unknown) => j === null || (obj(j) && num(j.startAt) && num(j.finishAt))
 function valid(s: any): s is State {
   return (
-    s.v === 4 &&
+    s.v === SAVE_VERSION &&
     typeof s.name === 'string' &&
     num(s.quest) &&
     num(s.time) &&
@@ -213,7 +214,7 @@ function valid(s: any): s is State {
   )
 }
 
-function upgrade(raw: unknown) {
+function upgradeSave(raw: unknown) {
   let s = raw as any
   if (!s || typeof s !== 'object') return null
   if (s.v === 1) s = { ...s, v: 2, name: DEFAULT_NAME, quest: 0 }
@@ -250,7 +251,7 @@ function upgrade(raw: unknown) {
       buffs: [],
     }
   }
-  if (s.v !== 4 || typeof s.time !== 'number') return null
+  if (s.v !== SAVE_VERSION || typeof s.time !== 'number') return null
   // Trường thêm sau (trong cùng bản): thiếu thì lấy mặc định
   if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save làm trước khi có nhiệm vụ ngày
   if (!s.weekly) s = { ...s, weekly: freshWeekly(s.time) } // … nhiệm vụ tuần

@@ -1,18 +1,18 @@
 // Trận nhiều bên: phòng thủ nhà (trưởng lão giữ nhà, Hộ Sơn Đại Trận), dò thám, gộp / tách đội, sức mang.
-import { fight, type Side } from '../combat.ts'
-import { sideOf } from '../core/battle.ts'
-import { elderLevel, unitOf } from '../core/stats.ts'
+import { fight, type Side, type Round } from '../combat.ts'
+import { sideOf, chance } from '../core/battle.ts'
+import { elderLevel, unitOf, isMarching } from '../core/stats.ts'
 import { type Army, type March, type State } from '../core/types.ts'
 import { CARRY, GUARD_STEP, TIER, UNITS, type ElderId } from '../data.ts'
+import { compact } from '../core/util.ts'
 
 // Trưởng lão giữ nhà chỉ tính khi đang ở tông môn
 export const guardOf = (s: State) =>
-  s.guard && s.elders[s.guard] !== undefined && !s.marches.some(m => m.elder === s.guard) ? s.guard : null
+  s.guard && s.elders[s.guard] !== undefined && !isMarching(s, s.guard) ? s.guard : null
 
 // Bên thủ: mọi đệ tử đang ở nhà, trưởng lão giữ nhà dẫn (không có thì chỉ bonus tông môn), Hộ Sơn Đại Trận thêm thủ và máu
 export function defense(s: State): Side {
-  const army = Object.fromEntries(UNITS.filter(u => s.troops[u] > 0).map(u => [u, s.troops[u]])) as Army
-  const side = sideOf(s, guardOf(s), army)
+  const side = sideOf(s, guardOf(s), compact(s.troops))
   const k = 1 + GUARD_STEP * s.levels.hoSonDaiTran
   return { ...side, troops: side.troops.map(t => ({ ...t, def: t.def * k, hp: t.hp * k })) }
 }
@@ -41,8 +41,6 @@ export function combine(parts: Side[]): { side: Side; at: number[] } {
   for (const p of parts) (at.push(k), (k += p.troops.length))
   return { side: { troops: parts.flatMap(p => p.troops), skill: parts[0]?.skill, el: parts[0]?.el }, at }
 }
-export const armyOf = (m: March) =>
-  Object.fromEntries(UNITS.filter(u => (m.army[u] ?? 0) > 0).map(u => [u, m.army[u]!])) as Army
 // số còn lại của đội thứ j (nhóm quân theo thứ tự UNITS có mặt) từ mảng n của trận gộp
 export function split(m: March, n: number[], from: number): { left: Army; hurt: Army } {
   const ids = UNITS.filter(u => (m.army[u] ?? 0) > 0)
@@ -56,7 +54,9 @@ export const addArmy = (a: Army = {}, b: Army) =>
 // Tỉ lệ thắng ước lượng khi đi cướp, đánh thử với phòng thủ đã dò thám (9 mầm cố định như winChance, không phải mầm thật)
 export function raidChance(s: State, elder: ElderId, army: Army, foe: Side) {
   if (!Object.values(army).some(Boolean) || s.elders[elder] === undefined) return 0
-  let won = 0
-  for (let k = 1; k <= 9; k++) if (fight(sideOf(s, elder, army), foe, Math.imul(k, 0x9e3779b1) >>> 0).win) won++
-  return won / 9
+  return chance(seed => fight(sideOf(s, elder, army), foe, seed).win)
 }
+
+// Trận nhìn từ phía bên kia (chiến báo của bên thủ)
+export const flipRounds = (rounds: Round[]): Round[] =>
+  rounds.map(r => ({ n: [r.n[1], r.n[0]], cast: [r.cast[1], r.cast[0]] }))

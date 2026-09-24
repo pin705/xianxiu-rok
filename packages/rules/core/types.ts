@@ -15,6 +15,7 @@ import {
   type UnitId,
   type UnitType,
   type WeeklyId,
+  type EventId,
 } from '../data.ts'
 
 export type Troops = Record<UnitId, number>
@@ -78,7 +79,22 @@ export type Daily = { day: number; n: Record<DailyId, number>; got: boolean[]; b
 export type Weekly = { week: number; n: Record<WeeklyId, number>; got: boolean[]; bonus: boolean }
 export type Ev = { week: number; pts: number; got: boolean[] } // sự kiện tuần: điểm, mốc đã nhận
 export type Foe = { pid: number; name: string; at: number } // ai đã đánh mình (báo thù)
-// Thư: chữ dựng ở client theo khoá k (@rok/i18n), quà nhận đúng một lần
+// Thư: chữ dựng ở client theo khoá k và tham số a (@rok/i18n mailText), quà nhận đúng một lần.
+// Thêm loại thư: thêm khoá vào MailArgs — i18n báo thiếu chữ ở mọi ngôn ngữ.
+export type MailArgs = {
+  eventTop: [rank: number, theme: EventId]
+  admin: [title: string, body: string]
+  gift: []
+  comp: []
+  boss: [lv: number, rank: number, pct: number]
+  season: [season: number, rank: number, up: 0 | 1]
+  sold: [good: string, n: number, net: number]
+  unsold: [good: string, n: number]
+}
+export type MailKind = keyof MailArgs
+// Thư mới (chưa có id): a bắt buộc, đúng kiểu theo khoá
+export type NewMail = { [K in MailKind]: { at: number; k: K; a: MailArgs[K]; gift?: Reward } }[MailKind]
+// Thư đã lưu: save cũ có thể thiếu a; server mới hơn client có thể gửi khoá client chưa biết
 export type Mail = { id: number; at: number; k: string; a?: (string | number)[]; gift?: Reward; got?: boolean }
 
 export type State = {
@@ -153,4 +169,5 @@ export type Err =
   | 'taken'
   | 'full'
   | 'limit'
+  | 'claimed' // phần thưởng đã nhận rồi
 export type Result = { ok: true; state: State } | { ok: false; error: Err }

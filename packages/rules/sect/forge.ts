@@ -1,8 +1,8 @@
 // Pháp bảo: luyện ở Luyện Khí Phòng, đeo cho trưởng lão.
-import { isMarching, no, ok, pay, type Actions } from '../core/action.ts'
+import { no, ok, pay, type Actions } from '../core/action.ts'
 import { evBump } from '../core/calendar.ts'
 import { isElder, oneOf } from '../core/parse.ts'
-import { gearCap, gearCost, gearTime } from '../core/stats.ts'
+import { gearCap, gearCost, gearTime, isMarching } from '../core/stats.ts'
 import { type Err, type State } from '../core/types.ts'
 import { afford, GEAR_IDS } from '../core/util.ts'
 import { GEAR_MAX, type ElderId, type GearId } from '../data.ts'

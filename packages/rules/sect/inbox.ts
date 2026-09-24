@@ -2,7 +2,7 @@
 import { no, ok, type Actions } from '../core/action.ts'
 import { grant } from '../core/battle.ts'
 import { int } from '../core/parse.ts'
-import { type Mail, type State } from '../core/types.ts'
+import { type State, type NewMail } from '../core/types.ts'
 import { MAIL_MAX } from '../data.ts'
 
 const BLOCKS_MAX = 100
@@ -22,7 +22,7 @@ export const inboxActions: Actions<InboxAction> = {
     run: (s, a) => {
       const m = s.mail.find(x => x.id === a.id)
       if (!m?.gift) return no('empty')
-      if (m.got) return no('max_level')
+      if (m.got) return no('claimed')
       return ok({ ...grant(s, m.gift), mail: s.mail.map(x => (x === m ? { ...x, got: true } : x)) })
     },
   },
@@ -37,7 +37,7 @@ export const inboxActions: Actions<InboxAction> = {
 }
 
 // Mọi phần thưởng từ ngoài (admin, sự kiện, xếp hạng, bồi thường) chỉ đi qua đây. Đầy thì bỏ thư cũ đã nhận (hoặc không có quà) trước.
-export function mail(s: State, m: Omit<Mail, 'id'>): State {
+export function mail(s: State, m: NewMail): State {
   const box = [...s.mail, { ...m, id: s.nextId }]
   while (box.length > MAIL_MAX) {
     const i = box.findIndex(x => !x.gift || x.got)

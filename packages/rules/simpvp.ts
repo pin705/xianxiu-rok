@@ -2,20 +2,9 @@
 //   npm run sim -- 30 4 --pvp 20
 // Cổng (plan M5): trung vị tầng ≥ 15 sau 30 ngày; đồ bị cướp ≤ 25 % sản lượng; người không đi cướp (giữ được khiên) không bị cướp
 // thành công > 3 lần/ngày. Ai vừa đi cướp thì tự bỏ khiên (đúng luật), bị đánh lại nhiều là chuyện họ chọn — không tính.
-import {
-  RESOURCES,
-  SHIELD_TIME,
-  TRIBS,
-  UNITS,
-  advance,
-  dayOf,
-  newGame,
-  rate,
-  type ElderId,
-  type State,
-} from './index.ts'
+import { RESOURCES, SHIELD_TIME, SURE_WIN, TRIBS, advance, dayOf, newGame, rate, type State } from './index.ts'
 import { advanceWorld, raidChance, rivals, worldAct, type Players } from './world.ts'
-import { turn } from './bot.ts'
+import { firstIdle, homeArmy, turn } from './bot.ts'
 
 const DAY = 86_400_000,
   HOUR = 3_600_000
@@ -67,12 +56,12 @@ for (let d = 0; d < days; d++)
       let s = advance(ps.get(pid)!, t)
       ps.set(pid, s)
       // thử cướp trước (đội đang ở nhà, chắc thắng theo dò thám), rồi chơi như thường
-      const e = (Object.keys(s.elders) as ElderId[]).find(x => !s.marches.some(m => m.elder === x))
-      const army = Object.fromEntries(UNITS.filter(u => s.troops[u] > 0).map(u => [u, s.troops[u]]))
+      const e = firstIdle(s)
+      const army = homeArmy(s)
       const trib = TRIBS[s.trib]?.hall === s.levels.chuDien // sắp độ kiếp: giữ quân ở nhà
       if (e && Object.keys(army).length && !trib)
         for (const r of rivals(ps, pid, t, rand)) {
-          if (raidChance(s, e, army, r.scout.side) < 0.8) continue
+          if (raidChance(s, e, army, r.scout.side) < SURE_WIN) continue
           const res = worldAct(ps, pid, { type: 'raid', pid: r.pid, elder: e, army }, t, (rand() * 2 ** 32) >>> 0 || 1)
           if (res.ok) (set(res.changed), attacked.set(pid, t))
           break

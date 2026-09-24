@@ -38,7 +38,19 @@ import {
   type State,
   type Target,
   type UnitId,
+  compact,
+  isMarching,
+  expAt,
+  levelsAt,
+  newGame,
+  NPC_ELDER,
+  NPC_HALL,
+  NPC_RES,
+  NPC_TROOPS,
+  REVENGE_TIME,
+  SURE_WIN,
 } from './index.ts'
+import { raidChance, regionOf, scout, type Atlas, type Players, type World, type WorldAction } from './world.ts'
 
 export type BotOpts = {
   casual?: boolean // người chơi thường: chỉ đánh khi giao diện báo ≥ 80% thắng
@@ -63,9 +75,10 @@ const GEAR_PLAN: GearId[] = [
 ]
 const BREWS: PillId[] = PILL_IDS.filter(p => p !== 'taiTuy' && p !== 'ngungThan').reverse()
 
-const home = (st: State): Army => Object.fromEntries(UNITS.filter(u => st.troops[u] > 0).map(u => [u, st.troops[u]]))
-const idleElders = (st: State) =>
-  ELDER_IDS.filter(e => st.elders[e] !== undefined && !st.marches.some(m => m.elder === e)).sort(
+// Mọi đệ tử đang ở nhà; trưởng lão rảnh (mạnh nhất trước)
+export const homeArmy = (st: State): Army => compact(st.troops)
+export const idleElders = (st: State) =>
+  ELDER_IDS.filter(e => st.elders[e] !== undefined && !isMarching(st, e)).sort(
     (a, b) => elderLevel(st.elders[b]) - elderLevel(st.elders[a]),
   )
 
@@ -81,7 +94,7 @@ export function turn(start: State, o: BotOpts = {}): State {
   // Bot giỏi biết trước kết quả thật; người chơi thường chỉ thấy tỉ lệ thắng ước lượng trên giao diện
   const wins = (st: State, e: ElderId, army: Army, t: Target | 'trib', pill = false) =>
     casual
-      ? winChance(st, e, army, t, pill) >= 0.8
+      ? winChance(st, e, army, t, pill) >= SURE_WIN
       : t === 'trib'
         ? true
         : fight(sideOf(st, e, army), enemyOf(st, t), st.seed).win
@@ -152,8 +165,8 @@ export function turn(start: State, o: BotOpts = {}): State {
       const e = idleElders(s)[0]
       if (e) {
         const pill = !!s.items.doKiep
-        const r = apply(s, { type: 'trib', elder: e, army: home(s), pill }, s.time)
-        if (casual && r.ok && wins(s, e, home(s), 'trib', pill)) {
+        const r = apply(s, { type: 'trib', elder: e, army: homeArmy(s), pill }, s.time)
+        if (casual && r.ok && wins(s, e, homeArmy(s), 'trib', pill)) {
           s = r.state // người chơi thường đánh theo ước lượng: có thể thua, phải chờ
           note(
             `${r.state.reports.at(-1)!.win ? 'ĐỘ KIẾP thành công' : 'độ kiếp THẤT BẠI'} → Chủ điện ${s.levels.chuDien} (${count(r.state.troops)} đệ tử)`,
@@ -173,8 +186,8 @@ export function turn(start: State, o: BotOpts = {}): State {
       const e = idleElders(s)[0]
       if (!e || !count(s.troops)) break
       const t: Target = { kind: 'realm', i }
-      const r = apply(s, { type: 'realm', i, elder: e, army: home(s) }, s.time)
-      if (r.ok && wins(s, e, home(s), t) && (casual || r.state.reports.at(-1)!.win)) {
+      const r = apply(s, { type: 'realm', i, elder: e, army: homeArmy(s) }, s.time)
+      if (r.ok && wins(s, e, homeArmy(s), t) && (casual || r.state.reports.at(-1)!.win)) {
         s = r.state
         if (r.state.reports.at(-1)!.win) note(`bí cảnh ${i + 1} tầng ${s.realms[i]}`)
         acted = true
@@ -186,8 +199,8 @@ export function turn(start: State, o: BotOpts = {}): State {
       const e = idleElders(s)[0]
       if (!e || !count(s.troops)) break
       const t: Target = { kind: 'tower', i: 0 }
-      const r = apply(s, { type: 'tower', elder: e, army: home(s) }, s.time)
-      if (!r.ok || !wins(s, e, home(s), t) || !(casual || r.state.reports.at(-1)!.win)) break
+      const r = apply(s, { type: 'tower', elder: e, army: homeArmy(s) }, s.time)
+      if (!r.ok || !wins(s, e, homeArmy(s), t) || !(casual || r.state.reports.at(-1)!.win)) break
       s = r.state
       if (r.state.reports.at(-1)!.win) note(`tháp tầng ${s.tower}`)
       acted = true
@@ -195,7 +208,7 @@ export function turn(start: State, o: BotOpts = {}): State {
     // Xuất quân: tông môn chưa hạ trước, rồi yêu thú cấp cao nhất đánh thắng được
     for (const e of ready(s, o) ? [] : idleElders(s)) {
       if (!count(s.troops)) break
-      const army = home(s)
+      const army = homeArmy(s)
       const targets: Target[] = [
         ...SECTS.map((_, i) => ({ kind: 'sect', i }) as Target).filter(t => !s.sects[t.i]),
         ...BEASTS.map((_, i) => ({ kind: 'beast', i }) as Target).reverse(),
@@ -255,4 +268,46 @@ export function turn(start: State, o: BotOpts = {}): State {
     if (!acted) break
   }
   return s
+}
+
+// ---------- Phân đà NPC của giới (server gọi: mỗi NPC_EVERY một lượt) ----------
+
+// Lúc lập: đội thủ vừa phải, không khiên tân thủ (là mục tiêu cho người chơi ngay từ đầu)
+export function npcState(now: number, name: string, seat: { x: number; y: number }): State {
+  const s = newGame(now, name)
+  return {
+    ...s,
+    name,
+    seat,
+    levels: levelsAt(NPC_HALL),
+    trib: TRIBS.filter(t => t.hall < NPC_HALL).length,
+    shield: 0,
+    guard: 'thanhPhong',
+    elders: { thanhPhong: expAt(NPC_ELDER) },
+    troops: { ...s.troops, kiem2: NPC_TROOPS, phap2: NPC_TROOPS, the2: NPC_TROOPS },
+    res: { linhThach: NPC_RES, linhThao: NPC_RES, linhKhoang: NPC_RES },
+  }
+}
+// Trưởng lão rảnh đầu tiên (theo thứ tự thu nhận)
+export const firstIdle = (s: State) => (Object.keys(s.elders) as ElderId[]).find(x => !isMarching(s, x))
+
+// Giữ linh mạch trong vùng mình: chưa đóng quân ở đâu mà vùng còn mạch trống thì đem nửa quân tới đóng
+export function npcHold(s: State, a: Atlas, w: World): WorldAction | null {
+  if (!s.seat || s.marches.some(m => m.target.kind === 'spot')) return null
+  const region = regionOf(a, s.seat)
+  const vein = a.points.find(p => p.kind === 'vein' && p.region === region && w.spots[p.i]?.own === undefined)
+  const e = firstIdle(s)
+  if (!vein || !e) return null
+  const army = Object.fromEntries(UNITS.filter(u => s.troops[u] >= 2).map(u => [u, Math.floor(s.troops[u] / 2)]))
+  return Object.keys(army).length ? { type: 'go', i: vein.i, task: 'take', elder: e, army } : null
+}
+
+// Phản kích kẻ vừa cướp mình nếu chắc thắng. NPC không bao giờ tự khởi đầu PvP.
+export function npcRevenge(s: State, ps: Players, now: number): WorldAction | null {
+  const foe = [...s.foes].reverse().find(f => f.at + REVENGE_TIME > now)
+  const target = foe && ps.get(foe.pid)
+  const e = firstIdle(s)
+  const army = homeArmy(s)
+  if (!foe || !target || !e || !count(army) || raidChance(s, e, army, scout(target).side) < SURE_WIN) return null
+  return { type: 'raid', pid: foe.pid, elder: e, army }
 }

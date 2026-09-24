@@ -3,7 +3,16 @@ import { type Pos } from '../atlas.ts'
 import { power } from '../core/stats.ts'
 import { freshWorld, garrison, type Players, type World } from './base.ts'
 
-export type Chron = { at: number; k: string; a: (string | number)[] } // biên niên của giới: chữ dựng ở client theo khoá
+// Biên niên của giới: chữ dựng ở client theo khoá (@rok/i18n chronText). Thêm loại: thêm khoá ở đây — i18n báo thiếu chữ.
+export type ChronArgs = {
+  found: [name: string]
+  raid: [attacker: string, defender: string, win: 0 | 1]
+  trib: [name: string, hall: number]
+  season: [season: number]
+  boss: [lv: number]
+}
+export type ChronKind = keyof ChronArgs
+export type Chron = { [K in ChronKind]: { at: number; k: K; a: ChronArgs[K] } }[ChronKind]
 export type Seat = {
   pid: number
   name: string

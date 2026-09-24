@@ -5,7 +5,7 @@ import { dailyDone, dailyReward, weeklyDone, weeklyReward } from '../core/calend
 import { int } from '../core/parse.ts'
 import { gearSum, techSum, totalTroops } from '../core/stats.ts'
 import { type State } from '../core/types.ts'
-import { addBag, addItems, bag } from '../core/util.ts'
+import { addBag, addItems, bag, mark } from '../core/util.ts'
 import {
   DAILY,
   DAILY_BONUS,
@@ -70,13 +70,13 @@ export const taskActions: Actions<TaskAction> = {
     pick: a => (int(0, DAILY.length - 1)(a.i) ? { type: 'daily', i: a.i } : null),
     run: (s, a) => {
       if (s.levels.chuDien < DAILY_HALL || !DAILY[a.i]) return no('locked')
-      if (s.daily.got[a.i]) return no('max_level')
+      if (s.daily.got[a.i]) return no('claimed')
       if (!dailyDone(s, a.i)) return no('not_done')
       const n = dailyReward(s)
       return ok({
         ...s,
         res: bag(r => s.res[r] + n),
-        daily: { ...s.daily, got: s.daily.got.map((x, k) => x || k === a.i) },
+        daily: { ...s.daily, got: mark(s.daily.got, a.i) },
       })
     },
   },
@@ -84,7 +84,7 @@ export const taskActions: Actions<TaskAction> = {
     pick: () => ({ type: 'dailyBonus' }),
     run: s => {
       if (s.levels.chuDien < DAILY_HALL) return no('locked')
-      if (s.daily.bonus) return no('max_level')
+      if (s.daily.bonus) return no('claimed')
       if (!s.daily.got.every(Boolean)) return no('not_done')
       const w = s.weekly
       return ok({
@@ -99,13 +99,13 @@ export const taskActions: Actions<TaskAction> = {
     pick: a => (int(0, WEEKLY.length - 1)(a.i) ? { type: 'weekly', i: a.i } : null),
     run: (s, a) => {
       if (s.levels.chuDien < DAILY_HALL || !WEEKLY[a.i]) return no('locked')
-      if (s.weekly.got[a.i]) return no('max_level')
+      if (s.weekly.got[a.i]) return no('claimed')
       if (!weeklyDone(s, a.i)) return no('not_done')
       const n = weeklyReward(s)
       return ok({
         ...s,
         res: bag(r => s.res[r] + n),
-        weekly: { ...s.weekly, got: s.weekly.got.map((x, k) => x || k === a.i) },
+        weekly: { ...s.weekly, got: mark(s.weekly.got, a.i) },
       })
     },
   },
@@ -113,7 +113,7 @@ export const taskActions: Actions<TaskAction> = {
     pick: () => ({ type: 'weeklyBonus' }),
     run: s => {
       if (s.levels.chuDien < DAILY_HALL) return no('locked')
-      if (s.weekly.bonus) return no('max_level')
+      if (s.weekly.bonus) return no('claimed')
       if (!s.weekly.got.every(Boolean)) return no('not_done')
       return ok({ ...s, items: addItems(s.items, WEEKLY_BONUS), weekly: { ...s.weekly, bonus: true } })
     },
@@ -122,9 +122,9 @@ export const taskActions: Actions<TaskAction> = {
     pick: a => (int(0, EVENT_GOALS.length - 1)(a.i) ? { type: 'event', i: a.i } : null),
     run: (s, a) => {
       if (s.levels.chuDien < DAILY_HALL || !EVENT_GOALS[a.i]) return no('locked')
-      if (s.ev.got[a.i]) return no('max_level')
+      if (s.ev.got[a.i]) return no('claimed')
       if (s.ev.pts < EVENT_GOALS[a.i]) return no('not_done')
-      return ok({ ...grant(s, EVENT_REWARDS[a.i]), ev: { ...s.ev, got: s.ev.got.map((x, k) => x || k === a.i) } })
+      return ok({ ...grant(s, EVENT_REWARDS[a.i]), ev: { ...s.ev, got: mark(s.ev.got, a.i) } })
     },
   },
 }

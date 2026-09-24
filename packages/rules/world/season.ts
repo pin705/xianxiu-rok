@@ -1,7 +1,16 @@
 // Điểm mùa (giữ điểm trên bản đồ theo giờ), bảng mùa, hết mùa; top sự kiện tuần.
 import { type Point } from '../atlas.ts'
 import { HOUR } from '../core/util.ts'
-import { ASCEND, ASCEND_HALL, EVENT_TOP, MAX_LEVEL, SEASON_GATE, SEASON_HEAVEN, SEASON_VEIN } from '../data.ts'
+import {
+  ASCEND,
+  ASCEND_HALL,
+  EVENT_PRIZES,
+  EVENT_TOP,
+  MAX_LEVEL,
+  SEASON_GATE,
+  SEASON_HEAVEN,
+  SEASON_VEIN,
+} from '../data.ts'
 import { mail } from '../sect/inbox.ts'
 import { seasonEnd } from '../sect/rebirth.ts'
 import { freshWorld, setSpot, sideKey, type MapCtx, type Players, type Spot, type World } from './base.ts'
@@ -79,6 +88,8 @@ export function endSeason(
   }
 }
 
+// Quà thư hết tuần theo hạng (0: hạng 1): hạng 1 · 2–3 · 4–10
+export const eventPrize = (rank: number) => EVENT_PRIZES[rank === 0 ? 0 : rank < 3 ? 1 : 2]
 // Top EVENT_TOP của tuần week (người có điểm), cao nhất trước
 export const eventTop = (ps: Players, week: number) =>
   [...ps]

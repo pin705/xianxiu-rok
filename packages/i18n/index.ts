@@ -31,3 +31,14 @@ export function pick(saved: string | null, prefs: readonly string[]): Locale {
 }
 
 export const loadText = (l: Locale): Promise<Text> => LOCALES[l].load()
+
+// Chữ của thư hệ thống / một dòng biên niên theo khoá. Khoá lạ (server mới hơn client) vẫn hiện được chữ chung.
+type Say<R> = Record<string, ((...a: (string | number)[]) => R) | undefined>
+export function mailText(t: Text, m: { k: string; a?: readonly (string | number)[] }): [string, string] {
+  const f = (t.mail.msg as unknown as Say<[string, string]>)[m.k]
+  return f ? f(...(m.a ?? [])) : t.mail.msg.unknown()
+}
+export function chronText(t: Text, c: { k: string; a: readonly (string | number)[] }): string {
+  const f = (t.world.msg as unknown as Say<string>)[c.k]
+  return f ? f(...c.a) : t.world.msg.unknown()
+}

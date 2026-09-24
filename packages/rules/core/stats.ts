@@ -178,3 +178,5 @@ export const tradeKeep = (s: State) => Math.min(TRADE_KEEP_MAX, TRADE_KEEP + TRA
 
 export const realmOf = (level: number) => Math.min(5, Math.ceil(level / 5)) // 1 Luyện Khí · 2 Trúc Cơ · 3 Kim Đan · 4 Nguyên Anh · 5 Hóa Thần
 export const marchSlots = (s: State) => MARCH_SLOTS[realmOf(s.levels.chuDien) - 1]
+// Trưởng lão đang dẫn đội đi xa: không giữ nhà, không đổi pháp bảo / thiên phú giữa đường
+export const isMarching = (s: State, e?: ElderId | null) => !!e && s.marches.some(m => m.elder === e)

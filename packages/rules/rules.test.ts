@@ -381,10 +381,10 @@ test('nhiệm vụ ngày: đếm tiến độ, nhận thưởng từng việc, r
   const before = s.res.linhThach
   for (let i = 0; i < 4; i++) s = run(s, { type: 'daily', i })
   assert.equal(s.res.linhThach, before + 4 * DAILY_RES * 6)
-  assert.equal(err(s, { type: 'daily', i: 0 }), 'max_level')
+  assert.equal(err(s, { type: 'daily', i: 0 }), 'claimed')
   s = run(s, { type: 'dailyBonus' })
   assert.equal(s.items.boiNguyen, 1)
-  assert.equal(err(s, { type: 'dailyBonus' }), 'max_level')
+  assert.equal(err(s, { type: 'dailyBonus' }), 'claimed')
   // 0h giờ VN hôm sau: làm lại từ đầu
   const fresh = advance(s, nextDay(s.time))
   assert.deepEqual(fresh.daily.n, { build: 0, train: 0, win: 0, brew: 0 })
@@ -407,11 +407,11 @@ test('nhiệm vụ tuần: đếm cùng nhiệm vụ ngày và số hôm mở r�
   assert.equal(err(s, { type: 'weeklyBonus' }), 'not_done')
   for (let i = 0; i < WEEKLY.length; i++) s = run(s, { type: 'weekly', i })
   assert.equal(s.res.linhKhoang, before + WEEKLY.length * WEEKLY_RES * 6)
-  assert.equal(err(s, { type: 'weekly', i: 0 }), 'max_level')
+  assert.equal(err(s, { type: 'weekly', i: 0 }), 'claimed')
   const pills = s.items.doKiep ?? 0
   s = run(s, { type: 'weeklyBonus' })
   assert.equal(s.items.doKiep, pills + (WEEKLY_BONUS.doKiep ?? 0))
-  assert.equal(err(s, { type: 'weeklyBonus' }), 'max_level')
+  assert.equal(err(s, { type: 'weeklyBonus' }), 'claimed')
   // mở rương ngày thì cộng một hôm
   const d = run({ ...s, daily: { ...s.daily, got: s.daily.got.map(() => true) } }, { type: 'dailyBonus' })
   assert.equal(d.weekly.n.days, s.weekly.n.days + 1)

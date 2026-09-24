@@ -2,7 +2,7 @@
 // core/: phần dùng chung (kiểu, chỉ số, trận, thời gian, save) · sect/: mỗi tính năng của một tông môn một file (thao tác + luật)
 // Luật giữa các tông môn (cướp, tiên minh, bản đồ giới, chợ) ở @rok/rules/world.
 export * from './data.ts'
-export { advantage, elAdv, fight, might, rng, type Fight, type Round, type Side, type Troop } from './combat.ts'
+export { fight, might, rng, type Fight, type Round, type Side, type Troop } from './combat.ts'
 export * from './core/types.ts'
 export * from './core/util.ts'
 export * from './core/calendar.ts'

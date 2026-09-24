@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { mailText } from '@rok/i18n'
   import { flushSync, onMount } from 'svelte'
   import {
     BUILDINGS,
@@ -174,10 +175,8 @@
             : L.report.fresh(reportName(r), r.win),
           { report: r, bad: !r.win },
         )
-    if (next.mail.length && next.mail.at(-1)!.id >= prev.nextId)
-      toast(
-        `${L.mail.title}: ${(L.mail.msg[next.mail.at(-1)!.k] ?? L.mail.msg.unknown)(...(next.mail.at(-1)!.a ?? []))[0]}`,
-      )
+    const newest = next.mail.at(-1)
+    if (newest && newest.id >= prev.nextId) toast(`${L.mail.title}: ${mailText(L, newest)[0]}`)
     if (next.stats.trained > prev.stats.trained) toast(L.away.trained(next.stats.trained - prev.stats.trained))
     if (next.stats.healed > prev.stats.healed) toast(L.away.healed(next.stats.healed - prev.stats.healed))
     if (next.stats.brewed > prev.stats.brewed) toast(L.away.brewed(next.stats.brewed - prev.stats.brewed))

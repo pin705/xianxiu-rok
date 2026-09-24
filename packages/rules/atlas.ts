@@ -13,7 +13,6 @@ export const TILE_TIME = 12_000 // ms đi một ô
 // Pha mùa theo ngày của giới: Khai giới (chưa mở cổng nào) / Tranh mạch (cổng vòng ngoài) / Trận nhãn (vào vòng giữa) / Phi thăng (vào tâm)
 export const PHASES = [0, 5, 14, 35]
 export const SEASON_DAYS = 49
-export const JOIN_DAYS = 21 // vào giới được tới ngày này
 
 export type Ring = 0 | 1 | 2 // ngoài · giữa · tâm
 export type Region = { i: number; cx: number; cy: number; ring: Ring }
@@ -164,11 +163,7 @@ export function spawn(a: Atlas, taken: Pos[], rand: () => number): Pos | null {
   return null
 }
 
-// Ngày đêm theo giờ Việt Nam: 0 đêm … 1 trưa (bình minh 6h, hoàng hôn 18h). Thời tiết theo vùng, đổi mỗi 3 giờ.
-export const daylight = (t: number) => {
-  const h = (((t / 3_600_000 + 7) % 24) + 24) % 24
-  return Math.max(0, Math.min(1, 1 - Math.abs(h - 12) / 7))
-}
+// Thời tiết theo vùng, đổi mỗi 3 giờ
 export type Weather = 'clear' | 'mist' | 'rain' | 'snow'
 export function weather(a: Atlas, region: number, t: number): Weather {
   const r = rng((a.seed * 31 + region * 997 + Math.floor(t / 10_800_000)) >>> 0)()

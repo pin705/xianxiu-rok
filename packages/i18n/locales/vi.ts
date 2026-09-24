@@ -57,7 +57,10 @@ import {
   type Tier,
   type UnitId,
   type UnitType,
+  type MailArgs,
+  type MailKind,
 } from '@rok/rules'
+import type { ChronArgs, ChronKind } from '@rok/rules/world'
 
 // Chữ hiển thị tiếng Việt. Bản tiếng Anh ở en.ts, cùng khuôn (kiểu Text).
 const pct = (v: number) => `${Math.round(v * 100)}%`
@@ -74,6 +77,12 @@ const tiers = { 1: 'Ngoại môn', 2: 'Nội môn', 3: 'Chân truyền', 4: 'H�
 const el = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' } satisfies Record<Element, string>
 const and = (xs: (string | number)[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} và ${xs.at(-1)}`)
 const res = { linhThach: 'Linh thạch', linhThao: 'Linh thảo', linhKhoang: 'Linh khoáng' } satisfies Record<Res, string>
+
+// Chữ của thư hệ thống và biên niên giới: đúng khoá, đúng tham số như luật khai báo (MailArgs, ChronArgs)
+export type MailTexts = { [K in MailKind]: (...a: MailArgs[K]) => [string, string] } & {
+  unknown: () => [string, string]
+}
+export type ChronTexts = { [K in ChronKind]: (...a: ChronArgs[K]) => string } & { unknown: () => string }
 
 export const vi = {
   game: 'Sơn Hà Tiên Tông',
@@ -672,11 +681,11 @@ export const vi = {
     msg: {
       found: (name: string) => `${name} lập tông môn trong giới`,
       raid: (a: string, b: string, win: number) => (win ? `${a} cướp ${b}` : `${b} đẩy lui ${a}`),
-      trib: (name: string, hall: number) => `${name} độ kiếp thành công, đột phá ${vi.realmName(hall)}`,
+      trib: (name: string, hall: number): string => `${name} độ kiếp thành công, đột phá ${vi.realmName(hall)}`,
       season: (n: number) => `Mùa ${n} mở: giới đổi bản đồ, các tông môn xếp lại chỗ`,
       boss: (lv: number) => `Yêu vương cấp ${lv} đã bị hạ`,
       unknown: () => 'Giới có biến',
-    } as Record<string, (...a: any[]) => string>,
+    } satisfies ChronTexts,
   },
   npc: { branch: (n: number) => `phân đà ${n}` },
   pvp: {
@@ -766,9 +775,9 @@ export const vi = {
     got: 'Đã nhận',
     // thư hệ thống: khoá k → [tiêu đề, nội dung]; khoá lạ vẫn hiện được (bản client cũ hơn server)
     msg: {
-      eventTop: (rank: number, theme: string) => [
+      eventTop: (rank: number, theme: EventId): [string, string] => [
         `Hạng ${rank} sự kiện tuần`,
-        `Tông môn đứng hạng ${rank} sự kiện "${theme}" của giới. Quà đính kèm.`,
+        `Tông môn đứng hạng ${rank} sự kiện "${vi.event.theme[theme] ?? theme}" của giới. Quà đính kèm.`,
       ],
       admin: (title: string, body: string) => [title, body],
       gift: () => ['Quà của trưởng lão giới', 'Chút quà mừng đạo hữu. Nhận ở dưới.'],
@@ -793,7 +802,7 @@ export const vi = {
       ],
       unsold: (g: string, n: number) => ['Lệnh chợ hết hạn', `${n} ${goodName(g)} chưa ai mua — hàng trả lại ở dưới.`],
       unknown: () => ['Thư hệ thống', 'Có thư mới. Cập nhật bản mới để đọc đủ nội dung.'],
-    } as Record<string, (...a: any[]) => [string, string]>,
+    } satisfies MailTexts,
   },
   event: {
     title: 'Sự kiện tuần',
@@ -1134,6 +1143,7 @@ export const vi = {
   },
   err: {
     max_level: 'Đã đạt tối đa',
+    claimed: 'Đã nhận rồi',
     need_main_hall: 'Cần nâng Chủ điện trước',
     busy: 'Đang bận',
     queue_full: 'Tạp dịch đang bận',

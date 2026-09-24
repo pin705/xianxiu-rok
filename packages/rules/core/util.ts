@@ -1,5 +1,5 @@
 // Tiện ích thuần không cần State: danh sách id, phép cộng trừ túi tài nguyên / quân, nhân lặp tất định.
-import { type Army, type Items, type Troops } from './types.ts'
+import { type Army, type Gain, type Items, type Troops } from './types.ts'
 import {
   BUILDINGS,
   ELDERS,
@@ -36,6 +36,11 @@ export const addBag = (a: Bag, b: Partial<Bag>) => bag(r => a[r] + (b[r] ?? 0))
 export const addItems = (a: Items, b: Items) =>
   Object.fromEntries(PILL_IDS.map(p => [p, (a[p] ?? 0) + (b[p] ?? 0)])) as Items
 export const afford = (have: Bag, c: Bag) => RESOURCES.every(r => have[r] >= c[r])
+// Đội gọn: chỉ các loại có người, theo thứ tự UNITS
+export const compact = (a: Army) => Object.fromEntries(UNITS.filter(u => (a[u] ?? 0) > 0).map(u => [u, a[u]!])) as Army
+export const noGain = (): Gain => ({ res: {}, items: {}, exp: 0 })
+// Danh sách "đã nhận": đánh dấu thêm mục i
+export const mark = (got: boolean[], i: number) => got.map((x, k) => x || k === i)
 // Mầm 0 = "ẩn": máy này không biết mầm thật (client nhận state từ server với mọi seed = 0), nên không tự giải trận.
 // 0 sinh ra 0; mầm khác 0 không bao giờ sinh ra 0.
 export const nextSeed = (seed: number) => (seed ? (Math.imul(seed, 1664525) + 1013904223) >>> 0 || 1 : 0)

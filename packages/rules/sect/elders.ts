@@ -1,8 +1,8 @@
 // Trưởng lão: Bồi Nguyên Đan (kinh nghiệm), thiên phú, Tẩy Tủy Đan, giữ nhà.
-import { isMarching, no, ok, use, type Actions } from '../core/action.ts'
+import { no, ok, use, type Actions } from '../core/action.ts'
 import { giveExp } from '../core/battle.ts'
 import { int, isElder } from '../core/parse.ts'
-import { talentPoints, talentUsed } from '../core/stats.ts'
+import { talentPoints, talentUsed, isMarching } from '../core/stats.ts'
 import { type Talent } from '../core/types.ts'
 import { BOI_NGUYEN_EXP, TALENT_MAX, type ElderId } from '../data.ts'
 

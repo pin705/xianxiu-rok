@@ -3,7 +3,7 @@ import { addGain, admit, battle, coolKey } from './battle.ts'
 import { rollDay } from './calendar.ts'
 import { rate, storage } from './stats.ts'
 import { type Job, type JobKind, type State } from './types.ts'
-import { addItems, count, HOUR, minus, plus } from './util.ts'
+import { addItems, count, HOUR, minus, plus, noGain } from './util.ts'
 import { RESOURCES } from '../data.ts'
 
 function accrue(s: State, t: number): State {
@@ -31,7 +31,7 @@ function arrive(s: State, id: number): State {
   const others = s.marches.filter(x => x.id !== id)
   // Mục tiêu đã bị hạ trước khi tới: quay về tay không
   if ((s.cool[coolKey(m.target)] ?? 0) > m.arriveAt)
-    return { ...s, marches: [...others, { ...m, back: m.army, hurt: {}, gain: { res: {}, items: {}, exp: 0 } }] }
+    return { ...s, marches: [...others, { ...m, back: m.army, hurt: {}, gain: noGain() }] }
   const r = battle({ ...s, marches: others }, m.target, m.elder, m.army, m.seed, m.arriveAt)
   const done = { ...m, back: r.back, hurt: r.hurt, gain: r.gain, report: r.report }
   return { ...r.state, marches: [...r.state.marches, done].sort((a, b) => a.id - b.id) }
@@ -41,11 +41,7 @@ function comeHome(s: State, id: number): State {
   const m = s.marches.find(x => x.id === id)!
   if (!m.back) return s // trận chưa giải (mầm ẩn ở client): chờ server báo kết quả
   const { state, dead } = admit({ ...s, marches: s.marches.filter(x => x.id !== id) }, m.hurt ?? {})
-  let st = addGain(
-    { ...state, troops: plus(state.troops, m.back ?? m.army) },
-    m.elder,
-    m.gain ?? { res: {}, items: {}, exp: 0 },
-  )
+  let st = addGain({ ...state, troops: plus(state.troops, m.back ?? m.army) }, m.elder, m.gain ?? noGain())
   // Báo cho chiến báo của chuyến này biết bao nhiêu người không qua khỏi
   if (count(dead)) st = { ...st, reports: st.reports.map(r => (r.id === m.report ? { ...r, dead } : r)) }
   return st
@@ -134,9 +130,13 @@ export function hasten(s: State, job: JobKind, startAt: number, ms: number, at: 
   const st = advance(s, at)
   const j = jobOf(st, job)
   if (!j || j.startAt !== startAt || job === 'brew') return st
-  const sped = { ...j, finishAt: Math.max(st.time, j.finishAt - ms) }
-  return advance(
-    job === 'build' ? { ...st, queue: st.queue.map(x => (x === j ? (sped as Job) : x)) } : { ...st, [job]: sped },
-    at,
-  )
+  return advance(shorten(st, job, ms), at)
+}
+
+// Rút ngắn việc k đang chờ ms (không sớm hơn lúc này) — tăng tốc bằng đan, đồng môn giúp
+export function shorten(s: State, k: JobKind, ms: number): State {
+  const j = jobOf(s, k)
+  if (!j) return s
+  const sped = { ...j, finishAt: Math.max(s.time, j.finishAt - ms) }
+  return k === 'build' ? { ...s, queue: s.queue.map(x => (x === j ? (sped as Job) : x)) } : { ...s, [k]: sped }
 }

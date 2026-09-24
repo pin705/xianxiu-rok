@@ -6,26 +6,21 @@ import { randomInt } from 'node:crypto'
 import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
 import {
-  BUILDINGS,
-  EVENT_PRIZES,
-  IDS,
-  REVENGE_TIME,
-  UNITS,
+  CHAT_HALL,
+  NPC_EVERY,
+  NPC_PER,
   advance,
   apply,
   dayOf,
   eventOf,
-  expAt,
   jobOf,
   mail,
   migrate,
-  newGame,
   power,
   weekOf,
   type Action,
-  type ElderId,
   type JobKind,
-  type Mail,
+  type NewMail,
   type Report,
   type State,
 } from '@rok/rules'
@@ -41,28 +36,29 @@ import {
   worldBuffs,
   atlas,
   dayIn,
+  eventPrize,
   eventTop,
   freshWorld,
   mapOf,
   nextRaid,
   parseWorldAction,
   phaseOf,
-  raidChance,
   regionOf,
   rivals,
-  scout,
   marketOf,
   seasonBoard,
   sideKey,
   spawn,
   worldAct,
   type Chron,
+  type ChronArgs,
+  type ChronKind,
   type MapCtx,
   type World as Shared,
   type WorldAction,
   type WorldResult,
 } from '@rok/rules/world'
-import { turn } from '@rok/rules/bot'
+import { npcHold, npcRevenge, npcState, turn } from '@rok/rules/bot'
 import { loadText } from '@rok/i18n'
 
 const vi = await loadText('vi') // tên phân đà NPC (tên tông môn là dữ liệu của giới, mọi người thấy cùng một tên)
@@ -126,8 +122,6 @@ type Pending = {
 }
 const empty = (): Pending => ({ reports: [], events: [], inboxDone: [], chat: [], gone: [] })
 const MAX_TABS = 5
-const NPC_PER = 2 // phân đà NPC mỗi vùng ngoài
-const NPC_EVERY = 4 * 3_600_000 // NPC chơi một lượt mỗi 4 giờ (như người chơi thường)
 const CHRON_MAX = 50
 const REMIND_MIN = 20 * 60_000 // việc xong sau ít nhất chừng này kể từ lúc rời game mới nhắc qua push
 const MAP_WATCH = 60_000 // theo dõi bản đồ: hết hạn nếu không hỏi lại
@@ -135,7 +129,6 @@ const MAP_WATCH = 60_000 // theo dõi bản đồ: hết hạn nếu không hỏ
 const CHAT_BURST = 3
 const CHAT_EVERY = 3_000
 const CHAT_DUP = 30_000
-const CHAT_HALL = 3
 const CHAT_KEEP = 50
 const seed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước mọi thao tác: client không đoán trước được trận
 // Chữ người chơi tự đặt mà cả giới thấy: lọc từ tục trước khi vào luật (chat lọc riêng bằng mask)
@@ -271,8 +264,8 @@ export class World {
     if (!this.npc.has(slot.id)) this.record(now, 'found', [s.name])
   }
 
-  private record(at: number, k: string, a: (string | number)[]) {
-    this.chron = [...this.chron, { at, k, a }].slice(-CHRON_MAX)
+  private record<K extends ChronKind>(at: number, k: K, a: ChronArgs[K]) {
+    this.chron = [...this.chron, { at, k, a } as Chron].slice(-CHRON_MAX)
     this.worldDirty = true
     this.mapChanged()
     this.schedule()
@@ -306,60 +299,25 @@ export class World {
     this.schedule()
   }
 
-  // NPC chơi một lượt (bot như người chơi thường) và phản kích kẻ vừa cướp mình nếu chắc thắng. Không bao giờ tự khởi đầu PvP.
+  // NPC một lượt: giữ linh mạch trong vùng, chơi như người thường (bot), phản kích kẻ vừa cướp mình nếu chắc thắng
   private npcTurn(now: number) {
     for (const pid of this.npc) {
       const slot = this.slots.get(pid)
       if (!slot) continue
       try {
-        this.npcHold(pid, now)
+        const hold = npcHold(this.ps.get(pid)!, atlas(this.seed), this.shared)
+        if (hold) this.npcAct(pid, hold, now)
         this.commit(slot, turn(advance(this.ps.get(pid)!, now), { casual: true }))
-        const s = this.ps.get(pid)!
-        const foe = [...s.foes].reverse().find(f => f.at + REVENGE_TIME > now)
-        const target = foe && this.ps.get(foe.pid)
-        const e = (Object.keys(s.elders) as ElderId[]).find(x => !s.marches.some(m => m.elder === x))
-        const army = Object.fromEntries(UNITS.filter(u => s.troops[u] > 0).map(u => [u, s.troops[u]]))
-        if (!foe || !target || !e || !Object.keys(army).length || raidChance(s, e, army, scout(target).side) < 0.8)
-          continue
-        const r = worldAct(
-          this.ps,
-          pid,
-          { type: 'raid', pid: foe.pid, elder: e, army },
-          now,
-          seed(),
-          this.map(now),
-          this.shared,
-        )
-        if (r.ok) for (const [id, x] of r.changed) this.commit(this.slots.get(id)!, x)
+        const revenge = npcRevenge(this.ps.get(pid)!, this.ps, now)
+        if (revenge) this.npcAct(pid, revenge, now)
       } catch (err) {
         this.env.log.error({ err, world: this.id, pid }, 'npc turn failed')
       }
     }
     this.armRaid()
   }
-
-  // NPC giữ linh mạch trong vùng mình: chưa đóng quân ở đâu mà vùng còn mạch trống thì đem nửa quân tới đóng
-  private npcHold(pid: number, now: number) {
-    const s = this.ps.get(pid)!
-    if (!s.seat || s.marches.some(m => m.target.kind === 'spot')) return
-    const a = atlas(this.seed)
-    const region = regionOf(a, s.seat)
-    const vein = a.points.find(
-      p => p.kind === 'vein' && p.region === region && this.shared.spots[p.i]?.own === undefined,
-    )
-    const e = (Object.keys(s.elders) as ElderId[]).find(x => !s.marches.some(m => m.elder === x))
-    if (!vein || !e) return
-    const army = Object.fromEntries(UNITS.filter(u => s.troops[u] >= 2).map(u => [u, Math.floor(s.troops[u] / 2)]))
-    if (!Object.keys(army).length) return
-    const r = worldAct(
-      this.ps,
-      pid,
-      { type: 'go', i: vein.i, task: 'take', elder: e, army },
-      now,
-      seed(),
-      this.map(now),
-      this.shared,
-    )
+  private npcAct(pid: number, a: WorldAction, now: number) {
+    const r = worldAct(this.ps, pid, a, now, seed(), this.map(now), this.shared)
     if (!r.ok) return
     if (r.world !== this.shared) this.share(r.world)
     this.commitAll(r.changed)
@@ -786,7 +744,7 @@ export class World {
   private rollWeek(now: number) {
     const week = this.week
     eventTop(this.ps, week).forEach((pid, i) => {
-      const gift = EVENT_PRIZES[i === 0 ? 0 : i < 3 ? 1 : 2]
+      const gift = eventPrize(i)
       this.commit(
         this.slots.get(pid)!,
         mail(this.ps.get(pid)!, { at: now, k: 'eventTop', a: [i + 1, eventOf(week)], gift }),
@@ -890,7 +848,7 @@ export class World {
   private command(r: store.InboxRow, now: number) {
     this.applied.add(r.id)
     this.pending.inboxDone.push(r.id) // cùng commit với thay đổi state: sập giữa chừng thì cả hai cùng chưa có, lần sau áp lại
-    const b = r.body as { pid?: number; mail?: Omit<Mail, 'id' | 'at'>; until?: number }
+    const b = r.body as { pid?: number; mail?: Omit<Extract<NewMail, { k: 'admin' }>, 'at'>; until?: number }
     if (r.kind === 'mute' && b.pid) {
       if (b.until && b.until > now) this.muted.set(b.pid, b.until)
       else this.muted.delete(b.pid)
@@ -1153,23 +1111,5 @@ export class World {
     if (!slot) return false
     this.commit(slot, s)
     return true
-  }
-}
-
-// Phân đà NPC lúc lập: Trúc Cơ tầng 7, đội thủ vừa phải, không khiên tân thủ (là mục tiêu cho người chơi ngay từ đầu)
-function npcState(now: number, name: string, seat: { x: number; y: number }): State {
-  const s = newGame(now, name)
-  const levels = Object.fromEntries(IDS.map(id => [id, BUILDINGS[id].unlock <= 7 ? 7 : 0])) as State['levels']
-  return {
-    ...s,
-    name,
-    seat,
-    levels,
-    trib: 1,
-    shield: 0,
-    guard: 'thanhPhong',
-    elders: { thanhPhong: expAt(10) },
-    troops: { ...s.troops, kiem2: 120, phap2: 120, the2: 120 },
-    res: { linhThach: 20_000, linhThao: 20_000, linhKhoang: 20_000 },
   }
 }
