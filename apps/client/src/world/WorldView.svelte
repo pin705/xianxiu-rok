@@ -198,7 +198,7 @@
   <Card tone="silk">
     <div class="row">
       <span class="grow stack" style:--gap="0">
-        <b class="t-small">{L.world.day(day)} · {L.world.phase[phase]}</b>
+        <b class="t-small">{L.rank.fameRow(info.season)} · {L.world.day(day)} · {L.world.phase[phase]}</b>
         <small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>
       </span>
       <Button size="sm" variant="ghost" onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}><Icon name="flag" size={14} />{L.world.you}</Button>

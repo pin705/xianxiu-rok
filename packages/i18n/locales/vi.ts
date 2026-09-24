@@ -382,6 +382,7 @@ export const vi = {
       found: (name: string) => `${name} lập tông môn trong giới`,
       raid: (a: string, b: string, win: number) => (win ? `${a} cướp ${b}` : `${b} đẩy lui ${a}`),
       trib: (name: string, hall: number) => `${name} độ kiếp thành công, đột phá ${vi.realmName(hall)}`,
+      season: (n: number) => `Mùa ${n} mở: giới đổi bản đồ, các tông môn xếp lại chỗ`,
       boss: (lv: number) => `Yêu vương cấp ${lv} đã bị hạ`,
       unknown: () => 'Giới có biến',
     } as Record<string, (...a: any[]) => string>,
@@ -472,6 +473,10 @@ export const vi = {
       gift: () => ['Quà của trưởng lão giới', 'Chút quà mừng đạo hữu. Nhận ở dưới.'],
       boss: (lv: number, rank: number, pct: number) => [`Hạ yêu vương cấp ${lv}`, `Tông môn đứng thứ ${rank} (${pct}% sát thương) trong trận hạ yêu vương. Phần thưởng đính kèm.`],
       comp: () => ['Quà bồi thường', 'Máy chủ vừa gặp sự cố. Xin lỗi đạo hữu — quà bù ở dưới.'],
+      season: (n: number, rank: number, up: number) =>
+        up
+          ? [`Phi thăng · mùa ${n}`, `Hết mùa ${n}${rank ? `, phe của bạn đứng hạng ${rank}` : ''}. Tông môn phi thăng: kiếp sau thêm hai tầng căn cơ và danh hiệu Phi thăng.`]
+          : [`Hết mùa ${n}`, `Hết mùa ${n}${rank ? `, phe của bạn đứng hạng ${rank}` : ''}. Cả giới luân hồi một kiếp: công trình về căn cơ; trưởng lão, công pháp, pháp bảo, đan còn nguyên. Mùa mới đã mở.`],
       unknown: () => ['Thư hệ thống', 'Có thư mới. Cập nhật bản mới để đọc đủ nội dung.'],
     } as Record<string, (...a: any[]) => [string, string]>,
   },
@@ -493,6 +498,11 @@ export const vi = {
     me: 'Tông môn của bạn',
     none: 'Chưa có ai.',
     open: 'Xem xếp hạng',
+    season: 'Mùa',
+    seasonHint: 'Điểm mùa tính theo phe (tiên minh; ai đi một mình là một phe): mỗi giờ giữ linh mạch, trận nhãn, Thiên Môn, và khi hạ yêu vương. Hết mùa, minh đứng đầu (người từ tầng 16) và ai tới tầng 25 được phi thăng — thêm hai tầng căn cơ; còn lại luân hồi một kiếp.',
+    fame: 'Bảng phong thần',
+    fameRow: (n: number) => `Mùa ${n}`,
+    pts: (n: string) => `${n} điểm`,
   },
   forge: {
     tab: 'Luyện khí',
@@ -566,6 +576,7 @@ export const vi = {
     count: (n: number) => `Đã luân hồi ${n} lần`,
     done: (n: number) => `Kiếp thứ ${n + 1}`,
     start: 'Bắt đầu kiếp mới',
+    season: 'Trong giới, luân hồi diễn ra khi hết mùa: cả giới cùng sang kiếp mới, minh đứng đầu được phi thăng.',
   },
 
   // ---------- Trang ----------

@@ -386,6 +386,7 @@ export const en: Text = {
       found: (name: string) => `${name} founded a sect in this world`,
       raid: (a: string, b: string, win: number) => (win ? `${a} raided ${b}` : `${b} drove off ${a}`),
       trib: (name: string, hall: number) => `${name} survived a tribulation and reached ${en.realmName(hall)}`,
+      season: (n: number) => `Season ${n} begins: a new world map, every sect resettled`,
       boss: (lv: number) => `A level ${lv} demon king has been slain`,
       unknown: () => 'Something stirred in the world',
     } as Record<string, (...a: any[]) => string>,
@@ -475,6 +476,10 @@ export const en: Text = {
       gift: () => ['A gift from the world elders', 'A small gift for you, fellow cultivator. Claim it below.'],
       boss: (lv: number, rank: number, pct: number) => [`Demon king lv ${lv} slain`, `Your sect placed ${rank} (${pct}% of the damage) in slaying the demon king. Your reward is attached.`],
       comp: () => ['Compensation', 'The server hit a problem. Our apologies — here is something to make up for it.'],
+      season: (n: number, rank: number, up: number) =>
+        up
+          ? [`Ascended · season ${n}`, `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. Your sect ascends: two extra foundation levels next life and the Ascended title.`]
+          : [`Season ${n} is over`, `Season ${n} is over${rank ? ` and your side placed #${rank}` : ''}. The whole world is reborn once: buildings return to their foundation; elders, techniques, artifacts and pills stay. A new season has begun.`],
       unknown: () => ['System mail', 'You have new mail. Update the game to read all of it.'],
     } as Record<string, (...a: any[]) => [string, string]>,
   },
@@ -496,6 +501,11 @@ export const en: Text = {
     me: 'Your sect',
     none: 'No one yet.',
     open: 'View rankings',
+    season: 'Season',
+    seasonHint: 'Season points go to sides (an alliance, or anyone playing solo): every hour holding a spirit vein, formation gate or the Heaven Gate, and every demon king slain. When the season ends, the top alliance (members at level 16+) and anyone at level 25 ascend — two extra foundation levels; everyone else is reborn once.',
+    fame: 'Hall of Immortals',
+    fameRow: (n: number) => `Season ${n}`,
+    pts: (n: string) => `${n} pts`,
   },
   forge: {
     tab: 'Forging',
@@ -567,6 +577,7 @@ export const en: Text = {
     count: (n: number) => `Reincarnated ${n} times`,
     done: (n: number) => `Life ${n + 1}`,
     start: 'Begin the new life',
+    season: 'In a world, rebirth happens when the season ends: everyone starts a new life together, and the top alliance ascends.',
   },
 
   // ---------- Pages ----------

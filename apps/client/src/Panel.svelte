@@ -224,6 +224,9 @@
             </Card>
           </div>
           <Tag icon="star" tone="gold">{L.rebirth.gain(game.rebirths + 1)}</Tag>
+          {#if game.seat}
+            <p class="t-small t-soft">{L.rebirth.season}</p>
+          {:else}
           {#if game.marches.length}<p class="t-small t-bad">{L.rebirth.marching}</p>{/if}
           {#if sure}
             <p class="t-small t-bad t-strong">{L.rebirth.confirm}</p>
@@ -233,6 +236,7 @@
             </div>
           {:else}
             <Button variant="gold" wide disabled={!!game.marches.length} onclick={() => (sure = true)}>{L.rebirth.go}</Button>
+          {/if}
           {/if}
         </Section>
       {/if}

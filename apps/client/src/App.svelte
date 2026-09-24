@@ -4,7 +4,7 @@
     BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, TRIBS, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, cost, newGame, questDone, questOf, storage, storeNeed,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
-  import type { MapSnap, Seen, WorldInfo } from '@rok/protocol'
+  import type { MapSnap, Season, Seen, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Sheet, Toasts, fly, type ToastItem } from './ui'
   import Conn from './Conn.svelte'
@@ -476,7 +476,7 @@
   <Reports {game} {act} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
   <Replay report={replay} onclose={() => (replay = null)} onrevenge={() => ((replay = null), (reportsOpen = false), (rivalsOpen = true))} {now} />
   <Rivals {game} {now} {busy} open={rivalsOpen} focus={rivalsFocus} load={pid => (net?.ask({ k: 'rivals', pid }) ?? Promise.resolve(null)) as Promise<Rival[] | null>} onclose={() => ((rivalsOpen = false), (rivalsFocus = null))} onraid={raid} onrecruit={() => ((rivalsOpen = false), focus('dienVoTruong', 'train'))} />
-  <Ranks open={ranksOpen} {me} load={b => net?.ranks(b).then(r => (r.ok ? r.data : null)) ?? Promise.resolve(null)} onclose={() => (ranksOpen = false)} />
+  <Ranks open={ranksOpen} {me} load={b => net?.ranks(b).then(r => (r.ok ? r.data : null)) ?? Promise.resolve(null)} season={info ? () => (net?.ask({ k: 'season' }) ?? Promise.resolve(null)) as Promise<Season | null> : undefined} onclose={() => (ranksOpen = false)} />
   <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
   <Settings
     {game}

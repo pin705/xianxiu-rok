@@ -404,3 +404,31 @@ test('độ kiếp công khai: có chỗ trên bản đồ thì kiếp vân tụ
   assert.equal(TRIB_CLOUD[0], cloud.arriveAt - cloud.startAt)
   c.close()
 })
+
+test('hết mùa: tới ngày 49 mọi người luân hồi, bản đồ mới, xếp chỗ lại, thư kết quả; client được mời nối lại; bảng điểm mùa', { skip }, async () => {
+  const { SEASON_DAYS } = await import('@rok/rules/world')
+  const n = await boot('m')
+  const w = await newWorld(n)
+  const A = await guest(n, undefined, w)
+  const c = client(n, A.token)
+  const w1 = await c.welcome
+  assert.equal(w1.world.season, 1)
+  const board = (await c.s.timeout(5000).emitWithAck('get', { k: 'season' })) as { rows: unknown[]; me: unknown; fame: unknown[] }
+  assert.deepEqual(board, { rows: [], me: null, fame: [] })
+  const bye = new Promise<string>(ok => c.s.once('bye', m => ok(m.reason)))
+  await api(n, '/dev/warp', { min: SEASON_DAYS * 24 * 60 + 5 }, A.token)
+  assert.equal(await bye, 'season')
+  c.close()
+  const c2 = client(n, A.token)
+  const w2 = await c2.welcome
+  assert.equal(w2.world.season, 2)
+  assert.notEqual(w2.world.map, w1.world.map, 'bản đồ mới')
+  assert.equal(w2.state.rebirths, 1)
+  assert.ok(w2.state.seat, 'có chỗ trên bản đồ mùa mới')
+  assert.equal(w2.state.mail.at(-1)?.k, 'season')
+  const [row] = await n.db.client`select season, seed, state from worlds where id = ${w}`
+  assert.equal(row.season, 2)
+  assert.equal(row.seed, w2.world.map)
+  assert.equal(row.state.fame[0].season, 1)
+  c2.close()
+})
