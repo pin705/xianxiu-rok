@@ -20,6 +20,13 @@
 		}
 	}
 
+	# /api/admin chỉ từ IP quản trị (ADMIN_IPS, cách nhau dấu cách; mặc định chỉ máy chủ): lộ token cũng không dùng được từ ngoài
+	@admin {
+		path /api/admin/*
+		not remote_ip {$ADMIN_IPS:127.0.0.1/8}
+	}
+	respond @admin 404
+
 	# Không mở ra ngoài: số đo (Prometheus kéo qua mạng nội bộ) và tài liệu API
 	@private path /metrics /docs* /healthz /readyz
 	respond @private 404

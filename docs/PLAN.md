@@ -270,6 +270,7 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 
 - Mỗi mùa một thay đổi lớn (luật giới, yêu thú, cảnh giới mới); sự kiện tuần dùng lại template.
 - Xem analytics sau mỗi mùa, cắt thứ không ai dùng.
+- Sổ tay trực server: [RUNBOOK.md](RUNBOOK.md) (deploy cuốn chiếu, sao lưu `pg_dump` hằng ngày + hướng lên PITR, số đo và ngưỡng cảnh báo, xử lý sự cố). Test sự cố tự động: mất Postgres ngắn/dài, node khởi động lại, bị rào, SIGKILL sau khi ack. Còn phải làm ngoài máy dev: load test 10k CCU trên máy phát tải riêng, diễn tập khôi phục trên máy thật.
 
 ## 6. Art & âm thanh (một người)
 

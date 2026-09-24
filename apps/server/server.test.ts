@@ -130,8 +130,8 @@ test('hai tab: tab gửi nhận ack, tab kia nhận patch cùng version; sai mã
   await x.welcome
   await y.welcome
   const ack = await x.act({ type: 'upgrade', building: 'linhDien' })
-  const p = await y.push()
   assert.ok(ack.ok)
+  const p = await y.push(q => q.v === ack.v) // patch khác của cả giới (buff linh triều…) có thể tới trước
   assert.equal(p.v, ack.ok && ack.v)
   assert.deepEqual(p.p, ack.ok && ack.p)
   // (patch lúc tab y nối vào — đưa state tới giờ hiện tại — thì tab x được nhận; bản sao của ack thì không)
@@ -564,4 +564,57 @@ test('Web Push: offline thì nhắc khi việc dài xong và báo khi bị cư�
   assert.equal(got.find(g => g.tag === 'raid')!.pid, V.pid)
   assert.ok(!got.some(g => g.pid === T.pid), 'người đang chơi không nhận push')
   ct.close()
+})
+
+test('mất Postgres: ngắn thì ack chờ ghi xong mới tới, không mất gì; quá 12 giây thì giới chỉ đọc, có DB lại thì chạy tiếp', { skip }, async () => {
+  const { createServer, connect } = await import('node:net')
+  // proxy TCP giữa node và Postgres: `cut` cắt mọi kết nối đang có và từ chối kết nối mới (như DB sập / mất mạng)
+  const target = new globalThis.URL(URL)
+  const open = new Set<import('node:net').Socket>()
+  let cut = false
+  const proxy = createServer(c => {
+    if (cut) return void c.destroy()
+    const s = connect(Number(target.port), target.hostname)
+    const end = () => (c.destroy(), s.destroy(), open.delete(c), open.delete(s))
+    for (const x of [c, s]) {
+      open.add(x)
+      x.on('error', end).on('close', end)
+    }
+    c.pipe(s).pipe(c)
+  }).listen(0, '127.0.0.1')
+  await new Promise(r => proxy.once('listening', r))
+  const down = () => {
+    cut = true
+    for (const x of open) x.destroy()
+  }
+  const via = Object.assign(new globalThis.URL(URL), { port: String((proxy.address() as { port: number }).port) }).toString()
+  const n = await boot('pg', { DATABASE_URL: via })
+  const w = await newWorld(n)
+  const g = await guest(n, undefined, w)
+  const c = client(n, g.token)
+  await c.welcome
+  const status: boolean[] = []
+  c.s.on('status', m => status.push(m.ro))
+
+  // mất DB 2 giây: thao tác vẫn nhận, nhưng ack chỉ tới sau khi đã ghi được (đã ack là bền)
+  down()
+  const t0 = Date.now()
+  setTimeout(() => (cut = false), 2000)
+  const ack = await c.act({ type: 'upgrade', building: 'linhDien' })
+  assert.ok(ack.ok, JSON.stringify(ack))
+  assert.ok(Date.now() - t0 >= 1800, `ack tới trước khi DB có lại (${Date.now() - t0} ms)`)
+  assert.equal((await row(n, g.pid)).state.queue.length, 1, 'thao tác đã ack nằm trong DB')
+
+  // mất DB lâu (> 12 giây không gia hạn được lease): giới tự chuyển chỉ đọc, từ chối thao tác; có DB lại thì chạy tiếp
+  down()
+  for (const t = Date.now(); Date.now() - t < 20_000 && !status.includes(true); ) await new Promise(r => setTimeout(r, 200))
+  assert.ok(status.includes(true), 'mất DB lâu mà giới không chuyển chỉ đọc')
+  const refused = await c.act({ type: 'upgrade', building: 'khoangMach' })
+  assert.deepEqual(refused, { ok: false, err: 'unavailable' })
+  cut = false
+  for (const t = Date.now(); Date.now() - t < 15_000 && status.at(-1) !== false; ) await new Promise(r => setTimeout(r, 200))
+  assert.equal(status.at(-1), false, 'có DB lại mà giới không hết chỉ đọc')
+  assert.ok((await c.act({ type: 'upgrade', building: 'khoangMach' })).ok)
+  c.close()
+  proxy.close()
 })

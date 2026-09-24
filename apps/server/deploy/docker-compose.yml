@@ -23,6 +23,8 @@ services:
       NODE_PATH: /n1/socket.io
       TRUST_PROXY: '1'
       ORIGINS: '${ORIGINS:-}'
+      ADMIN_TOKEN: '${ADMIN_TOKEN:-}' # ≥ 24 ký tự: bật /api/admin/* (Caddy chỉ cho IP quản trị)
+      MARKET: '${MARKET:-on}'
       # Web Push: npx web-push generate-vapid-keys → đặt trong .env (bỏ trống: không có thông báo đẩy)
       VAPID_PUBLIC_KEY: '${VAPID_PUBLIC_KEY:-}'
       VAPID_PRIVATE_KEY: '${VAPID_PRIVATE_KEY:-}'
@@ -36,9 +38,28 @@ services:
     image: caddy:2
     restart: unless-stopped
     ports: ['80:80', '443:443', '443:443/udp']
-    environment: { DOMAIN: '${DOMAIN:?đặt DOMAIN trong .env}' }
+    environment: { DOMAIN: '${DOMAIN:?đặt DOMAIN trong .env}', ADMIN_IPS: '${ADMIN_IPS:-127.0.0.1/8}' }
     volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, ../../client/dist:/srv:ro, caddy:/data]
     depends_on: [n1, n2]
+  # Lưới cuối: pg_dump mỗi ngày (lúc khởi động rồi cứ 24 giờ), định dạng custom có nén, giữ BACKUP_KEEP_DAYS ngày trong volume
+  # `backups` — chép ra máy khác / object storage bằng cron của máy chủ. Khôi phục tới từng giây (PITR): docs/RUNBOOK.md.
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    depends_on: { db: { condition: service_healthy } }
+    environment: { PGHOST: db, PGUSER: rok, PGPASSWORD: '${DB_PASSWORD}', PGDATABASE: rok, KEEP: '${BACKUP_KEEP_DAYS:-14}' }
+    volumes: [backups:/backups]
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while true; do
+          f=/backups/rok-$$(date +%F-%H%M).dump
+          pg_dump -Fc -Z6 -f "$$f.part" && mv "$$f.part" "$$f" && echo "backup $$f ok" || echo "backup FAILED"
+          find /backups -name 'rok-*.dump' -mtime +$$KEEP -delete
+          sleep 86400
+        done
 volumes:
   db:
   caddy:
+  backups:

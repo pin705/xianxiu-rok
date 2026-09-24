@@ -18,12 +18,13 @@ npm run fonts      # tải lại font tự host (sau khi thêm hệ chữ mới)
 npm run db:generate -w @rok/server   # sinh migration SQL sau khi sửa apps/server/src/db/schema.ts
 ```
 
-Triển khai: `apps/server/deploy/` (Docker Compose: Postgres + 2 node game + Caddy HTTPS). Kiến trúc server: xem [docs/PLAN.md](docs/PLAN.md) mục 4.
+Triển khai: `apps/server/deploy/` (Docker Compose: Postgres + 2 node game + Caddy HTTPS + sao lưu hằng ngày; cấu hình mẫu `.env.example`), sổ tay vận hành ở [docs/RUNBOOK.md](docs/RUNBOOK.md). Kiến trúc server: xem [docs/PLAN.md](docs/PLAN.md) mục 4.
 
 Mọi lệnh chạy ở gốc repo. Lệnh của riêng một package: `npm run <lệnh> -w @rok/client`.
 
 - [docs/PLAN.md](docs/PLAN.md) — tầm nhìn, hệ thống, kỹ thuật, lộ trình, cách phát hành (mục 13).
 - [docs/UX.md](docs/UX.md) — luồng màn hình, hệ thiết kế.
+- [docs/RUNBOOK.md](docs/RUNBOOK.md) — vận hành server: dựng máy, deploy cuốn chiếu, sao lưu / khôi phục, theo dõi, xử lý sự cố.
 
 ## Cấu trúc repo (npm workspaces, không cần Nx/Turbo)
 

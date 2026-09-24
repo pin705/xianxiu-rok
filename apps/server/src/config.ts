@@ -30,7 +30,7 @@ const Env = z
     WORLD_CAP: z.coerce.number().int().min(1).default(300),
     REBALANCE: bool(true),
     MARKET: bool(true), // chợ giữa người chơi (tắt được nếu bị lạm dụng — PLAN §11)
-    ADMIN_TOKEN: z.string().min(24).optional(), // bật /api/admin/* (header x-admin-token); không đặt thì không có route admin
+    ADMIN_TOKEN: unset(z.string().min(24)), // bật /api/admin/* (header x-admin-token); không đặt thì không có route admin
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
     // Web Push: khoá VAPID (npx web-push generate-vapid-keys) + liên hệ (mailto:…); không đặt thì không có thông báo đẩy
     VAPID_PUBLIC_KEY: unset(z.string().min(40)),
