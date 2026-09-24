@@ -2,10 +2,10 @@
 // Chạy: npm run db && npm run build && npm run e2e   (Chrome ở chỗ khác: CHROME=…; Postgres khác: E2E_DATABASE_URL=…)
 // Mỗi lần chạy: database tạm riêng, cổng trống riêng, bản sao dist riêng — chạy song song hay build lại giữa chừng không giẫm nhau.
 // Kiểm: lập tông môn → 14 nhiệm vụ đầu chỉ bằng click (tua giờ giới qua API dev) → tải lại vẫn còn tiến độ (từ server) →
-// hai tab đồng bộ → ngăn kéo desktop → bị người chơi khác cướp: thông báo, xem lại trận, báo thù → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
+// hai tab đồng bộ → ngăn kéo desktop → bị người chơi khác cướp: thông báo, xem lại trận, báo thù → bản đồ giới: chạm tông môn mở bảng thông tin → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
 // màn "không có mạng", đổi ngôn ngữ vẫn được (service worker) → console sạch.
 import { spawn, type ChildProcess } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -211,7 +211,7 @@ try {
   // (tab A lên trước: Chrome dừng hoạt ảnh ở tab nền — bảng trượt đóng không xong)
   await a.send('Page.bringToFront')
   await a.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
-  const tenTo = (st: any, troops: object) => ({ ...st, levels: Object.fromEntries(Object.keys(st.levels).map(k => [k, 10])), shield: 0, troops: { ...st.troops, ...troops }, res: { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 } })
+  const tenTo = (st: any, troops: object) => ({ ...st, queue: [], levels: Object.fromEntries(Object.keys(st.levels).map(k => [k, 10])), shield: 0, troops: { ...st.troops, ...troops }, res: { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 } })
   await a.js(`${truth}.then(st => fetch('/api/dev/state', { method: 'POST', headers: { 'content-type': 'application/json', 'x-rok': '1' }, body: JSON.stringify({ state: (${tenTo.toString()})(st, { the1: 200 }) }) })).then(r => r.ok)`)
   const api = (path: string, token: string, body?: object) =>
     fetch(`http://127.0.0.1:${GAME}/api${path}`, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json', 'x-rok': '1', authorization: `Bearer ${token}` }, body: body && JSON.stringify(body) }).then(r => r.json())
@@ -238,29 +238,31 @@ try {
   assert.deepEqual(errors, [], 'console có lỗi')
 
   // Bản đồ giới: tab Bản đồ → gạt sang "Giới" → cảnh WebGL + ghim tên tông môn mình → chạm vào tông môn mình → bảng thông tin
-  const me = (await a.js(truth)).name as string
   for (let i = 0; i < 10 && (await a.js(`document.querySelectorAll('dialog[open]').length`)); i++) (await a.js(closeAll), await sleep(300))
   await a.js(`document.querySelector('[data-tab=banDo]')?.click()`)
   assert.ok(await a.until(`[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Giới')`), 'tab Bản đồ không có nút gạt Giới')
   await a.js(`[...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Giới').click()`)
   assert.ok(await a.until(`!!document.querySelector('.pins .pin.mine')`, 15000), `bản đồ giới không hiện tông môn của mình — ${await seen()}`)
-  const pin = await a.js(`(() => { const r = document.querySelector('.pins .pin.mine').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top - 18 } })()`)
+  // chạm tông môn đầu tiên không bị HUD che (tông môn mình có thể sát mép giới). Chuyển tab chạy View Transition: trong lúc
+  // hiệu ứng trình duyệt chỉ hit-test vào <html> — nên đợi tới khi điểm chạm trúng lớp cử chỉ
+  const spot = `[...document.querySelectorAll('.pins .pin')].map(p => { const r = p.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top - 18, name: p.innerText } }).find(p => document.elementFromPoint(p.x, p.y)?.classList.contains('touch'))`
+  assert.ok(await a.until(`!!${spot}`), 'không ghim tông môn nào chạm được')
+  const pin = (await a.js(spot)) as { x: number; y: number; name: string }
   for (const type of ['mousePressed', 'mouseReleased']) await a.send('Input.dispatchMouseEvent', { type, x: pin.x, y: pin.y, button: 'left', clickCount: 1 })
-  const under = await a.js(`(() => {
-    const all = document.elementsFromPoint(${pin.x}, ${pin.y}).map(e => e.tagName + '.' + String(e.className).slice(0, 30))
-    const t = document.querySelector('.touch'), r = t?.getBoundingClientRect()
-    return JSON.stringify({ all, touch: r && [r.left, r.top, r.width, r.height, getComputedStyle(t).pointerEvents, getComputedStyle(t).visibility], body: getComputedStyle(document.body).pointerEvents, inert: document.body.inert })
-  })()`)
-  assert.ok(
-    await a.until(`[...document.querySelectorAll('dialog[open]')].some(d => d.innerText.includes(${JSON.stringify(me)}))`, 5000),
-    `chạm tông môn mình mà không mở bảng thông tin — dưới điểm chạm: ${under} @${JSON.stringify(pin)}, hộp thoại: ${JSON.stringify(await a.js(`[...document.querySelectorAll('dialog[open]')].map(d => d.innerText.slice(0, 80))`))}`,
-  )
+  assert.ok(await a.until(`[...document.querySelectorAll('dialog[open]')].some(d => d.innerText.includes(${JSON.stringify(pin.name)}))`, 5000), `chạm tông môn ${pin.name} mà không mở bảng thông tin`)
   await a.js(closeAll)
   await a.js(`[...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Vùng')?.click()`) // trả lại bản đồ vùng cho các bước sau
   console.log('✓ bản đồ giới: cảnh WebGL, ghim tông môn, chạm mở bảng thông tin')
   assert.deepEqual(errors, [], 'console có lỗi')
 
   // Server sập giữa chừng (SIGKILL, không kịp xả): client báo đang nối lại, server lên thì tự nối, thao tác đã ack còn nguyên
+  await a.js(`document.querySelector('[data-tab=tongMon]')?.click()`)
+  await sleep(800)
+  await a.js(pick('Diễn võ trường'))
+  await sleep(500)
+  await a.js(act)
+  assert.ok(await a.until(`${truth}.then(s => !!s.train)`), `trước khi sập: không chiêu mộ được — ${await seen()}`)
+  await a.js(closeAll)
   const before = await a.js(truth)
   expectDrops = true
   game!.kill('SIGKILL')
@@ -268,7 +270,7 @@ try {
   await startGame()
   assert.ok(await a.until(`!document.querySelector('[data-conn]')`, 25000), `server lên lại mà client không tự nối — ${await seen()}`)
   const after = await a.js(truth)
-  assert.deepEqual(after.queue, before.queue, 'thao tác đã ack mất sau khi server sập')
+  assert.deepEqual(after.train, before.train, 'thao tác đã ack mất sau khi server sập')
   assert.equal(after.quest, before.quest)
   console.log('✓ server sập rồi lên lại: tự nối lại, không mất thao tác đã ghi')
 

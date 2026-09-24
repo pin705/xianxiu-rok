@@ -159,7 +159,7 @@ export class MapScene implements Scene {
   // open: các mục tiêu đã mở (vẽ đường nét đứt tới)
   set(game: State, open: Target[], now: number) {
     this.now = now
-    this.marches = game.marches
+    this.marches = game.marches.filter(m => m.target.kind !== 'trib') // kiếp vân ở trên núi, không đi trên bản đồ vùng
     this.routes.removeChildren().forEach(c => c.destroy())
     for (const tg of open) {
       const p = place(tg)

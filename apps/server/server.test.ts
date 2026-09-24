@@ -377,3 +377,29 @@ test('bản đồ giới: đi chiếm linh mạch trong vùng mình, đóng quâ
   assert.equal(map2.spots.find(s => s.i === vein!.i)?.own, undefined, 'gọi về hết quân: điểm trống')
   c.close()
 })
+
+test('độ kiếp công khai: có chỗ trên bản đồ thì kiếp vân tụ (cả giới thấy), server giải lúc giáng và đẩy chiến báo', { skip }, async () => {
+  const { TRIB_CLOUD } = await import('@rok/rules')
+  const n = await boot('k')
+  const w = await newWorld(n)
+  const A = await guest(n, undefined, w)
+  const c = client(n, A.token)
+  const welcome = await c.welcome
+  const { state } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { state: any }
+  assert.ok(state.seat, 'vào giới là có chỗ trên bản đồ')
+  const levels = Object.fromEntries(Object.keys(state.levels).map(k => [k, 5]))
+  await api(n, '/dev/state', { state: { ...state, levels, troops: { ...state.troops, kiem1: 300 }, res: { linhThach: 5e4, linhThao: 5e4, linhKhoang: 5e4 } } }, A.token)
+  await c.push()
+  const ack = await c.act({ type: 'trib', elder: 'thanhPhong', army: { kiem1: 300 }, pill: false })
+  assert.ok(ack.ok, JSON.stringify(ack))
+  assert.equal(ack.ok && ack.rep, undefined, 'chưa giải ngay: kiếp vân đang tụ')
+  const cloud = ack.p!.marches!.at(-1)!
+  assert.equal(cloud.target.kind, 'trib')
+  const map = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { seats: { pid: number; cloud?: number }[] }
+  assert.equal(map.seats.find(s => s.pid === A.pid)?.cloud, cloud.arriveAt)
+  await api(n, '/dev/warp', { min: Math.ceil((cloud.arriveAt - welcome.now) / 60_000) + 1 }, A.token)
+  const p = await c.push(x => !!x.rep?.some(r => r.kind === 'trib'), 8000)
+  assert.equal(p.p.marches?.length, 0, 'kiếp giáng xong: đội về nhà')
+  assert.equal(TRIB_CLOUD[0], cloud.arriveAt - cloud.startAt)
+  c.close()
+})

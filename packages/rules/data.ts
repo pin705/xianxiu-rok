@@ -367,6 +367,14 @@ export const TRIBS: { hall: number; tier: Tier; waves: { type: UnitType; str: nu
 ]
 export const TRIB_COOLDOWN = 10 * 60_000
 export const TRIB_EXP = [300, 1500, 4000, 9000]
+// Độ kiếp công khai (tông môn đã có chỗ trên bản đồ giới): kiếp vân tụ trên núi TRIB_CLOUD rồi mới giáng — đội độ kiếp đứng dưới
+// kiếp vân (không giữ nhà). Lúc giáng: mỗi đội đồng minh đóng ở nhà (hộ pháp) làm lôi kiếp nhẹ HO_PHAP, mỗi lần bị cướp trúng trong
+// lúc tụ (phá kiếp) làm nặng PHA_KIEP; mỗi loại tính tối đa TRIB_AID lần. Thất bại hoàn chi phí. Hộ pháp nhận HO_PHAP_EXP kinh nghiệm.
+export const TRIB_CLOUD = [5, 8, 10, 12].map(m => m * 60_000)
+export const HO_PHAP = 0.06
+export const PHA_KIEP = 0.08
+export const TRIB_AID = 3
+export const HO_PHAP_EXP = 0.25
 
 // ---------- Nhiệm vụ ngày ----------
 

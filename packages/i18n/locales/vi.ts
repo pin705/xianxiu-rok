@@ -217,7 +217,7 @@ export const vi = {
     { name: 'Hỗn Độn Bí Cảnh', lore: 'Khe nứt dẫn về thuở trời đất chưa phân, ngũ hành đảo lộn.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : t.kind === 'pvp' ? vi.pvp.kind : t.kind === 'spot' ? vi.world.point.vein : vi.realms[t.i].name
+    return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : t.kind === 'pvp' ? vi.pvp.kind : t.kind === 'spot' ? vi.world.point.vein : t.kind === 'trib' ? vi.trib.cloud : vi.realms[t.i].name
   },
   weekend: {
     title: 'Sự kiện cuối tuần',
@@ -534,6 +534,12 @@ export const vi = {
     go: 'Độ kiếp',
     wait: (t: string) => `Kinh mạch chưa ổn, thử lại sau ${t}`,
     gather: 'Kiếp vân đang tụ…',
+    cloud: 'Kiếp vân',
+    public: (t: string, help: number, foil: number) =>
+      `Kiếp vân tụ trên núi ${t} cho cả giới thấy rồi mới giáng; đội độ kiếp đứng dưới kiếp vân, không giữ nhà. Đồng minh đến viện binh là hộ pháp (mỗi đội lôi kiếp −${pct(help)}), bị cướp trúng lúc này là bị phá kiếp (mỗi lần +${pct(foil)}). Thất bại được hoàn tài nguyên.`,
+    gathering: (t: string) => `Kiếp vân đang tụ — giáng sau ${t}`,
+    foiled: (n: number) => `Bị phá kiếp ${n} lần`,
+    started: 'Kiếp vân bắt đầu tụ trên núi — gọi đồng minh đến hộ pháp',
     success: 'Đột phá',
     fail: 'Độ kiếp thất bại',
     failHint: 'Chữa thương binh, tuyển thêm đệ tử hoặc luyện Độ Kiếp Đan rồi thử lại.',

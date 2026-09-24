@@ -1,7 +1,7 @@
 <script lang="ts">
   import { flushSync, onMount } from 'svelte'
   import {
-    BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, cost, newGame, questDone, questOf, storage, storeNeed,
+    BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, TRIBS, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, cost, newGame, questDone, questOf, storage, storeNeed,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
   import type { MapSnap, Seen, WorldInfo } from '@rok/protocol'
@@ -102,6 +102,13 @@
   // So state trước/sau để mừng việc vừa xong — dù xong theo giờ, nhờ Tụ Khí Đan hay do server đẩy xuống.
   // reports: báo chiến báo mới (trận ở bí cảnh/độ kiếp người chơi đang xem tận mắt thì không cần)
   function notice(prev: State, next: State, reports: boolean) {
+    // kiếp vân (độ kiếp công khai) vừa giáng: đang ở núi thì diễn sét như độ kiếp tại chỗ, không thì chỉ báo
+    const tr = reports && tab === 'tongMon' && !document.hidden && !storm ? next.reports.find(r => r.kind === 'trib' && r.id >= prev.nextId) : undefined
+    if (tr) {
+      strike(tr, prev.levels.chuDien)
+      if (prev.reports.every(r => r.id <= prev.seen)) setTimeout(() => act({ type: 'seen' }))
+      prev = { ...prev, levels: { ...prev.levels, chuDien: next.levels.chuDien } }
+    }
     for (const id of IDS) {
       if (next.levels[id] > prev.levels[id]) {
         bursts = [...bursts, { id, level: next.levels[id], t: now }]
@@ -110,7 +117,7 @@
       }
     }
     if (reports)
-      for (const r of next.reports.filter(r => r.id >= prev.nextId))
+      for (const r of next.reports.filter(r => r.id >= prev.nextId && r !== tr))
         toast(r.def ? (r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? '')) : L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
     if (next.mail.length && next.mail.at(-1)!.id >= prev.nextId) toast(`${L.mail.title}: ${(L.mail.msg[next.mail.at(-1)!.k] ?? L.mail.msg.unknown)(...(next.mail.at(-1)!.a ?? []))[0]}`)
     if (next.stats.trained > prev.stats.trained) toast(L.away.trained(next.stats.trained - prev.stats.trained))
@@ -290,20 +297,36 @@
     target = null
   }
 
-  // Độ kiếp: về núi, trời tối, ba đợt sét đánh xuống Chủ điện, rồi hiện kết quả
+  // Độ kiếp: về núi, trời tối, ba đợt sét đánh xuống Chủ điện, rồi hiện kết quả.
+  // Có chỗ trên bản đồ giới: kiếp vân tụ trước cho cả giới thấy, server giải lúc giáng — sét diễn khi kết quả về (notice)
   async function trib(elder: ElderId, army: Army, pill: boolean) {
+    if (game?.seat) {
+      if (!net || busy) return
+      busy = true
+      const r = await net.send({ type: 'trib', elder, army, pill })
+      busy = false
+      if (!r.ok) return
+      selected = null
+      tab = 'tongMon'
+      sfx('thunder')
+      toast(L.trib.started)
+      return
+    }
     const from = game?.levels.chuDien ?? null
     storm = from === null ? null : { hall: from, strikes: 0 } // giấu tầng mới ngay khi server trả kết quả
     const r = await fightNow({ type: 'trib', elder, army, pill })
-    if (!r || !game) {
+    if (!r || from === null) {
       storm = null
       return
     }
-    const hall = game.levels.chuDien
+    strike(r, from)
+  }
+  function strike(r: Report, from: number) {
+    const hall = TRIBS[r.i].hall + 1
     selected = null
     tab = 'tongMon'
     requestAnimationFrame(() => world?.querySelector('[data-b="chuDien"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }))
-    storm = from === null ? null : { hall: from, strikes: r.fights.length }
+    storm = { hall: from, strikes: r.fights.length }
     r.fights.forEach((_, i) => setTimeout(() => sfx('thunder'), 700 + i * 1200))
     setTimeout(() => {
       storm = null

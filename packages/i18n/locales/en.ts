@@ -221,7 +221,7 @@ export const en: Text = {
     { name: 'Chaos Realm', lore: 'A rift back to the time before heaven and earth parted, where the five elements turn over.' },
   ],
   target(t: Target) {
-    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : t.kind === 'pvp' ? en.pvp.kind : t.kind === 'spot' ? en.world.point.vein : en.realms[t.i].name
+    return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : t.kind === 'pvp' ? en.pvp.kind : t.kind === 'spot' ? en.world.point.vein : t.kind === 'trib' ? en.trib.cloud : en.realms[t.i].name
   },
   weekend: {
     title: 'Weekend event',
@@ -537,6 +537,12 @@ export const en: Text = {
     go: 'Face the tribulation',
     wait: (t: string) => `Meridians unsettled — retry in ${t}`,
     gather: 'Tribulation clouds gather…',
+    cloud: 'Tribulation cloud',
+    public: (t: string, help: number, foil: number) =>
+      `The cloud gathers over your mountain for ${t}, in sight of the whole world, before it strikes; the tribulation team waits beneath it, not at home. Allies who reinforce you are guardians (lightning −${pct(help)} each); every raid that beats you meanwhile disrupts it (+${pct(foil)} each). A failed tribulation refunds its cost.`,
+    gathering: (t: string) => `Tribulation cloud gathering — strikes in ${t}`,
+    foiled: (n: number) => `Disrupted ${n}×`,
+    started: 'A tribulation cloud gathers over your mountain — call allies to guard you',
     success: 'Breakthrough',
     fail: 'Tribulation failed',
     failHint: 'Heal the wounded, recruit more disciples or brew a Tribulation Pill, then try again.',

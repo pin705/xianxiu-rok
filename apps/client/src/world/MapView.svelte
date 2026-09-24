@@ -87,10 +87,10 @@
       {@const out = now < m.arriveAt}
       {@const held = !!m.stay || !!(m.mine && m.mine.end > now)}
       <li>
-        <Card tone="silk" onclick={() => (m.target.kind === 'pvp' ? onrivals() : m.target.kind === 'spot' ? undefined : onpick(m.target))}>
+        <Card tone="silk" onclick={() => (m.target.kind === 'pvp' ? onrivals() : m.target.kind === 'spot' || m.target.kind === 'trib' ? undefined : onpick(m.target))}>
           <span class="row">
             <Portrait look={LOOK[m.elder]} size={30} />
-            <span class="grow stack" style:--gap="0"><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft">{m.stay ? L.world.stay : m.mine && m.mine.end > now ? L.world.gathering : out ? L.map.out : L.map.back}</small></span>
+            <span class="grow stack" style:--gap="0"><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft">{m.target.kind === 'trib' ? L.trib.gather : m.stay ? L.world.stay : m.mine && m.mine.end > now ? L.world.gathering : out ? L.map.out : L.map.back}</small></span>
             {#if held && onrecall}
               <Button size="sm" variant="ghost" onclick={e => (e.stopPropagation(), onrecall(m.id))}>{L.world.recall}</Button>
             {:else}

@@ -337,6 +337,7 @@ export class World {
       return this.deliver(() => ack({ ok: false, err }))
     }
     this.commit(slot, r.state, { sock, ack })
+    if (a.type === 'trib') this.armRaid() // có chỗ trên bản đồ: kiếp vân tụ, giải lúc giáng như trận giới
   }
 
   // Thao tác chạm tới tông môn khác (đi cướp): luật giới, có thể đổi state của nhiều người trong một bước
@@ -443,7 +444,7 @@ export class World {
     }, true)
     if (ack) this.deliver(() => ack({ ok: true, ...push }), true)
     if (prev.marches !== stored.marches) this.wake(slot)
-    if (prev.seat !== stored.seat || prev.name !== stored.name || prev.levels.chuDien !== stored.levels.chuDien || (prev.marches !== stored.marches && [...prev.marches, ...stored.marches].some(m => m.path)))
+    if (prev.seat !== stored.seat || prev.name !== stored.name || prev.levels.chuDien !== stored.levels.chuDien || (prev.marches !== stored.marches && [...prev.marches, ...stored.marches].some(m => m.path || m.target.kind === 'trib')))
       this.mapChanged()
     this.schedule()
   }

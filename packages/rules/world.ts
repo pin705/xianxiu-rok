@@ -5,9 +5,9 @@ import {
   ALLY_COST, ALLY_ELDERS, ALLY_HALL, ALLY_HELPS, ALLY_MAX, HELP_MIN, HELP_SHARE, RESOURCES as RES,
   CARRY, ELDER_IDS, ELO_K, EVENT_TOP, FOES_MAX, GUARD_STEP, MAIL_MAX, MATCH_PICK, MATCH_POOL, PROTECT, PVP_FLOOR, PVP_HALL,
   RAID_SHARE, RESOURCES, REVENGE_TIME, SHIELD_TIME, TIER, UNITS, BEATS, BOSSES, GARRISON_MAX, MINE_RATE, MINE_RESPAWN, MINE_STOCK, TIDE_MINE,
-  TIDE_PROD, TYPES, VEIN_BUFF, VEIN_CAP, RALLY_MAX, RALLY_WAIT, REINFORCE_MAX, might,
+  TIDE_PROD, TYPES, VEIN_BUFF, VEIN_CAP, RALLY_MAX, RALLY_WAIT, REINFORCE_MAX, HO_PHAP, HO_PHAP_EXP, PHA_KIEP, TRIB_AID, TRIB_EXP, might,
   admit, advance, armyError, bump, elderLevel, evBump, fight, lead, marchSlots, marchTime, minus, mob, pickArmy, power, pushReport, sideOf,
-  snap, storage, unitOf, cutOf, hasten, jobOf,
+  snap, storage, unitOf, cutOf, hasten, jobOf, giveExp, tribEnd,
   type Buff, type Reward,
   type JobKind,
   type Army, type Bag, type ElderId, type Err, type Mail, type March, type Report, type Side, type State,
@@ -291,7 +291,7 @@ function allyAct(w: World, ps: Players, pid: number, a: Exclude<WorldAction, { t
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
-const waiting = (m: March) => (m.target.kind === 'pvp' || m.target.kind === 'spot') && !m.returnAt && !m.stay && !m.back
+const waiting = (m: March) => (m.target.kind === 'pvp' || m.target.kind === 'spot' || m.target.kind === 'trib') && !m.returnAt && !m.stay && !m.back
 type Party = [pid: number, s: State, m: March][] // các đội đi cùng (kết trận), state đã đưa tới lúc tới nơi
 // Viện binh đang đóng ở nhà người chơi pid
 export const aidAt = (ps: Players, pid: number): [number, March][] =>
@@ -320,6 +320,14 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     if (done.has(`${pid}:${id}`)) continue
     const att = advance(cur(pid)!, at)
     const m = att.marches.find(x => x.id === id)!
+    if (m.target.kind === 'trib') {
+      // kiếp vân giáng: đồng minh đóng ở nhà là hộ pháp (nhẹ kiếp, nhận kinh nghiệm), mỗi lần bị cướp trúng lúc tụ làm nặng kiếp
+      const guards = aidAt(view(), pid).slice(0, TRIB_AID)
+      changed.set(pid, tribEnd(att, id, at, (1 - HO_PHAP * guards.length) * (1 + PHA_KIEP * Math.min(TRIB_AID, m.foil ?? 0))))
+      const exp = Math.round(TRIB_EXP[m.target.i] * HO_PHAP_EXP)
+      for (const [hp, hm] of guards) changed.set(hp, giveExp(advance(cur(hp)!, at), hm.elder, exp))
+      continue
+    }
     if (m.target.kind === 'spot') {
       // kết trận: mọi đội cùng mã, cùng lúc tới, giải một lần như một bên
       const group: Party = m.rally === undefined ? [[pid, att, m]] : due.flatMap(([a2, p2, id2]) => {
@@ -416,6 +424,7 @@ export function raid(att: State, attPid: number, def: State, defPid: number, m: 
     pvp: { pts: Math.max(0, def.pvp.pts - d), win: def.pvp.win + (f.win ? 0 : 1), loss: def.pvp.loss + (f.win ? 1 : 0) },
     foes: [...def.foes.filter(x => x.pid !== attPid), { pid: attPid, name: att.name, at }].slice(-FOES_MAX),
     shield: f.win ? Math.max(def.shield, at + SHIELD_TIME) : def.shield,
+    marches: f.win ? dd.marches.map(x => (x.target.kind === 'trib' ? { ...x, foil: (x.foil ?? 0) + 1 } : x)) : dd.marches, // phá kiếp
   }
   const hs: Players = new Map()
   helpers.forEach(([hp, st, hm], j) => {
@@ -484,7 +493,7 @@ export const eventTop = (ps: Players, week: number) =>
 // ---------- Ảnh chụp bản đồ giới (server gửi cho người đang mở bản đồ) ----------
 
 export type Chron = { at: number; k: string; a: (string | number)[] } // biên niên của giới: chữ dựng ở client theo khoá
-export type Seat = { pid: number; name: string; x: number; y: number; hall: number; power: number; npc: boolean; shield: boolean }
+export type Seat = { pid: number; name: string; x: number; y: number; hall: number; power: number; npc: boolean; shield: boolean; cloud?: number } // cloud: kiếp vân giáng lúc này
 export type MapMarch = { pid: number; id: number; path: Pos[]; startAt: number; arriveAt: number; returnAt: number; foe?: string; spot?: string }
 // Điểm khác mặc định: phe giữ (tên minh/tông môn), số đội đóng, mỏ còn bao nhiêu, yêu vương còn máu, lúc hồi
 export type SpotView = { i: number; own?: string; n?: number; left?: number; hp?: number; until?: number }
@@ -494,7 +503,8 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
   const seats: Seat[] = [], marches: MapMarch[] = []
   for (const [pid, s] of ps) {
     if (!s.seat) continue
-    seats.push({ pid, name: s.name, x: s.seat.x, y: s.seat.y, hall: s.levels.chuDien, power: Math.round(power(s)), npc: npc.has(pid), shield: s.shield > now })
+    const cloud = s.marches.find(m => m.target.kind === 'trib')?.arriveAt
+    seats.push({ pid, name: s.name, x: s.seat.x, y: s.seat.y, hall: s.levels.chuDien, power: Math.round(power(s)), npc: npc.has(pid), shield: s.shield > now, ...(cloud && { cloud }) })
     for (const m of s.marches)
       if (m.path) marches.push({ pid, id: m.id, path: m.path, startAt: m.startAt, arriveAt: m.arriveAt, returnAt: m.returnAt, ...(m.foe && { foe: m.foe }), ...(m.spot && { spot: m.spot }) })
   }

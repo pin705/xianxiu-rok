@@ -5,7 +5,7 @@ import {
   GEAR, GEAR_COST_GROWTH, GEAR_MAX, GEAR_TIME_GROWTH, HEAL_COST,
   HEAL_TIME, HOME, HOSPITAL_BASE, HOSPITAL_STEP, KNEE, LOSS_EXP, MAIN_SHARE, MAP_HALL, MARCH_MIN, MARCH_SLOTS, MARCH_SPEED,
   MAX_CUT, MAX_LEVEL, PHA_CANH, PILLS, QUESTS, QUEUE_SIZE, RATE_HIGH, REALMS, REBIRTH_BUILD, REBIRTH_HALL, REBIRTH_HEAD, REBIRTH_HEAD_MAX, REBIRTH_MAX, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
-  SECT_SHARE, SPEEDUP, SPEEDUP_BIG, START, TALENTS, TALENT_EVERY, TALENT_MAX, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TIME_GROWTH2, TRIBS, TRIB_COOLDOWN,
+  SECT_SHARE, SPEEDUP, SPEEDUP_BIG, START, TALENTS, TALENT_EVERY, TALENT_MAX, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TIME_GROWTH2, TRIBS, TRIB_CLOUD, TRIB_COOLDOWN,
   TRIB_EXP, TYPES, UNITS, UNIT_BASE,
   type Bag, type Bonus, type BuildingId, type DailyId, type EventId, type WeeklyId, type ElderId, type GearId, type PillId, type Quest, type Res, type Reward, type Skill,
   type TechId, type Tier, type UnitId, type UnitType,
@@ -30,8 +30,8 @@ export type Gear = { lv: number; on?: ElderId } // on: trưởng lão đang đeo
 export type Talent = [atk: number, hp: number, skill: number]
 // until: lúc hết (due() gỡ đúng giờ, nên sản lượng trước/sau tính đúng); 0 = giữ tới khi server gỡ. src: nguồn, mỗi nguồn một buff
 export type Buff = { key: Bonus; v: number; until: number; src: string }
-// pvp: i = mã người chơi bị cướp · spot: i = chỉ số điểm trên bản đồ giới (atlas.points)
-export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp' | 'spot'; i: number }
+// pvp: i = mã người chơi bị cướp · spot: i = chỉ số điểm trên bản đồ giới (atlas.points) · trib: kiếp vân, i = lần độ kiếp
+export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp' | 'spot' | 'trib'; i: number }
 export type Gain = { res: Partial<Bag>; items: Items; elder?: ElderId; exp: number }
 export type March = {
   id: number
@@ -53,6 +53,8 @@ export type March = {
   hurt?: Army
   gain?: Gain
   report?: number
+  pill?: PillId // kiếp vân: đan độ kiếp đã dùng lúc tụ
+  foil?: number // kiếp vân: số lần bị cướp trúng trong lúc tụ (phá kiếp)
 }
 export type Snap = { elder?: ElderId; level: number; troops: { type: UnitType; tier: Tier; n: number }[] }
 export type Report = {
@@ -479,7 +481,7 @@ export function admit(s: State, hurt: Army): { state: State; dead: Army } {
   return { state: { ...s, wounded }, dead }
 }
 
-function giveExp(s: State, elder: ElderId, exp: number): State {
+export function giveExp(s: State, elder: ElderId, exp: number): State {
   const cur = s.elders[elder]
   if (cur === undefined) return s
   return { ...s, elders: { ...s.elders, [elder]: Math.min(expAt(ELDER_MAX), cur + exp) } }
@@ -700,6 +702,7 @@ export function forgeError(s: State, g: GearId): Err | null {
 export function tribError(s: State): Err | null {
   const tr = TRIBS[s.trib]
   if (!tr || s.levels.chuDien !== tr.hall) return 'locked'
+  if (s.marches.some(m => m.target.kind === 'trib')) return 'busy'
   if (s.tribCool > s.time) return 'cooldown'
   return afford(s.res, cost('chuDien', tr.hall + 1)) ? null : 'not_enough'
 }
@@ -725,11 +728,10 @@ export function hasten(s: State, job: JobKind, startAt: number, ms: number, at: 
 export const tribPill = (s: State, want: boolean): 'phaCanh' | 'doKiep' | null =>
   !want ? null : s.items.phaCanh ? 'phaCanh' : s.items.doKiep ? 'doKiep' : null
 
-// Ba đợt lôi kiếp nối nhau; đệ tử còn đứng được đi tiếp sang đợt sau.
-function tribulation(s: State, elder: ElderId, army: Army, pill: boolean, seed: number) {
+// Ba đợt lôi kiếp nối nhau; đệ tử còn đứng được đi tiếp sang đợt sau. mul: hộ pháp / phá kiếp (kiếp vân công khai)
+function tribulation(s: State, elder: ElderId, army: Army, p: PillId | null, seed: number, mul = 1) {
   const tr = TRIBS[s.trib]
-  const p = tribPill(s, pill)
-  const weaken = (1 - Math.min(MAX_CUT, lead(s, elder, 'trib'))) * (p === 'phaCanh' ? 1 - PHA_CANH : p ? 1 - DO_KIEP : 1)
+  const weaken = (1 - Math.min(MAX_CUT, lead(s, elder, 'trib'))) * (p === 'phaCanh' ? 1 - PHA_CANH : p ? 1 - DO_KIEP : 1) * mul
   const lv = elderLevel(s.elders[elder])
   let me = sideOf(s, elder, army)
   let win = true
@@ -750,6 +752,32 @@ function tribulation(s: State, elder: ElderId, army: Army, pill: boolean, seed: 
   return { win, fights, left: me.troops.map(x => x.n), seed }
 }
 
+// Kiếp giáng lúc at: đội độ kiếp (đã rời khỏi s.troops) đánh ba đợt, người còn đứng về nhà, thương binh vào Đan phòng.
+// paid: chi phí đã trả lúc kiếp vân tụ (công khai) — thành công không trừ nữa, thất bại hoàn lại.
+function settle(s: State, elder: ElderId, army: Army, p: PillId | null, seed: number, at: number, mul: number, paid: boolean) {
+  const k = s.trib
+  const tr = TRIBS[k]
+  const r = tribulation(s, elder, army, p, seed, mul)
+  const ids = UNITS.filter(u => (army[u] ?? 0) > 0)
+  const hurt = Object.fromEntries(ids.map((u, i) => [u, army[u]! - r.left[i]])) as Army
+  const adm = admit({ ...s, troops: plus(s.troops, Object.fromEntries(ids.map((u, i) => [u, r.left[i]]))) }, hurt)
+  const exp = Math.round(TRIB_EXP[k] * (1 + lead(s, elder, 'exp')) * (r.win ? 1 : LOSS_EXP))
+  const st = giveExp(adm.state, elder, exp)
+  const price = cost('chuDien', tr.hall + 1)
+  const next = r.win
+    ? bump({ ...st, trib: k + 1, res: paid ? st.res : bag(x => st.res[x] - price[x]), levels: { ...st.levels, chuDien: tr.hall + 1 } }, 'win')
+    : { ...st, tribCool: at + TRIB_COOLDOWN, res: paid ? addBag(st.res, price) : st.res }
+  return { state: pushReport(next, { at, kind: 'trib', i: k, win: r.win, fights: r.fights, hurt, dead: adm.dead, gain: { res: {}, items: {}, exp } }), seed: r.seed }
+}
+
+// Kiếp vân giáng (server gọi lúc m.arriveAt; world.ts tính mul từ hộ pháp và phá kiếp)
+export function tribEnd(s: State, id: number, at: number, mul: number): State {
+  const st = advance(s, at)
+  const m = st.marches.find(x => x.id === id)
+  if (!m || m.target.kind !== 'trib') return st
+  return settle({ ...st, marches: st.marches.filter(x => x !== m) }, m.elder, m.army, m.pill ?? null, m.seed, at, mul, true).state
+}
+
 // Tỉ lệ thắng ước lượng để hiện cho người chơi: đánh thử với 9 mầm cố định, khác mầm thật (không lộ đúng kết quả).
 // Tính đủ hệ khắc, công pháp trưởng lão, lôi kiếp — lực chiến thô thì không (đội bị khắc hệ hiện "áp đảo" mà thua 1/4).
 export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'trib', pill = false) {
@@ -758,7 +786,7 @@ export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'tri
   let won = 0
   for (let k = 1; k <= 9; k++) {
     const seed = Math.imul(k, 0x9e3779b1) >>> 0
-    if (t === 'trib' ? tribulation(s, elder, army, pill, seed).win : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win) won++
+    if (t === 'trib' ? tribulation(s, elder, army, tribPill(s, pill), seed).win : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win) won++
   }
   return won / 9
 }
@@ -915,20 +943,19 @@ export function apply(s: State, raw: Action, now: number): Result {
       if (e) return no(e)
       const p = tribPill(state, a.pill)
       if (a.pill && !p) return no('no_item')
+      const army = Object.fromEntries(UNITS.filter(u => a.army[u]).map(u => [u, a.army[u]])) as Army
+      const away: State = { ...state, troops: minus(state.troops, army), items: p ? use(p) : state.items }
+      if (!state.seat) {
+        const r = settle(away, a.elder, army, p, state.seed, t, 1, false)
+        return ok({ ...r.state, seed: r.seed })
+      }
+      // có chỗ trên bản đồ giới: kiếp vân tụ trên núi cho cả giới thấy, trả chi phí ngay, server giải lúc giáng (tribEnd).
+      // Đội độ kiếp là một đội xuất quân (chiếm một lượt)
+      if (state.marches.length >= marchSlots(state)) return no('slots')
       const k = state.trib
-      const tr = TRIBS[k]
-      const { win, fights, left, seed } = tribulation(state, a.elder, a.army, a.pill, state.seed)
-      const ids = UNITS.filter(u => (a.army[u] ?? 0) > 0)
-      const hurt = Object.fromEntries(ids.map((u, i) => [u, a.army[u]! - left[i]])) as Army
-      let st: State = { ...state, seed, troops: minus(state.troops, hurt), items: p ? use(p) : state.items }
-      const adm = admit(st, hurt)
-      st = adm.state
-      const exp = Math.round(TRIB_EXP[k] * (1 + lead(state, a.elder, 'exp')) * (win ? 1 : LOSS_EXP))
-      st = giveExp(st, a.elder, exp)
-      st = win
-        ? bump({ ...st, trib: k + 1, res: bag(r => st.res[r] - cost('chuDien', tr.hall + 1)[r]), levels: { ...st.levels, chuDien: tr.hall + 1 } }, 'win')
-        : { ...st, tribCool: t + TRIB_COOLDOWN }
-      return ok(pushReport(st, { at: t, kind: 'trib', i: k, win, fights, hurt, dead: adm.dead, gain: { res: {}, items: {}, exp } }))
+      const price = cost('chuDien', TRIBS[k].hall + 1)
+      const m: March = { id: state.nextId, elder: a.elder, army, target: { kind: 'trib', i: k }, seed: state.seed, startAt: t, arriveAt: t + TRIB_CLOUD[k], returnAt: 0, ...(p && { pill: p }) }
+      return ok({ ...away, res: bag(r => away.res[r] - price[r]), marches: [...away.marches, m], nextId: state.nextId + 1, seed: nextSeed(state.seed) })
     }
     case 'speed': {
       if (a.job === 'brew') return no('bad') // đan không rút ngắn việc luyện đan: có giảm thời gian từ công pháp là thành vòng lặp đẻ đan
@@ -1134,7 +1161,7 @@ function valid(s: any): s is State {
     obj(s.gear) && Object.entries(s.gear).every(([g, x]: [string, any]) => Object.hasOwn(GEAR, g) && obj(x) && num(x.lv) && (x.on === undefined || Object.hasOwn(ELDERS, x.on))) &&
     Array.isArray(s.buffs) && s.buffs.every((b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string') &&
     Array.isArray(s.marches) &&
-    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect', 'pvp', 'spot'].includes(m.target.kind) &&
+    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect', 'pvp', 'spot', 'trib'].includes(m.target.kind) &&
       num(m.target.i) && num(m.seed) && num(m.startAt) && num(m.arriveAt) && num(m.returnAt)) &&
     Array.isArray(s.reports) && s.reports.every((r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead)) &&
     num(s.seen) && num(s.beast) && obj(s.cool) &&

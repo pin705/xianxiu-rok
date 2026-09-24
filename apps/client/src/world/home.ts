@@ -134,6 +134,7 @@ export class Home {
   private rt = 0 // đồng hồ thật, cho hiệu ứng thoáng qua
   private mood = MOOD.day
   private stormK = 0 // 0 trời yên … 1 kiếp vân phủ kín
+  private cloud = false
   private storm = { n: 0, at: 0, struck: 0, eye: [0, 0] as Pt, flare: 0 }
   private lightsLevel = 0
   private view?: HomeView
@@ -456,10 +457,10 @@ export class Home {
     this.view = v
     this.mood = MOOD[v.phase]
     this.sky.texture = skyTex(v.phase)
-    if (v.storm && !this.storm.n) {
-      if (!this.vortex.children.length) this.buildStorm()
-      Object.assign(this.storm, { at: this.rt, struck: 0 })
-    }
+    // kiếp vân công khai đang tụ (server giải lúc giáng): trời tối sẵn, chưa có sét
+    this.cloud = v.game.marches.some(m => m.target.kind === 'trib')
+    if ((v.storm || this.cloud) && !this.vortex.children.length) this.buildStorm()
+    if (v.storm && !this.storm.n) Object.assign(this.storm, { at: this.rt, struck: 0 })
     this.storm.n = v.storm
     const g = v.game
     for (const id of IDS) this.place(id, g)
@@ -901,7 +902,7 @@ export class Home {
     this.far.forEach((f, i) => (f.y = cam * (0.5 - i * 0.2)))
     // trời chuyển dần sang kiếp vân và trở lại
     const st = this.storm
-    this.stormK += ((st.n ? 1 : 0) - this.stormK) * Math.min(1, dt * 2.2)
+    this.stormK += ((st.n || this.cloud ? 1 : 0) - this.stormK) * Math.min(1, dt * 2.2)
     const k = this.stormK, m = this.mood, sm = MOOD.storm
     this.world.tint = this.land.tint = lerpC(m.tint, sm.tint, k)
     this.stormSky.alpha = k

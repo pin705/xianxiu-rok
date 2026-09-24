@@ -447,3 +447,87 @@ test('viện binh: đóng ở nhà đồng minh, cùng thủ khi bị cướp; t
     assert.ok(ps.get(3)!.marches[0].returnAt > m.arriveAt)
   }
 })
+
+test('độ kiếp công khai: kiếp vân tụ trước (trả chi phí, đội rời nhà), hộ pháp nhẹ kiếp + nhận kinh nghiệm, phá kiếp nặng kiếp, thất bại hoàn chi phí', async () => {
+  const { freshWorld, allyOf, advanceAll, aidAt, mapOf } = await import('./world.ts')
+  const { HO_PHAP_EXP, TRIB_CLOUD, TRIB_EXP, cost, tribError } = await import('./index.ts')
+  const price = cost('chuDien', 11)
+  // tầng 10 = đỉnh Trúc Cơ: độ kiếp lần thứ hai; có chỗ trên bản đồ giới
+  const kiep = (army: Partial<State['troops']>) => ({ ...sect('Kiếp', 10, army), trib: 1, seat: { x: 10, y: 10 } })
+  // độ kiếp lúc at, trả về state vừa tụ kiếp vân
+  const start = (s: State, army: Partial<State['troops']>, at = T0) => {
+    const r = apply(advance(s, at), { type: 'trib', elder: 'thanhPhong', army, pill: false }, at)
+    if (!r.ok) throw new Error(r.error)
+    return r.state
+  }
+  const strike = (ps: Players, w: World, pid: number) => {
+    const m = ps.get(pid)!.marches.find(x => x.target.kind === 'trib')!
+    const r = advanceAll(ps, w, m.arriveAt)
+    for (const [k, v] of r.changed) ps.set(k, v)
+    return ps.get(pid)!.reports.at(-1)!
+  }
+  const wave = (rep: State['reports'][number]) => count(rep.hurt) // cùng mầm, sét yếu/mạnh hơn → thương vong ít/nhiều hơn
+
+  // tụ kiếp vân: chi phí trả ngay, đội rời nhà, chưa có chiến báo; client (mầm ẩn) không tự giải; cả giới thấy trên bản đồ
+  const cloud = start(kiep({ kiem3: 400 }), { kiem3: 400 })
+  const m = cloud.marches[0]
+  assert.equal(m.target.kind, 'trib')
+  assert.equal(m.arriveAt, T0 + TRIB_CLOUD[1])
+  assert.equal(cloud.troops.kiem3, 0)
+  assert.equal(cloud.res.linhThach, 2e5 - price.linhThach)
+  assert.equal(cloud.reports.length, 0)
+  assert.equal(tribError(cloud), 'busy')
+  assert.equal(advance({ ...cloud, seed: 0, marches: [{ ...m, seed: 0 }] }, m.arriveAt + HOUR).marches.length, 1)
+  assert.equal(nextRaid(world(cloud)), m.arriveAt)
+  assert.equal(mapOf(world(cloud), T0, new Set(), []).seats[0].cloud, m.arriveAt)
+
+  // một mình: kiếp giáng đúng giờ; thắng thì lên tầng 11 mà không trừ chi phí lần nữa
+  const solo = world(cloud)
+  const plain = strike(solo, freshWorld(), 1)
+  const after = solo.get(1)!
+  assert.equal(after.marches.length, 0)
+  assert.equal(plain.kind, 'trib')
+  if (plain.win) {
+    assert.equal(after.levels.chuDien, 11)
+    assert.equal(after.trib, 2)
+    assert.deepEqual(after.res, advance(cloud, m.arriveAt).res)
+  }
+  assert.equal(after.troops.kiem3 + after.wounded.kiem3 + count(plain.dead), 400, 'đệ tử về nhà hoặc vào Đan phòng')
+
+  // thất bại: hoàn đủ chi phí, chờ hồi
+  const weak = world(start(kiep({ kiem1: 1 }), { kiem1: 1 }))
+  const lost = strike(weak, freshWorld(), 1)
+  assert.equal(lost.win, false)
+  assert.equal(weak.get(1)!.levels.chuDien, 10)
+  assert.equal(weak.get(1)!.res.linhThach, advance(start(kiep({ kiem1: 1 }), { kiem1: 1 }), m.arriveAt).res.linhThach + price.linhThach)
+  assert.ok(weak.get(1)!.tribCool > m.arriveAt)
+
+  // hộ pháp: đồng minh đóng ở nhà lúc kiếp giáng — lôi kiếp nhẹ đi, trưởng lão hộ pháp nhận kinh nghiệm
+  const ps = world(kiep({ kiem3: 400 }), sect('Hộ', 10, { the3: 300 }))
+  let w = freshWorld()
+  for (const [pid, a] of [[1, { type: 'allyFound', name: 'Hộ Pháp', tag: 'HP' }], [2, { type: 'allyJoin', id: 1 }], [2, { type: 'aid', pid: 1, elder: 'thanhPhong', army: { the3: 300 } }]] as const) {
+    const r = worldAct(ps, pid, a as never, T0, 7, undefined, w)
+    assert.ok(r.ok, JSON.stringify(r))
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+  }
+  assert.equal(allyOf(w, 2)?.id, 1)
+  let r = advanceAll(ps, w, ps.get(2)!.marches[0].arriveAt)
+  for (const [k, v] of r.changed) ps.set(k, v)
+  assert.equal(aidAt(ps, 1).length, 1)
+  const t1 = ps.get(2)!.marches[0].arriveAt
+  ps.set(1, start(ps.get(1)!, { kiem3: 400 }, t1))
+  const exp0 = ps.get(2)!.elders.thanhPhong!
+  const guarded = strike(ps, w, 1)
+  assert.ok(wave(guarded) < wave(plain), `hộ pháp: thương vong ${wave(guarded)} phải ít hơn ${wave(plain)}`)
+  assert.equal(ps.get(2)!.elders.thanhPhong! - exp0, Math.round(TRIB_EXP[1] * HO_PHAP_EXP))
+
+  // phá kiếp: bị cướp trúng trong lúc kiếp vân tụ (đội độ kiếp không giữ nhà) — lôi kiếp nặng thêm
+  const pv = world(sect('Phá', 10, { kiem3: 1100 }), kiep({ kiem3: 400, the1: 50 }))
+  const raid = send(pv, 1, 2, { kiem3: 1100 })
+  pv.set(2, start(pv.get(2)!, { kiem3: 400 }, raid.arriveAt - 60_000))
+  resolve(pv, raid.arriveAt)
+  assert.equal(pv.get(2)!.marches[0].foil, 1, 'cướp thắng lúc kiếp vân tụ = phá kiếp một lần')
+  const foiled = strike(pv, freshWorld(), 2)
+  assert.ok(wave(foiled) > wave(plain), `phá kiếp: thương vong ${wave(foiled)} phải nhiều hơn ${wave(plain)}`)
+})

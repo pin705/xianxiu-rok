@@ -2,7 +2,7 @@
   // Bảng công trình: mở khi chạm vào công trình trên núi. Công trình có chức năng thì thêm thẻ (tuyển, luyện đan, công pháp).
   // Chủ điện ở tầng 5, 10, 15, 20: thay nâng cấp bằng độ kiếp. Từ tầng 15: luân hồi.
   import {
-    BUILDINGS, DO_KIEP, GUARD_STEP, MAX_LEVEL, PHA_CANH, REBIRTH_HALL, TECH_ROWS, TRIBS, batch, buildTime, capAt, cost, gearCap, hospital, marchSlots, might, mob, rate,
+    BUILDINGS, DO_KIEP, GUARD_STEP, HO_PHAP, MAX_LEVEL, PHA_CANH, PHA_KIEP, TRIB_CLOUD, REBIRTH_HALL, TECH_ROWS, TRIBS, batch, buildTime, capAt, cost, gearCap, hospital, marchSlots, might, mob, rate,
     storage, storeNeed, tribError, tribPill, upgradeError, winChance,
     type Action, type Army, type BuildingId, type ElderId, type State, type Tier, type UnitType,
   } from '@rok/rules'
@@ -147,8 +147,10 @@
         <!-- Độ kiếp -->
         {@const terr = tribError(game)}
         {@const tp = tribPill(game, true)}
+        {@const cloud = game.marches.find(m => m.target.kind === 'trib')}
         <Section title={L.trib.title}>
           <p class="t-small t-lore">{L.trib.lore(L.realmName(tr.hall + 1))}</p>
+          {#if game.seat}<p class="t-small t-soft">{L.trib.public(clock(TRIB_CLOUD[game.trib]), HO_PHAP, PHA_KIEP)}</p>{/if}
           <ul class="stack">
             {#each tr.waves as w, i (i)}
               <li class="wave row">
@@ -161,6 +163,12 @@
             {/each}
           </ul>
         </Section>
+        {#if cloud}
+          <Card tone="silk">
+            <p class="t-small t-strong"><Icon name="bolt" size={16} /> {L.trib.gathering(clock(Math.max(0, cloud.arriveAt - now)))}</p>
+            {#if cloud.foil}<p class="t-small t-bad">{L.trib.foiled(cloud.foil)}</p>{/if}
+          </Card>
+        {:else}
         <Section title={L.trib.need}>
           <Bag res={cost('chuDien', tr.hall + 1)} have={game.res} />
           {@render store(cost('chuDien', tr.hall + 1))}
@@ -178,6 +186,7 @@
           onsubmit={(e, a) => ontrib(e, a, pill && !!tp)}
           onrecruit={() => onselect('dienVoTruong', 'train')}
         />
+        {/if}
       {:else if err === 'max_level'}
         <p class="mt-3 center t-gold t-strong">{L.panel.maxed}</p>
       {:else}
