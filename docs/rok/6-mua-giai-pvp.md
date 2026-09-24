@@ -41,7 +41,7 @@
 | Eve of the Crusade (tiền KvK) | ngày ~75–95 [8]; bài khác ghi ~100 [1] | 3 chặng PvE + luyện quân, xếp hạng liên server. Tracker ước 3 chặng × 2 ngày rồi mở bản đồ KvK (10 → 16/11/2026, tác giả tự ghi là ước lượng) [18] |
 | Season 1 — KvK 1 ("The Lost Kingdom") | ngay sau Eve | 8 vương quốc. Dài ~50 ngày không kể tiền KvK [8][9]; bài tổng hợp cùng tác giả ghi 60 [7] — [mâu thuẫn] |
 | Season 2 — KvK 2 | ~60–70 ngày sau KvK 1 [7][9] | Bản đồ Lost Kingdom; ghép theo "vùng" 8 vương quốc liền số đã xong KvK 1 [9] |
-| Season 3 — KvK 3 | chưa tới 30 ngày sau KvK 2 [7] | Light and Darkness (2 phe × 4 vương quốc) hoặc King of All Britain (Viking – Anh; 1.1.12 ghi là truyện của Season 3) [4][15][16] |
+| Season 3 — KvK 3 | chưa tới 30 ngày sau KvK 2 [7] | Light and Darkness (8 vương quốc [4], chia 2 phe × 4 [trích tìm kiếm]) hoặc King of All Britain (Viking – Anh; 1.1.12 ghi là truyện của Season 3) [15][16] |
 | Season of Conquest (KvK 4 trở đi) | lặp mãi, mỗi mùa ~50 ngày [7][3] | Mở màn bằng Heroic Anthem (4 phe) rồi tới các truyện khác [11] [1 nguồn]. Vua đăng ký chọn "truyện" (story); bỏ lượt tối đa 3 lần thì bị ghép bắt buộc [7] |
 
 **Vai trò** (phân tích từ các nguồn trên):
@@ -746,7 +746,7 @@ làm hỏng nhịp**: mỗi chương mở khoá có hạn chót đúng bằng l�
 |---|---|---|---|---|---|---|---|
 | 1 | Trảm Tà | ngày 0 | Cả giới hạ 20 × N yêu thú / tà tu (chỉ số `hunt`; tà tu của A2 khi có) | Pha 1 — cổng vòng ngoài | ngày 3 | ngày 5 | phù 1 giờ, nang 10K |
 | 2 | Tranh Mạch | sau chương 1 | Cả giới tích 3 × N điểm mùa từ linh mạch | Linh triều ×2 trong 24 giờ | — | ngày 10 | phù 2 giờ |
-| 3 | Kiếp Vân | ngày 5 | N/3 lần độ kiếp qua cảnh giới thành công (đếm từ biên niên `trib`), hộ pháp tính nửa lần | "Kiếp Vân Lễ": hộ pháp +50% kinh nghiệm độ kiếp trong 48 giờ | — | ngày 12 | Độ Kiếp Đan |
+| 3 | Kiếp Vân | ngày 5 | N/3 lần độ kiếp qua cảnh giới thành công (server đã đếm sự kiện `trib` ở `game/track.ts`; biên niên chỉ ghi từ Kim Đan), hộ pháp tính nửa lần | "Kiếp Vân Lễ": hộ pháp +50% kinh nghiệm độ kiếp trong 48 giờ | — | ngày 12 | Độ Kiếp Đan |
 | 4 | Trận Nhãn | sau chương 2 | Các minh cùng giữ ≥ 4 trong 16 trận nhãn vòng ngoài liên tục 6 giờ | Pha 2 — vòng giữa, yêu vương cấp 2 | ngày 11 | ngày 14 | phù 3 giờ |
 | 5 | Yêu Vương Xuất Thế | sau chương 4 | Hạ yêu vương cấp 2 lần đầu | Cổ Di Tích (A7) bắt đầu mở theo lịch | — | ngày 20 | tín vật trưởng lão |
 | 6 | Bế Giới | ngày 21 (cố định) | — (hết nhận người mới, `JOIN_DAYS`) | Danh hiệu "nguyên lão" cho ai vào trước ngày 7 | 21 | 21 | danh hiệu |
@@ -754,8 +754,8 @@ làm hỏng nhịp**: mỗi chương mở khoá có hạn chót đúng bằng l�
 | 8 | Thiên Môn Tranh Đoạt | sau chương 7 | Một minh giữ Thiên Môn liên tục 12 giờ | Hiệp Ước Thiên Môn (A11); Luận Kiếm Đại Hội (D2) tuần cuối | — | ngày 42 | rương lớn cho minh giữ |
 | 9 | Phi Thăng | ngày 49 | — | Kết mùa như hiện nay + Lưu Danh Sử Sách (A13) | 49 | 49 | như kết mùa |
 
-Tổng thưởng cả mùa nên ở cỡ 25–30 giờ tăng tốc mỗi người — con số phải chốt bằng `npm run sim` (tầng 25 của bot giỏi đang ở ngày 34,5, người chơi thường
-tầng 21 ngày 38,5; không để thưởng biên niên kéo các mốc này sớm quá).
+Tổng thưởng cả mùa nên ở cỡ 25–30 giờ tăng tốc mỗi người — con số phải chốt bằng `npm run sim` (bot giỏi tới tầng 25 ở ngày 35,5 theo README 24/09;
+người chơi thường tới tầng 21 ở ngày 38,5 theo PLAN; không để thưởng biên niên kéo các mốc này sớm quá).
 
 **UI:**
 - Dải trên bản đồ giới (đã có ngày, pha, biên niên) thêm nút **Thiên Đạo Bia**. Thẻ chương hiện tại: tên, một câu mô tả, thanh tiến độ cả giới ("63%"),

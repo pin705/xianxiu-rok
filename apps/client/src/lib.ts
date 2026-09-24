@@ -8,7 +8,8 @@ import {
   type Look,
   type TabIcon,
 } from '@rok/art'
-import type { ElderId, Element, March, Report, UnitType } from '@rok/rules'
+import type { ElderId, Element, March, Report, State, UnitType } from '@rok/rules'
+import type { Net } from './net'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
 import { read, write } from './storage'
@@ -307,4 +308,11 @@ export function sfx(kind: Sfx) {
     }
     SOUNDS[kind]({ t: ac.currentTime + 0.01, note, noise })
   } catch {}
+}
+
+// Bản dev (server bật ALLOW_WARP): rok.warp(60) tua giới 60 phút, rok.get() / rok.set(state) trong console
+export function devTools(n: Pick<Net, 'dev'>, get: () => State | null) {
+  Object.assign(globalThis, {
+    rok: { get, warp: (min: number) => n.dev('warp', { min }), set: (s: State) => n.dev('state', { state: s }) },
+  })
 }

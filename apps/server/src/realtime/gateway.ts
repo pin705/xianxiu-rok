@@ -22,7 +22,10 @@ const Handshake = z.object({
   lang: z.string().max(16),
 })
 // Khuôn Zod khớp kiểu của @rok/protocol (satisfies): giao kèo đổi mà quên sửa ở đây là lỗi biên dịch
-const Chan = z.enum(['world', 'ally']) satisfies z.ZodType<Channel>
+const Chan = z.union([
+  z.enum(['world', 'ally']),
+  z.templateLiteral(['p', z.number().int().positive()]),
+]) satisfies z.ZodType<Channel>
 const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }),
   z.object({ k: z.literal('rivals'), pid: z.number().int().positive().optional() }),
@@ -32,6 +35,8 @@ const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('chat'), ch: Chan }),
   z.object({ k: z.literal('season') }),
   z.object({ k: z.literal('market'), good: z.enum(GOODS as [Good, ...Good[]]).optional() }),
+  z.object({ k: z.literal('profile'), pid: z.number().int().positive() }),
+  z.object({ k: z.literal('dms') }),
 ]) satisfies z.ZodType<Q>
 const Say = z.object({ ch: Chan, text: z.string().max(400) }) // độ dài thật (200 ký tự) world.say kiểm sau khi chuẩn hoá
 const Report = z.object({ id: z.number().int().positive() })

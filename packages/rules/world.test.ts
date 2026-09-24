@@ -3,6 +3,11 @@ import assert from 'node:assert/strict'
 import {
   ASCEND,
   ASCEND_HALL,
+  MOB_GOALS,
+  MOB_MIN,
+  MOB_TAKES,
+  MOB_TIME,
+  ALLY_MARKS,
   DONATE_COST,
   DONATE_EVERY,
   DONATE_MAX,
@@ -49,6 +54,8 @@ import {
   allyRows,
   atlas,
   basePrice,
+  boardOf,
+  mobTask,
   contribOf,
   donateLeft,
   defense,
@@ -480,6 +487,70 @@ test('Hộ Minh Đại Trận: cung phụng theo lượt (hồi 30 phút), trậ
   assert.equal(contribOf(ps.get(2)!).credit, credit - 300)
   assert.equal(allyOf(w, 1)!.stock!.kinhThu2k, 1)
   assert.equal(act(2, { type: 'allyBuy', item: 'kinhThu2k', n: 1 }), 'not_enough', 'hết cống hiến')
+  // dấu bản đồ cho cả minh
+  assert.equal(act(2, { type: 'allyMark', x: 10, y: 20, text: 'Tập trung' }), 'locked', 'thành viên không đặt dấu')
+  for (let i = 0; i < ALLY_MARKS; i++) assert.equal(act(1, { type: 'allyMark', x: i, y: 1, text: `Dấu ${i}` }), null)
+  assert.equal(act(1, { type: 'allyMark', x: 99, y: 1, text: 'Thêm' }), 'full')
+  assert.equal(act(1, { type: 'allyMark', x: 0, y: 1, text: 'Đổi' }), null, 'cùng ô: đổi lời ghi')
+  assert.deepEqual(
+    allyOf(w, 1)!.marks!.map(m => m.text),
+    ['Dấu 1', 'Dấu 2', 'Dấu 3', 'Dấu 4', 'Đổi'],
+  )
+  assert.equal(act(1, { type: 'allyUnmark', x: 0, y: 1 }), null)
+  assert.equal(act(1, { type: 'allyUnmark', x: 0, y: 1 }), 'gone')
+  assert.equal(allyOf(w, 1)!.marks!.length, ALLY_MARKS - 1)
+})
+
+test('Minh vụ đường: nhận việc trên bảng (việc mới thế chỗ), làm đủ trong hạn thì minh được điểm, quá hạn thì mất lượt; đủ mốc thì người đã góp nhận quà', () => {
+  const ps = world(sect('A', 12, { kiem1: 500 }), sect('B', 12))
+  let w = freshWorld()
+  const act = (pid: number, a: Parameters<typeof worldAct>[2], now = T0) => {
+    const r = worldAct(ps, pid, a, now, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [id, s] of r.changed) ps.set(id, s)
+    w = r.world
+    return null
+  }
+  act(1, { type: 'allyFound', name: 'Vạn Kiếm', tag: 'VK' })
+  const al = () => allyOf(w, 1)!
+  act(2, { type: 'allyJoin', id: al().id })
+  const b0 = boardOf(al(), T0)
+  assert.deepEqual(b0.board, [0, 1, 2, 3, 4, 5, 6, 7], 'bảng tuần mới')
+  assert.deepEqual(mobTask(al().id, b0.week, 3), mobTask(al().id, b0.week, 3), 'việc tất định')
+  // A nhận một việc "tuyển đệ tử": chọn ô có việc train (hoặc dựng tay nếu bảng không có)
+  const slot = b0.board.findIndex(i => mobTask(al().id, b0.week, i).m === 'train')
+  assert.equal(act(1, { type: 'mobTake', slot: Math.max(0, slot) }), null)
+  assert.equal(al().mob!.board[Math.max(0, slot)], 8, 'việc mới thế chỗ')
+  assert.equal(act(1, { type: 'mobTake', slot: 1 }), 'busy', 'một việc một lúc')
+  const task = ps.get(1)!.mob!.task!
+  if (task.m === 'train') {
+    assert.equal(act(1, { type: 'mobDone' }), 'not_done')
+    ps.set(1, { ...ps.get(1)!, stats: { ...ps.get(1)!.stats, trained: ps.get(1)!.stats.trained + task.n } })
+  } else ps.set(1, { ...ps.get(1)!, mob: { ...ps.get(1)!.mob!, task: { ...task, base: -task.n * 1e6 } } }) // bảng không có việc tuyển: coi như xong
+  assert.equal(act(1, { type: 'mobDone' }), null)
+  assert.equal(al().mob!.pts, task.pts)
+  assert.equal(al().mob!.by[1], task.pts)
+  assert.equal(ps.get(1)!.mob!.task, null)
+  // quá hạn: bỏ việc, không điểm
+  assert.equal(act(2, { type: 'mobTake', slot: 0 }), null)
+  assert.equal(act(2, { type: 'mobDone' }, T0 + MOB_TIME + 1), null)
+  assert.equal(ps.get(2)!.mob!.task, null)
+  assert.equal(al().mob!.by[2], undefined, 'quá hạn không có điểm')
+  // lượt mỗi ngày
+  ps.set(2, { ...ps.get(2)!, mob: { ...ps.get(2)!.mob!, took: MOB_TAKES } })
+  assert.equal(act(2, { type: 'mobTake', slot: 0 }, T0 + MOB_TIME + 2), 'limit')
+  // quà mốc: đủ điểm minh và mình đã góp đủ
+  w = { ...w, allies: { [al().id]: { ...al(), mob: { ...al().mob!, pts: MOB_GOALS[1] } } } }
+  assert.equal(act(2, { type: 'mobClaim', tier: 0 }), 'not_done', 'chưa góp đủ')
+  const before = ps.get(1)!.items.thoiQuang15 ?? 0
+  if (task.pts >= MOB_MIN) {
+    assert.equal(act(1, { type: 'mobClaim', tier: 0 }), null)
+    assert.equal(ps.get(1)!.items.thoiQuang15, before + 1)
+    assert.equal(act(1, { type: 'mobClaim', tier: 0 }), 'claimed')
+    assert.equal(act(1, { type: 'mobClaim', tier: 2 }), 'not_done', 'minh chưa tới mốc')
+  }
+  // tuần sau: bảng mới
+  assert.equal(boardOf(al(), T0 + 7 * 24 * HOUR).pts, 0)
 })
 
 test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác đánh bật, gọi về thì mất điểm; buff cho cả minh', async () => {

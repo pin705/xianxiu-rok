@@ -269,7 +269,8 @@
     translate: -50% 0;
     pointer-events: none;
   }
-  .top > * {
+  /* :global — nút gạt, Button là component khác: * có phạm vi thì không trúng, chạm xuyên xuống bản đồ */
+  .top > :global(*) {
     pointer-events: auto;
   }
   /* dải giấy mờ dần sau hàng nút: nhãn mục tiêu cuộn qua thì chìm dần, không bị cắt ngang giữa chữ */

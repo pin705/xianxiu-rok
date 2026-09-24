@@ -1,4 +1,5 @@
-// Chat của một giới: tin gần đây theo phòng ('w' kênh giới, 'a<mã minh>' kênh tiên minh), lọc từ tục, giới hạn tần suất
+// Chat của một giới: tin gần đây theo phòng ('w' kênh giới, 'a<mã minh>' kênh tiên minh, 'd<a>-<b>' truyền âm giữa hai
+// người chơi a < b), lọc từ tục, giới hạn tần suất
 // (CHAT_BURST tin liền rồi một tin mỗi CHAT_EVERY), chặn lặp lại tin vừa gửi trong CHAT_DUP, cấm chat. Gửi đi do World lo.
 import type { ChatMsg, SayErr } from '@rok/protocol'
 import type { ChatRow } from '../db/store.ts'
@@ -26,6 +27,16 @@ export class Chat {
   mute(pid: number, until: number, now: number) {
     if (until > now) this.muted.set(pid, until)
     else this.muted.delete(pid)
+  }
+  // Các phòng truyền âm ('d<pid nhỏ>-<pid lớn>') có người này: người bên kia, tin cuối — mới nhất trước
+  dms(pid: number) {
+    const out: { other: number; last: ChatMsg }[] = []
+    for (const [room, list] of this.rooms) {
+      if (room[0] !== 'd' || !list.length) continue
+      const [a, b] = room.slice(1).split('-').map(Number)
+      if (a === pid || b === pid) out.push({ other: a === pid ? b : a, last: list.at(-1)! })
+    }
+    return out.sort((x, y) => y.last.at - x.last.at)
   }
   // Tin id đang giữ và phòng của nó (báo cáo tin xấu)
   find(id: number) {

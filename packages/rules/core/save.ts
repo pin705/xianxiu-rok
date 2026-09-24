@@ -18,6 +18,7 @@ import {
   FIRST_ELDER,
   GEAR,
   MAX_LEVEL,
+  METRICS,
   NEWBIE_SHIELD,
   PVP_START,
   QUESTS,
@@ -265,7 +266,14 @@ const validFest = (s: any) =>
       s.incoming.every((x: any) => obj(x) && num(x.id) && num(x.pid) && typeof x.foe === 'string' && num(x.at)))) &&
   (s.frenzy === undefined || num(s.frenzy)) &&
   (s.contrib === undefined ||
-    (obj(s.contrib) && num(s.contrib.credit) && num(s.contrib.full) && num(s.contrib.day) && num(s.contrib.helped)))
+    (obj(s.contrib) && num(s.contrib.credit) && num(s.contrib.full) && num(s.contrib.day) && num(s.contrib.helped))) &&
+  (s.mob === undefined ||
+    (obj(s.mob) &&
+      num(s.mob.week) &&
+      num(s.mob.day) &&
+      num(s.mob.took) &&
+      Array.isArray(s.mob.got) &&
+      (s.mob.task === null || (obj(s.mob.task) && METRICS.includes(s.mob.task.m) && num(s.mob.task.base)))))
 
 function upgradeSave(raw: unknown) {
   let s = raw as any

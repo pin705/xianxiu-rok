@@ -3,7 +3,7 @@
   // + dải trên (ngày, pha mùa, biên niên). Dữ liệu sống: ảnh chụp server đẩy khi đổi (watch). Chạm: cờ hành quân → tông môn → điểm → ô.
   import { chronText } from '@rok/i18n'
   import { onMount, type Snippet } from 'svelte'
-  import { MAP_W, SEASON_DAYS, dayIn, phaseOf, type MapSnap } from '@rok/rules/world'
+  import { MAP_W, SEASON_DAYS, dayIn, phaseOf, type MapSnap, type Mark } from '@rok/rules/world'
   import type { WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Button, Card } from '../ui'
@@ -17,6 +17,9 @@
     me,
     snap,
     allies = [],
+    marks = [],
+    goto = null,
+    ongone,
     onpick,
     toggle,
   }: {
@@ -24,6 +27,9 @@
     me: number | null
     snap: MapSnap | null
     allies?: number[] // mã tông môn cùng minh (tô màu đồng minh)
+    marks?: Mark[] // dấu của minh (Alliance Markers)
+    goto?: { x: number; y: number } | null // nhảy tới ô này
+    ongone?: () => void
     onpick: (p: Pick) => void
     toggle?: Snippet // nút gạt Giới | Vùng (MapTab)
   } = $props()
@@ -155,6 +161,27 @@
     if (scene && snap) scene.setData(snap, rel, phase, now)
   })
 
+  // Ô (x, y) của giới → toạ độ trên màn; null: ngoài màn
+  const onScreen = (x: number, y: number, pad = 40) => {
+    if (typeof innerWidth === 'undefined') return null
+    const c = center()
+    const p = { x: c.x + ((x + 0.5) * T - cam.x) * cam.z, y: c.y + ((y + 0.5) * T - cam.y) * cam.z }
+    return p.x > -pad && p.y > -pad && p.x < innerWidth + pad && p.y < innerHeight + pad ? p : null
+  }
+  // chọn vật ở ô (x, y) như chạm vào đó
+  const pickAt = (x: number, y: number) => {
+    if (scene && snap) onpick(scene.pick((x + 0.5) * T, (y + 0.5) * T, cam.z, snap.seats, now))
+  }
+  // Nhảy tới ô (toạ độ trong chat, dấu của minh): đưa khung nhìn tới, nháy vòng son vài giây
+  let ping = $state<{ x: number; y: number; until: number } | null>(null)
+  $effect(() => {
+    if (!goto) return
+    cam = clamp({ x: (goto.x + 0.5) * T, y: (goto.y + 0.5) * T, z: Math.max(cam.z, 0.9) })
+    ping = { ...goto, until: now + 4000 }
+    ongone?.()
+  })
+  const pingAt = $derived(ping && ping.until > now ? onScreen(ping.x, ping.y) : null)
+
   // Ghim tên: tối đa 60 tông môn gần tâm nhìn nhất, chỉ khi đủ phóng để đọc
   const pins = $derived.by(() => {
     if (!snap || cam.z < FINE_Z * 0.8) return []
@@ -182,6 +209,18 @@
   {#each pins as p (p.s.pid)}
     <span class="pin" class:mine={p.s.pid === me} style="left:{p.x}px;top:{p.y + 18}px">{p.s.name}</span>
   {/each}
+</div>
+
+<div class="marks">
+  {#each marks as m (`${m.x},${m.y}`)}
+    {@const p = onScreen(m.x, m.y)}
+    {#if p}
+      <button class="mark" style="left:{p.x}px;top:{p.y}px" onclick={() => pickAt(m.x, m.y)}
+        ><Icon name="flag" size={16} /><span>{m.text}</span></button
+      >
+    {/if}
+  {/each}
+  {#if pingAt}<span class="ping" style="left:{pingAt.x}px;top:{pingAt.y}px" aria-hidden="true"></span>{/if}
 </div>
 
 <div class="top stack" style:--gap="6px">
@@ -242,6 +281,51 @@
   .mine {
     color: var(--ink);
     background: color-mix(in srgb, var(--gold-l) 85%, transparent);
+  }
+  /* dấu của minh: cờ son + lời ghi, bấm được (chọn vật ở ô đó) */
+  .marks {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .mark {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 1px 6px 1px 2px;
+    font: inherit;
+    font-size: var(--fs-1);
+    font-weight: 700;
+    color: var(--silk);
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--cinnabar) 82%, var(--ink));
+    border: 1px solid var(--gold-l);
+    border-radius: 8px;
+    translate: -50% -100%;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  .ping {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border: 3px solid var(--cinnabar);
+    border-radius: 50%;
+    translate: -50% -50%;
+    animation: ping 1s var(--ease) infinite;
+  }
+  @keyframes ping {
+    from {
+      scale: 0.4;
+      opacity: 1;
+    }
+    to {
+      scale: 1.6;
+      opacity: 0;
+    }
   }
   /* cùng chỗ với thanh trên của bản đồ vùng (MapView) */
   .top {

@@ -9,7 +9,6 @@ import { advance } from '../core/time.ts'
 import { type Army, type Err, type March, type Report, type State } from '../core/types.ts'
 import { minus, compact, noGain } from '../core/util.ts'
 import {
-  ELO_K,
   FOES_MAX,
   FRENZY_TIME,
   MATCH_PICK,
@@ -27,6 +26,7 @@ import {
 } from '../data.ts'
 import {
   allyOf,
+  elo,
   raidPath,
   travel,
   withMarch,
@@ -109,9 +109,6 @@ export const raidActions: WorldActions<RaidAction> = {
   },
 }
 
-// Điểm kiểu Elo cho bên đánh (bên thủ mất/được đúng bấy nhiêu). Chỉ server tính nên không cần tất định giữa các engine.
-const elo = (a: number, d: number, win: boolean) =>
-  Math.round(ELO_K * ((win ? 1 : 0) - 1 / (1 + 10 ** ((d - a) / 400))))
 
 // Phần cướp được: RAID_SHARE phần vượt kho bảo hộ (bonus chiến lợi phẩm của người dẫn), không quá sức mang của đội còn đứng
 function plunder(att: State, def: State, elder: ElderId, back: Army): Partial<Bag> {

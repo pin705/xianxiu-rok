@@ -8,6 +8,7 @@ import { type Army, type Buff, type March } from '../core/types.ts'
 import { compact, noGain } from '../core/util.ts'
 import { BOSSES, GARRISON_MAX, RALLY_MAX, RALLY_WAIT, TIDE_PROD, VEIN_BUFF, VEIN_CAP, type ElderId } from '../data.ts'
 import {
+  allyBuffs,
   allyOf,
   garrison,
   setSpot,
@@ -23,7 +24,6 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
-import { allyBuffs } from './guild.ts'
 import { hold, TASK_OF, spotOf } from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)

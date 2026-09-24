@@ -4,6 +4,7 @@
   import type { Target } from '@rok/rules'
   import { atlas, type AllyInfo, type MapSnap, type WorldAction } from '@rok/rules/world'
   import type { Ack, WorldInfo } from '@rok/protocol'
+  import type { Net } from '../net'
   import TileSheet from '../TileSheet.svelte'
   import { Tabs } from '../ui'
   import { L } from '../lib'
@@ -22,6 +23,9 @@
     onrivals,
     onraid,
     send,
+    goto = null,
+    ongone,
+    say,
   }: {
     info: WorldInfo | null
     me: number | null
@@ -33,6 +37,9 @@
     onrivals: () => void
     onraid: (pid: number) => void
     send: (a: WorldAction) => Promise<Ack>
+    goto?: { x: number; y: number } | null // nhảy tới ô này (toạ độ trong chat, dấu của minh)
+    ongone?: () => void // đã nhảy tới
+    say?: Net['say'] // chia sẻ toạ độ vào chat
   } = $props()
 
   const KEY = 'rok.map'
@@ -57,6 +64,9 @@
     return watch(m => (snap = m))
   })
   const world = $derived(info ? atlas(info.map) : null)
+  $effect(() => {
+    if (goto && mode !== 'world') choose('world')
+  })
 </script>
 
 {#snippet toggle()}
@@ -71,7 +81,7 @@
 {/snippet}
 
 {#if mode === 'world' && info && world}
-  <WorldView {info} {me} {snap} {allies} onpick={p => (pick = p)} {toggle} />
+  <WorldView {info} {me} {snap} {allies} marks={ally?.marks ?? []} {goto} {ongone} onpick={p => (pick = p)} {toggle} />
   <TileSheet
     {info}
     atlas={world}
@@ -85,6 +95,7 @@
       onraid(pid)
     }}
     {send}
+    {say}
   />
 {:else}
   <MapView

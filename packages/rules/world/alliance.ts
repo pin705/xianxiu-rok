@@ -19,8 +19,11 @@ import {
 import {
   aidAt,
   allyOf,
+  helpCredit,
+  helpsOf,
   put,
   raidPath,
+  seatsOf,
   type Alliance,
   type Ctx,
   type Help,
@@ -31,7 +34,6 @@ import {
   type WorldActions,
   type WorldResult,
 } from './base.ts'
-import { helpCredit, helpsOf, seatsOf } from './guild.ts'
 
 const drop = (w: World, aid: number): World => {
   const { [aid]: _, ...allies } = w.allies
@@ -84,6 +86,43 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
     ...al,
     people: people.sort((a, b) => b.role - a.role || b.power - a.power),
     rallies: Object.values(w.rallies).filter(r => r.ally === al.id),
+  }
+}
+
+// Hồ sơ chưởng môn mà người khác xem được (như Governor Profile của RoK): không lộ kho, quân, mầm
+export type Profile = {
+  pid: number
+  name: string
+  hall: number
+  power: number
+  ally: { tag: string; name: string; role: Role } | null
+  seat: { x: number; y: number } | null
+  pvp: { win: number; loss: number; pts: number }
+  rebirths: number
+  ascended: number // số mùa đã phi thăng
+  tower: number
+  elders: number
+  ach: number // tổng bậc thành tựu đã nhận
+  online: boolean
+}
+export function profileOf(w: World, ps: Players, pid: number, online: boolean): Profile | null {
+  const s = ps.get(pid)
+  if (!s) return null
+  const al = allyOf(w, pid)
+  return {
+    pid,
+    name: s.name,
+    hall: s.levels.chuDien,
+    power: Math.round(power(s)),
+    ally: al ? { tag: al.tag, name: al.name, role: al.members[pid] } : null,
+    seat: s.seat,
+    pvp: s.pvp,
+    rebirths: s.rebirths,
+    ascended: s.ascended.length,
+    tower: s.tower,
+    elders: Object.keys(s.elders).length,
+    ach: Object.values(s.ach ?? {}).reduce((a, b) => a + (b ?? 0), 0),
+    online,
   }
 }
 

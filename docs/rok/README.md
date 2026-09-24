@@ -12,7 +12,7 @@
 | [3-ban-do-pve.md](3-ban-do-pve.md) | Bản đồ vương quốc, khám phá, man tộc, khai thác, PvE, Monument |
 | [4-lien-minh-xa-hoi.md](4-lien-minh-xa-hoi.md) | Liên minh, chat, thư, tương tác giữa người chơi, PvP |
 | [5-su-kien.md](5-su-kien.md) | Sự kiện thường kỳ, trung tâm sự kiện, lịch sự kiện |
-| [6-mua-giai-pvp.md](6-mua-giai-pvp.md) | KvK, Lost Kingdom, Ark of Osiris, Olympia, Sunset Canyon |
+| [6-mua-giai-pvp.md](6-mua-giai-pvp.md) | Vòng đời KvK → Season of Conquest (Lost Kingdom, các truyện), Ark of Osiris + Osiris League, Canyon Clash, Sunset Canyon, Olympia, chế độ PvP có lịch khác; thiết kế Luận Kiếm Đài, Tranh Đoạt Linh Châu, Thiên Đạo Biên Niên |
 | [7-tien-trinh-giu-chan.md](7-tien-trinh-giu-chan.md) | Hướng dẫn tân thủ, nhiệm vụ, giữ chân, nhịp tiến trình, kiếm tiền |
 | [8-ui-ux.md](8-ui-ux.md) | HUD, luồng thao tác, phản hồi, thông báo, tiện lợi |
 
@@ -42,6 +42,13 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Daily Objectives (activity points, 5 chests) | Nhật Khóa: mỗi việc hằng ngày cộng điểm hoạt lực, 5 rương mốc, rương mốc 3 tính một "ngày" cho nhiệm vụ tuần — thay nhiệm vụ ngày cũ | ✅ `core/fest.ts` (kiểu `activity`), đầu bảng Nhật khoá |
 | Achievements | Thành tựu: 12 chuỗi nhiều bậc (xây, đánh, săn, cướp, khai mỏ, tăng tốc, chiêu hiền…) có thưởng | ✅ `sect/ach.ts`, Bảo khố › Thành tựu |
 | Event calendar + nhiều sự kiện xoay vòng | Thêm 7 sự kiện chu kỳ: Thổ Mộc Hưng Công, Luyện Binh Trảm Yêu, Tụ Khí Tranh Thời, Thu Linh Nhật Khóa, Tàng Kinh Ngộ Đạo, Trảm Yêu Lệnh, Liên Trảm Bất Hồi; lịch 7 ngày tới trong Trung tâm sự kiện | ✅ `FESTS`, `festCalendar` |
+| Alliance Technology + Donation | Hộ Minh Đại Trận: 9 trận × 5 tầng (sản lượng, xây, tuyển, chữa, hành quân, công, thủ, +lượt giúp, +chỗ trong minh); cung phụng 20 lượt tích, hồi 1 lượt/30 phút, giá theo tầng; minh chủ/trưởng lão điểm trận → góp gấp đôi | ✅ `world/guild.ts`, tăng ích tới từng người qua `worldBuffs` |
+| Alliance Credits + Shop | Cống hiến (từ cung phụng và giúp đỡ, trần 250/ngày từ giúp) + Minh khố; Cống Hiến Các: trưởng lão nhập hàng bằng Minh khố, người trong minh đổi bằng cống hiến | ✅ `AllyShop.svelte` |
+| Alliance Gifts | Minh lễ: người trong minh hạ yêu vương → cả minh nhận quà qua thư; điểm quà nâng cấp quà 1–5 | ✅ `allyGifts` (base.ts) |
+| Alliance Markers, Share Coordinates | Dấu của minh trên bản đồ giới (5 dấu, trưởng lão/minh chủ đặt, cả minh thấy, bấm tới); chạm chỗ nào cũng "Gửi kênh minh / giới"; toạ độ "(x,y)" trong chat thành nút "Tới" — bản đồ giới bay tới, vòng son nháy | ✅ `allyMark`, `TileSheet`, `Chat`, `WorldView` |
+| Governor Profile | Hồ sơ chưởng môn: cảnh giới, lực chiến, minh, chiến tích, xem tông môn trên bản đồ, truyền âm, chặn — chạm tên ở chat, người trong minh, tông môn trên bản đồ | ✅ `profileOf`, `Profile.svelte` |
+| Private Chat | Truyền âm 1-1: thẻ "Truyền âm" trong chat (danh sách cuộc gần đây, chấm đỏ chưa đọc), từ tầng 3, người bị chặn không nhắn được; offline thì Web Push | ✅ kênh `p<pid>`, `talk.ts` |
+| Alliance Mobilization | Minh vụ đường: bảng 8 việc chung mỗi tuần (tất định theo mã minh + tuần), nhận 1 việc/lúc, 10 lượt/ngày, hạn 4 giờ, việc mới thế chỗ; 5 mốc quà cho ai góp ≥ 20 điểm | ✅ `world/mob.ts`, `AllyMob.svelte` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
 
 Nhịp sau các thay đổi (`npm run sim`, 24/09): bot giỏi Chủ điện 15 ngày 9,3 (trước đợt này 11,3), tầng 20 ngày 17,9, tầng 25
@@ -56,21 +63,27 @@ ngày 30,5 (trước 34,5); người chơi thường (`45 3 --casual`) tầng 15
 3. Kho bảo hộ theo tầng.
 4. Tạp dịch thứ 2 (mở bằng Hương Hỏa hoặc thuê có hạn) — có trần, qua sim (bộ nhớ: bot 11→9 ngày, thường 19→14).
 
-**Đợt C — tương tác người chơi**
-1. Đánh dấu bản đồ cho minh; chia sẻ toạ độ / chiến báo vào chat; truyền âm 1-1.
-2. Minh lễ (quà minh khi hạ yêu vương/yêu trại), yêu trại hằng ngày để kết trận.
-3. Minh vụ đường (Alliance Mobilization), thưởng người giúp đỡ.
-4. Hộ minh đại trận (công nghệ minh + quyên góp) + điểm cống hiến + Cống Hiến Các (cửa hàng minh).
-5. Hồ sơ người chơi khác, Giới Chủ + sắc phong buff/debuff, minh ước (NAP).
+**Đợt C — tương tác người chơi** (đã xong: Hộ Minh Đại Trận, cống hiến + Cống Hiến Các, Minh lễ từ yêu vương, thưởng người giúp, dấu bản đồ, chia sẻ toạ độ, hồ sơ, truyền âm, Minh vụ đường)
+1. Chia sẻ chiến báo vào chat (người khác xem được trận).
+2. Yêu trại hằng ngày để kết trận (thêm nguồn Minh lễ).
+3. Giới Chủ + sắc phong buff/debuff, minh ước (NAP).
+4. Minh vụ: hạng giải giữa các minh (Đồng → Chí Tôn) như RoK.
 
 **Đợt D — chiến đấu & trưởng lão**
 1. Trưởng lão phó (cặp chính/phó) và công pháp theo nộ; trần quân mỗi đội; điểm tiêu diệt + bảng chiến công; chiến báo tách nguồn sát thương.
 2. Phẩm cấp, sao, hồn ấn nâng công pháp; thiên phú sâu hơn; pháp bảo theo bộ.
 3. Nâng bậc đệ tử; tốc độ và sức mang theo hệ.
 
-**Đợt E — bản đồ & PvE, Đợt F — mùa giải & đấu trường** (chờ file 3, 5, 6)
-- Điểm hành động + săn yêu thú, sương mù + thám tử + hang động, sự kiện yêu vương theo đợt (Lohar), tổ đội PvE (Ceroli),
-  Luận Kiếm Đài (Sunset Canyon bất đồng bộ), chiến trường minh bất đồng bộ (Ark of Osiris), biên niên giới kiểu Monument.
+**Đợt E — bản đồ & PvE** (file 3)
+- Điểm hành động + săn yêu thú trên bản đồ giới, sương mù + thám tử + hang động, sự kiện yêu vương theo đợt (Lohar),
+  tổ đội PvE (Ceroli), biên niên giới kiểu Monument.
+
+**Đợt F — mùa giải & đấu trường** (file 6, mục 3 có thiết kế chi tiết)
+1. Luận Kiếm Đài (Sunset Canyon bất đồng bộ): đội thủ đặt sẵn, 5 lượt/ngày, mùa 7 ngày, không mất quân.
+2. Thiên Đạo Biên Niên: mùa 49 ngày chia 9 chương mục tiêu chung, hạn chót trùng lịch mở cổng.
+3. Thưởng cá nhân của mùa: điểm công huân, thành tựu mùa, thưởng hạng cá nhân.
+4. Tranh Đoạt Linh Châu (Ark of Osiris giản lược): chiến trường 11 ô, 8 hiệp, lệnh đứng — minh đấu minh có lịch.
+5. Luật mùa thay đổi: Linh Triều Mùa, Chính – Tà, Cổ Di Tích mở theo lịch.
 
 **Đợt G — UI/UX** (file 8)
 - Hồ sơ chưởng môn, "Nhận tất cả", lịch sự kiện 7 ngày, dải chat mọi tab, đĩa Tương trợ, trận đồ (preset), tìm mục tiêu +

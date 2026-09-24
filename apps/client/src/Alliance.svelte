@@ -2,9 +2,22 @@
   // Trang Tiên minh: chưa có minh thì xem các minh trong giới (vào ngay) hoặc lập minh; có rồi thì cống hiến / Minh khố /
   // Minh lễ, lối vào Hộ Minh Đại Trận và Cống Hiến Các, bố cáo, giúp đỡ, người trong minh (chức vị, đang chơi), chat kênh
   // minh. Luật ở rules/world, server kiểm lại mọi thao tác.
-  import { ALLY_COST, ALLY_GIFT_LV, ALLY_HALL, DONATE_MAX, RESOURCES, jobOf, type JobKind } from '@rok/rules'
   import {
+    ALLY_COST,
+    ALLY_GIFT_LV,
+    ALLY_HALL,
+    DONATE_MAX,
+    MOB_GOALS,
+    MOB_MIN,
+    RESOURCES,
+    jobOf,
+    type JobKind,
+  } from '@rok/rules'
+  import {
+    boardOf,
     donateLeft,
+    mobOf,
+    mobProgress,
     giftLevel,
     helpsOf,
     seatsOf,
@@ -21,6 +34,8 @@
   import { useGame } from './game'
   import AllyTech from './AllyTech.svelte'
   import AllyShop from './AllyShop.svelte'
+  import AllyMob from './AllyMob.svelte'
+  import { social } from './social.svelte'
 
   let {
     me,
@@ -28,12 +43,14 @@
     rows,
     send,
     chat,
+    onmap,
   }: {
     me: number | null
     ally: AllyInfo | null
     rows: AllyRow[] | null // danh sách minh (khi chưa vào minh nào)
     send: (a: WorldAction) => Promise<Ack>
     chat?: Snippet
+    onmap?: (x: number, y: number) => void // tới dấu của minh trên bản đồ giới
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -42,10 +59,18 @@
   let tag = $state('')
   let editing = $state<string | null>(null)
   let pick = $state<number | null>(null)
-  let sheet = $state<'tech' | 'shop' | null>(null)
+  let sheet = $state<'tech' | 'shop' | 'mob' | null>(null)
   const maxHelps = $derived(ally ? helpsOf(ally) : 0)
   const left = $derived(donateLeft(game, g.now))
   const gift = $derived(ally ? giftLevel(ally) : 1)
+  // Minh vụ: việc đã đủ chờ nộp, hoặc có mốc quà nhận được
+  const mobReady = $derived.by(() => {
+    if (!ally || me === null) return false
+    const m = mobOf(game, g.now),
+      b = boardOf(ally, g.now)
+    const done = !!m.task && m.task.until > g.now && mobProgress(game, m) >= m.task.n
+    return done || MOB_GOALS.some((goal, k) => b.pts >= goal && (b.by[me] ?? 0) >= MOB_MIN && !m.got.includes(k))
+  })
   const giftPart = $derived(
     ally && gift < ALLY_GIFT_LV.length
       ? ((ally.gift ?? 0) - ALLY_GIFT_LV[gift - 1]) / (ALLY_GIFT_LV[gift] - ALLY_GIFT_LV[gift - 1])
@@ -154,6 +179,12 @@
         <b class="t-small">{L.guild.tech}</b>
         <small class="t-tiny t-soft">{L.guild.left(left)}</small>
       </button>
+      <button type="button" class="tile" onclick={() => (sheet = 'mob')}>
+        {#if mobReady}<span class="dot-red" aria-hidden="true"></span>{/if}
+        <Icon name="scroll" size={30} />
+        <b class="t-small">{L.mob.title}</b>
+        <small class="t-tiny t-soft">{L.mob.pts(num(boardOf(ally, g.now).pts))}</small>
+      </button>
       <button type="button" class="tile" onclick={() => (sheet = 'shop')}>
         <Icon name="hoSon" size={30} />
         <b class="t-small">{L.guild.shop}</b>
@@ -162,6 +193,7 @@
     </div>
     <AllyTech open={sheet === 'tech'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
     <AllyShop open={sheet === 'shop'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
+    <AllyMob open={sheet === 'mob'} onclose={() => (sheet = null)} {ally} {me} {send} />
 
     <Section title={L.ally.notice}>
       {#if editing !== null}
@@ -209,10 +241,7 @@
       <ul class="stack">
         {#each ally.people as p (p.pid)}
           <li>
-            <Card
-              onclick={myRole >= 1 && p.pid !== me ? () => (pick = pick === p.pid ? null : p.pid) : undefined}
-              label={p.name}
-            >
+            <Card onclick={p.pid !== me ? () => (pick = pick === p.pid ? null : p.pid) : undefined} label={p.name}>
               <span class="row">
                 <span class="dot" class:on={p.online} title={p.online ? L.ally.online : ''}></span>
                 <span class="grow stack" style:--gap="0"
@@ -225,6 +254,10 @@
             </Card>
             {#if pick === p.pid}
               <div class="row wrap mt-2">
+                <Button size="sm" variant="ghost" onclick={() => (social.profile = p.pid)}>{L.profile.open}</Button>
+                <Button size="sm" variant="ghost" icon="mail" onclick={() => (social.dm = { pid: p.pid, name: p.name })}
+                  >{L.profile.dm}</Button
+                >
                 {#if myRole === 2}
                   {#if p.role === 0}<Button
                       size="sm"
@@ -250,6 +283,20 @@
           </li>
         {/each}
       </ul>
+    </Section>
+
+    <Section title={L.world.marks}>
+      {#if ally.marks?.length}
+        <div class="row wrap">
+          {#each ally.marks as m (`${m.x},${m.y}`)}
+            <Button size="sm" variant="ghost" icon="flag" onclick={() => onmap?.(m.x, m.y)}
+              >{m.text} {L.world.coord(m.x, m.y)}</Button
+            >
+          {/each}
+        </div>
+      {:else}
+        <p class="t-small t-soft">{L.world.noMarks}</p>
+      {/if}
     </Section>
 
     {#if ally.rallies.length}
@@ -309,7 +356,7 @@
   }
   .tiles {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--sp-2);
   }
   .tile {

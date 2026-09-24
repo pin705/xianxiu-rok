@@ -24,6 +24,7 @@
   import Hud from './Hud.svelte'
   import MapTab from './world/MapTab.svelte'
   import Alliance from './Alliance.svelte'
+  import Profile from './Profile.svelte'
   import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
   import Ranks from './Ranks.svelte'
@@ -48,6 +49,7 @@
     L,
     LANG,
     TABS,
+    devTools,
     forgetP1,
     isMuted,
     keyBlocked,
@@ -72,6 +74,7 @@
   let selected: BuildingId | null = $state(null)
   let view: PanelTab | null = $state(null) // thẻ mở sẵn trong bảng công trình
   let target: Target | null = $state(null)
+  let mapAt = $state<{ x: number; y: number } | null>(null) // nhảy tới ô này trên bản đồ giới (toạ độ trong chat, dấu của minh)
   let replay: Report | null = $state(null)
   let outcome: Outcome | null = $state(null) // kết quả độ kiếp / luân hồi
   let storm = $state<{ hall: number; strikes: number } | null>(null) // đang độ kiếp: tầng Chủ điện trước khi đột phá (giấu kết quả tới khi sét đánh xong), số đợt sét
@@ -211,15 +214,7 @@
         switchTab(t.id, new MouseEvent('click', { clientX: innerWidth / 2, clientY: innerHeight / 2 }))
     }
     addEventListener('keydown', keys)
-    // Bản dev (server bật ALLOW_WARP): rok.warp(60) tua giới 60 phút, rok.get() / rok.set(state)
-    if (import.meta.env.DEV)
-      Object.assign(globalThis, {
-        rok: {
-          get: () => game,
-          warp: (min: number) => n.dev('warp', { min }),
-          set: (s: State) => n.dev('state', { state: s }),
-        },
-      })
+    if (import.meta.env.DEV) devTools(n, () => game)
     return () => {
       clearInterval(tick)
       offAlly()
@@ -280,6 +275,7 @@
       tab = t
       selected = null
     }
+    if (t === 'tienMinh') void loadAlly() // danh sách minh / người trong minh có thể đã đổi
     // trang đang ẩn thì trình duyệt bỏ qua hiệu ứng (ready bị từ chối): chuyển thẳng
     if (!document.startViewTransition || document.hidden || matchMedia('(prefers-reduced-motion: reduce)').matches)
       return go()
@@ -289,11 +285,14 @@
     document.startViewTransition(() => flushSync(go)).ready.catch(() => {})
   }
 
-  function openTarget(t: Target) {
+  // Sang tab Bản đồ: mở một mục tiêu PvE, hoặc (toạ độ trong chat, dấu của minh) đưa bản đồ giới tới ô `at`
+  function openTarget(t: Target | null, at: { x: number; y: number } | null = null) {
     selected = null
     tab = 'banDo'
     target = t
+    mapAt = at
   }
+  const goMap = (x: number, y: number) => openTarget(null, { x, y })
 
   function upgrade(id: BuildingId) {
     if (!act({ type: 'upgrade', building: id })) return
@@ -502,15 +501,19 @@
         onrivals={() => openRivals()}
         onraid={pid => openRivals(pid)}
         send={sendWorld}
+        goto={mapAt}
+        ongone={() => (mapAt = null)}
+        say={net?.say}
       />
     {:else if tab === 'baoKho'}
       <Vault onfocus={focus} />
     {:else if tab === 'tienMinh'}
-      <Alliance {me} {ally} rows={allyRows} send={sendWorld}>
-        {#snippet chat()}<Chat {me} ally api={net ?? null} toast={t => toast(t)} inline />{/snippet}
+      <Alliance {me} {ally} rows={allyRows} send={sendWorld} onmap={goMap}>
+        {#snippet chat()}<Chat {me} ally api={net ?? null} toast={t => toast(t)} inline onmap={goMap} />{/snippet}
       </Alliance>
     {/if}
-    {#if tab === 'banDo'}<Chat {me} ally={!!ally} api={net ?? null} toast={t => toast(t)} />{/if}
+    {#if tab === 'banDo'}<Chat {me} ally={!!ally} api={net ?? null} toast={t => toast(t)} onmap={goMap} />{/if}
+    <Profile api={net ?? null} {me} onmap={goMap} />
     <Hud
       game={shown}
       {now}

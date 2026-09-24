@@ -4,7 +4,7 @@
 //   1. mầm ngẫu nhiên (seed) không bao giờ rời server — mọi seed gửi đi đều là 0 (rules: mầm 0 = ẩn, không tự giải trận)
 //   2. chiến báo (reports) không nằm trong state gửi đi — đi riêng qua `rep` và truy vấn `reports` (state nhỏ, patch nhỏ)
 import type { Action, Err, March, Report, State } from '@rok/rules'
-import type { AllyInfo, AllyRow, Good, MapSnap, OrderView, Rival, Trades, WorldAction } from '@rok/rules/world'
+import type { AllyInfo, AllyRow, Good, MapSnap, OrderView, Profile, Rival, Trades, WorldAction } from '@rok/rules/world'
 
 export type View = Omit<State, 'reports'>
 export type Patch = Partial<View>
@@ -60,7 +60,8 @@ export type Push = { v: number; p: Patch; rep?: Report[] } // state đổi do se
 export type Snap = { v: number; state: View }
 // reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) · map: ảnh chụp bản đồ giới, kèm theo dõi
 // 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn) · allies: danh sách tiên minh · ally: minh của mình
-// season: điểm mùa · market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình. Trả lời: Answer[k].
+// season: điểm mùa · market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình · profile: hồ sơ một người
+// · dms: các cuộc truyền âm gần đây của mình. Trả lời: Answer[k].
 export type Query =
   | { k: 'reports'; before?: number }
   | { k: 'rivals'; pid?: number }
@@ -70,14 +71,18 @@ export type Query =
   | { k: 'chat'; ch: Channel }
   | { k: 'season' }
   | { k: 'market'; good?: Good }
+  | { k: 'profile'; pid: number }
+  | { k: 'dms' }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
 export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
 export type Season = { rows: { name: string; pts: number }[]; me: { rank: number; pts: number } | null; fame: Fame[] }
-// Chat: kênh giới (từ tầng 3) và kênh tiên minh. Chữ đã lọc ở server.
-export type Channel = 'world' | 'ally'
+// Chat: kênh giới (từ tầng 3), kênh tiên minh, truyền âm 1-1 với người chơi pid ('p<pid>'). Chữ đã lọc ở server.
+export type Channel = 'world' | 'ally' | `p${number}`
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
-export type { AllyInfo, AllyRow, MapSnap, Rival }
+export type { AllyInfo, AllyRow, MapSnap, Profile, Rival }
+// Một cuộc truyền âm gần đây: người bên kia, tin cuối
+export type Dm = { pid: number; name: string; last: ChatMsg }
 // Trả lời từng truy vấn. Server trả null khi không trả lời được (truy vấn sai, lỗi) — client coi như không có.
 export type Answer = {
   reports: Report[]
@@ -88,6 +93,8 @@ export type Answer = {
   chat: ChatMsg[]
   season: Season
   market: Market | null // chợ tắt
+  profile: Profile | null // người không còn trong giới
+  dms: Dm[]
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }

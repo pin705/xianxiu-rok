@@ -530,6 +530,19 @@ test(
     const hist = await cb.ask({ k: 'chat', ch: 'ally' })
     assert.equal(hist.length, 1)
     assert.equal(await cb.s.timeout(5000).emitWithAck('report', { id: hist[0].id }), true)
+    // truyền âm: chỉ hai người nghe, bên nhận thấy kênh 'p<người gửi>', có lịch sử và danh sách truyền âm; hồ sơ người khác
+    await sleep(3100) // A vừa hết lượt nhắn
+    const dm = (c: typeof ca, to: number, text: string) =>
+      c.s.timeout(5000).emitWithAck('say', { ch: `p${to}`, text }) as Promise<{ ok: boolean; err?: string }>
+    assert.ok((await dm(ca, B.pid, 'Chào đạo hữu')).ok)
+    await until(() => heard.some(h => h.ch === `p${A.pid}`), 1500)
+    assert.equal(heard.find(h => h.ch === `p${A.pid}`)?.text, 'Chào đạo hữu')
+    assert.equal((await cb.ask({ k: 'chat', ch: `p${A.pid}` })).length, 1)
+    assert.deepEqual((await cb.ask({ k: 'dms' })).map(d => [d.pid, d.last.text]), [[A.pid, 'Chào đạo hữu']])
+    assert.deepEqual(await dm(cb, A.pid, 'chào'), { ok: false, err: 'locked' }, 'dưới tầng 3 chưa truyền âm được')
+    assert.deepEqual(await dm(ca, A.pid, 'tự nhắn'), { ok: false, err: 'locked' })
+    const prof = await cb.ask({ k: 'profile', pid: A.pid })
+    assert.deepEqual([prof?.name, prof?.hall, prof?.ally?.tag, prof?.online], [state.name, 10, 'TVM', true])
     const mute = await fetch(`http://127.0.0.1:${n.port}/api/admin/mute`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-rok': '1', 'x-admin-token': ADMIN },

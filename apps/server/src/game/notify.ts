@@ -27,6 +27,11 @@ export const incomingNote =
   (foe: string) =>
   (L: Text): Note => ({ title: L.push.title, body: L.pvp.incoming(foe), tag: 'raid' })
 
+// Truyền âm tới lúc offline: ai nhắn, nhắn gì
+export const dmNote =
+  (name: string, text: string) =>
+  (L: Text): Note => ({ title: L.push.dm(name), body: text, tag: 'dm' })
+
 // Chiến báo mới lúc offline đáng báo: bị cướp (thủ được hay không), kiếp vân giáng
 export function reportNote(r: Report): ((L: Text) => Note) | null {
   if (r.kind === 'pvp' && r.def)

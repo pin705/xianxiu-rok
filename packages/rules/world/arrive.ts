@@ -18,6 +18,7 @@ import {
 } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
 import {
+  allyGifts,
   garrison,
   setSpot,
   sideKey,
@@ -31,7 +32,6 @@ import {
   type World,
 } from './base.ts'
 import { addArmy, carryOf, combine, split, flipRounds } from './fight.ts'
-import { allyGifts } from './guild.ts'
 import { bank, hold, spotOf, bossSlice } from './points.ts'
 
 type Arrived = { changed: Players; world: World }

@@ -46,38 +46,32 @@
     </Card>
     <ul class="grid">
       {#each ids as id (id)}
-        <li>
-          <Card>
-            <div class="good">
-              <ItemCell {id} n={have(id)} />
-              <div class="stack" style:--gap="2px">
-                <b class="t-small">{itemName(id)}</b>
-                <small class="t-tiny t-num">{L.guild.price(num(ALLY_SHOP[id]!.price))}</small>
-                <small class="t-tiny" class:t-soft={have(id) > 0} class:t-bad={!have(id)}
-                  >{have(id) ? L.guild.stock(have(id)) : L.guild.empty}</small
-                >
-              </div>
-            </div>
-            <div class="row wrap mt-2">
-              <Button
-                size="sm"
-                variant="gold"
-                disabled={!have(id) || credit < ALLY_SHOP[id]!.price}
-                onclick={() => go({ type: 'allyBuy', item: id, n: 1 })}>{L.guild.buy}</Button
-              >
-              {#if officer}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={batch(id) < 1}
-                  label={L.guild.cost(num(ALLY_SHOP[id]!.stock * Math.max(1, batch(id))))}
-                  onclick={() => go({ type: 'allyStock', item: id, n: batch(id) })}
-                  >{L.guild.restock} ×{Math.max(1, batch(id))}</Button
-                >
-              {/if}
-            </div>
-            {#if officer}<small class="t-tiny t-soft">{L.guild.cost(num(ALLY_SHOP[id]!.stock))}</small>{/if}
-          </Card>
+        <li class="good">
+          <ItemCell {id} n={have(id)} />
+          <b class="t-tiny">{itemName(id)}</b>
+          <small class="t-tiny t-num">{L.guild.price(num(ALLY_SHOP[id]!.price))}</small>
+          <small class="t-tiny" class:t-soft={have(id) > 0} class:t-bad={!have(id)}
+            >{have(id) ? L.guild.stock(have(id)) : L.guild.empty}</small
+          >
+          <Button
+            size="sm"
+            variant="gold"
+            wide
+            disabled={!have(id) || credit < ALLY_SHOP[id]!.price}
+            onclick={() => go({ type: 'allyBuy', item: id, n: 1 })}>{L.guild.buy}</Button
+          >
+          {#if officer}
+            <Button
+              size="sm"
+              variant="ghost"
+              wide
+              disabled={batch(id) < 1}
+              label={L.guild.cost(num(ALLY_SHOP[id]!.stock * Math.max(1, batch(id))))}
+              onclick={() => go({ type: 'allyStock', item: id, n: batch(id) })}
+              >{L.guild.restock} ×{Math.max(1, batch(id))}</Button
+            >
+            <small class="t-tiny t-soft">{L.guild.cost(num(ALLY_SHOP[id]!.stock))}</small>
+          {/if}
         </li>
       {/each}
     </ul>
@@ -87,15 +81,21 @@
 <style>
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: var(--sp-2);
     margin: 0;
     padding: 0;
     list-style: none;
   }
+  /* ô hàng như cửa hàng của RoK: hình + số còn, tên, giá, nút */
   .good {
-    display: flex;
-    gap: var(--sp-2);
-    align-items: center;
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    padding: 8px;
+    text-align: center;
+    background: var(--silk);
+    border: 1.5px solid var(--paper3);
+    border-radius: 12px;
   }
 </style>

@@ -65,7 +65,7 @@ export type Snap = { elder?: ElderId; level: number; troops: { type: UnitType; t
 export type Report = {
   id: number
   at: number
-  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot'
+  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena'
   i: number
   spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
@@ -120,6 +120,22 @@ export type Foe = { pid: number; name: string; at: number } // ai đã đánh m�
 // Cống hiến trong tiên minh: điểm cống hiến đang có (mua ở Cống Hiến Các, giữ cả khi đổi minh), lúc lượt cung phụng hồi đầy,
 // ngày (dayOf) và số cống hiến đã nhận từ giúp đỡ trong ngày đó
 export type Contrib = { credit: number; full: number; day: number; helped: number }
+// Minh vụ đường của mình: tuần, việc đang nhận (chỉ số lúc nhận, hạn chót), ngày (dayOf) và số lượt đã nhận trong ngày đó,
+// các mốc quà đã nhận tuần này
+// Luận Kiếm Đài: đội hình thủ (theo thứ tự ra trận), điểm, tuần / ngày của điểm và lượt, lượt còn, ngày đã mở rương, nhật ký
+export type ArenaTeam = { elder: ElderId; type: UnitType }
+export type ArenaLog = { at: number; pid: number; foe: string; win: boolean; delta: number; def: boolean } // def: mình thủ
+export type Arena = {
+  lineup: ArenaTeam[]
+  pts: number
+  week: number
+  day: number
+  left: number
+  chest: number
+  log: ArenaLog[]
+}
+export type MobTask = { m: Metric; n: number; pts: number; base: number; until: number }
+export type Mob = { week: number; task: MobTask | null; day: number; took: number; got: number[] }
 // Đội đang kéo tới: mã hành quân và người chơi bên kia (để gỡ đúng lúc trận giải), tên tông môn, lúc tới nơi
 export type Incoming = { id: number; pid: number; foe: string; at: number }
 // Thư: chữ dựng ở client theo khoá k và tham số a (@rok/i18n mailText), quà nhận đúng một lần.
@@ -131,6 +147,7 @@ export type MailArgs = {
   comp: []
   boss: [lv: number, rank: number, pct: number]
   allyGift: [lv: number, gift: number] // Minh lễ: người trong minh hạ yêu vương cấp lv, quà cấp gift
+  arenaTop: [rank: number] // hạng tuần Luận Kiếm Đài
   season: [season: number, rank: number, up: 0 | 1]
   sold: [good: string, n: number, net: number]
   unsold: [good: string, n: number]
@@ -196,6 +213,8 @@ export type State = {
   ach: Partial<Record<AchId, number>> // thành tựu: số bậc đã nhận quà
   incoming?: Incoming[] // đội đang kéo tới cướp mình (như Tháp canh của RoK) — server ghi lúc bên kia xuất quân
   contrib?: Contrib // cống hiến tiên minh (chưa từng góp / giúp: chưa có)
+  mob?: Mob // Minh vụ đường (chưa từng nhận việc: chưa có)
+  arena?: Arena // Luận Kiếm Đài (chưa từng vào: chưa có)
   frenzy?: number // cơn sát khí: vừa đi cướp, tới lúc này chưa dùng được Hộ Sơn Phù (như War Frenzy)
   born?: number // lúc lập tông môn (ms) — sự kiện tân thủ tính theo giờ từ đây (lập lúc 23h vẫn đủ 24 giờ ngày đầu)
 }

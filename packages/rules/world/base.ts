@@ -3,9 +3,27 @@ import { route, TILE_TIME, type Atlas, type Pos } from '../atlas.ts'
 import { type Pick } from '../core/action.ts'
 import { marchTime } from '../core/battle.ts'
 import { cutOf } from '../core/stats.ts'
-import { type Err, type JobKind, type March, type State } from '../core/types.ts'
-import { type AllyTechId, type ItemId, type PillId } from '../data.ts'
+import { dayOf } from '../core/calendar.ts'
+import { type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
+import {
+  ALLY_GIFT_LV,
+  ALLY_GIFTS,
+  ALLY_HELPS,
+  ALLY_MAX,
+  ALLY_TECH_IDS,
+  ALLY_TECH_PTS,
+  ALLY_TECHS,
+  ELO_K,
+  GIFT_PTS,
+  HELP_CREDIT,
+  HELP_CREDIT_DAY,
+  type AllyTechId,
+  type Bonus,
+  type ItemId,
+  type PillId,
+} from '../data.ts'
 import { noGain } from '../core/util.ts'
+import { mail } from '../sect/inbox.ts'
 
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
 export type MapCtx = { atlas: Atlas; phase: number }
@@ -36,7 +54,14 @@ export type Alliance = {
   fund?: number // Minh khố: nhập hàng Cống Hiến Các
   stock?: Partial<Record<ItemId, number>> // hàng đang có ở Cống Hiến Các
   gift?: number // điểm quà minh (cấp Minh lễ)
+  marks?: Mark[] // dấu trên bản đồ giới cho cả minh
+  mob?: MobBoard // Minh vụ đường tuần này
 }
+// Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
+// tuần và số thứ tự nên client tự vẽ được), điểm từng người đã góp
+export type MobBoard = { week: number; pts: number; next: number; board: number[]; by: Record<number, number> }
+// Dấu của minh trên bản đồ giới: ô, lời ghi, ai đặt, lúc nào
+export type Mark = { x: number; y: number; text: string; by: number; at: number }
 // Trạng thái một điểm trên bản đồ giới. own: phe giữ (mã minh > 0, người giữ một mình = −mã người chơi), since: từ lúc nào.
 // Mỏ: còn left, cạn thì hồi đầy lúc until. Yêu vương: còn hp, sát thương từng người; chết thì hồi sinh lúc until.
 export type Spot = {
@@ -76,6 +101,9 @@ export const freshWorld = (): World => ({
   nextOrder: 1,
   mkt: {},
 })
+// Điểm kiểu Elo cho bên đánh (bên thủ mất/được đúng bấy nhiêu): cướp, Luận Kiếm Đài. Chỉ server tính.
+export const elo = (a: number, d: number, win: boolean) =>
+  Math.round(ELO_K * ((win ? 1 : 0) - 1 / (1 + 10 ** ((d - a) / 400))))
 export const put = (w: World, al: Alliance): World => ({ ...w, allies: { ...w.allies, [al.id]: al } })
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
 
@@ -126,3 +154,55 @@ export const garrison = (ps: Players, i: number): [number, March][] =>
 export const withMarch = (s: State, m: March): State => ({ ...s, marches: s.marches.map(x => (x.id === m.id ? m : x)) })
 export const travel = (m: March) => m.arriveAt - m.startAt
 export const setSpot = (w: World, i: number, sp: Spot): World => ({ ...w, spots: { ...w.spots, [i]: sp } })
+
+// ---------- Tiên minh: Hộ Minh Đại Trận, cống hiến, Minh lễ (dùng chung cho alliance / guild / spots / arrive) ----------
+
+// Tầng một trận theo điểm đã góp; tổng tăng ích theo khoá của mọi trận
+export const techLevel = (al: Alliance, id: AllyTechId) => ALLY_TECH_PTS.filter(p => (al.tech?.[id] ?? 0) >= p).length
+const techSum = (al: Alliance, key: string) =>
+  ALLY_TECH_IDS.reduce((sum, id) => sum + (ALLY_TECHS[id].key === key ? ALLY_TECHS[id].v * techLevel(al, id) : 0), 0)
+export const helpsOf = (al: Alliance) => ALLY_HELPS + techSum(al, 'helps')
+export const seatsOf = (al: Alliance) => ALLY_MAX + techSum(al, 'seats')
+// Tăng ích tông môn từ các trận (worldBuffs gắn vào state từng người trong minh, nguồn 'ally')
+export const allyBuffs = (al: Alliance | undefined): Buff[] =>
+  al
+    ? ALLY_TECH_IDS.flatMap(id => {
+        const d = ALLY_TECHS[id],
+          lv = techLevel(al, id)
+        return lv && d.key !== 'helps' && d.key !== 'seats'
+          ? [{ key: d.key as Bonus, v: Math.round(d.v * lv * 1000) / 1000, until: 0, src: 'ally' }]
+          : []
+      })
+    : []
+
+export const contribOf = (s: State): Contrib => s.contrib ?? { credit: 0, full: 0, day: 0, helped: 0 }
+// Cống hiến cho người vừa giúp n lượt (trần HELP_CREDIT_DAY mỗi ngày giờ VN)
+export function helpCredit(s: State, n: number, t: number): State {
+  const c = contribOf(s),
+    day = dayOf(t)
+  const helped = c.day === day ? c.helped : 0
+  const got = Math.max(0, Math.min(n * HELP_CREDIT, HELP_CREDIT_DAY - helped))
+  return {
+    ...s,
+    contrib: { ...c, credit: c.credit + got, day, helped: helped + got },
+    stats: { ...s.stats, allied: (s.stats.allied ?? 0) + n },
+  }
+}
+
+// Minh lễ: người trong các minh vừa góp sức hạ yêu vương cấp lv → mọi người trong minh đó nhận quà qua thư (theo cấp quà
+// hiện tại), minh thêm điểm quà. Ghi state người nhận vào changed.
+export const giftLevel = (al: Alliance) => ALLY_GIFT_LV.filter(p => (al.gift ?? 0) >= p).length
+export function allyGifts(ps: Players, changed: Players, w: World, pids: number[], lv: number, at: number): World {
+  const pts = GIFT_PTS[lv]
+  if (!pts) return w
+  let next = w
+  for (const al of new Set(pids.map(p => allyOf(w, p)).filter(x => x !== undefined))) {
+    const glv = giftLevel(al)
+    for (const p of Object.keys(al.members).map(Number)) {
+      const st = changed.get(p) ?? ps.get(p)
+      if (st) changed.set(p, mail(st, { at, k: 'allyGift', a: [lv, glv], gift: ALLY_GIFTS[glv - 1] }))
+    }
+    next = put(next, { ...al, gift: (al.gift ?? 0) + pts })
+  }
+  return next
+}

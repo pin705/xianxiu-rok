@@ -156,7 +156,9 @@
             {@const v = festProgress(s, 'nhatKhoa', t.m)}
             <li class="row between t-small" class:done={v >= t.n}>
               <span class="row" style:--gap="6px"
-                ><Icon name={v >= t.n ? 'check' : 'clock'} size={16} />{L.fest.task[t.m](num(t.n))}</span
+                ><Icon name={v >= t.n ? 'check' : 'clock'} size={16} />{(L.fest.gain[t.m] ?? L.fest.task[t.m])(
+                  num(t.n),
+                )}</span
               >
               <span class="row" style:--gap="8px"
                 ><span class="t-num t-soft">{num(Math.min(v, t.n))}/{num(t.n)}</span><b class="t-gold"

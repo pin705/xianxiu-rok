@@ -809,6 +809,30 @@ export const PVP_START = 1000 // điểm kiểu Elo
 export const ELO_K = 32
 export const MATCH_POOL = 10 // ghép cặp: MATCH_PICK người ngẫu nhiên trong MATCH_POOL người gần lực chiến nhất
 export const MATCH_PICK = 3
+
+// ---------- Luận Kiếm Đài (Sunset Canyon của RoK, bất đồng bộ) ----------
+// Đội hình thủ: tối đa bằng số đội xuất quân, mỗi đội một trưởng lão + một hệ đệ tử ảo bậc ARENA_TIER, số lượng ARENA_BASE +
+// ARENA_STEP × cấp trưởng lão. Chỉ tính sức của trưởng lão (cấp, bị động, pháp bảo, thiên phú, sao) — không tính công pháp tông
+// môn, phù, Hương Hỏa, luân hồi. Trận xa luân: đội thắng đi tiếp với quân còn lại. Không mất quân, không mất tài nguyên.
+// ARENA_TRIES lượt mỗi ngày; điểm Elo (PVP_START, ELO_K), sang tuần nén về giữa; thư quà hạng tuần; rương ngày theo bậc điểm.
+export const ARENA_TIER: Tier = 3
+export const ARENA_BASE = 150
+export const ARENA_STEP = 15
+export const ARENA_TRIES = 5
+export const ARENA_LOG = 10 // nhật ký đài giữ chừng này dòng
+export const ARENA_BANDS = [0, 1000, 1200, 1400] // điểm tối thiểu của bậc Đồng · Bạc · Vàng · Ngọc
+export const ARENA_CHEST: Reward[] = [
+  { items: { thoiQuang5: 2, kinhThu500: 1 } },
+  { items: { thoiQuang15: 1, kinhThu500: 2 } },
+  { items: { thoiQuang15: 2, kinhThu2k: 1 } },
+  { items: { thoiQuang60: 1, kinhThu2k: 1, nganDuyen: 1 } },
+]
+export const ARENA_TOP = 10 // thư quà hạng tuần: hạng 1 · 2–3 · 4–10
+export const ARENA_PRIZES: Reward[] = [
+  { items: { kimDuyen: 2, thoiQuang180: 1, kinhThu8k: 1 } },
+  { items: { kimDuyen: 1, thoiQuang60: 2, kinhThu2k: 2 } },
+  { items: { nganDuyen: 2, thoiQuang60: 1 } },
+]
 export const PVP_GATE = { x: 200, y: -60 } // tới P3 (bản đồ giới): đội đi cướp rời vùng qua mép trên bản đồ
 export const GUARD_STEP = 0.04 // Hộ Sơn Đại Trận: thủ và máu bên thủ mỗi tầng
 // Tỉ lệ thắng ước lượng coi là chắc thắng: giao diện báo "áp đảo"; bot và NPC chỉ đánh từ mức này
@@ -879,6 +903,7 @@ export const ALLY_SHOP: Partial<Record<ItemId, { price: number; stock: number }>
   khoangNang5k: { price: 150, stock: 75 },
 }
 export const ALLY_SHOP_MAX = 99 // tồn tối đa mỗi món
+export const ALLY_MARKS = 5 // dấu trên bản đồ giới trưởng lão / minh chủ đặt cho cả minh (Alliance Markers)
 // Minh lễ (Alliance Gifts): người trong minh hạ yêu vương → cả minh nhận quà qua thư, minh được GIFT_PTS điểm quà theo cấp
 // yêu vương; điểm quà nâng cấp quà (ALLY_GIFT_LV: điểm để lên cấp 1..5), cấp càng cao quà càng hậu.
 export const GIFT_PTS: Partial<Record<number, number>> = { 2: 150, 3: 400 }
@@ -889,6 +914,36 @@ export const ALLY_GIFTS: Reward[] = [
   { items: { thoiQuang15: 2, kinhThu500: 1, khoangNang5k: 1 } },
   { items: { thoiQuang60: 1, kinhThu2k: 1, thachNang5k: 1 } },
   { items: { thoiQuang60: 1, nganDuyen: 1, kinhThu2k: 1 } },
+]
+// Minh vụ đường (Alliance Mobilization): bảng việc chung của tiên minh, làm mới mỗi tuần. MOB_SLOTS việc trên bảng, mỗi người
+// nhận một việc một lúc (tối đa MOB_TAKES lượt mỗi ngày), làm xong trong MOB_TIME thì minh được điểm việc đó (việc mới thế
+// chỗ). Đủ mốc MOB_GOALS thì ai đã góp ≥ MOB_MIN điểm nhận quà mốc. Việc đo bằng chỉ số tăng thêm từ lúc nhận (như Nhật Khóa).
+export const MOB_POOL: { m: Metric; n: number; pts: number }[] = [
+  { m: 'build', n: 2, pts: 30 },
+  { m: 'train', n: 100, pts: 20 },
+  { m: 'heal', n: 50, pts: 15 },
+  { m: 'brew', n: 2, pts: 15 },
+  { m: 'tech', n: 1, pts: 30 },
+  { m: 'win', n: 5, pts: 20 },
+  { m: 'hunt', n: 3, pts: 25 },
+  { m: 'speed', n: 120, pts: 25 },
+  { m: 'gather', n: 20_000, pts: 30 },
+  { m: 'draw', n: 1, pts: 10 },
+  { m: 'raid', n: 1, pts: 35 },
+  { m: 'realm', n: 1, pts: 25 },
+  { m: 'ally', n: 5, pts: 15 },
+]
+export const MOB_SLOTS = 8
+export const MOB_TAKES = 10
+export const MOB_TIME = 4 * 3_600_000
+export const MOB_MIN = 20
+export const MOB_GOALS = [200, 600, 1200, 2000, 3200]
+export const MOB_REWARDS: Reward[] = [
+  { items: { thoiQuang15: 1, thachNang5k: 1 } },
+  { items: { thoiQuang60: 1, thaoNang5k: 1, khoangNang5k: 1 } },
+  { items: { thoiQuang60: 1, nganDuyen: 1, kinhThu2k: 1 } },
+  { items: { thoiQuang180: 1, kimDuyen: 1 } },
+  { items: { thoiQuang180: 1, kimDuyen: 1, hoSon24: 1 } },
 ]
 
 // ---------- Điểm trên bản đồ giới ----------

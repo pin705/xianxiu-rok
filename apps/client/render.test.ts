@@ -60,6 +60,8 @@ async function load(lang: 'vi' | 'en') {
     'Alliance',
     'AllyTech',
     'AllyShop',
+    'Profile',
+    'AllyMob',
     'Chat',
     'world/WorldView',
     'world/MapTab',
@@ -591,7 +593,16 @@ test('sự kiện, túi đồ, tăng tốc, Hương Hỏa, bảng tài nguyên, 
       // túi có đủ mọi loại vật phẩm để mọi ô, mọi tab đều được vẽ
       const full: State = {
         ...s,
-        items: { ...s.items, thoiQuang60: 3, loBan15: 2, thachNang5k: 1, tuLinh8: 1, hoSon24: 1, kinhThu2k: 2, kimDuyen: 4 },
+        items: {
+          ...s.items,
+          thoiQuang60: 3,
+          loBan15: 2,
+          thachNang5k: 1,
+          tuLinh8: 1,
+          hoSon24: 1,
+          kinhThu2k: 2,
+          kimDuyen: 4,
+        },
         tokens: { hanBang: 12, thanhPhong: 3 },
       }
       const events = paint('Events', { game: full, now, open: true, onclose: noop }, label)
@@ -625,6 +636,8 @@ test('tiên minh, chat', async () => {
     fund: 820,
     stock: { thoiQuang60: 3, kinhThu2k: 0 },
     gift: 700,
+    marks: [{ x: 40, y: 52, text: 'Tập trung', by: 1, at: late.time }],
+    mob: { week: 0, pts: 700, next: 9, board: [8, 1, 2, 3, 4, 5, 6, 7], by: { 1: 40 } },
   }
   const api = {
     ask: async () => [],
@@ -656,11 +669,19 @@ test('tiên minh, chat', async () => {
         const who = officer ? 'trưởng lão' : 'thành viên'
         const sheet = { game: s, ally: info, officer, open: true, onclose: noop, send: async () => ({ ok: true }) }
         const tech = paint('AllyTech', sheet, `${label}, Hộ Minh Đại Trận (${who})`)
-        assert.ok(tech.includes(L.guild.names.quangNap) && tech.includes(L.guild.maxed), 'đủ trận, trận đầy ghi viên mãn')
+        assert.ok(
+          tech.includes(L.guild.names.quangNap) && tech.includes(L.guild.maxed),
+          'đủ trận, trận đầy ghi viên mãn',
+        )
         const shop = paint('AllyShop', sheet, `${label}, Cống Hiến Các (${who})`)
+        paint('AllyMob', { ...sheet, me: 1 }, `${label}, Minh vụ đường (${who})`)
         assert.equal(shop.includes(L.guild.restock), officer, 'chỉ trưởng lão / minh chủ thấy nút nhập hàng')
       }
       paint('Chat', { game: s, me: 1, ally: true, api, act, toast: noop, inline: true }, `${label}, chat trong trang`)
+      const { social } = await vite.ssrLoadModule('/src/social.svelte.ts')
+      social.profile = 2
+      paint('Profile', { game: s, api, me: 1 }, `${label}, hồ sơ đang tải`)
+      social.profile = null
       paint('Chat', { game: s, me: 1, api: null, act, toast: noop }, `${label}, dải chat`)
     }
   }
@@ -738,5 +759,42 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
         { game, now, info, atlas: a, me: 1, snap, pick, onclose: noop, onraid: noop, send: async () => ({ ok: true }) },
         `chạm ${pick.kind} ${JSON.stringify(pick)}`,
       )
+    // trong minh, là minh chủ: chia sẻ toạ độ vào chat và đặt / gỡ dấu cho cả minh
+    const ally = {
+      id: 1,
+      name: 'Thanh Vân Minh',
+      tag: 'TVM',
+      notice: '',
+      at: now,
+      helps: [],
+      people: [],
+      rallies: [],
+      members: { 1: 2 } as Record<number, 0 | 1 | 2>,
+      marks: [{ x: 3, y: 4, text: 'Tập trung', by: 1, at: now }],
+    }
+    const sheet = paint(
+      'TileSheet',
+      {
+        game,
+        now,
+        info,
+        atlas: a,
+        me: 1,
+        snap,
+        ally,
+        onclose: noop,
+        onraid: noop,
+        pick: { kind: 'tile', x: 3, y: 4 },
+        send: async () => ({ ok: true }),
+        say: async () => ({ ok: true }),
+      },
+      'minh chủ chạm ô có dấu',
+    )
+    assert.ok(sheet.includes(L.world.shareAlly) && sheet.includes(L.world.unmark), 'chia sẻ + gỡ dấu')
+    paint(
+      'WorldView',
+      { game, now, info, me: 1, snap, allies: [3], marks: ally.marks, goto: { x: 3, y: 4 }, onpick: noop },
+      'bản đồ giới có dấu của minh, vừa nhảy tới ô',
+    )
   }
 })

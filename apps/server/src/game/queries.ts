@@ -1,10 +1,10 @@
 // Truy vấn chỉ đọc của client: mỗi khoá một hàm, trả đúng kiểu Answer[k] (@rok/protocol). Thêm truy vấn: thêm khoá vào
 // Query/Answer ở protocol — thiếu hàm ở đây là lỗi biên dịch.
 import type { Report } from '@rok/rules'
-import { allyInfo, allyRows, marketOf, rivals, seasonBoard, sideKey } from '@rok/rules/world'
+import { allyInfo, allyRows, marketOf, profileOf, rivals, seasonBoard, sideKey } from '@rok/rules/world'
 import type { Answer, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
-import { channel } from './talk.ts'
+import { channel, dmsOf } from './talk.ts'
 import type { Sock, World } from './world.ts'
 
 const SEASON_ROWS = 20 // bảng điểm mùa gửi client: top này
@@ -22,6 +22,8 @@ export const answersOf = (w: World): Answers => ({
     return key ? w.chat.history(key) : []
   },
   allies: () => allyRows(w.shared, w.ps),
+  profile: (_, q) => (w.npc.has(q.pid) ? null : profileOf(w.shared, w.ps, q.pid, !!w.slots.get(q.pid)?.conns.size)),
+  dms: sock => dmsOf(w, sock.data.pid),
   ally: sock => allyInfo(w.shared, w.ps, sock.data.pid, p => !!w.slots.get(p)?.conns.size),
   market: (sock, q) => (w.info.market ? marketOf(w.ps, w.shared, sock.data.pid, w.now(), q.good) : null),
   season: sock => {

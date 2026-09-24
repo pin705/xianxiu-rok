@@ -84,10 +84,8 @@
           <b class="t-head">{L.guild.names[sel]}</b>
           {#if ally.star === sel}<Tag size="sm" tone="gold" icon="star">{L.guild.star}</Tag>{/if}
         </p>
-        <p class="t-small">
-          {L.guild.now}: {lv(sel) ? L.guild.effect(sel, lv(sel)) : '—'}{#if lv(sel) < TOP}
-            · {L.guild.next1}: <b>{L.guild.effect(sel, lv(sel) + 1)}</b>{/if}
-        </p>
+        <p class="t-small">{L.guild.now}: {lv(sel) ? L.guild.effect(sel, lv(sel)) : '—'}</p>
+        {#if lv(sel) < TOP}<p class="t-small">{L.guild.next1}: <b>{L.guild.effect(sel, lv(sel) + 1)}</b></p>{/if}
         {#if lv(sel) < TOP}
           <Meter value={part(sel)} size="sm" label="{num(pts(sel))} / {num(ALLY_TECH_PTS[lv(sel)])}" />
           <small class="t-tiny t-soft t-num"
