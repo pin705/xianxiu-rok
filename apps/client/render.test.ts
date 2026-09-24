@@ -21,7 +21,7 @@ import {
   type State,
   type Target,
 } from '@rok/rules'
-import { advanceWorld, mail, worldAct } from '@rok/rules/world'
+import { advanceWorld, atlas, freshWorld, mail, mapOf, spawn, worldAct } from '@rok/rules/world'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 let vite: ViteDevServer
@@ -54,6 +54,9 @@ async function load(lang: 'vi' | 'en') {
     'Ranks',
     'Alliance',
     'Chat',
+    'world/WorldView',
+    'world/MapTab',
+    'TileSheet',
   ])
     C[name.replace('world/', '')] = (await vite.ssrLoadModule(`/src/${name}.svelte`)).default
   L = (await vite.ssrLoadModule('/src/lib.ts')).L
@@ -436,7 +439,7 @@ test('tiên minh, chat', async () => {
     { pid: 1, name: 'Lạc Hà Tông', role: 2 as const, hall: 12, power: 9000, online: true },
     { pid: 2, name: 'Huyết Kiếm Tông', role: 0 as const, hall: 10, power: 7000, online: false },
   ]
-  const info = { id: 1, name: 'Thanh Vân Minh', tag: 'TVM', members: { 1: 2, 2: 0 } as Record<number, 0 | 1 | 2>, notice: 'Họp lúc 8h', at: late.time, helps: [{ pid: 2, job: 'build' as const, startAt: 0, ms: 60_000, by: [] }], people }
+  const info = { id: 1, name: 'Thanh Vân Minh', tag: 'TVM', members: { 1: 2, 2: 0 } as Record<number, 0 | 1 | 2>, notice: 'Họp lúc 8h', at: late.time, helps: [{ pid: 2, job: 'build' as const, startAt: 0, ms: 60_000, by: [] }], people, rallies: [{ id: 1, ally: 1, by: 1, i: 3, task: 'hit' as const, at: late.time + 600_000 }] }
   const api = { ask: async () => [], say: async () => ({ ok: true as const }), report: async () => true, onChat: () => () => {} }
   for (const lang of LANGS) {
     await load(lang)
@@ -447,5 +450,37 @@ test('tiên minh, chat', async () => {
       paint('Chat', { game: s, me: 1, ally: true, api, act, toast: noop, inline: true }, `${label}, chat trong trang`)
       paint('Chat', { game: s, me: 1, api: null, act, toast: noop }, `${label}, dải chat`)
     }
+  }
+})
+
+test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi loại', async () => {
+  const DAY = 86_400_000
+  const info = { id: 1, name: 'Giới 1', season: 1, map: 7, opened: late.time - 6 * DAY } // ngày 7: pha Tranh mạch
+  const a = atlas(7)
+  const taken: { x: number; y: number }[] = []
+  let k = 3
+  const rand = () => ((k = (Math.imul(k, 1103515245) + 12345) >>> 0) / 4294967296)
+  const ps = new Map(STATES.map(([, st], i) => {
+    const seat = spawn(a, taken, rand)!
+    taken.push(seat)
+    return [i + 1, { ...st, seat }] as [number, State]
+  }))
+  const vein = a.points.find(p => p.kind === 'vein')!
+  const mine = a.points.find(p => p.kind === 'mine')!
+  const boss = a.points.find(p => p.kind === 'boss')!
+  const w = { ...freshWorld(), spots: { [vein.i]: { own: -1, since: late.time }, [mine.i]: { left: 500 }, [boss.i]: { hp: 30_000 } } }
+  const snap = mapOf(ps, late.time, new Set([2]), [{ at: late.time, k: 'found', a: ['Lạc Hà Tông'] }, { at: late.time, k: 'khoáLạ', a: [] }], w)
+  const game = ps.get(1)!
+  const now = late.time
+  const picks = [
+    { kind: 'seat', pid: 2 }, { kind: 'seat', pid: 1 }, { kind: 'point', i: vein.i }, { kind: 'point', i: mine.i }, { kind: 'point', i: boss.i },
+    { kind: 'point', i: a.points.find(p => p.kind === 'gate')!.i }, { kind: 'point', i: a.points.find(p => p.kind === 'heaven')!.i }, { kind: 'tile', x: 3, y: 4 },
+  ]
+  for (const lang of LANGS) {
+    await load(lang)
+    paint('WorldView', { game, now, info, me: 1, snap, allies: [3], onpick: noop }, 'bản đồ giới')
+    paint('WorldView', { game: { ...game, seat: null }, now, info, me: 1, snap: null, onpick: noop }, 'chưa có ảnh chụp, chưa có chỗ')
+    paint('MapTab', { game, now, info, me: 1, watch: () => () => {}, onpick: noop, onreports: noop, onrivals: noop, onraid: noop, send: async () => ({ ok: true }) }, 'tab bản đồ')
+    for (const pick of picks) paint('TileSheet', { game, now, info, atlas: a, me: 1, snap, pick, onclose: noop, onraid: noop, send: async () => ({ ok: true }) }, `chạm ${pick.kind} ${JSON.stringify(pick)}`)
   }
 })

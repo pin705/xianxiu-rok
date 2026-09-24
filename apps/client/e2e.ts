@@ -208,6 +208,8 @@ try {
   assert.deepEqual(errors, [], 'console có lỗi')
 
   // Tranh đoạt: người chơi thứ hai (bot socket.io) cướp tông môn trong trình duyệt → bên thủ thấy thông báo, xem lại trận, báo thù
+  // (tab A lên trước: Chrome dừng hoạt ảnh ở tab nền — bảng trượt đóng không xong)
+  await a.send('Page.bringToFront')
   await a.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
   const tenTo = (st: any, troops: object) => ({ ...st, levels: Object.fromEntries(Object.keys(st.levels).map(k => [k, 10])), shield: 0, troops: { ...st.troops, ...troops }, res: { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 } })
   await a.js(`${truth}.then(st => fetch('/api/dev/state', { method: 'POST', headers: { 'content-type': 'application/json', 'x-rok': '1' }, body: JSON.stringify({ state: (${tenTo.toString()})(st, { the1: 200 }) }) })).then(r => r.ok)`)
@@ -233,6 +235,29 @@ try {
   await a.js(closeAll)
   other.close()
   console.log('✓ bị người chơi khác cướp: thông báo, xem lại trận, báo thù')
+  assert.deepEqual(errors, [], 'console có lỗi')
+
+  // Bản đồ giới: tab Bản đồ → gạt sang "Giới" → cảnh WebGL + ghim tên tông môn mình → chạm vào tông môn mình → bảng thông tin
+  const me = (await a.js(truth)).name as string
+  for (let i = 0; i < 10 && (await a.js(`document.querySelectorAll('dialog[open]').length`)); i++) (await a.js(closeAll), await sleep(300))
+  await a.js(`document.querySelector('[data-tab=banDo]')?.click()`)
+  assert.ok(await a.until(`[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Giới')`), 'tab Bản đồ không có nút gạt Giới')
+  await a.js(`[...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Giới').click()`)
+  assert.ok(await a.until(`!!document.querySelector('.pins .pin.mine')`, 15000), `bản đồ giới không hiện tông môn của mình — ${await seen()}`)
+  const pin = await a.js(`(() => { const r = document.querySelector('.pins .pin.mine').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top - 18 } })()`)
+  for (const type of ['mousePressed', 'mouseReleased']) await a.send('Input.dispatchMouseEvent', { type, x: pin.x, y: pin.y, button: 'left', clickCount: 1 })
+  const under = await a.js(`(() => {
+    const all = document.elementsFromPoint(${pin.x}, ${pin.y}).map(e => e.tagName + '.' + String(e.className).slice(0, 30))
+    const t = document.querySelector('.touch'), r = t?.getBoundingClientRect()
+    return JSON.stringify({ all, touch: r && [r.left, r.top, r.width, r.height, getComputedStyle(t).pointerEvents, getComputedStyle(t).visibility], body: getComputedStyle(document.body).pointerEvents, inert: document.body.inert })
+  })()`)
+  assert.ok(
+    await a.until(`[...document.querySelectorAll('dialog[open]')].some(d => d.innerText.includes(${JSON.stringify(me)}))`, 5000),
+    `chạm tông môn mình mà không mở bảng thông tin — dưới điểm chạm: ${under} @${JSON.stringify(pin)}, hộp thoại: ${JSON.stringify(await a.js(`[...document.querySelectorAll('dialog[open]')].map(d => d.innerText.slice(0, 80))`))}`,
+  )
+  await a.js(closeAll)
+  await a.js(`[...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Vùng')?.click()`) // trả lại bản đồ vùng cho các bước sau
+  console.log('✓ bản đồ giới: cảnh WebGL, ghim tông môn, chạm mở bảng thông tin')
   assert.deepEqual(errors, [], 'console có lỗi')
 
   // Server sập giữa chừng (SIGKILL, không kịp xả): client báo đang nối lại, server lên thì tự nối, thao tác đã ack còn nguyên

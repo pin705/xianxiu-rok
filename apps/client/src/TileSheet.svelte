@@ -2,7 +2,8 @@
   // Chạm trên bản đồ giới: tông môn (thông tin, đường đi, cướp), điểm (ai giữ, mỏ còn bao nhiêu, yêu vương còn máu; chiếm /
   // khai / đánh; gọi đội về), đội hành quân, ô trống (vùng, vòng, thời tiết). Luật ở rules/world.ts, server kiểm lại.
   import { MINE_STOCK, BOSSES, cutOf, might, type Army, type ElderId, type State } from '@rok/rules'
-  import { TILE_TIME, bossSlice, dayIn, phaseOf, raidChance, regionOf, route, weather, type Atlas, type MapSnap, type Task, type WorldAction } from '@rok/rules/world'
+  import { RALLY_WAIT } from '@rok/rules'
+  import { TILE_TIME, bossSlice, dayIn, phaseOf, raidChance, regionOf, route, weather, type AllyInfo, type Atlas, type MapSnap, type Task, type WorldAction } from '@rok/rules/world'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import { landAt } from '@rok/art'
   import ArmyPick from './Army.svelte'
@@ -19,6 +20,7 @@
     snap,
     pick,
     busy = false,
+    ally = null,
     onclose,
     onraid,
     send,
@@ -31,6 +33,7 @@
     snap: MapSnap | null
     pick: Pick | null
     busy?: boolean
+    ally?: AllyInfo | null // tiên minh của mình: kết trận, viện binh
     onclose: () => void
     onraid: (pid: number) => void
     send: (a: WorldAction) => Promise<Ack>
@@ -50,9 +53,21 @@
   const title = $derived(
     seat ? seat.name : point ? `${spotName(point.kind)} · ${L.lv(point.lv)}` : march ? (snap?.seats.find(s => s.pid === march.pid)?.name ?? '') : pick?.kind === 'tile' ? regionName(regionOf(atlas, pick)) : '',
   )
+  // cách xuất quân tới điểm: một mình, mở kết trận (chờ 5/10/30 phút), hay góp vào kết trận đang mở
+  let way = $state<'solo' | 'rally' | number>('solo')
+  let wait = $state<0 | 1 | 2>(1)
+  $effect(() => void (pick && (way = 'solo')))
+  const rallies = $derived(point && ally ? ally.rallies.filter(r => r.i === point.i && r.at > now) : [])
+  const isAlly = (pid: number) => !!ally?.people.some(p => p.pid === pid)
   async function go(task: Task, elder: ElderId, army: Army) {
     if (!point) return
-    const r = await send({ type: 'go', i: point.i, task, elder, army })
+    const a: WorldAction = way === 'solo' ? { type: 'go', i: point.i, task, elder, army } : way === 'rally' ? { type: 'rally', i: point.i, wait, elder, army } : { type: 'rallyJoin', id: way, elder, army }
+    const r = await send(a)
+    if (r.ok) (sfx('march'), onclose())
+  }
+  let aiding = $state(false)
+  async function aid(pid: number, elder: ElderId, army: Army) {
+    const r = await send({ type: 'aid', pid, elder, army })
     if (r.ok) (sfx('march'), onclose())
   }
 </script>
@@ -76,7 +91,13 @@
         {/if}
       </div>
     </Card>
-    {#if seat.pid !== me && !seat.shield && r}
+    {#if seat.pid !== me && isAlly(seat.pid) && r}
+      {#if aiding}
+        <ArmyPick {game} cta={L.world.aid} time={time(r.len)} disabled={busy} onsubmit={(e, a) => aid(seat.pid, e, a)} />
+      {:else}
+        <div class="mt-3"><Button variant="gold" wide icon="shield" onclick={() => (aiding = true)}>{L.world.aid}</Button></div>
+      {/if}
+    {:else if seat.pid !== me && !seat.shield && r}
       <div class="mt-3"><Button variant="danger" wide icon="swords" onclick={() => onraid(seat.pid)}>{L.pvp.attack}</Button></div>
     {/if}
   {:else if point}
@@ -110,6 +131,24 @@
       </div>
     {:else if r && !dead && (point.kind !== 'heaven' || phase >= 3)}
       {@const slice = task === 'hit' ? bossSlice(atlas, point.i) : null}
+      {#if ally && task !== 'gather'}
+        <Section title={L.world.rally}>
+          <div class="row wrap">
+            <Button size="sm" variant={way === 'solo' ? 'gold' : 'ghost'} onclick={() => (way = 'solo')}>{L.world.solo}</Button>
+            <Button size="sm" variant={way === 'rally' ? 'gold' : 'ghost'} onclick={() => (way = 'rally')}>{L.world.openRally}</Button>
+            {#each rallies as rl (rl.id)}
+              <Button size="sm" variant={way === rl.id ? 'gold' : 'ghost'} onclick={() => (way = rl.id)}>{L.world.joinRally(clock(rl.at - now))}</Button>
+            {/each}
+          </div>
+          {#if way === 'rally'}
+            <div class="row wrap">
+              {#each RALLY_WAIT as ms, k (k)}
+                <Button size="sm" variant={wait === k ? 'gold' : 'quiet'} onclick={() => (wait = k as 0 | 1 | 2)}>{L.world.wait(ms / 60_000)}</Button>
+              {/each}
+            </div>
+          {/if}
+        </Section>
+      {/if}
       <ArmyPick
         {game}
         foe={slice ? might(slice) : undefined}

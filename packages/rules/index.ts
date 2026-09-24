@@ -44,7 +44,8 @@ export type March = {
   returnAt: number // 0: chưa hẹn (đi cướp: server giải trận lúc tới nơi rồi mới biết giờ về)
   foe?: string // đi cướp: tên tông môn bên kia (để hiện)
   path?: { x: number; y: number }[] // đi trên bản đồ giới: các điểm dừng (đi, …cổng, tới) — theo ô
-  task?: 'take' | 'gather' | 'hit' // tới điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương
+  task?: 'take' | 'gather' | 'hit' | 'aid' // điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương; aid: viện binh nhà đồng minh
+  rally?: number // thuộc kết trận này (mọi đội cùng tới lúc hẹn, đánh như một bên)
   spot?: string // loại điểm (để hiện tên): vein, mine, boss, gate, heaven
   stay?: boolean // đang đóng quân ở điểm (chỉ về khi bị đánh bật hoặc gọi về)
   mine?: { end: number; amount: number; res: Res } // đang khai mỏ tới end, mang về amount

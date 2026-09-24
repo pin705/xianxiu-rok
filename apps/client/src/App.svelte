@@ -415,6 +415,7 @@
       {me}
       {busy}
       allies={ally ? ally.people.map(p => p.pid) : []}
+      {ally}
       watch={watchMap}
       onpick={t => (target = t)}
       onreports={openReports}

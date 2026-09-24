@@ -2,7 +2,7 @@
   // Tab Bản đồ: nút gạt Giới (bản đồ giới chung) | Vùng (bản đồ PvE riêng). Nhớ lựa chọn trên máy. Chỉ theo dõi bản đồ giới
   // (server đẩy ảnh chụp khi đổi) lúc đang xem.
   import type { State, Target } from '@rok/rules'
-  import { atlas, type MapSnap, type WorldAction } from '@rok/rules/world'
+  import { atlas, type AllyInfo, type MapSnap, type WorldAction } from '@rok/rules/world'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import TileSheet from '../TileSheet.svelte'
   import { Tabs } from '../ui'
@@ -17,6 +17,7 @@
     info,
     me,
     allies = [],
+    ally = null,
     busy = false,
     watch,
     onpick,
@@ -30,6 +31,7 @@
     info: WorldInfo | null
     me: number | null
     allies?: number[]
+    ally?: AllyInfo | null
     busy?: boolean
     watch: (on: (m: MapSnap) => void) => () => void
     onpick: (t: Target) => void
@@ -69,7 +71,7 @@
 
 {#if mode === 'world' && info && world}
   <WorldView {game} {now} {info} {me} {snap} {allies} onpick={p => (pick = p)} {toggle} />
-  <TileSheet {game} {now} {info} atlas={world} {me} {snap} {pick} {busy} onclose={() => (pick = null)} onraid={pid => ((pick = null), onraid(pid))} {send} />
+  <TileSheet {game} {now} {info} atlas={world} {me} {snap} {pick} {busy} {ally} onclose={() => (pick = null)} onraid={pid => ((pick = null), onraid(pid))} {send} />
 {:else}
   <MapView {game} {now} {onpick} {onreports} {onrivals} onrecall={id => send({ type: 'recall', id })} toggle={info ? toggle : undefined} />
 {/if}

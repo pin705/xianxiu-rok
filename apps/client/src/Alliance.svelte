@@ -7,7 +7,7 @@
   import type { Snippet } from 'svelte'
   import { Icon } from '@rok/art'
   import { Button, Card, Medal, Page, Section, Tag } from './ui'
-  import { L, num, sfx } from './lib'
+  import { L, clock, num, sfx } from './lib'
 
   let {
     game,
@@ -125,6 +125,15 @@
         {/each}
       </ul>
     </Section>
+
+    {#if ally.rallies.length}
+      <Section title={L.world.rally}>
+        <ul class="stack" style:--gap="2px">
+          {#each ally.rallies as r (r.id)}<li class="t-small">{L.world.rallyAt(nameOf(r.by), r.task === 'hit' ? L.world.point.boss : L.world.point.vein, clock(Math.max(0, r.at - game.time)))}</li>{/each}
+        </ul>
+        <p class="t-tiny t-soft">{L.world.rallyHint}</p>
+      </Section>
+    {/if}
 
     {#if chat}<Section title={L.chat.ally}>{@render chat()}</Section>{/if}
 

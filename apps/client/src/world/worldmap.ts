@@ -176,11 +176,15 @@ export class WorldScene {
   // Chọn vật dưới điểm (DU): cờ hành quân → tông môn → điểm → ô trống
   pick(x: number, y: number, z: number, seats: MapSnap['seats'], now: number): Pick {
     const r = (MARK * 0.6) / z
-    const near = (p: Pos, k = 1) => Math.hypot((p.x + 0.5) * T - x, (p.y + 0.5) * T - y) < r * k
-    for (const m of this.marches) if (near(marchAt(m, now), 0.8)) return { kind: 'march', pid: m.pid, id: m.id }
-    const s = seats.find(s => near(s))
+    const d = (p: Pos) => Math.hypot((p.x + 0.5) * T - x, (p.y + 0.5) * T - y)
+    // trong mỗi loại lấy cái GẦN NHẤT trong tầm chạm (các tông môn sát nhau vẫn chọn đúng)
+    const nearest = <X,>(list: readonly X[], at: (x: X) => Pos, k = 1) =>
+      list.reduce<[X | null, number]>((best, it) => { const dd = d(at(it)); return dd < r * k && dd < best[1] ? [it, dd] : best }, [null, Infinity])[0]
+    const m = nearest(this.marches, x2 => marchAt(x2, now), 0.8)
+    if (m) return { kind: 'march', pid: m.pid, id: m.id }
+    const s = nearest(seats, x2 => x2)
     if (s) return { kind: 'seat', pid: s.pid }
-    const p = this.atlas.points.find(p => near(p, p.kind === 'heaven' ? 1.5 : 1))
+    const p = nearest(this.atlas.points, x2 => x2, 1.2)
     if (p) return { kind: 'point', i: p.i }
     return { kind: 'tile', x: Math.max(0, Math.min(MAP_W - 1, Math.floor(x / T))), y: Math.max(0, Math.min(MAP_W - 1, Math.floor(y / T))) }
   }

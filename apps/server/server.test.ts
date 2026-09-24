@@ -346,3 +346,34 @@ test('tiên minh + chat: lập minh, người khác vào, nhờ giúp, kênh gi�
   ca.close()
   cb.close()
 })
+
+test('bản đồ giới: đi chiếm linh mạch trong vùng mình, đóng quân, được buff, ảnh chụp ghi người giữ, gọi về', { skip }, async () => {
+  const { atlas, regionOf } = await import('@rok/rules/world')
+  const n = await boot('p')
+  const w = await newWorld(n)
+  const A = await guest(n, undefined, w)
+  const c = client(n, A.token)
+  const welcome = await c.welcome
+  const a = atlas(welcome.world.map)
+  const { state } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { state: any }
+  // linh mạch trống trong vùng của mình (NPC cùng vùng có thể đã giữ một mạch — chọn mạch chưa ai giữ)
+  const map0 = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { spots: { i: number; own?: string }[] }
+  const vein = a.points.find(p => p.kind === 'vein' && p.region === regionOf(a, state.seat) && !map0.spots.some(s => s.i === p.i && s.own))
+  assert.ok(vein, 'vùng nào cũng có linh mạch')
+  await api(n, '/dev/state', { state: { ...state, troops: { ...state.troops, kiem2: 300 } } }, A.token)
+  const ack = await c.act({ type: 'go', i: vein!.i, task: 'take', elder: 'thanhPhong', army: { kiem2: 300 } })
+  assert.ok(ack.ok, JSON.stringify(ack))
+  const m = ack.p!.marches!.at(-1)!
+  const now0 = welcome.now
+  await api(n, '/dev/warp', { min: Math.ceil((m.arriveAt - now0) / 60_000) + 1 }, A.token)
+  const held = await c.push(p => !!p.p.marches?.some(x => x.id === m.id && x.stay))
+  assert.ok(held)
+  const buffed = await c.push(p => !!p.p.buffs?.some(b => b.src === 'vein'), 8000)
+  assert.ok(buffed, 'giữ linh mạch: sản lượng tăng')
+  const map = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { spots: { i: number; own?: string; n?: number }[] }
+  assert.equal(map.spots.find(s => s.i === vein!.i)?.n, 1)
+  assert.ok((await c.act({ type: 'recall', id: m.id })).ok)
+  const map2 = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { spots: { i: number; own?: string }[] }
+  assert.equal(map2.spots.find(s => s.i === vein!.i)?.own, undefined, 'gọi về hết quân: điểm trống')
+  c.close()
+})

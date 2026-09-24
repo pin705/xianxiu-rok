@@ -207,6 +207,7 @@ export class World {
       const slot = this.slots.get(pid)
       if (!slot) continue
       try {
+        this.npcHold(pid, now)
         this.commit(slot, turn(advance(this.ps.get(pid)!, now), { casual: true }))
         const s = this.ps.get(pid)!
         const foe = [...s.foes].reverse().find(f => f.at + REVENGE_TIME > now)
@@ -221,6 +222,23 @@ export class World {
       }
     }
     this.armRaid()
+  }
+
+  // NPC giữ linh mạch trong vùng mình: chưa đóng quân ở đâu mà vùng còn mạch trống thì đem nửa quân tới đóng
+  private npcHold(pid: number, now: number) {
+    const s = this.ps.get(pid)!
+    if (!s.seat || s.marches.some(m => m.target.kind === 'spot')) return
+    const a = atlas(this.seed)
+    const region = regionOf(a, s.seat)
+    const vein = a.points.find(p => p.kind === 'vein' && p.region === region && this.shared.spots[p.i]?.own === undefined)
+    const e = (Object.keys(s.elders) as ElderId[]).find(x => !s.marches.some(m => m.elder === x))
+    if (!vein || !e) return
+    const army = Object.fromEntries(UNITS.filter(u => s.troops[u] >= 2).map(u => [u, Math.floor(s.troops[u] / 2)]))
+    if (!Object.keys(army).length) return
+    const r = worldAct(this.ps, pid, { type: 'go', i: vein.i, task: 'take', elder: e, army }, now, seed(), this.map(now), this.shared)
+    if (!r.ok) return
+    if (r.world !== this.shared) this.share(r.world)
+    this.commitAll(r.changed)
   }
 
   // Bản đồ đổi (chỗ ngồi, hành quân trên bản đồ, biên niên): đẩy ảnh chụp cho người đang xem, gộp 1 giây.

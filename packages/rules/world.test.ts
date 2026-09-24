@@ -373,3 +373,77 @@ test('yêu vương: kho máu chung, mỗi đội đánh một lát; hạ thì th
   assert.equal(worldAct(ps, 3, { type: 'go', i: boss.i, task: 'hit', elder: 'thanhPhong', army: { kiem4: 10 } }, at + 1, 1, map, w).ok, false, 'đang hồi sinh')
   assert.equal(spotOf(w, map, boss.i, w.spots[boss.i].until!).hp, 60_000, 'hồi sinh đầy máu')
 })
+
+test('kết trận: mở ở yêu vương, người cùng minh góp đội, mọi đội tới cùng lúc và đánh như một bên, sát thương chia theo lực chiến', async () => {
+  const { atlas, advanceAll, freshWorld, allyOf } = await import('./world.ts')
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const boss = a.points.find(p => p.kind === 'boss' && p.lv === 2)!
+  const seat = { x: a.regions[boss.region].cx + 3, y: a.regions[boss.region].cy }
+  const ps = world(...[1, 2, 3].map(k => ({ ...sect(`S${k}`, 20, { kiem4: 2000, phap4: 2000, the4: 2000 }), seat, elders: { thanhPhong: expAt(35) } })))
+  let w = freshWorld()
+  const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {
+    const r = worldAct(ps, pid, x, at, 3 + pid, map, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  const army = { kiem4: 2000, phap4: 2000, the4: 2000 }
+  act(1, { type: 'allyFound', name: 'Vạn Kiếm', tag: 'VK' })
+  act(2, { type: 'allyJoin', id: allyOf(w, 1)!.id })
+  assert.equal(act(3, { type: 'rally', i: boss.i, wait: 0, elder: 'thanhPhong', army }), 'locked', 'phải ở trong minh')
+  assert.equal(act(1, { type: 'rally', i: boss.i, wait: 1, elder: 'thanhPhong', army }), null)
+  const rid = Object.values(w.rallies)[0].id
+  assert.equal(act(3, { type: 'rallyJoin', id: rid, elder: 'thanhPhong', army }), 'locked', 'người ngoài minh không góp được')
+  assert.equal(act(2, { type: 'rallyJoin', id: rid, elder: 'thanhPhong', army }, T0 + 1000), null)
+  const at = ps.get(1)!.marches[0].arriveAt
+  assert.equal(ps.get(2)!.marches[0].arriveAt, at, 'cùng tới lúc hẹn')
+  assert.ok(at - T0 >= 10 * 60_000, 'chờ 10 phút')
+  const r = advanceAll(ps, w, at, map)
+  for (const [k, v] of r.changed) ps.set(k, v)
+  w = r.world
+  const reps = [1, 2].map(p => ps.get(p)!.reports.at(-1)!)
+  assert.ok(reps.every(x => x.kind === 'spot'), 'mỗi người một chiến báo')
+  assert.equal(reps[0].fights[0].rounds.length, reps[1].fights[0].rounds.length, 'cùng một trận')
+  const d = w.spots[boss.i].dmg!
+  assert.ok(d[1] > 0 && d[2] > 0 && Math.abs(d[1] - d[2]) <= 1, 'hai đội ngang nhau: sát thương ngang nhau')
+  assert.equal(Object.keys(w.rallies).length, 0, 'kết trận xong thì gỡ')
+})
+
+test('viện binh: đóng ở nhà đồng minh, cùng thủ khi bị cướp; thủ được thì ở lại, gọi về được', async () => {
+  const { freshWorld, allyOf, advanceAll, aidAt } = await import('./world.ts')
+  const ps = world(sect('A', 10, { kiem3: 900 }), sect('B', 10, { the1: 50 }), sect('C', 10, { the3: 900 }))
+  let w = freshWorld()
+  const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {
+    const r = worldAct(ps, pid, x, at, 3 + pid, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  const step = (at: number) => {
+    const r = advanceAll(ps, w, at)
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+  }
+  act(2, { type: 'allyFound', name: 'Hộ Sơn', tag: 'HS' })
+  act(3, { type: 'allyJoin', id: allyOf(w, 2)!.id })
+  assert.equal(act(1, { type: 'aid', pid: 2, elder: 'thanhPhong', army: { kiem3: 10 } }), 'locked', 'không viện binh người ngoài minh')
+  assert.equal(act(3, { type: 'aid', pid: 2, elder: 'thanhPhong', army: { the3: 900 } }), null)
+  step(ps.get(3)!.marches[0].arriveAt)
+  assert.deepEqual(aidAt(ps, 2).map(([p]) => p), [3])
+  // A cướp B: viện binh của C cùng thủ
+  assert.equal(act(1, { type: 'raid', pid: 2, elder: 'thanhPhong', army: { kiem3: 900 } }, T0 + HOUR), null)
+  const m = ps.get(1)!.marches[0]
+  step(m.arriveAt)
+  const rep = ps.get(1)!.reports.at(-1)!
+  assert.ok(rep.fights[0].b.troops.some(t => t.tier === 3 && t.type === 'the'), 'bên thủ có thể tu bậc 3 của viện binh')
+  assert.ok(ps.get(3)!.reports.at(-1)!.def, 'viện binh có chiến báo thủ')
+  if (rep.win) assert.equal(ps.get(3)!.marches[0].stay, false, 'thua thì viện binh bị đánh bật về')
+  else {
+    assert.equal(ps.get(3)!.marches[0].stay, true, 'thủ được thì ở lại')
+    assert.equal(act(3, { type: 'recall', id: ps.get(3)!.marches[0].id }, m.arriveAt + 1000), null)
+    assert.ok(ps.get(3)!.marches[0].returnAt > m.arriveAt)
+  }
+})
