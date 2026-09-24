@@ -84,7 +84,7 @@ function run(s: State, a: Action) {
   if (!r.ok) throw new Error(`${a.type}: ${r.error}`)
   return r.state
 }
-const levels = (s: State, lv: number, hall = lv) =>
+const levels = (lv: number, hall = lv) =>
   ({
     ...Object.fromEntries(IDS.map(id => [id, lv])),
     chuDien: hall,
@@ -98,7 +98,7 @@ const fresh = newGame(T0, 'Lạc Hà Tông')
 function midGame(): State {
   let s: State = {
     ...fresh,
-    levels: levels(fresh, 6, 7),
+    levels: levels(6, 7),
     res: rich,
     troops: { ...fresh.troops, kiem1: 400, phap2: 120, the2: 80, the3: 10 },
     wounded: { ...fresh.wounded, kiem1: 25 },
@@ -136,7 +136,7 @@ const mid = midGame()
 // Chờ độ kiếp (tầng 5, 10), vừa độ kiếp xong (có chiến báo 3 đợt), và tầng 15 (luân hồi)
 const trib5: State = {
   ...fresh,
-  levels: levels(fresh, 5),
+  levels: levels(5),
   res: rich,
   troops: { ...fresh.troops, kiem1: 300, phap1: 300, the1: 300 },
   items: { doKiep: 1 },
@@ -151,7 +151,7 @@ const failTrib = run(
   { ...trib5, troops: { ...trib5.troops, kiem1: 3 } },
   { type: 'trib', elder: 'thanhPhong', army: { kiem1: 3 }, pill: false },
 )
-const trib10: State = { ...mid, levels: levels(mid, 10), trib: 1, marches: [] }
+const trib10: State = { ...mid, levels: levels(10), trib: 1, marches: [] }
 // có chỗ trên bản đồ giới: kiếp vân đang tụ (server giải lúc giáng), đã bị phá kiếp một lần
 const clouded = run(
   { ...trib10, seat: { x: 10, y: 10 }, res: rich, troops: { ...trib10.troops, kiem2: 200 } },
@@ -160,7 +160,7 @@ const clouded = run(
 const cloud: State = { ...clouded, marches: clouded.marches.map(m => ({ ...m, foil: 1 })) }
 const late: State = {
   ...mid,
-  levels: levels(mid, 15),
+  levels: levels(15),
   trib: 2,
   marches: [],
   beast: 15,
@@ -179,7 +179,7 @@ const late: State = {
 // Tầng 16–25: bậc 4–5, pháp bảo (một món đang đeo, một món đang luyện), thiên phú, đan mới, buff Ngưng Thần
 const high: State = {
   ...late,
-  levels: levels(late, 20),
+  levels: levels(20),
   trib: 3,
   realms: [5, 5, 5, 2, 0],
   tower: 31,
@@ -191,7 +191,7 @@ const high: State = {
   items: { tuKhi: 7, daiTuKhi: 1, hoiXuan: 2, ngungThan: 1, phaCanh: 1, taiTuy: 1, doKiep: 2 },
 }
 const high20 = run(run(high, { type: 'focus' }), { type: 'forge', gear: 'hoTam' })
-const top: State = { ...high, levels: levels(high, 25), trib: 4, realms: REALMS.map(() => 5), tower: 50 }
+const top: State = { ...high, levels: levels(25), trib: 4, realms: REALMS.map(() => 5), tower: 50 }
 // Tranh đoạt: tông môn A cướp B — A đang mang chiến lợi phẩm về, B vừa bị cướp (khiên, kẻ thù, chiến báo thủ), có thư, điểm sự kiện
 function raided(): [State, State] {
   const a0: State = { ...late, shield: 0, marches: [], troops: { ...late.troops, kiem3: 1500 } }

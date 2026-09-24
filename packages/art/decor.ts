@@ -1,5 +1,5 @@
 // Chi tiết cảnh tông môn: bậc đá leo núi, mai nở, đèn đá, bụi trúc. Mỗi hàm trả về Asset để bake().
-import { blot, grain, spline, stroke, wash, type Asset, type G, type Pt } from './brush'
+import { blot, grain, spline, stroke, wash, type Asset, type Pt } from './brush'
 import { dissolve, moss, tuft } from './landscape'
 import { rng } from './noise'
 import { PIGMENT as C, mix } from './palette'

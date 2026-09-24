@@ -5,7 +5,7 @@
 // hai tab đồng bộ → ngăn kéo desktop → bị người chơi khác cướp: thông báo, xem lại trận, báo thù → bản đồ giới: chạm tông môn mở bảng thông tin → tài khoản: gắn email, đăng xuất, đăng nhập lại → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
 // màn "không có mạng", đổi ngôn ngữ vẫn được (service worker) → console sạch.
 import { spawn, type ChildProcess } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

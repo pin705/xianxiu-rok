@@ -1,4 +1,4 @@
-import { fight, type Round, type Side, type Troop } from './combat.ts'
+import { fight, type Round, type Side } from './combat.ts'
 import {
   BASE_CAP,
   BASE_RATE,

@@ -3,7 +3,6 @@
 import {
   BEASTS,
   ELDER_IDS,
-  GEAR_IDS,
   IDS,
   MAX_LEVEL,
   PILL_IDS,
