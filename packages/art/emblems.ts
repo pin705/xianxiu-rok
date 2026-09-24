@@ -1,18 +1,23 @@
 // Huy hiệu tròn vẽ tay (thay cho chữ Hán): đĩa màu khoáng loang, vòng vàng một nét, viền mực, hình chạm giữa đĩa.
-// Hình chạm: 15 yêu thú, 5 tông môn đối địch, 3 bí cảnh, lôi kiếp, 3 hệ đệ tử và vài biểu tượng khoảnh khắc lớn.
+// Hình chạm: 15 yêu thú, 5 tông môn đối địch, 5 bí cảnh, ngũ hành, lôi kiếp, 3 hệ đệ tử và vài biểu tượng khoảnh khắc lớn.
 // Hộp 48 × 48 DU, tâm (0, 0); hình chạm nằm trong bán kính ~16.
 import { blot, grain, stroke, wash, type Asset, type G, type Press, type Pt } from './brush'
 import { outline, ring } from './chrome'
 import { PIGMENT as C, mix, rgba } from './palette'
 
-export type MedalTone = 'kiem' | 'phap' | 'the' | 'beast' | 'sect' | 'realm' | 'thunder' | 'ink' | 'jade' | 'gold' | 'red' | 'tower'
+// Tông đĩa theo ngũ hành đặt đúng tên hành (kim, moc, thuy, hoa, tho): medal(ELEMENT_EMBLEMS[el], el)
+export type MedalTone = 'kiem' | 'phap' | 'the' | 'beast' | 'sect' | 'realm' | 'thunder' | 'ink' | 'jade' | 'gold' | 'red' | 'tower' | keyof typeof ELEMENT_EMBLEMS
 export const BEAST_EMBLEMS = ['wolf', 'snake', 'bear', 'fox', 'eagle', 'ape', 'windWolf', 'leopard', 'rhino', 'nineFox', 'hawk', 'turtle', 'tiger', 'phoenix', 'dragon'] as const
 export const SECT_EMBLEMS = ['wind', 'blood', 'poison', 'demon', 'ghost'] as const
-export const REALM_EMBLEMS = ['wood', 'fire', 'ice'] as const
+// 3 bí cảnh đầu (rừng, hoả, băng), Lôi Trì, Hỗn Độn
+export const REALM_EMBLEMS = ['wood', 'fire', 'ice', 'thunderPool', 'chaos'] as const
 export const UNIT_EMBLEMS = { kiem: 'sword', phap: 'orb', the: 'fist' } as const
+// Ngũ hành: Mộc, Hoả dùng chung hình với bí cảnh
+export const ELEMENT_EMBLEMS = { kim: 'metal', moc: 'wood', thuy: 'water', hoa: 'fire', tho: 'earth' } as const
 export type Emblem =
   | (typeof BEAST_EMBLEMS)[number] | (typeof SECT_EMBLEMS)[number] | (typeof REALM_EMBLEMS)[number]
-  | (typeof UNIT_EMBLEMS)[keyof typeof UNIT_EMBLEMS] | 'thunder' | 'win' | 'lose' | 'rebirth' | 'lotus' | 'crest' | 'tick' | 'tower'
+  | (typeof UNIT_EMBLEMS)[keyof typeof UNIT_EMBLEMS] | (typeof ELEMENT_EMBLEMS)[keyof typeof ELEMENT_EMBLEMS]
+  | 'thunder' | 'win' | 'lose' | 'rebirth' | 'lotus' | 'crest' | 'tick' | 'tower' | 'anvil'
 
 const DISC: Record<MedalTone, [string, string]> = {
   kiem: [C.azuriteL, C.azuriteD],
@@ -27,6 +32,11 @@ const DISC: Record<MedalTone, [string, string]> = {
   gold: [C.goldL, C.goldD],
   red: [C.cinnabarL, mix(C.cinnabar, C.ink, 0.3)],
   tower: [C.azuriteL, mix(C.indigo, C.ink, 0.3)],
+  kim: [mix(C.silk, C.ink3, 0.18), mix(C.ink3, C.ink, 0.5)],
+  moc: [C.malachiteL, C.malachiteD],
+  thuy: [mix(C.azuriteL, C.indigo, 0.25), mix(C.indigo, C.ink, 0.5)],
+  hoa: [C.cinnabarL, mix(C.cinnabar, C.ink, 0.3)],
+  tho: [mix(C.ochreL, C.gamboge, 0.25), '#5c3b17'],
 }
 
 const oval = (cx: number, cy: number, rx: number, ry: number, n = 28, rot = 0): Pt[] =>
@@ -428,6 +438,86 @@ function thunder(g: G) {
   part(g, bolt, C.goldL, 450, 1)
 }
 
+// Lôi Trì: mây đen, sét đánh xuống hồ nước, sóng vòng toé bọt
+function thunderPool(g: G) {
+  part(g, oval(0, 9.5, 14.5, 5.4, 30), mix(C.azurite, C.indigo, 0.3), 700, 1.1)
+  for (const [rx, ry, a] of [[10, 3.2, 0.8], [6, 1.9, 0.9]] as const) ln(g, oval(0, 9.2, rx, ry, 24).concat([[rx, 9.2]]), 0.8, C.azuriteL, 'even', a, 701 + rx)
+  for (const [x, y, r] of [[-8, -11, 6], [0, -13, 7], [8, -10.5, 6], [-2, -8.5, 6]] as const) blot(g, x, y, r, mix(C.indigo, C.ink, 0.4), 1, 703 + x, 0.7)
+  for (const [x, y, r] of [[-7, -12.5, 2.6], [1, -14.5, 3.2]] as const) blot(g, x, y, r, mix(C.indigo, C.silk, 0.35), 0.6, 707 + x, 0.7)
+  part(g, [[1.4, -8], [-3.6, 0], [0, 0.2], [-2, 8.6], [5.6, -1.6], [1.8, -1.8], [4.4, -8]], C.goldL, 709, 0.9)
+  for (const [x, a] of [[-3.6, -2.2], [0.6, -1.6], [4.6, -0.9]] as const) ln(g, [[x - 2, 8], [x - 2 + Math.cos(a) * 3.4, 8 + Math.sin(a) * 3.4]], 1, '#ffffff', 'taper', 0.95, 710 + x)
+  blot(g, -2, 8.6, 2, '#ffffff', 0.7, 713, 0.5)
+}
+// Hỗn Độn: xoáy mực nguyên sơ, các dải sắc cuộn vào lõi sáng, sao lấm tấm
+function chaos(g: G) {
+  const arm = (k: number, r0: number, turns: number): Pt[] =>
+    Array.from({ length: 30 }, (_, i) => {
+      const t = i / 29, a = k + t * Math.PI * 2 * turns, r = r0 * (1 - t * 0.9)
+      return [Math.cos(a) * r, Math.sin(a) * r * 0.92] as Pt
+    })
+  const hues = ['#8a73cf', C.cinnabarL, C.azuriteL, C.malachiteL]
+  hues.forEach((c, i) => {
+    const pts = arm((i / 4) * Math.PI * 2, 16, 0.95)
+    stroke(g, pts, { w: 5.2, color: C.ink, press: 'nail', alpha: 0.92, rough: 0.35, seed: 720 + i })
+    stroke(g, pts, { w: 2.4, color: c, press: 'nail', alpha: 1, rough: 0.35, seed: 724 + i })
+  })
+  blot(g, 0, 0, 4.2, C.silk, 0.5, 728, 1)
+  blot(g, 0, 0, 2.2, '#fff6d8', 1, 729, 1)
+  for (const [x, y, r] of [[-11, -9, 0.7], [12, -6, 0.6], [-6, 12, 0.6], [9, 10, 0.8], [2, -14, 0.5]] as const) blot(g, x, y, r, '#ffffff', 0.95, 730 + x, 1)
+}
+
+// ---------- Ngũ hành ----------
+
+// Kim: nén vàng 元宝 — hai đầu cong vút, bụng tròn nhô, ánh kim toả
+function metal(g: G) {
+  for (let i = 0; i < 9; i++) {
+    const a = -Math.PI * (0.1 + (i / 8) * 0.8)
+    ln(g, [[Math.cos(a) * 9, -1 + Math.sin(a) * 9], [Math.cos(a) * 15, -1 + Math.sin(a) * 15]], i % 2 ? 0.9 : 1.4, C.goldL, 'taper', 0.75, 740 + i)
+  }
+  part(g, oval(0, -1.6, 7, 7.2, 22), C.goldL, 750, 1.1)
+  ln(g, [[-4, -4.6], [-1.4, -7.2]], 1.3, '#ffffff', 'taper', 0.75, 751)
+  part(g, [[-15, -5], [-11, -1.4], [-6, 0.2], [6, 0.2], [11, -1.4], [15, -5], [13.4, 1.6], [9, 7.6], [0, 10.2], [-9, 7.6], [-13.4, 1.6]], C.gold, 752, 1.2)
+  ln(g, [[-12.4, -2.6], [-7, 1.6], [0, 2.2], [7, 1.6], [12.4, -2.6]], 0.8, C.goldD, 'taper', 0.8, 753)
+  ln(g, [[-10.6, 4], [-5, 7.6]], 1.1, '#ffffff', 'taper', 0.55, 754)
+}
+// Thuỷ: giọt nước, sóng cuộn trắng bên trong
+function water(g: G) {
+  const drop: Pt[] = [[0, -15.6], [4.2, -8], [8.4, -1.4], [9.6, 4], [7.8, 9.6], [3.8, 12.8], [0, 13.4], [-3.8, 12.8], [-7.8, 9.6], [-9.6, 4], [-8.4, -1.4], [-4.2, -8]]
+  part(g, drop, mix(C.azuriteL, C.spirit, 0.3), 760, 1.2)
+  wash(g, drop.map(([x, y]) => [x * 0.82 + 0.8, y * 0.82 + 2.2] as Pt), { fill: C.azurite, alpha: 0.55, layers: 2, jitter: 0.3, seed: 761 })
+  ln(g, [[-7, 7], [-4, 4.2], [0, 4.4], [2.6, 6.6], [1.6, 9], [-0.8, 8.4], [-0.4, 6.8]], 1.3, '#ffffff', 'taper', 0.95, 762)
+  ln(g, [[1.6, 9], [4.4, 9.4], [6.8, 7.4]], 1, '#ffffff', 'taper', 0.85, 763)
+  ln(g, [[-4.6, -5.6], [-6.4, -0.4], [-6.2, 3.4]], 1.3, '#ffffff', 'taper', 0.6, 764)
+}
+// Thổ: gò đất vàng, vỉa đất sẫm xếp tầng, cỏ non trên đỉnh
+function earth(g: G) {
+  const hill: Pt[] = [[-15.4, 11.6], [-13.4, 3], [-8.6, -4.4], [-2.6, -9], [4, -9.6], [9.4, -5], [13.6, 2.4], [15.4, 11.6]]
+  part(g, hill, mix(C.gamboge, C.ochreL, 0.45), 770, 1.3)
+  wash(g, [[-15, 11.4], [-14, 5.6], [-6, 3.6], [2, 5.4], [9, 3.2], [14.4, 5.8], [15, 11.4]], { fill: C.ochre, alpha: 0.9, layers: 2, jitter: 0.3, seed: 771 })
+  wash(g, [[-15, 11.4], [-14.6, 9.2], [-5, 8.2], [4, 9.6], [14.8, 8.4], [15, 11.4]], { fill: mix(C.ochre, C.ink, 0.35), alpha: 0.95, layers: 2, jitter: 0.3, seed: 772 })
+  ln(g, [[-13.6, 5.2], [-6, 3.2], [2, 5], [9, 2.8], [14, 5.4]], 0.8, C.ink, 'taper', 0.6, 773)
+  ln(g, [[-14.4, 9], [-5, 7.8], [4, 9.2], [14.6, 8]], 0.7, C.ink, 'taper', 0.55, 774)
+  for (const [x, y] of [[-6, 0.6], [5, -2.4], [-1, 6.4]] as const) blot(g, x, y, 0.8, mix(C.ochre, C.ink, 0.4), 0.9, 775 + x, 0.8)
+  ln(g, [[-7, -6.4], [-3, -4.6], [2, -6.8]], 1.1, '#ffffff', 'taper', 0.4, 778)
+  for (const [x, d] of [[0.6, -1], [2, 1], [1.2, 0.2]] as const) ln(g, [[x, -9.2], [x + d * 1.6, -13]], 1, C.malachite, 'nail', 1, 779 + d)
+}
+
+// Luyện Khí Phòng: đe sắt, búa, tia lửa
+function anvil(g: G) {
+  for (let i = 0; i < 7; i++) {
+    const a = -Math.PI * (0.15 + (i / 6) * 0.7)
+    ln(g, [[2 + Math.cos(a) * 4, -4 + Math.sin(a) * 4], [2 + Math.cos(a) * (8 + (i % 2) * 3), -4 + Math.sin(a) * (8 + (i % 2) * 3)]], 1.1, i % 2 ? C.gamboge : C.goldL, 'taper', 0.95, 790 + i)
+  }
+  const iron = mix(C.ink2, C.indigo, 0.35)
+  part(g, [[-15.4, -3], [-7, -2.4], [10, -3.4], [10, 1.2], [5, 2.2], [3.6, 6], [7.4, 9], [7.4, 12], [-7.4, 12], [-7.4, 9], [-3.6, 6], [-5, 2.2], [-9, 1.4]], iron, 800, 1.3)
+  ln(g, [[-13, -2.6], [9.2, -3.2]], 1.2, mix(C.silk, C.ink3, 0.2), 'taper', 0.8, 801)
+  ln(g, [[-4, 4], [-3, 10.4]], 0.9, '#ffffff', 'taper', 0.3, 802)
+  ln(g, [[-4.6, -4.4], [6.8, -4.6]], 2, C.cinnabarL, 'taper', 1, 803) // phôi nung đỏ
+  ln(g, [[-3.6, -4.5], [5.8, -4.7]], 0.8, '#fff0b0', 'taper', 1, 804)
+  ln(g, [[13.6, 4.6], [5.6, -12.4]], 2, mix(C.ochre, C.ink, 0.25), 'even', 1, 805)
+  part(g, [[1.4, -12.6], [9.4, -16.4], [11, -12.6], [3.2, -8.8]], iron, 806, 1.1)
+}
+
 // ---------- Hệ đệ tử ----------
 
 function sword(g: G) {
@@ -547,7 +637,8 @@ function tick(g: G) {
 
 const DRAW: Record<Emblem, (g: G) => void> = {
   wolf, snake, bear, fox, eagle, ape, windWolf, leopard, rhino, nineFox, hawk, turtle, tiger, phoenix, dragon,
-  wind, blood, poison, demon, ghost, wood, fire, ice, thunder, sword, orb, fist, win, lose, rebirth, lotus, crest, tick, tower,
+  wind, blood, poison, demon, ghost, wood, fire, ice, thunderPool, chaos, thunder, sword, orb, fist, win, lose, rebirth, lotus, crest, tick, tower,
+  metal, water, earth, anvil,
 }
 
 // Huy hiệu: đĩa màu khoáng loang sáng trên tối dưới, vòng vàng một nét, viền mực, hình chạm ở giữa, ánh men

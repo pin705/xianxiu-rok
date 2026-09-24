@@ -1,5 +1,5 @@
-import { BEAST_EMBLEMS, REALM_EMBLEMS, SECT_EMBLEMS, UNIT_EMBLEMS, type Emblem, type Look, type TabIcon } from '@rok/art'
-import type { ElderId, Report, UnitType } from '@rok/rules'
+import { BEAST_EMBLEMS, ELEMENT_EMBLEMS, REALM_EMBLEMS, SECT_EMBLEMS, UNIT_EMBLEMS, type Emblem, type Look, type TabIcon } from '@rok/art'
+import type { ElderId, Element, Report, UnitType } from '@rok/rules'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
 // Lưu trên máy (trình duyệt chặn storage thì vẫn chơi được, chỉ không lưu)
@@ -30,9 +30,11 @@ export function setLang(l: Locale) {
   location.reload()
 }
 
-// Hình chạm trên huy hiệu vẽ tay (@rok/art): hệ đệ tử, từng yêu thú / tông môn / bí cảnh theo thứ tự trong luật
+// Hình chạm trên huy hiệu vẽ tay (@rok/art): hệ đệ tử, ngũ hành, từng yêu thú / tông môn / bí cảnh theo thứ tự trong luật.
+// Ngũ hành tô đĩa bằng tông cùng tên hành: <Medal emblem={EMBLEM.element[el]} tone={el} />
 export const EMBLEM = {
   unit: UNIT_EMBLEMS satisfies Record<UnitType, Emblem>,
+  element: ELEMENT_EMBLEMS satisfies Record<Element, Emblem>,
   beast: BEAST_EMBLEMS,
   sect: SECT_EMBLEMS,
   realm: REALM_EMBLEMS,
@@ -46,6 +48,13 @@ export const LOOK: Record<ElderId, Look> = {
   loiChan: { robe: '#4b3f86', trim: '#f5d34f', hair: '#16181f', style: 'tied', bg: '#9d95c8' },
   vanHac: { robe: '#e9ece6', trim: '#c23b22', hair: '#f4f4f0', style: 'bald', beard: 'long', bg: '#a9c6b4' },
   hanBang: { robe: '#8fc3dc', trim: '#e9f6fb', hair: '#dfe9ef', style: 'crown', female: true, bg: '#bcd9e6', mark: '#5aa5d0' },
+  // Từ tầng 15: kim · thổ · hoả · thuỷ · mộc · thuỷ
+  bachVoNhai: { robe: '#eef0ee', trim: '#8f9aa6', hair: '#dde2e8', style: 'long', brow: 'fierce', sword: '#b8382a', bg: '#aab5c0' },
+  macSau: { robe: '#8a6d45', trim: '#d9c49a', hair: '#5b5048', style: 'long', beard: 'short', brow: 'sad', hat: '#c9a86a', bg: '#c4ad86' },
+  hoacThienCuong: { robe: '#8e2a1c', trim: '#f0a24a', hair: '#3a120c', style: 'wild', beard: 'short', brow: 'fierce', bg: '#e8a06e', mark: '#f0a24a' },
+  toMiNuong: { robe: '#2f7f8f', trim: '#f2b8c6', hair: '#1c1a26', style: 'bun', female: true, flower: '#f29ab4', bg: '#a3d6d6', mark: '#e0506a' },
+  diepCoThanh: { robe: '#3e7a4f', trim: '#1f3a2a', hair: '#15140f', style: 'tied', band: '#8cc09d', sword: '#c9a14a', bg: '#a2c7a0' },
+  huyenMinh: { robe: '#1d2a44', trim: '#6fb3c9', hair: '#ecedf2', style: 'crown', beard: 'long', brow: 'long', bg: '#56708c', mark: '#7fd6dc' },
 }
 
 export const TABS: readonly { id: TabIcon; unlock: number }[] = [

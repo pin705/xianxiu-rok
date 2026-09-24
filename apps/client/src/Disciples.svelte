@@ -1,7 +1,8 @@
 <script lang="ts">
-  // Trang Môn hạ: trưởng lão (trụ cột "truyền thừa của riêng mình"), đệ tử theo hệ × bậc, thương binh.
+  // Trang Môn hạ: trưởng lão (trụ cột "truyền thừa của riêng mình": hành, pháp bảo, thiên phú), đệ tử theo hệ × bậc, thương binh.
   import {
-    ELDERS, ELDER_IDS, ELDER_MAX, TIERS, TYPES, away, count, elderLevel, expAt, hospital,
+    ELDERS, ELDER_IDS, ELDER_MAX, GEAR, GEAR_IDS, TALENTS, TALENT_MAX, TIERS, TYPES, away, count, elderLevel, expAt, gearOf, hospital,
+    talentPoints, talentUsed, tierOpen,
     type Action, type BuildingId, type ElderId, type State, type UnitId,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
@@ -12,6 +13,7 @@
     $props()
 
   let open = $state<ElderId | null>(null)
+  let picking = $state(false) // đang chọn pháp bảo cho trưởng lão đang mở
   const out = $derived(away(game))
   const hurt = $derived(count(game.wounded))
   const marchOf = (e: ElderId) => game.marches.find(m => m.elder === e)
@@ -19,6 +21,10 @@
     const lv = elderLevel(game.elders[e])
     return lv >= ELDER_MAX ? 1 : ((game.elders[e] ?? 0) - expAt(lv)) / (expAt(lv + 1) - expAt(lv))
   }
+  // bậc đã mở hoặc đang có quân (5 cột thì chật trên điện thoại)
+  const tiers = $derived(TIERS.filter(t => t <= 3 || tierOpen(game, t) || TYPES.some(ty => game.troops[`${ty}${t}`] || out[`${ty}${t}`])))
+  const owned = $derived(GEAR_IDS.filter(g => game.gear[g]?.lv))
+  const marching = (e: ElderId) => game.marches.some(m => m.elder === e)
 </script>
 
 <Page title={L.monHa.title} icon="monHa">
@@ -34,7 +40,7 @@
               <span class="grow stack" style:--gap="2px">
                 <b class="t-small">{has ? L.elders[e].name : '???'}</b>
                 {#if has}
-                  <small class="t-tiny t-soft">{L.elders[e].title} · {L.units[ELDERS[e].type]}</small>
+                  <small class="t-tiny t-soft">{L.elders[e].title} · {L.units[ELDERS[e].type]} · {L.el[ELDERS[e].el]}</small>
                   <span class="row" style:--gap="6px"><b class="t-tiny t-gold">{L.lv(elderLevel(game.elders[e]))}</b><span class="grow"><Meter value={expPart(e)} tone="gold" size="sm" /></span></span>
                   <small class="t-tiny" class:t-bad={!!m} class:t-good={!m}>{m ? `${L.monHa.out} · ${clock(m.returnAt - now)}` : L.monHa.home}</small>
                 {:else}
@@ -50,12 +56,12 @@
 
   <Section title="{L.monHa.disciples} · {num(count(game.troops) + count(out))}">
     <Card>
-      <div class="table">
+      <div class="table" style:--n={tiers.length}>
         <span></span>
-        {#each TIERS as t (t)}<span class="th t-tiny t-soft">{L.tiers[t]}</span>{/each}
+        {#each tiers as t (t)}<span class="th t-tiny t-soft">{L.tiers[t]}</span>{/each}
         {#each TYPES as type (type)}
           <span class="row" style:--gap="6px"><Medal emblem={EMBLEM.unit[type]} tone={type} size={28} /><span class="stack" style:--gap="0"><b class="t-small">{L.units[type]}</b><small class="t-tiny t-soft">{L.beats(type)}</small></span></span>
-          {#each TIERS as t (t)}
+          {#each tiers as t (t)}
             {@const u = `${type}${t}` as UnitId}
             <span class="cell" class:zero={!game.troops[u] && !out[u]}>
               <b class="t-num">{num(game.troops[u])}</b>
@@ -84,7 +90,7 @@
   </Section>
 </Page>
 
-<Sheet open={!!open} onclose={() => (open = null)} title={open ? L.elders[open].name : ''} sub={open ? `${L.elders[open].title} · ${L.units[ELDERS[open].type]}` : ''} lore={open ? L.elders[open].lore : ''}>
+<Sheet open={!!open} onclose={() => ((open = null), (picking = false))} title={open ? L.elders[open].name : ''} sub={open ? `${L.elders[open].title} · ${L.units[ELDERS[open].type]} · ${L.el[ELDERS[open].el]} (${L.overcomes(ELDERS[open].el)})` : ''} lore={open ? L.elders[open].lore : ''}>
   {#snippet art()}{#if open}<Portrait look={LOOK[open]} size={84} />{/if}{/snippet}
   {#if open}
     {@const e = open}
@@ -115,6 +121,52 @@
         </Card>
       {/each}
     </Section>
+    {@const g = gearOf(game, e)}
+    {@const busy = marching(e)}
+    <Section title={L.forge.slot}>
+      <Card>
+        <div class="row">
+          {#if g}
+            <Icon name={g} size={30} />
+            <span class="grow stack" style:--gap="1px"><b class="t-small">{L.gear[g]} · {L.lv(game.gear[g]!.lv)}</b><small class="t-small t-soft">{L.bonus(GEAR[g].key, GEAR[g].v * game.gear[g]!.lv)}</small></span>
+            <Button variant="quiet" size="sm" disabled={busy} onclick={() => act({ type: 'equip', gear: g, elder: null })}>{L.forge.unequip}</Button>
+          {:else}
+            <span class="grow t-small t-soft">{owned.length ? L.forge.none : L.forge.empty}</span>
+          {/if}
+          {#if owned.some(x => x !== g)}<Button variant="ghost" size="sm" disabled={busy} onclick={() => (picking = !picking)}>{L.forge.equip}</Button>{/if}
+        </div>
+      </Card>
+      {#if picking && !busy}
+        <p class="t-small t-strong t-gold">{L.forge.pick}</p>
+        {#each owned.filter(x => x !== g) as x (x)}
+          {@const on = game.gear[x]!.on}
+          <Card onclick={on && marching(on) ? undefined : () => act({ type: 'equip', gear: x, elder: e }) && (sfx('reward'), (picking = false))} disabled={!!on && marching(on)} label={L.gear[x]}>
+            <span class="row">
+              <Icon name={x} size={26} />
+              <span class="grow stack" style:--gap="0"><b class="t-small">{L.gear[x]} · {L.lv(game.gear[x]!.lv)}</b><small class="t-tiny t-soft">{L.bonus(GEAR[x].key, GEAR[x].v * game.gear[x]!.lv)}</small></span>
+              {#if on}<small class="t-tiny t-soft">{L.forge.worn(L.elders[on].name)}</small>{/if}
+            </span>
+          </Card>
+        {/each}
+      {/if}
+    </Section>
+    {@const pts = talentPoints(game, e) - talentUsed(game, e)}
+    {@const tal = game.talents[e] ?? [0, 0, 0]}
+    <Section title={L.talent.title}>
+      {#snippet aside()}{L.talent.points(pts)}{/snippet}
+      <p class="t-small t-soft">{L.talent.hint}</p>
+      {#each TALENTS as d, i (i)}
+        <Card>
+          <div class="row">
+            <span class="grow stack" style:--gap="1px"><b class="t-small">{L.talent.branch[i]} · {tal[i]}/{TALENT_MAX}</b><small class="t-small t-soft">{L.bonus(d.key, d.v * Math.max(1, tal[i]))}</small></span>
+            <Button size="sm" disabled={!pts || tal[i] >= TALENT_MAX || busy} onclick={() => act({ type: 'talent', elder: e, branch: i as 0 | 1 | 2 }) && sfx('reward')}>{L.talent.add}</Button>
+          </div>
+        </Card>
+      {/each}
+      {#if game.items.taiTuy && talentUsed(game, e)}
+        <Button variant="ghost" wide icon="taiTuy" disabled={busy} onclick={() => act({ type: 'wash', elder: e }) && sfx('reward')}>{L.talent.wash(game.items.taiTuy)}</Button>
+      {/if}
+    </Section>
     {#if game.items.boiNguyen && lv < ELDER_MAX}
       <div class="mt-4">
         <Button variant="gold" wide icon="boiNguyen" onclick={() => act({ type: 'feed', elder: e, n: 1 }) && sfx('reward')}>{L.monHa.feed(game.items.boiNguyen)}</Button>
@@ -126,7 +178,7 @@
 <style>
   .table {
     display: grid;
-    grid-template-columns: 1.7fr repeat(3, 1fr);
+    grid-template-columns: 1.7fr repeat(var(--n), 1fr);
     gap: var(--sp-2) 6px;
     align-items: center;
   }

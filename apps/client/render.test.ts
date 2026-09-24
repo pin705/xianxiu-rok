@@ -98,7 +98,7 @@ function midGame(): State {
     items: { tuKhi: 3, boiNguyen: 2, doKiep: 1 },
     beast: 6,
     sects: [true, false, false, false, false],
-    realms: [5, 1, 0],
+    realms: [5, 1, 0, 0, 0],
     trib: 1,
     tech: { tuLinh: 3, phapTam: 1, kiemTam: 5 },
   }
@@ -162,6 +162,22 @@ const late: State = {
     hanBang: 0,
   },
 }
+// Tầng 16–25: bậc 4–5, pháp bảo (một món đang đeo, một món đang luyện), thiên phú, đan mới, buff Ngưng Thần
+const high: State = {
+  ...late,
+  levels: levels(late, 20),
+  trib: 3,
+  realms: [5, 5, 5, 2, 0],
+  tower: 31,
+  troops: { ...late.troops, kiem4: 600, phap4: 400, the3: 300 },
+  wounded: { ...late.wounded, the4: 40 },
+  elders: { ...late.elders, thanhPhong: expAt(38), bachVoNhai: expAt(6), macSau: 0 },
+  talents: { thanhPhong: [5, 2, 0] },
+  gear: { thienLoi: { lv: 6, on: 'thanhPhong' }, hoTam: { lv: 4 } },
+  items: { tuKhi: 7, daiTuKhi: 1, hoiXuan: 2, ngungThan: 1, phaCanh: 1, taiTuy: 1, doKiep: 2 },
+}
+const high20 = run(run(high, { type: 'focus' }), { type: 'forge', gear: 'hoTam' })
+const top: State = { ...high, levels: levels(high, 25), trib: 4, realms: REALMS.map(() => 5), tower: 50 }
 const STATES: [string, State][] = [
   ['người mới', fresh],
   ['giữa game', mid],
@@ -169,6 +185,8 @@ const STATES: [string, State][] = [
   ['sau độ kiếp', afterTrib],
   ['chờ độ kiếp 10', trib10],
   ['tầng 15', late],
+  ['chờ độ kiếp 20', high20],
+  ['tầng 25', top],
 ]
 
 // Trợ năng: nút/ô nhập phải có tên cho trình đọc màn hình (chữ bên trong hoặc aria-label) — nút chỉ có icon hay quên
@@ -234,7 +252,7 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
     await load(lang)
     for (const [label, s] of STATES)
       for (const id of IDS)
-        for (const view of [null, 'upgrade', 'train', 'alchemy', 'library', 'trade'])
+        for (const view of [null, 'upgrade', 'train', 'alchemy', 'library', 'trade', 'forge'])
           paint(
             'Panel',
             {
@@ -276,6 +294,12 @@ test('bảng công trình: mọi công trình × mọi thẻ × mọi trạng th
     assert.ok(!panel(trib10, 'chuDien').includes(L.panel.store('', 0).slice(0, 12)), 'đủ tiền thì không nhắc kho')
     assert.ok(panel(mid, 'dienVoTruong').includes(L.train.pick), 'Diễn võ trường mở sẵn thẻ tuyển')
     assert.ok(panel(mid, 'dienVoTruong', 'upgrade').includes(L.panel.upgrade))
+    // Tầng 16–25: độ kiếp tầng 20 kèm luân hồi, Phá Cảnh Đan thay Độ Kiếp Đan, Luyện Khí Phòng có thẻ luyện khí
+    const hall20 = panel(high20, 'chuDien')
+    assert.ok(hall20.includes(L.trib.title) && hall20.includes(L.rebirth.title), 'Chủ điện tầng 20: độ kiếp và luân hồi')
+    assert.ok(hall20.includes(L.pills.phaCanh.name), 'có Phá Cảnh Đan thì dùng nó cho độ kiếp')
+    assert.ok(panel(top, 'chuDien').includes(L.panel.maxed) && panel(top, 'chuDien').includes(L.rebirth.title), 'tầng 25: tối đa, vẫn luân hồi được')
+    assert.ok(panel(high20, 'luyenKhiPhong').includes(L.forge.doing(L.gear.hoTam, 5)), 'đang luyện hiện ở Luyện Khí Phòng')
   }
 })
 

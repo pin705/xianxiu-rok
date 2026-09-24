@@ -50,26 +50,28 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 
 | Hệ thống | Tương đương RoK | P1 (offline) | Sau đó |
 |---|---|---|---|
-| Chủ điện (cấp = cảnh giới chưởng môn) | Tòa thị chính | ✅ Luyện Khí → Kim Đan (tầng 1–15); số đội xuất quân 1/2/3 theo cảnh giới | Nguyên Anh, Hóa Thần (tới tầng 25) |
-| Công trình | Thành phố | ✅ 8 (xem dưới) | Hộ sơn đại trận, Luyện khí phòng (P2) |
+| Chủ điện (cấp = cảnh giới chưởng môn) | Tòa thị chính | ✅ Luyện Khí → Kim Đan (tầng 1–15); số đội xuất quân 1/2/3 theo cảnh giới | ✅ Nguyên Anh, Hóa Thần (tầng 16–25), tới 5 đội xuất quân. Từ tầng 16 tăng trưởng thoải (chi phí ×1,22, thời gian ×1,05 mỗi tầng; số tầng 1–15 giữ nguyên), sản lượng mỗi tầng ×1,5 |
+| Công trình | Thành phố | ✅ 8 (xem dưới) | ✅ Luyện Khí Phòng (tầng 8: 9 pháp bảo tất định, cấp tối đa ⌈tầng/2⌉ ≤ 10) · Hộ sơn đại trận (P2) |
 | Tài nguyên | Lương, gỗ, đá, vàng | ✅ Linh thạch, Linh thảo, Linh khoáng | Tiên ngọc — premium (P4) |
-| Đệ tử | Lính | ✅ 3 hệ × 3 bậc (Ngoại môn / Nội môn ở Diễn võ trường 5 / Chân truyền ở 10) | Bậc 4–5 |
-| Trưởng lão | Tướng | ✅ 6 người, 1 công pháp chủ động + 2 bị động (mở ở cấp 5, 12), cấp 1–30 | Thêm người, cây thiên phú, ngũ hành |
-| Tàng Kinh Các | Học viện | ✅ 20 công pháp, 5 hàng mở theo tầng 1/3/6/9/12 | Mở rộng theo mùa |
-| Đan phòng | Bệnh viện | ✅ Chữa thương (chỗ nằm có hạn, dư thì tử trận) + 3 đan: Tụ Khí (tăng tốc), Bồi Nguyên (kinh nghiệm), Độ Kiếp | Luyện đan theo công thức |
-| Bản đồ | Bản đồ vương quốc | ✅ Vùng PvE riêng: 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, 3 bí cảnh × 5 tầng | P3: giới chung |
+| Đệ tử | Lính | ✅ 3 hệ × 3 bậc (Ngoại môn / Nội môn ở Diễn võ trường 5 / Chân truyền ở 10) | ✅ Bậc 4 Hạch tâm (Diễn võ trường 16), bậc 5 Thánh tử (21) |
+| Trưởng lão | Tướng | ✅ 6 người, 1 công pháp chủ động + 2 bị động (mở ở cấp 5, 12), cấp 1–30 | ✅ 12 người (thêm từ bí cảnh 4–5, tháp tầng 30/45, sự kiện tuần, yêu vương giữa giới), cấp tới 40, ngũ hành, thiên phú 3 nhánh (mỗi 5 cấp một điểm), mỗi người đeo một pháp bảo |
+| Tàng Kinh Các | Học viện | ✅ 20 công pháp, 5 hàng mở theo tầng 1/3/6/9/12 | ✅ 28 công pháp, thêm hàng ở tầng 16, 21 · mở rộng theo mùa |
+| Đan phòng | Bệnh viện | ✅ Chữa thương (chỗ nằm có hạn, dư thì tử trận) + 3 đan: Tụ Khí (tăng tốc), Bồi Nguyên (kinh nghiệm), Độ Kiếp | ✅ Đan theo công thức: Hồi Xuân (chữa ngay), Ngưng Thần (công +10 % 2 giờ), Đại Tụ Khí (từ 6 Tụ Khí, −2 giờ), Phá Cảnh (từ 2 Độ Kiếp, lôi kiếp −45 %), Tẩy Tủy (cộng lại thiên phú) |
+| Bản đồ | Bản đồ vương quốc | ✅ Vùng PvE riêng: 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, 3 bí cảnh × 5 tầng | ✅ Bí cảnh 4–5 (Lôi Trì tầng 16, Hỗn Độn tầng 21; địch có ngũ hành) · P3: giới chung |
 | Sự kiện cuối tuần | Sự kiện | ✅ Thứ Bảy, Chủ nhật (giờ VN): chiến lợi phẩm đánh lại và kinh nghiệm ×1,5; thưởng lần đầu giữ nguyên. Dải thông báo trong bảng nhiệm vụ, bảng mục tiêu hiện số đã nhân | Sự kiện theo mùa, có chủ đề (P3) |
 | Thương hội | Chợ đổi tài nguyên | ✅ Ở Tàng Bảo Các: đổi tài nguyên dư lấy loại thiếu, nhận về 60% (+1% mỗi tầng Tàng Bảo Các, tối đa 75%) — cứu kho lệch, vẫn đắt hơn xây công trình tài nguyên | Chợ giữa người chơi (P3) |
 | Thông Thiên Tháp | — | ✅ Tháp thử thách không giới hạn tầng, mở ở tầng 10, đánh ngay như bí cảnh; mỗi tầng địch mạnh hơn 10% và đổi hệ chính; thưởng lần đầu mỗi tầng (tầng 5: Tụ Khí, tầng 10: Độ Kiếp + Bồi Nguyên); kỷ lục giữ qua luân hồi. Sim: bot giỏi tầng 39 sau 30 ngày, người chơi thường tầng 38 sau 45 ngày | Bảng xếp hạng tháp (P2) |
-| Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | P3: kiếp vân công khai trên bản đồ |
+| Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | ✅ Kiếp tầng 15, 20 (mỗi đợt thêm một hành) · P3: kiếp vân công khai trên bản đồ |
 | PvP | Đánh thành | — | P2: bất đồng bộ; P3: trên bản đồ |
 | Tiên minh | Liên minh | — (tab khóa "sắp có") | P3 |
 | Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; kiếp sau khởi đầu với công trình tầng 3 rồi tầng 5 ("căn cơ"), mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
 | Chat | Chat | — | P3 |
 | Nhiệm vụ ngày, tuần | Nhiệm vụ hằng ngày | ✅ Ngày: 4 việc (xây 2 lần, tuyển 50, thắng 3 trận, luyện 1 mẻ đan) + rương, làm mới 0h giờ VN. Tuần: 5 việc (xây 12, tuyển 400, thắng 15, luyện 5 mẻ, mở rương ngày 5 hôm) + rương có Độ Kiếp Đan, làm mới 0h thứ Hai. Mở ở tầng 3 | Sự kiện |
-| Âm thanh | — | ✅ Hiệu ứng + nhạc nền cổ phong sinh bằng WebAudio (đàn tranh, sáo trúc, trầm nền), bật/tắt riêng | Nhạc theo cảnh (bản đồ, trận) |
+| Âm thanh | — | ✅ Hiệu ứng + nhạc nền cổ phong sinh bằng WebAudio (đàn tranh, sáo trúc, trầm nền), bật/tắt riêng | ✅ Nhạc theo cảnh: bản đồ nhiều sáo trúc, xem trận / độ kiếp có trống trận |
 
-5 cảnh giới × 5 tầng = 25 cấp, như 25 cấp Tòa thị chính của RoK. Qua mỗi cảnh giới mới (tầng 5→6, 10→11, 15→16) phải độ kiếp.
+5 cảnh giới × 5 tầng = 25 cấp, như 25 cấp Tòa thị chính của RoK. Qua mỗi cảnh giới mới (tầng 5→6, 10→11, 15→16, 20→21) phải độ kiếp. Luân hồi mở từ tầng 15 (kiếp đầu); tầng 16–25 là đường tiếp cho người không luân hồi và là thang tầng của mùa giải.
+
+**Ngũ hành:** Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim. Mỗi trưởng lão có một hành; địch có hành chỉ từ tầng 15 (lôi kiếp 15/20, bí cảnh 4–5). Người dẫn khắc hành địch: sát thương ×1,1, bị khắc ×0,92. Địch không hành thì hệ số là 1 — mọi trận P1 ra đúng kết quả cũ.
 
 **8 công trình P1:** Chủ điện, Tụ Linh Trận (linh thạch), Linh điền (linh thảo), Khoáng mạch (linh khoáng), Tàng Bảo Các (sức chứa — kéo người chơi quay lại), Diễn võ trường (đệ tử; 1 nhà cho cả 3 hệ), Tàng Kinh Các, Đan phòng.
 
@@ -216,6 +218,8 @@ Nhịp hiện tại. Bot giỏi (`npm run sim`) được xem trước kết qu�
 | Chủ điện tầng 15 | ngày 11 | ngày 18 | ngày 17,5, không thua trận nào |
 
 (đã tính nhiệm vụ ngày và tuần; bot dồn Chủ điện nhưng giữ 3 công trình tài nguyên ≥ tầng 2 như chuỗi nhiệm vụ dạy)
+
+Tầng 16–25, không luân hồi (`npm run sim -- 60 4 --goal 25`, CI chặn nếu không tới 25; `npm run sim -- 49 3 --casual --goal 21`): bot giỏi độ kiếp 15 → 16 ở ngày 14,5, 20 → 21 ở ngày 24, tầng 25 ở ngày 34,5; người chơi thường tầng 16 ở ngày 27, tầng 21 ở ngày 38,5, tầng 25 ở ngày 48 — trong một mùa 49 ngày.
 
 **Luân hồi** (`npm run sim -- 60 4 --rebirth` và `npm run sim -- 90 3 --casual --rebirth`, tính từ đầu kiếp tới lúc luân hồi, gồm cả dọn hết bản đồ):
 

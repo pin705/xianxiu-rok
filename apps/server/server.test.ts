@@ -210,3 +210,27 @@ test('giới hạn tần suất: spam thao tác bị từ chối "rate"', { skip
   assert.ok(results.some(r => !r.ok && r.err === 'rate'))
   c.close()
 })
+
+test('nạp giới: state bản cũ được nâng qua migrate(), state hỏng chỉ cách ly đúng người đó', { skip }, async () => {
+  const w = await newWorld(a)
+  const old = await guest(a, undefined, w)
+  const broken = await guest(a, undefined, w)
+  // sửa thẳng DB trước khi giới được nạp: một save bản 3 (trước tầng 16–25), một save rác
+  const s = (await row(a, old.pid)).state
+  for (const k of ['forge', 'gear', 'talents', 'buffs']) delete s[k]
+  for (const u of ['kiem4', 'kiem5', 'phap4', 'phap5', 'the4', 'the5']) delete s.troops[u], delete s.wounded[u]
+  delete s.levels.luyenKhiPhong
+  await a.db.client`update players set state = ${JSON.stringify({ ...s, v: 3, realms: [0, 0, 0] })}::jsonb where id = ${old.pid}`
+  await a.db.client`update players set state = ${JSON.stringify({ v: 99 })}::jsonb where id = ${broken.pid}`
+  const c = client(a, old.token)
+  const welcome = await c.welcome
+  assert.equal(welcome.state.v, 4)
+  assert.equal(welcome.state.troops.the5, 0)
+  assert.deepEqual(welcome.state.realms, [0, 0, 0, 0, 0])
+  assert.ok((await c.act({ type: 'upgrade', building: 'tuLinhTran' })).ok, 'người chơi bản cũ chơi tiếp được')
+  assert.equal((await row(a, old.pid)).state.v, 4, 'ghi lại bằng khuôn mới')
+  const b = client(a, broken.token)
+  await assert.rejects(b.welcome, (e: { data?: Refuse }) => e.data?.reason === 'unavailable')
+  c.close()
+  b.close()
+})

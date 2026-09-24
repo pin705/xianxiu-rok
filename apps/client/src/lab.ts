@@ -1,7 +1,7 @@
 // Phòng thử art (chỉ bản dev): /lab.html — xem hình vẽ tay trên giấy. ?view=icons|faces|troops|decor|chrome|medals|fx|battle|result|home|tiers|buildings (mặc định)
 import {
-  ITEMS, badgeSkin, bake, buttonSkin, cardSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, knobSkin, lacquerSkin, plankSkin, rodSkin, scrollSkin, switchSkin,
-  tagSkin, toastSkin, trackSkin, type Skin, PIGMENT, BEAST_EMBLEMS, SECT_EMBLEMS, REALM_EMBLEMS, medal, emblemArt, type Emblem, type MedalTone, bamboo, battlefield, beast, blossom, building, butterfly, flyingSword, itemIcon, paper, portrait, soldier, splashTex, stairway, stoneLantern, vortexTex, type Asset, type Kind, type Look,
+  ITEMS, GEAR_ICONS, badgeSkin, bake, buttonSkin, cardSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, knobSkin, lacquerSkin, plankSkin, rodSkin, scrollSkin, switchSkin,
+  tagSkin, toastSkin, trackSkin, type Skin, PIGMENT, BEAST_EMBLEMS, SECT_EMBLEMS, REALM_EMBLEMS, ELEMENT_EMBLEMS, medal, emblemArt, type Emblem, type MedalTone, bamboo, battlefield, beast, blossom, building, butterfly, flyingSword, itemIcon, paper, portrait, soldier, splashTex, stairway, stoneLantern, vortexTex, type Asset, type Kind, type Look,
   PIGMENT as C, boltTex, burstTex, canvas, clawTex, mix, orbTex, puffTex, ringTex, rng, slashTex, type G } from '@rok/art'
 import type { Report, Skill } from '@rok/rules'
 import type { Outcome } from './Result.svelte'
@@ -105,21 +105,27 @@ if (view === 'chrome') {
     ...BEAST_EMBLEMS.map(e => [e, 'beast'] as [Emblem, MedalTone]),
     ...SECT_EMBLEMS.map(e => [e, 'sect'] as [Emblem, MedalTone]),
     ...REALM_EMBLEMS.map(e => [e, 'realm'] as [Emblem, MedalTone]),
-    ['thunder', 'thunder'], ['sword', 'kiem'], ['orb', 'phap'], ['fist', 'the'], ['win', 'red'], ['lose', 'ink'], ['rebirth', 'gold'], ['lotus', 'jade'], ['crest', 'gold'], ['tick', 'gold'],
+    ...Object.entries(ELEMENT_EMBLEMS).map(([el, e]) => [e, el] as [Emblem, MedalTone]),
+    ['anvil', 'ink'], ['thunder', 'thunder'], ['sword', 'kiem'], ['orb', 'phap'], ['fist', 'the'], ['win', 'red'], ['lose', 'ink'], ['rebirth', 'gold'], ['lotus', 'jade'], ['crest', 'gold'], ['tick', 'gold'],
   ]
-  list.forEach(([e, t], i) => put(medal(e, t), 40 + (i % 5) * 78, 44 + Math.floor(i / 5) * 78, 70))
-  list.forEach(([e, t], i) => put(medal(e, t), 20 + (i % 10) * 37, 620 + Math.floor(i / 10) * 38, 32))
-  ;(['win', 'lose', 'tick', 'crest', 'lotus'] as Emblem[]).forEach((e, i) => put(emblemArt(e), 40 + i * 76, 790, 64))
+  list.forEach(([e, t], i) => put(medal(e, t), 34 + (i % 6) * 64, 36 + Math.floor(i / 6) * 64, 60))
+  list.forEach(([e, t], i) => put(medal(e, t), 16 + (i % 12) * 30, 634 + Math.floor(i / 12) * 30, 26))
+  ;(['win', 'lose', 'tick', 'crest', 'lotus'] as Emblem[]).forEach((e, i) => put(emblemArt(e), 40 + i * 76, 800, 56))
 } else if (view === 'icons') {
-  ;[64, 32, 22, 16].forEach((px, row) => ITEMS.forEach((n, i) => put(itemIcon(n), 40 + i * 62, 60 + row * 90, px)))
+  // vật phẩm + đan (hàng 1–2), pháp bảo (hàng 3–4), mỗi thứ bốn cỡ 56/32/22/16
+  const rows = [ITEMS.slice(0, 6), ITEMS.slice(6), GEAR_ICONS.slice(0, 5), GEAR_ICONS.slice(5)]
+  rows.forEach((names, r) => names.forEach((n, i) => [56, 32, 22, 16].forEach((px, k) => put(itemIcon(n), 36 + i * 64, 44 + r * 200 + [0, 60, 104, 140][k], px))))
 } else if (view === 'troops') {
   put(battlefield(390, 844, 'wild'), 0, 0, 844)
+  // hàng dưới: bậc 1–3 (một dáng) · bậc 4 · bậc 5; hàng trên: quân địch cùng thứ tự
   ;(['kiem', 'phap', 'the'] as const).forEach((t, i) => {
-    put(soldier(t, false), 60 + i * 60, 620, 60)
-    put(soldier(t, true), 60 + i * 60, 320, 60)
+    ;[1, 4, 5].forEach((tier, j) => {
+      put(soldier(t, false, tier), 40 + i * 38 + j * 124, 640, tier > 3 ? 64 : 52)
+      put(soldier(t, true, tier), 40 + i * 38 + j * 124, 330, tier > 3 ? 64 : 52)
+    })
     put(beast(t), 90 + i * 110, 450, 90)
   })
-  put(flyingSword(), 340, 620, 40)
+  put(flyingSword(), 340, 740, 40)
 } else if (view === 'decor') {
   put(stairway([[80, 420], [70, 360], [92, 300], [86, 240]], 16, 3), 0, 0, 0)
   put(blossom(1.3, 2), 200, 180)
@@ -232,7 +238,7 @@ if (view === 'chrome') {
 } else if (view === 'faces') {
   ;(Object.values(LOOK) as Look[]).forEach((l, i) => {
     put(portrait(l), 20 + (i % 3) * 124, 30 + Math.floor(i / 3) * 130, 110)
-    put(portrait(l), 20 + (i % 3) * 124, 300 + Math.floor(i / 3) * 60, 40)
+    put(portrait(l), 20 + (i % 6) * 60, 570 + Math.floor(i / 6) * 60, 40)
   })
 } else if (view === 'tiers') {
   // Một công trình qua 5 bậc (&id=, mặc định Chủ điện), mỗi bậc một hàng, cỡ thật; &id=all: lưới mọi công trình × bậc, thu nhỏ

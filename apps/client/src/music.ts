@@ -2,6 +2,8 @@
 // Đàn tranh gảy giai điệu đi ngẫu nhiên trên thang ngũ cung Rê (Rê Mi Fa# La Si), đầu mỗi đoạn vuốt dây;
 // thỉnh thoảng sáo trúc thổi nốt dài có rung và tiếng hơi; trầm nền đổi Rê–La như sương. Không đoạn nào lặp y hệt.
 // Rất nhẹ: ~2 nốt mỗi giây, mỗi nốt vài node, lên lịch trước cả đoạn 8 phách.
+// Theo cảnh (setMood): tông môn thong thả như trên; bản đồ sáo trúc nhiều hơn, ít nghỉ (đường xa); trận có trống trận
+// và đàn tranh dồn ở âm vực thấp. Đổi cảnh thì đổi từ đoạn kế tiếp, không cắt ngang.
 import { audio } from './lib'
 
 const BEAT = 60 / 66
@@ -129,15 +131,50 @@ function drone(ac: BaseAudioContext, bus: Bus, t: number, f: number, dur: number
   }
 }
 
+// Trống trận: tiếng thùm (sin tụt cao độ) + chút nhiễu lọc thấp cho mặt da
+function drum(ac: BaseAudioContext, bus: Bus, t: number, vol: number) {
+  const g = ac.createGain()
+  g.gain.setValueAtTime(vol, t)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5)
+  g.connect(bus.input)
+  const o = ac.createOscillator()
+  o.frequency.setValueAtTime(95, t)
+  o.frequency.exponentialRampToValueAtTime(48, t + 0.3)
+  o.connect(g)
+  o.start(t)
+  o.stop(t + 0.55)
+  const n = ac.createBufferSource()
+  n.buffer = bus.noise
+  const lp = ac.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = 500
+  const ng = ac.createGain()
+  ng.gain.setValueAtTime(vol * 0.6, t)
+  ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.12)
+  n.connect(lp).connect(ng).connect(bus.input)
+  n.start(t, Math.random())
+  n.stop(t + 0.15)
+}
+
+export type Mood = 'home' | 'map' | 'battle'
+let mood: Mood = 'home'
+export const setMood = (m: Mood) => void (mood = m)
+
 const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x))
 
 // Một đoạn 8 phách bắt đầu từ t. p: số thứ tự đoạn; deg: bậc giai điệu hiện tại (đi ngẫu nhiên, trả về bậc mới)
-export function phrase(ac: BaseAudioContext, bus: Bus, t: number, p: number, deg: number) {
+export function phrase(ac: BaseAudioContext, bus: Bus, t: number, p: number, deg: number, m: Mood = mood) {
   const hum = () => (Math.random() - 0.5) * 0.03 // lệch nhịp chút xíu cho giống người gảy
-  if (p % 2 === 0) drone(ac, bus, t, p % 4 === 0 ? 73.42 : 110, PHRASE * 2 + 1, 0.035) // Rê2 / La2
+  const fight = m === 'battle'
+  if (p % 2 === 0) drone(ac, bus, t, fight || p % 4 === 0 ? 73.42 : 110, PHRASE * 2 + 1, 0.035) // Rê2 / La2
   if (p % 4 === 0) for (let k = 0; k < 5; k++) pluck(ac, bus, t + k * 0.06, hz(deg - 5 + k), 0.05 + k * 0.01) // vuốt dây mở đoạn
-  const kind = p % 4 === 3 ? 'rest' : p % 6 === 4 ? 'flute' : Math.random() < 0.12 ? 'rest' : 'zheng'
+  if (fight) for (const [beat, v] of [[0, 0.16], [2, 0.1], [4, 0.14], [5.5, 0.08], [6, 0.12]] as const) drum(ac, bus, t + beat * BEAT, v)
+  const kind = fight
+    ? 'zheng'
+    : m === 'map'
+      ? p % 3 === 1 ? 'flute' : p % 8 === 7 ? 'rest' : 'zheng'
+      : p % 4 === 3 ? 'rest' : p % 6 === 4 ? 'flute' : Math.random() < 0.12 ? 'rest' : 'zheng'
   if (kind === 'flute') {
     let f0: number | undefined
     let at = 0
@@ -150,9 +187,9 @@ export function phrase(ac: BaseAudioContext, bus: Bus, t: number, p: number, deg
     pluck(ac, bus, t, hz(deg - 10), 0.07) // đàn đệm nốt trầm
     pluck(ac, bus, t + 4 * BEAT, hz(deg - 8), 0.06)
   } else if (kind === 'zheng') {
-    const rhythm = pick(RHYTHMS)
+    const rhythm = fight ? RHYTHMS[3] : pick(RHYTHMS) // trận: gảy đều từng phách
     rhythm.forEach((beat, k) => {
-      deg = clamp(deg + pick([-2, -1, -1, 1, 1, 2]), 5, 14)
+      deg = clamp(deg + pick([-2, -1, -1, 1, 1, 2]), fight ? 2 : 5, fight ? 10 : 14)
       if (k === rhythm.length - 1) deg = deg % 5 < 2.5 ? deg - (deg % 5) : deg - (deg % 5) + 3 // kết đoạn trên Rê hoặc La
       const at = t + beat * BEAT + hum()
       pluck(ac, bus, at, hz(deg), 0.09 + Math.random() * 0.03)

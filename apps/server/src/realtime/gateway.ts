@@ -58,6 +58,7 @@ export function attachRealtime(http: HttpServer, o: RealtimeOptions) {
       if (!s.pid || !s.world) return refuse('auth')
       const w = await o.host.ensure(s.world)
       if (!(w instanceof World)) return refuse(w.owner ? 'moved' : 'unavailable', w.owner ?? undefined)
+      if (w.quarantined(s.pid)) return refuse('unavailable')
       socket.data = { pid: s.pid, world: s.world, lang: h.data.lang }
       next()
     } catch (err) {

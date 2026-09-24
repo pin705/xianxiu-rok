@@ -136,12 +136,12 @@ export class Battle {
       const y = side ? this.h * 0.43 : Math.min(this.h * 0.8, this.h - 160)
       const n = troops.length
       const x0 = (this.w - 400) / 2 // đội hình nằm trong cột 400 DU ở giữa
-      return troops.map((t, k) => this.squad(side, t.type, t.n, x0 + (400 / (n + 1)) * (k + 1), y))
+      return troops.map((t, k) => this.squad(side, t.type, t.n, x0 + (400 / (n + 1)) * (k + 1), y, t.tier))
     })
     if (fi > 0) this.strikeAll()
   }
 
-  private squad(side: number, type: Troop, n0: number, x: number, y: number): Squad {
+  private squad(side: number, type: Troop, n0: number, x: number, y: number, tier = 1): Squad {
     const kind: Kind = side ? this.enemy : 'man'
     const max = kind === 'man' ? 9 : kind === 'beast' ? 3 : 4
     const per = Math.max(1, Math.ceil(n0 / max))
@@ -170,7 +170,8 @@ export class Battle {
         s.addChild(core, this.sprite(cl))
         this.tick_.push(() => (core.alpha = 0.55 + 0.45 * Math.abs(Math.sin(this.t * 5 + i))))
       } else {
-        const p = kind === 'man' ? painted(`sold:${type}:${side}`, () => soldier(type, side === 1)) : painted(`beast:${type}:${this.tint}`, () => beast(type, this.tint))
+        // bậc 1–3 chung một dáng đệ tử
+        const p = kind === 'man' ? painted(`sold:${type}:${side}:${Math.max(3, tier)}`, () => soldier(type, side === 1, tier)) : painted(`beast:${type}:${this.tint}`, () => beast(type, this.tint))
         s = this.sprite(p)
         const scale = (kind === 'beast' ? 1.7 : 1.75) * (1 - row * 0.06)
         s.scale.set(scale / p.scale)

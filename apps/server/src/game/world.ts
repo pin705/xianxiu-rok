@@ -5,7 +5,7 @@
 import { randomInt } from 'node:crypto'
 import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
-import { advance, apply, dayOf, power, type Action, type Report, type State } from '@rok/rules'
+import { advance, apply, dayOf, migrate, power, type Action, type Report, type State } from '@rok/rules'
 import { diff, view, type Ack, type Bye, type ClientToServer, type Push, type Query, type Seen, type ServerToClient, type Snap, type WorldInfo } from '@rok/protocol'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
@@ -58,6 +58,7 @@ export class World {
   private n = 0
   private timer: NodeJS.Timeout | null = null
   private timerAt = Infinity
+  private bad = new Set<number>() // người chơi bị cách ly (state hỏng)
 
   constructor(c: store.Claimed, rows: store.PlayerRow[], env: Env) {
     this.env = env
@@ -80,9 +81,19 @@ export class World {
     return n
   }
 
+  // State trong DB đi qua migrate() (nâng bản cũ, kiểm khuôn). Không qua được thì cách ly người đó: không nạp, không ghi,
+  // không nhận kết nối — cả giới vẫn chạy, chờ người sửa tay.
   private adopt(r: store.PlayerRow) {
-    this.ps.set(r.id, r.state)
+    const s = migrate(r.state)
+    if (!s) {
+      this.bad.add(r.id)
+      return this.env.log.error({ pid: r.id, world: this.id }, 'state không qua migrate: cách ly người chơi')
+    }
+    this.ps.set(r.id, s)
     this.slots.set(r.id, { id: r.id, name: r.name, v: 1, conns: new Set(), seen: r.seen, gen: 0, errors: 0, broken: false, day: -1 })
+  }
+  quarantined(pid: number) {
+    return this.bad.has(pid)
   }
 
   // ---------- Kết nối ----------
@@ -92,7 +103,8 @@ export class World {
     if (!this.slots.has(pid)) {
       const row = await store.findPlayer(this.env.db, pid) // người vừa lập tông môn (API có thể ở node khác)
       if (!row || row.worldId !== this.id) return void sock.disconnect(true)
-      if (!this.slots.has(pid)) this.adopt(row)
+      if (!this.slots.has(pid) && !this.bad.has(pid)) this.adopt(row)
+      if (!this.slots.has(pid)) return void sock.disconnect(true)
     }
     if (this.closing || this.lost || !sock.connected) return void sock.disconnect(true)
     const slot = this.slots.get(pid)!

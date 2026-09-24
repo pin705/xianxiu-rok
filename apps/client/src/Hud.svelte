@@ -81,6 +81,7 @@
     }
     if (game.heal) out.push({ key: 'h', icon: 'heal', text: L.alchemy.healing(count(game.heal.troops)), end: game.heal.finishAt, go: () => onfocus('danPhong', 'alchemy') })
     if (game.brew) out.push({ key: 'p', icon: 'cauldron', text: L.alchemy.brewing(game.brew.n, L.pills[game.brew.pill].name), end: game.brew.finishAt, go: () => onfocus('danPhong', 'alchemy') })
+    if (game.forge) out.push({ key: 'f', icon: 'hammer', text: L.forge.doing(L.gear[game.forge.gear], game.forge.level), end: game.forge.finishAt, go: () => onfocus('luyenKhiPhong', 'forge') })
     if (game.study) out.push({ key: 's', icon: 'scroll', text: L.library.doing(L.techs[game.study.tech], game.study.level), end: game.study.finishAt, go: () => onfocus('tangKinhCac', 'library') })
     for (const m of game.marches)
       out.push({ key: `m${m.id}`, icon: 'flag', text: L.activity.march(L.elders[m.elder].name, L.target(m.target)), end: now < m.arriveAt ? m.arriveAt : m.returnAt, go: e => ontab('banDo', e) })

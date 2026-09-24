@@ -95,6 +95,7 @@ export const vi = {
     hospital: 'Chỗ nằm thương binh',
     rows: 'Hàng công pháp mở',
     slots: 'Đội xuất quân',
+    gearCap: 'Cấp pháp bảo tối đa',
     requires: 'Yêu cầu',
     hall: (n: number) => `Chủ điện tầng ${n}`,
     goTo: 'Đi tới',

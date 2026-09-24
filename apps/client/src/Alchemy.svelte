@@ -1,7 +1,7 @@
 <script lang="ts">
   // Đan phòng: chữa thương binh (cả lô) và luyện đan (1–5 viên mỗi mẻ).
   import {
-    BREW_MAX, PILLS, PILL_IDS, UNITS, brewCost, brewError, brewTime, count, healCost, healError, healTime, hospital, unitOf,
+    BREW_MAX, PILLS, PILL_IDS, UNITS, brewCost, brewError, brewNeed, brewTime, count, healCost, healError, healTime, hospital, unitOf,
     type Action, type PillId, type State,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
@@ -60,6 +60,16 @@
     {/each}
   </div>
   <p class="t-small t-lore">{L.pills[pill].desc}</p>
+  {#if PILLS[pill].need}
+    <!-- đan theo công thức: đan nguyên liệu trừ lúc bắt đầu luyện -->
+    <div class="row wrap">
+      <span class="t-small t-soft">{L.panel.requires}</span>
+      {#each Object.entries(brewNeed(pill, n)) as [q, k] (q)}
+        {@const have = game.items[q as PillId] ?? 0}
+        <Tag icon={q as PillId} tone={have >= k! ? 'good' : 'bad'}>{L.pills[q as PillId].name} {have}/{k}</Tag>
+      {/each}
+    </div>
+  {/if}
   <div class="row between">
     <Stepper value={n} max={BREW_MAX} onchange={v => (n = v)} />
     <Bag res={brewCost(game, pill, n)} have={game.res} />

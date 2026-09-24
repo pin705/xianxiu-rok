@@ -1,7 +1,7 @@
 <script lang="ts">
   // Bảng mục tiêu trên bản đồ: yêu thú, tông môn đối địch, bí cảnh. Xem địch, phần thưởng, chọn đội rồi xuất quân.
   import {
-    BEASTS, BEATS, REALMS, SECTS, TOWER, TYPES, beastExp, beastLoot, coolKey, enemyOf, eventMul, isWeekend, marchSlots, marchTime,
+    BEASTS, BEATS, ELEMENTS, OVERCOMES, REALMS, SECTS, TOWER, TYPES, beastExp, beastLoot, coolKey, enemyOf, eventMul, isWeekend, marchSlots, marchTime,
     might, targetError, tierFor, towerReward, towerType, winChance,
     type Army, type ElderId, type Reward, type State, type Target, type UnitType,
   } from '@rok/rules'
@@ -94,6 +94,10 @@
         {/if}
         {@const c = counter(info.type)}
         <Tag icon="swords" tone="good">{L.map.counter} {L.units[c]} ({L.beats(c).replace(/^\p{Lu}/u, ch => ch.toLowerCase())})</Tag>
+        {#if foe.el}
+          {@const el = foe.el}
+          <Tag icon="star" tone="gold">{L.trib.element(L.el[el])} · {L.map.counter} {L.el[ELEMENTS.find(x => OVERCOMES[x] === el)!]}</Tag>
+        {/if}
       </Section>
     {/if}
 

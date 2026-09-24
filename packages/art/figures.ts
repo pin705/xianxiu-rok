@@ -1,20 +1,26 @@
 // Nhân vật vẽ tay: chân dung trưởng lão (bán thân, mắt khép như đang tĩnh toạ — lối 工笔 thu nhỏ).
 // Khung 48 × 48 DU, cắt tròn. Nét mực đứt quãng như bút thật, mảng màu loang, hạt giấy.
 import { blot, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
-import { PIGMENT as C, mix } from './palette'
+import { PIGMENT as C, mix, rgba } from './palette'
 
 export type Look = {
   robe: string
   trim: string
   hair: string
-  style: 'bun' | 'long' | 'bald' | 'crown' | 'tied'
+  style: 'bun' | 'long' | 'bald' | 'crown' | 'tied' | 'wild' // wild: tóc dựng như lửa
   beard?: 'long' | 'short'
   female?: boolean
   bg?: string
   mark?: string // ấn giữa trán
+  brow?: 'sad' | 'fierce' | 'long' // mày chau buồn · mày xếch · mày dài bạc rủ (mặc định: mày thanh)
+  hat?: string // nón lá (màu tre)
+  band?: string // dải buộc trán
+  sword?: string // chuôi kiếm nhô sau vai (màu tua)
+  flower?: string // hoa cài tóc
 }
 
 const SKIN = '#f1d9bf'
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const ring = (cx: number, cy: number, rx: number, ry: number, k = 16, a0 = 0, a1 = Math.PI * 2): Pt[] =>
   Array.from({ length: k + 1 }, (_, i) => {
     const a = a0 + ((a1 - a0) * i) / k
@@ -42,8 +48,17 @@ export function portrait(look: Look): Asset {
       wash(g, ring(24, 40, 26, 8, 14), { fill: C.silk, alpha: 0.25, jitter: 2, layers: 2, seed: 3 })
 
       const hair = look.hair
-      const long = look.style === 'long' || (look.female && look.style === 'crown')
+      const long = look.style === 'long' || (look.female && (look.style === 'crown' || look.style === 'bun'))
       if (long) wash(g, [[14.4, 17], [13, 30], [12.6, 40], [10.5, 49], [37.5, 49], [35.4, 40], [35, 30], [33.6, 17]], { fill: hair, alpha: 0.95, jitter: 0.5, layers: 2, seed: 5 })
+      if (look.sword) {
+        // chuôi kiếm đeo sau lưng nhô qua vai phải: cán quấn, đốc tròn, tua bay
+        line(g, [[34.4, 38], [39.6, 24.4]], 2.4, C.ink, 0.9, 'even')
+        line(g, [[34.4, 38], [39.6, 24.4]], 1.5, mix(C.lacquer2, C.ink3, 0.3), 1, 'even')
+        for (let i = 0; i < 4; i++) line(g, [[37.2 - i * 0.7, 29.4 + i * 1.9], [38.8 - i * 0.7, 30 + i * 1.9]], 0.4, C.ink3, 0.8, 'even')
+        line(g, [[34.4, 35.4], [39.2, 37.4]], 1.6, C.gold, 1, 'even') // chắn tay
+        blot(g, 39.8, 23.8, 1.3, C.gold, 1, 24, 1)
+        line(g, [[40.2, 23.4], [43.4, 25.4], [44.6, 29.4]], 1, look.sword, 0.95, 'fade')
+      }
 
       // áo: vai, cổ giao lĩnh, viền
       const robe: Pt[] = [[3, 49], [5.2, 41], [11, 36.4], [18, 34.2], [24, 34], [30, 34.2], [37, 36.4], [42.8, 41], [45, 49]]
@@ -94,12 +109,56 @@ export function portrait(look: Look): Asset {
             line(g, [[29, 11.6], [34, 9]], 1.3, C.gold, 1, 'even')
             blot(g, 34.2, 8.8, 1.3, look.trim, 1, 19, 1)
           }
+        } else if (look.style === 'wild') {
+          // tóc dựng ngược như ngọn lửa hất về sau, ngọn ánh màu viền
+          const top: Pt[] = [[15.2, 19.4], [13.4, 12], [17.4, 11.4], [16.6, 5], [20.8, 8.8], [21.8, 2], [24.6, 8], [27, 1.4], [28, 8.4], [31.8, 3.8], [31.4, 10.2], [36, 9.4], [32.8, 14.6], [33, 19.4]]
+          const edge: Pt[] = [[30.6, 17.4], [27, 15.2], [24, 15], [21, 15.2], [17.4, 17.4]]
+          wash(g, [...top, ...edge], { fill: g2 => { const r = g2.createLinearGradient(0, 2, 0, 14); r.addColorStop(0, mix(hair, look.trim, 0.55)); r.addColorStop(1, hair); return r }, alpha: 1, jitter: 0.2, layers: 2, seed: 30 })
+          line(g, top, 0.8, C.ink, 0.8, 'nail')
+          for (let i = 1; i < top.length - 2; i += 2) line(g, [[lerp(top[i][0], top[i + 1][0], 0.5), top[i + 1][1] + 2.4], top[i]], 0.8, look.trim, 0.85, 'taper')
         }
+      }
+      if (look.band) {
+        // dải buộc trán, hai đuôi bay sau gáy
+        line(g, [[15.6, 15.4], [20, 13.6], [24, 13.2], [28, 13.6], [32.4, 15.4]], 1.7, look.band, 1, 'even')
+        line(g, [[32.4, 15.2], [36, 15.6], [39.4, 19.6]], 1.2, look.band, 0.95, 'fade')
+        line(g, [[32.2, 16], [35, 18.6], [36.6, 23]], 0.9, look.band, 0.85, 'fade')
+      }
+      if (look.hat) {
+        // nón lá: chóp thấp, vành rộng che trán, nan tre toả từ chóp, quai mảnh
+        const hat: Pt[] = [[4.6, 16.4], [14, 11.6], [24, 3.8], [34, 11.6], [43.4, 16.4], [34, 16.8], [24, 16.2], [14, 16.8]]
+        wash(g, hat, { fill: g2 => { const r = g2.createLinearGradient(0, 4, 0, 17); r.addColorStop(0, mix(look.hat!, '#ffffff', 0.25)); r.addColorStop(1, mix(look.hat!, C.ink, 0.25)); return r }, alpha: 1, jitter: 0.25, layers: 2, seed: 34 })
+        for (let i = 1; i < 8; i++) line(g, [[24, 4.4], [lerp(6.4, 41.6, i / 8), 16.2]], 0.35, mix(look.hat, C.ink, 0.5), 0.55, 'taper')
+        line(g, [[4.6, 16.4], [14, 16.8], [24, 16.3], [34, 16.8], [43.4, 16.4]], 0.9, C.ink, 0.85, 'even')
+        line(g, [[4.6, 16.4], [14, 11.6], [24, 3.8], [34, 11.6], [43.4, 16.4]], 0.8, C.ink, 0.8, 'nail')
+        line(g, [[16.6, 17], [18.2, 26], [21, 30.6]], 0.4, C.ink2, 0.55, 'even')
+        line(g, [[31.4, 17], [29.8, 26], [27, 30.6]], 0.4, C.ink2, 0.55, 'even')
+      }
+      if (look.flower) {
+        // đoá hoa cài bên tóc: năm cánh, nhuỵ vàng
+        for (let i = 0; i < 5; i++) {
+          const a = (i / 5) * Math.PI * 2 - Math.PI / 2
+          blot(g, 16.4 + Math.cos(a) * 1.6, 12.4 + Math.sin(a) * 1.6, 1.3, look.flower, 1, 40 + i, 0.8, a)
+        }
+        blot(g, 16.4, 12.4, 0.8, C.goldL, 1, 45, 1)
+        line(g, [[18.2, 13.6], [20.8, 16.2]], 0.8, C.gold, 1, 'even') // chuỗi ngọc rủ
+        blot(g, 21, 16.6, 0.6, look.trim, 1, 46, 1)
       }
       // mày, mắt khép, mũi, miệng
       if (look.style === 'bald' && look.beard === 'long') {
         line(g, [[18.2, 19.6], [20.4, 17.9], [22.8, 19]], 1.3, hair, 1, 'nail')
         line(g, [[29.8, 19.6], [27.6, 17.9], [25.2, 19]], 1.3, hair, 1, 'nail')
+      } else if (look.brow === 'long') {
+        // mày bạc dài rủ quá đuôi mắt
+        line(g, [[22.8, 18.8], [20.6, 18], [18.4, 18.8], [16.8, 21.8]], 1.35, hair, 1, 'nail')
+        line(g, [[25.2, 18.8], [27.4, 18], [29.6, 18.8], [31.2, 21.8]], 1.35, hair, 1, 'nail')
+      } else if (look.brow === 'sad') {
+        line(g, [[22.6, 17.9], [20.8, 18.6], [18.9, 19.9]], 0.95, C.ink, 0.95, 'nail')
+        line(g, [[25.4, 17.9], [27.2, 18.6], [29.1, 19.9]], 0.95, C.ink, 0.95, 'nail')
+        line(g, [[22.4, 16.4], [24, 16.9], [25.6, 16.4]], 0.4, C.ink, 0.35) // nếp chau giữa mày
+      } else if (look.brow === 'fierce') {
+        line(g, [[18.6, 17.7], [20.8, 18.3], [22.9, 19.2]], 1.2, C.ink, 1, 'nail')
+        line(g, [[29.4, 17.7], [27.2, 18.3], [25.1, 19.2]], 1.2, C.ink, 1, 'nail')
       } else {
         line(g, [[19, 19.4], [20.8, 18.6], [22.7, 18.8]], 0.95, C.ink, 0.95, 'nail')
         line(g, [[29, 19.4], [27.2, 18.6], [25.3, 18.8]], 0.95, C.ink, 0.95, 'nail')
@@ -129,23 +188,38 @@ export function portrait(look: Look): Asset {
 // ---------- Quân trên sân trận (neo ở chân, cao ~20 DU) ----------
 export type Troop = 'kiem' | 'phap' | 'the'
 
-// Đệ tử ra trận. foe: áo tối, đai son (quân địch)
-export function soldier(type: Troop, foe = false): Asset {
+// Đệ tử ra trận. foe: áo tối, đai son (quân địch). tier 1–3 cùng một dáng; 4 (Hạch tâm): giáp viền vàng, linh khí mờ
+// quanh người; 5 (Thánh tử): áo trắng viền vàng, hào quang sau đầu
+export function soldier(type: Troop, foe = false, tier = 1): Asset {
+  const hi = tier >= 4
   return {
-    x: -12, y: -24, w: 24, h: 26,
+    x: -12, y: hi ? -30 : -24, w: 24, h: hi ? 32 : 26,
     draw(g) {
-      const robe = foe ? mix(C.lacquer2, C.ink2, 0.3) : type === 'phap' ? mix(C.azurite, C.silk, 0.15) : C.silk
-      const sash = foe ? C.cinnabar : type === 'kiem' ? C.azurite : type === 'phap' ? C.gold : C.ochre
-      const shade = mix(robe, C.ink, foe ? 0.3 : 0.2)
+      const saint = tier >= 5 && !foe
+      const robe = saint ? mix(C.silk, C.goldL, 0.22) : foe ? mix(C.lacquer2, C.ink2, 0.3) : type === 'phap' ? mix(C.azurite, C.silk, 0.15) : C.silk
+      const sash = tier >= 5 || (hi && !foe) ? C.gold : foe ? C.cinnabar : type === 'kiem' ? C.azurite : type === 'phap' ? C.gold : C.ochre
+      const shade = saint ? mix(robe, C.goldD, 0.3) : mix(robe, C.ink, foe ? 0.3 : 0.2)
+      const glow = foe ? C.cinnabarL : tier >= 5 ? C.goldL : C.spirit
       const ol = { color: C.ink, press: 'taper' as const, alpha: 0.9, rough: 0.3 }
       // nếp áo, đường cơ: nét mảnh đầu đinh, khô ở cuối
       const fold = (pts: Pt[], seed: number, a = 0.45) => stroke(g, pts, { ...ol, w: 0.42, press: 'nail', alpha: a, dry: 0.4, seed })
+      if (hi) {
+        // linh khí toả quanh người (bậc 5 sáng hơn), vài làn khí bốc lên
+        const r = g.createRadialGradient(0, -11, 1, 0, -11, tier >= 5 ? 13 : 11)
+        r.addColorStop(0, rgba(glow, tier >= 5 ? 0.55 : 0.32))
+        r.addColorStop(1, rgba(glow, 0))
+        g.fillStyle = r
+        g.fillRect(-12, -26, 24, 28)
+        for (const [x, sd] of [[-6.4, 50], [6.8, 51], [-3, 52]] as const)
+          stroke(g, [[x, -2], [x + 0.8, -8], [x - 0.6, -13], [x + 0.4, -18]], { w: 0.9, color: glow, press: 'fade', alpha: 0.55, rough: 0.3, seed: sd })
+      }
       blot(g, 0, 0.6, 6.5, C.ink, 0.18, 2, 0.3)
       if (type === 'the') {
         // thể tu: chân tấn, quần son, mình trần, nắm đấm; tay có viền mực (vẽ viền trước, da đè lên)
         const pants: Pt[] = [[-5, 0], [-3.4, -8], [3.4, -8], [5, 0], [1.6, 0], [0, -4], [-1.6, 0]]
-        wash(g, pants, { fill: foe ? C.ink2 : C.ochre, alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: 3 })
-        wash(g, [[0.4, -8], [3.4, -8], [5, 0], [1.6, 0]], { fill: mix(foe ? C.ink2 : C.ochre, C.ink, 0.3), alpha: 0.5, jitter: 0.1, layers: 1, sharp: true, seed: 20 })
+        const cloth = saint ? robe : foe ? C.ink2 : C.ochre
+        wash(g, pants, { fill: cloth, alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: 3 })
+        wash(g, [[0.4, -8], [3.4, -8], [5, 0], [1.6, 0]], { fill: mix(cloth, C.ink, 0.3), alpha: 0.5, jitter: 0.1, layers: 1, sharp: true, seed: 20 })
         wash(g, [[-3.6, -8], [-3.2, -14.6], [3.2, -14.6], [3.6, -8]], { fill: SKIN, alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: 4 })
         wash(g, [[1.2, -14.6], [3.2, -14.6], [3.6, -8], [1.6, -8]], { fill: mix(SKIN, C.ochre, 0.35), alpha: 0.55, jitter: 0.1, layers: 1, sharp: true, seed: 21 })
         wash(g, [[-3.8, -8.8], [3.8, -8.8], [3.8, -7.4], [-3.8, -7.4]], { fill: sash, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: 5 })
@@ -163,6 +237,13 @@ export function soldier(type: Troop, foe = false): Asset {
         stroke(g, [[-3.2, -14.6], [-3.4, -8], [-5, 0]], { ...ol, w: 0.6, press: 'nail', dry: 0.25 })
         stroke(g, [[3.2, -14.6], [3.4, -8], [5, 0]], { ...ol, w: 1, press: 'nail', dry: 0.25 })
         stroke(g, [[-1.6, 0], [0, -4], [1.6, 0]], { ...ol, w: 0.5, press: 'even', alpha: 0.7 })
+        if (hi) {
+          // hộ uyển vàng ở cổ tay, giáp vai trái viền vàng
+          for (const [x, y] of [[-6.6, -9.2], [7.4, -15.8]] as const) blot(g, x, y, 1.15, C.gold, 1, 53 + x, 0.7, 0.9)
+          const pad: Pt[] = [[-4.6, -13.2], [-4.2, -15.6], [-1.6, -15.4], [-1.2, -13.8]]
+          wash(g, pad, { fill: tier >= 5 ? C.silk : mix(C.ink2, C.indigo, 0.4), alpha: 1, jitter: 0.1, layers: 1, seed: 54 })
+          stroke(g, [...pad, pad[0]], { w: 0.5, color: C.gold, press: 'even', alpha: 1 })
+        }
       } else {
         // kiếm tu / pháp tu: áo dài giao lĩnh, vạt áo bị gió thổi lệch sang trái, dải đai bay (飘带)
         const hem = type === 'phap' ? 6 : 4.4, sway = 0.9
@@ -173,7 +254,7 @@ export function soldier(type: Troop, foe = false): Asset {
         stroke(g, [[-1.8, -9.4], [-4.4, -8.4], [-6.8, -9.2], [-8.8, -8]], { w: 0.95, color: sash, press: 'fade', alpha: 0.95, rough: 0.3, seed: 18 })
         stroke(g, [[-1.4, -9], [-3.6, -6.8], [-6, -6.6], [-7.2, -5.4]], { w: 0.7, color: sash, press: 'fade', alpha: 0.85, rough: 0.3, seed: 19 })
         // cổ áo: vạt trái đè vạt phải
-        const collar = foe ? C.ink : type === 'phap' ? C.silk : C.azuriteD
+        const collar = tier >= 5 ? C.gold : foe ? C.ink : type === 'phap' ? C.silk : C.azuriteD
         stroke(g, [[-2.3, -14.8], [0.3, -12.3], [1.5, -10]], { w: 0.75, color: collar, press: 'taper', alpha: 0.9, seed: 17 })
         stroke(g, [[2.3, -14.8], [0.9, -13.1]], { w: 0.5, color: collar, press: 'taper', alpha: 0.8, seed: 27 })
         fold([[-1.2, -8.6], [-1.9, -4.4], [-3, -0.6]], 28)
@@ -182,6 +263,21 @@ export function soldier(type: Troop, foe = false): Asset {
         stroke(g, [[-3, -14.8], [-3.4, -9], L], { ...ol, w: 0.6, press: 'nail', dry: 0.3, seed: 31 })
         stroke(g, [[3, -14.8], [3.4, -9], R], { ...ol, w: 1, press: 'nail', dry: 0.3, seed: 32 })
         stroke(g, [[L[0] + 0.6, 0.2], [0, 0.5], [R[0] - 0.6, 0]], { ...ol, w: 0.6, press: 'even', seed: 33 })
+        if (hi) {
+          // vạt áo viền vàng; bậc 4: giáp ngực lá vảy + giáp vai, viền vàng
+          stroke(g, [[L[0] + 0.8, -0.3], [0, 0], [R[0] - 0.8, -0.4]], { w: 0.55, color: C.gold, press: 'even', alpha: 1, seed: 55 })
+          if (tier === 4) {
+            const plate: Pt[] = [[-3.1, -14.2], [3.1, -14.2], [3.3, -10.1], [-3.3, -10.1]]
+            wash(g, plate, { fill: foe ? C.ink2 : mix(C.ink2, C.indigo, 0.45), alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: 56 })
+            for (const y of [-12.8, -11.4]) stroke(g, [[-3, y], [3, y]], { w: 0.3, color: C.ink, press: 'even', alpha: 0.7 })
+            stroke(g, [[-3.1, -14.2], [0, -12.9], [3.1, -14.2]], { w: 0.55, color: C.gold, press: 'even', alpha: 1, seed: 57 })
+            for (const s of [-1, 1]) {
+              const pad: Pt[] = [[s * 1.8, -15.4], [s * 4.4, -15], [s * 4.8, -12.6], [s * 2.8, -13.2]]
+              wash(g, pad, { fill: foe ? C.ink2 : mix(C.ink2, C.indigo, 0.45), alpha: 1, jitter: 0.1, layers: 1, seed: 58 + s })
+              stroke(g, pad.slice(1), { w: 0.5, color: C.gold, press: 'even', alpha: 1, seed: 59 + s })
+            }
+          }
+        }
         if (type === 'kiem') {
           // tay áo chéo lên cầm kiếm
           const sleeve: Pt[] = [[2.4, -14.2], [5.6, -14], [7, -12.6], [3.2, -11.6]]
@@ -209,6 +305,16 @@ export function soldier(type: Troop, foe = false): Asset {
       wash(g, [[-2.7, -17.4], [-2.2, -19.4], [0, -20.1], [2.2, -19.4], [2.7, -17.4], [1.2, -18.4], [-1.2, -18.4]], { fill: C.ink, alpha: 1, jitter: 0.1, layers: 1, seed: 14 })
       blot(g, 0, -20.6, 1.3, C.ink, 1, 15, 1)
       if (foe) stroke(g, [[-2.6, -18.9], [0, -19.5], [2.6, -18.9], [4.2, -17.4]], { w: 0.8, color: C.cinnabar, press: 'even', alpha: 1 })
+      if (hi) stroke(g, [[-1.4, -21.1], [1.6, -20.3]], { w: 0.7, color: C.gold, press: 'even', alpha: 1 }) // trâm vàng
+      if (tier >= 5) {
+        // hào quang: vòng vàng sau đầu, tia ngắn toả ra
+        const halo = foe ? C.cinnabar : C.gold
+        stroke(g, ring(0, -18.4, 5, 5, 20, -Math.PI * 1.05, Math.PI * 0.05), { w: 0.9, color: halo, press: 'taper', alpha: 0.95, rough: 0.2, seed: 60 })
+        for (let i = 0; i < 9; i++) {
+          const a = -Math.PI * (0.08 + (i / 8) * 0.84)
+          stroke(g, [[Math.cos(a) * 6.2, -18.4 + Math.sin(a) * 6.2], [Math.cos(a) * (i % 2 ? 7.6 : 8.8), -18.4 + Math.sin(a) * (i % 2 ? 7.6 : 8.8)]], { w: 0.6, color: i % 2 ? glow : halo, press: 'taper', alpha: 0.85, seed: 61 + i })
+        }
+      }
       grain(g, 0.25)
     },
   }

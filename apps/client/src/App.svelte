@@ -22,6 +22,7 @@
   import Title from './Title.svelte'
   import Vault from './Vault.svelte'
   import { createNet, type Net, type Status } from './net'
+  import { setMood } from './music'
   import { DESK, L, LANG, TABS, forgetP1, isMuted, reportName, setMuted, sfx, type Tab } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
@@ -44,6 +45,8 @@
   let reportsOpen = $state(false)
   let settingsOpen = $state(false)
   let dailyOpen = $state(false)
+  // nhạc theo cảnh: xem trận / độ kiếp là trống trận, bản đồ là sáo trúc lên đường
+  $effect(() => setMood(replay || storm ? 'battle' : tab === 'banDo' ? 'map' : 'home'))
   let bursts: { id: BuildingId; level: number; t: number }[] = $state([])
   let gain: { bag: Partial<Res>; t: number } | null = $state(null)
   let toasts: ToastItem[] = $state([])
