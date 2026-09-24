@@ -12,8 +12,10 @@ import type { Config } from './config.ts'
 import { createDb, migrate } from './db/index.ts'
 import { prune } from './db/store.ts'
 import { Host } from './game/host.ts'
+import { adminRoutes } from './http/admin.ts'
 import { authRoutes } from './http/auth.ts'
 import { devRoutes } from './http/dev.ts'
+import { gameRoutes } from './http/game.ts'
 import { healthRoutes } from './http/health.ts'
 import { attachRealtime } from './realtime/gateway.ts'
 
@@ -54,7 +56,9 @@ export async function buildServer(c: Config) {
         if (req.method === 'POST' && req.headers['x-rok'] !== '1') return reply.code(403).send({ error: 'csrf' })
       })
       await api.register(authRoutes, { db: d.db, worldCap: c.WORLD_CAP, secure: c.NODE_ENV === 'production', path: c.NODE_PATH })
+      await api.register(gameRoutes, { db: d.db })
       if (c.ALLOW_WARP) await api.register(devRoutes, { prefix: '/dev', db: d.db, host })
+      if (c.ADMIN_TOKEN) await api.register(adminRoutes, { prefix: '/admin', db: d.db, token: c.ADMIN_TOKEN })
     },
     { prefix: '/api' },
   )

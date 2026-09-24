@@ -20,7 +20,7 @@ const Handshake = z.object({
   build: z.string().max(64),
   lang: z.string().max(16),
 })
-const Query = z.discriminatedUnion('k', [z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() })])
+const Query = z.discriminatedUnion('k', [z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }), z.object({ k: z.literal('rivals') })])
 const ActionShape = z.object({ type: z.string().max(32) }).loose() // khung; từng trường do rules.parseAction kiểm
 
 export type RealtimeOptions = { db: Database; host: Host; path: string; origins: string[]; protocol: string; limits: boolean; log: FastifyBaseLogger }

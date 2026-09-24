@@ -134,7 +134,8 @@ test('hai tab: tab gửi nhận ack, tab kia nhận patch cùng version; sai mã
   assert.ok(ack.ok)
   assert.equal(p.v, ack.ok && ack.v)
   assert.deepEqual(p.p, ack.ok && ack.p)
-  assert.equal(x.pushes.length, 0, 'tab gửi không nhận trùng patch')
+  // (patch lúc tab y nối vào — đưa state tới giờ hiện tại — thì tab x được nhận; bản sao của ack thì không)
+  assert.ok(!x.pushes.some(q => ack.ok && q.v === ack.v), 'tab gửi không nhận trùng patch')
   const z = client(a, g.token, 'ban-cu')
   await assert.rejects(z.welcome, (e: { data?: Refuse }) => e.data?.reason === 'protocol')
   x.close()
@@ -233,4 +234,60 @@ test('nạp giới: state bản cũ được nâng qua migrate(), state hỏng c
   await assert.rejects(b.welcome, (e: { data?: Refuse }) => e.data?.reason === 'unavailable')
   c.close()
   b.close()
+})
+
+test('cướp giữa hai người chơi: server giải trận lúc tới nơi, cả hai nhận chiến báo; đối thủ, xếp hạng, thư admin nhận quà một lần', { skip }, async () => {
+  const ADMIN = 'k'.repeat(32)
+  const n = await boot('m', { ADMIN_TOKEN: ADMIN })
+  const w = await newWorld(n)
+  const A = await guest(n, undefined, w), B = await guest(n, undefined, w)
+  const ca = client(n, A.token), cb = client(n, B.token)
+  await Promise.all([ca.welcome, cb.welcome])
+  // dựng hai tông môn tầng 10, hết khiên tân thủ (công cụ dev)
+  const setup = async (token: string, troops: object) => {
+    const { state } = (await (await api(n, '/dev/state', undefined, token)).json()) as { state: any }
+    const levels = Object.fromEntries(Object.keys(state.levels).map(k => [k, 10]))
+    const res = { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 }
+    assert.equal((await api(n, '/dev/state', { state: { ...state, levels, res, shield: 0, troops: { ...state.troops, ...troops } } }, token)).status, 200)
+  }
+  await setup(A.token, { kiem3: 1100 })
+  await setup(B.token, { the1: 200 })
+  const rivals = (await ca.s.timeout(5000).emitWithAck('get', { k: 'rivals' })) as { pid: number; scout: { side: { troops: unknown[] } } }[]
+  assert.ok(rivals.some(r => r.pid === B.pid && r.scout.side.troops.length), 'đối thủ có dò thám')
+  const ack = await ca.act({ type: 'raid', pid: B.pid, elder: 'thanhPhong', army: { kiem3: 1100 } })
+  assert.ok(ack.ok && ack.p?.marches, JSON.stringify(ack))
+  const m = ack.p!.marches!.at(-1)!
+  assert.equal(m.returnAt, 0)
+  assert.equal(m.seed, 0, 'mầm trận cướp không rời server')
+  assert.deepEqual(await ca.act({ type: 'raid', pid: B.pid, elder: 'thanhPhong', army: { kiem3: 1 } }), { ok: false, err: 'busy' })
+  // tua tới lúc tới nơi: server tự giải trận (không ai phải thao tác)
+  const { now } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { now: number }
+  await api(n, '/dev/warp', { min: Math.ceil((m.arriveAt - now) / 60_000) + 1 }, A.token)
+  const pb = await cb.push(p => !!p.rep?.some(r => r.kind === 'pvp'))
+  assert.equal(pb.rep![0].def, true)
+  assert.equal(pb.rep![0].i, A.pid)
+  const pa = await ca.push(p => !!p.rep?.some(r => r.kind === 'pvp'))
+  assert.ok(pa.p.marches![0].returnAt > m.arriveAt)
+  const rows = await n.db.client`select player_id, (body->>'def')::boolean as def from reports where kind = 'pvp' and player_id in (${A.pid}, ${B.pid})`
+  assert.equal(rows.length, 2, 'cả hai chiến báo đã ghi')
+  // xếp hạng tranh đoạt (cột chép từ state lúc commit)
+  const rk = (await (await api(n, '/ranks/pvp', undefined, A.token)).json()) as { rows: { pid: number }[]; me: { rank: number } }
+  assert.ok(rk.rows.some(r => r.pid === A.pid) && rk.me.rank >= 1)
+  assert.equal((await api(n, '/ranks/nope', undefined, A.token)).status, 400)
+  // admin: số liệu có token mới xem được; thư có quà tới người chơi qua inbox, nhận đúng một lần
+  const admin = (path: string, body?: object) =>
+    fetch(`http://127.0.0.1:${n.port}/api/admin${path}`, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json', 'x-rok': '1', 'x-admin-token': ADMIN }, body: body && JSON.stringify(body) })
+  assert.equal((await api(n, '/admin/stats')).status, 401)
+  assert.ok(Array.isArray(((await (await admin('/stats')).json()) as { cohorts: unknown[] }).cohorts))
+  assert.equal((await admin('/mail', { world: w, pid: B.pid, title: 'Chào', body: 'Quà', gift: { res: { linhThach: 777 }, items: { vang: 1 } } })).status, 400, 'quà lạ bị chặn')
+  assert.equal((await admin('/mail', { world: w, pid: B.pid, title: 'Chào', body: 'Quà', gift: { res: { linhThach: 777 } } })).status, 200)
+  const pm = await cb.push(p => !!p.p.mail?.length, 8000)
+  const mail = pm.p.mail!.at(-1)!
+  assert.deepEqual(mail.a, ['Chào', 'Quà'])
+  const before = (await row(n, B.pid)).state.res.linhThach
+  assert.ok((await cb.act({ type: 'mail', id: mail.id })).ok)
+  assert.ok((await row(n, B.pid)).state.res.linhThach >= before + 777)
+  assert.equal((await cb.act({ type: 'mail', id: mail.id })).ok, false, 'nhận lần hai bị từ chối')
+  ca.close()
+  cb.close()
 })

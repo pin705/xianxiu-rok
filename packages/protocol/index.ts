@@ -4,6 +4,7 @@
 //   1. mầm ngẫu nhiên (seed) không bao giờ rời server — mọi seed gửi đi đều là 0 (rules: mầm 0 = ẩn, không tự giải trận)
 //   2. chiến báo (reports) không nằm trong state gửi đi — đi riêng qua `rep` và truy vấn `reports` (state nhỏ, patch nhỏ)
 import type { Action, Err, March, Report, State } from '@rok/rules'
+import type { Rival, WorldAction } from '@rok/rules/world'
 
 export type View = Omit<State, 'reports'>
 export type Patch = Partial<View>
@@ -47,7 +48,9 @@ export type ServerErr = 'rate' | 'unavailable' | 'moving' | 'maintenance'
 export type Ack = { ok: true; v?: number; p?: Patch; rep?: Report[] } | { ok: false; err: Err | ServerErr }
 export type Push = { v: number; p: Patch; rep?: Report[] } // state đổi do server (trận tới nơi…) hoặc do tab khác của cùng người
 export type Snap = { v: number; state: View }
-export type Query = { k: 'reports'; before?: number }
+// reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) → Rival[]
+export type Query = { k: 'reports'; before?: number } | { k: 'rivals' }
+export type { Rival }
 export type Bye = 'moved' | 'restart' | 'replaced' | 'rate' | 'banned' | 'deleted'
 
 export interface ServerToClient {
@@ -58,7 +61,7 @@ export interface ServerToClient {
   bye(m: { reason: Bye; path?: string }): void
 }
 export interface ClientToServer {
-  act(a: Action, ack: (r: Ack) => void): void
+  act(a: Action | WorldAction, ack: (r: Ack) => void): void
   get(q: Query, ack: (r: unknown) => void): void
   sync(ack: (s: Snap) => void): void
   time(ack: (now: number) => void): void

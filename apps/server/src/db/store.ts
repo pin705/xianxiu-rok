@@ -1,5 +1,5 @@
 // Truy vấn của game. Logic game đọc state trong RAM (world actor); DB chỉ là nơi lưu bền.
-import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 import type { State } from '@rok/rules'
 import type { Seen } from '@rok/protocol'
 import type { Database } from './index.ts'
@@ -117,7 +117,7 @@ export type Batch = {
   online: number
   sync: boolean
   state?: object // phần chung của giới, khi đổi
-  players: { id: number; state: State; name: string; power: number; hall: number; tower: number; rebirths: number; seen?: Seen }[]
+  players: { id: number; state: State; name: string; power: number; hall: number; tower: number; rebirths: number; pvp: number; weekNo: number; weekPts: number; seen?: Seen }[]
   reports: { pid: number; id: number; at: number; kind: string; win: boolean; body: object }[]
   events: { pid: number; name: string; day: number; at: number; props: object }[]
   inboxDone: number[]
@@ -141,9 +141,9 @@ export async function flushWorld(db: Database, b: Batch) {
       q.push(
         tx.execute(sql`
           update ${players} p set state = r.state, name = r.name, power = r.power, hall = r.hall, tower = r.tower, rebirths = r.rebirths,
-            seen = coalesce(r.seen, p.seen), updated_at = now()
+            pvp = r.pvp, week_no = r."weekNo", week_pts = r."weekPts", seen = coalesce(r.seen, p.seen), updated_at = now()
           from jsonb_to_recordset(${JSON.stringify(b.players)}::jsonb)
-            as r(id int, state jsonb, name text, power int, hall int, tower int, rebirths int, seen jsonb)
+            as r(id int, state jsonb, name text, power int, hall int, tower int, rebirths int, pvp int, "weekNo" int, "weekPts" int, seen jsonb)
           where p.id = r.id and p.world_id = ${b.world}`),
       )
     if (b.reports.length)
@@ -161,10 +161,60 @@ export async function flushWorld(db: Database, b: Batch) {
           select to_timestamp(e.at / 1000.0), e.day, e.pid, e.name, e.props
           from jsonb_to_recordset(${JSON.stringify(b.events)}::jsonb) as e(at float8, day int, pid int, name text, props jsonb)`),
       )
-    if (b.inboxDone.length) q.push(tx.update(inbox).set({ doneAt: sql`now()` }).where(and(eq(inbox.worldId, b.world), sql`${inbox.id} = any(${b.inboxDone})`)))
+    if (b.inboxDone.length) q.push(tx.update(inbox).set({ doneAt: sql`now()` }).where(and(eq(inbox.worldId, b.world), inArray(inbox.id, b.inboxDone))))
     const [fence] = (await Promise.all(q)) as [unknown[]]
     if (!fence.length) throw new Fenced()
   })
+}
+
+// ---------- Hộp lệnh (inbox): API ghi, chủ giới đọc 2 giây một lần, đánh dấu xong trong chính commit của nó ----------
+
+export type InboxRow = { id: number; kind: string; body: unknown }
+export const openInbox = (db: Database, world: number): Promise<InboxRow[]> =>
+  db.select({ id: inbox.id, kind: inbox.kind, body: inbox.body }).from(inbox).where(and(eq(inbox.worldId, world), isNull(inbox.doneAt))).orderBy(inbox.id).limit(100)
+export const addInbox = (db: Database, world: number, kind: string, body: object) => db.insert(inbox).values({ worldId: world, kind, body }).returning({ id: inbox.id })
+
+// ---------- Xếp hạng ----------
+
+export const BOARDS = ['power', 'hall', 'tower', 'pvp', 'week'] as const
+export type Board = (typeof BOARDS)[number]
+const boardValue = { power: players.power, hall: players.hall, tower: players.tower, pvp: players.pvp, week: players.weekPts }
+const boardScope = (world: number, board: Board, week: number) => and(eq(players.worldId, world), board === 'week' ? eq(players.weekNo, week) : undefined)
+const boardOrder = (board: Board) => (board === 'hall' ? [desc(players.hall), desc(players.power)] : [desc(boardValue[board])])
+// Top 50 của giới. ponytail: quét cả giới (≤ vài trăm dòng, API cache 30 giây); index khi giới to.
+export async function topOf(db: Database, world: number, board: Board, week: number) {
+  const rows = await db
+    .select({ pid: players.id, name: players.name, v: boardValue[board], hall: players.hall })
+    .from(players)
+    .where(boardScope(world, board, week))
+    .orderBy(...boardOrder(board), players.id)
+    .limit(50)
+  return rows.map((r, i) => ({ ...r, rank: i + 1 }))
+}
+export async function rankOf(db: Database, world: number, board: Board, pid: number, week: number) {
+  const [me] = await db.execute<{ rank: number; v: number }>(sql`
+    select rank, v from (
+      select id, ${boardValue[board]} as v, rank() over (order by ${sql.join(boardOrder(board), sql`, `)}, id) as rank
+      from ${players} where ${boardScope(world, board, week)}
+    ) x where id = ${pid}`)
+  return me ? { rank: Number(me.rank), v: Number(me.v) } : null
+}
+
+// ---------- Admin: D1/D7 theo ngày vào game đầu tiên (giờ VN), phân bố cảnh giới ----------
+
+export async function stats(db: Database) {
+  const cohorts = await db.execute<{ day: number; n: number; d1: number | null; d7: number | null }>(sql`
+    with d as (select distinct player_id, day from ${events} where name = 'login' and player_id is not null),
+         f as (select player_id, min(day) as d0 from d group by player_id)
+    select f.d0 as day, count(*)::int as n,
+      avg((exists (select 1 from d where d.player_id = f.player_id and d.day = f.d0 + 1))::int)::float8 as d1,
+      avg((exists (select 1 from d where d.player_id = f.player_id and d.day = f.d0 + 7))::int)::float8 as d7
+    from f group by f.d0 order by f.d0 desc limit 60`)
+  const halls = await db.select({ hall: players.hall, n: sql<number>`count(*)::int` }).from(players).groupBy(players.hall).orderBy(players.hall)
+  const tribs = await db.execute<{ hall: number; tries: number; wins: number }>(sql`
+    select (props->>'hall')::int as hall, count(*)::int as tries, count(*) filter (where (props->>'win')::boolean)::int as wins
+    from ${events} where name = 'trib' group by 1 order by 1`)
+  return { cohorts: [...cohorts], halls, tribs: [...tribs] }
 }
 
 export async function playerReports(db: Database, pid: number, before?: number) {

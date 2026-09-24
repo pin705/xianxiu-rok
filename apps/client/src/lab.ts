@@ -106,7 +106,7 @@ if (view === 'chrome') {
     ...SECT_EMBLEMS.map(e => [e, 'sect'] as [Emblem, MedalTone]),
     ...REALM_EMBLEMS.map(e => [e, 'realm'] as [Emblem, MedalTone]),
     ...Object.entries(ELEMENT_EMBLEMS).map(([el, e]) => [e, el] as [Emblem, MedalTone]),
-    ['anvil', 'ink'], ['thunder', 'thunder'], ['sword', 'kiem'], ['orb', 'phap'], ['fist', 'the'], ['win', 'red'], ['lose', 'ink'], ['rebirth', 'gold'], ['lotus', 'jade'], ['crest', 'gold'], ['tick', 'gold'],
+    ['anvil', 'ink'], ['crest', 'pvp'], ['thunder', 'thunder'], ['sword', 'kiem'], ['orb', 'phap'], ['fist', 'the'], ['win', 'red'], ['lose', 'ink'], ['rebirth', 'gold'], ['lotus', 'jade'], ['crest', 'gold'], ['tick', 'gold'],
   ]
   list.forEach(([e, t], i) => put(medal(e, t), 34 + (i % 6) * 64, 36 + Math.floor(i / 6) * 64, 60))
   list.forEach(([e, t], i) => put(medal(e, t), 16 + (i % 12) * 30, 634 + Math.floor(i / 12) * 30, 26))

@@ -66,6 +66,9 @@ export const players = pgTable(
     hall: smallint().notNull().default(1),
     tower: integer().notNull().default(0),
     rebirths: smallint().notNull().default(0),
+    pvp: integer().notNull().default(1000), // điểm tranh đoạt
+    weekNo: integer('week_no').notNull().default(0), // sự kiện tuần: tuần của week_pts
+    weekPts: integer('week_pts').notNull().default(0),
     createdAt: ts('created_at').notNull().defaultNow(),
     updatedAt: ts('updated_at').notNull().defaultNow(),
   },

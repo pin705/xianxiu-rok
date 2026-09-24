@@ -5,7 +5,8 @@
 import { randomInt } from 'node:crypto'
 import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
-import { advance, apply, dayOf, migrate, power, type Action, type Report, type State } from '@rok/rules'
+import { EVENT_PRIZES, advance, apply, dayOf, eventOf, migrate, power, weekOf, type Action, type Mail, type Report, type State } from '@rok/rules'
+import { advanceWorld, eventTop, mail, nextRaid, parseWorldAction, rivals, worldAct, type WorldAction, type WorldResult } from '@rok/rules/world'
 import { diff, view, type Ack, type Bye, type ClientToServer, type Push, type Query, type Seen, type ServerToClient, type Snap, type WorldInfo } from '@rok/protocol'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
@@ -59,6 +60,12 @@ export class World {
   private timer: NodeJS.Timeout | null = null
   private timerAt = Infinity
   private bad = new Set<number>() // người chơi bị cách ly (state hỏng)
+  private week: number // tuần sự kiện đang chạy (lật tuần: trao quà top rồi sang tuần mới) — lưu ở worlds.state
+  private worldDirty = false
+  private polling = false
+  // lệnh inbox đã áp vào RAM (chờ commit đánh dấu xong): không áp lại dù lần đọc sau còn thấy.
+  // ponytail: giữ mãi (lệnh admin hiếm); dọn theo tuổi nếu dùng inbox cho việc thường xuyên.
+  private readonly applied = new Set<number>()
 
   constructor(c: store.Claimed, rows: store.PlayerRow[], env: Env) {
     this.env = env
@@ -67,6 +74,8 @@ export class World {
     this.warp = env.warpAllowed ? c.warp : 0
     this.info = { id: c.id, name: c.name, season: c.season }
     for (const r of rows) this.adopt(r)
+    this.week = (c.state as { week?: number } | null)?.week ?? weekOf(this.now())
+    this.armRaid()
   }
 
   now() {
@@ -129,6 +138,7 @@ export class World {
   detach(sock: Sock) {
     const slot = this.slots.get(sock.data.pid)
     if (!slot || !slot.conns.delete(sock) || slot.conns.size) return
+    this.tick(this.now()) // sự kiện giới (cướp, lật tuần) trước khi đưa state người này lên
     slot.gen++ // không còn ai xem: bỏ hẹn đẩy kết quả trận
     this.commit(slot, advance(this.ps.get(slot.id)!, this.now()))
     const s = this.ps.get(slot.id)!
@@ -146,7 +156,7 @@ export class World {
 
   // ---------- Thao tác ----------
 
-  intent(sock: Sock, a: Action, ack: (r: Ack) => void) {
+  intent(sock: Sock, a: Action | WorldAction, ack: (r: Ack) => void) {
     const slot = this.slots.get(sock.data.pid)
     if (!slot) return ack({ ok: false, err: 'moving' })
     if (this.closing || this.lost) return this.deliver(() => ack({ ok: false, err: 'moving' }))
@@ -154,6 +164,7 @@ export class World {
     if (slot.broken) return this.deliver(() => ack({ ok: false, err: 'maintenance' }))
     const now = this.now()
     this.tick(now)
+    if (a.type === 'raid') return this.social(slot, sock, a, now, ack)
     let r: ReturnType<typeof apply>
     try {
       r = apply({ ...this.ps.get(slot.id)!, seed: seed() }, a, now)
@@ -172,8 +183,34 @@ export class World {
     this.commit(slot, r.state, { sock, ack })
   }
 
+  // Thao tác chạm tới tông môn khác (đi cướp): luật giới, có thể đổi state của nhiều người trong một bước
+  private social(slot: Slot, sock: Sock, raw: unknown, now: number, ack: (r: Ack) => void) {
+    const a = parseWorldAction(raw)
+    let r: WorldResult
+    try {
+      r = a ? worldAct(this.ps, slot.id, a, now, seed()) : { ok: false, error: 'bad' }
+    } catch (e) {
+      r = { ok: false, error: 'bad' }
+      this.env.log.error({ err: e, world: this.id, pid: slot.id }, 'worldAct threw')
+    }
+    intents.inc({ result: r.ok ? 'ok' : r.error })
+    if (!r.ok) {
+      const err = r.error
+      return this.deliver(() => ack({ ok: false, err }))
+    }
+    for (const [pid, s] of r.changed) {
+      const other = this.slots.get(pid)
+      if (other) this.commit(other, s, pid === slot.id ? { sock, ack } : undefined)
+    }
+    this.armRaid()
+  }
+
   async query(sock: Sock, q: Query, ack: (d: unknown) => void) {
     const pid = sock.data.pid
+    if (q.k === 'rivals') {
+      this.tick(this.now())
+      return this.deliver(() => ack(rivals(this.ps, pid, this.now(), Math.random)))
+    }
     // chiến báo chưa kịp ghi DB (đang chờ / đang commit) cộng chiến báo đã ghi
     const mem = [...(this.inflight?.reports ?? []), ...this.pending.reports]
       .filter(r => r.pid === pid && (q.before === undefined || r.id < q.before))
@@ -259,9 +296,76 @@ export class World {
     )
   }
 
+  // Hẹn giờ trận cướp kế tiếp (vé pid 0: tick giải mọi trận tới hạn bằng advanceWorld, vé cũ tự vô hại)
+  private armRaid() {
+    const at = nextRaid(this.ps)
+    if (at === Infinity) return
+    this.wakes.push({ at, n: this.n++, pid: 0, gen: 0 })
+    this.arm()
+  }
+
+  // Sự kiện của cả giới: lật tuần sự kiện, rồi mọi trận cướp đã tới nơi (một trận đổi state của cả hai bên)
+  private worldStep(now: number) {
+    if (weekOf(now) > this.week) this.rollWeek(now)
+    let changed: Map<number, State>
+    try {
+      changed = advanceWorld(this.ps, now)
+    } catch (e) {
+      return this.env.log.error({ err: e, world: this.id }, 'advanceWorld threw')
+    }
+    for (const [pid, s] of changed) {
+      const slot = this.slots.get(pid)
+      if (slot) this.commit(slot, s)
+    }
+    if (changed.size) this.armRaid()
+  }
+
+  // Hết tuần: top sự kiện của tuần cũ nhận quà qua thư (điểm vẫn còn trong state vì worldStep chạy trước mọi advance của tuần mới)
+  private rollWeek(now: number) {
+    const week = this.week
+    eventTop(this.ps, week).forEach((pid, i) => {
+      const gift = EVENT_PRIZES[i === 0 ? 0 : i < 3 ? 1 : 2]
+      this.commit(this.slots.get(pid)!, mail(this.ps.get(pid)!, { at: now, k: 'eventTop', a: [i + 1, eventOf(week)], gift }))
+    })
+    this.week = weekOf(now)
+    this.worldDirty = true
+    this.schedule()
+  }
+
+  // ---------- Hộp lệnh giữa các node (thư admin, bồi thường…): chủ giới đọc định kỳ, áp đúng một lần ----------
+
+  async pollInbox() {
+    if (this.polling || this.lost || this.readOnly || this.closing) return
+    this.polling = true
+    try {
+      const rows = await store.openInbox(this.env.db, this.id)
+      const now = this.now()
+      this.tick(now)
+      for (const r of rows) if (!this.applied.has(r.id)) this.command(r, now)
+    } catch (e) {
+      this.env.log.warn({ err: e, world: this.id }, 'inbox poll failed')
+    } finally {
+      this.polling = false
+    }
+  }
+
+  private command(r: store.InboxRow, now: number) {
+    this.applied.add(r.id)
+    this.pending.inboxDone.push(r.id) // cùng commit với thay đổi state: sập giữa chừng thì cả hai cùng chưa có, lần sau áp lại
+    const b = r.body as { pid?: number; mail?: Omit<Mail, 'id' | 'at'> }
+    if (r.kind === 'mail' && b.mail) {
+      for (const pid of b.pid ? [b.pid] : [...this.slots.keys()]) {
+        const slot = this.slots.get(pid), s = this.ps.get(pid)
+        if (slot && s) this.commit(slot, mail(s, { ...b.mail, at: now }))
+      }
+    } else this.env.log.warn({ id: r.id, kind: r.kind }, 'unknown inbox command, skipped')
+    this.schedule()
+  }
+
   // Xử lý mọi sự kiện đã tới hạn, theo thứ tự thời gian. Gọi trước mỗi thao tác: không ai thao tác trên state cũ hơn sự kiện.
   tick(now: number) {
     if (this.lost || this.readOnly) return
+    this.worldStep(now)
     for (let ev = this.wakes.peek(); ev && ev.at <= now; ev = this.wakes.peek()) {
       this.wakes.pop()
       const slot = this.slots.get(ev.pid)
@@ -304,7 +408,7 @@ export class World {
   async flush(renew = false) {
     if (this.committing || this.lost) return
     const p = this.pending
-    if (!renew && !this.dirty.size && !this.outbox.length && !p.events.length && !p.inboxDone.length) return
+    if (!renew && !this.dirty.size && !this.outbox.length && !p.events.length && !p.inboxDone.length && !this.worldDirty) return
     if (this.commitTimer) clearTimeout(this.commitTimer)
     this.commitTimer = null
     const ids = [...this.dirty]
@@ -319,15 +423,18 @@ export class World {
       const slot = this.slots.get(id)!
       return {
         id, state: s, name: slot.name, power: Math.round(power(s)), hall: s.levels.chuDien, tower: s.tower, rebirths: s.rebirths,
+        pvp: s.pvp.pts, weekNo: s.ev.week, weekPts: s.ev.pts,
         ...(seenIds.has(id) && slot.seen ? { seen: slot.seen } : {}),
       }
     })
+    const worldState = this.worldDirty ? { week: this.week } : undefined
+    this.worldDirty = false
     this.committing = true
     this.inflight = p
     const stop = commitSeconds.startTimer()
     try {
       await store.flushWorld(this.env.db, {
-        world: this.id, epoch: this.epoch, node: this.env.node, online: this.online, sync: this.env.sync,
+        world: this.id, epoch: this.epoch, node: this.env.node, online: this.online, sync: this.env.sync, state: worldState,
         players, reports: p.reports, events: p.events, inboxDone: p.inboxDone,
       })
       stop()
@@ -343,6 +450,7 @@ export class World {
       commitErrors.inc()
       this.env.log.warn({ err: e, world: this.id }, 'commit failed, retrying')
       for (const id of ids) this.dirty.add(id) // lần sau ghi state MỚI NHẤT của họ
+      if (worldState) this.worldDirty = true
       for (const id of seenIds) this.seenDirty.add(id)
       this.pending = { reports: [...p.reports, ...this.pending.reports], events: [...p.events, ...this.pending.events], inboxDone: [...p.inboxDone, ...this.pending.inboxDone] }
       this.outbox = [...outbox, ...this.outbox]
@@ -372,6 +480,7 @@ export class World {
       this.broadcast('status', { ro: true })
     }
     if (idle > 5_000) void this.flush(true)
+    void this.pollInbox() // kèm lật tuần sự kiện đúng giờ dù không ai đang chơi (pollInbox gọi tick)
   }
 
   // Node khác đã nhận giới (epoch đổi): dừng hẳn, không ghi gì nữa, đẩy mọi người sang node mới
