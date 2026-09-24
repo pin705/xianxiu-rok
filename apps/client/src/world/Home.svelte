@@ -55,7 +55,11 @@
   // Pháo hoa lên tầng: mỗi burst một lần
   const seen = new Set<number>()
   $effect(() => {
-    for (const b of bursts) if (scene && !seen.has(b.t)) (seen.add(b.t), scene.burst(b.id))
+    for (const b of bursts)
+      if (scene && !seen.has(b.t)) {
+        seen.add(b.t)
+        scene.burst(b.id)
+      }
   })
 
   // Bong bóng đồng hồ nằm trên nóc; nóc nào ngang tầm biển tên công trình bên cạnh (tầng núi so le) thì dời

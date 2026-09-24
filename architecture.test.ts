@@ -14,6 +14,8 @@ const ALLOWED: Record<string, string[]> = {
   'apps/server': ['rules', 'protocol', 'i18n'], // i18n: chữ của Web Push (app đang đóng, client không dựng được)
 }
 const root = import.meta.dirname
+const importsOf = (file: string) =>
+  [...readFileSync(file, 'utf8').matchAll(/(?:from|import)\s*\(?\s*'([^']+)'/g)].map(m => m[1])
 
 test('mỗi package chỉ import đúng các package được phép, không với ra ngoài thư mục mình', () => {
   const bad: string[] = []
@@ -28,7 +30,7 @@ test('mỗi package chỉ import đúng các package được phép, không vớ
       f => /\.(ts|svelte|mjs)$/.test(f) && !/(^|\/)(node_modules|dist)\//.test(f),
     )
     for (const f of files) {
-      for (const [, spec] of readFileSync(join(root, dir, f), 'utf8').matchAll(/(?:from|import)\s*\(?\s*'([^']+)'/g)) {
+      for (const spec of importsOf(join(root, dir, f))) {
         const pkg = spec.match(/^@rok\/([\w-]+)/)?.[1]
         if (pkg && !allowed.includes(pkg)) bad.push(`${dir}/${f}: không được import @rok/${pkg}`)
         if (
@@ -39,5 +41,25 @@ test('mỗi package chỉ import đúng các package được phép, không vớ
       }
     }
   }
+  assert.deepEqual(bad, [])
+})
+
+// Bên trong rules chỉ import xuống: core ← sect ← world. Mỗi file sect/ là một tính năng độc lập (chỉ dùng core/, data, combat);
+// chỉ sect/apply.ts gộp chúng — thêm tính năng không phải sửa tính năng khác.
+test('rules: core không import sect/world, tính năng trong sect/ không import lẫn nhau hay world', () => {
+  const rules = join(root, 'packages/rules')
+  const bad: string[] = []
+  for (const layer of ['core', 'sect'])
+    for (const f of readdirSync(join(rules, layer)).filter(f => f.endsWith('.ts'))) {
+      for (const spec of importsOf(join(rules, layer, f)).filter(s => s.startsWith('.'))) {
+        const to = relative(rules, resolve(rules, layer, spec))
+        const ok =
+          to.startsWith('core/') ||
+          to === 'data.ts' ||
+          to === 'combat.ts' ||
+          (layer === 'sect' && f === 'apply.ts' && to.startsWith('sect/'))
+        if (!ok) bad.push(`rules/${layer}/${f}: không được import ${to}`)
+      }
+    }
   assert.deepEqual(bad, [])
 })

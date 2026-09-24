@@ -3,7 +3,7 @@ import { fight } from '../combat.ts'
 import { no } from '../core/action.ts'
 import { admit, pushReport, sideOf, snap, marchError, launch } from '../core/battle.ts'
 import { bump, evBump } from '../core/calendar.ts'
-import { id, isElder, pickArmy } from '../core/parse.ts'
+import { isId, isElder, pickArmy } from '../core/parse.ts'
 import { elderLevel, lead, power, storage } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Err, type March, type Report, type State } from '../core/types.ts'
@@ -64,7 +64,7 @@ export const raidActions: WorldActions<RaidAction> = {
   raid: {
     pick: a => {
       const army = pickArmy(a.army)
-      return id(a.pid) && army && isElder(a.elder) ? { type: 'raid', pid: a.pid, elder: a.elder, army } : null
+      return isId(a.pid) && army && isElder(a.elder) ? { type: 'raid', pid: a.pid, elder: a.elder, army } : null
     },
     run: ({ ps, w, pid, s: att, now, seed, map }, a) => {
       const t = att.time
@@ -135,7 +135,7 @@ export function raid(
   const dLeft = n1.slice(0, dIds.length)
   const dHurt = Object.fromEntries(dIds.map((u, k) => [u, def.troops[u] - dLeft[k]])) as Army
   const loot = f.win ? plunder(att, def, m.elder, back) : {}
-  const d = elo(att.pvp.pts, def.pvp.pts, f.win)
+  const delta = elo(att.pvp.pts, def.pvp.pts, f.win)
   const g = guardOf(def)
   const aSnap = snap(me, m.elder, elderLevel(att.elders[m.elder]))
   const dSnap = snap(foe, g ?? undefined, g ? elderLevel(def.elders[g]) : 1)
@@ -168,7 +168,7 @@ export function raid(
         : x,
     ),
     pvp: {
-      pts: Math.max(0, att.pvp.pts + d),
+      pts: Math.max(0, att.pvp.pts + delta),
       win: att.pvp.win + (f.win ? 1 : 0),
       loss: att.pvp.loss + (f.win ? 0 : 1),
     },
@@ -203,7 +203,7 @@ export function raid(
   dd = {
     ...dd,
     pvp: {
-      pts: Math.max(0, def.pvp.pts - d),
+      pts: Math.max(0, def.pvp.pts - delta),
       win: def.pvp.win + (f.win ? 0 : 1),
       loss: def.pvp.loss + (f.win ? 1 : 0),
     },

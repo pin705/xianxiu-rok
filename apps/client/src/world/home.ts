@@ -44,7 +44,7 @@ import {
 } from '@rok/art'
 import { BUILDINGS, IDS, storage, type BuildingId, type State } from '@rok/rules'
 import { DECOR, HOME, LEDGES, MISTS, PINES, SLOT, STAIRS } from './layout'
-import { DRY, THUNDER, back, hex, ink, last, painted, sprite, texOf, type Hue, type Painted, fxTex } from './stage'
+import { DRY, THUNDER, back, hex, ink, LAST_DRY, painted, sprite, texOf, type Hue, type Painted, fxTex } from './stage'
 
 export type Phase = 'dawn' | 'day' | 'dusk' | 'night'
 export type HomeView = {
@@ -929,7 +929,11 @@ export class Home {
       c,
       0.9,
       e => {
-        if (!re && e > 0.12) ((re = true), (g.visible = false), (g2.visible = true))
+        if (!re && e > 0.12) {
+          re = true
+          g.visible = false
+          g2.visible = true
+        }
         g.alpha = g2.alpha = e < 0.07 ? 1 : e < 0.12 ? 0.12 : e < 0.26 ? 0.95 : Math.max(0, 1 - (e - 0.26) / 0.25)
         bloom.alpha = Math.max(0, 1 - e / 0.5)
         bloom.scale.set(((big ? 150 : 100) / 64) * (0.6 + e))
@@ -955,12 +959,12 @@ export class Home {
     const mid = -slot.top * 0.5
     const glowT = fxTex.glow()
     const sparkT = fxTex.spark()
-    const add = (s: Sprite, ax = 0.5, ay = 0.5) => (
-      s.anchor.set(ax, ay),
-      (s.tint = hex(C.goldL)),
-      (s.blendMode = 'add'),
-      s
-    )
+    const add = (s: Sprite, ax = 0.5, ay = 0.5) => {
+      s.anchor.set(ax, ay)
+      s.tint = hex(C.goldL)
+      s.blendMode = 'add'
+      return s
+    }
     const c = new Container()
     c.position.set(x, y)
     const rays = big ? Array.from({ length: 12 }, () => add(new Sprite(fxTex.ray()), 0.5, 1)) : []
@@ -995,12 +999,12 @@ export class Home {
       const sk = Math.min(1, e / 0.18)
       star.c.scale.set(s0 * (sk < 1 ? 0.3 + back(sk) * 0.7 : 1 + (e - 0.18) * 0.1))
       star.c.rotation = e * 0.25
-      star.frame(Math.max(0, (k - 0.15) / 0.6) * (last + 0.99))
+      star.frame(Math.max(0, (k - 0.15) / 0.6) * (LAST_DRY + 0.99))
       star.c.alpha = k < 0.55 ? 1 : Math.max(0, 1 - (k - 0.55) / 0.35)
       if (e >= dur) star.c.destroy({ children: true })
       const rk = e / (big ? 1.3 : 0.9)
       ring.c.scale.set(r0 * (1 + e * (big ? 19 : 10)))
-      ring.frame(rk * (last + 0.99))
+      ring.frame(rk * (LAST_DRY + 0.99))
       ring.c.alpha = Math.max(0, 1 - rk)
       rays.forEach((ry, i) => {
         ry.rotation = (i / rays.length) * Math.PI * 2 + e * 0.3
@@ -1133,12 +1137,19 @@ export class Home {
       for (const l of s.lights) l.alpha = this.lightsLevel * (0.75 + 0.2 * Math.sin(t * 3 + i++))
     for (const l of this.lamps) l.alpha = this.lightsLevel * (0.7 + 0.25 * Math.sin(t * 4.3 + l.x))
     const dark = Math.min(1, this.lightsLevel * 1.4)
-    for (const d of this.day) ((d.alpha = (1 - dark) * (1 - k)), (d.visible = d.alpha > 0.02))
+    for (const d of this.day) {
+      d.alpha = (1 - dark) * (1 - k)
+      d.visible = d.alpha > 0.02
+    }
     for (const n of this.night) n.alpha = dark * (1 - k) * Math.max(0, Math.sin(t * 1.9 + n.x))
     // hiệu ứng thoáng qua, loé sáng, rung
     this.plays = this.plays.filter(p => {
       const e = this.rt - p.t0
-      if (e >= p.dur) return (void (p.step(p.dur), p.c.destroy({ children: true })), false)
+      if (e >= p.dur) {
+        p.step(p.dur)
+        p.c.destroy({ children: true })
+        return false
+      }
       p.step(e)
       return true
     })

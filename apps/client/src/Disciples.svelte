@@ -52,7 +52,7 @@
   const tiers = $derived(
     TIERS.filter(t => t <= 3 || tierOpen(game, t) || TYPES.some(ty => game.troops[`${ty}${t}`] || out[`${ty}${t}`])),
   )
-  const owned = $derived(GEAR_IDS.filter(g => game.gear[g]?.lv))
+  const owned = $derived(GEAR_IDS.filter(id => game.gear[id]?.lv))
 </script>
 
 <Page title={L.monHa.title} icon="monHa">

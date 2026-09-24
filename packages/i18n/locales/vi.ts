@@ -781,9 +781,9 @@ export const vi = {
       ],
       admin: (title: string, body: string) => [title, body],
       gift: () => ['Quà của trưởng lão giới', 'Chút quà mừng đạo hữu. Nhận ở dưới.'],
-      boss: (lv: number, rank: number, pct: number) => [
+      boss: (lv: number, rank: number, share: number) => [
         `Hạ yêu vương cấp ${lv}`,
-        `Tông môn đứng thứ ${rank} (${pct}% sát thương) trong trận hạ yêu vương. Phần thưởng đính kèm.`,
+        `Tông môn đứng thứ ${rank} (${share}% sát thương) trong trận hạ yêu vương. Phần thưởng đính kèm.`,
       ],
       comp: () => ['Quà bồi thường', 'Máy chủ vừa gặp sự cố. Xin lỗi đạo hữu — quà bù ở dưới.'],
       season: (n: number, rank: number, up: number) =>

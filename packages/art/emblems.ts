@@ -285,7 +285,7 @@ function tiger(g: G) {
 }
 
 function phoenix(g: G) {
-  const ice = mix(C.azuriteL, C.silk, 0.5)
+  const frost = mix(C.azuriteL, C.silk, 0.5)
   // đuôi lông dài uốn xuống
   for (let i = 0; i < 4; i++) {
     const end: Pt = [-15.5 + i * 3.2, 11 + i * 1.6]
@@ -295,10 +295,10 @@ function phoenix(g: G) {
     blot(g, end[0], end[1], 1.7, C.azurite, 1, 248 + i, 0.8)
     blot(g, end[0], end[1], 0.8, C.goldL, 1, 252 + i, 1)
   }
-  part(g, [[0, -4.5], [-4.5, -14.5], [2.4, -10.4], [6.4, -5]], mix(ice, C.azurite, 0.3), 248, 1)
+  part(g, [[0, -4.5], [-4.5, -14.5], [2.4, -10.4], [6.4, -5]], mix(frost, C.azurite, 0.3), 248, 1)
   ln(g, [[0.5, -5.5], [-2.6, -11.5]], 0.7, C.silk, 'taper', 0.7, 249)
-  part(g, [[2, -6], [8, -5], [10.4, 0], [6, 4.4], [-2, 4.4], [-6.4, 1]], ice, 250, 1.1)
-  part(g, oval(9, -9, 3.1, 3, 14), ice, 251, 1)
+  part(g, [[2, -6], [8, -5], [10.4, 0], [6, 4.4], [-2, 4.4], [-6.4, 1]], frost, 250, 1.1)
+  part(g, oval(9, -9, 3.1, 3, 14), frost, 251, 1)
   wash(g, [[11.6, -9.8], [15, -8.6], [11.6, -7.8]], { fill: C.goldL, alpha: 1, layers: 1, jitter: 0.05, sharp: true, seed: 252 })
   blot(g, 9.8, -9.6, 0.65, C.ink, 1, 253, 1)
   for (let i = 0; i < 3; i++) {
@@ -675,7 +675,10 @@ export function medal(emblem: Emblem, tone: MedalTone): Asset {
 
 // Hình chạm không đĩa (dùng làm ấn lớn, biểu tượng khoảnh khắc trên nền giấy)
 export function emblemArt(emblem: Emblem): Asset {
-  return { x: -20, y: -20, w: 40, h: 40, draw: g => (DRAW[emblem](g), grain(g, 0.2)) }
+  return { x: -20, y: -20, w: 40, h: 40, draw: g => {
+    DRAW[emblem](g)
+    grain(g, 0.2)
+  } }
 }
 
 // ---------- Icon thanh tab (không đĩa, nhiều màu, đọc được trên ván sơn mài tối) ----------
@@ -757,4 +760,7 @@ const TAB_DRAW: Record<TabIcon, (g: G) => void> = {
     ln(g, [[-10.6, -6.6], [-4, -7.4]], 1, WHITE, 'taper', 0.35, 680)
   },
 }
-export const tabIcon = (id: TabIcon): Asset => ({ x: -20, y: -20, w: 40, h: 40, draw: g => (TAB_DRAW[id](g), grain(g, 0.18)) })
+export const tabIcon = (id: TabIcon): Asset => ({ x: -20, y: -20, w: 40, h: 40, draw: g => {
+  TAB_DRAW[id](g)
+  grain(g, 0.18)
+} })

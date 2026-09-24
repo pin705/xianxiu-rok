@@ -88,8 +88,14 @@ export function worldPiece(d: WorldData, x0: number, y0: number, n: number, fine
       for (let y = y0; y < y0 + n; y++)
         for (let x = x0; x < x0 + n; x++) {
           const r = region(x, y)
-          if (x + 1 < d.w && region(x + 1, y) !== r) g.moveTo((x + 1) * T, y * T), g.lineTo((x + 1) * T, (y + 1) * T)
-          if (y + 1 < d.w && region(x, y + 1) !== r) g.moveTo(x * T, (y + 1) * T), g.lineTo((x + 1) * T, (y + 1) * T)
+          if (x + 1 < d.w && region(x + 1, y) !== r) {
+            g.moveTo((x + 1) * T, y * T)
+            g.lineTo((x + 1) * T, (y + 1) * T)
+          }
+          if (y + 1 < d.w && region(x, y + 1) !== r) {
+            g.moveTo(x * T, (y + 1) * T)
+            g.lineTo((x + 1) * T, (y + 1) * T)
+          }
         }
       g.stroke()
       g.restore()

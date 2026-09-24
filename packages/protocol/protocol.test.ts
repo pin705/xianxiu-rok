@@ -25,38 +25,25 @@ function history() {
     if (r.ok) push(r.state)
     return r.ok
   }
+  const units = ['kiem2', 'phap2', 'the2', 'kiem1', 'phap1', 'the1'] as const
+  const beasts = BEASTS.map((_, i) => i).reverse()
+  // một lượt: mỗi nhóm thử lần lượt, dừng ở thao tác đầu tiên được nhận; false khi không làm được gì
+  const round = () => {
+    let acted = tryDo({ type: 'claim' })
+    if (IDS.some(id => tryDo({ type: 'upgrade', building: id }))) acted = true
+    if (!s.train && s.levels.dienVoTruong && units.some(u => tryDo({ type: 'train', unit: u, n: 40 }))) acted = true
+    if (count(s.wounded) && tryDo({ type: 'heal' })) acted = true
+    if (TECH_IDS.some(t => tryDo({ type: 'study', tech: t }))) acted = true
+    const army = Object.fromEntries(UNITS.filter(u => s.troops[u] > 0).map(u => [u, s.troops[u]]))
+    for (const e of ELDER_IDS)
+      if (beasts.some(i => tryDo({ type: 'march', target: { kind: 'beast', i }, elder: e, army }))) acted = true
+    for (let i = 0; i < 3; i++) if (tryDo({ type: 'realm', i, elder: 'thanhPhong', army })) acted = true
+    return acted
+  }
   for (let d = 0; d < 12; d++)
     for (const h of [8, 12, 18, 22]) {
       push(advance(s, d * 86_400_000 + h * 3_600_000))
-      for (let g = 0; g < 30; g++) {
-        let acted = tryDo({ type: 'claim' })
-        for (const id of IDS)
-          if (tryDo({ type: 'upgrade', building: id })) {
-            acted = true
-            break
-          }
-        if (!s.train && s.levels.dienVoTruong)
-          for (const u of ['kiem2', 'phap2', 'the2', 'kiem1', 'phap1', 'the1'] as const)
-            if (tryDo({ type: 'train', unit: u, n: 40 })) {
-              acted = true
-              break
-            }
-        if (count(s.wounded) && tryDo({ type: 'heal' })) acted = true
-        for (const t of TECH_IDS)
-          if (tryDo({ type: 'study', tech: t })) {
-            acted = true
-            break
-          }
-        const army = Object.fromEntries(UNITS.filter(u => s.troops[u] > 0).map(u => [u, s.troops[u]]))
-        for (const e of ELDER_IDS)
-          for (let i = BEASTS.length - 1; i >= 0; i--)
-            if (tryDo({ type: 'march', target: { kind: 'beast', i }, elder: e, army })) {
-              acted = true
-              break
-            }
-        for (let i = 0; i < 3; i++) if (tryDo({ type: 'realm', i, elder: 'thanhPhong', army })) acted = true
-        if (!acted) break
-      }
+      for (let g = 0; g < 30; g++) if (!round()) break
     }
   return out
 }

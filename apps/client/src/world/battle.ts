@@ -24,7 +24,7 @@ import {
   type Troop,
 } from '@rok/art'
 import type { Report, Skill } from '@rok/rules'
-import { DRY, THUNDER, back, hex, ink, last, painted, sprite, texOf, warm, type Hue, fxTex } from './stage'
+import { DRY, THUNDER, back, hex, ink, LAST_DRY, painted, sprite, texOf, warm, type Hue, fxTex } from './stage'
 
 type Kind = 'man' | 'beast' | 'spirit'
 type Squad = {
@@ -270,7 +270,15 @@ export class Battle {
     figs.forEach((s, i) => {
       const y0 = s.y
       s.alpha = 0
-      this.add(0.35, k => ((s.alpha = k), (s.y = y0 + (1 - ease(k)) * 10)), undefined, i * 0.04)
+      this.add(
+        0.35,
+        k => {
+          s.alpha = k
+          s.y = y0 + (1 - ease(k)) * 10
+        },
+        undefined,
+        i * 0.04,
+      )
     })
     return { c, figs, type, n0, n: n0, per, label, x, y }
   }
@@ -346,7 +354,7 @@ export class Battle {
       k => {
         claw.c.visible = true
         claw.c.scale.set(s0 * (k < 0.15 ? 0.75 + back(k / 0.15) * 0.3 : 1.05))
-        claw.frame(k < 0.3 ? 0 : ((k - 0.3) / 0.7) * (last + 0.99))
+        claw.frame(k < 0.3 ? 0 : ((k - 0.3) / 0.7) * (LAST_DRY + 0.99))
         claw.c.alpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25
       },
       () => claw.c.destroy({ children: true }),
@@ -366,7 +374,7 @@ export class Battle {
       k => {
         ring.c.visible = true
         ring.c.scale.set(r0 * (1 + ease(k) * 3.6))
-        ring.frame(k * (last + 0.99))
+        ring.frame(k * (LAST_DRY + 0.99))
         ring.c.alpha = k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4
       },
       () => ring.c.destroy({ children: true }),
@@ -409,7 +417,10 @@ export class Battle {
           f: 2 + i,
         }))
       : []
-    for (const o of [p, ...ghosts.map(g => g.g)]) ((o.c.visible = false), this.fx.addChild(o.c))
+    for (const o of [p, ...ghosts.map(g => g.g)]) {
+      o.c.visible = false
+      this.fx.addChild(o.c)
+    }
     ghosts.forEach(o => o.g.frame(o.f))
     const sparkT = fxTex.spark()
     const arc = sword ? 8 : 28
@@ -434,11 +445,12 @@ export class Battle {
         for (const { g, lag, a } of ghosts) {
           const kk = k - lag / Math.max(0.1, travel)
           g.c.visible = kk > 0
-          if (kk > 0)
-            ((g.c.alpha = a),
-              g.c.position.set(...at(kk)),
-              (g.c.rotation = dirAt(kk)),
-              g.c.scale.set(s0 * (kk < 0.25 ? 0.55 + back(kk / 0.25) * 0.45 : 1)))
+          if (kk > 0) {
+            g.c.alpha = a
+            g.c.position.set(...at(kk))
+            g.c.rotation = dirAt(kk)
+            g.c.scale.set(s0 * (kk < 0.25 ? 0.55 + back(kk / 0.25) * 0.45 : 1))
+          }
         }
         // tàn lửa rơi lại sau: lệch khỏi đường bay, to nhỏ khác nhau, trôi rồi tắt
         if (!sword && Math.random() < 0.35) {
@@ -454,7 +466,10 @@ export class Battle {
           this.fx.addChild(s)
           this.add(
             0.25 + Math.random() * 0.2,
-            q => (s.position.set(x + vx * q, y + vy * q), (s.alpha = 1 - q)),
+            q => {
+              s.position.set(x + vx * q, y + vy * q)
+              s.alpha = 1 - q
+            },
             () => s.destroy(),
           )
         }
@@ -469,7 +484,7 @@ export class Battle {
       k => {
         p.c.position.set(tx + Math.cos(rot) * 10 * ease(k), ty + Math.sin(rot) * 10 * ease(k))
         p.c.scale.set(s0 * (1 + k * 0.12))
-        p.frame(1 + k * last)
+        p.frame(1 + k * LAST_DRY)
         p.c.alpha = k < 0.5 ? 1 : 1 - (k - 0.5) / 0.5
       },
       () => p.c.destroy({ children: true }),
@@ -499,7 +514,7 @@ export class Battle {
       k => {
         hit.c.visible = true
         hit.c.scale.set(h0 * (k < 0.12 ? 0.5 + back(k / 0.12) * 0.6 : 1.1 + k * 0.15))
-        hit.frame(k < 0.25 ? 0 : ((k - 0.25) / 0.75) * (last + 0.99))
+        hit.frame(k < 0.25 ? 0 : ((k - 0.25) / 0.75) * (LAST_DRY + 0.99))
         hit.c.alpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3
       },
       () => hit.c.destroy({ children: true }),
@@ -507,10 +522,10 @@ export class Battle {
     )
     this.add(
       0.6,
-      k => (
-        (sp.alpha = k < 0.15 ? 0.85 : 0.85 * (1 - (k - 0.15) / 0.85)),
+      k => {
+        sp.alpha = k < 0.15 ? 0.85 : 0.85 * (1 - (k - 0.15) / 0.85)
         sp.scale.set((46 / 128) * (0.5 + ease(Math.min(1, k * 4)) * 0.6))
-      ),
+      },
       () => sp.destroy(),
       at,
     )
@@ -523,11 +538,14 @@ export class Battle {
       s.blendMode = 'add'
       s.alpha = 0
       const a = Math.random() * Math.PI * 2,
-        v = 30 + Math.random() * 40
+        speed = 30 + Math.random() * 40
       this.fx.addChild(s)
       this.add(
         0.35,
-        k => (s.position.set(x + Math.cos(a) * v * k, y + Math.sin(a) * v * k + 30 * k * k), (s.alpha = 1 - k)),
+        k => {
+          s.position.set(x + Math.cos(a) * speed * k, y + Math.sin(a) * speed * k + 30 * k * k)
+          s.alpha = 1 - k
+        },
         () => s.destroy(),
         at,
       )
@@ -553,7 +571,10 @@ export class Battle {
     this.add(
       0.01,
       () => {},
-      () => ((this.zoom = Math.max(this.zoom, a)), (this.hold = Math.max(this.hold, 0.07))),
+      () => {
+        this.zoom = Math.max(this.zoom, a)
+        this.hold = Math.max(this.hold, 0.07)
+      },
       at,
     )
   }
@@ -631,7 +652,10 @@ export class Battle {
               tr.c.position.set(s.x, s.y - 19)
               tr.c.scale.y = tr.c.scale.x * (0.6 + (1 - k) * 0.6) // chậm dần khi cắm xuống: vệt ngắn lại
             },
-            () => (s.destroy(), tr.c.destroy({ children: true })),
+            () => {
+              s.destroy()
+              tr.c.destroy({ children: true })
+            },
             i * 0.04,
           )
         }
@@ -652,7 +676,10 @@ export class Battle {
         this.fx.addChild(d.c)
         this.add(
           dur,
-          k => ((d.c.alpha = Math.min(1, k * 5)), d.frame(k < 0.6 ? 0 : ((k - 0.6) / 0.4) * (last + 0.99))),
+          k => {
+            d.c.alpha = Math.min(1, k * 5)
+            d.frame(k < 0.6 ? 0 : ((k - 0.6) / 0.4) * (LAST_DRY + 0.99))
+          },
           () => d.c.destroy({ children: true }),
         )
       }
@@ -671,7 +698,10 @@ export class Battle {
           this.fx.addChild(m)
           this.add(
             dur,
-            k => (m.position.set(x0, q.c.y - k * 50), (m.alpha = Math.sin(k * Math.PI))),
+            k => {
+              m.position.set(x0, q.c.y - k * 50)
+              m.alpha = Math.sin(k * Math.PI)
+            },
             () => m.destroy(),
             i * 0.05,
           )
@@ -689,7 +719,10 @@ export class Battle {
         this.fx.addChild(m)
         this.add(
           dur * 1.6,
-          k => ((m.alpha = Math.sin(k * Math.PI) * 0.8), (m.width = m.height = 50 + k * 30)),
+          k => {
+            m.alpha = Math.sin(k * Math.PI) * 0.8
+            m.width = m.height = 50 + k * 30
+          },
           () => m.destroy(),
         )
       }
@@ -713,7 +746,11 @@ export class Battle {
               y0 = s.y
             this.add(
               0.45,
-              e => ((s.rotation = r0 + e * (i % 2 ? 1.3 : -1.3)), (s.alpha = 1 - e), (s.y = y0 + e * 4)),
+              e => {
+                s.rotation = r0 + e * (i % 2 ? 1.3 : -1.3)
+                s.alpha = 1 - e
+                s.y = y0 + e * 4
+              },
               () => (s.visible = false),
             )
             if (dur) this.dissolve(q.c.x + s.x, q.c.y + s.y - 10)
@@ -742,11 +779,11 @@ export class Battle {
       this.fx.addChild(m)
       this.add(
         0.9,
-        k => (
-          m.position.set(x + dx * (0.4 + k), y - rise * ease(k)),
-          (m.width = m.height = 8 + k * 14),
-          (m.alpha = Math.sin(k * Math.PI) * 0.45)
-        ),
+        k => {
+          m.position.set(x + dx * (0.4 + k), y - rise * ease(k))
+          m.width = m.height = 8 + k * 14
+          m.alpha = Math.sin(k * Math.PI) * 0.45
+        },
         () => m.destroy(),
         0.12 + i * 0.05,
       )
@@ -769,11 +806,11 @@ export class Battle {
     this.fx.addChild(t)
     this.add(
       Math.max(0.6, dur),
-      k => (
-        (t.y = q.c.y - 34 - ease(k) * 18),
-        (t.alpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3),
+      k => {
+        t.y = q.c.y - 34 - ease(k) * 18
+        t.alpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3
         t.scale.set(k < 0.15 ? 1.4 - k * 2.6 : 1)
-      ),
+      },
       () => t.destroy(),
     )
   }
@@ -794,7 +831,10 @@ export class Battle {
 
   tick(dt: number) {
     const real = dt
-    if (this.hold > 0) ((this.hold -= dt), (dt = 0))
+    if (this.hold > 0) {
+      this.hold -= dt
+      dt = 0
+    }
     this.t += dt
     for (const f of this.tick_) f(dt)
     this.tweens = this.tweens.filter(tw => {

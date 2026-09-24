@@ -258,7 +258,10 @@ export class MapScene implements Scene {
     for (const d of [...this.dust.children] as Sprite[]) {
       const e = this.t - (d as Sprite & { t0: number }).t0
       if (e > 1.2) d.destroy()
-      else ((d.width = d.height = 5 + e * 10), (d.alpha = 0.4 * (1 - e / 1.2)))
+      else {
+        d.width = d.height = 5 + e * 10
+        d.alpha = 0.4 * (1 - e / 1.2)
+      }
     }
   }
 

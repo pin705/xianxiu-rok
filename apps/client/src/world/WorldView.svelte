@@ -119,7 +119,10 @@
       '=': () => zoomAt(1.2, center().x, center().y),
       '-': () => zoomAt(1 / 1.2, center().x, center().y),
     }
-    if (k[e.key]) (e.preventDefault(), k[e.key]())
+    if (k[e.key]) {
+      e.preventDefault()
+      k[e.key]()
+    }
   }
 
   onMount(() => {

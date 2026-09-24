@@ -618,9 +618,9 @@ export const marchToken = (): Asset => ({
     wash(g, ellipse(0, 0, 8, 8, 14), { fill: C.lacquer, alpha: 1, layers: 2, jitter: 0.25, edge: 0.8, seed: 4 })
     ring(g, 0, 0, 7.5, 1.3, C.gold, 5, 0.95, 0.06)
     stroke(g, [[-2.5, 5], [-2.4, -6.2]], { w: 1.1, color: C.goldL, press: 'nail', alpha: 1 })
-    const flag: Pt[] = [[-2.2, -6], [5.2, -4.6], [3.6, -3.3], [5, -1.6], [-2.2, -1.1]]
-    wash(g, flag, { fill: C.cinnabar, alpha: 1, layers: 2, jitter: 0.15, seed: 6 })
-    stroke(g, [...flag, flag[0]], { w: 0.4, color: C.ink, press: 'even', alpha: 0.6 })
+    const cloth: Pt[] = [[-2.2, -6], [5.2, -4.6], [3.6, -3.3], [5, -1.6], [-2.2, -1.1]]
+    wash(g, cloth, { fill: C.cinnabar, alpha: 1, layers: 2, jitter: 0.15, seed: 6 })
+    stroke(g, [...cloth, cloth[0]], { w: 0.4, color: C.ink, press: 'even', alpha: 0.6 })
     grain(g, 0.3)
   },
 })

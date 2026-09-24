@@ -1,7 +1,7 @@
 // Chợ: ký gửi trong biên giá, mua nhận ngay, người bán nhận tiền (trừ thuế) qua thư; hết hạn / hết mùa trả hàng.
 import { no } from '../core/action.ts'
 import { dayOf } from '../core/calendar.ts'
-import { id, oneOf } from '../core/parse.ts'
+import { isId, oneOf } from '../core/parse.ts'
 import { storage } from '../core/stats.ts'
 import { type State } from '../core/types.ts'
 import { PILL_IDS } from '../core/util.ts'
@@ -63,11 +63,13 @@ export const GOODS: readonly Good[] = ['linhThao', 'linhKhoang', ...PILL_IDS]
 export const marketActions: WorldActions<MarketAction> = {
   sell: {
     pick: a =>
-      oneOf(GOODS)(a.good) && id(a.n) && id(a.price) ? { type: 'sell', good: a.good, n: a.n, price: a.price } : null,
+      oneOf(GOODS)(a.good) && isId(a.n) && isId(a.price)
+        ? { type: 'sell', good: a.good, n: a.n, price: a.price }
+        : null,
     run: marketAct,
   },
-  buy: { pick: a => (id(a.id) ? { type: 'buy', id: a.id } : null), run: marketAct },
-  cancel: { pick: a => (id(a.id) ? { type: 'cancel', id: a.id } : null), run: marketAct },
+  buy: { pick: a => (isId(a.id) ? { type: 'buy', id: a.id } : null), run: marketAct },
+  cancel: { pick: a => (isId(a.id) ? { type: 'cancel', id: a.id } : null), run: marketAct },
 }
 export const MARKET_ACTIONS: readonly string[] = Object.keys(marketActions)
 

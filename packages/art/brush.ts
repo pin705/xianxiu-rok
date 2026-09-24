@@ -115,9 +115,15 @@ export function stroke(g: G, pts: readonly Pt[], o: StrokeOpts) {
     g.beginPath()
     let p = edge(0, 0.5 * grow)
     g.moveTo(p[0], p[1])
-    for (let i = 1; i < n; i++) (p = edge(i, 0.5 * grow)), g.lineTo(p[0], p[1])
+    for (let i = 1; i < n; i++) {
+      p = edge(i, 0.5 * grow)
+      g.lineTo(p[0], p[1])
+    }
     cap(n - 1, 1, 0) // vòng qua phía trước
-    for (let i = n - 1; i >= 0; i--) (p = edge(i, -0.5 * grow)), g.lineTo(p[0], p[1])
+    for (let i = n - 1; i >= 0; i--) {
+      p = edge(i, -0.5 * grow)
+      g.lineTo(p[0], p[1])
+    }
     cap(0, 1, Math.PI) // vòng qua phía sau
     g.closePath()
     g.fill()
@@ -130,8 +136,14 @@ export function stroke(g: G, pts: readonly Pt[], o: StrokeOpts) {
     g.beginPath()
     let p = at(a, u1)
     g.moveTo(p[0], p[1])
-    for (let i = a + 1; i <= b; i++) (p = at(i, u1)), g.lineTo(p[0], p[1])
-    for (let i = b; i >= a; i--) (p = at(i, u0)), g.lineTo(p[0], p[1])
+    for (let i = a + 1; i <= b; i++) {
+      p = at(i, u1)
+      g.lineTo(p[0], p[1])
+    }
+    for (let i = b; i >= a; i--) {
+      p = at(i, u0)
+      g.lineTo(p[0], p[1])
+    }
     g.closePath()
     g.fill()
   }
@@ -216,7 +228,8 @@ export function wash(g: G, pts: readonly Pt[], o: WashOpts) {
     c.forEach(([x, y], i) => {
       const dx = (noise2(x * f, y * f, seed + l * 5) - 0.5) * 2 * j
       const dy = (noise2(x * f + 40, y * f, seed + l * 5 + 1) - 0.5) * 2 * j
-      i ? g.lineTo(x + dx, y + dy) : g.moveTo(x + dx, y + dy)
+      if (i) g.lineTo(x + dx, y + dy)
+      else g.moveTo(x + dx, y + dy)
     })
     g.closePath()
     g.fill()

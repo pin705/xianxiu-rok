@@ -910,7 +910,10 @@ test('bí cảnh mới và tháp thu nhận trưởng lão mới; save bản 3 n
   const v4 = { ...rich(12), troops: { ...rich(12).troops, kiem3: 7 } }
   const v3: any = JSON.parse(JSON.stringify({ ...v4, v: 3, realms: [5, 2, 0] }))
   for (const k of ['forge', 'gear', 'talents', 'buffs']) delete v3[k]
-  for (const u of ['kiem4', 'kiem5', 'phap4', 'phap5', 'the4', 'the5']) (delete v3.troops[u], delete v3.wounded[u])
+  for (const u of ['kiem4', 'kiem5', 'phap4', 'phap5', 'the4', 'the5']) {
+    delete v3.troops[u]
+    delete v3.wounded[u]
+  }
   delete v3.levels.luyenKhiPhong
   const m = migrate(v3)!
   assert.equal(m.v, 4)

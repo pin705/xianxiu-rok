@@ -47,6 +47,19 @@ const set = (changed: Players) => {
 }
 
 let prev = 0
+// Đi cướp nếu có đội đang ở nhà và một đối thủ chắc thắng theo dò thám (sắp độ kiếp: giữ quân ở nhà)
+function tryRaid(pid: number, s: State, t: number) {
+  const e = firstIdle(s)
+  const army = homeArmy(s)
+  if (!e || !Object.keys(army).length || TRIBS[s.trib]?.hall === s.levels.chuDien) return
+  const r = rivals(ps, pid, t, rand).find(r => raidChance(s, e, army, r.scout.side) >= SURE_WIN)
+  if (!r) return
+  const res = worldAct(ps, pid, { type: 'raid', pid: r.pid, elder: e, army }, t, (rand() * 2 ** 32) >>> 0 || 1)
+  if (res.ok) {
+    set(res.changed)
+    attacked.set(pid, t)
+  }
+}
 for (let d = 0; d < days; d++)
   for (const h of SESSIONS) {
     const t = d * DAY + h * HOUR
@@ -55,17 +68,7 @@ for (let d = 0; d < days; d++)
     for (const pid of ps.keys()) {
       let s = advance(ps.get(pid)!, t)
       ps.set(pid, s)
-      // thử cướp trước (đội đang ở nhà, chắc thắng theo dò thám), rồi chơi như thường
-      const e = firstIdle(s)
-      const army = homeArmy(s)
-      const trib = TRIBS[s.trib]?.hall === s.levels.chuDien // sắp độ kiếp: giữ quân ở nhà
-      if (e && Object.keys(army).length && !trib)
-        for (const r of rivals(ps, pid, t, rand)) {
-          if (raidChance(s, e, army, r.scout.side) < SURE_WIN) continue
-          const res = worldAct(ps, pid, { type: 'raid', pid: r.pid, elder: e, army }, t, (rand() * 2 ** 32) >>> 0 || 1)
-          if (res.ok) (set(res.changed), attacked.set(pid, t))
-          break
-        }
+      tryRaid(pid, s, t) // thử cướp trước, rồi chơi như thường
       s = turn(ps.get(pid)!, { casual: casual(pid) })
       ps.set(pid, s)
     }

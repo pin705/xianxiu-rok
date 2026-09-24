@@ -96,7 +96,10 @@
   function finish() {
     done = true
     sfx(report?.win ? 'win' : 'lose')
-    setTimeout(() => (battle?.slam(), sfx('stamp')), 240)
+    setTimeout(() => {
+      battle?.slam()
+      sfx('stamp')
+    }, 240)
   }
   $effect(() => {
     if (!report || done) return

@@ -36,7 +36,8 @@ rok/
                              src/game (actor, lease/epoch) · src/realtime · src/http · src/db (schema, truy vấn) · drizzle/ (migration)
   packages/                  thư viện dùng chung
     rules/     @rok/rules    luật game thuần — không I/O, không Date, không phụ thuộc gì (client và server chạy chung)
-                             index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
+                             core/ (kiểu, advance, trận, đọc JSON) · sect/ (thao tác một tông môn) · world/ (thao tác giữa người chơi)
+                             combat.ts (trận tất định) · data.ts (số liệu) · bot.ts + simulate.ts (bot chỉnh nhịp)
     art/       @rok/art      bút lông sinh hình vẽ tay (canvas → texture), icon, chân dung, bảng màu
     i18n/      @rok/i18n     chữ hiển thị mọi ngôn ngữ (locales/*.ts), chọn ngôn ngữ, tải theo nhu cầu
     protocol/  @rok/protocol giao kèo client ↔ server: kiểu sự kiện Socket.IO, view()/diff() (patch), mã giao thức (hash luật)
@@ -46,6 +47,32 @@ rok/
 ```
 
 Chiều phụ thuộc (sai là `npm test` báo): `rules` ← `i18n` ← `client`; `art` ← `client`; `rules` ← `protocol` ← `client`, `server`; `i18n` ← `server` (chữ Web Push). Package mới phải được khai trong `architecture.test.ts`.
+
+## Thêm một tính năng
+
+Mỗi bước có một chỗ cố định. Quên bước nào thì compiler hoặc `npm test` báo, không phải nhớ.
+
+1. **Luật** — một file mới `packages/rules/sect/<tên>.ts` (thao tác trên một tông môn) hoặc `world/<tên>.ts` (giữa người chơi, cần state người khác). File export kiểu thao tác `XAction` và bảng `xActions: Actions<XAction>` (world: `WorldActions`), mỗi `type` có `pick` (đọc JSON không tin được, dùng `core/parse.ts`) và `run` (luật; state đã `advance` tới lúc thao tác).
+   Đăng ký: thêm `XAction` vào union và `...xActions` vào bảng trong `sect/apply.ts` (hoặc `world/act.ts`). Thiếu `pick`/`run` cho một `type` là lỗi biên dịch. Danh sách thao tác của server (`ACTION_TYPES`, `WORLD_ACTIONS`) tự suy ra.
+   Chỉ import xuống: `core/` ← `sect/` ← `world/`. File trong `sect/` không import nhau (`architecture.test.ts` báo).
+2. **Số liệu** — hằng và bảng cân bằng vào `packages/rules/data.ts`. Đổi nhịp thì chạy `npm run sim`.
+3. **Kiểu lỗi / thư / biên niên** — `Err` trong `core/types.ts`; thư hệ thống thì thêm khoá vào `MailArgs` (kèm tuple tham số), biên niên giới vào `ChronArgs`. Mọi locale thiếu chữ hay sai tham số là lỗi biên dịch (`satisfies MailTexts` / `ChronTexts`).
+4. **Chữ** — `packages/i18n/locales/vi.ts` rồi `en.ts`. Không viết chữ cứng trong component.
+5. **Giao diện** — component lấy `game`, `now`, `act`, `busy` bằng `useGame()` (`src/game.ts`), không nhận qua props. Thao tác tông môn: `g.act(a, 'tiếng')`. Tiếng mới thêm một dòng vào `SOUNDS` (`lib.ts`). Thao tác giới đi qua `net.send`. Màn mới thêm vào `render.test.ts` để được vẽ thử (SSR).
+6. **Hình** — công trình vào `DRAW`/`MOTIF` (`art/buildings.ts`), vật phẩm/pháp bảo vào `ITEM_DRAW` (`art/icons.ts`), huy hiệu vào `DRAW` (`art/emblems.ts`). Bảng khoá theo id nên thiếu hình là lỗi biên dịch.
+7. **Kiểm tra** — test luật trong `rules.test.ts` (tông môn) hoặc `world.test.ts` (giới). Trước khi đẩy lên:
+
+```bash
+npm run format && npm run lint && npm test && npm run check && npm run sim
+```
+
+`npm run lint` (oxlint, `.oxlintrc.json`) chặn:
+- chuỗi dấu phẩy và `a && b()` dùng làm lệnh;
+- tên biến che tên ở tầng ngoài;
+- lồng quá 4 tầng;
+- file quá 400 dòng, hàm quá 100 dòng.
+
+Mấy file lớn đang có mức trần riêng, chỉ được nhỏ đi. Vượt trần là lúc nên tách file.
 
 ## Đa ngôn ngữ
 

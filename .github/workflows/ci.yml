@@ -20,6 +20,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format:check # Prettier; sửa bằng npm run format
+      - run: npm run lint # oxlint theo .oxlintrc.json: chuỗi dấu phẩy, tên che nhau, lồng sâu, file/hàm quá dài
       - run: npm test # luật, gói tin, i18n, ranh giới package, server với Postgres thật (database tạm), vẽ mọi màn hình
       - run: npm run check
       - run: npm run sim # bot phải tới Chủ điện tầng 15 trong 30 ngày, không thì báo lỗi

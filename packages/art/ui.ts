@@ -52,7 +52,8 @@ export function inkBlot(size = 256, seed = 17) {
     const a = (i / k) * Math.PI * 2
     const rr = size * (0.36 + noise2(Math.cos(a) * 2 + 5, Math.sin(a) * 2 + 5, seed) * 0.1)
     const x = c + Math.cos(a) * rr, y = c + Math.sin(a) * rr
-    i ? g.lineTo(x, y) : g.moveTo(x, y)
+    if (i) g.lineTo(x, y)
+    else g.moveTo(x, y)
   }
   g.fill()
   for (let i = 0; i < 26; i++) {

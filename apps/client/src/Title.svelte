@@ -77,7 +77,10 @@
     sfx('done')
     ondone()
   }
-  const to = (s: typeof step) => () => ((error = ''), (step = s))
+  const to = (s: typeof step) => () => {
+    error = ''
+    step = s
+  }
 </script>
 
 <div class="title-screen">

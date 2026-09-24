@@ -222,4 +222,7 @@ const COLOR_DRAW: Record<Colored, (g: G) => void> = {
 // Mặt nạ icon đơn sắc (trắng trên nền trong)
 export const monoIcon = (name: Mono): Asset => ({ x: 0, y: 0, w: 24, h: 24, draw: g => MONO_DRAW[name](g) })
 // Icon nhiều màu
-export const colorIcon = (name: Colored): Asset => ({ x: 0, y: 0, w: 24, h: 24, draw: g => (COLOR_DRAW[name](g), grain(g, 0.2)) })
+export const colorIcon = (name: Colored): Asset => ({ x: 0, y: 0, w: 24, h: 24, draw: g => {
+  COLOR_DRAW[name](g)
+  grain(g, 0.2)
+} })

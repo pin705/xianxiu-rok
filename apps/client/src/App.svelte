@@ -149,9 +149,9 @@
   function toast(text: string, opt: { bad?: boolean; report?: Report; act?: [string, () => void] } = {}) {
     const id = ++tid
     const r = opt.report
-    const act = opt.act ?? (r && [L.report.replay, () => (replay = r)])
-    toasts = [...toasts.slice(-2), { id, text, bad: opt.bad, ...(act && { action: act[0], onaction: act[1] }) }]
-    setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), act ? 6000 : 2600)
+    const btn = opt.act ?? (r && [L.report.replay, () => (replay = r)])
+    toasts = [...toasts.slice(-2), { id, text, bad: opt.bad, ...(btn && { action: btn[0], onaction: btn[1] }) }]
+    setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), btn ? 6000 : 2600)
   }
 
   // Hỏi bật thông báo đúng lúc: vừa giao một việc dài (≥ 30 phút) mà trình duyệt chưa được hỏi — mỗi máy một lần.

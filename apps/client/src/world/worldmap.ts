@@ -54,7 +54,10 @@ class Bakery {
           console.warn('bake worker failed, baking on main thread', e.message)
           this.worker?.terminate()
           this.worker = null
-          for (const [id, w] of this.wait) (this.wait.delete(id), w.ok(this.here(w.job)))
+          for (const [id, w] of this.wait) {
+            this.wait.delete(id)
+            w.ok(this.here(w.job))
+          }
         }
       }
     } catch {
@@ -324,7 +327,7 @@ export class WorldScene {
             this.land.addChild(s)
             this.pieces.set(key, { s, used: performance.now(), tex })
             while (this.pieces.size > KEEP) {
-              const [old] = [...this.pieces].sort((a, b) => a[1].used - b[1].used)
+              const [old] = [...this.pieces].sort((p, q) => p[1].used - q[1].used)
               old[1].s.destroy()
               old[1].tex.destroy(true)
               this.pieces.delete(old[0])

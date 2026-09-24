@@ -368,8 +368,10 @@ try {
   assert.deepEqual(errors, [], 'console có lỗi')
 
   // Bản đồ giới: tab Bản đồ → gạt sang "Giới" → cảnh WebGL + ghim tên tông môn mình → chạm vào tông môn mình → bảng thông tin
-  for (let i = 0; i < 10 && (await a.js(`document.querySelectorAll('dialog[open]').length`)); i++)
-    (await a.js(closeAll), await sleep(300))
+  for (let i = 0; i < 10 && (await a.js(`document.querySelectorAll('dialog[open]').length`)); i++) {
+    await a.js(closeAll)
+    await sleep(300)
+  }
   await a.js(`document.querySelector('[data-tab=banDo]')?.click()`)
   assert.ok(
     await a.until(`[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Giới')`),

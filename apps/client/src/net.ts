@@ -60,7 +60,10 @@ export function createNet(h: Handlers, lang: string) {
   const mapWatch = new Set<(m: MapSnap) => void>() // đang mở bản đồ giới
   const chatWatch = new Set<(ch: Channel, ms: ChatMsg[]) => void>()
   const allyWatch = new Set<() => void>()
-  const listen = <T>(set: Set<T>, f: T) => (set.add(f), () => void set.delete(f))
+  const listen = <T>(set: Set<T>, f: T) => {
+    set.add(f)
+    return () => void set.delete(f)
+  }
 
   const now = () => Date.now() + offset
   const set = (s: Status) => {

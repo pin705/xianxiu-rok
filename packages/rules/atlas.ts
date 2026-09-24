@@ -58,7 +58,10 @@ export function atlas(seed: number): Atlas {
         bd = Infinity
       for (const r of regions) {
         const d = (r.cx - x) ** 2 + (r.cy - y) ** 2
-        if (d < bd) ((bd = d), (best = r.i))
+        if (d < bd) {
+          bd = d
+          best = r.i
+        }
       }
       tiles[y * MAP_W + x] = best
     }
@@ -94,17 +97,19 @@ export function atlas(seed: number): Atlas {
       for (let dx = -pad; dx <= pad; dx++) if (regionAt(x + dx, y + dy) !== region) return false
     return x >= pad && y >= pad && x < MAP_W - pad && y < MAP_W - pad
   }
+  // thử tối đa 200 chỗ quanh tâm vùng: lọt hẳn trong vùng, không sát tâm, không sát điểm khác
+  const place = (kind: keyof typeof PER, r: Region) => {
+    for (let tries = 0; tries < 200; tries++) {
+      const x = Math.round(r.cx + (rand() * 2 - 1) * CELL * 0.6),
+        y = Math.round(r.cy + (rand() * 2 - 1) * CELL * 0.6)
+      if (!inside(x, y, r.i, 2) || dist({ x, y }, { x: r.cx, y: r.cy }) < (r.ring === 2 ? 5 : 2)) continue
+      if (points.some(p => dist(p, { x, y }) < 5)) continue
+      add(kind, r.i, x, y, r.ring + 1)
+      return
+    }
+  }
   for (const r of regions)
-    for (const kind of ['boss', 'vein', 'mine'] as const)
-      for (let k = 0; k < PER[kind][r.ring]; k++)
-        for (let tries = 0; tries < 200; tries++) {
-          const x = Math.round(r.cx + (rand() * 2 - 1) * CELL * 0.6),
-            y = Math.round(r.cy + (rand() * 2 - 1) * CELL * 0.6)
-          if (!inside(x, y, r.i, 2) || dist({ x, y }, { x: r.cx, y: r.cy }) < (r.ring === 2 ? 5 : 2)) continue
-          if (points.some(p => dist(p, { x, y }) < 5)) continue
-          add(kind, r.i, x, y, r.ring + 1)
-          break
-        }
+    for (const kind of ['boss', 'vein', 'mine'] as const) for (let k = 0; k < PER[kind][r.ring]; k++) place(kind, r)
   const a = { seed, regions, gates, points, tiles }
   cache.set(seed, a)
   return a
@@ -123,7 +128,8 @@ export function route(a: Atlas, from: Pos, to: Pos, phase: number): { path: Pos[
   const open = a.gates.filter(g => g.phase <= phase)
   const best = new Map<number, number>(),
     prev = new Map<number, number>()
-  const q = open.filter(g => g.a === ra || g.b === ra).map(g => (best.set(g.i, dist(from, g)), g))
+  const q = open.filter(g => g.a === ra || g.b === ra)
+  for (const g of q) best.set(g.i, dist(from, g))
   const done = new Set<number>()
   let end: { g: number; len: number } | null = null
   while (q.length) {
@@ -136,7 +142,11 @@ export function route(a: Atlas, from: Pos, to: Pos, phase: number): { path: Pos[
     for (const h of open) {
       if (done.has(h.i) || ![h.a, h.b].some(r => r === g.a || r === g.b)) continue
       const nd = d + dist(g, h)
-      if (nd < (best.get(h.i) ?? Infinity)) (best.set(h.i, nd), prev.set(h.i, g.i), q.push(h))
+      if (nd < (best.get(h.i) ?? Infinity)) {
+        best.set(h.i, nd)
+        prev.set(h.i, g.i)
+        q.push(h)
+      }
     }
   }
   if (!end) return null

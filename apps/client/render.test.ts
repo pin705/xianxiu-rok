@@ -260,8 +260,8 @@ function unnamed(html: string) {
 
 // Vẽ một màn: game / now / act / busy đi qua context (src/game.ts) như trong App, phần còn lại là props
 function draw(name: string, props: Record<string, unknown>) {
-  const { game, now = T0, act = () => null, busy = false } = props
-  return render(C[name], { props, context: new Map([['rok.game', { game, now, act, busy }]]) }).body
+  const { game, now = T0, busy = false } = props
+  return render(C[name], { props, context: new Map([['rok.game', { game, now, act: props.act ?? act, busy }]]) }).body
 }
 
 // RENDER_DUMP=<thư mục>: ghi HTML mọi lần vẽ ra file — so trước / sau khi sửa giao diện (diff -r)

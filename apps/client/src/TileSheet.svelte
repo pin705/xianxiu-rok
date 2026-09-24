@@ -82,6 +82,10 @@
   $effect(() => void (pick && (way = 'solo')))
   const rallies = $derived(point && ally ? ally.rallies.filter(r => r.i === point.i && r.at > now) : [])
   const isAlly = (pid: number) => !!ally?.people.some(p => p.pid === pid)
+  const sent = () => {
+    sfx('march')
+    onclose()
+  }
   async function go(task: Task, elder: ElderId, army: Army) {
     if (!point) return
     const a: WorldAction =
@@ -91,12 +95,12 @@
           ? { type: 'rally', i: point.i, wait, elder, army }
           : { type: 'rallyJoin', id: way, elder, army }
     const r = await send(a)
-    if (r.ok) (sfx('march'), onclose())
+    if (r.ok) sent()
   }
   let aiding = $state(false)
   async function aid(pid: number, elder: ElderId, army: Army) {
     const r = await send({ type: 'aid', pid, elder, army })
-    if (r.ok) (sfx('march'), onclose())
+    if (r.ok) sent()
   }
 </script>
 

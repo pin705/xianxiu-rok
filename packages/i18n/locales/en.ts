@@ -802,9 +802,9 @@ export const en: Text = {
       ],
       admin: (title: string, body: string) => [title, body],
       gift: () => ['A gift from the world elders', 'A small gift for you, fellow cultivator. Claim it below.'],
-      boss: (lv: number, rank: number, pct: number) => [
+      boss: (lv: number, rank: number, share: number) => [
         `Demon king lv ${lv} slain`,
-        `Your sect placed ${rank} (${pct}% of the damage) in slaying the demon king. Your reward is attached.`,
+        `Your sect placed ${rank} (${share}% of the damage) in slaying the demon king. Your reward is attached.`,
       ],
       comp: () => ['Compensation', 'The server hit a problem. Our apologies — here is something to make up for it.'],
       season: (n: number, rank: number, up: number) =>

@@ -11,18 +11,18 @@ import { buildServer } from './src/app.ts'
 import { loadConfig } from './src/config.ts'
 import { prune } from './src/db/store.ts'
 
-const ADMIN = process.env.DATABASE_URL ?? 'postgres://rok:rok@127.0.0.1:5439/rok'
+const PG_ADMIN = process.env.DATABASE_URL ?? 'postgres://rok:rok@127.0.0.1:5439/rok'
 const NAME = `rok_t_${randomBytes(4).toString('hex')}`
-const URL = Object.assign(new globalThis.URL(ADMIN), { pathname: `/${NAME}` }).toString()
+const URL = Object.assign(new globalThis.URL(PG_ADMIN), { pathname: `/${NAME}` }).toString()
 let up = true
 try {
-  const admin = postgres(ADMIN, { max: 1, connect_timeout: 3, onnotice: () => {} })
+  const admin = postgres(PG_ADMIN, { max: 1, connect_timeout: 3, onnotice: () => {} })
   await admin.unsafe(`create database "${NAME}"`)
   await admin.end()
 } catch {
   up = false
 }
-if (!up && process.env.CI) throw new Error(`CI cần Postgres ở ${ADMIN}`)
+if (!up && process.env.CI) throw new Error(`CI cần Postgres ở ${PG_ADMIN}`)
 const skip = !up && 'không có Postgres (npm run db)'
 
 type Node = Awaited<ReturnType<typeof buildServer>> & { port: number; path: string }
@@ -60,7 +60,7 @@ before(async () => {
 after(async () => {
   for (const n of nodes) await n.app.close().catch(() => {})
   if (skip) return
-  const admin = postgres(ADMIN, { max: 1, onnotice: () => {} })
+  const admin = postgres(PG_ADMIN, { max: 1, onnotice: () => {} })
   await admin.unsafe(`drop database if exists "${NAME}" with (force)`)
   await admin.end()
 })
@@ -116,8 +116,8 @@ function client(n: Node, token: string, protocol = n.protocol) {
     s.once('welcome', ok)
     s.once('connect_error', e => no(Object.assign(new Error(e.message), { data: (e as { data?: Refuse }).data })))
   })
-  const act = async (a: Action | Record<string, unknown>) => {
-    const r = await s.timeout(5000).emitWithAck('act', a as Action)
+  const act = async (action: Action | Record<string, unknown>) => {
+    const r = await s.timeout(5000).emitWithAck('act', action as Action)
     frames.push(JSON.stringify(r))
     return r as Ack
   }
@@ -316,7 +316,10 @@ test('nạp giới: state bản cũ được nâng qua migrate(), state hỏng c
   // sửa thẳng DB trước khi giới được nạp: một save bản 3 (trước tầng 16–25), một save rác
   const s = (await row(a, old.pid)).state
   for (const k of ['forge', 'gear', 'talents', 'buffs']) delete s[k]
-  for (const u of ['kiem4', 'kiem5', 'phap4', 'phap5', 'the4', 'the5']) (delete s.troops[u], delete s.wounded[u])
+  for (const u of ['kiem4', 'kiem5', 'phap4', 'phap5', 'the4', 'the5']) {
+    delete s.troops[u]
+    delete s.wounded[u]
+  }
   delete s.levels.luyenKhiPhong
   await a.db
     .client`update players set state = ${JSON.stringify({ ...s, v: 3, realms: [0, 0, 0] })}::jsonb where id = ${old.pid}`
@@ -449,9 +452,9 @@ test(
     const pm = await cb.push(p => !!p.p.mail?.length, 8000)
     const mail = pm.p.mail!.at(-1)!
     assert.deepEqual(mail.a, ['Chào', 'Quà'])
-    const before = (await row(n, B.pid)).state.res.linhThach
+    const had = (await row(n, B.pid)).state.res.linhThach
     assert.ok((await cb.act({ type: 'mail', id: mail.id })).ok)
-    assert.ok((await row(n, B.pid)).state.res.linhThach >= before + 777)
+    assert.ok((await row(n, B.pid)).state.res.linhThach >= had + 777)
     assert.equal((await cb.act({ type: 'mail', id: mail.id })).ok, false, 'nhận lần hai bị từ chối')
     ca.close()
     cb.close()
@@ -508,8 +511,8 @@ test(
         [B.pid, 0],
       ].sort(),
     )
-    const row = await n.db.client`select state->'world'->'allies' as a from worlds where id = ${w}`
-    assert.ok(Object.keys(row[0].a).length === 1, 'tiên minh đã ghi vào DB')
+    const rows = await n.db.client`select state->'world'->'allies' as a from worlds where id = ${w}`
+    assert.ok(Object.keys(rows[0].a).length === 1, 'tiên minh đã ghi vào DB')
     // chat: kênh minh tới đúng người trong minh; lọc từ; tần suất; lặp lại; cấm chat
     const heard: { ch: string; text: string }[] = []
     cb.s.on('chat', m => heard.push(...m.ms.map(x => ({ ch: m.ch, text: x.text }))))
@@ -552,12 +555,12 @@ test(
     const A = await guest(n, undefined, w)
     const c = client(n, A.token)
     const welcome = await c.welcome
-    const a = atlas(welcome.world.map)
+    const geo = atlas(welcome.world.map)
     const { state } = await getState(n, A.token)
     // linh mạch trống trong vùng của mình (NPC cùng vùng có thể đã giữ một mạch — chọn mạch chưa ai giữ)
     const map0 = await c.ask({ k: 'map' })
-    const vein = a.points.find(
-      p => p.kind === 'vein' && p.region === regionOf(a, state.seat!) && !map0.spots.some(s => s.i === p.i && s.own),
+    const vein = geo.points.find(
+      p => p.kind === 'vein' && p.region === regionOf(geo, state.seat!) && !map0.spots.some(s => s.i === p.i && s.own),
     )
     assert.ok(vein, 'vùng nào cũng có linh mạch')
     // phân đà NPC cùng vùng cũng đi giữ mạch trống (có khi tới trước): mang đủ quân để thắng chắc đội đóng của chúng
@@ -646,10 +649,10 @@ test(
     assert.equal(w2.state.rebirths, 1)
     assert.ok(w2.state.seat, 'có chỗ trên bản đồ mùa mới')
     assert.equal(w2.state.mail.at(-1)?.k, 'season')
-    const [row] = await n.db.client`select season, seed, state from worlds where id = ${w}`
-    assert.equal(row.season, 2)
-    assert.equal(row.seed, w2.world.map)
-    assert.equal(row.state.fame[0].season, 1)
+    const [saved] = await n.db.client`select season, seed, state from worlds where id = ${w}`
+    assert.equal(saved.season, 2)
+    assert.equal(saved.seed, w2.world.map)
+    assert.equal(saved.state.fame[0].season, 1)
     c2.close()
   },
 )
@@ -900,7 +903,12 @@ test(
     const proxy = createServer(c => {
       if (cut) return void c.destroy()
       const s = connect(Number(target.port), target.hostname)
-      const end = () => (c.destroy(), s.destroy(), open.delete(c), open.delete(s))
+      const end = () => {
+        c.destroy()
+        s.destroy()
+        open.delete(c)
+        open.delete(s)
+      }
       for (const x of [c, s]) {
         open.add(x)
         x.on('error', end).on('close', end)

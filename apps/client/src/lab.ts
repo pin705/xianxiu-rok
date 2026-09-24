@@ -444,12 +444,12 @@ const VIEWS: Record<string, () => void> = {
     cv.remove()
     const q = new URLSearchParams(location.search)
     const lv = Number(q.get('lv') ?? 1)
-    Promise.all([getApp(), import('./world/home'), import('@rok/rules')]).then(([app, H, rules]) => {
+    Promise.all([getApp(), import('./world/home'), import('@rok/rules')]).then(([app, { Home }, rules]) => {
       document.body.append(app.canvas)
       app.ticker.stop()
       const game = rules.newGame(0)
       for (const id of rules.IDS) game.levels[id] = lv
-      const home = new H.Home({ still: true })
+      const home = new Home({ still: true })
       home.root.scale.set(cssPerDU())
       app.stage.addChild(home.root)
       home.set({ game, selected: null, storm: 0, phase: (q.get('phase') ?? 'day') as 'day' })
@@ -463,51 +463,53 @@ const VIEWS: Record<string, () => void> = {
     cv.remove()
     const q = new URLSearchParams(location.search)
     const seed = Number(q.get('seed') ?? 7)
-    Promise.all([getApp(), import('./world/worldmap'), import('@rok/rules/world')]).then(async ([app, W, R]) => {
-      document.body.append(app.canvas)
-      const a = R.atlas(seed)
-      const taken: { x: number; y: number }[] = []
-      const rand = rng(1)
-      for (let i = 0; i < 120; i++) taken.push(R.spawn(a, taken, rand)!)
-      const seats = taken.map((p, i) => ({
-        pid: i + 1,
-        name: `Tông ${i + 1}`,
-        x: p.x,
-        y: p.y,
-        hall: 5 + (i % 15),
-        power: 5000 + i * 300,
-        npc: i % 4 === 0,
-        shield: i % 7 === 0,
-        ...(i % 5 === 1 && { cloud: 1_000_000 + 300_000 }),
-      })) // vài tông môn đang độ kiếp
-      const vein = a.points.find(p => p.kind === 'vein')!
-      const now = 1_000_000
-      const marches = [0, 1, 2].map(i => {
-        const r = R.route(a, taken[i], i === 2 ? vein : taken[i + 3], 3)!
-        return { pid: i + 1, id: i + 1, path: r.path, startAt: now - 60_000, arriveAt: now + 120_000, returnAt: 0 }
-      })
-      const scene = new W.WorldScene(seed)
-      app.stage.addChild(scene.root)
-      scene.setData(
-        { seats, marches, chron: [], spots: [{ i: vein.i, own: '[VK] Vạn Kiếm', n: 2 }] },
-        pid => (pid === 1 ? 'me' : pid === 2 ? 'ally' : seats[pid - 1].npc ? 'npc' : 'other'),
-        1,
-        now,
-      )
-      const z = Number(q.get('z') ?? 0.16)
-      const cx = (Number(q.get('x') ?? 75) + 0.5) * 16,
-        cy = (Number(q.get('y') ?? 75) + 0.5) * 16
-      // chờ worker nướng xong ảnh tổng quan (và mảnh nét nếu phóng to) rồi vẽ
-      const t0 = performance.now()
-      await Promise.race([scene.ready, new Promise(r => setTimeout(r, 30_000))])
-      console.log('overview ms', Math.round(performance.now() - t0))
-      for (let t = 0; t < 40; t++) {
-        scene.tick({ x: cx, y: cy, z }, innerWidth / 2, innerHeight / 2, now)
-        await new Promise(r => setTimeout(r, 150))
-      }
-      app.render()
-      document.title = 'ready'
-    })
+    Promise.all([getApp(), import('./world/worldmap'), import('@rok/rules/world')]).then(
+      async ([app, { WorldScene }, R]) => {
+        document.body.append(app.canvas)
+        const a = R.atlas(seed)
+        const taken: { x: number; y: number }[] = []
+        const rand = rng(1)
+        for (let i = 0; i < 120; i++) taken.push(R.spawn(a, taken, rand)!)
+        const seats = taken.map((p, i) => ({
+          pid: i + 1,
+          name: `Tông ${i + 1}`,
+          x: p.x,
+          y: p.y,
+          hall: 5 + (i % 15),
+          power: 5000 + i * 300,
+          npc: i % 4 === 0,
+          shield: i % 7 === 0,
+          ...(i % 5 === 1 && { cloud: 1_000_000 + 300_000 }),
+        })) // vài tông môn đang độ kiếp
+        const vein = a.points.find(p => p.kind === 'vein')!
+        const now = 1_000_000
+        const marches = [0, 1, 2].map(i => {
+          const r = R.route(a, taken[i], i === 2 ? vein : taken[i + 3], 3)!
+          return { pid: i + 1, id: i + 1, path: r.path, startAt: now - 60_000, arriveAt: now + 120_000, returnAt: 0 }
+        })
+        const scene = new WorldScene(seed)
+        app.stage.addChild(scene.root)
+        scene.setData(
+          { seats, marches, chron: [], spots: [{ i: vein.i, own: '[VK] Vạn Kiếm', n: 2 }] },
+          pid => (pid === 1 ? 'me' : pid === 2 ? 'ally' : seats[pid - 1].npc ? 'npc' : 'other'),
+          1,
+          now,
+        )
+        const z = Number(q.get('z') ?? 0.16)
+        const cx = (Number(q.get('x') ?? 75) + 0.5) * 16,
+          cy = (Number(q.get('y') ?? 75) + 0.5) * 16
+        // chờ worker nướng xong ảnh tổng quan (và mảnh nét nếu phóng to) rồi vẽ
+        const start = performance.now()
+        await Promise.race([scene.ready, new Promise(r => setTimeout(r, 30_000))])
+        console.log('overview ms', Math.round(performance.now() - start))
+        for (let t = 0; t < 40; t++) {
+          scene.tick({ x: cx, y: cy, z }, innerWidth / 2, innerHeight / 2, now)
+          await new Promise(r => setTimeout(r, 150))
+        }
+        app.render()
+        document.title = 'ready'
+      },
+    )
   },
   result: () => {
     // Màn Kết quả (đột phá / thất bại / luân hồi) với theme thật: &kind=win|fail|rebirth

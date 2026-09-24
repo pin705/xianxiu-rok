@@ -3,7 +3,7 @@ import { regionOf, route, tide, type Atlas, type PointKind, type Point } from '.
 import { fight, might, type Side } from '../combat.ts'
 import { no } from '../core/action.ts'
 import { mob, pushReport, sideOf, snap, marchError, launch } from '../core/battle.ts'
-import { id, int, isElder, oneOf, pickArmy } from '../core/parse.ts'
+import { isId, int, isElder, oneOf, pickArmy } from '../core/parse.ts'
 import { elderLevel, lead } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Buff, type March } from '../core/types.ts'
@@ -109,7 +109,7 @@ export const spotActions: WorldActions<SpotAction> = {
     run: goAct,
   },
   recall: {
-    pick: a => (id(a.id) ? { type: 'recall', id: a.id } : null),
+    pick: a => (isId(a.id) ? { type: 'recall', id: a.id } : null),
     run: (c, a) => recallAct(c, a.id),
   },
   rally: {
@@ -124,7 +124,7 @@ export const spotActions: WorldActions<SpotAction> = {
   rallyJoin: {
     pick: a => {
       const army = pickArmy(a.army)
-      return army && isElder(a.elder) && id(a.id) ? { type: 'rallyJoin', id: a.id, elder: a.elder, army } : null
+      return army && isElder(a.elder) && isId(a.id) ? { type: 'rallyJoin', id: a.id, elder: a.elder, army } : null
     },
     run: rallyAct,
   },

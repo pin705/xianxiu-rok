@@ -1,7 +1,7 @@
 // Tiên minh: lập, vào, chức vị, bố cáo, nhờ giúp / giúp việc, viện binh (đóng quân ở nhà đồng minh).
 import { no } from '../core/action.ts'
 import { marchError, launch } from '../core/battle.ts'
-import { cleanText, id, int, isElder, JOB_KINDS, oneOf, pickArmy } from '../core/parse.ts'
+import { cleanText, isId, int, isElder, JOB_KINDS, oneOf, pickArmy } from '../core/parse.ts'
 import { power } from '../core/stats.ts'
 import { advance, hasten, jobOf } from '../core/time.ts'
 import { type Army, type JobKind, type March, type State } from '../core/types.ts'
@@ -134,7 +134,7 @@ export const allianceActions: WorldActions<AllianceAction> = {
     },
   },
   allyJoin: {
-    pick: a => (id(a.id) ? { type: 'allyJoin', id: a.id } : null),
+    pick: a => (isId(a.id) ? { type: 'allyJoin', id: a.id } : null),
     run: ({ w, pid }, a) => {
       const al = w.allies[a.id]
       if (allyOf(w, pid)) return no('busy')
@@ -152,7 +152,7 @@ export const allianceActions: WorldActions<AllianceAction> = {
     },
   },
   allyKick: {
-    pick: a => (id(a.pid) ? { type: 'allyKick', pid: a.pid } : null),
+    pick: a => (isId(a.pid) ? { type: 'allyKick', pid: a.pid } : null),
     run: ({ w, pid }, a) => {
       const mine = allyOf(w, pid)
       const their = mine?.members[a.pid]
@@ -162,7 +162,7 @@ export const allianceActions: WorldActions<AllianceAction> = {
     },
   },
   allyRole: {
-    pick: a => (id(a.pid) && int(0, 2)(a.role) ? { type: 'allyRole', pid: a.pid, role: a.role as Role } : null),
+    pick: a => (isId(a.pid) && int(0, 2)(a.role) ? { type: 'allyRole', pid: a.pid, role: a.role as Role } : null),
     run: ({ w, pid }, a) => {
       const mine = allyOf(w, pid)
       const their = mine?.members[a.pid]
@@ -229,7 +229,7 @@ export const allianceActions: WorldActions<AllianceAction> = {
   aid: {
     pick: a => {
       const army = pickArmy(a.army)
-      return army && isElder(a.elder) && id(a.pid) ? { type: 'aid', pid: a.pid, elder: a.elder, army } : null
+      return army && isElder(a.elder) && isId(a.pid) ? { type: 'aid', pid: a.pid, elder: a.elder, army } : null
     },
     run: aidAct,
   },

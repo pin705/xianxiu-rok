@@ -112,7 +112,7 @@ export function due(s: State, now: number): Due[] {
       ev.push([m.arriveAt, st => arrive(st, m.id)])
     if (m.returnAt && m.returnAt <= now) ev.push([m.returnAt, st => comeHome(st, m.id)])
   }
-  return ev.sort((a, b) => a[0] - b[0])
+  return ev.sort((p, q) => p[0] - q[0])
 }
 
 // Đưa state tới thời điểm now. Mọi việc hẹn giờ xong theo đúng thứ tự thời gian:

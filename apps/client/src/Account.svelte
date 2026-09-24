@@ -19,21 +19,30 @@
   let pushed = $state(typeof Notification !== 'undefined' && Notification.permission === 'granted')
 
   onMount(() => void account.info().then(r => r.ok && (info = r.data)))
-  const fail = (e: string) => ((msg = { text: L.account.err[e] ?? L.account.err.server, bad: true }), sfx('err'))
+  const fail = (e: string) => {
+    msg = { text: L.account.err[e] ?? L.account.err.server, bad: true }
+    sfx('err')
+  }
   async function run(f: () => Promise<{ ok: true } | { ok: false; error: string }>, done?: string) {
     if (busy) return false
     busy = true
     msg = null
     const r = await f()
     busy = false
-    if (!r.ok) return (fail(r.error), false)
+    if (!r.ok) {
+      fail(r.error)
+      return false
+    }
     if (done) msg = { text: done }
     return true
   }
   async function link(e: SubmitEvent) {
     e.preventDefault()
-    if (await run(() => account.link(email, pass)))
-      ((info = { ...info!, email: email.trim().toLowerCase() }), (pass = ''), sfx('reward'))
+    if (await run(() => account.link(email, pass))) {
+      info = { ...info!, email: email.trim().toLowerCase() }
+      pass = ''
+      sfx('reward')
+    }
   }
   async function change(e: SubmitEvent) {
     e.preventDefault()

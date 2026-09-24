@@ -154,7 +154,7 @@ const LAYERS = [
 export const DRY = [0.12, 0.3, 0.55, 0.78, 0.95]
 // vượt quá rồi thu về: khung "BÙNG" khi hiệu ứng vừa bung ra
 export const back = (k: number) => 1 + 2.7 * (k - 1) ** 3 + 1.7 * (k - 1) ** 2
-export const last = DRY.length - 1
+export const LAST_DRY = DRY.length - 1
 export type Ink = { c: Container; frame: (f: number) => void }
 // make(f, k): khung f (0..frames-1), hệ số bề ngang k. size: bề ngang hiện ra (DU)
 export function ink(

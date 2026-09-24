@@ -40,7 +40,10 @@ export function rounded(x0: number, y0: number, x1: number, y1: number, r: numbe
   const nrm: P[] = []
   const seg = (ax: number, ay: number, bx: number, by: number, nx: number, ny: number) => {
     const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / step))
-    for (let i = 0; i < n; i++) out.push([ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n]), nrm.push([nx, ny])
+    for (let i = 0; i < n; i++) {
+      out.push([ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n])
+      nrm.push([nx, ny])
+    }
   }
   const arc = (cx: number, cy: number, a0: number) => {
     const n = Math.max(2, Math.ceil((r * Math.PI) / 2 / step))
@@ -103,8 +106,8 @@ function rule(g: G, a: Pt, b: Pt, w: number, color: string, seed: number, alpha 
 // Viền kín theo một đường khép (nét bút đi vòng, chỗ bắt đầu/kết thúc chồng lên hơi đậm).
 // heavy > 0: thêm một lượt nét ở phía khuất sáng (pháp tuyến hướng xuống-phải) — nét mực dày mỏng theo hướng sáng.
 export function outline(g: G, pts: readonly Pt[], w: number, color: string, seed: number, alpha = 0.85, dry = 0.12, heavy = 0.8) {
-  const ring = [...pts, pts[0], pts[1], pts[2]]
-  stroke(g, ring, { w, color, alpha, rough: 0.5, dry, seed, wobble: 0.12, press: t => 0.72 + 0.28 * noise1(t * 9, seed) })
+  const loop = [...pts, pts[0], pts[1], pts[2]]
+  stroke(g, loop, { w, color, alpha, rough: 0.5, dry, seed, wobble: 0.12, press: t => 0.72 + 0.28 * noise1(t * 9, seed) })
   if (!heavy) return
   // các đoạn liên tiếp nằm phía khuất sáng (vòng đi theo chiều kim đồng hồ: pháp tuyến ngoài = (dy, −dx))
   const n = pts.length

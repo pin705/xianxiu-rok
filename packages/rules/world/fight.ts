@@ -38,7 +38,10 @@ export const carryOf = (army: Army) =>
 export function combine(parts: Side[]): { side: Side; at: number[] } {
   const at: number[] = []
   let k = 0
-  for (const p of parts) (at.push(k), (k += p.troops.length))
+  for (const p of parts) {
+    at.push(k)
+    k += p.troops.length
+  }
   return { side: { troops: parts.flatMap(p => p.troops), skill: parts[0]?.skill, el: parts[0]?.el }, at }
 }
 // số còn lại của đội thứ j (nhóm quân theo thứ tự UNITS có mặt) từ mảng n của trận gộp

@@ -74,11 +74,10 @@ for (let d = 0; d < days; d++) {
       if (s.beast !== lastBeast) note(`hạ yêu thú cấp ${(lastBeast = s.beast)}`)
       if (s.quest !== lastQuest && s.quest === QUESTS.length) note('XONG CHUỖI NHIỆM VỤ')
       lastQuest = s.quest
-      for (const e of ELDER_IDS)
-        if (s.elders[e] !== undefined && !seenElders.has(e)) {
-          seenElders.add(e)
-          note(`thu nhận trưởng lão ${e}`)
-        }
+      for (const e of ELDER_IDS.filter(e => s.elders[e] !== undefined && !seenElders.has(e))) {
+        seenElders.add(e)
+        note(`thu nhận trưởng lão ${e}`)
+      }
     }
   }
 }

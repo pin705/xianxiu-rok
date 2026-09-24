@@ -161,9 +161,9 @@ export function clock(ms: number) {
 
 // n tên khác nhau (danh sách gợi ý dùng tên làm key, trùng là vỡ)
 export function suggestNames(n: number) {
-  const pick = <T>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
+  const anyOf = <T>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
   const names = new Set<string>()
-  while (names.size < n) names.add(`${pick(L.naming.first)} ${pick(L.naming.last)}`)
+  while (names.size < n) names.add(`${anyOf(L.naming.first)} ${anyOf(L.naming.last)}`)
   return [...names]
 }
 
