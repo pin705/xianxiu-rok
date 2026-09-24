@@ -51,14 +51,17 @@ export type Push = { v: number; p: Patch; rep?: Report[] } // state đổi do se
 export type Snap = { v: number; state: View }
 // reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) → Rival[] · map: ảnh chụp bản đồ giới → MapSnap,
 // kèm theo dõi 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn)
-// allies: danh sách tiên minh → AllyRow[] · ally: minh của mình → AllyInfo | null
-export type Query = { k: 'reports'; before?: number } | { k: 'rivals'; pid?: number } | { k: 'map' } | { k: 'allies' } | { k: 'ally' } | { k: 'chat'; ch: Channel }
+// allies: danh sách tiên minh → AllyRow[] · ally: minh của mình → AllyInfo | null · season: điểm mùa → Season
+export type Query = { k: 'reports'; before?: number } | { k: 'rivals'; pid?: number } | { k: 'map' } | { k: 'allies' } | { k: 'ally' } | { k: 'chat'; ch: Channel } | { k: 'season' }
+// Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
+export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
+export type Season = { rows: { name: string; pts: number }[]; me: { rank: number; pts: number } | null; fame: Fame[] }
 // Chat: kênh giới (từ tầng 3) và kênh tiên minh. Chữ đã lọc ở server.
 export type Channel = 'world' | 'ally'
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
 export type { AllyInfo, AllyRow, MapSnap, Rival }
-export type Bye = 'moved' | 'restart' | 'replaced' | 'rate' | 'banned' | 'deleted'
+export type Bye = 'moved' | 'restart' | 'replaced' | 'rate' | 'banned' | 'deleted' | 'season' // season: hết mùa, nối lại nhận bản đồ mới
 
 export interface ServerToClient {
   welcome(w: Welcome): void

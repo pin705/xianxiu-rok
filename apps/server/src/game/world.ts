@@ -401,7 +401,7 @@ export class World {
     }
     if (q.k === 'allies') return this.deliver(() => ack(allyRows(this.shared, this.ps)))
     if (q.k === 'season') {
-      const rows = seasonBoard(this.shared, this.ps, this.map(now), now)
+      const rows = seasonBoard(this.shared, this.ps, this.map(this.now()), this.now())
       const side = sideKey(this.shared, pid), k = rows.findIndex(r => r.side === side)
       return this.deliver(() => ack({ rows: rows.slice(0, 20).map(({ name, pts }) => ({ name, pts })), me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts }, fame: this.fame }))
     }
