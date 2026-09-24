@@ -435,6 +435,55 @@ export const REBIRTH_HEAD = 2
 export const REBIRTH_HEAD_MAX = 5
 export const REBIRTH_MAX = 5 // sản lượng/tốc độ xây từ luân hồi chỉ tính tới lần thứ 5
 
+// ---------- PvP (cướp tông môn khác trong giới) ----------
+
+// Mở ở tầng PVP_HALL. Chỉ đánh được người có lực chiến ≥ PVP_FLOOR × mình (báo thù thì bỏ giới hạn) — không bắt nạt người yếu.
+// Kho bảo hộ PROTECT; cướp RAID_SHARE phần vượt, mỗi đệ tử còn đứng mang về tối đa CARRY × sức bậc. Thủ thua được khiên SHIELD_TIME;
+// đi đánh người khác thì mất khiên. Người mới có khiên NEWBIE_SHIELD. Bị đánh thì được báo thù trong REVENGE_TIME.
+// Chữa thương đắt (40 % chi phí tuyển) nên đánh người đang giữ nhà là lỗ — PvP là cướp người vắng, đúng ý đồ.
+export const PVP_HALL = 6
+export const PVP_FLOOR = 0.5
+export const PROTECT = 0.3
+export const RAID_SHARE = 0.3
+export const CARRY = 40
+export const SHIELD_TIME = 8 * 3_600_000
+export const NEWBIE_SHIELD = 72 * 3_600_000
+export const REVENGE_TIME = 24 * 3_600_000
+export const FOES_MAX = 5
+export const PVP_START = 1000 // điểm kiểu Elo
+export const ELO_K = 32
+export const MATCH_POOL = 10 // ghép cặp: MATCH_PICK người ngẫu nhiên trong MATCH_POOL người gần lực chiến nhất
+export const MATCH_PICK = 3
+export const PVP_GATE = { x: 200, y: -60 } // tới P3 (bản đồ giới): đội đi cướp rời vùng qua mép trên bản đồ
+export const GUARD_STEP = 0.04 // Hộ Sơn Đại Trận: thủ và máu bên thủ mỗi tầng
+
+// ---------- Thư ----------
+
+export const MAIL_MAX = 30
+
+// ---------- Sự kiện tuần ----------
+
+// Mỗi tuần một chủ đề (theo số tuần), cộng điểm khi làm việc đó; đủ mốc thì nhận quà, top EVENT_TOP của giới nhận thư lúc hết tuần.
+export const EVENTS = ['win', 'train', 'brew', 'build', 'raid', 'forge'] as const
+export type EventId = (typeof EVENTS)[number]
+// điểm mỗi lần (tuyển: mỗi 5 đệ tử)
+export const EVENT_PTS: Record<EventId, number> = { win: 10, train: 1, brew: 25, build: 30, raid: 60, forge: 40 }
+export const EVENT_GOALS = [100, 300, 600, 1000, 1500]
+export const EVENT_REWARDS: Reward[] = [
+  { res: b(3000, 3000, 3000), items: { tuKhi: 3 } },
+  { res: b(8000, 8000, 8000), items: { boiNguyen: 2 } },
+  { res: b(15000, 15000, 15000), items: { doKiep: 1, hoiXuan: 1 } },
+  { res: b(30000, 30000, 30000), items: { daiTuKhi: 1, ngungThan: 1 } },
+  { res: b(50000, 50000, 50000), items: { taiTuy: 1 }, elder: 'toMiNuong' },
+]
+export const EVENT_TOP = 10
+// quà thư cho hạng 1, 2–3, 4–10 khi hết tuần
+export const EVENT_PRIZES: Reward[] = [
+  { res: b(60000, 60000, 60000), items: { daiTuKhi: 2, phaCanh: 1 } },
+  { res: b(40000, 40000, 40000), items: { daiTuKhi: 1 } },
+  { res: b(20000, 20000, 20000), items: { tuKhi: 5 } },
+]
+
 // ---------- Nhiệm vụ chính tuyến ----------
 
 // Dẫn người chơi qua từng hệ thống theo đúng thứ tự mở khoá (UX.md mục 5.1). Thưởng được vượt sức chứa.

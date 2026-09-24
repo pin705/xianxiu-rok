@@ -222,6 +222,24 @@ if (view === 'chrome') {
     app.render()
     document.title = 'ready'
   })
+} else if (view === 'home') {
+  // Cảnh núi thật trên WebGL, mọi công trình ở tầng &lv= (mặc định 1), đứng hình; &phase=day|dawn|dusk|night
+  cv.remove()
+  const q = new URLSearchParams(location.search)
+  const lv = Number(q.get('lv') ?? 1)
+  Promise.all([getApp(), import('./world/home'), import('@rok/rules')]).then(([app, H, rules]) => {
+    document.body.append(app.canvas)
+    app.ticker.stop()
+    const game = rules.newGame(0)
+    for (const id of rules.IDS) game.levels[id] = lv
+    const home = new H.Home({ still: true })
+    home.root.scale.set(cssPerDU())
+    app.stage.addChild(home.root)
+    home.set({ game, selected: null, storm: 0, phase: (q.get('phase') ?? 'day') as 'day' })
+    home.tick(0.5, 0)
+    app.render()
+    document.title = 'ready'
+  })
 } else if (view === 'result') {
   // Màn Kết quả (đột phá / thất bại / luân hồi) với theme thật: &kind=win|fail|rebirth
   cv.remove()

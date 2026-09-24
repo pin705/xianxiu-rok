@@ -32,7 +32,7 @@ const burstT = (n: number) => (f: number, k: number) => burstTex(128, 5 + n * 7,
 const streakT = (f: number, k: number) => streakTex(24, 128, 11, DRY[f], k)
 const boltT = (n: number) => (_: number, k: number) => boltTex(160, 640, n, k)
 const THEME: Record<Report['kind'], Theme> = { beast: 'wild', sect: 'sect', realm: 'forest', tower: 'tower', trib: 'storm' }
-const REALM: Theme[] = ['forest', 'fire', 'ice']
+const REALM: Theme[] = ['forest', 'fire', 'ice', 'storm', 'storm'] // Lôi Trì, Hỗn Độn: trời tối như lôi kiếp
 const REALM_TINT = [C.malachite, C.cinnabarL, C.azuriteL]
 
 export class Battle {

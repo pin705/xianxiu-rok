@@ -256,6 +256,7 @@ export class Home {
     byLedge(6)
     this.mist(...MISTS[3])
     byLedge(5)
+    byLedge(7)
     this.mist(...MISTS[4])
     this.mist(...MISTS[5])
 

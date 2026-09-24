@@ -1,13 +1,13 @@
 import { fight, type Round, type Side, type Troop } from './combat.ts'
 import {
   BASE_CAP, BASE_RATE, BATCH_BASE, BATCH_STEP, BEASTS, BEAST_COOLDOWN, BEAST_EXP, BEAST_LOOT, BEAST_STR, BEATS, BOI_NGUYEN_EXP,
-  BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, COST_GROWTH2, CURE, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, WEEKEND, TRADE_KEEP, TRADE_KEEP_MAX, TRADE_STEP, TOWER, TOWER_ELDERS, TOWER_GROW, TOWER_RES, TOWER_RES_GROW, TOWER_STR, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, FOCUS, FOCUS_TIME,
+  BREW_MAX, BUILDINGS, CAP_GROWTH, EVENTS, EVENT_GOALS, EVENT_PTS, EVENT_REWARDS, NEWBIE_SHIELD, PVP_GATE, PVP_START, COST_GROWTH, COST_GROWTH2, CURE, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, WEEKEND, TRADE_KEEP, TRADE_KEEP_MAX, TRADE_STEP, TOWER, TOWER_ELDERS, TOWER_GROW, TOWER_RES, TOWER_RES_GROW, TOWER_STR, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, FOCUS, FOCUS_TIME,
   GEAR, GEAR_COST_GROWTH, GEAR_MAX, GEAR_TIME_GROWTH, HEAL_COST,
   HEAL_TIME, HOME, HOSPITAL_BASE, HOSPITAL_STEP, KNEE, LOSS_EXP, MAIN_SHARE, MAP_HALL, MARCH_MIN, MARCH_SLOTS, MARCH_SPEED,
   MAX_CUT, MAX_LEVEL, PHA_CANH, PILLS, QUESTS, QUEUE_SIZE, RATE_HIGH, REALMS, REBIRTH_BUILD, REBIRTH_HALL, REBIRTH_HEAD, REBIRTH_HEAD_MAX, REBIRTH_MAX, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
   SECT_SHARE, SPEEDUP, SPEEDUP_BIG, START, TALENTS, TALENT_EVERY, TALENT_MAX, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TIME_GROWTH2, TRIBS, TRIB_COOLDOWN,
   TRIB_EXP, TYPES, UNITS, UNIT_BASE,
-  type Bag, type Bonus, type BuildingId, type DailyId, type WeeklyId, type ElderId, type GearId, type PillId, type Quest, type Res, type Reward, type Skill,
+  type Bag, type Bonus, type BuildingId, type DailyId, type EventId, type WeeklyId, type ElderId, type GearId, type PillId, type Quest, type Res, type Reward, type Skill,
   type TechId, type Tier, type UnitId, type UnitType,
 } from './data.ts'
 
@@ -30,7 +30,7 @@ export type Gear = { lv: number; on?: ElderId } // on: trưởng lão đang đeo
 export type Talent = [atk: number, hp: number, skill: number]
 // until: lúc hết (due() gỡ đúng giờ, nên sản lượng trước/sau tính đúng); 0 = giữ tới khi server gỡ. src: nguồn, mỗi nguồn một buff
 export type Buff = { key: Bonus; v: number; until: number; src: string }
-export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower'; i: number }
+export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp'; i: number } // pvp: i = mã người chơi bị cướp
 export type Gain = { res: Partial<Bag>; items: Items; elder?: ElderId; exp: number }
 export type March = {
   id: number
@@ -40,7 +40,7 @@ export type March = {
   seed: number
   startAt: number
   arriveAt: number
-  returnAt: number
+  returnAt: number // 0: chưa hẹn (đi cướp: server giải trận lúc tới nơi rồi mới biết giờ về)
   back?: Army // sau trận: đệ tử còn đứng được, thương binh và chiến lợi phẩm mang về
   hurt?: Army
   gain?: Gain
@@ -50,9 +50,11 @@ export type Snap = { elder?: ElderId; level: number; troops: { type: UnitType; t
 export type Report = {
   id: number
   at: number
-  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib'
+  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp'
   i: number
   f?: number // bí cảnh: tầng
+  foe?: string // PvP: tên tông môn bên kia
+  def?: boolean // PvP: mình là bên thủ
   win: boolean
   fights: { a: Snap; b: Snap; rounds: Round[] }[]
   hurt: Army // thương vong
@@ -62,6 +64,10 @@ export type Report = {
 export type Stats = { trained: number; healed: number; brewed: number; won: number; lost: number }
 export type Daily = { day: number; n: Record<DailyId, number>; got: boolean[]; bonus: boolean }
 export type Weekly = { week: number; n: Record<WeeklyId, number>; got: boolean[]; bonus: boolean }
+export type Ev = { week: number; pts: number; got: boolean[] } // sự kiện tuần: điểm, mốc đã nhận
+export type Foe = { pid: number; name: string; at: number } // ai đã đánh mình (báo thù)
+// Thư: chữ dựng ở client theo khoá k (@rok/i18n), quà nhận đúng một lần
+export type Mail = { id: number; at: number; k: string; a?: (string | number)[]; gift?: Reward; got?: boolean }
 
 export type State = {
   v: 4                               // phiên bản save
@@ -101,6 +107,12 @@ export type State = {
   stats: Stats
   daily: Daily                       // nhiệm vụ ngày: tiến độ hôm nay, việc đã nhận thưởng
   weekly: Weekly                     // nhiệm vụ tuần: tiến độ tuần này (làm mới 0h thứ Hai)
+  ev: Ev                             // sự kiện tuần
+  shield: number                     // khiên PvP tới lúc này
+  guard: ElderId | null              // trưởng lão giữ nhà (phải đang ở tông môn mới tính)
+  pvp: { pts: number; win: number; loss: number }
+  foes: Foe[]
+  mail: Mail[]
 }
 
 export type Action =
@@ -129,10 +141,13 @@ export type Action =
   | { type: 'wash'; elder: ElderId } // Tẩy Tủy Đan
   | { type: 'cure' } // Hồi Xuân Đan
   | { type: 'focus' } // Ngưng Thần Đan
+  | { type: 'guard'; elder: ElderId | null } // trưởng lão giữ nhà
+  | { type: 'mail'; id: number } // nhận quà trong thư
+  | { type: 'event'; i: number } // nhận quà mốc sự kiện tuần
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'
 export type Err =
   | 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done' | 'locked' | 'cooldown'
-  | 'empty' | 'no_item' | 'slots' | 'trib' | 'bad'
+  | 'empty' | 'no_item' | 'slots' | 'trib' | 'bad' | 'shield' | 'weak' | 'gone'
 export type Result = { ok: true; state: State } | { ok: false; error: Err }
 
 const HOUR = 3_600_000
@@ -144,14 +159,14 @@ export const GEAR_IDS = Object.keys(GEAR) as GearId[]
 const bag = (f: (r: Res) => number) => Object.fromEntries(RESOURCES.map(r => [r, f(r)])) as Bag
 const troops = (f: (u: UnitId) => number) => Object.fromEntries(UNITS.map(u => [u, f(u)])) as Troops
 export const count = (a: Army) => UNITS.reduce((sum, u) => sum + (a[u] ?? 0), 0)
-const plus = (a: Troops, b: Army) => troops(u => a[u] + (b[u] ?? 0))
-const minus = (a: Troops, b: Army) => troops(u => a[u] - (b[u] ?? 0))
+export const plus = (a: Troops, b: Army) => troops(u => a[u] + (b[u] ?? 0))
+export const minus = (a: Troops, b: Army) => troops(u => a[u] - (b[u] ?? 0))
 const addBag = (a: Bag, b: Partial<Bag>) => bag(r => a[r] + (b[r] ?? 0))
 const addItems = (a: Items, b: Items) => Object.fromEntries(PILL_IDS.map(p => [p, (a[p] ?? 0) + (b[p] ?? 0)])) as Items
 export const afford = (have: Bag, c: Bag) => RESOURCES.every(r => have[r] >= c[r])
 // Mầm 0 = "ẩn": máy này không biết mầm thật (client nhận state từ server với mọi seed = 0), nên không tự giải trận.
 // 0 sinh ra 0; mầm khác 0 không bao giờ sinh ra 0.
-const nextSeed = (seed: number) => (seed ? (Math.imul(seed, 1664525) + 1013904223) >>> 0 || 1 : 0)
+export const nextSeed = (seed: number) => (seed ? (Math.imul(seed, 1664525) + 1013904223) >>> 0 || 1 : 0)
 
 // Nhân lặp thay cho Math.pow: phép nhân IEEE cho cùng kết quả trên mọi engine, pow thì không chắc.
 function grow(base: number, factor: number, times: number) {
@@ -180,6 +195,7 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
     tech: {}, items: {}, elders: { [FIRST_ELDER]: 0 }, talents: {}, gear: {}, buffs: [], marches: [], reports: [], seen: 0,
     beast: 0, cool: {}, sects: SECTS.map(() => false), realms: REALMS.map(() => 0), tower: 0, trib: 0, tribCool: 0, rebirths: 0,
     seed: now >>> 0 || 1, nextId: 1, stats: { trained: 0, healed: 0, brewed: 0, won: 0, lost: 0 }, daily: freshDaily(now), weekly: freshWeekly(now),
+    ev: freshEv(now), shield: now + NEWBIE_SHIELD, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [],
   }
 }
 
@@ -193,15 +209,22 @@ const freshDaily = (t: number): Daily => ({ day: dayOf(t), n: { build: 0, train:
 export const weekOf = (t: number) => Math.floor((dayOf(t) - 4) / 7)
 export const nextWeek = (t: number) => ((weekOf(t) + 1) * 7 + 4) * DAY - DAY_OFFSET
 const freshWeekly = (t: number): Weekly => ({ week: weekOf(t), n: { build: 0, train: 0, win: 0, brew: 0, days: 0 }, got: WEEKLY.map(() => false), bonus: false })
+const freshEv = (t: number): Ev => ({ week: weekOf(t), pts: 0, got: EVENT_GOALS.map(() => false) })
+export const eventOf = (week: number): EventId => EVENTS[((week % EVENTS.length) + EVENTS.length) % EVENTS.length]
 const rollDay = (s: State, t: number): State => {
   if (dayOf(t) > s.daily.day) s = { ...s, daily: freshDaily(t) }
+  if (weekOf(t) > s.ev.week) s = { ...s, ev: freshEv(t) }
   return weekOf(t) > s.weekly.week ? { ...s, weekly: freshWeekly(t) } : s
 }
-const bump = (s: State, id: DailyId, k = 1): State => ({
-  ...s,
-  daily: { ...s.daily, n: { ...s.daily.n, [id]: s.daily.n[id] + k } },
-  weekly: { ...s.weekly, n: { ...s.weekly.n, [id]: s.weekly.n[id] + k } },
-})
+// Điểm sự kiện tuần khi làm đúng việc của chủ đề tuần này (tuyển: mỗi 5 đệ tử một lần)
+export const evBump = (s: State, id: EventId, k = 1): State =>
+  eventOf(s.ev.week) !== id ? s : { ...s, ev: { ...s.ev, pts: s.ev.pts + EVENT_PTS[id] * (id === 'train' ? Math.floor(k / 5) : k) } }
+const bump = (s: State, id: DailyId, k = 1): State =>
+  evBump({
+    ...s,
+    daily: { ...s.daily, n: { ...s.daily.n, [id]: s.daily.n[id] + k } },
+    weekly: { ...s.weekly, n: { ...s.weekly.n, [id]: s.weekly.n[id] + k } },
+  }, id, k)
 export const dailyDone = (s: State, i: number) => s.daily.n[DAILY[i].id] >= DAILY[i].n
 export const dailyReward = (s: State) => DAILY_RES * s.levels.chuDien
 // Số việc làm xong mà chưa nhận thưởng (kể cả rương) — để hiện huy hiệu
@@ -321,7 +344,8 @@ export const tierFor = (level: number): Tier => (level <= 5 ? 1 : level <= 10 ? 
 export const beastStr = (level: number) => grow(BEAST_STR[0], BEAST_STR[1], level - 1)
 export const beastLoot = (level: number) => grow(BEAST_LOOT[0], BEAST_LOOT[1], level - 1)
 export const beastExp = (level: number) => grow(BEAST_EXP[0], BEAST_EXP[1], level - 1)
-export const place = (t: Target) => (t.kind === 'beast' ? BEASTS[t.i] : t.kind === 'sect' ? SECTS[t.i] : t.kind === 'tower' ? TOWER : REALMS[t.i])
+export const place = (t: Target) =>
+  t.kind === 'beast' ? BEASTS[t.i] : t.kind === 'sect' ? SECTS[t.i] : t.kind === 'tower' ? TOWER : t.kind === 'pvp' ? PVP_GATE : REALMS[t.i]
 export const marchTime = (s: State, t: Target) => {
   const p = place(t)
   return Math.round(Math.max(MARCH_MIN, Math.hypot(p.x - HOME.x, p.y - HOME.y) * MARCH_SPEED) * cut(s, 'march')) * 1000
@@ -388,13 +412,14 @@ export function enemyOf(s: State, t: Target): Side {
   return d.el ? { ...side, el: d.el } : side
 }
 
-export function sideOf(s: State, elder: ElderId, army: Army): Side {
-  const m = 1 + ELDER_STEP * (elderLevel(s.elders[elder]) - 1)
-  const b = (k: Bonus) => lead(s, elder, k)
-  const sk = ELDERS[elder].skill, power = b('skill')
+// elder null: đội không người dẫn (giữ nhà khi không ai trấn thủ) — chỉ có bonus của tông môn
+export function sideOf(s: State, elder: ElderId | null, army: Army): Side {
+  const m = elder ? 1 + ELDER_STEP * (elderLevel(s.elders[elder]) - 1) : 1
+  const b = (k: Bonus) => (elder ? lead(s, elder, k) : bonus(s, k))
+  const sk = elder ? ELDERS[elder].skill : undefined, power = elder ? b('skill') : 0
   return {
-    el: ELDERS[elder].el,
-    skill: power ? { ...sk, v: sk.v * (1 + power) } : sk,
+    el: elder ? ELDERS[elder].el : undefined,
+    skill: sk && power ? { ...sk, v: sk.v * (1 + power) } : sk,
     troops: UNITS.filter(u => (army[u] ?? 0) > 0).map(u => {
       const { type, tier } = unitOf(u)
       const base = UNIT_BASE[type], k = TIER[tier].stat
@@ -420,12 +445,12 @@ export function armyError(s: State, elder: ElderId, army: Army): Err | null {
   return count(army) ? null : 'empty'
 }
 
-const snap = (side: Side, elder?: ElderId, level = 1): Snap => ({
+export const snap = (side: Side, elder?: ElderId, level = 1): Snap => ({
   elder, level, troops: side.troops.map(t => ({ type: t.type, tier: t.tier, n: t.n })),
 })
 
 // Thương binh về Đan phòng; hết chỗ thì phần dư tử trận. Nhận bậc cao trước.
-function admit(s: State, hurt: Army): { state: State; dead: Army } {
+export function admit(s: State, hurt: Army): { state: State; dead: Army } {
   let room = Math.max(0, hospital(s) - count(s.wounded))
   const wounded = { ...s.wounded }
   const dead: Army = {}
@@ -451,12 +476,18 @@ function gain(s: State, elder: ElderId, g: Gain): State {
   return giveExp(st, elder, g.exp)
 }
 
+// Quà từ ngoài (thư, mốc sự kiện): tài nguyên, đan, trưởng lão — không có kinh nghiệm
+export function grant(s: State, r: Reward): State {
+  const st: State = { ...s, res: addBag(s.res, r.res ?? {}), items: addItems(s.items, r.items ?? {}) }
+  return r.elder && st.elders[r.elder] === undefined ? { ...st, elders: { ...st.elders, [r.elder]: 0 } } : st
+}
+
 const fromReward = (r: Reward, lootMul: number, exp: number): Gain => ({
   res: Object.fromEntries(RESOURCES.map(x => [x, Math.round((r.res?.[x] ?? 0) * lootMul)])),
   items: { ...r.items }, elder: r.elder, exp: Math.round(exp),
 })
 
-const pushReport = (s: State, r: Omit<Report, 'id'>): State => ({
+export const pushReport = (s: State, r: Omit<Report, 'id'>): State => ({
   ...s, nextId: s.nextId + 1, reports: [...s.reports, { ...r, id: s.nextId }].slice(-30),
   stats: { ...s.stats, won: s.stats.won + (r.win ? 1 : 0), lost: s.stats.lost + (r.win ? 0 : 1) },
 })
@@ -562,9 +593,9 @@ function home(s: State, id: number): State {
   return st
 }
 
-type Ev = [at: number, run: (s: State) => State]
-function due(s: State, now: number): Ev[] {
-  const ev: Ev[] = []
+type Due = [at: number, run: (s: State) => State]
+function due(s: State, now: number): Due[] {
+  const ev: Due[] = []
   for (const j of s.queue)
     if (j.finishAt <= now)
       ev.push([j.finishAt, st => ({ ...st, levels: { ...st.levels, [j.building]: j.level }, queue: st.queue.filter(q => q.building !== j.building) })])
@@ -584,8 +615,9 @@ function due(s: State, now: number): Ev[] {
   for (const x of s.buffs)
     if (x.until && x.until <= now) ev.push([x.until, st => ({ ...st, buffs: st.buffs.filter(y => y.src !== x.src || y.until !== x.until) })])
   for (const m of s.marches) {
-    if (!m.back && m.seed && m.arriveAt <= now) ev.push([m.arriveAt, st => arrive(st, m.id)])
-    if (m.returnAt <= now) ev.push([m.returnAt, st => home(st, m.id)])
+    // đi cướp: trận cần state của người kia — server giải (world.ts), ở đây chỉ chờ
+    if (!m.back && m.seed && m.arriveAt <= now && m.target.kind !== 'pvp') ev.push([m.arriveAt, st => arrive(st, m.id)])
+    if (m.returnAt && m.returnAt <= now) ev.push([m.returnAt, st => home(st, m.id)])
   }
   return ev.sort((a, b) => a[0] - b[0])
 }
@@ -773,6 +805,9 @@ const PICK: { [K in Action['type']]: Pick<K> } = {
   wash: a => (isElder(a.elder) ? { type: 'wash', elder: a.elder } : null),
   cure: () => ({ type: 'cure' }),
   focus: () => ({ type: 'focus' }),
+  guard: a => (a.elder === null || isElder(a.elder) ? { type: 'guard', elder: a.elder } : null),
+  mail: a => (int(0, 1e12)(a.id) ? { type: 'mail', id: a.id } : null),
+  event: a => (int(0, EVENT_GOALS.length - 1)(a.i) ? { type: 'event', i: a.i } : null),
 }
 export function parseAction(raw: unknown): Action | null {
   if (!obj(raw) || typeof raw.type !== 'string' || !Object.hasOwn(PICK, raw.type)) return null
@@ -942,7 +977,7 @@ export function apply(s: State, raw: Action, now: number): Result {
       const e = forgeError(state, a.gear)
       if (e) return no(e)
       const level = (state.gear[a.gear]?.lv ?? 0) + 1
-      return ok({ ...state, res: pay(gearCost(a.gear, level)), forge: { gear: a.gear, level, startAt: t, finishAt: t + gearTime(state, a.gear, level) } })
+      return ok(evBump({ ...state, res: pay(gearCost(a.gear, level)), forge: { gear: a.gear, level, startAt: t, finishAt: t + gearTime(state, a.gear, level) } }, 'forge'))
     }
     case 'equip': {
       const g = state.gear[a.gear]
@@ -984,6 +1019,22 @@ export function apply(s: State, raw: Action, now: number): Result {
         ...state, items: use('hoiXuan'), troops: plus(state.troops, up), wounded: minus(state.wounded, up),
         stats: { ...state.stats, healed: state.stats.healed + count(up) },
       })
+    }
+    case 'guard': {
+      if (a.elder && state.elders[a.elder] === undefined) return no('locked')
+      return ok({ ...state, guard: a.elder })
+    }
+    case 'mail': {
+      const m = state.mail.find(x => x.id === a.id)
+      if (!m?.gift) return no('empty')
+      if (m.got) return no('max_level')
+      return ok({ ...grant(state, m.gift), mail: state.mail.map(x => (x === m ? { ...x, got: true } : x)) })
+    }
+    case 'event': {
+      if (state.levels.chuDien < DAILY_HALL || !EVENT_GOALS[a.i]) return no('locked')
+      if (state.ev.got[a.i]) return no('max_level')
+      if (state.ev.pts < EVENT_GOALS[a.i]) return no('not_done')
+      return ok({ ...grant(state, EVENT_REWARDS[a.i]), ev: { ...state.ev, got: state.ev.got.map((x, k) => x || k === a.i) } })
     }
     case 'focus': {
       if (!state.items.ngungThan) return no('no_item')
@@ -1053,7 +1104,7 @@ function valid(s: any): s is State {
     obj(s.gear) && Object.entries(s.gear).every(([g, x]: [string, any]) => Object.hasOwn(GEAR, g) && obj(x) && num(x.lv) && (x.on === undefined || Object.hasOwn(ELDERS, x.on))) &&
     Array.isArray(s.buffs) && s.buffs.every((b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string') &&
     Array.isArray(s.marches) &&
-    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect'].includes(m.target.kind) &&
+    s.marches.every((m: any) => obj(m) && Object.hasOwn(ELDERS, m.elder) && obj(m.army) && obj(m.target) && ['beast', 'sect', 'pvp'].includes(m.target.kind) &&
       num(m.target.i) && num(m.seed) && num(m.startAt) && num(m.arriveAt) && num(m.returnAt)) &&
     Array.isArray(s.reports) && s.reports.every((r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead)) &&
     num(s.seen) && num(s.beast) && obj(s.cool) &&
@@ -1062,7 +1113,11 @@ function valid(s: any): s is State {
     obj(s.stats) && ['trained', 'healed', 'brewed', 'won', 'lost'].every(k => num(s.stats[k])) &&
     obj(s.daily) && num(s.daily.day) && obj(s.daily.n) && Array.isArray(s.daily.got) && s.daily.got.length === DAILY.length &&
     obj(s.weekly) && num(s.weekly.week) && obj(s.weekly.n) && WEEKLY.every(w => num(s.weekly.n[w.id])) &&
-    Array.isArray(s.weekly.got) && s.weekly.got.length === WEEKLY.length
+    Array.isArray(s.weekly.got) && s.weekly.got.length === WEEKLY.length &&
+    obj(s.ev) && num(s.ev.week) && num(s.ev.pts) && Array.isArray(s.ev.got) && s.ev.got.length === EVENT_GOALS.length &&
+    num(s.shield) && (s.guard === null || Object.hasOwn(ELDERS, s.guard)) && obj(s.pvp) && num(s.pvp.pts) && num(s.pvp.win) && num(s.pvp.loss) &&
+    Array.isArray(s.foes) && s.foes.every((f: any) => obj(f) && num(f.pid) && typeof f.name === 'string' && num(f.at)) &&
+    Array.isArray(s.mail) && s.mail.every((m: any) => obj(m) && num(m.id) && num(m.at) && typeof m.k === 'string')
   )
 }
 
@@ -1094,5 +1149,7 @@ function upgrade(raw: unknown) {
   if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save làm trước khi có nhiệm vụ ngày
   if (!s.weekly) s = { ...s, weekly: freshWeekly(s.time) } // … nhiệm vụ tuần
   if (s.tower === undefined) s = { ...s, tower: 0 } // … Thông Thiên Tháp
+  if (!s.ev) s = { ...s, ev: freshEv(s.time) } // … PvP, thư, sự kiện tuần (người cũ không được khiên tân thủ)
+  if (s.shield === undefined) s = { ...s, shield: 0, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [] }
   return s
 }
