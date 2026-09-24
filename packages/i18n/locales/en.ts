@@ -1,5 +1,5 @@
 import {
-  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIB_COOLDOWN, rebirthLevels,
+  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIB_COOLDOWN, WEEKEND, rebirthLevels,
   type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
@@ -182,6 +182,11 @@ export const en: Text = {
   ],
   target(t: Target) {
     return t.kind === 'beast' ? en.beasts[t.i] : t.kind === 'sect' ? en.sects[t.i].name : t.kind === 'tower' ? en.tower.name : en.realms[t.i].name
+  },
+  weekend: {
+    title: 'Weekend event',
+    body: `Saturday and Sunday: repeat battle loot and elder experience ×${WEEKEND}`,
+    tag: `Weekend ×${WEEKEND}`,
   },
   trade: {
     tab: 'Trading house',

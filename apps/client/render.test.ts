@@ -351,6 +351,9 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
       paint('Vault', { game: s, now, act, onfocus: noop }, label)
       const daily = paint('Daily', { game: s, now, open: true, onclose: noop, act }, label)
       assert.ok(daily.includes(L.weekly.title) && daily.includes(L.weekly.bonus), `nhiệm vụ tuần phải hiện (${label})`)
+      const sat = Date.UTC(2026, 8, 26, 3) // thứ Bảy 10h giờ VN
+      assert.equal(paint('Daily', { game: s, now: sat, open: true, onclose: noop, act }, `${label}, cuối tuần`).includes(L.weekend.title), true)
+      assert.equal(daily.includes(L.weekend.title), false, 'ngày thường không có sự kiện')
       const settings = paint(
         'Settings',
         {

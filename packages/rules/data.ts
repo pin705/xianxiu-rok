@@ -278,6 +278,12 @@ export const DAILY: { id: DailyId; n: number }[] = [
 export const DAILY_RES = 150 // mỗi việc: DAILY_RES × tầng Chủ điện, mỗi loại tài nguyên
 export const DAILY_BONUS: Partial<Record<PillId, number>> = { tuKhi: 1, boiNguyen: 1 } // rương khi xong cả 4
 
+// ---------- Sự kiện cuối tuần ----------
+
+// Thứ Bảy, Chủ nhật (giờ VN): chiến lợi phẩm đánh lại (yêu thú, tông môn đã hạ) và kinh nghiệm trưởng lão ×WEEKEND.
+// Thưởng lần đầu (bí cảnh, tháp, tông môn lần đầu) giữ nguyên — sự kiện không làm rẻ nội dung một lần.
+export const WEEKEND = 1.5
+
 // ---------- Thương hội (Tàng Bảo Các) ----------
 
 // Đổi tài nguyên dư lấy tài nguyên thiếu: mỗi hệ đệ tử ăn chủ yếu một loại, nên kho hay lệch — một loại cạn, hai loại đầy.

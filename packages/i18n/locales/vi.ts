@@ -1,5 +1,5 @@
 import {
-  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIB_COOLDOWN, rebirthLevels,
+  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIB_COOLDOWN, WEEKEND, rebirthLevels,
   type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
@@ -179,6 +179,11 @@ export const vi = {
   ],
   target(t: Target) {
     return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : vi.realms[t.i].name
+  },
+  weekend: {
+    title: 'Sự kiện cuối tuần',
+    body: `Thứ Bảy, Chủ nhật: chiến lợi phẩm đánh lại và kinh nghiệm trưởng lão ×${String(WEEKEND).replace('.', ',')}`,
+    tag: `Cuối tuần ×${String(WEEKEND).replace('.', ',')}`,
   },
   trade: {
     tab: 'Thương hội',

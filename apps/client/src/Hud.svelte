@@ -1,9 +1,10 @@
 <script lang="ts">
-  // HUD: ván sơn mài viền vàng trên cùng (chưởng môn, thế lực, tài nguyên), thẻ nhiệm vụ giấy, nút tạp dịch,
-  // ván tab dưới cùng — mọi mặt đều vẽ tay (da từ theme.ts, icon/huy hiệu từ @rok/art).
+  // HUD: dải giấy bồi lụa trên cùng (chưởng môn, thế lực, tài nguyên), thẻ nhiệm vụ giấy, nút tạp dịch,
+  // dải tab dưới cùng — mọi mặt đều vẽ tay (da từ theme.ts, icon/huy hiệu từ @rok/art), cùng họ màu với tranh.
   import { Tween } from 'svelte/motion'
   import {
-    DAILY_HALL, RESOURCES, count, dailyReady, power, questDone, questOf, questProgress, rate, storage, unitOf, type Bag as Res, type BuildingId, type State,
+    DAILY_HALL, RESOURCES, count, dailyReady, isWeekend, power, questDone, questOf, questProgress, rate, storage, unitOf, type Bag as Res, type BuildingId,
+    type State,
   } from '@rok/rules'
   import { Icon, Portrait, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon, type Look } from '@rok/art'
   import { Badge, Bag, IconButton, Meter, Tag } from './ui'
@@ -144,6 +145,8 @@
       {#if hall >= DAILY_HALL}
         <span class="daily" class:ready={ready > 0}>
           <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}><Badge n={ready} /></IconButton>
+          <!-- sự kiện cuối tuần đang diễn ra: nhãn vàng ngay dưới nút nhiệm vụ (chi tiết trong bảng nhiệm vụ) -->
+          {#if isWeekend(now)}<Tag tone="gold" size="sm" icon="star">{L.weekend.tag}</Tag>{/if}
         </span>
       {/if}
       <section class="runs" aria-label={L.activity.title}>
@@ -378,7 +381,13 @@
     color: var(--cinnabar);
     background: var(--img-disc-paper) center / 100% 100% no-repeat;
   }
-  .daily.ready {
+  .daily {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .daily.ready :global(.ib) {
     animation: glow 1.6s var(--ease) infinite;
     border-radius: 50%;
   }
@@ -621,6 +630,7 @@
     }
     .daily {
       align-self: flex-start;
+      justify-items: start;
     }
     .runs {
       display: grid;

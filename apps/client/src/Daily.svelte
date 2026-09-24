@@ -2,7 +2,7 @@
   // Nhiệm vụ ngày (4 việc quen tay mỗi phiên, làm mới 0h giờ VN) và nhiệm vụ tuần (mục tiêu gộp cả tuần, làm mới 0h thứ Hai).
   // Mỗi phần: từng việc nhận thưởng riêng, xong hết thì mở rương.
   import {
-    DAILY, DAILY_BONUS, RESOURCES, WEEKLY, WEEKLY_BONUS, dailyDone, dailyReward, nextDay, nextWeek, weeklyDone, weeklyReward,
+    DAILY, DAILY_BONUS, RESOURCES, WEEKLY, WEEKLY_BONUS, dailyDone, dailyReward, isWeekend, nextDay, nextWeek, weeklyDone, weeklyReward,
     type Action, type PillId, type State,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
@@ -52,6 +52,9 @@
 {/snippet}
 
 <Sheet {open} {onclose} title={L.daily.title} sub={L.daily.reset(clock(nextDay(now) - now))}>
+  {#if isWeekend(now)}
+    <div class="mt-2"><Card tone="glow"><div class="row"><Icon name="star" size={24} /><span class="stack" style:--gap="2px"><b>{L.weekend.title}</b><span class="t-small">{L.weekend.body}</span></span></div></Card></div>
+  {/if}
   <ul class="stack mt-2">
     {#each DAILY as d, i (d.id)}
       {@render task(L.daily.task[d.id](d.n), game.daily.n[d.id], d.n, game.daily.got[i], dailyDone(game, i), perDay, () => act({ type: 'daily', i }))}

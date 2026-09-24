@@ -1,7 +1,7 @@
 <script lang="ts">
   // Bảng mục tiêu trên bản đồ: yêu thú, tông môn đối địch, bí cảnh. Xem địch, phần thưởng, chọn đội rồi xuất quân.
   import {
-    BEASTS, BEATS, REALMS, SECTS, TOWER, TYPES, beastExp, beastLoot, coolKey, enemyOf, marchSlots, marchTime,
+    BEASTS, BEATS, REALMS, SECTS, TOWER, TYPES, beastExp, beastLoot, coolKey, enemyOf, eventMul, isWeekend, marchSlots, marchTime,
     might, targetError, tierFor, towerReward, towerType, winChance,
     type Army, type ElderId, type Reward, type State, type Target, type UnitType,
   } from '@rok/rules'
@@ -28,6 +28,9 @@
 
   // Hệ khắc được hệ chính của địch
   const counter = (t: UnitType) => TYPES.find(x => BEATS[x] === t)!
+  // sự kiện cuối tuần: số hiển thị khớp số thật nhận (chiến lợi phẩm đánh lại, kinh nghiệm)
+  const ev = $derived(eventMul(now))
+  const weekendTag = $derived(isWeekend(now) ? ` · ${L.weekend.tag}` : '')
   const info = $derived.by(() => {
     const t = target
     if (!t) return null
@@ -35,8 +38,8 @@
       const lv = t.i + 1
       return {
         emblem: EMBLEM.beast[t.i], sub: L.map.beast(lv), type: BEASTS[t.i].type, lore: '',
-        reward: { res: { linhThach: beastLoot(lv), linhThao: beastLoot(lv), linhKhoang: beastLoot(lv) }, exp: beastExp(lv) } as Reward,
-        rewardLabel: L.map.reward, tier: tierFor(lv),
+        reward: { res: { linhThach: beastLoot(lv) * ev, linhThao: beastLoot(lv) * ev, linhKhoang: beastLoot(lv) * ev }, exp: beastExp(lv) * ev } as Reward,
+        rewardLabel: L.map.reward + weekendTag, tier: tierFor(lv),
       }
     }
     if (t.kind === 'sect') {
@@ -44,8 +47,8 @@
       const first = !game.sects[t.i]
       return {
         emblem: EMBLEM.sect[t.i], sub: `${L.map.sect} · ${L.panel.hall(d.hall)}`, type: d.type, lore: L.sects[t.i].lore,
-        reward: first ? { ...d.first, exp: d.exp } : { res: { linhThach: d.loot, linhThao: d.loot, linhKhoang: d.loot }, exp: d.exp },
-        rewardLabel: first ? L.map.firstWin : L.map.repeat, tier: tierFor(d.hall), skill: d.elder,
+        reward: first ? { ...d.first, exp: d.exp * ev } : { res: { linhThach: d.loot * ev, linhThao: d.loot * ev, linhKhoang: d.loot * ev }, exp: d.exp * ev },
+        rewardLabel: first ? L.map.firstWin : L.map.repeat + weekendTag, tier: tierFor(d.hall), skill: d.elder,
       }
     }
     if (t.kind === 'tower') {

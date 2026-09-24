@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   BASE_RATE, BEASTS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
-  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, nextWeek, weekOf, tradeKeep, towerReward, towerStr, towerType, enemyOf, targetError,
+  elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, nextWeek, weekOf, tradeKeep, isWeekend, eventMul, towerReward, towerStr, towerType, enemyOf, targetError,
   techTime, trainCost, trainTime, upgradeError, winChance,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
@@ -436,4 +436,23 @@ test('Thương hội: đổi tài nguyên dư lấy tài nguyên thiếu, mất 
   assert.equal(err(s, { type: 'trade', from: 'linhThach', to: 'linhThach', n: 10 }), 'locked')
   assert.equal(err(s, { type: 'trade', from: 'linhThach', to: 'linhThao', n: 1.5 }), 'locked')
   assert.equal(err({ ...s, levels: { ...s.levels, tangBaoCac: 0 } }, { type: 'trade', from: 'linhThach', to: 'linhThao', n: 10 }), 'locked')
+})
+
+test('sự kiện cuối tuần: thứ Bảy, Chủ nhật giờ VN, chiến lợi phẩm đánh lại ×1.5, thưởng lần đầu giữ nguyên', () => {
+  const at = (iso: string) => Date.parse(iso) // giờ UTC; VN = UTC+7
+  assert.equal(isWeekend(at('2026-09-25T16:59:00Z')), false, 'thứ Sáu 23:59 VN')
+  assert.equal(isWeekend(at('2026-09-25T17:00:00Z')), true, 'thứ Bảy 0:00 VN')
+  assert.equal(isWeekend(at('2026-09-27T16:59:00Z')), true, 'Chủ nhật 23:59 VN')
+  assert.equal(isWeekend(at('2026-09-27T17:00:00Z')), false, 'thứ Hai 0:00 VN')
+  // cùng một trận yêu thú: cuối tuần được nhiều chiến lợi phẩm hơn
+  const base = { ...rich(6, 5), troops: { ...rich(6, 5).troops, kiem1: 2000 } }
+  const hunt = (t: number) => {
+    const s = { ...base, time: t }
+    const r = run(s, { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: { kiem1: 2000 } })
+    const done = advance(r, r.marches[0].returnAt + 1)
+    return done.reports.at(-1)!.gain.res.linhThach ?? 0
+  }
+  const week = hunt(at('2026-09-23T03:00:00Z')), weekend = hunt(at('2026-09-26T03:00:00Z'))
+  assert.ok(week > 0)
+  assert.equal(weekend, Math.round(week * eventMul(at('2026-09-26T03:00:00Z'))))
 })

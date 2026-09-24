@@ -1,7 +1,7 @@
 import { fight, type Round, type Side, type Troop } from './combat.ts'
 import {
   BASE_CAP, BASE_RATE, BATCH_BASE, BATCH_STEP, BEASTS, BEAST_COOLDOWN, BEAST_EXP, BEAST_LOOT, BEAST_STR, BEATS, BOI_NGUYEN_EXP,
-  BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, TRADE_KEEP, TRADE_KEEP_MAX, TRADE_STEP, TOWER, TOWER_GROW, TOWER_RES, TOWER_RES_GROW, TOWER_STR, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, HEAL_COST,
+  BREW_MAX, BUILDINGS, CAP_GROWTH, COST_GROWTH, DAILY, DAILY_BONUS, DAILY_HALL, DAILY_RES, DAY_OFFSET, WEEKEND, TRADE_KEEP, TRADE_KEEP_MAX, TRADE_STEP, TOWER, TOWER_GROW, TOWER_RES, TOWER_RES_GROW, TOWER_STR, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, DO_KIEP, ELDERS, ELDER_MAX, ELDER_STEP, EXP_BASE, FIRST_ELDER, HEAL_COST,
   HEAL_TIME, HOME, HOSPITAL_BASE, HOSPITAL_STEP, LOSS_EXP, MAIN_SHARE, MAP_HALL, MARCH_MIN, MARCH_SLOTS, MARCH_SPEED,
   MAX_CUT, MAX_LEVEL, PILLS, QUESTS, QUEUE_SIZE, REALMS, REBIRTH_BUILD, REBIRTH_HEAD, REBIRTH_HEAD_MAX, REBIRTH_PROD, RESOURCES, SECTS, SECT_COOLDOWN,
   SECT_SHARE, SPEEDUP, START, TECHS, TECH_COST_GROWTH, TECH_ROWS, TECH_TIME_GROWTH, TIER, TIME_GROWTH, TRIBS, TRIB_COOLDOWN,
@@ -178,6 +178,9 @@ const bump = (s: State, id: DailyId, k = 1): State => ({
 export const dailyDone = (s: State, i: number) => s.daily.n[DAILY[i].id] >= DAILY[i].n
 export const dailyReward = (s: State) => DAILY_RES * s.levels.chuDien
 // Số việc làm xong mà chưa nhận thưởng (kể cả rương) — để hiện huy hiệu
+// Sự kiện cuối tuần: thứ Bảy, Chủ nhật giờ VN (ngày 0 kể từ 1/1/1970 là thứ Năm)
+export const isWeekend = (t: number) => [2, 3].includes(((dayOf(t) % 7) + 7) % 7)
+export const eventMul = (t: number) => (isWeekend(t) ? WEEKEND : 1)
 // Thương hội: phần giữ lại khi đổi tài nguyên (0..1)
 export const tradeKeep = (s: State) => Math.min(TRADE_KEEP_MAX, TRADE_KEEP + TRADE_STEP * (s.levels.tangBaoCac - 1))
 export const weeklyDone = (s: State, i: number) => s.weekly.n[WEEKLY[i].id] >= WEEKLY[i].n
@@ -420,8 +423,8 @@ function battle(s: State, t: Target, elder: ElderId, army: Army, seed: number, a
   const left = f.rounds.at(-1)?.n[0] ?? ids.map(u => army[u]!)
   const back = Object.fromEntries(ids.map((u, k) => [u, left[k]])) as Army
   const hurt = Object.fromEntries(ids.map((u, k) => [u, army[u]! - left[k]])) as Army
-  const loot = 1 + lead(s, elder, 'loot')
-  const expMul = (1 + lead(s, elder, 'exp')) * (f.win ? 1 : LOSS_EXP)
+  const loot = (1 + lead(s, elder, 'loot')) * eventMul(at)
+  const expMul = (1 + lead(s, elder, 'exp')) * (f.win ? 1 : LOSS_EXP) * eventMul(at)
   let st = s
   let g: Gain = { res: {}, items: {}, exp: 0 }
   let floor: number | undefined
