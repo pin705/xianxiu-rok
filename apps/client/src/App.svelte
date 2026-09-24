@@ -4,7 +4,7 @@
     BUILDINGS, IDS, MAP_HALL, REALMS, TOWER, RESOURCES, SECTS, TECH_IDS, MAX_LEVEL, cost, newGame, questDone, questOf, storage, storeNeed,
     type Action, type Army, type Bag as Res, type BuildingId, type ElderId, type Report, type State, type Target,
   } from '@rok/rules'
-  import type { Seen } from '@rok/protocol'
+  import type { MapSnap, Seen, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Medal, Sheet, Toasts, fly, type ToastItem } from './ui'
   import Conn from './Conn.svelte'
@@ -12,6 +12,8 @@
   import Disciples from './Disciples.svelte'
   import Hud from './Hud.svelte'
   import MapView from './world/MapView.svelte'
+  import Alliance from './Alliance.svelte'
+  import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
   import Ranks from './Ranks.svelte'
   import Rivals from './Rivals.svelte'
@@ -25,12 +27,12 @@
   import Vault from './Vault.svelte'
   import { createNet, type Net, type Status } from './net'
   import { setMood } from './music'
-  import type { Rival } from '@rok/rules/world'
+  import type { AllyInfo, AllyRow, Rival, WorldAction } from '@rok/rules/world'
   import { DESK, L, LANG, TABS, forgetP1, isMuted, reportName, setMuted, sfx, type Tab } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
 
-  let net: Net | undefined
+  let net = $state.raw<Net>()
   let status: Status = $state('boot')
   let game: State | null = $state.raw(null)
   let now = $state(Date.now())
@@ -49,6 +51,10 @@
   let settingsOpen = $state(false)
   let dailyOpen = $state(false)
   let rivalsOpen = $state(false)
+  let rivalsFocus = $state<number | null>(null)
+  let info = $state<WorldInfo | null>(null) // giới đang ở: seed bản đồ, lúc mở (pha mùa)
+  let ally = $state.raw<AllyInfo | null>(null) // tiên minh của mình
+  let allyRows = $state.raw<AllyRow[] | null>(null) // các minh trong giới (khi chưa vào minh)
   let ranksOpen = $state(false)
   let me = $state<number | null>(null) // mã tông môn của mình (tô đậm trên bảng xếp hạng)
   // nhạc theo cảnh: xem trận / độ kiếp là trống trận, bản đồ là sáo trúc lên đường
@@ -122,7 +128,7 @@
           game = next
         },
         status: s => (status = s),
-        welcome: w => ((seen = w.seen), (me = w.me.pid)),
+        welcome: w => ((seen = w.seen), (me = w.me.pid), (info = w.world), void loadAlly()),
         reports: () => {},
         error(code) {
           sfx('err')
@@ -132,6 +138,7 @@
       LANG,
     )
     net = n
+    const offAlly = n.onAlly(() => void loadAlly())
     void n.start()
     if (forgetP1()) toast(L.net.p1Gone)
     const tick = setInterval(() => {
@@ -154,6 +161,7 @@
       })
     return () => {
       clearInterval(tick)
+      offAlly()
       removeEventListener('keydown', keys)
       n.close()
     }
@@ -319,6 +327,28 @@
     rivalsOpen = false
   }
 
+  // Tiên minh: của mình (server báo khi đổi), hoặc danh sách để vào
+  async function loadAlly() {
+    if (!net) return
+    ally = ((await net.ask({ k: 'ally' })) as AllyInfo | null) ?? null
+    allyRows = ally ? null : (((await net.ask({ k: 'allies' })) as AllyRow[] | null) ?? [])
+  }
+  // Thao tác tiên minh: chờ server (luật giới), rồi tải lại minh
+  async function sendWorld(a: WorldAction) {
+    if (!net) return { ok: false as const, err: 'unavailable' as const }
+    const r = await net.send(a)
+    if (r.ok) void loadAlly()
+    return r
+  }
+
+  // Tranh đoạt: danh sách đối thủ, hoặc thẳng một tông môn (chạm trên bản đồ giới)
+  function openRivals(pid: number | null = null) {
+    rivalsFocus = pid
+    rivalsOpen = true
+  }
+  // Bản đồ giới: đăng ký nhận ảnh chụp (server đẩy khi đổi) — trả hàm huỷ
+  const watchMap = (on: (m: MapSnap) => void) => net?.watchMap(on) ?? (() => {})
+
   async function rebirth() {
     if (!net || busy) return
     busy = true
@@ -378,10 +408,15 @@
   {#if tab === 'monHa'}
     <Disciples {game} {now} {act} onfocus={focus} />
   {:else if tab === 'banDo'}
-    <MapView {game} {now} onpick={t => (target = t)} onreports={openReports} onrivals={() => (rivalsOpen = true)} />
+    <MapView {game} {now} onpick={t => (target = t)} onreports={openReports} onrivals={() => openRivals()} />
   {:else if tab === 'baoKho'}
     <Vault {game} {now} {act} onfocus={focus} />
+  {:else if tab === 'tienMinh'}
+    <Alliance {game} {me} {ally} rows={allyRows} send={sendWorld}>
+      {#snippet chat()}<Chat game={game!} {me} ally api={net ?? null} {act} toast={t => toast(t)} inline />{/snippet}
+    </Alliance>
   {/if}
+  {#if tab === 'banDo'}<Chat {game} {me} ally={!!ally} api={net ?? null} {act} toast={t => toast(t)} />{/if}
   <Hud
     game={shown}
     {now}
@@ -403,7 +438,7 @@
   <TargetSheet {game} {now} {target} {busy} onclose={() => (target = null)} onmarch={march} onrecruit={() => focus('dienVoTruong', 'train')} />
   <Reports {game} {act} open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
   <Replay report={replay} onclose={() => (replay = null)} onrevenge={() => ((replay = null), (reportsOpen = false), (rivalsOpen = true))} {now} />
-  <Rivals {game} {now} {busy} open={rivalsOpen} load={() => (net?.ask({ k: 'rivals' }) ?? Promise.resolve(null)) as Promise<Rival[] | null>} onclose={() => (rivalsOpen = false)} onraid={raid} onrecruit={() => ((rivalsOpen = false), focus('dienVoTruong', 'train'))} />
+  <Rivals {game} {now} {busy} open={rivalsOpen} focus={rivalsFocus} load={pid => (net?.ask({ k: 'rivals', pid }) ?? Promise.resolve(null)) as Promise<Rival[] | null>} onclose={() => ((rivalsOpen = false), (rivalsFocus = null))} onraid={raid} onrecruit={() => ((rivalsOpen = false), focus('dienVoTruong', 'train'))} />
   <Ranks open={ranksOpen} {me} load={b => net?.ranks(b).then(r => (r.ok ? r.data : null)) ?? Promise.resolve(null)} onclose={() => (ranksOpen = false)} />
   <Result {outcome} {game} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
   <Settings

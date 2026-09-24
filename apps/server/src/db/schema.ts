@@ -69,6 +69,7 @@ export const players = pgTable(
     pvp: integer().notNull().default(1000), // điểm tranh đoạt
     weekNo: integer('week_no').notNull().default(0), // sự kiện tuần: tuần của week_pts
     weekPts: integer('week_pts').notNull().default(0),
+    mutedUntil: ts('muted_until'), // cấm chat tới lúc này (admin)
     createdAt: ts('created_at').notNull().defaultNow(),
     updatedAt: ts('updated_at').notNull().defaultNow(),
   },
@@ -87,6 +88,32 @@ export const reports = pgTable(
   },
   t => [primaryKey({ columns: [t.playerId, t.id] }), index().on(t.at)],
 )
+
+// Chat: mã do actor của giới cấp (thử lại commit không nhân đôi). ch: 'w' (giới) hoặc 'a<mã minh>'. Giữ 14 ngày.
+export const chat = pgTable(
+  'chat',
+  {
+    worldId: integer().notNull().references(() => worlds.id),
+    id: integer().notNull(),
+    ch: text().notNull(),
+    playerId: integer().notNull(),
+    name: text().notNull(),
+    text: text().notNull(),
+    at: ts('at').notNull(),
+  },
+  t => [primaryKey({ columns: [t.worldId, t.id] }), index().on(t.at)],
+)
+
+// Báo cáo tin chat: chép lại chữ lúc báo (bằng chứng dù tin bị xoá)
+export const chatReports = pgTable('chat_reports', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  worldId: integer().notNull(),
+  msgId: integer().notNull(),
+  reporter: integer().notNull(),
+  author: integer().notNull(),
+  text: text().notNull(),
+  at: ts('at').notNull().defaultNow(),
+})
 
 export const inbox = pgTable(
   'inbox',

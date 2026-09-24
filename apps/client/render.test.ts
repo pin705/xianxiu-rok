@@ -52,6 +52,8 @@ async function load(lang: 'vi' | 'en') {
     'Title',
     'Rivals',
     'Ranks',
+    'Alliance',
+    'Chat',
   ])
     C[name.replace('world/', '')] = (await vite.ssrLoadModule(`/src/${name}.svelte`)).default
   L = (await vite.ssrLoadModule('/src/lib.ts')).L
@@ -425,6 +427,25 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
         L.guide.items.every(([q]: [string]) => settings.includes(q)),
         'Cài đặt phải có đủ mục Cẩm nang',
       )
+    }
+  }
+})
+
+test('tiên minh, chat', async () => {
+  const people = [
+    { pid: 1, name: 'Lạc Hà Tông', role: 2 as const, hall: 12, power: 9000, online: true },
+    { pid: 2, name: 'Huyết Kiếm Tông', role: 0 as const, hall: 10, power: 7000, online: false },
+  ]
+  const info = { id: 1, name: 'Thanh Vân Minh', tag: 'TVM', members: { 1: 2, 2: 0 } as Record<number, 0 | 1 | 2>, notice: 'Họp lúc 8h', at: late.time, helps: [{ pid: 2, job: 'build' as const, startAt: 0, ms: 60_000, by: [] }], people }
+  const api = { ask: async () => [], say: async () => ({ ok: true as const }), report: async () => true, onChat: () => () => {} }
+  for (const lang of LANGS) {
+    await load(lang)
+    for (const [label, s] of STATES) {
+      paint('Alliance', { game: s, me: 1, ally: null, rows: [{ id: 1, name: 'Thanh Vân Minh', tag: 'TVM', n: 2, power: 16000 }], send: async () => ({ ok: true }) }, `${label}, chưa vào minh`)
+      const inside = paint('Alliance', { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }) }, `${label}, trong minh`)
+      assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
+      paint('Chat', { game: s, me: 1, ally: true, api, act, toast: noop, inline: true }, `${label}, chat trong trang`)
+      paint('Chat', { game: s, me: 1, api: null, act, toast: noop }, `${label}, dải chat`)
     }
   }
 })

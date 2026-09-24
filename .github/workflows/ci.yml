@@ -23,6 +23,7 @@ jobs:
       - run: npm run check
       - run: npm run sim # bot phải tới Chủ điện tầng 15 trong 30 ngày, không thì báo lỗi
       - run: npm run sim -- 60 4 --goal 25 # không luân hồi: phải leo hết tầng 16–25 trong 60 ngày
+      - run: npm run sim -- 30 4 --pvp 20 # 20 bot cướp lẫn nhau: vẫn lên tầng, cướp không quá tay
       - run: npm run build
       - run: npm run e2e # Chrome có sẵn trên máy ảo ubuntu: chơi thật bản online với server game + Postgres
         env:

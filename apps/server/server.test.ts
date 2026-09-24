@@ -244,20 +244,27 @@ test('cướp giữa hai người chơi: server giải trận lúc tới nơi, c
   const ca = client(n, A.token), cb = client(n, B.token)
   await Promise.all([ca.welcome, cb.welcome])
   // dựng hai tông môn tầng 10, hết khiên tân thủ (công cụ dev)
-  const setup = async (token: string, troops: object) => {
+  // giới vừa mở (pha Khai giới: cổng chưa mở) → đặt hai tông môn cùng vùng, sát nhau
+  const setup = async (token: string, troops: object, seat?: { x: number; y: number }) => {
     const { state } = (await (await api(n, '/dev/state', undefined, token)).json()) as { state: any }
     const levels = Object.fromEntries(Object.keys(state.levels).map(k => [k, 10]))
     const res = { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 }
-    assert.equal((await api(n, '/dev/state', { state: { ...state, levels, res, shield: 0, troops: { ...state.troops, ...troops } } }, token)).status, 200)
+    assert.equal((await api(n, '/dev/state', { state: { ...state, levels, res, shield: 0, troops: { ...state.troops, ...troops }, ...(seat && { seat }) } }, token)).status, 200)
+    return state.seat as { x: number; y: number }
   }
-  await setup(A.token, { kiem3: 1100 })
-  await setup(B.token, { the1: 200 })
+  const seatA = await setup(A.token, { kiem3: 1100 })
+  assert.ok(seatA, 'vào giới là có chỗ trên bản đồ')
+  await setup(B.token, { the1: 200 }, { x: seatA.x + 1, y: seatA.y })
   const rivals = (await ca.s.timeout(5000).emitWithAck('get', { k: 'rivals' })) as { pid: number; scout: { side: { troops: unknown[] } } }[]
   assert.ok(rivals.some(r => r.pid === B.pid && r.scout.side.troops.length), 'đối thủ có dò thám')
   const ack = await ca.act({ type: 'raid', pid: B.pid, elder: 'thanhPhong', army: { kiem3: 1100 } })
   assert.ok(ack.ok && ack.p?.marches, JSON.stringify(ack))
   const m = ack.p!.marches!.at(-1)!
   assert.equal(m.returnAt, 0)
+  assert.equal(m.path?.length, 2, 'cùng vùng: đi thẳng')
+  const map = (await ca.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { seats: { pid: number; npc: boolean }[]; marches: { pid: number }[] }
+  assert.ok(map.seats.some(x => x.pid === B.pid) && map.seats.filter(x => x.npc).length === 32, 'bản đồ có mọi tông môn, kể cả 32 phân đà NPC')
+  assert.ok(map.marches.some(x => x.pid === A.pid), 'bản đồ có đội đi cướp')
   assert.equal(m.seed, 0, 'mầm trận cướp không rời server')
   assert.deepEqual(await ca.act({ type: 'raid', pid: B.pid, elder: 'thanhPhong', army: { kiem3: 1 } }), { ok: false, err: 'busy' })
   // tua tới lúc tới nơi: server tự giải trận (không ai phải thao tác)
@@ -288,6 +295,54 @@ test('cướp giữa hai người chơi: server giải trận lúc tới nơi, c
   assert.ok((await cb.act({ type: 'mail', id: mail.id })).ok)
   assert.ok((await row(n, B.pid)).state.res.linhThach >= before + 777)
   assert.equal((await cb.act({ type: 'mail', id: mail.id })).ok, false, 'nhận lần hai bị từ chối')
+  ca.close()
+  cb.close()
+})
+
+test('tiên minh + chat: lập minh, người khác vào, nhờ giúp, kênh giới và kênh minh, lọc từ, giới hạn tần suất, tin lặp, cấm chat', { skip }, async () => {
+  const ADMIN = 'q'.repeat(32)
+  const n = await boot('c', { ADMIN_TOKEN: ADMIN })
+  const w = await newWorld(n)
+  const A = await guest(n, undefined, w), B = await guest(n, undefined, w)
+  const ca = client(n, A.token), cb = client(n, B.token)
+  await Promise.all([ca.welcome, cb.welcome])
+  const { state } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { state: any }
+  await api(n, '/dev/state', { state: { ...state, levels: { ...state.levels, chuDien: 10 }, res: { linhThach: 5e4, linhThao: 5e4, linhKhoang: 5e4 } } }, A.token)
+  const allyEvents: number[] = []
+  cb.s.on('ally', () => allyEvents.push(Date.now()))
+  assert.ok((await ca.act({ type: 'allyFound', name: 'Thanh Vân Minh', tag: 'TVM' })).ok)
+  const list = (await cb.s.timeout(5000).emitWithAck('get', { k: 'allies' })) as { id: number; name: string }[]
+  assert.equal(list[0].name, 'Thanh Vân Minh')
+  assert.ok((await cb.act({ type: 'allyJoin', id: list[0].id })).ok)
+  const info = (await ca.s.timeout(5000).emitWithAck('get', { k: 'ally' })) as { people: { pid: number; role: number }[] }
+  assert.deepEqual(info.people.map(p => [p.pid, p.role]).sort(), [[A.pid, 2], [B.pid, 0]].sort())
+  const row = await n.db.client`select state->'world'->'allies' as a from worlds where id = ${w}`
+  assert.ok(Object.keys(row[0].a).length === 1, 'tiên minh đã ghi vào DB')
+  // chat: kênh minh tới đúng người trong minh; lọc từ; tần suất; lặp lại; cấm chat
+  const heard: { ch: string; text: string }[] = []
+  cb.s.on('chat', m => heard.push(...m.ms.map(x => ({ ch: m.ch, text: x.text }))))
+  const say = (c: typeof ca, ch: 'world' | 'ally', text: string) => c.s.timeout(5000).emitWithAck('say', { ch, text }) as Promise<{ ok: boolean; err?: string }>
+  assert.ok((await say(ca, 'ally', 'Họp lúc 8h, đm đến đúng giờ')).ok)
+  assert.deepEqual(await say(ca, 'ally', 'Họp lúc 8h, đm đến đúng giờ'), { ok: false, err: 'dup' })
+  for (let t = 0; t < 30 && !heard.length; t++) await new Promise(r => setTimeout(r, 50))
+  assert.equal(heard[0]?.text, 'Họp lúc 8h, ** đến đúng giờ')
+  assert.equal(heard[0]?.ch, 'ally')
+  assert.ok((await say(ca, 'world', 'một')).ok && (await say(ca, 'world', 'hai')).ok)
+  assert.deepEqual(await say(ca, 'world', 'ba'), { ok: false, err: 'rate' }, '3 tin liền rồi phải chờ')
+  const hist = (await cb.s.timeout(5000).emitWithAck('get', { k: 'chat', ch: 'ally' })) as { id: number; text: string }[]
+  assert.equal(hist.length, 1)
+  assert.equal(await cb.s.timeout(5000).emitWithAck('report', { id: hist[0].id }), true)
+  const mute = await fetch(`http://127.0.0.1:${n.port}/api/admin/mute`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-rok': '1', 'x-admin-token': ADMIN }, body: JSON.stringify({ world: w, pid: B.pid, minutes: 60 }) })
+  assert.equal(mute.status, 200)
+  let muted = false
+  for (let t = 0; t < 40 && !muted; t++) {
+    await new Promise(r => setTimeout(r, 200))
+    muted = (await say(cb, 'ally', `thử ${t}`)).err === 'muted'
+  }
+  assert.ok(muted, 'cấm chat có hiệu lực qua inbox')
+  const stored = await n.db.client`select count(*)::int as n from chat where world_id = ${w}`
+  assert.ok(stored[0].n >= 3, 'tin chat đã ghi DB')
+  assert.ok(allyEvents.length > 0, 'người trong minh được báo khi minh đổi')
   ca.close()
   cb.close()
 })

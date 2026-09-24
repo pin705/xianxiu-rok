@@ -43,6 +43,8 @@ export class Host {
     const w = new World(c, rows, this.env)
     this.worlds.set(id, w)
     this.env.log.info({ world: id, epoch: c.epoch, players: rows.length }, 'world claimed')
+    await w.ensureNpcs().catch(err => this.env.log.warn({ err, world: id }, 'npc seeding failed')) // lần đầu: phân đà NPC
+    await w.loadChat().catch(err => this.env.log.warn({ err, world: id }, 'chat load failed'))
     w.tick(w.now()) // đuổi kịp sự kiện đã tới hạn lúc giới không có chủ
     return w
   }

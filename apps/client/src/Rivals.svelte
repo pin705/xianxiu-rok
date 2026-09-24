@@ -13,6 +13,7 @@
     now,
     open,
     busy = false,
+    focus = null,
     load,
     onclose,
     onraid,
@@ -22,7 +23,8 @@
     now: number
     open: boolean
     busy?: boolean
-    load: () => Promise<Rival[] | null>
+    focus?: number | null // mở thẳng một tông môn (chạm trên bản đồ giới)
+    load: (pid?: number) => Promise<Rival[] | null>
     onclose: () => void
     onraid: (pid: number, elder: ElderId, army: Army) => void
     onrecruit: () => void
@@ -33,8 +35,9 @@
   let loading = $state(false)
   async function refresh() {
     loading = true
-    list = await load()
+    list = await load(focus ?? undefined)
     loading = false
+    if (focus !== null) pick = list?.find(r => r.pid === focus) ?? null
   }
   $effect(() => {
     if (!open) return

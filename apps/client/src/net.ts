@@ -5,7 +5,7 @@
 import { io, type Socket } from 'socket.io-client'
 import { advance, apply, type Action, type Report, type State } from '@rok/rules'
 import type { WorldAction } from '@rok/rules/world'
-import type { Ack, ClientToServer, Push, Query, Refuse, ServerToClient, Welcome } from '@rok/protocol'
+import type { Ack, Channel, ChatMsg, ClientToServer, MapSnap, Push, Query, Refuse, SayErr, ServerToClient, Welcome } from '@rok/protocol'
 import { fold, offsetOf, withReports, type Pending } from './sync'
 
 export type Ranks = { rows: { pid: number; name: string; v: number; hall: number; rank: number }[]; me: { rank: number; v: number } | null }
@@ -39,6 +39,10 @@ export function createNet(h: Handlers, lang: string) {
   let samples: { rtt: number; off: number }[] = []
   let offlineTimer: ReturnType<typeof setTimeout> | undefined
   let pingTimer: ReturnType<typeof setInterval> | undefined
+  const mapWatch = new Set<(m: MapSnap) => void>() // đang mở bản đồ giới
+  const chatWatch = new Set<(ch: Channel, ms: ChatMsg[]) => void>()
+  const allyWatch = new Set<() => void>()
+  const listen = <T,>(set: Set<T>, f: T) => (set.add(f), () => void set.delete(f))
 
   const now = () => Date.now() + offset
   const set = (s: Status) => {
@@ -112,7 +116,11 @@ export function createNet(h: Handlers, lang: string) {
       clearInterval(pingTimer)
       pingTimer = setInterval(ping, 25_000)
       void ask({ k: 'reports' }).then(list => Array.isArray(list) && merge(list as Report[]))
+      if (mapWatch.size) void askMap() // nối lại: theo dõi lại bản đồ
     })
+    s.on('w', m => mapWatch.forEach(f => f(m)))
+    s.on('chat', m => chatWatch.forEach(f => f(m.ch, m.ms)))
+    s.on('ally', () => allyWatch.forEach(f => f()))
     s.on('s', (m: Push) => {
       if (!confirmed) return
       if (m.v !== v + 1) return resync()
@@ -228,6 +236,7 @@ export function createNet(h: Handlers, lang: string) {
 
   const ask = (q: Query) =>
     new Promise<unknown>(ok => (socket?.connected ? socket.timeout(10_000).emit('get', q, (err, d) => ok(err ? null : d)) : ok(null)))
+  const askMap = () => ask({ k: 'map' }).then(m => m && mapWatch.forEach(f => f(m as MapSnap)))
 
   return {
     now,
@@ -279,6 +288,24 @@ export function createNet(h: Handlers, lang: string) {
       return r
     },
     ask,
+    // Bản đồ giới: ảnh chụp ngay, rồi mỗi lần đổi (server đẩy `w`); hỏi lại mỗi 50 giây để gia hạn theo dõi. Trả hàm huỷ.
+    watchMap(on: (m: MapSnap) => void) {
+      mapWatch.add(on)
+      void askMap()
+      const renew = setInterval(askMap, 50_000)
+      return () => {
+        clearInterval(renew)
+        mapWatch.delete(on)
+      }
+    },
+    // Chat: gửi (server lọc chữ, giới hạn tần suất), báo cáo; nghe tin mới / tiên minh đổi. listen trả hàm huỷ.
+    say: (ch: Channel, text: string) =>
+      new Promise<{ ok: true } | { ok: false; err: SayErr }>(ok =>
+        socket?.connected ? socket.timeout(10_000).emit('say', { ch, text }, (err, r) => ok(err ? { ok: false, err: 'unavailable' } : r)) : ok({ ok: false, err: 'unavailable' }),
+      ),
+    report: (id: number) => new Promise<boolean>(ok => (socket?.connected ? socket.timeout(10_000).emit('report', { id }, (err, r) => ok(!err && r)) : ok(false))),
+    onChat: (f: (ch: Channel, ms: ChatMsg[]) => void) => listen(chatWatch, f),
+    onAlly: (f: () => void) => listen(allyWatch, f),
     // Bảng xếp hạng của giới mình (HTTP, server cache 30 giây)
     ranks: (board: string) => api<Ranks>(`/ranks/${board}`),
     // Công cụ dev (server bật ALLOW_WARP): tua giờ giới, đặt state

@@ -42,6 +42,7 @@ export type March = {
   arriveAt: number
   returnAt: number // 0: chưa hẹn (đi cướp: server giải trận lúc tới nơi rồi mới biết giờ về)
   foe?: string // đi cướp: tên tông môn bên kia (để hiện)
+  path?: { x: number; y: number }[] // đi trên bản đồ giới: các điểm dừng (đi, …cổng, tới) — theo ô
   back?: Army // sau trận: đệ tử còn đứng được, thương binh và chiến lợi phẩm mang về
   hurt?: Army
   gain?: Gain
@@ -115,6 +116,8 @@ export type State = {
   pvp: { pts: number; win: number; loss: number }
   foes: Foe[]
   mail: Mail[]
+  seat: { x: number; y: number } | null // chỗ trên bản đồ giới (server xếp lúc vào giới lần đầu)
+  blocks: number[]                   // người chơi đã chặn (ẩn chat của họ)
 }
 
 export type Action =
@@ -146,13 +149,15 @@ export type Action =
   | { type: 'guard'; elder: ElderId | null } // trưởng lão giữ nhà
   | { type: 'mail'; id: number } // nhận quà trong thư
   | { type: 'event'; i: number } // nhận quà mốc sự kiện tuần
+  | { type: 'block'; pid: number; on: boolean } // chặn / bỏ chặn một người (chat)
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'
 export type Err =
   | 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done' | 'locked' | 'cooldown'
-  | 'empty' | 'no_item' | 'slots' | 'trib' | 'bad' | 'shield' | 'weak' | 'gone'
+  | 'empty' | 'no_item' | 'slots' | 'trib' | 'bad' | 'shield' | 'weak' | 'gone' | 'far' | 'friend' | 'taken' | 'full'
 export type Result = { ok: true; state: State } | { ok: false; error: Err }
 
 const HOUR = 3_600_000
+const BLOCKS_MAX = 100
 export const IDS = Object.keys(BUILDINGS) as BuildingId[]
 export const TECH_IDS = Object.keys(TECHS) as TechId[]
 export const ELDER_IDS = Object.keys(ELDERS) as ElderId[]
@@ -197,7 +202,7 @@ export function newGame(now: number, name = DEFAULT_NAME): State {
     tech: {}, items: {}, elders: { [FIRST_ELDER]: 0 }, talents: {}, gear: {}, buffs: [], marches: [], reports: [], seen: 0,
     beast: 0, cool: {}, sects: SECTS.map(() => false), realms: REALMS.map(() => 0), tower: 0, trib: 0, tribCool: 0, rebirths: 0,
     seed: now >>> 0 || 1, nextId: 1, stats: { trained: 0, healed: 0, brewed: 0, won: 0, lost: 0 }, daily: freshDaily(now), weekly: freshWeekly(now),
-    ev: freshEv(now), shield: now + NEWBIE_SHIELD, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [],
+    ev: freshEv(now), shield: now + NEWBIE_SHIELD, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [], seat: null, blocks: [],
   }
 }
 
@@ -258,6 +263,7 @@ export function bonus(s: State, key: Bonus) {
   return v
 }
 const cut = (s: State, key: Bonus) => 1 - Math.min(MAX_CUT, bonus(s, key))
+export const cutOf = cut
 
 export const elderLevel = (exp = 0) => {
   let n = 1
@@ -699,6 +705,15 @@ export function rebirthLevels(n: number) {
 
 export const jobOf = (s: State, k: JobKind) => (k === 'build' ? s.queue[0] ?? null : s[k])
 
+// Đồng môn giúp: bớt ms cho việc `job` của s (đúng việc đã nhờ — startAt khớp), tại lúc at. Việc đã đổi/xong thì không làm gì.
+export function hasten(s: State, job: JobKind, startAt: number, ms: number, at: number): State {
+  const st = advance(s, at)
+  const j = jobOf(st, job)
+  if (!j || j.startAt !== startAt || job === 'brew') return st
+  const sped = { ...j, finishAt: Math.max(st.time, j.finishAt - ms) }
+  return advance(job === 'build' ? { ...st, queue: st.queue.map(x => (x === j ? (sped as Job) : x)) } : { ...st, [job]: sped }, at)
+}
+
 // Đan độ kiếp được dùng khi bật "dùng đan": viên mạnh nhất đang có
 export const tribPill = (s: State, want: boolean): 'phaCanh' | 'doKiep' | null =>
   !want ? null : s.items.phaCanh ? 'phaCanh' : s.items.doKiep ? 'doKiep' : null
@@ -810,6 +825,7 @@ const PICK: { [K in Action['type']]: Pick<K> } = {
   guard: a => (a.elder === null || isElder(a.elder) ? { type: 'guard', elder: a.elder } : null),
   mail: a => (int(0, 1e12)(a.id) ? { type: 'mail', id: a.id } : null),
   event: a => (int(0, EVENT_GOALS.length - 1)(a.i) ? { type: 'event', i: a.i } : null),
+  block: a => (int(1, 1e12)(a.pid) && typeof a.on === 'boolean' ? { type: 'block', pid: a.pid, on: a.on } : null),
 }
 export function parseAction(raw: unknown): Action | null {
   if (!obj(raw) || typeof raw.type !== 'string' || !Object.hasOwn(PICK, raw.type)) return null
@@ -1038,6 +1054,11 @@ export function apply(s: State, raw: Action, now: number): Result {
       if (state.ev.pts < EVENT_GOALS[a.i]) return no('not_done')
       return ok({ ...grant(state, EVENT_REWARDS[a.i]), ev: { ...state.ev, got: state.ev.got.map((x, k) => x || k === a.i) } })
     }
+    case 'block': {
+      const rest = state.blocks.filter(p => p !== a.pid)
+      if (a.on && rest.length >= BLOCKS_MAX) return no('full')
+      return ok({ ...state, blocks: a.on ? [...rest, a.pid] : rest })
+    }
     case 'focus': {
       if (!state.items.ngungThan) return no('no_item')
       // uống thêm thì kéo dài, không cộng dồn sức
@@ -1119,7 +1140,9 @@ function valid(s: any): s is State {
     obj(s.ev) && num(s.ev.week) && num(s.ev.pts) && Array.isArray(s.ev.got) && s.ev.got.length === EVENT_GOALS.length &&
     num(s.shield) && (s.guard === null || Object.hasOwn(ELDERS, s.guard)) && obj(s.pvp) && num(s.pvp.pts) && num(s.pvp.win) && num(s.pvp.loss) &&
     Array.isArray(s.foes) && s.foes.every((f: any) => obj(f) && num(f.pid) && typeof f.name === 'string' && num(f.at)) &&
-    Array.isArray(s.mail) && s.mail.every((m: any) => obj(m) && num(m.id) && num(m.at) && typeof m.k === 'string')
+    Array.isArray(s.mail) && s.mail.every((m: any) => obj(m) && num(m.id) && num(m.at) && typeof m.k === 'string') &&
+    (s.seat === null || (obj(s.seat) && num(s.seat.x) && num(s.seat.y))) &&
+    Array.isArray(s.blocks) && s.blocks.every(num)
   )
 }
 
@@ -1153,5 +1176,7 @@ function upgrade(raw: unknown) {
   if (s.tower === undefined) s = { ...s, tower: 0 } // … Thông Thiên Tháp
   if (!s.ev) s = { ...s, ev: freshEv(s.time) } // … PvP, thư, sự kiện tuần (người cũ không được khiên tân thủ)
   if (s.shield === undefined) s = { ...s, shield: 0, guard: null, pvp: { pts: PVP_START, win: 0, loss: 0 }, foes: [], mail: [] }
+  if (s.seat === undefined) s = { ...s, seat: null } // … bản đồ giới
+  if (!s.blocks) s = { ...s, blocks: [] } // … chat
   return s
 }

@@ -163,3 +163,108 @@ test('hai đội cùng nhắm một người: trận đầu cho bên thủ khiê
   assert.ok(back.returnAt > 0 && back.back?.kiem3 === 1100 && !Object.keys(back.gain!.res).length)
   assert.ok(m1.arriveAt < m2.arriveAt)
 })
+
+test('bản đồ giới: tất định theo seed, 25 vùng lồi, cổng mở theo pha, đủ điểm, chỗ đặt tông môn ở vòng ngoài', async () => {
+  const { atlas, route, spawn, regionOf, phaseOf, MAP_W } = await import('./atlas.ts')
+  const a = atlas(777)
+  assert.deepEqual(atlas(777).points, a.points)
+  assert.notDeepEqual(atlas(778).points, a.points)
+  assert.equal(a.regions.length, 25)
+  assert.equal(a.regions.filter(r => r.ring === 0).length, 16)
+  const kinds = (k: string) => a.points.filter(p => p.kind === k).length
+  assert.deepEqual([kinds('vein'), kinds('mine'), kinds('boss'), kinds('heaven')], [16 * 2 + 8 * 3 + 1, 16 * 6 + 8 * 6, 8 + 1, 1])
+  for (const g of a.gates) assert.ok([g.a, g.b].includes(regionOf(a, g)), 'cổng nằm trên biên hai vùng')
+  // vùng lồi: đoạn thẳng giữa hai ô cùng vùng không ra khỏi vùng
+  let seed = 3
+  const rand = () => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296)
+  for (let k = 0; k < 500; k++) {
+    const p = { x: Math.floor(rand() * MAP_W), y: Math.floor(rand() * MAP_W) }, q = { x: Math.floor(rand() * MAP_W), y: Math.floor(rand() * MAP_W) }
+    if (regionOf(a, p) !== regionOf(a, q)) continue
+    for (let u = 0; u <= 1; u += 0.05) assert.equal(regionOf(a, { x: p.x + (q.x - p.x) * u, y: p.y + (q.y - p.y) * u }), regionOf(a, p))
+  }
+  // đường: pha 0 chỉ trong vùng; vào tâm phải đợi pha 3; đường qua cổng dài hơn đường chim bay
+  const home = { x: a.regions[0].cx, y: a.regions[0].cy }, next = { x: a.regions[1].cx, y: a.regions[1].cy }, center = { x: a.regions[12].cx, y: a.regions[12].cy }
+  assert.equal(route(a, home, next, 0), null)
+  assert.ok(route(a, home, next, 1)!.path.length === 3)
+  assert.equal(route(a, home, center, 2), null)
+  assert.ok(route(a, home, center, 3)!.len >= Math.hypot(home.x - center.x, home.y - center.y))
+  assert.deepEqual([0, 4, 5, 14, 35, 48].map(phaseOf), [0, 0, 1, 2, 3, 3])
+  const taken: { x: number; y: number }[] = []
+  for (let i = 0; i < 40; i++) taken.push(spawn(a, taken, rand)!)
+  assert.ok(taken.every(p => a.regions[regionOf(a, p)].ring === 0))
+  assert.ok(taken.every((p, i) => taken.every((q, j) => i === j || Math.hypot(p.x - q.x, p.y - q.y) >= 3)))
+})
+
+test('đi cướp trên bản đồ giới: theo đường qua cổng đang mở, chưa có đường thì từ chối "far"', async () => {
+  const { atlas } = await import('./atlas.ts')
+  const a = atlas(777)
+  const at = (r: number) => ({ x: a.regions[r].cx, y: a.regions[r].cy })
+  const ps = world({ ...sect('A', 10, { kiem3: 1100 }), seat: at(0) }, { ...sect('B', 10, { the1: 200 }), seat: at(1) })
+  const r0 = worldAct(ps, 1, { type: 'raid', pid: 2, elder: 'thanhPhong', army: { kiem3: 1100 } }, T0, 1, { atlas: a, phase: 0 })
+  assert.deepEqual(r0, { ok: false, error: 'far' })
+  const r1 = worldAct(ps, 1, { type: 'raid', pid: 2, elder: 'thanhPhong', army: { kiem3: 1100 } }, T0, 1, { atlas: a, phase: 1 })
+  assert.ok(r1.ok)
+  const m = r1.changed.get(1)!.marches[0]
+  assert.equal(m.path!.length, 3, 'đi, cổng, tới')
+  assert.ok(m.arriveAt - T0 > 60_000)
+  assert.equal(rivals(ps, 1, T0, () => 0.5, { atlas: a, phase: 0 }).length, 0, 'khác vùng lúc pha 0: không ai đánh được')
+})
+
+test('tiên minh: lập (tầng 10, tốn phí, tên/tag không trùng), vào, chức vị, rời (truyền minh chủ, giải tán), không cướp đồng minh', async () => {
+  const { freshWorld, allyOf } = await import('./world.ts')
+  const ps = world(sect('A', 10, { kiem3: 1100 }), sect('B', 10, { the1: 200 }), sect('C', 9), sect('D', 10))
+  let w = freshWorld()
+  const act = (pid: number, a: Parameters<typeof worldAct>[2]) => {
+    const r = worldAct(ps, pid, a, T0, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [id, s] of r.changed) ps.set(id, s)
+    w = r.world
+    return null
+  }
+  assert.equal(act(3, { type: 'allyFound', name: 'Thanh Vân', tag: 'TV' }), 'locked', 'tầng 9 chưa lập được')
+  const before = ps.get(1)!.res.linhThach
+  assert.equal(act(1, { type: 'allyFound', name: 'Thanh Vân', tag: 'TV' }), null)
+  assert.equal(ps.get(1)!.res.linhThach, before - 20_000)
+  assert.equal(act(4, { type: 'allyFound', name: 'thanh vân', tag: 'XX' }), 'taken')
+  assert.equal(parseWorldAction({ type: 'allyFound', name: '<script>', tag: 'TV' }), null)
+  const aid = allyOf(w, 1)!.id
+  assert.equal(act(2, { type: 'allyJoin', id: aid }), null)
+  assert.equal(act(2, { type: 'allyJoin', id: aid }), 'busy')
+  assert.equal(raidError(ps.get(1)!, ps.get(2)!, 1, 2, T0, undefined, w), 'friend')
+  assert.equal(act(2, { type: 'allyKick', pid: 1 }), 'locked', 'thành viên không đuổi được minh chủ')
+  assert.equal(act(1, { type: 'allyRole', pid: 2, role: 1 }), null)
+  assert.equal(act(1, { type: 'allyNotice', text: '  Họp  lúc 8h  ' }), null)
+  assert.equal(allyOf(w, 1)!.notice, 'Họp lúc 8h')
+  // minh chủ rời: trưởng lão lên thay; người cuối rời: giải tán
+  assert.equal(act(1, { type: 'allyLeave' }), null)
+  assert.equal(allyOf(w, 2)!.members[2], 2)
+  assert.equal(act(2, { type: 'allyLeave' }), null)
+  assert.equal(Object.keys(w.allies).length, 0)
+})
+
+test('tiên minh giúp đỡ: nhờ một việc, mỗi người giúp một lần, mỗi lần bớt max(60 giây, 1 %), tối đa 10 lần', async () => {
+  const { freshWorld, allyOf, helpMs } = await import('./world.ts')
+  const ps = world(...Array.from({ length: 12 }, (_, i) => sect(`S${i}`, 12)))
+  let w = freshWorld()
+  const act = (pid: number, a: Parameters<typeof worldAct>[2]) => {
+    const r = worldAct(ps, pid, a, T0, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [id, s] of r.changed) ps.set(id, s)
+    w = r.world
+    return null
+  }
+  act(1, { type: 'allyFound', name: 'Vạn Kiếm', tag: 'VK' })
+  const aid = allyOf(w, 1)!.id
+  for (let p = 2; p <= 12; p++) act(p, { type: 'allyJoin', id: aid })
+  ps.set(1, run(ps.get(1)!, { type: 'upgrade', building: 'chuDien' }))
+  assert.equal(act(1, { type: 'helpAsk', job: 'build' }), null)
+  assert.equal(act(1, { type: 'helpAsk', job: 'build' }), 'max_level', 'đã nhờ việc này rồi')
+  const job = ps.get(1)!.queue[0]
+  assert.equal(act(1, { type: 'helpAll' }), 'empty', 'không tự giúp mình')
+  assert.equal(act(2, { type: 'helpAll' }), null)
+  assert.equal(ps.get(1)!.queue[0].finishAt, job.finishAt - helpMs(job))
+  assert.equal(act(2, { type: 'helpAll' }), 'empty', 'mỗi người giúp một lần')
+  for (let p = 3; p <= 12; p++) act(p, { type: 'helpAll' })
+  assert.equal(ps.get(1)!.queue[0].finishAt, job.finishAt - 10 * helpMs(job), 'tối đa 10 lần')
+  assert.equal(allyOf(w, 1)!.helps.length, 0, 'đủ 10 lần thì lời nhờ tự gỡ')
+})

@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 import type { State } from '@rok/rules'
 import type { Seen } from '@rok/protocol'
 import type { Database } from './index.ts'
-import { accounts, events, inbox, players, reports, sessions, worlds } from './schema.ts'
+import { accounts, chat, chatReports, events, inbox, players, reports, sessions, worlds } from './schema.ts'
 
 // ---------- Phiên ----------
 
@@ -64,7 +64,7 @@ export async function createGuest(
 
 // ---------- Giới: nhận / nhả (lease + epoch) ----------
 
-export type Claimed = { id: number; name: string; seed: number; season: number; state: unknown; epoch: number; warp: number }
+export type Claimed = { id: number; name: string; seed: number; season: number; state: unknown; epoch: number; warp: number; opensAt: Date }
 // Nhận giới nếu chưa ai giữ, hoặc chính node này giữ (khởi động lại), hoặc lease đã hết quá 15 giây
 // (grace: DB chập chờn không làm giới chuyển oan sang node khác)
 export async function claimWorld(db: Database, id: number, node: string): Promise<Claimed | { owner: string | null }> {
@@ -78,7 +78,7 @@ export async function claimWorld(db: Database, id: number, node: string): Promis
         or(isNull(worlds.owner), eq(worlds.owner, node), lt(worlds.leaseUntil, sql`now() - interval '15 seconds'`)),
       ),
     )
-    .returning({ id: worlds.id, name: worlds.name, seed: worlds.seed, season: worlds.season, state: worlds.state, epoch: worlds.epoch, warp: worlds.warp })
+    .returning({ id: worlds.id, name: worlds.name, seed: worlds.seed, season: worlds.season, state: worlds.state, epoch: worlds.epoch, warp: worlds.warp, opensAt: worlds.opensAt })
   if (w) return w
   const [o] = await db.select({ owner: worlds.owner }).from(worlds).where(eq(worlds.id, id))
   return { owner: o?.owner ?? null }
@@ -121,7 +121,9 @@ export type Batch = {
   reports: { pid: number; id: number; at: number; kind: string; win: boolean; body: object }[]
   events: { pid: number; name: string; day: number; at: number; props: object }[]
   inboxDone: number[]
+  chat?: ChatRow[]
 }
+export type ChatRow = { id: number; ch: string; pid: number; name: string; text: string; at: number }
 export class Fenced extends Error {}
 
 // Một transaction: kiểm fencing (owner + epoch; UPDATE khoá dòng worlds) rồi ghi mọi thứ. Các câu chạy nối liền trên cùng
@@ -161,11 +163,47 @@ export async function flushWorld(db: Database, b: Batch) {
           select to_timestamp(e.at / 1000.0), e.day, e.pid, e.name, e.props
           from jsonb_to_recordset(${JSON.stringify(b.events)}::jsonb) as e(at float8, day int, pid int, name text, props jsonb)`),
       )
+    if (b.chat?.length)
+      q.push(
+        tx.execute(sql`
+          insert into ${chat} (world_id, id, ch, player_id, name, text, at)
+          select ${b.world}, c.id, c.ch, c.pid, c.name, c.text, to_timestamp(c.at / 1000.0)
+          from jsonb_to_recordset(${JSON.stringify(b.chat)}::jsonb) as c(id int, ch text, pid int, name text, text text, at float8)
+          on conflict do nothing`),
+      )
     if (b.inboxDone.length) q.push(tx.update(inbox).set({ doneAt: sql`now()` }).where(and(eq(inbox.worldId, b.world), inArray(inbox.id, b.inboxDone))))
     const [fence] = (await Promise.all(q)) as [unknown[]]
     if (!fence.length) throw new Fenced()
   })
 }
+
+// Tông môn NPC (không tài khoản): tạo một lần cho mỗi giới. Trùng tên (đã tạo ở lần nhận giới trước) thì bỏ qua.
+export async function createNpcs(db: Database, world: number, rows: { name: string; nameKey: string; state: State }[]) {
+  if (!rows.length) return []
+  return db
+    .insert(players)
+    .values(rows.map(r => ({ worldId: world, name: r.name, nameKey: r.nameKey, state: r.state })))
+    .onConflictDoNothing()
+    .returning(playerCols)
+}
+
+// ---------- Chat ----------
+
+// Tin gần đây của giới (mọi kênh) để nạp lại lúc nhận giới
+export async function recentChat(db: Database, world: number, limit = 400): Promise<ChatRow[]> {
+  const rows = await db
+    .select({ id: chat.id, ch: chat.ch, pid: chat.playerId, name: chat.name, text: chat.text, at: chat.at })
+    .from(chat)
+    .where(eq(chat.worldId, world))
+    .orderBy(desc(chat.id))
+    .limit(limit)
+  return rows.reverse().map(r => ({ ...r, at: r.at.getTime() }))
+}
+export const reportChat = (db: Database, r: { world: number; msgId: number; reporter: number; author: number; text: string }) =>
+  db.insert(chatReports).values({ worldId: r.world, msgId: r.msgId, reporter: r.reporter, author: r.author, text: r.text })
+export const setMute = (db: Database, pid: number, until: Date | null) => db.update(players).set({ mutedUntil: until }).where(eq(players.id, pid))
+export const mutes = (db: Database, world: number) =>
+  db.select({ pid: players.id, until: players.mutedUntil }).from(players).where(and(eq(players.worldId, world), sql`${players.mutedUntil} > now()`))
 
 // ---------- Hộp lệnh (inbox): API ghi, chủ giới đọc 2 giây một lần, đánh dấu xong trong chính commit của nó ----------
 
@@ -237,6 +275,7 @@ export async function prune(db: Database) {
     if (!ok) return
     await tx.delete(reports).where(lt(reports.at, sql`now() - interval '30 days'`))
     await tx.delete(events).where(lt(events.at, sql`now() - interval '180 days'`))
+    await tx.delete(chat).where(lt(chat.at, sql`now() - interval '14 days'`))
     await tx.delete(sessions).where(lt(sessions.seenAt, sql`now() - interval '180 days'`))
   })
 }

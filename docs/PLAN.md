@@ -60,9 +60,10 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 | Bản đồ | Bản đồ vương quốc | ✅ Vùng PvE riêng: 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, 3 bí cảnh × 5 tầng | ✅ Bí cảnh 4–5 (Lôi Trì tầng 16, Hỗn Độn tầng 21; địch có ngũ hành) · P3: giới chung |
 | Sự kiện cuối tuần | Sự kiện | ✅ Thứ Bảy, Chủ nhật (giờ VN): chiến lợi phẩm đánh lại và kinh nghiệm ×1,5; thưởng lần đầu giữ nguyên. Dải thông báo trong bảng nhiệm vụ, bảng mục tiêu hiện số đã nhân | Sự kiện theo mùa, có chủ đề (P3) |
 | Thương hội | Chợ đổi tài nguyên | ✅ Ở Tàng Bảo Các: đổi tài nguyên dư lấy loại thiếu, nhận về 60% (+1% mỗi tầng Tàng Bảo Các, tối đa 75%) — cứu kho lệch, vẫn đắt hơn xây công trình tài nguyên | Chợ giữa người chơi (P3) |
+| Thư, xếp hạng, sự kiện tuần | — | — | ✅ Thư có quà (nhận đúng một lần; admin gửi qua inbox), xếp hạng giới (lực chiến, cảnh giới, tháp, tranh đoạt, sự kiện tuần), sự kiện tuần 6 chủ đề xoay vòng, 5 mốc quà (mốc 5: trưởng lão Tô Mị Nương), top 10 giới nhận thư |
 | Thông Thiên Tháp | — | ✅ Tháp thử thách không giới hạn tầng, mở ở tầng 10, đánh ngay như bí cảnh; mỗi tầng địch mạnh hơn 10% và đổi hệ chính; thưởng lần đầu mỗi tầng (tầng 5: Tụ Khí, tầng 10: Độ Kiếp + Bồi Nguyên); kỷ lục giữ qua luân hồi. Sim: bot giỏi tầng 39 sau 30 ngày, người chơi thường tầng 38 sau 45 ngày | Bảng xếp hạng tháp (P2) |
 | Độ kiếp | — | ✅ 3 đợt lôi kiếp (mỗi đợt một hệ), đệ tử sống sót đi tiếp; thành công lên tầng ngay, thất bại chờ 10 phút | ✅ Kiếp tầng 15, 20 (mỗi đợt thêm một hành) · P3: kiếp vân công khai trên bản đồ |
-| PvP | Đánh thành | — | P2: bất đồng bộ; P3: trên bản đồ |
+| PvP | Đánh thành | — | ✅ P2: cướp bất đồng bộ trong giới (từ tầng 6; kho bảo hộ 30 %, cướp 30 % phần vượt theo sức mang; khiên 8 giờ khi thủ thua, đi cướp thì mất khiên, tân thủ 72 giờ; báo thù 24 giờ; điểm kiểu Elo; Hộ Sơn Đại Trận + trưởng lão trấn thủ) · P3: trên bản đồ |
 | Tiên minh | Liên minh | — (tab khóa "sắp có") | P3 |
 | Mùa, luân hồi | KvK | ✅ Luân hồi tự nguyện ở tầng 15: giữ trưởng lão, công pháp, đan; kiếp sau khởi đầu với công trình tầng 3 rồi tầng 5 ("căn cơ"), mỗi lần +20% sản lượng, −10% thời gian xây | P3: gắn với mùa |
 | Chat | Chat | — | P3 |
@@ -232,7 +233,10 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 
 **Cổng P1** (tham khảo): ≥ 300 người thử; D1 ≥ 30%, D7 ≥ 10%; người đã luân hồi vẫn chơi tiếp. Không đạt → sửa lõi, chưa làm online.
 
-### P2 — Online (1.5–2 tháng)
+### P2 — Online (1.5–2 tháng) — ✅ xong phần mã
+
+Đã chạy: server trọng tài (mục 4 › Kiến trúc online), PvP bất đồng bộ trong giới, Hộ Sơn Đại Trận, Luyện Khí Phòng, thư, xếp hạng, sự kiện tuần, `/api/admin/stats` (D1/D7 theo ngày vào đầu tiên, phân bố cảnh giới, tỉ lệ độ kiếp). Cân bằng PvP đo bằng `npm run sim -- 30 4 --pvp 20` (20 bot chung giới, nửa giỏi nửa thường; CI chặn): trung vị tầng 19 sau 30 ngày, đồ bị cướp 20,7 % sản lượng (trần 25 %), người không đi cướp bị cướp nhiều nhất 2 lần/ngày (trần 3). Việc còn lại để qua cổng là việc ngoài mã: người chơi thật.
+
 
 - Server Node + Postgres, tài khoản khách, `rules` chạy trên server, cloud save.
 - PvP bất đồng bộ: ghép đối thủ cùng tầm lực chiến → xuất quân (có timer) → đánh vào phòng thủ hiện tại của họ (Hộ sơn đại trận + đệ tử thủ) → cướp một phần tài nguyên ngoài phần kho bảo hộ. Có khiên bảo hộ sau khi bị đánh, có báo thù.

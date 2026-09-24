@@ -61,7 +61,7 @@ export const TABS: readonly { id: TabIcon; unlock: number }[] = [
   { id: 'tongMon', unlock: 1 },
   { id: 'monHa', unlock: 2 },
   { id: 'banDo', unlock: 3 },
-  { id: 'tienMinh', unlock: 99 }, // P3
+  { id: 'tienMinh', unlock: 4 },
   { id: 'baoKho', unlock: 3 },
 ]
 export type Tab = TabIcon

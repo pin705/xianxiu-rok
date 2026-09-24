@@ -2,7 +2,7 @@
 // Chạy: npm run db && npm run build && npm run e2e   (Chrome ở chỗ khác: CHROME=…; Postgres khác: E2E_DATABASE_URL=…)
 // Mỗi lần chạy: database tạm riêng, cổng trống riêng, bản sao dist riêng — chạy song song hay build lại giữa chừng không giẫm nhau.
 // Kiểm: lập tông môn → 14 nhiệm vụ đầu chỉ bằng click (tua giờ giới qua API dev) → tải lại vẫn còn tiến độ (từ server) →
-// hai tab đồng bộ → ngăn kéo desktop → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
+// hai tab đồng bộ → ngăn kéo desktop → bị người chơi khác cướp: thông báo, xem lại trận, báo thù → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
 // màn "không có mạng", đổi ngôn ngữ vẫn được (service worker) → console sạch.
 import { spawn, type ChildProcess } from 'node:child_process'
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
@@ -11,6 +11,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import assert from 'node:assert/strict'
 import postgres from 'postgres'
+import { io } from 'socket.io-client'
+import { protocolHash } from '@rok/protocol/hash'
 
 const CHROME = process.env.CHROME ?? ['/usr/bin/google-chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find(p => existsSync(p))
 if (!CHROME || !existsSync(CHROME)) {
@@ -203,6 +205,34 @@ try {
   assert.ok(await a.until(`[...document.querySelectorAll('dialog[open]')].some(d => d.querySelector('h2')?.innerText === 'Tụ Linh Trận')`), 'desktop: ngăn kéo mở mà không chọn được công trình khác')
   await a.js(closeAll)
   console.log('✓ desktop: ngăn kéo bên phải, vẫn chọn được công trình trên núi')
+  assert.deepEqual(errors, [], 'console có lỗi')
+
+  // Tranh đoạt: người chơi thứ hai (bot socket.io) cướp tông môn trong trình duyệt → bên thủ thấy thông báo, xem lại trận, báo thù
+  await a.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+  const tenTo = (st: any, troops: object) => ({ ...st, levels: Object.fromEntries(Object.keys(st.levels).map(k => [k, 10])), shield: 0, troops: { ...st.troops, ...troops }, res: { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 } })
+  await a.js(`${truth}.then(st => fetch('/api/dev/state', { method: 'POST', headers: { 'content-type': 'application/json', 'x-rok': '1' }, body: JSON.stringify({ state: (${tenTo.toString()})(st, { the1: 200 }) }) })).then(r => r.ok)`)
+  const api = (path: string, token: string, body?: object) =>
+    fetch(`http://127.0.0.1:${GAME}/api${path}`, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json', 'x-rok': '1', authorization: `Bearer ${token}` }, body: body && JSON.stringify(body) }).then(r => r.json())
+  const thief = (await (await fetch(`http://127.0.0.1:${GAME}/api/guest`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-rok': '1' }, body: JSON.stringify({ name: 'Hắc Sát Tông', lang: 'vi' }) })).json()) as { token: string; path: string }
+  const other = io(`http://127.0.0.1:${GAME}`, { path: thief.path, auth: { token: thief.token, protocol: protocolHash(), build: 'e2e', lang: 'vi' }, transports: ['websocket'], reconnection: false })
+  await new Promise(ok => other.once('welcome', ok))
+  const t2 = (await api('/dev/state', thief.token)) as { state: any }
+  const home = (await a.js(truth)).seat // giới vừa mở: cổng chưa mở, kẻ cướp phải cùng vùng
+  await api('/dev/state', thief.token, { state: { ...tenTo(t2.state, { kiem3: 1100 }), seat: { x: home.x + 1, y: home.y } } })
+  const victimPid = (await a.js(`fetch('/api/me').then(r => r.json()).then(d => d.pid)`)) as number
+  const raid = await other.timeout(10_000).emitWithAck('act', { type: 'raid', pid: victimPid, elder: 'thanhPhong', army: { kiem3: 1100 } })
+  assert.ok(raid.ok, `người chơi thứ hai không xuất quân được: ${JSON.stringify(raid)}`)
+  await api('/dev/warp', thief.token, { min: 12 })
+  assert.ok(await a.until(`document.body.innerText.includes('Hắc Sát Tông vừa cướp tông môn')`, 10000), `bên thủ không được báo bị cướp — ${await seen()}`)
+  await a.js(`[...document.querySelectorAll('button.toast')].find(b => b.innerText.includes('Hắc Sát Tông'))?.click()`)
+  assert.ok(await a.until(`[...document.querySelectorAll('dialog[open] button')].some(b => b.innerText.includes('Xem kết quả'))`), 'không mở được trận vừa bị cướp')
+  await a.js(`[...document.querySelectorAll('dialog[open] button')].find(b => b.innerText.includes('Xem kết quả'))?.click()`)
+  assert.ok(await a.until(`[...document.querySelectorAll('dialog[open] button')].some(b => b.innerText.includes('Báo thù'))`), 'thua trận thủ mà không có nút Báo thù')
+  await a.js(`[...document.querySelectorAll('dialog[open] button')].find(b => b.innerText.includes('Báo thù'))?.click()`)
+  assert.ok(await a.until(`[...document.querySelectorAll('dialog[open]')].some(d => d.innerText.includes('Hắc Sát Tông') && d.innerText.includes('Kẻ thù'))`, 10000), `báo thù: không thấy kẻ thù trong danh sách — ${await seen()}`)
+  await a.js(closeAll)
+  other.close()
+  console.log('✓ bị người chơi khác cướp: thông báo, xem lại trận, báo thù')
   assert.deepEqual(errors, [], 'console có lỗi')
 
   // Server sập giữa chừng (SIGKILL, không kịp xả): client báo đang nối lại, server lên thì tự nối, thao tác đã ack còn nguyên

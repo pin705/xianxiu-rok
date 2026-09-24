@@ -458,6 +458,45 @@ export const MATCH_PICK = 3
 export const PVP_GATE = { x: 200, y: -60 } // tới P3 (bản đồ giới): đội đi cướp rời vùng qua mép trên bản đồ
 export const GUARD_STEP = 0.04 // Hộ Sơn Đại Trận: thủ và máu bên thủ mỗi tầng
 
+// ---------- Tiên minh ----------
+
+// Lập từ tầng ALLY_HALL, tốn ALLY_COST mỗi loại. Tối đa ALLY_MAX người, 3 chức vị (thành viên · trưởng lão · minh chủ).
+// Giúp đỡ: mỗi việc nhờ được giúp tối đa ALLY_HELPS lần, mỗi lần bớt max(HELP_MIN, HELP_SHARE × thời gian việc).
+export const ALLY_HALL = 10
+export const ALLY_COST = 20_000
+export const ALLY_MAX = 30
+export const ALLY_ELDERS = 4 // số trưởng lão tối đa
+export const ALLY_HELPS = 10
+export const HELP_MIN = 60_000
+export const HELP_SHARE = 0.01
+
+// ---------- Điểm trên bản đồ giới ----------
+
+// Chiếm (linh mạch, trận nhãn, Thiên Môn): đội tới nơi thì đóng quân; điểm thuộc phe có quân đóng. Tối đa GARRISON_MAX đội mỗi điểm.
+// Linh mạch cho cả tiên minh (hoặc người giữ một mình) sản lượng +VEIN_BUFF theo cấp, cộng dồn tới VEIN_CAP.
+export const GARRISON_MAX = 6
+export const VEIN_BUFF = [0.03, 0.05, 0.08] // theo cấp điểm 1..3 (vòng ngoài, giữa, tâm)
+export const VEIN_CAP = 0.3
+// Mỏ: trữ MINE_STOCK, khai MINE_RATE mỗi giờ (một loại tài nguyên theo mỏ), cạn thì hồi đầy sau MINE_RESPAWN
+export const MINE_STOCK = [20_000, 40_000, 40_000]
+export const MINE_RATE = [3_000, 5_000, 5_000]
+export const MINE_RESPAWN = 2 * 3_600_000
+// Yêu vương: kho máu chung (tính bằng số đệ tử bậc 1), mỗi đội đánh một "lát" SLICE = str / slices — đội nhỏ đánh một mình thì thua,
+// cả minh kết trận thì hạ được (Lanchester). Chết thì thưởng chia theo sát thương, hồi sau respawn.
+export const BOSSES: Partial<Record<number, { str: number; tier: Tier; slices: number; respawn: number; reward: Reward }>> = {
+  2: { str: 60_000, tier: 4, slices: 5, respawn: 24 * 3_600_000, reward: { res: b(300_000, 300_000, 300_000), items: { daiTuKhi: 6, phaCanh: 3 } } },
+  3: { str: 150_000, tier: 5, slices: 8, respawn: 72 * 3_600_000, reward: { res: b(800_000, 800_000, 800_000), items: { daiTuKhi: 15, taiTuy: 5 }, elder: 'huyenMinh' } },
+}
+// Linh triều: mỗi TIDE_EVERY một vùng có triều trong TIDE_LEN: sản lượng +TIDE_PROD cho tông môn trong vùng, khai mỏ +TIDE_MINE
+export const TIDE_EVERY = 8 * 3_600_000
+export const TIDE_LEN = 2 * 3_600_000
+export const TIDE_PROD = 0.15
+export const TIDE_MINE = 0.5
+// Kết trận: tối đa RALLY_MAX đội, chờ RALLY_WAIT rồi cùng tới đích. Viện binh: tối đa REINFORCE_MAX đội đóng ở nhà đồng minh.
+export const RALLY_MAX = 8
+export const RALLY_WAIT = [5 * 60_000, 10 * 60_000, 30 * 60_000]
+export const REINFORCE_MAX = 3
+
 // ---------- Thư ----------
 
 export const MAIL_MAX = 30
