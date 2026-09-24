@@ -102,7 +102,7 @@
   </ol>
   <form class="row" onsubmit={send}>
     <input class="grow" bind:value={text} maxlength="200" placeholder={L.chat.say} aria-label={L.chat.say} />
-    <Button size="sm" disabled={!text.trim()}>{L.chat.send}</Button>
+    <Button size="sm" type="submit" disabled={!text.trim()}>{L.chat.send}</Button>
   </form>
 {/snippet}
 

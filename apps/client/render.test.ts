@@ -288,6 +288,9 @@ function paint(name: string, props: Record<string, unknown>, label: string) {
     `${name} lọt "${bad?.[0]}" ra màn hình (${label}): …${body.slice(Math.max(0, (bad?.index ?? 0) - 80), (bad?.index ?? 0) + 40)}…`,
   )
   assert.deepEqual(unnamed(body), [], `${name} có nút/ô nhập không tên (${label})`)
+  // Button mặc định type="button": form thiếu nút submit thì bấm không gửi (chỉ Enter mới gửi)
+  for (const f of body.match(/<form[\s\S]*?<\/form>/g) ?? [])
+    assert.ok(f.includes('type="submit"'), `${name} có form không nút gửi (${label})`)
   return body
 }
 

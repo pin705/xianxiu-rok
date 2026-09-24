@@ -110,6 +110,7 @@
         <Button
           variant="gold"
           wide
+          type="submit"
           disabled={game.levels.chuDien < ALLY_HALL ||
             RESOURCES.some(r => game.res[r] < ALLY_COST) ||
             name.trim().length < 2 ||
