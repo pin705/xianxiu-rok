@@ -3,7 +3,7 @@ import { no, ok, type Actions } from '../core/action.ts'
 import { grant } from '../core/battle.ts'
 import { dailyDone, dailyReward, weeklyDone, weeklyReward } from '../core/calendar.ts'
 import { int } from '../core/parse.ts'
-import { gearSum, techSum, totalTroops } from '../core/stats.ts'
+import { cost, gearSum, storeNeed, techSum, totalTroops } from '../core/stats.ts'
 import { type State } from '../core/types.ts'
 import { addBag, addItems, bag, mark } from '../core/util.ts'
 import {
@@ -12,6 +12,7 @@ import {
   DAILY_HALL,
   EVENT_GOALS,
   EVENT_REWARDS,
+  MAX_LEVEL,
   QUESTS,
   WEEKLY,
   WEEKLY_BONUS,
@@ -48,6 +49,9 @@ export const questDone = (s: State) => {
   const [cur, need] = questProgress(s, q)
   return cur >= need
 }
+// Công trình cần xây cho nhiệm vụ — trừ khi kho không đủ chỗ cho chi phí: khi đó phải nâng Tàng Bảo Các trước
+export const questBuilding = (s: State, id: BuildingId): BuildingId =>
+  storeNeed(s, cost(id, Math.min(s.levels[id] + 1, MAX_LEVEL))) ? 'tangBaoCac' : id
 
 export type TaskAction =
   | { type: 'claim' } // nhiệm vụ chính

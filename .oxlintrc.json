@@ -37,20 +37,12 @@
       "rules": { "max-lines": ["error", { "max": 800, "skipBlankLines": true, "skipComments": true }] }
     },
     {
-      "files": ["apps/client/src/App.svelte"],
-      "rules": { "max-lines": ["error", { "max": 450, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
       "files": ["apps/client/src/net.ts"],
       "rules": { "max-lines-per-function": ["error", { "max": 340, "skipBlankLines": true, "skipComments": true }] }
     },
     {
       "files": ["packages/rules/bot.ts"],
       "rules": { "max-lines-per-function": ["error", { "max": 180, "skipBlankLines": true, "skipComments": true }] }
-    },
-    {
-      "files": ["packages/rules/world/raid.ts"],
-      "rules": { "max-lines-per-function": ["error", { "max": 140, "skipBlankLines": true, "skipComments": true }] }
     }
   ]
 }

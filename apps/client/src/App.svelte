@@ -1,22 +1,11 @@
 <script lang="ts">
-  import { mailText } from '@rok/i18n'
   import { flushSync, onMount } from 'svelte'
   import {
-    BUILDINGS,
-    IDS,
-    MAP_HALL,
-    REALMS,
-    TOWER,
     TRIBS,
-    SECTS,
-    TECH_IDS,
-    MAX_LEVEL,
-    cost,
-    jobOf,
     newGame,
     questDone,
+    questBuilding,
     questOf,
-    storeNeed,
     type Action,
     type Army,
     type Bag as Res,
@@ -48,6 +37,7 @@
   import Vault from './Vault.svelte'
   import AwaySummary from './AwaySummary.svelte'
   import { summarize, type Away } from './away'
+  import { changes, longJob, unlocked } from './notices'
   import { createNet, type Net, type Status } from './net'
   import { provideGame } from './game'
   import { setMood } from './music'
@@ -59,10 +49,8 @@
     TABS,
     forgetP1,
     isMuted,
-    defended,
     keyBlocked,
     read,
-    reportName,
     setMuted,
     sfx,
     write,
@@ -128,22 +116,6 @@
     if (!game || selected || game.queue.length || q?.k !== 'build' || questDone(game)) return null
     return questBuilding(game, q.id as BuildingId)
   })
-  // Công trình nhiệm vụ cần xây — trừ khi kho không đủ chỗ cho chi phí: khi đó phải nâng Tàng Bảo Các trước
-  const questBuilding = (s: State, id: BuildingId) =>
-    storeNeed(s, cost(id, Math.min(s.levels[id] + 1, MAX_LEVEL))) ? 'tangBaoCac' : id
-
-  // Chủ điện lên tầng n: báo những gì vừa mở (UX.md mục 4 — mở dần theo tầng)
-  function unlocks(n: number) {
-    const opened = [
-      ...IDS.filter(id => id !== 'chuDien' && BUILDINGS[id].unlock === n).map(id => L.b[id].name),
-      ...TABS.filter(t => t.unlock === n).map(t => L.tabs[t.id]),
-      ...(n === MAP_HALL ? [L.map.title] : []),
-      ...SECTS.flatMap((d, i) => (d.hall === n ? [L.sects[i].name] : [])),
-      ...REALMS.flatMap((d, i) => (d.hall === n ? [L.realms[i].name] : [])),
-      ...(n === TOWER.hall ? [L.tower.name] : []),
-    ]
-    if (opened.length) toast(L.unlocked([...new Set(opened)].join(', ')))
-  }
 
   let tid = 0
   function toast(text: string, opt: { bad?: boolean; report?: Report; act?: [string, () => void] } = {}) {
@@ -160,11 +132,7 @@
   function askPush(prev: State, next: State) {
     if (!pushKey || typeof Notification === 'undefined' || Notification.permission !== 'default' || read('rok.push'))
       return
-    const long = (k: 'build' | 'train' | 'study' | 'forge') => {
-      const j = jobOf(next, k)
-      return !!j && j !== jobOf(prev, k) && j.finishAt - next.time >= 30 * 60_000
-    }
-    if (!(['build', 'train', 'study', 'forge'] as const).some(long)) return
+    if (!longJob(prev, next)) return
     write('rok.push', '1')
     const key = pushKey
     toast(L.push.ask, {
@@ -188,23 +156,12 @@
       if (prev.reports.every(r => r.id <= prev.seen)) setTimeout(() => act({ type: 'seen' }))
       prev = { ...prev, levels: { ...prev.levels, chuDien: next.levels.chuDien } }
     }
-    for (const id of IDS) {
-      if (next.levels[id] > prev.levels[id]) {
-        bursts = [...bursts, { id, level: next.levels[id], t: now }]
-        if (!document.hidden) sfx('done') // tab ẩn (tab khác cùng người chơi đang bấm) thì im
-        if (id === 'chuDien') unlocks(next.levels[id])
-      }
+    const c = changes(prev, next, reports, tr)
+    for (const id of c.up) {
+      bursts = [...bursts, { id, level: next.levels[id], t: now }]
+      if (!document.hidden) sfx('done') // tab ẩn (tab khác cùng người chơi đang bấm) thì im
     }
-    if (reports)
-      for (const r of next.reports.filter(r => r.id >= prev.nextId && r !== tr))
-        toast(r.def ? defended(r) : L.report.fresh(reportName(r), r.win), { report: r, bad: !r.win })
-    const newest = next.mail.at(-1)
-    if (newest && newest.id >= prev.nextId) toast(`${L.mail.title}: ${mailText(L, newest)[0]}`)
-    if (next.stats.trained > prev.stats.trained) toast(L.away.trained(next.stats.trained - prev.stats.trained))
-    if (next.stats.healed > prev.stats.healed) toast(L.away.healed(next.stats.healed - prev.stats.healed))
-    if (next.stats.brewed > prev.stats.brewed) toast(L.away.brewed(next.stats.brewed - prev.stats.brewed))
-    for (const t of TECH_IDS)
-      if ((next.tech[t] ?? 0) > (prev.tech[t] ?? 0)) toast(L.away.tech(L.techs[t], next.tech[t]!))
+    for (const n of c.notes) toast(n.text, n)
   }
 
   onMount(() => {
@@ -447,7 +404,7 @@
         sfx(r.win ? 'win' : 'lose')
         if (r.win) {
           bursts = [...bursts, { id: 'chuDien', level: hall, t: now }]
-          unlocks(hall)
+          for (const n of unlocked(hall)) toast(n.text)
         }
       },
       800 + r.fights.length * 1200,

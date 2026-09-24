@@ -108,6 +108,22 @@ function plunder(att: State, def: State, elder: ElderId, back: Army): Partial<Ba
   return Object.fromEntries(RESOURCES.map((r, i) => [r, Math.floor(want[i] * k)]))
 }
 
+// Một trận cướp đã giải: số liệu mà bên đánh, bên thủ và viện binh cùng dùng
+type Bout = {
+  at: number
+  att: State
+  attPid: number
+  def: State
+  defPid: number
+  m: March
+  win: boolean
+  loot: Partial<Bag>
+  delta: number // điểm Elo bên đánh được (bên thủ mất đúng bấy nhiêu)
+  n1: number[] // quân bên thủ (nhà + viện binh) còn đứng sau trận
+  fights: Report['fights'] // nhìn từ bên đánh
+  flip: Report['fights'] // nhìn từ bên thủ
+}
+
 // Một trận cướp lúc at: cả hai state đã đưa tới at. Bên thủ là mọi đệ tử đang ở nhà.
 // Viện binh (helpers) đứng cùng quân nhà: thua thì bị đánh bật về, thắng thì ở lại với phần còn lại.
 export function raid(
@@ -130,28 +146,39 @@ export function raid(
   const left = last?.n[0] ?? ids.map(u => m.army[u]!)
   const back = Object.fromEntries(ids.map((u, k) => [u, left[k]])) as Army
   const hurt = Object.fromEntries(ids.map((u, k) => [u, m.army[u]! - left[k]])) as Army
-  const dIds = UNITS.filter(u => def.troops[u] > 0)
-  const n1 = last?.n[1] ?? foe.troops.map(t => t.n)
-  const dLeft = n1.slice(0, dIds.length)
-  const dHurt = Object.fromEntries(dIds.map((u, k) => [u, def.troops[u] - dLeft[k]])) as Army
-  const loot = f.win ? plunder(att, def, m.elder, back) : {}
-  const delta = elo(att.pvp.pts, def.pvp.pts, f.win)
   const g = guardOf(def)
   const aSnap = snap(me, m.elder, elderLevel(att.elders[m.elder]))
   const dSnap = snap(foe, g ?? undefined, g ? elderLevel(def.elders[g]) : 1)
-  const exp = f.win ? Math.round(40 * def.levels.chuDien * (1 + lead(att, m.elder, 'exp'))) : 0
+  const b: Bout = {
+    at,
+    att,
+    attPid,
+    def,
+    defPid,
+    m,
+    win: f.win,
+    loot: f.win ? plunder(att, def, m.elder, back) : {},
+    delta: elo(att.pvp.pts, def.pvp.pts, f.win),
+    n1: last?.n[1] ?? foe.troops.map(t => t.n),
+    fights: [{ a: aSnap, b: dSnap, rounds: f.rounds }],
+    flip: [{ a: dSnap, b: aSnap, rounds: flipRounds(f.rounds) }],
+  }
+  return { att: attacker(b, back, hurt), def: defender(b), helpers: helping(b, helpers, hOffs) }
+}
 
-  // bên đánh: chiến báo, đội quay về mang chiến lợi phẩm (nhận lúc về tới nhà như PvE)
+// Bên đánh: chiến báo, đội quay về mang chiến lợi phẩm (nhận lúc về tới nhà như PvE)
+function attacker({ at, att, def, defPid, m, win, loot, delta, fights }: Bout, back: Army, hurt: Army): State {
+  const exp = win ? Math.round(40 * def.levels.chuDien * (1 + lead(att, m.elder, 'exp'))) : 0
   let a: State = pushReport(att, {
     at,
     kind: 'pvp',
     i: defPid,
     foe: def.name,
-    win: f.win,
+    win,
     hurt,
     dead: {},
     gain: { res: loot, items: {}, exp },
-    fights: [{ a: aSnap, b: dSnap, rounds: f.rounds }],
+    fights,
   })
   a = {
     ...a,
@@ -169,14 +196,19 @@ export function raid(
     ),
     pvp: {
       pts: Math.max(0, att.pvp.pts + delta),
-      win: att.pvp.win + (f.win ? 1 : 0),
-      loss: att.pvp.loss + (f.win ? 0 : 1),
+      win: att.pvp.win + (win ? 1 : 0),
+      loss: att.pvp.loss + (win ? 0 : 1),
     },
-    foes: f.win ? att.foes.filter(x => x.pid !== defPid) : att.foes, // báo thù xong
+    foes: win ? att.foes.filter(x => x.pid !== defPid) : att.foes, // báo thù xong
   }
-  if (f.win) a = evBump(bump(a, 'win'), 'raid')
+  return win ? evBump(bump(a, 'win'), 'raid') : a
+}
 
-  // bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên
+// Bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên
+function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout): State {
+  const dIds = UNITS.filter(u => def.troops[u] > 0)
+  const dLeft = n1.slice(0, dIds.length)
+  const dHurt = Object.fromEntries(dIds.map((u, k) => [u, def.troops[u] - dLeft[k]])) as Army
   const lost = Object.fromEntries(RESOURCES.map(r => [r, loot[r] ?? 0])) as Bag
   const adm = admit(
     {
@@ -186,64 +218,55 @@ export function raid(
     },
     dHurt,
   )
-  const flip: Report['fights'] = [{ a: dSnap, b: aSnap, rounds: flipRounds(f.rounds) }]
-  let dd: State = pushReport(adm.state, {
+  const dd: State = pushReport(adm.state, {
     at,
     kind: 'pvp',
     i: attPid,
     foe: att.name,
     def: true,
-    win: !f.win,
+    win: !win,
     hurt: dHurt,
     dead: adm.dead,
     lost: loot,
     gain: noGain(),
     fights: flip,
   })
-  dd = {
+  return {
     ...dd,
     pvp: {
       pts: Math.max(0, def.pvp.pts - delta),
-      win: def.pvp.win + (f.win ? 0 : 1),
-      loss: def.pvp.loss + (f.win ? 1 : 0),
+      win: def.pvp.win + (win ? 0 : 1),
+      loss: def.pvp.loss + (win ? 1 : 0),
     },
     foes: [...def.foes.filter(x => x.pid !== attPid), { pid: attPid, name: att.name, at }].slice(-FOES_MAX),
-    shield: f.win ? Math.max(def.shield, at + SHIELD_TIME) : def.shield,
-    marches: f.win
-      ? dd.marches.map(x => (x.target.kind === 'trib' ? { ...x, foil: (x.foil ?? 0) + 1 } : x))
-      : dd.marches, // phá kiếp
+    shield: win ? Math.max(def.shield, at + SHIELD_TIME) : def.shield,
+    marches: win ? dd.marches.map(x => (x.target.kind === 'trib' ? { ...x, foil: (x.foil ?? 0) + 1 } : x)) : dd.marches, // phá kiếp
   }
+}
+
+// Viện binh: chiến báo như bên thủ; thua thì bị đánh bật về nhà, thắng thì ở lại với phần còn lại
+function helping({ at, att, attPid, win, n1, flip }: Bout, helpers: Party, offs: number[]): Players {
   const hs: Players = new Map()
   helpers.forEach(([hp, st, hm], j) => {
-    const d = split(hm, n1, hOffs[j + 1])
-    let x = pushReport(st, {
+    const d = split(hm, n1, offs[j + 1])
+    const x = pushReport(st, {
       at,
       kind: 'pvp',
       i: attPid,
       foe: att.name,
       def: true,
-      win: !f.win,
+      win: !win,
       hurt: d.hurt,
       dead: {},
       gain: noGain(),
       fights: flip,
     })
-    x = withMarch(
-      x,
-      f.win
-        ? {
-            ...hm,
-            stay: false,
-            back: d.left,
-            hurt: addArmy(hm.hurt, d.hurt),
-            gain: noGain(),
-            returnAt: at + travel(hm),
-          }
-        : { ...hm, army: d.left, hurt: addArmy(hm.hurt, d.hurt) },
-    )
-    hs.set(hp, x)
+    const march = win
+      ? { ...hm, stay: false, back: d.left, hurt: addArmy(hm.hurt, d.hurt), gain: noGain(), returnAt: at + travel(hm) }
+      : { ...hm, army: d.left, hurt: addArmy(hm.hurt, d.hurt) }
+    hs.set(hp, withMarch(x, march))
   })
-  return { att: a, def: dd, helpers: hs }
+  return hs
 }
 
 export type Rival = {
