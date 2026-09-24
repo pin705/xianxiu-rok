@@ -23,13 +23,15 @@ import {
   type State,
   mail,
   type Target,
+  rng,
 } from '@rok/rules'
+import type { Text } from '@rok/i18n'
 import { advanceWorld, atlas, freshWorld, mapOf, spawn, worldAct, type Chron } from '@rok/rules/world'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 let vite: ViteDevServer
 const C: Record<string, any> = {}
-let L: any
+let L: Text // bộ chữ của ngôn ngữ đang vẽ (lấy qua Vite như component)
 let render: (c: any, o: { props: Record<string, unknown>; context?: Map<string, unknown> }) => { body: string } // lấy qua Vite: cùng bản runtime với component
 
 // Ngôn ngữ chọn lúc nạp lib.ts theo navigator.language: nạp lại toàn bộ component cho từng ngôn ngữ
@@ -545,7 +547,7 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
         label,
       )
       assert.ok(
-        L.guide.items.every(([q]: [string]) => settings.includes(q)),
+        L.guide.items.every(([q]) => settings.includes(q)),
         'Cài đặt phải có đủ mục Cẩm nang',
       )
       // bản online: mục tài khoản (SSR chưa có thông tin tài khoản — chỉ cần vẽ không lỗi, vẫn có tiêu đề mục)
@@ -623,8 +625,7 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
   const info = { id: 1, name: 'Giới 1', season: 1, map: 7, opened: late.time - 6 * DAY } // ngày 7: pha Tranh mạch
   const a = atlas(7)
   const taken: { x: number; y: number }[] = []
-  let k = 3
-  const rand = () => (k = (Math.imul(k, 1103515245) + 12345) >>> 0) / 4294967296
+  const rand = rng(3)
   const ps = new Map(
     STATES.map(([, st], i) => {
       const seat = spawn(a, taken, rand)!

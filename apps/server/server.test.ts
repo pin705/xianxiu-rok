@@ -5,8 +5,8 @@ import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import postgres from 'postgres'
 import { io, type Socket } from 'socket.io-client'
-import type { Action } from '@rok/rules'
-import type { Ack, ClientToServer, Push, Refuse, ServerToClient, Welcome } from '@rok/protocol'
+import type { Action, State } from '@rok/rules'
+import type { Ack, Answer, ClientToServer, Push, Query, QueryOf, Refuse, ServerToClient, Welcome } from '@rok/protocol'
 import { buildServer } from './src/app.ts'
 import { loadConfig } from './src/config.ts'
 import { prune } from './src/db/store.ts'
@@ -27,6 +27,7 @@ const skip = !up && 'không có Postgres (npm run db)'
 
 type Node = Awaited<ReturnType<typeof buildServer>> & { port: number; path: string }
 const nodes: Node[] = []
+// name: đường node — mỗi test một tên (hai node trùng tên sẽ giành lease của nhau); chỉ test khởi động lại dùng lại tên
 async function boot(
   name: string,
   env: Record<string, string> = {},
@@ -70,6 +71,18 @@ const api = (n: Node, path: string, body?: object, token?: string) =>
     headers: { 'content-type': 'application/json', 'x-rok': '1', ...(token && { authorization: `Bearer ${token}` }) },
     body: body && JSON.stringify(body),
   })
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+// Chờ tới khi f() đúng (tối đa ms); trả kết quả lần thử cuối
+async function until(f: () => boolean | Promise<boolean>, ms = 5000, every = 50) {
+  for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(every)) if (await f()) return true
+  return f()
+}
+// Công cụ dev (ALLOW_WARP): state của chính người chơi và giờ của giới
+const getState = async (n: Node, token: string) =>
+  (await (await api(n, '/dev/state', undefined, token)).json()) as { now: number; state: State }
+// Mọi công trình ở tầng lv
+const allLevels = (levels: State['levels'], lv: number) =>
+  Object.fromEntries(Object.keys(levels).map(k => [k, lv])) as State['levels']
 // Giới riêng cho test cần cô lập (mỗi giới do đúng một node giữ)
 const newWorld = async (n: Node) =>
   (await n.db.client`insert into worlds (seed) values (7) returning id`)[0].id as number
@@ -109,13 +122,15 @@ function client(n: Node, token: string, protocol = n.protocol) {
     return r as Ack
   }
   const push = async (pred: (p: Push) => boolean = () => true, ms = 5000) => {
-    for (const t0 = Date.now(); Date.now() - t0 < ms; await new Promise(r => setTimeout(r, 20))) {
+    for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(20)) {
       const i = pushes.findIndex(pred)
       if (i >= 0) return pushes.splice(i, 1)[0]
     }
     throw new Error('hết giờ chờ patch')
   }
-  return { s, welcome, act, push, pushes, frames, close: () => s.close() }
+  // truy vấn đúng kiểu trả lời (Answer[k] của @rok/protocol)
+  const ask = async <K extends Query['k']>(q: QueryOf<K>) => (await s.timeout(5000).emitWithAck('get', q)) as Answer[K]
+  return { s, welcome, act, ask, push, pushes, frames, close: () => s.close() }
 }
 
 test('migration chạy lại trên schema đã có: không làm gì, không lỗi', { skip }, async () => {
@@ -235,7 +250,7 @@ test(
     const p = await c.push(m => !!m.rep?.length)
     assert.equal(p.rep![0].kind, 'beast')
     assert.ok(p.rep![0].win)
-    const list = (await c.s.timeout(5000).emitWithAck('get', { k: 'reports' })) as { id: number }[]
+    const list = await c.ask({ k: 'reports' })
     assert.equal(list.length, 1)
     c.close()
   },
@@ -334,8 +349,8 @@ test(
     // dựng hai tông môn tầng 10, hết khiên tân thủ (công cụ dev)
     // giới vừa mở (pha Khai giới: cổng chưa mở) → đặt hai tông môn cùng vùng, sát nhau
     const setup = async (token: string, troops: object, seat?: { x: number; y: number }) => {
-      const { state } = (await (await api(n, '/dev/state', undefined, token)).json()) as { state: any }
-      const levels = Object.fromEntries(Object.keys(state.levels).map(k => [k, 10]))
+      const { state } = await getState(n, token)
+      const levels = allLevels(state.levels, 10)
       const res = { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 }
       assert.equal(
         (
@@ -362,10 +377,7 @@ test(
     const seatA = await setup(A.token, { kiem3: 1100 })
     assert.ok(seatA, 'vào giới là có chỗ trên bản đồ')
     await setup(B.token, { the1: 200 }, { x: seatA.x + 1, y: seatA.y })
-    const rivals = (await ca.s.timeout(5000).emitWithAck('get', { k: 'rivals' })) as {
-      pid: number
-      scout: { side: { troops: unknown[] } }
-    }[]
+    const rivals = await ca.ask({ k: 'rivals' })
     assert.ok(
       rivals.some(r => r.pid === B.pid && r.scout.side.troops.length),
       'đối thủ có dò thám',
@@ -375,10 +387,7 @@ test(
     const m = ack.p!.marches!.at(-1)!
     assert.equal(m.returnAt, 0)
     assert.equal(m.path?.length, 2, 'cùng vùng: đi thẳng')
-    const map = (await ca.s.timeout(5000).emitWithAck('get', { k: 'map' })) as {
-      seats: { pid: number; npc: boolean }[]
-      marches: { pid: number }[]
-    }
+    const map = await ca.ask({ k: 'map' })
     assert.ok(
       map.seats.some(x => x.pid === B.pid) && map.seats.filter(x => x.npc).length === 32,
       'bản đồ có mọi tông môn, kể cả 32 phân đà NPC',
@@ -393,7 +402,7 @@ test(
       err: 'busy',
     })
     // tua tới lúc tới nơi: server tự giải trận (không ai phải thao tác)
-    const { now } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { now: number }
+    const { now } = await getState(n, A.token)
     await api(n, '/dev/warp', { min: Math.ceil((m.arriveAt - now) / 60_000) + 1 }, A.token)
     const pb = await cb.push(p => !!p.rep?.some(r => r.kind === 'pvp'))
     assert.equal(pb.rep![0].def, true)
@@ -454,14 +463,14 @@ test(
   { skip },
   async () => {
     const ADMIN = 'q'.repeat(32)
-    const n = await boot('c', { ADMIN_TOKEN: ADMIN })
+    const n = await boot('ally', { ADMIN_TOKEN: ADMIN })
     const w = await newWorld(n)
     const A = await guest(n, undefined, w),
       B = await guest(n, undefined, w)
     const ca = client(n, A.token),
       cb = client(n, B.token)
     await Promise.all([ca.welcome, cb.welcome])
-    const { state } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { state: any }
+    const { state } = await getState(n, A.token)
     await api(
       n,
       '/dev/state',
@@ -487,12 +496,11 @@ test(
       { ok: false, err: 'rude' },
       'bố cáo có từ tục',
     )
-    const list = (await cb.s.timeout(5000).emitWithAck('get', { k: 'allies' })) as { id: number; name: string }[]
+    const list = await cb.ask({ k: 'allies' })
     assert.equal(list[0].name, 'Thanh Vân Minh')
     assert.ok((await cb.act({ type: 'allyJoin', id: list[0].id })).ok)
-    const info = (await ca.s.timeout(5000).emitWithAck('get', { k: 'ally' })) as {
-      people: { pid: number; role: number }[]
-    }
+    const info = await ca.ask({ k: 'ally' })
+    assert.ok(info, 'đã vào minh')
     assert.deepEqual(
       info.people.map(p => [p.pid, p.role]).sort(),
       [
@@ -509,15 +517,12 @@ test(
       c.s.timeout(5000).emitWithAck('say', { ch, text }) as Promise<{ ok: boolean; err?: string }>
     assert.ok((await say(ca, 'ally', 'Họp lúc 8h, đm đến đúng giờ')).ok)
     assert.deepEqual(await say(ca, 'ally', 'Họp lúc 8h, đm đến đúng giờ'), { ok: false, err: 'dup' })
-    for (let t = 0; t < 30 && !heard.length; t++) await new Promise(r => setTimeout(r, 50))
+    await until(() => heard.length > 0, 1500)
     assert.equal(heard[0]?.text, 'Họp lúc 8h, ** đến đúng giờ')
     assert.equal(heard[0]?.ch, 'ally')
     assert.ok((await say(ca, 'world', 'một')).ok && (await say(ca, 'world', 'hai')).ok)
     assert.deepEqual(await say(ca, 'world', 'ba'), { ok: false, err: 'rate' }, '3 tin liền rồi phải chờ')
-    const hist = (await cb.s.timeout(5000).emitWithAck('get', { k: 'chat', ch: 'ally' })) as {
-      id: number
-      text: string
-    }[]
+    const hist = await cb.ask({ k: 'chat', ch: 'ally' })
     assert.equal(hist.length, 1)
     assert.equal(await cb.s.timeout(5000).emitWithAck('report', { id: hist[0].id }), true)
     const mute = await fetch(`http://127.0.0.1:${n.port}/api/admin/mute`, {
@@ -526,11 +531,8 @@ test(
       body: JSON.stringify({ world: w, pid: B.pid, minutes: 60 }),
     })
     assert.equal(mute.status, 200)
-    let muted = false
-    for (let t = 0; t < 40 && !muted; t++) {
-      await new Promise(r => setTimeout(r, 200))
-      muted = (await say(cb, 'ally', `thử ${t}`)).err === 'muted'
-    }
+    let t = 0
+    const muted = await until(async () => (await say(cb, 'ally', `thử ${t++}`)).err === 'muted', 8000, 200)
     assert.ok(muted, 'cấm chat có hiệu lực qua inbox')
     const stored = await n.db.client`select count(*)::int as n from chat where world_id = ${w}`
     assert.ok(stored[0].n >= 3, 'tin chat đã ghi DB')
@@ -551,11 +553,11 @@ test(
     const c = client(n, A.token)
     const welcome = await c.welcome
     const a = atlas(welcome.world.map)
-    const { state } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { state: any }
+    const { state } = await getState(n, A.token)
     // linh mạch trống trong vùng của mình (NPC cùng vùng có thể đã giữ một mạch — chọn mạch chưa ai giữ)
-    const map0 = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { spots: { i: number; own?: string }[] }
+    const map0 = await c.ask({ k: 'map' })
     const vein = a.points.find(
-      p => p.kind === 'vein' && p.region === regionOf(a, state.seat) && !map0.spots.some(s => s.i === p.i && s.own),
+      p => p.kind === 'vein' && p.region === regionOf(a, state.seat!) && !map0.spots.some(s => s.i === p.i && s.own),
     )
     assert.ok(vein, 'vùng nào cũng có linh mạch')
     // phân đà NPC cùng vùng cũng đi giữ mạch trống (có khi tới trước): mang đủ quân để thắng chắc đội đóng của chúng
@@ -569,12 +571,10 @@ test(
     assert.ok(held)
     const buffed = await c.push(p => !!p.p.buffs?.some(b => b.src === 'vein'), 8000)
     assert.ok(buffed, 'giữ linh mạch: sản lượng tăng')
-    const map = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as {
-      spots: { i: number; own?: string; n?: number }[]
-    }
+    const map = await c.ask({ k: 'map' })
     assert.equal(map.spots.find(s => s.i === vein!.i)?.n, 1)
     assert.ok((await c.act({ type: 'recall', id: m.id })).ok)
-    const map2 = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as { spots: { i: number; own?: string }[] }
+    const map2 = await c.ask({ k: 'map' })
     assert.equal(map2.spots.find(s => s.i === vein!.i)?.own, undefined, 'gọi về hết quân: điểm trống')
     c.close()
   },
@@ -590,9 +590,9 @@ test(
     const A = await guest(n, undefined, w)
     const c = client(n, A.token)
     const welcome = await c.welcome
-    const { state } = (await (await api(n, '/dev/state', undefined, A.token)).json()) as { state: any }
+    const { state } = await getState(n, A.token)
     assert.ok(state.seat, 'vào giới là có chỗ trên bản đồ')
-    const levels = Object.fromEntries(Object.keys(state.levels).map(k => [k, 5]))
+    const levels = allLevels(state.levels, 5)
     await api(
       n,
       '/dev/state',
@@ -612,9 +612,7 @@ test(
     assert.equal(ack.ok && ack.rep, undefined, 'chưa giải ngay: kiếp vân đang tụ')
     const cloud = ack.p!.marches!.at(-1)!
     assert.equal(cloud.target.kind, 'trib')
-    const map = (await c.s.timeout(5000).emitWithAck('get', { k: 'map' })) as {
-      seats: { pid: number; cloud?: number }[]
-    }
+    const map = await c.ask({ k: 'map' })
     assert.equal(map.seats.find(s => s.pid === A.pid)?.cloud, cloud.arriveAt)
     await api(n, '/dev/warp', { min: Math.ceil((cloud.arriveAt - welcome.now) / 60_000) + 1 }, A.token)
     const p = await c.push(x => !!x.rep?.some(r => r.kind === 'trib'), 8000)
@@ -629,17 +627,13 @@ test(
   { skip },
   async () => {
     const { SEASON_DAYS } = await import('@rok/rules/world')
-    const n = await boot('m')
+    const n = await boot('season')
     const w = await newWorld(n)
     const A = await guest(n, undefined, w)
     const c = client(n, A.token)
     const w1 = await c.welcome
     assert.equal(w1.world.season, 1)
-    const board = (await c.s.timeout(5000).emitWithAck('get', { k: 'season' })) as {
-      rows: unknown[]
-      me: unknown
-      fame: unknown[]
-    }
+    const board = await c.ask({ k: 'season' })
     assert.deepEqual(board, { rows: [], me: null, fame: [] })
     const bye = new Promise<string>(ok => c.s.once('bye', m => ok(m.reason)))
     await api(n, '/dev/warp', { min: SEASON_DAYS * 24 * 60 + 5 }, A.token)
@@ -675,14 +669,14 @@ test(
       [A, { items: { doKiep: 2 } }],
       [B, {}],
     ] as const) {
-      const { state } = (await (await api(n, '/dev/state', undefined, g.token)).json()) as { state: any }
+      const { state } = await getState(n, g.token)
       await api(
         n,
         '/dev/state',
         {
           state: {
             ...state,
-            levels: Object.fromEntries(Object.keys(state.levels).map(k => [k, 10])),
+            levels: allLevels(state.levels, 10),
             res: { linhThach: 5e4, linhThao: 5e4, linhKhoang: 5e4 },
             ...extra,
           },
@@ -692,9 +686,8 @@ test(
     }
     const sell = await ca.act({ type: 'sell', good: 'doKiep', n: 1, price: 6000 })
     assert.ok(sell.ok, JSON.stringify(sell))
-    const m = (await cb.s.timeout(5000).emitWithAck('get', { k: 'market', good: 'doKiep' })) as {
-      orders: { id: number; name: string; price: number }[]
-    }
+    const m = await cb.ask({ k: 'market', good: 'doKiep' })
+    assert.ok(m, 'chợ đang bật')
     assert.equal(m.orders.length, 1)
     const buy = await cb.act({ type: 'buy', id: m.orders[0].id })
     assert.ok(buy.ok && buy.p?.items?.doKiep === 1, JSON.stringify(buy))
@@ -774,33 +767,29 @@ test(
     const ca = client(n, A2.token),
       cb = client(n, B.token)
     await Promise.all([ca.welcome, cb.welcome])
-    const st = (await (await api(n, '/dev/state', undefined, B.token)).json()) as { state: any }
+    const st = await getState(n, B.token)
     await api(
       n,
       '/dev/state',
       {
         state: {
           ...st.state,
-          levels: Object.fromEntries(Object.keys(st.state.levels).map(k => [k, 10])),
+          levels: allLevels(st.state.levels, 10),
           res: { linhThach: 1e5, linhThao: 1e5, linhKhoang: 1e5 },
         },
       },
       B.token,
     )
     assert.ok((await cb.act({ type: 'allyFound', name: 'Xoá Thử', tag: 'XT' })).ok)
-    const ally = (await ca.s.timeout(5000).emitWithAck('get', { k: 'allies' })) as { id: number }[]
+    const ally = await ca.ask({ k: 'allies' })
     assert.ok((await ca.act({ type: 'allyJoin', id: ally[0].id })).ok)
     const bye = new Promise<string>(ok => cb.s.once('bye', m => ok(m.reason)))
     assert.equal((await json(await api(n, '/account/delete', {}, B.token))).ok, true)
     assert.equal((await api(n, '/account', undefined, B.token)).status, 401, 'phiên bị bỏ ngay')
     assert.equal(await bye, 'deleted')
-    let gone = false
-    for (let i = 0; i < 50 && !gone; i++, await new Promise(r => setTimeout(r, 100)))
-      gone = !(await n.db.client`select 1 from players where id = ${B.pid}`).length
+    const gone = await until(async () => !(await n.db.client`select 1 from players where id = ${B.pid}`).length)
     assert.ok(gone, 'tông môn bị xoá khỏi DB')
-    const mine = (await ca.s.timeout(5000).emitWithAck('get', { k: 'ally' })) as {
-      members: Record<number, number>
-    } | null
+    const mine = await ca.ask({ k: 'ally' })
     assert.deepEqual(mine?.members, { [A.pid]: 2 }, 'người còn lại thành minh chủ')
     ca.close()
     cb.close()
@@ -837,18 +826,14 @@ test(
       'B'.repeat(87),
       'client lấy khoá công khai VAPID',
     )
-    const until = async (f: () => boolean, ms = 5000) => {
-      for (const t0 = Date.now(); Date.now() - t0 < ms && !f();) await new Promise(r => setTimeout(r, 50))
-      return f()
-    }
 
     // V giao việc xây 30 phút rồi rời game → tới giờ xong thì được nhắc; đang chơi thì không
     const cv = client(n, V.token)
     await cv.welcome
-    const st = ((await (await api(n, '/dev/state', undefined, V.token)).json()) as { state: any }).state
+    const st = (await getState(n, V.token)).state
     const strong = {
       ...st,
-      levels: Object.fromEntries(Object.keys(st.levels).map(k => [k, 10])),
+      levels: allLevels(st.levels, 10),
       shield: 0,
       troops: { ...st.troops, the1: 200 },
       res: { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 },
@@ -866,7 +851,7 @@ test(
     )
     await cv.push()
     cv.close()
-    await new Promise(r => setTimeout(r, 200))
+    await sleep(200)
     await api(n, '/dev/warp', { min: 31 }, V.token)
     assert.ok(await until(() => got.length >= 1), 'không nhắc khi việc xong')
     assert.deepEqual(got[0], { pid: V.pid, title: en.push.title, body: en.push.done.build, tag: 'done' })
@@ -875,8 +860,8 @@ test(
     const T = await guest(n, undefined, w)
     const ct = client(n, T.token)
     await ct.welcome
-    const ts = ((await (await api(n, '/dev/state', undefined, T.token)).json()) as { state: any }).state
-    const vs = ((await (await api(n, '/dev/state', undefined, V.token)).json()) as { state: any }).state
+    const ts = (await getState(n, T.token)).state
+    const vs = (await getState(n, V.token)).state
     await api(
       n,
       '/dev/state',
@@ -885,7 +870,7 @@ test(
           ...strong,
           time: ts.time,
           name: ts.name,
-          seat: { x: vs.seat.x + 1, y: vs.seat.y },
+          seat: { x: vs.seat!.x + 1, y: vs.seat!.y },
           troops: { ...ts.troops, kiem3: 1100 },
           queue: [],
         },
@@ -949,14 +934,12 @@ test(
 
     // mất DB lâu (> 12 giây không gia hạn được lease): giới tự chuyển chỉ đọc, từ chối thao tác; có DB lại thì chạy tiếp
     down()
-    for (const t = Date.now(); Date.now() - t < 20_000 && !status.includes(true);)
-      await new Promise(r => setTimeout(r, 200))
+    for (const t = Date.now(); Date.now() - t < 20_000 && !status.includes(true);) await sleep(200)
     assert.ok(status.includes(true), 'mất DB lâu mà giới không chuyển chỉ đọc')
     const refused = await c.act({ type: 'upgrade', building: 'khoangMach' })
     assert.deepEqual(refused, { ok: false, err: 'unavailable' })
     cut = false
-    for (const t = Date.now(); Date.now() - t < 15_000 && status.at(-1) !== false;)
-      await new Promise(r => setTimeout(r, 200))
+    for (const t = Date.now(); Date.now() - t < 15_000 && status.at(-1) !== false;) await sleep(200)
     assert.equal(status.at(-1), false, 'có DB lại mà giới không hết chỉ đọc')
     assert.ok((await c.act({ type: 'upgrade', building: 'khoangMach' })).ok)
     c.close()

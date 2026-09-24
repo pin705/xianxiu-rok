@@ -5,6 +5,7 @@
 // hai tab đồng bộ → ngăn kéo desktop → bị người chơi khác cướp: thông báo, xem lại trận, báo thù → bản đồ giới: chạm tông môn mở bảng thông tin → tài khoản: gắn email, đăng xuất, đăng nhập lại → server sập rồi lên lại: tự nối lại, thao tác đã ack còn nguyên → mất mạng hẳn: hiện
 // màn "không có mạng", đổi ngôn ngữ vẫn được (service worker) → console sạch.
 import { spawn, type ChildProcess } from 'node:child_process'
+import { loadText } from '@rok/i18n'
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
@@ -103,6 +104,10 @@ const chrome = spawn(
   ],
   { stdio: 'ignore' },
 )
+// Chữ giao diện lấy từ bộ chữ tiếng Việt (game chạy tiếng Việt, rok.lang = vi): sửa chữ không làm vỡ e2e
+const T = await loadText('vi')
+const q = (text: string) => JSON.stringify(text) // nhúng chữ vào biểu thức JS chạy trong trang
+const THIEF = 'Hắc Sát Tông' // tông môn đi cướp người chơi e2e
 const errors: string[] = []
 let expectDrops = false // đang cố ý tắt server: lỗi kết nối là đúng
 
@@ -119,9 +124,11 @@ async function tab() {
   await new Promise(r => ws.addEventListener('open', r))
   let id = 0
   const wait = new Map<number, (v: any) => void>()
+  const on = new Map<string, () => void>() // chờ một sự kiện CDP (Page.loadEventFired…)
   ws.addEventListener('message', e => {
     const m = JSON.parse(String(e.data))
     if (m.id) wait.get(m.id)?.(m)
+    if (m.method) on.get(m.method)?.()
     const note = (text: string) =>
       !(expectDrops && /socket|ERR_CONNECTION|Failed to fetch|net::|WebSocket|503|502|504/i.test(text)) &&
       errors.push(text)
@@ -143,8 +150,12 @@ async function tab() {
   await send('Page.enable')
   await send('Log.enable')
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+  const loaded = new Promise<void>(ok => {
+    on.set('Page.loadEventFired', ok)
+    setTimeout(ok, 15000)
+  })
   await send('Page.navigate', { url: URL })
-  await sleep(1500)
+  await loaded
   const js = async (expression: string) => {
     const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
     if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description ?? expression)
@@ -159,11 +170,11 @@ async function tab() {
   return { js, until, send }
 }
 
-const closeAll = `document.querySelectorAll('dialog[open]').forEach(d => [...d.querySelectorAll('button')].find(b => b.matches('.x') || b.innerText.trim() === 'Đóng')?.click())`
+const closeAll = `document.querySelectorAll('dialog[open]').forEach(d => [...d.querySelectorAll('button')].find(b => b.matches('.x') || b.innerText.trim() === ${q(T.panel.close)})?.click())`
 // Trong hộp thoại trên cùng: bấm nút hành động chính (không phải nút phụ, không phải chữa thương)
 const act = `(() => {
   const d = [...document.querySelectorAll('dialog[open]')].pop(); if (!d) return ''
-  const b = [...d.querySelectorAll('button.btn:not([disabled]):not(.ghost):not(.quiet)')].find(b => !/Đóng|Chữa|Xem/.test(b.innerText))
+  const b = [...d.querySelectorAll('button.btn:not([disabled]):not(.ghost):not(.quiet)')].find(b => ![${q(T.panel.close)}, ${q(T.alchemy.heal)}, ${q(T.report.replay)}].some(t => b.innerText.includes(t)))
   b?.click(); return b?.innerText.trim() ?? ''
 })()`
 // Công cụ dev của server (ALLOW_WARP), gọi từ trong trang để cookie phiên đi kèm
@@ -196,7 +207,7 @@ try {
   for (let i = 0; i < 80 && (await a.js(truth)).quest < 14; i++) {
     await a.js(closeAll)
     await a.js(
-      `document.querySelector('button.quest') || [...document.querySelectorAll('button')].find(b => b.innerText.includes('Tông môn'))?.click()`,
+      `document.querySelector('button.quest') || [...document.querySelectorAll('button')].find(b => b.innerText.includes(${q(T.tabs.tongMon)}))?.click()`,
     )
     await sleep(400)
     await a.js(`document.querySelector('button.quest')?.click()`)
@@ -229,7 +240,8 @@ try {
   const pick = (name: string) =>
     `[...document.querySelectorAll('[aria-label]')].find(e => e.getAttribute('aria-label').startsWith('${name}'))?.click()`
   let started = false
-  for (const name of ['Tụ Linh Trận', 'Linh điền', 'Khoáng mạch', 'Tàng Bảo Các', 'Diễn võ trường', 'Đan phòng']) {
+  for (const id of ['tuLinhTran', 'linhDien', 'khoangMach', 'tangBaoCac', 'dienVoTruong', 'danPhong'] as const) {
+    const name = T.b[id].name
     await a.js(closeAll)
     await a.js(pick(name))
     await sleep(500)
@@ -256,17 +268,17 @@ try {
   await sleep(500)
   await a.js(closeAll) // vừa tua 24 giờ: màn Xuất quan hiện ra (đúng thiết kế) — đóng trước
   await sleep(300)
-  await a.js(pick('Chủ điện'))
+  await a.js(pick(T.b.chuDien.name))
   assert.ok(
     await a.until(
-      `[...document.querySelectorAll('dialog[open]')].some(d => !d.matches(':modal') && d.innerText.includes('Chủ điện'))`,
+      `[...document.querySelectorAll('dialog[open]')].some(d => !d.matches(':modal') && d.innerText.includes(${q(T.b.chuDien.name)}))`,
     ),
     'desktop: bảng không mở thành ngăn kéo',
   )
-  await a.js(pick('Tụ Linh Trận'))
+  await a.js(pick(T.b.tuLinhTran.name))
   assert.ok(
     await a.until(
-      `[...document.querySelectorAll('dialog[open]')].some(d => d.querySelector('h2')?.innerText === 'Tụ Linh Trận')`,
+      `[...document.querySelectorAll('dialog[open]')].some(d => d.querySelector('h2')?.innerText === ${q(T.b.tuLinhTran.name)})`,
     ),
     'desktop: ngăn kéo mở mà không chọn được công trình khác',
   )
@@ -299,7 +311,7 @@ try {
     await fetch(`http://127.0.0.1:${GAME}/api/guest`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-rok': '1' },
-      body: JSON.stringify({ name: 'Hắc Sát Tông', lang: 'vi' }),
+      body: JSON.stringify({ name: THIEF, lang: 'vi' }),
     })
   ).json()) as { token: string; path: string }
   const other = io(`http://127.0.0.1:${GAME}`, {
@@ -321,21 +333,23 @@ try {
   assert.ok(raid.ok, `người chơi thứ hai không xuất quân được: ${JSON.stringify(raid)}`)
   await api('/dev/warp', thief.token, { min: 12 })
   assert.ok(
-    await a.until(`document.body.innerText.includes('Hắc Sát Tông vừa cướp tông môn')`, 10000),
+    await a.until(`document.body.innerText.includes(${q(T.pvp.raided(THIEF).replace(/!$/, ''))})`, 10000),
     `bên thủ không được báo bị cướp — ${await seen()}`,
   )
-  await a.js(`[...document.querySelectorAll('button.toast')].find(b => b.innerText.includes('Hắc Sát Tông'))?.click()`)
+  await a.js(`[...document.querySelectorAll('button.toast')].find(b => b.innerText.includes(${q(THIEF)}))?.click()`)
   assert.ok(
     await a.until(
-      `[...document.querySelectorAll('dialog[open] button')].some(b => b.innerText.includes('Xem kết quả'))`,
+      `[...document.querySelectorAll('dialog[open] button')].some(b => b.innerText.includes(${q(T.report.skip)}))`,
     ),
     'không mở được trận vừa bị cướp',
   )
   await a.js(
-    `[...document.querySelectorAll('dialog[open] button')].find(b => b.innerText.includes('Xem kết quả'))?.click()`,
+    `[...document.querySelectorAll('dialog[open] button')].find(b => b.innerText.includes(${q(T.report.skip)}))?.click()`,
   )
   assert.ok(
-    await a.until(`[...document.querySelectorAll('dialog[open] button')].some(b => b.innerText.includes('Báo thù'))`),
+    await a.until(
+      `[...document.querySelectorAll('dialog[open] button')].some(b => b.innerText.includes(${q(T.pvp.revenge)}))`,
+    ),
     'thua trận thủ mà không có nút Báo thù',
   )
   await a.js(
@@ -343,7 +357,7 @@ try {
   )
   assert.ok(
     await a.until(
-      `[...document.querySelectorAll('dialog[open]')].some(d => d.innerText.includes('Hắc Sát Tông') && d.innerText.includes('Kẻ thù'))`,
+      `[...document.querySelectorAll('dialog[open]')].some(d => d.innerText.includes(${q(THIEF)}) && d.innerText.includes(${q(T.pvp.revengeTag)}))`,
       10000,
     ),
     `báo thù: không thấy kẻ thù trong danh sách — ${await seen()}`,

@@ -1,36 +1,71 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  ASCEND,
+  ASCEND_HALL,
   EVENT_GOALS,
+  HO_PHAP_EXP,
+  MARKET_BUYS,
+  MARKET_ORDERS,
+  MARKET_TAX,
+  MARKET_TTL,
   NEWBIE_SHIELD,
   PROTECT,
   PVP_START,
   REVENGE_TIME,
   SHIELD_TIME,
+  TRIB_CLOUD,
+  TRIB_EXP,
   advance,
   apply,
+  cost,
   count,
   eventOf,
   expAt,
+  mail,
   newGame,
   power,
+  rebirthLevels,
   storage,
+  tribError,
   weekOf,
   type Action,
-  mail,
   type State,
 } from './index.ts'
 import {
+  MAP_W,
+  advanceAll,
   advanceWorld,
+  aidAt,
+  allyOf,
   allyRows,
+  atlas,
+  basePrice,
   defense,
+  endSeason,
   eventTop,
+  freshWorld,
+  garrison,
+  helpMs,
+  mapOf,
+  marketOf,
   nextRaid,
   parseWorldAction,
+  phaseOf,
+  priceBand,
   raidError,
+  regionOf,
   rivals,
+  route,
   scout,
+  seasonBoard,
+  seasonPts,
+  seasonRate,
+  sellCap,
+  spawn,
+  spotOf,
   worldAct,
+  worldBuffs,
   type Players,
   type World,
 } from './world.ts'
@@ -246,7 +281,6 @@ test('hai đội cùng nhắm một người: trận đầu cho bên thủ khiê
 })
 
 test('bản đồ giới: tất định theo seed, 25 vùng lồi, cổng mở theo pha, đủ điểm, chỗ đặt tông môn ở vòng ngoài', async () => {
-  const { atlas, route, spawn, regionOf, phaseOf, MAP_W } = await import('./atlas.ts')
   const a = atlas(777)
   assert.deepEqual(atlas(777).points, a.points)
   assert.notDeepEqual(atlas(778).points, a.points)
@@ -258,7 +292,9 @@ test('bản đồ giới: tất định theo seed, 25 vùng lồi, cổng mở t
     [16 * 2 + 8 * 3 + 1, 16 * 6 + 8 * 6, 8 + 1, 1],
   )
   for (const g of a.gates) assert.ok([g.a, g.b].includes(regionOf(a, g)), 'cổng nằm trên biên hai vùng')
-  // vùng lồi: đoạn thẳng giữa hai ô cùng vùng không ra khỏi vùng
+  // vùng lồi: đoạn thẳng giữa hai ô cùng vùng không ra khỏi vùng.
+  // ponytail: chỉ lồi gần đúng — regionOf làm tròn ra ô nên đoạn thẳng có thể cắt góc một ô biên vùng bên cạnh
+  // (dãy điểm của rng(3) bốc trúng); giữ dãy mẫu này cho tới khi kiểm cả ô biên
   let seed = 3
   const rand = () => (seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296
   for (let k = 0; k < 500; k++) {
@@ -284,7 +320,6 @@ test('bản đồ giới: tất định theo seed, 25 vùng lồi, cổng mở t
 })
 
 test('đi cướp trên bản đồ giới: theo đường qua cổng đang mở, chưa có đường thì từ chối "far"', async () => {
-  const { atlas } = await import('./atlas.ts')
   const a = atlas(777)
   const at = (r: number) => ({ x: a.regions[r].cx, y: a.regions[r].cy })
   const ps = world({ ...sect('A', 10, { kiem3: 1100 }), seat: at(0) }, { ...sect('B', 10, { the1: 200 }), seat: at(1) })
@@ -309,7 +344,6 @@ test('đi cướp trên bản đồ giới: theo đường qua cổng đang mở
 })
 
 test('tiên minh: lập (tầng 10, tốn phí, tên/tag không trùng), vào, chức vị, rời (truyền minh chủ, giải tán), không cướp đồng minh', async () => {
-  const { freshWorld, allyOf } = await import('./world.ts')
   const ps = world(sect('A', 10, { kiem3: 1100 }), sect('B', 10, { the1: 200 }), sect('C', 9), sect('D', 10))
   let w = freshWorld()
   const act = (pid: number, a: Parameters<typeof worldAct>[2]) => {
@@ -346,7 +380,6 @@ test('tiên minh: lập (tầng 10, tốn phí, tên/tag không trùng), vào, c
 })
 
 test('tiên minh giúp đỡ: nhờ một việc, mỗi người giúp một lần, mỗi lần bớt max(60 giây, 1 %), tối đa 10 lần', async () => {
-  const { freshWorld, allyOf, helpMs } = await import('./world.ts')
   const ps = world(...Array.from({ length: 12 }, (_, i) => sect(`S${i}`, 12)))
   let w = freshWorld()
   const act = (pid: number, a: Parameters<typeof worldAct>[2]) => {
@@ -373,7 +406,6 @@ test('tiên minh giúp đỡ: nhờ một việc, mỗi người giúp một l�
 })
 
 test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác đánh bật, gọi về thì mất điểm; buff cho cả minh', async () => {
-  const { atlas, advanceAll, freshWorld, worldBuffs, garrison } = await import('./world.ts')
   const a = atlas(777)
   const map = { atlas: a, phase: 3 }
   const vein = a.points.find(p => p.kind === 'vein' && p.region === 0)!
@@ -442,7 +474,6 @@ test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác
 })
 
 test('khai mỏ: mang về theo sức mang, hết giờ khai rồi về; gọi về sớm thì chia theo thời gian, phần còn lại trả mỏ', async () => {
-  const { atlas, advanceAll, freshWorld } = await import('./world.ts')
   const a = atlas(777)
   const map = { atlas: a, phase: 3 }
   const mine = a.points.find(p => p.kind === 'mine' && p.region === 0)!
@@ -479,7 +510,6 @@ test('khai mỏ: mang về theo sức mang, hết giờ khai rồi về; gọi v
 })
 
 test('yêu vương: kho máu chung, mỗi đội đánh một lát; hạ thì thưởng chia theo sát thương qua thư, rồi hồi sinh', async () => {
-  const { atlas, advanceAll, freshWorld, spotOf } = await import('./world.ts')
   const a = atlas(777)
   const map = { atlas: a, phase: 3 }
   const boss = a.points.find(p => p.kind === 'boss' && p.lv === 2)!
@@ -522,7 +552,6 @@ test('yêu vương: kho máu chung, mỗi đội đánh một lát; hạ thì th
 })
 
 test('kết trận: mở ở yêu vương, người cùng minh góp đội, mọi đội tới cùng lúc và đánh như một bên, sát thương chia theo lực chiến', async () => {
-  const { atlas, advanceAll, freshWorld, allyOf } = await import('./world.ts')
   const a = atlas(777)
   const map = { atlas: a, phase: 3 }
   const boss = a.points.find(p => p.kind === 'boss' && p.lv === 2)!
@@ -572,7 +601,6 @@ test('kết trận: mở ở yêu vương, người cùng minh góp đội, mọ
 })
 
 test('viện binh: đóng ở nhà đồng minh, cùng thủ khi bị cướp; thủ được thì ở lại, gọi về được', async () => {
-  const { freshWorld, allyOf, advanceAll, aidAt } = await import('./world.ts')
   const ps = world(sect('A', 10, { kiem3: 900 }), sect('B', 10, { the1: 50 }), sect('C', 10, { the3: 900 }))
   let w = freshWorld()
   const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {
@@ -610,17 +638,14 @@ test('viện binh: đóng ở nhà đồng minh, cùng thủ khi bị cướp; t
     'bên thủ có thể tu bậc 3 của viện binh',
   )
   assert.ok(ps.get(3)!.reports.at(-1)!.def, 'viện binh có chiến báo thủ')
-  if (rep.win) assert.equal(ps.get(3)!.marches[0].stay, false, 'thua thì viện binh bị đánh bật về')
-  else {
-    assert.equal(ps.get(3)!.marches[0].stay, true, 'thủ được thì ở lại')
-    assert.equal(act(3, { type: 'recall', id: ps.get(3)!.marches[0].id }, m.arriveAt + 1000), null)
-    assert.ok(ps.get(3)!.marches[0].returnAt > m.arriveAt)
-  }
+  // với mầm này bên thủ (nhà + viện binh) giữ được; thua thì viện binh bị đánh bật về (world.ts raid)
+  assert.equal(rep.win, false, 'viện binh giúp thủ được')
+  assert.equal(ps.get(3)!.marches[0].stay, true, 'thủ được thì ở lại')
+  assert.equal(act(3, { type: 'recall', id: ps.get(3)!.marches[0].id }, m.arriveAt + 1000), null)
+  assert.ok(ps.get(3)!.marches[0].returnAt > m.arriveAt)
 })
 
 test('độ kiếp công khai: kiếp vân tụ trước (trả chi phí, đội rời nhà), hộ pháp nhẹ kiếp + nhận kinh nghiệm, phá kiếp nặng kiếp, thất bại hoàn chi phí', async () => {
-  const { freshWorld, allyOf, advanceAll, aidAt, mapOf } = await import('./world.ts')
-  const { HO_PHAP_EXP, TRIB_CLOUD, TRIB_EXP, cost, tribError } = await import('./index.ts')
   const price = cost('chuDien', 11)
   // tầng 10 = đỉnh Trúc Cơ: độ kiếp lần thứ hai; có chỗ trên bản đồ giới
   const kiep = (army: Partial<State['troops']>) => ({ ...sect('Kiếp', 10, army), trib: 1, seat: { x: 10, y: 10 } })
@@ -657,11 +682,10 @@ test('độ kiếp công khai: kiếp vân tụ trước (trả chi phí, đội
   const after = solo.get(1)!
   assert.equal(after.marches.length, 0)
   assert.equal(plain.kind, 'trib')
-  if (plain.win) {
-    assert.equal(after.levels.chuDien, 11)
-    assert.equal(after.trib, 2)
-    assert.deepEqual(after.res, advance(cloud, m.arriveAt).res)
-  }
+  assert.equal(plain.win, true, 'đội 400 kiếm tu bậc 3 vượt kiếp')
+  assert.equal(after.levels.chuDien, 11)
+  assert.equal(after.trib, 2)
+  assert.deepEqual(after.res, advance(cloud, m.arriveAt).res)
   assert.equal(after.troops.kiem3 + after.wounded.kiem3 + count(plain.dead), 400, 'đệ tử về nhà hoặc vào Đan phòng')
 
   // thất bại: hoàn đủ chi phí, chờ hồi
@@ -710,8 +734,6 @@ test('độ kiếp công khai: kiếp vân tụ trước (trả chi phí, đội
 })
 
 test('mùa: điểm mùa theo giờ giữ điểm (chốt khi đổi phe), cổng / Thiên Môn chỉ chiếm được khi đã mở; hết mùa phi thăng minh đầu, còn lại luân hồi', async () => {
-  const { atlas, advanceAll, freshWorld, seasonBoard, seasonPts, seasonRate, endSeason } = await import('./world.ts')
-  const { ASCEND, ASCEND_HALL, rebirthLevels } = await import('./index.ts')
   const a = atlas(777)
   const map = { atlas: a, phase: 1 }
   const vein = a.points.find(p => p.kind === 'vein' && p.region === 0)!
@@ -792,9 +814,6 @@ test('mùa: điểm mùa theo giờ giữ điểm (chốt khi đổi phe), cổn
 })
 
 test('chợ: ký gửi trong biên giá, mua nhận hàng ngay, người bán nhận linh thạch trừ thuế qua thư; giới hạn; gỡ lệnh; hết hạn và hết mùa trả hàng', async () => {
-  const { freshWorld, advanceAll, basePrice, priceBand, marketOf, sellCap, endSeason, atlas } =
-    await import('./world.ts')
-  const { MARKET_BUYS, MARKET_ORDERS, MARKET_TAX, MARKET_TTL } = await import('./index.ts')
   const ps = world({ ...sect('Bán', 10), items: { doKiep: 3 } }, sect('Mua', 10), sect('Nhỏ', 5))
   let w = freshWorld()
   const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {

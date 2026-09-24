@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  ACTION_TYPES,
   BASE_RATE,
   BEASTS,
   BUILDINGS,
@@ -65,6 +66,7 @@ import {
   type BuildingId,
   type Side,
   type State,
+  rng,
 } from './index.ts'
 
 const T0 = 1_000_000
@@ -690,37 +692,9 @@ test('dữ liệu vào bẩn: mọi payload lạ bị từ chối "bad", state k
 })
 
 test('thao tác JSON ngẫu nhiên: không bao giờ throw, state sau đó luôn hợp lệ', () => {
-  let seed = 7
-  const rnd = () => (seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296
+  const rnd = rng(7)
   const pick = <T>(a: readonly T[]) => a[Math.floor(rnd() * a.length)]
-  const types = [
-    'upgrade',
-    'claim',
-    'train',
-    'heal',
-    'study',
-    'brew',
-    'march',
-    'realm',
-    'tower',
-    'trade',
-    'trib',
-    'speed',
-    'feed',
-    'seen',
-    'rebirth',
-    'daily',
-    'dailyBonus',
-    'weekly',
-    'weeklyBonus',
-    'forge',
-    'equip',
-    'talent',
-    'wash',
-    'cure',
-    'focus',
-    'x',
-  ]
+  const types = [...ACTION_TYPES, 'x'] // mọi thao tác trong registry + một loại lạ
   const junk = () =>
     pick<unknown>([
       0,

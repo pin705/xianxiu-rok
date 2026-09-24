@@ -467,8 +467,7 @@ const VIEWS: Record<string, () => void> = {
       document.body.append(app.canvas)
       const a = R.atlas(seed)
       const taken: { x: number; y: number }[] = []
-      let k = 1
-      const rand = () => (k = (Math.imul(k, 1103515245) + 12345) >>> 0) / 4294967296
+      const rand = rng(1)
       for (let i = 0; i < 120; i++) taken.push(R.spawn(a, taken, rand)!)
       const seats = taken.map((p, i) => ({
         pid: i + 1,

@@ -43,6 +43,8 @@ const ACTIONS: Actions<Action> = {
   ...inboxActions,
 }
 
+export const ACTION_TYPES = Object.keys(ACTIONS) as Action['type'][]
+
 // Thao tác từ client là JSON, có thể là bất cứ thứ gì (chuỗi thay số, 'constructor' thay id, thiếu trường, thừa trường).
 // apply() kiểm ở đây trước tiên — một chốt cho mọi nơi gọi (server, client, sim): pick dựng lại object mới chỉ từ trường đã biết.
 export function parseAction(raw: unknown): Action | null {
