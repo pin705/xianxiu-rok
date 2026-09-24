@@ -350,3 +350,36 @@ export function bake<M>(a: Asset<M>, scale: number) {
   const meta = a.draw(g)
   return { canvas: cv, anchor: [-a.x / a.w, -a.y / a.h] as const, scale, meta }
 }
+
+// ---------- Hình học chung ----------
+
+export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+// k điểm trên elip tâm (x, y), bán trục rx, ry, xoay rot (radian)
+export const ellipse = (x: number, y: number, rx: number, ry: number, k = 12, rot = 0): Pt[] =>
+  Array.from({ length: k }, (_, i) => {
+    const a = (i / k) * Math.PI * 2
+    if (!rot) return [x + Math.cos(a) * rx, y + Math.sin(a) * ry]
+    const dx = Math.cos(a) * rx, dy = Math.sin(a) * ry
+    return [x + dx * Math.cos(rot) - dy * Math.sin(rot), y + dx * Math.sin(rot) + dy * Math.cos(rot)]
+  })
+// Xoá phần đã vẽ bằng những gì draw() tô (khoét lỗ, hốc mắt, lỗ khoá)
+export function erase(g: G, draw: () => void) {
+  g.save()
+  g.globalCompositeOperation = 'destination-out'
+  draw()
+  g.restore()
+}
+
+// Chuyển màu: stops là [vị trí 0..1, màu]. vgrad: dọc từ y0 xuống y1; linear: theo đoạn (x0, y0) → (x1, y1); radial: như canvas
+export type Stops = [number, string][]
+export function linear(g: G, x0: number, y0: number, x1: number, y1: number, stops: Stops) {
+  const gr = g.createLinearGradient(x0, y0, x1, y1)
+  stops.forEach(([t, c]) => gr.addColorStop(t, c))
+  return gr
+}
+export const vgrad = (g: G, y0: number, y1: number, stops: Stops) => linear(g, 0, y0, 0, y1, stops)
+export function radial(g: G, [x0, y0, r0, x1, y1, r1]: readonly number[], stops: Stops) {
+  const gr = g.createRadialGradient(x0, y0, r0, x1, y1, r1)
+  stops.forEach(([t, c]) => gr.addColorStop(t, c))
+  return gr
+}

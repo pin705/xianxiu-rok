@@ -1,4 +1,5 @@
 // Bảng màu khoáng của tranh thanh lục sơn thủy. Nguồn duy nhất: cả nét vẽ lẫn giao diện (apps/client/src/ui) đọc từ đây.
+export const WHITE = '#ffffff' // hình trắng (icon, lõi sáng) tô màu sau bằng tint / mix
 export const PIGMENT = {
   ink: '#211c17', // 墨 mực đậm
   ink2: '#4b443c', // mực pha

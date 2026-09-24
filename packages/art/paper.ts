@@ -1,7 +1,7 @@
 // Giấy xuyến chỉ ghép liền (tileable): nền cho bản đồ, lớp phủ cảnh núi, nền bảng giao diện.
 import { canvas, type G } from './brush'
 import { noise2, rng } from './noise'
-import { PIGMENT, mix, rgba } from './palette'
+import { PIGMENT, mix, rgba, WHITE } from './palette'
 
 const tiles = new Map<string, HTMLCanvasElement | OffscreenCanvas>()
 // Ô giấy ghép liền; cùng tham số thì dùng lại (người gọi chỉ đọc, không vẽ đè lên)
@@ -31,7 +31,7 @@ export function paper(size = 256, tone: string = PIGMENT.paper, seed = 7) {
   g.putImageData(img, 0, 0)
   // sợi xơ: nét cong ngắn đậm/nhạt hơn nền, vẽ lặp 9 ô để ghép liền
   const r = rng(seed)
-  const dark = mix(tone, PIGMENT.ochre, 0.35), light = mix(tone, '#ffffff', 0.5)
+  const dark = mix(tone, PIGMENT.ochre, 0.35), light = mix(tone, WHITE, 0.5)
   for (let k = 0; k < size * 0.9; k++) {
     const x = r() * size, y = r() * size, len = 3 + r() * 14, a = (r() - 0.5) * 1.2, bend = (r() - 0.5) * 6
     g.strokeStyle = rgba(r() < 0.6 ? dark : light, 0.18 + r() * 0.25)

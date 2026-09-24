@@ -1,10 +1,8 @@
 // Phong cảnh thanh lục sơn thủy: mỏm núi, đỉnh xa, tùng, mây tường vân, sương, thác.
 // Mỗi hàm trả về Asset (khung DU + hàm vẽ) để bake() thành texture. Neo (0,0) ghi ở từng hàm.
-import { blot, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
+import { blot, grain, lerp, stroke, vgrad, wash, type Asset, type G, type Pt } from './brush'
 import { rng } from './noise'
 import { PIGMENT as C } from './palette'
-
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 // Xoá dần phần dưới (từ y0 tới y1) để hình tan vào sương
 export function dissolve(g: G, x0: number, x1: number, y0: number, y1: number) {
@@ -237,11 +235,6 @@ export function mapTerrain(w: number, h: number, peaks: number[][], pines: numbe
 const mixInk = (far: number) => (far > 0.6 ? '#8fa3a6' : far > 0.3 ? '#6f8a8e' : '#4f6b70')
 
 // Gradient dọc tiện dùng: các điểm dừng (0..1) giữa y0, y1
-export function vgrad(g: G, y0: number, y1: number, stops: [number, string][]) {
-  const gr = g.createLinearGradient(0, y0, 0, y1)
-  stops.forEach(([t, c]) => gr.addColorStop(t, c))
-  return gr
-}
 
 // ---------- Tùng ----------
 // Neo: gốc cây. Thân vặn bằng nét khô, tán là các "đĩa kim" dẹt xếp tầng (lối vẽ tùng hình bánh xe).
@@ -298,8 +291,6 @@ export function pine(s = 1, seed = 1): Asset {
   }
 }
 
-export const ellipse = (x: number, y: number, rx: number, ry: number, k = 12): Pt[] =>
-  Array.from({ length: k }, (_, i) => [x + Math.cos((i / k) * Math.PI * 2) * rx, y + Math.sin((i / k) * Math.PI * 2) * ry])
 
 // ---------- Mây tường vân ----------
 // Neo: giữa đáy mây. Mỗi "đầu mây" là một vòng tròn có xoáy ốc nối liền viền. dark: kiếp vân.

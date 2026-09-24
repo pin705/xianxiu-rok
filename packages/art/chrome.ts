@@ -6,7 +6,7 @@
 import { blot, canvas, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
 import { noise1, noise2, rng } from './noise'
 import { paper } from './paper'
-import { PIGMENT as C, mix, rgba } from './palette'
+import { PIGMENT as C, mix, rgba, WHITE } from './palette'
 
 export type Skin = {
   cv: HTMLCanvasElement | OffscreenCanvas
@@ -212,7 +212,7 @@ export function scrollSkin(s: number, silk: string = SILK): Skin {
   g.fill()
   // hoa văn mây chìm trên lụa, chỉ ở góc (cạnh giãn ra vẫn trơn)
   for (const [x, y, rot] of [[band / 2 + 1, band / 2 + 1, 0], [W - band / 2 - 1, band / 2 + 1, Math.PI / 2], [W - band / 2 - 1, H - band / 2 - 1, Math.PI], [band / 2 + 1, H - band / 2 - 1, -Math.PI / 2]] as const) {
-    curl(g, x, y, 3.2, rot, mix(silk, '#ffffff', 0.55), 1, 11 + x, 0.55)
+    curl(g, x, y, 3.2, rot, mix(silk, WHITE, 0.55), 1, 11 + x, 0.55)
   }
   // mép lụa: nét mực mảnh
   outline(g, rounded(0.8, 0.8, W - 0.8, H - 0.8, 2.5, 5, 0.12), 1.1, C.ink2, 5, 0.7, 0)
@@ -249,13 +249,13 @@ export function rodSkin(s: number): Skin {
   const y0 = 5, y1 = H - 5
   // thân trục: sơn mài nâu đen, vệt sáng dọc thân
   const body = g.createLinearGradient(0, y0, 0, y1)
-  body.addColorStop(0, mix(C.lacquer2, '#ffffff', 0.18))
+  body.addColorStop(0, mix(C.lacquer2, WHITE, 0.18))
   body.addColorStop(0.35, C.lacquer2)
   body.addColorStop(1, mix(C.lacquer, '#000000', 0.35))
   g.fillStyle = body
   path(g, rounded(cap - 6, y0, W - cap + 6, y1, (y1 - y0) / 2, 3, 0.2))
   g.fill()
-  stroke(g, [[cap, y0 + 2.6], [W / 2, y0 + 2.2], [W - cap, y0 + 2.6]], { w: 1.4, color: '#ffffff', alpha: 0.28, press: 'even', dry: 0.5, seed: 4 })
+  stroke(g, [[cap, y0 + 2.6], [W / 2, y0 + 2.2], [W - cap, y0 + 2.6]], { w: 1.4, color: WHITE, alpha: 0.28, press: 'even', dry: 0.5, seed: 4 })
   outline(g, rounded(cap - 6, y0, W - cap + 6, y1, (y1 - y0) / 2, 3, 0.2), 0.9, C.ink, 5, 0.7, 0)
   // đầu đồng: khối vàng loang, gờ khắc, nụ tròn
   for (const [x0, dir] of [[2, 1], [W - 2, -1]] as const) {
@@ -283,7 +283,7 @@ export type CardTone = 'paper' | 'glow' | 'selected' | 'lacquer' | 'plain' | 'si
 export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
   const W = 180, H = 100, sl = 14, pad = 3
   const { cv, g } = surface(W, H, s)
-  const base = { paper: mix(C.paper, '#ffffff', 0.4), plain: mix(C.paper, '#ffffff', 0.4), glow: mix(C.goldL, C.paper, 0.45), selected: mix(C.paper, '#ffffff', 0.4), lacquer: C.lacquer, silk: mix(SILK, '#ffffff', 0.25) }[tone]
+  const base = { paper: mix(C.paper, WHITE, 0.4), plain: mix(C.paper, WHITE, 0.4), glow: mix(C.goldL, C.paper, 0.45), selected: mix(C.paper, WHITE, 0.4), lacquer: C.lacquer, silk: mix(SILK, WHITE, 0.25) }[tone]
   const edge = deckle(pad, pad, W - pad, H - pad - 0.5, tone === 'lacquer' ? 0.5 : 1.3, seed)
   // bóng: giấy hơi nhấc khỏi mặt bảng
   const lift = () => {
@@ -304,8 +304,8 @@ export function cardSkin(s: number, tone: CardTone = 'paper', seed = 3): Skin {
   g.clip()
   if (tone === 'lacquer') {
     const sheen = g.createLinearGradient(0, 0, 0, H)
-    sheen.addColorStop(0, rgba('#ffffff', 0.1))
-    sheen.addColorStop(0.5, rgba('#ffffff', 0))
+    sheen.addColorStop(0, rgba(WHITE, 0.1))
+    sheen.addColorStop(0.5, rgba(WHITE, 0))
     sheen.addColorStop(1, rgba('#000000', 0.25))
     g.fillStyle = sheen
     g.fillRect(0, 0, W, H)
@@ -350,7 +350,7 @@ export function plankSkin(s: number, seed = 5): Skin {
   g.imageSmoothingQuality = 'high'
   g.drawImage(wood as CanvasImageSource, 0, 0, W, H)
   // vệt sáng sơn mài quét ngang
-  for (let k = 0; k < 2; k++) stroke(g, [[20 + k * 110, 4 + k * 1.5], [70 + k * 110, 3 + k], [120 + k * 110, 5]], { w: 3, color: '#ffffff', alpha: 0.07, press: 'swell', dry: 0.7, seed: seed + k })
+  for (let k = 0; k < 2; k++) stroke(g, [[20 + k * 110, 4 + k * 1.5], [70 + k * 110, 3 + k], [120 + k * 110, 5]], { w: 3, color: WHITE, alpha: 0.07, press: 'swell', dry: 0.7, seed: seed + k })
   // chỉ vàng đôi viền tay
   const box = (i: number, w: number, color: string, al: number, sd: number) => {
     rule(g, [i, i], [W - i, i], w, color, sd, al, 0.4)
@@ -380,7 +380,7 @@ const BTN: Record<ButtonTone, { base: string; light: string; dark: string; line:
   primary: { base: C.azurite, light: C.azuriteL, dark: C.azuriteD, line: C.ink },
   gold: { base: C.gold, light: C.goldL, dark: C.goldD, line: C.ink },
   danger: { base: C.cinnabar, light: C.cinnabarL, dark: mix(C.cinnabar, C.ink, 0.35), line: C.ink },
-  ghost: { base: mix(C.paper, '#ffffff', 0.3), light: '#ffffff', dark: C.paper3, line: C.ink2 },
+  ghost: { base: mix(C.paper, WHITE, 0.3), light: WHITE, dark: C.paper3, line: C.ink2 },
   off: { base: mix(C.paper2, C.ink3, 0.28), light: C.paper2, dark: mix(C.paper3, C.ink3, 0.4), line: C.ink3 },
 }
 export function buttonSkin(s: number, tone: ButtonTone, seed = 7): Skin {
@@ -416,7 +416,7 @@ export function buttonSkin(s: number, tone: ButtonTone, seed = 7): Skin {
     for (let k = 0; k < 26; k++) blot(g, x0 + 4 + r() * (x1 - x0 - 8), y0 + 3 + r() * (y1 - y0 - 6), 0.35 + r() * 0.6, '#fff6d8', 0.55 + r() * 0.4, seed + 30 + k, 1) // vảy vàng lá
   g.restore()
   // gờ sáng mép trên
-  stroke(g, [[x0 + 14, y0 + 3.4], [W * 0.38, y0 + 2.9], [W * 0.62, y0 + 3.3]], { w: 1.2, color: '#ffffff', alpha: tone === 'off' ? 0.2 : 0.35, press: 'swell', dry: 0.6, seed: seed + 50 })
+  stroke(g, [[x0 + 14, y0 + 3.4], [W * 0.38, y0 + 2.9], [W * 0.62, y0 + 3.3]], { w: 1.2, color: WHITE, alpha: tone === 'off' ? 0.2 : 0.35, press: 'swell', dry: 0.6, seed: seed + 50 })
   // viền mực
   outline(g, shape, tone === 'ghost' || tone === 'off' ? 1.3 : 1.6, c.line, seed + 60, tone === 'off' ? 0.5 : 0.88)
   grain(g, 0.22)
@@ -431,14 +431,14 @@ export function tagSkin(s: number, tone: TagTone, seed = 11): Skin {
   const { cv, g } = surface(W, H, s)
   const fill = {
     plain: mix(C.paper2, C.ink3, 0.18), good: mix(C.malachiteL, C.paper, 0.55), bad: mix(C.cinnabarL, C.paper, 0.62),
-    gold: mix(C.goldL, C.paper, 0.35), dark: mix(C.lacquer, C.ink, 0.2), red: C.cinnabar, silk: mix(SILK, '#ffffff', 0.2),
+    gold: mix(C.goldL, C.paper, 0.35), dark: mix(C.lacquer, C.ink, 0.2), red: C.cinnabar, silk: mix(SILK, WHITE, 0.2),
   }[tone]
-  const line = { plain: C.ink2, good: C.malachiteD, bad: C.cinnabar, gold: C.goldD, dark: C.gold, red: mix(C.cinnabar, C.ink, 0.5), silk: C.ink2 }[tone]
+  const edge = { plain: C.ink2, good: C.malachiteD, bad: C.cinnabar, gold: C.goldD, dark: C.gold, red: mix(C.cinnabar, C.ink, 0.5), silk: C.ink2 }[tone]
   const shape = rounded(1.5, 1.5, W - 1.5, H - 1.5, 5, seed, 0.5)
   wash(g, shape, { fill, alpha: tone === 'dark' ? 0.85 : 1, layers: 3, jitter: 0.45, edge: 1.9, seed })
   // gờ sáng khô ở mép trên (như nút), rồi viền mực dày mỏng theo hướng sáng
-  if (tone !== 'dark') stroke(g, [[8, 4.2], [W * 0.4, 3.6], [W * 0.62, 4.1]], { w: 1, color: '#ffffff', alpha: tone === 'plain' ? 0.35 : 0.45, press: 'swell', dry: 0.6, seed: seed + 5 })
-  outline(g, shape, 1.15, line, seed + 3, tone === 'plain' ? 0.62 : 0.8, 0.3, 0.9)
+  if (tone !== 'dark') stroke(g, [[8, 4.2], [W * 0.4, 3.6], [W * 0.62, 4.1]], { w: 1, color: WHITE, alpha: tone === 'plain' ? 0.35 : 0.45, press: 'swell', dry: 0.6, seed: seed + 5 })
+  outline(g, shape, 1.15, edge, seed + 3, tone === 'plain' ? 0.62 : 0.8, 0.3, 0.9)
   grain(g, 0.2)
   return { cv, w: W, h: H, slice: [9, 10, 9, 10] }
 }
@@ -455,7 +455,7 @@ export function badgeSkin(s: number, fresh = false, seed = 13): Skin {
   g.shadowOffsetY = 1 * s
   wash(g, shape, { fill: fresh ? C.goldL : C.cinnabar, alpha: 1, layers: 3, jitter: 0.4, edge: 1.6, seed })
   g.restore()
-  stroke(g, [[8, 4.5], [W / 2, 3.6], [W - 9, 4.6]], { w: 1.1, color: '#ffffff', alpha: 0.4, press: 'swell', seed: seed + 2 })
+  stroke(g, [[8, 4.5], [W / 2, 3.6], [W - 9, 4.6]], { w: 1.1, color: WHITE, alpha: 0.4, press: 'swell', seed: seed + 2 })
   outline(g, shape, 0.9, fresh ? C.cinnabar : C.goldL, seed + 4, 0.9, 0.1)
   return { cv, w: W, h: H, slice: [10, 11, 10, 11] }
 }
@@ -476,7 +476,7 @@ export function fillSkin(s: number, color: string, seed = 17): Skin {
   stroke(g, [[2.5, H / 2 + 0.2], [W * 0.4, H / 2 - 0.3], [W * 0.75, H / 2 + 0.2], [W - 2, H / 2]], {
     w: 8.4, color, alpha: 1, press: t => (t < 0.03 ? 0.85 : 1) * (t > 0.92 ? 1 - (t - 0.92) * 5 : 1), dry: 0.35, rough: 0.35, seed,
   })
-  stroke(g, [[5, 4.2], [W * 0.5, 3.8], [W - 8, 4.2]], { w: 1.3, color: '#ffffff', alpha: 0.4, press: 'even', dry: 0.4, seed: seed + 1 })
+  stroke(g, [[5, 4.2], [W * 0.5, 3.8], [W - 8, 4.2]], { w: 1.3, color: WHITE, alpha: 0.4, press: 'even', dry: 0.4, seed: seed + 1 })
   return { cv, w: W, h: H, slice: [5, 7, 5, 6] }
 }
 
@@ -485,7 +485,7 @@ export function fillSkin(s: number, color: string, seed = 17): Skin {
 export function fieldSkin(s: number, seed = 19): Skin {
   const W = 100, H = 38
   const { cv, g } = surface(W, H, s)
-  wash(g, rounded(2, 3, W - 2, H - 4, 5, seed, 0.4), { fill: '#ffffff', alpha: 0.4, layers: 2, jitter: 0.6, seed })
+  wash(g, rounded(2, 3, W - 2, H - 4, 5, seed, 0.4), { fill: WHITE, alpha: 0.4, layers: 2, jitter: 0.6, seed })
   rule(g, [5, H - 5], [W - 5, H - 5.5], 1.6, C.ink, seed + 1, 0.75)
   rule(g, [5, H - 9], [5, H - 4], 1, C.ink, seed + 2, 0.5, 0.2)
   rule(g, [W - 5, H - 9], [W - 5, H - 4.5], 1, C.ink, seed + 3, 0.5, 0.2)
@@ -520,8 +520,8 @@ export function lacquerSkin(s: number, seed = 23, ends: 'round' | 'notch' = 'rou
   wash(g, shape, { fill: C.lacquer, alpha: 1, layers: 3, jitter: 0.3, edge: 1.5, sharp: ends === 'notch', seed })
   g.restore()
   const sheen = g.createLinearGradient(0, 0, 0, H)
-  sheen.addColorStop(0, rgba('#ffffff', 0.14))
-  sheen.addColorStop(0.5, rgba('#ffffff', 0))
+  sheen.addColorStop(0, rgba(WHITE, 0.14))
+  sheen.addColorStop(0.5, rgba(WHITE, 0))
   g.save()
   path(g, shape)
   g.clip()
@@ -554,7 +554,7 @@ export function switchSkin(s: number, on: boolean, seed = 27): Skin {
   const { cv, g } = surface(W, H, s)
   const shape = rounded(2, 3, W - 2, H - 3, 12, seed, 0.35)
   wash(g, shape, { fill: on ? C.malachite : C.ink, alpha: on ? 1 : 0.18, layers: 3, jitter: 0.4, edge: on ? 1.6 : 0, seed })
-  if (on) stroke(g, [[10, 7.5], [W / 2, 6.8], [W - 14, 7.6]], { w: 1.4, color: '#ffffff', alpha: 0.35, press: 'swell', seed: seed + 1 })
+  if (on) stroke(g, [[10, 7.5], [W / 2, 6.8], [W - 14, 7.6]], { w: 1.4, color: WHITE, alpha: 0.35, press: 'swell', seed: seed + 1 })
   outline(g, shape, 1, on ? C.malachiteD : C.ink2, seed + 2, 0.75, 0.15)
   return { cv, w: W, h: H, slice: [0, 0, 0, 0] }
 }
@@ -562,7 +562,7 @@ export function switchSkin(s: number, on: boolean, seed = 27): Skin {
 export function knobSkin(s: number, seed = 29): Skin {
   const W = 26, H = 26
   const { cv, g } = surface(W, H, s)
-  fillPaper(g, s, rounded(3, 3, W - 3, H - 3, 10, seed, 0.2), mix(C.paper, '#ffffff', 0.5), () => {
+  fillPaper(g, s, rounded(3, 3, W - 3, H - 3, 10, seed, 0.2), mix(C.paper, WHITE, 0.5), () => {
     g.shadowColor = rgba(C.ink, 0.4)
     g.shadowBlur = 2 * s
     g.shadowOffsetY = 1 * s
@@ -599,7 +599,7 @@ export type DiscTone = 'lacquer' | 'paper' | 'azure' | 'gold' | 'silk'
 export function discSkin(s: number, tone: DiscTone, seed = 33): Skin {
   const W = 48, H = 48, c = 24, r = 20.5
   const { cv, g } = surface(W, H, s)
-  const base = { lacquer: C.lacquer, paper: mix(C.paper, '#ffffff', 0.45), azure: C.azuriteD, gold: C.gold, silk: SILK }[tone]
+  const base = { lacquer: C.lacquer, paper: mix(C.paper, WHITE, 0.45), azure: C.azuriteD, gold: C.gold, silk: SILK }[tone]
   const disc = rounded(c - r, c - r, c + r, c + r, r, seed, 0.3)
   const lift = () => {
     g.shadowColor = rgba(C.ink, 0.45)
@@ -620,8 +620,8 @@ export function discSkin(s: number, tone: DiscTone, seed = 33): Skin {
   g.clip()
   if (tone !== 'paper') wash(g, disc, { fill: base, alpha: 1, layers: 3, jitter: 0.4, edge: 1.8, seed })
   const sheen = g.createRadialGradient(c - 6, c - 9, 1, c, c, r + 2)
-  sheen.addColorStop(0, rgba('#ffffff', tone === 'gold' || tone === 'silk' ? 0.55 : tone === 'paper' ? 0.2 : 0.22))
-  sheen.addColorStop(0.6, rgba('#ffffff', 0))
+  sheen.addColorStop(0, rgba(WHITE, tone === 'gold' || tone === 'silk' ? 0.55 : tone === 'paper' ? 0.2 : 0.22))
+  sheen.addColorStop(0.6, rgba(WHITE, 0))
   sheen.addColorStop(1, rgba('#000000', tone === 'paper' ? 0.08 : tone === 'silk' ? 0.14 : 0.3))
   g.fillStyle = sheen
   g.fillRect(0, 0, W, H)
@@ -631,7 +631,7 @@ export function discSkin(s: number, tone: DiscTone, seed = 33): Skin {
     ring(g, c, c, r - 2.2, 1.4, tone === 'gold' || tone === 'silk' ? C.goldD : C.goldL, seed + 1, 0.9, 0.03)
     stroke(g, [...disc, disc[0], disc[1]], { w: 1.1, color: C.ink, alpha: 0.9, press: 'even', rough: 0.3, seed: seed + 2 })
   }
-  stroke(g, [[c - 12, c - 6], [c - 9, c - 12], [c - 3, c - 15]], { w: 1.4, color: '#ffffff', alpha: tone === 'paper' ? 0.5 : 0.3, press: 'swell', dry: 0.4, seed: seed + 3 })
+  stroke(g, [[c - 12, c - 6], [c - 9, c - 12], [c - 3, c - 15]], { w: 1.4, color: WHITE, alpha: tone === 'paper' ? 0.5 : 0.3, press: 'swell', dry: 0.4, seed: seed + 3 })
   return { cv, w: W, h: H, slice: [0, 0, 0, 0] }
 }
 
@@ -711,13 +711,13 @@ export function capsuleSkin(s: number, tone: 'paper' | 'silk' = 'paper', seed = 
     g.shadowBlur = 2.5 * s
     g.shadowOffsetY = 1.2 * s
   }
-  fillPaper(g, s, shape, tone === 'paper' ? mix(C.paper, '#ffffff', 0.45) : mix(SILK, '#ffffff', 0.35), lift)
+  fillPaper(g, s, shape, tone === 'paper' ? mix(C.paper, WHITE, 0.45) : mix(SILK, WHITE, 0.35), lift)
   g.save()
   path(g, shape)
   g.clip()
   age(g, 2, 2, W - 2, H - 3, 6, tone === 'paper' ? C.ochre : C.azurite, 0.1)
   g.restore()
-  stroke(g, [[14, 5.4], [W * 0.4, 4.6], [W * 0.6, 5.2]], { w: 1.1, color: '#ffffff', alpha: 0.5, press: 'swell', dry: 0.5, seed: seed + 1 })
+  stroke(g, [[14, 5.4], [W * 0.4, 4.6], [W * 0.6, 5.2]], { w: 1.1, color: WHITE, alpha: 0.5, press: 'swell', dry: 0.5, seed: seed + 1 })
   outline(g, shape, 1.1, C.ink2, seed + 2, 0.75, 0.3, 0.9)
   grain(g, 0.15)
   return { cv, w: W, h: H, slice: [13, 15, 13, 15] }
@@ -728,7 +728,7 @@ export function plateSkin(s: number, seed = 43): Skin {
   const W = 120, H = 30
   const { cv, g } = surface(W, H, s)
   const shape: Pt[] = [[8, 1.5], [W - 8, 1.5], [W - 1.5, H / 2], [W - 8, H - 2.5], [8, H - 2.5], [1.5, H / 2]]
-  fillPaper(g, s, shape, mix(C.paper, '#ffffff', 0.5), () => {
+  fillPaper(g, s, shape, mix(C.paper, WHITE, 0.5), () => {
     g.shadowColor = rgba(C.ink, 0.35)
     g.shadowBlur = 2.5 * s
     g.shadowOffsetY = 1.2 * s
@@ -752,7 +752,7 @@ export function slipSkin(s: number, bad = false, seed = 45): Skin {
   const W = 240, H = 44
   const { cv, g } = surface(W, H, s)
   const shape = rounded(3, 3, W - 3, H - 4, 6, seed, 0.5)
-  fillPaper(g, s, shape, bad ? mix(C.cinnabarL, C.paper, 0.75) : mix(C.paper, '#ffffff', 0.5), () => {
+  fillPaper(g, s, shape, bad ? mix(C.cinnabarL, C.paper, 0.75) : mix(C.paper, WHITE, 0.5), () => {
     g.shadowColor = rgba(C.ink, 0.35)
     g.shadowBlur = 4 * s
     g.shadowOffsetY = 2 * s

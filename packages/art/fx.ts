@@ -1,9 +1,9 @@
 // Texture cho phần chuyển động của cảnh (GPU diễn): sương, thác, hào quang, khói, cờ, hạc, đệ tử, tia sáng.
-import { bake, blot, canvas, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
+import { bake, blot, canvas, ellipse, grain, lerp, stroke, wash, type Asset, type G, type Pt, vgrad } from './brush'
 import { ring } from './chrome'
-import { cloud, ellipse, vgrad } from './landscape'
+import { cloud } from './landscape'
 import { fbm, noise2, rng } from './noise'
-import { PIGMENT as C, mix, rgba } from './palette'
+import { PIGMENT as C, mix, rgba, WHITE } from './palette'
 
 // Dải sương ghép liền theo chiều ngang (px thật, không theo DU — sương vốn mờ)
 export function mistTex(w = 512, h = 96, seed = 1) {
@@ -241,7 +241,7 @@ export function battlefield(w: number, h: number, theme: Theme): Asset {
       stamp(g, farRange(w, h * 0.16, 77, t.far, theme === 'storm' ? 0.7 : 0.45), 0, h * 0.3)
       // mặt đất: dải loang từ giữa xuống, đậm dần
       const ground: Pt[] = [[-10, h * 0.34], [w * 0.3, h * 0.33], [w * 0.7, h * 0.35], [w + 10, h * 0.33], [w + 10, h + 10], [-10, h + 10]]
-      wash(g, ground, { fill: g2 => { const r = g2.createLinearGradient(0, h * 0.33, 0, h); r.addColorStop(0, rgba(t.ground, 0.25)); r.addColorStop(1, rgba(t.ground, 0.7)); return r }, alpha: 1, jitter: 4, layers: 3, seed: 5 })
+      wash(g, ground, { fill: g2 => vgrad(g2, h * 0.33, h, [[0, rgba(t.ground, 0.25)], [1, rgba(t.ground, 0.7)]]), alpha: 1, jitter: 4, layers: 3, seed: 5 })
       // vệt đất, cỏ
       const r = rng(9)
       for (let i = 0; i < 26; i++) {
@@ -251,7 +251,7 @@ export function battlefield(w: number, h: number, theme: Theme): Asset {
       // đá hai mép
       for (const [x, y, rw, rh, s] of [[18, h * 0.58, 70, 46, 1], [w - 16, h * 0.52, 60, 40, 2], [10, h * 0.92, 90, 60, 3], [w - 8, h * 0.96, 80, 56, 4]] as const) {
         const rock: Pt[] = [[x - rw / 2, y], [x - rw * 0.4, y - rh * 0.6], [x - rw * 0.1, y - rh], [x + rw * 0.25, y - rh * 0.8], [x + rw / 2, y]]
-        wash(g, rock, { fill: g2 => { const r2 = g2.createLinearGradient(0, y - rh, 0, y); r2.addColorStop(0, mix(t.far, C.ink, 0.2)); r2.addColorStop(1, mix(t.far, C.ink, 0.6)); return r2 }, alpha: 0.9, jitter: 2, layers: 2, edge: 1.5, seed: s * 11 })
+        wash(g, rock, { fill: g2 => vgrad(g2, y - rh, y, [[0, mix(t.far, C.ink, 0.2)], [1, mix(t.far, C.ink, 0.6)]]), alpha: 0.9, jitter: 2, layers: 2, edge: 1.5, seed: s * 11 })
         stroke(g, rock.slice(0, 3), { w: 2, color: C.ink, press: 'nail', dry: 0.35, alpha: 0.8, seed: s * 13 })
       }
       grain(g, 0.35)
@@ -291,7 +291,6 @@ function towerTop(g: G, w: number, h: number, t: { sky: string; ground: string; 
     wash(g, ellipse(x, y, 30 + r() * 40, 5 + r() * 5, 10), { fill: C.ink3, alpha: 0.08, layers: 2, jitter: 4, seed: 240 + i })
   }
   // mạch đá: hàng ngang dày dần về xa, cột chụm về phía chân trời
-  const lerp = (a: number, b: number, k: number) => a + (b - a) * k
   for (let i = 1; i < 6; i++) {
     const k = (i / 6) ** 1.8, y = lerp(y0, y1, k)
     stroke(g, [[lerp(L0, L1, k), y], [lerp(R0, R1, k), y + 0.5]], { w: 0.5 + k * 1.1, color: C.ink2, press: 'taper', alpha: 0.1 + k * 0.08, dry: 0.5, seed: 80 + i })
@@ -417,14 +416,14 @@ export function splashTex(size = 128, seed = 3) {
   const g = cv.getContext('2d') as G
   const c = size / 2
   const r = rng(seed)
-  blot(g, c, c, size * 0.2, '#ffffff', 1, seed, 0.95)
+  blot(g, c, c, size * 0.2, WHITE, 1, seed, 0.95)
   for (let i = 0; i < 9; i++) {
     const a = r() * Math.PI * 2, l = size * (0.22 + r() * 0.22)
-    stroke(g, [[c + Math.cos(a) * size * 0.1, c + Math.sin(a) * size * 0.1], [c + Math.cos(a) * l, c + Math.sin(a) * l]], { w: size * (0.03 + r() * 0.04), color: '#ffffff', press: 'nail', alpha: 1, seed: seed + i })
+    stroke(g, [[c + Math.cos(a) * size * 0.1, c + Math.sin(a) * size * 0.1], [c + Math.cos(a) * l, c + Math.sin(a) * l]], { w: size * (0.03 + r() * 0.04), color: WHITE, press: 'nail', alpha: 1, seed: seed + i })
   }
   for (let i = 0; i < 16; i++) {
     const a = r() * Math.PI * 2, d = size * (0.25 + r() * 0.2)
-    blot(g, c + Math.cos(a) * d, c + Math.sin(a) * d, size * (0.01 + r() * 0.025), '#ffffff', 1, seed + 50 + i, 1)
+    blot(g, c + Math.cos(a) * d, c + Math.sin(a) * d, size * (0.01 + r() * 0.025), WHITE, 1, seed + 50 + i, 1)
   }
   return cv
 }
@@ -445,7 +444,7 @@ export function crackTex(size = 128, seed = 4) {
       y += Math.sin(a) * l
       pts.push([x, y])
     }
-    stroke(g, pts, { w: size * 0.03, color: '#ffffff', press: 'nail', alpha: 1, seed: seed + i })
+    stroke(g, pts, { w: size * 0.03, color: WHITE, press: 'nail', alpha: 1, seed: seed + i })
   }
   return cv
 }
@@ -489,7 +488,7 @@ export function petalTex(size = 16) {
 // ---------- VFX nét bút (trắng — tô màu bằng tint) ----------
 // dry: độ khô của nét. Khung sau vẽ khô hơn → đuôi nét tước sợi rồi tan (飞白), thay cho mờ dần đều.
 // k: hệ số bề ngang. Cùng hình vẽ mảnh hơn làm lõi sáng đè lên bóng mực (battle.ts ghép ba lớp).
-const W = '#ffffff'
+const W = WHITE
 function blank(w: number, h: number) {
   const cv = canvas(w, h)
   return { cv, g: cv.getContext('2d') as G }

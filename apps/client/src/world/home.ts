@@ -2,6 +2,7 @@
 // (sương trôi, thác chảy, hạc bay, khói, lửa, linh khí, đèn đêm) do GPU diễn mỗi khung hình.
 import { Container, Graphics, Sprite, TilingSprite, type Texture } from 'pixi.js'
 import {
+  lerp,
   PIGMENT as C,
   bamboo,
   bird,
@@ -53,7 +54,6 @@ export type HomeView = {
   phase: Phase
 }
 
-const lerp = (a: number, b: number, k: number) => a + (b - a) * k
 const soft = (tex: Texture, color: string, size: number, alpha = 1) => {
   const s = new Sprite(tex)
   s.anchor.set(0.5)

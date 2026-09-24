@@ -1,10 +1,9 @@
 // Chi tiết cảnh tông môn: bậc đá leo núi, mai nở, đèn đá, bụi trúc. Mỗi hàm trả về Asset để bake().
-import { blot, grain, spline, stroke, wash, type Asset, type Pt } from './brush'
+import { blot, grain, lerp, spline, stroke, wash, type Asset, type Pt } from './brush'
 import { dissolve, moss, tuft } from './landscape'
 import { rng } from './noise'
 import { PIGMENT as C, mix } from './palette'
 
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const BLOSSOM = '#eaa2b3'
 const BLOSSOM_L = '#f7d4dc'
 

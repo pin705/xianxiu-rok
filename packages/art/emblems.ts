@@ -1,9 +1,9 @@
 // Huy hiệu tròn vẽ tay (thay cho chữ Hán): đĩa màu khoáng loang, vòng vàng một nét, viền mực, hình chạm giữa đĩa.
 // Hình chạm: 15 yêu thú, 5 tông môn đối địch, 5 bí cảnh, ngũ hành, lôi kiếp, 3 hệ đệ tử và vài biểu tượng khoảnh khắc lớn.
 // Hộp 48 × 48 DU, tâm (0, 0); hình chạm nằm trong bán kính ~16.
-import { blot, grain, stroke, wash, type Asset, type G, type Press, type Pt } from './brush'
+import { blot, ellipse, grain, stroke, wash, type Asset, type G, type Press, type Pt } from './brush'
 import { outline, ring } from './chrome'
-import { PIGMENT as C, mix, rgba } from './palette'
+import { PIGMENT as C, mix, rgba, WHITE } from './palette'
 
 // Tông đĩa theo ngũ hành đặt đúng tên hành (kim, moc, thuy, hoa, tho): medal(ELEMENT_EMBLEMS[el], el)
 export type MedalTone = 'kiem' | 'phap' | 'the' | 'beast' | 'sect' | 'realm' | 'thunder' | 'trib' | 'ink' | 'jade' | 'gold' | 'red' | 'tower' | 'pvp' | 'spot' | keyof typeof ELEMENT_EMBLEMS
@@ -42,12 +42,7 @@ const DISC: Record<MedalTone, [string, string]> = {
   tho: [mix(C.ochreL, C.gamboge, 0.25), '#5c3b17'],
 }
 
-const oval = (cx: number, cy: number, rx: number, ry: number, n = 28, rot = 0): Pt[] =>
-  Array.from({ length: n }, (_, i) => {
-    const a = (i / n) * Math.PI * 2
-    const x = Math.cos(a) * rx, y = Math.sin(a) * ry
-    return [cx + x * Math.cos(rot) - y * Math.sin(rot), cy + x * Math.sin(rot) + y * Math.cos(rot)] as Pt
-  })
+const oval = (cx: number, cy: number, rx: number, ry: number, n = 28, rot = 0) => ellipse(cx, cy, rx, ry, n, rot)
 const flipX = (pts: readonly Pt[]): Pt[] => pts.map(([x, y]) => [-x, y] as Pt).reverse()
 
 // Mảng màu có viền mực (hình khép, đi theo chiều kim đồng hồ)
@@ -62,7 +57,7 @@ function eye(g: G, x: number, y: number, r: number, iris: string = C.goldL, slit
   blot(g, x, y, r, iris, 1, seed, 0.8)
   if (slit) ln(g, [[x, y - r * 0.7], [x, y + r * 0.7]], r * 0.55, C.ink, 'swell', 1, seed + 1)
   else blot(g, x + r * 0.12, y + r * 0.05, r * 0.5, C.ink, 1, seed + 1, 1)
-  blot(g, x - r * 0.3, y - r * 0.3, r * 0.22, '#ffffff', 0.9, seed + 2, 1)
+  blot(g, x - r * 0.3, y - r * 0.3, r * 0.22, WHITE, 0.9, seed + 2, 1)
 }
 
 // ---------- 15 yêu thú ----------
@@ -74,7 +69,7 @@ function wolfHead(g: G, fill: string, eyeC: string, seed: number) {
   ln(g, [[1, -7.4], [7, -5.2], [13, -2.3]], 1, C.silk, 'taper', 0.45, seed + 3) // ánh sáng sống mũi
   blot(g, 15.6, 0.4, 1.3, C.ink, 1, seed + 4, 0.8)
   ln(g, [[16, 2.2], [12.5, 3.4], [9, 4.1]], 0.8, C.ink, 'nail', 0.9, seed + 5)
-  wash(g, [[10, 4.2], [11.2, 6.3], [12.2, 4.3]], { fill: '#ffffff', alpha: 1, layers: 1, jitter: 0.05, sharp: true, seed: seed + 6 }) // nanh
+  wash(g, [[10, 4.2], [11.2, 6.3], [12.2, 4.3]], { fill: WHITE, alpha: 1, layers: 1, jitter: 0.05, sharp: true, seed: seed + 6 }) // nanh
   eye(g, 5.2, -2.6, 1.6, eyeC, false, seed + 7)
   ln(g, [[3.4, -4.6], [7.4, -4.2]], 0.9, C.ink, 'nail', 0.9, seed + 8) // mày dữ
   for (let i = 0; i < 4; i++) ln(g, [[-11 + i * 2.2, 13.6], [-12 + i * 2.2, 16]], 0.9, mix(fill, C.silk, 0.5), 'taper', 0.7, seed + 9 + i) // lông bờm cổ
@@ -128,7 +123,7 @@ function bear(g: G) {
   ln(g, [[-2.8, 7.6], [0, 6.6], [2.8, 7.6]], 0.8, C.ink, 'even', 0.9, 68)
   for (const x of [-4.6, 4.6]) {
     blot(g, x, -2.2, 1.4, C.ink, 1, 69 + x, 0.9)
-    blot(g, x - 0.4, -2.6, 0.35, '#ffffff', 0.9, 70 + x, 1)
+    blot(g, x - 0.4, -2.6, 0.35, WHITE, 0.9, 70 + x, 1)
     ln(g, [[x + 2.4 * Math.sign(x), -5.6], [x - 2 * Math.sign(x), -3.9]], 1, C.ink, 'nail', 0.9, 71 + x) // mày dữ
   }
 }
@@ -164,7 +159,7 @@ function nineFox(g: G) {
     stroke(g, [[0, 6], mid, [x1, y1]], { w: 5.8, color: mix(C.silk, C.goldL, 0.15), press: 'swell', alpha: 1, rough: 0.3, seed: 91 + i })
     stroke(g, [mid, [x1, y1]], { w: 3.2, color: C.goldL, press: 'rise', alpha: 0.9, rough: 0.3, seed: 92 + i })
   }
-  foxHead(g, mix(C.silk, C.goldL, 0.25), '#ffffff', C.cinnabarL, 101, 0.72, 3)
+  foxHead(g, mix(C.silk, C.goldL, 0.25), WHITE, C.cinnabarL, 101, 0.72, 3)
   blot(g, 0, -4.2, 0.9, C.cinnabar, 1, 102, 1.4) // ấn đỏ giữa trán
 }
 
@@ -196,7 +191,7 @@ function ape(g: G) {
   ln(g, [[-6.4, -3.4], [0, -5.2], [6.4, -3.4]], 1.8, mix(C.ochre, C.ink, 0.5), 'swell', 0.9, 142)
   for (const x of [-3.2, 3.2]) {
     blot(g, x, -1, 1.4, C.ink, 1, 143 + x, 0.9)
-    blot(g, x - 0.4, -1.4, 0.35, '#ffffff', 0.9, 144 + x, 1)
+    blot(g, x - 0.4, -1.4, 0.35, WHITE, 0.9, 144 + x, 1)
   }
   blot(g, -1, 3.8, 0.45, C.ink, 1, 145, 1)
   blot(g, 1, 3.8, 0.45, C.ink, 1, 146, 1)
@@ -283,8 +278,8 @@ function tiger(g: G) {
     blot(g, 4.9 * s, -1.6, 0.7, C.ink, 1, 230 + s, 1)
     ln(g, [...e, e[0]], 0.6, C.ink, 'even', 0.9, 231 + s)
   }
-  part(g, oval(-2.6, 6.8, 3.2, 2.6, 16), '#ffffff', 232, 0.7)
-  part(g, oval(2.6, 6.8, 3.2, 2.6, 16), '#ffffff', 233, 0.7)
+  part(g, oval(-2.6, 6.8, 3.2, 2.6, 16), WHITE, 232, 0.7)
+  part(g, oval(2.6, 6.8, 3.2, 2.6, 16), WHITE, 233, 0.7)
   wash(g, [[-2, 3.4], [2, 3.4], [0, 5.6]], { fill: C.cinnabarL, alpha: 1, layers: 1, jitter: 0.05, sharp: true, seed: 234 })
   for (const [x, y] of [[-3.6, 6.6], [-2, 7.8], [2, 7.8], [3.6, 6.6]] as const) blot(g, x, y, 0.3, C.ink, 1, 235 + x, 1)
 }
@@ -321,8 +316,8 @@ function dragon(g: G) {
   const head: Pt[] = [[-10, -6], [-3, -9], [5, -7.4], [10, -6], [16, -4], [17.2, -1], [14, 1], [8.4, 2], [13, 5], [6, 8], [-2, 9.2], [-10, 12.4], [-14.4, 4]]
   part(g, head, jade, 265, 1.3)
   wash(g, [[8.4, 2], [14, 1], [13, 5]], { fill: mix(C.cinnabar, C.ink, 0.3), alpha: 1, layers: 1, jitter: 0.05, sharp: true, seed: 266 })
-  ln(g, [[9.6, 2.1], [10.2, 3.2]], 0.6, '#ffffff', 'taper', 1, 267)
-  ln(g, [[12, 1.4], [12.4, 2.6]], 0.6, '#ffffff', 'taper', 1, 268)
+  ln(g, [[9.6, 2.1], [10.2, 3.2]], 0.6, WHITE, 'taper', 1, 267)
+  ln(g, [[12, 1.4], [12.4, 2.6]], 0.6, WHITE, 'taper', 1, 268)
   for (let i = 0; i < 4; i++) ln(g, [[-8 + i * 3, 3 + (i % 2)], [-6.8 + i * 3, 4.2 + (i % 2)], [-5.6 + i * 3, 3 + (i % 2)]], 0.6, C.malachiteD, 'even', 0.8, 269 + i) // vảy
   ln(g, [[-2, -7.6], [5, -6.2], [12, -4.2]], 1, C.malachiteL, 'taper', 0.6, 273)
   eye(g, 5.2, -4, 1.5, C.goldL, true, 274)
@@ -355,7 +350,7 @@ function blood(g: G) {
   part(g, [[-6, 8.6], [6, 8.6], [6, 10.6], [-6, 10.6]], C.gold, 312, 0.9)
   const drop: Pt[] = [[0, -6], [3.6, 0], [5.4, 4.4], [4.4, 8.4], [0, 10.4], [-4.4, 8.4], [-5.4, 4.4], [-3.6, 0]].map(([x, y]) => [x + 6.5, y - 2] as Pt)
   part(g, drop, C.cinnabar, 313, 1.1)
-  blot(g, 4.8, 3.4, 1, '#ffffff', 0.6, 314, 1.4)
+  blot(g, 4.8, 3.4, 1, WHITE, 0.6, 314, 1.4)
   blot(g, -6, 12, 1.3, C.cinnabar, 1, 315, 0.8)
   blot(g, -3.6, 14.6, 0.8, C.cinnabar, 1, 316, 0.9)
 }
@@ -386,7 +381,7 @@ function demon(g: G) {
     const e: Pt[] = s > 0 ? [[1.6, -2.4], [8, -4.8], [6.4, -0.6]] : flipX([[1.6, -2.4], [8, -4.8], [6.4, -0.6]])
     part(g, e, C.goldL, 344 + s, 0.8)
     ln(g, [[2 * s, -4.6], [9 * s, -7.4]], 1.4, C.ink, 'nail', 0.95, 346 + s)
-    wash(g, s > 0 ? [[3, 7], [4.4, 7], [3.8, 10]] : [[-4.4, 7], [-3, 7], [-3.8, 10]], { fill: '#ffffff', alpha: 1, layers: 1, jitter: 0.05, sharp: true, seed: 348 + s })
+    wash(g, s > 0 ? [[3, 7], [4.4, 7], [3.8, 10]] : [[-4.4, 7], [-3, 7], [-3.8, 10]], { fill: WHITE, alpha: 1, layers: 1, jitter: 0.05, sharp: true, seed: 348 + s })
   }
   ln(g, [[-5, 7], [0, 5.6], [5, 7]], 1.1, C.ink, 'even', 0.9, 350)
   blot(g, 0, -7.6, 1.2, C.goldL, 1, 351, 1.2) // ấn giữa trán
@@ -423,7 +418,7 @@ function ice(g: G) {
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 - Math.PI / 2, c = Math.cos(a), s = Math.sin(a)
     ln(g, [[0, 0], [c * 15, s * 15]], 3.4, C.ink, 'even', 0.85, 400 + i)
-    ln(g, [[0, 0], [c * 15, s * 15]], 2.2, '#ffffff', 'even', 1, 406 + i)
+    ln(g, [[0, 0], [c * 15, s * 15]], 2.2, WHITE, 'even', 1, 406 + i)
     for (const k of [0.45, 0.72]) {
       const bx = c * 15 * k, by = s * 15 * k
       for (const d of [-0.9, 0.9]) {
@@ -448,8 +443,8 @@ function thunderPool(g: G) {
   for (const [x, y, r] of [[-8, -11, 6], [0, -13, 7], [8, -10.5, 6], [-2, -8.5, 6]] as const) blot(g, x, y, r, mix(C.indigo, C.ink, 0.4), 1, 703 + x, 0.7)
   for (const [x, y, r] of [[-7, -12.5, 2.6], [1, -14.5, 3.2]] as const) blot(g, x, y, r, mix(C.indigo, C.silk, 0.35), 0.6, 707 + x, 0.7)
   part(g, [[1.4, -8], [-3.6, 0], [0, 0.2], [-2, 8.6], [5.6, -1.6], [1.8, -1.8], [4.4, -8]], C.goldL, 709, 0.9)
-  for (const [x, a] of [[-3.6, -2.2], [0.6, -1.6], [4.6, -0.9]] as const) ln(g, [[x - 2, 8], [x - 2 + Math.cos(a) * 3.4, 8 + Math.sin(a) * 3.4]], 1, '#ffffff', 'taper', 0.95, 710 + x)
-  blot(g, -2, 8.6, 2, '#ffffff', 0.7, 713, 0.5)
+  for (const [x, a] of [[-3.6, -2.2], [0.6, -1.6], [4.6, -0.9]] as const) ln(g, [[x - 2, 8], [x - 2 + Math.cos(a) * 3.4, 8 + Math.sin(a) * 3.4]], 1, WHITE, 'taper', 0.95, 710 + x)
+  blot(g, -2, 8.6, 2, WHITE, 0.7, 713, 0.5)
 }
 // Hỗn Độn: xoáy mực nguyên sơ, các dải sắc cuộn vào lõi sáng, sao lấm tấm
 function chaos(g: G) {
@@ -466,7 +461,7 @@ function chaos(g: G) {
   })
   blot(g, 0, 0, 4.2, C.silk, 0.5, 728, 1)
   blot(g, 0, 0, 2.2, '#fff6d8', 1, 729, 1)
-  for (const [x, y, r] of [[-11, -9, 0.7], [12, -6, 0.6], [-6, 12, 0.6], [9, 10, 0.8], [2, -14, 0.5]] as const) blot(g, x, y, r, '#ffffff', 0.95, 730 + x, 1)
+  for (const [x, y, r] of [[-11, -9, 0.7], [12, -6, 0.6], [-6, 12, 0.6], [9, 10, 0.8], [2, -14, 0.5]] as const) blot(g, x, y, r, WHITE, 0.95, 730 + x, 1)
 }
 
 // ---------- Ngũ hành ----------
@@ -478,19 +473,19 @@ function metal(g: G) {
     ln(g, [[Math.cos(a) * 9, -1 + Math.sin(a) * 9], [Math.cos(a) * 15, -1 + Math.sin(a) * 15]], i % 2 ? 0.9 : 1.4, C.goldL, 'taper', 0.75, 740 + i)
   }
   part(g, oval(0, -1.6, 7, 7.2, 22), C.goldL, 750, 1.1)
-  ln(g, [[-4, -4.6], [-1.4, -7.2]], 1.3, '#ffffff', 'taper', 0.75, 751)
+  ln(g, [[-4, -4.6], [-1.4, -7.2]], 1.3, WHITE, 'taper', 0.75, 751)
   part(g, [[-15, -5], [-11, -1.4], [-6, 0.2], [6, 0.2], [11, -1.4], [15, -5], [13.4, 1.6], [9, 7.6], [0, 10.2], [-9, 7.6], [-13.4, 1.6]], C.gold, 752, 1.2)
   ln(g, [[-12.4, -2.6], [-7, 1.6], [0, 2.2], [7, 1.6], [12.4, -2.6]], 0.8, C.goldD, 'taper', 0.8, 753)
-  ln(g, [[-10.6, 4], [-5, 7.6]], 1.1, '#ffffff', 'taper', 0.55, 754)
+  ln(g, [[-10.6, 4], [-5, 7.6]], 1.1, WHITE, 'taper', 0.55, 754)
 }
 // Thuỷ: giọt nước, sóng cuộn trắng bên trong
 function water(g: G) {
   const drop: Pt[] = [[0, -15.6], [4.2, -8], [8.4, -1.4], [9.6, 4], [7.8, 9.6], [3.8, 12.8], [0, 13.4], [-3.8, 12.8], [-7.8, 9.6], [-9.6, 4], [-8.4, -1.4], [-4.2, -8]]
   part(g, drop, mix(C.azuriteL, C.spirit, 0.3), 760, 1.2)
   wash(g, drop.map(([x, y]) => [x * 0.82 + 0.8, y * 0.82 + 2.2] as Pt), { fill: C.azurite, alpha: 0.55, layers: 2, jitter: 0.3, seed: 761 })
-  ln(g, [[-7, 7], [-4, 4.2], [0, 4.4], [2.6, 6.6], [1.6, 9], [-0.8, 8.4], [-0.4, 6.8]], 1.3, '#ffffff', 'taper', 0.95, 762)
-  ln(g, [[1.6, 9], [4.4, 9.4], [6.8, 7.4]], 1, '#ffffff', 'taper', 0.85, 763)
-  ln(g, [[-4.6, -5.6], [-6.4, -0.4], [-6.2, 3.4]], 1.3, '#ffffff', 'taper', 0.6, 764)
+  ln(g, [[-7, 7], [-4, 4.2], [0, 4.4], [2.6, 6.6], [1.6, 9], [-0.8, 8.4], [-0.4, 6.8]], 1.3, WHITE, 'taper', 0.95, 762)
+  ln(g, [[1.6, 9], [4.4, 9.4], [6.8, 7.4]], 1, WHITE, 'taper', 0.85, 763)
+  ln(g, [[-4.6, -5.6], [-6.4, -0.4], [-6.2, 3.4]], 1.3, WHITE, 'taper', 0.6, 764)
 }
 // Thổ: gò đất vàng, vỉa đất sẫm xếp tầng, cỏ non trên đỉnh
 function earth(g: G) {
@@ -501,7 +496,7 @@ function earth(g: G) {
   ln(g, [[-13.6, 5.2], [-6, 3.2], [2, 5], [9, 2.8], [14, 5.4]], 0.8, C.ink, 'taper', 0.6, 773)
   ln(g, [[-14.4, 9], [-5, 7.8], [4, 9.2], [14.6, 8]], 0.7, C.ink, 'taper', 0.55, 774)
   for (const [x, y] of [[-6, 0.6], [5, -2.4], [-1, 6.4]] as const) blot(g, x, y, 0.8, mix(C.ochre, C.ink, 0.4), 0.9, 775 + x, 0.8)
-  ln(g, [[-7, -6.4], [-3, -4.6], [2, -6.8]], 1.1, '#ffffff', 'taper', 0.4, 778)
+  ln(g, [[-7, -6.4], [-3, -4.6], [2, -6.8]], 1.1, WHITE, 'taper', 0.4, 778)
   for (const [x, d] of [[0.6, -1], [2, 1], [1.2, 0.2]] as const) ln(g, [[x, -9.2], [x + d * 1.6, -13]], 1, C.malachite, 'nail', 1, 779 + d)
 }
 
@@ -514,7 +509,7 @@ function anvil(g: G) {
   const iron = mix(C.ink2, C.indigo, 0.35)
   part(g, [[-15.4, -3], [-7, -2.4], [10, -3.4], [10, 1.2], [5, 2.2], [3.6, 6], [7.4, 9], [7.4, 12], [-7.4, 12], [-7.4, 9], [-3.6, 6], [-5, 2.2], [-9, 1.4]], iron, 800, 1.3)
   ln(g, [[-13, -2.6], [9.2, -3.2]], 1.2, mix(C.silk, C.ink3, 0.2), 'taper', 0.8, 801)
-  ln(g, [[-4, 4], [-3, 10.4]], 0.9, '#ffffff', 'taper', 0.3, 802)
+  ln(g, [[-4, 4], [-3, 10.4]], 0.9, WHITE, 'taper', 0.3, 802)
   ln(g, [[-4.6, -4.4], [6.8, -4.6]], 2, C.cinnabarL, 'taper', 1, 803) // phôi nung đỏ
   ln(g, [[-3.6, -4.5], [5.8, -4.7]], 0.8, '#fff0b0', 'taper', 1, 804)
   ln(g, [[13.6, 4.6], [5.6, -12.4]], 2, mix(C.ochre, C.ink, 0.25), 'even', 1, 805)
@@ -531,7 +526,7 @@ function sword(g: G) {
   for (let i = 0; i < 3; i++) ln(g, [[-1.6, 10.4 + i * 1.5], [1.6, 11.2 + i * 1.5]], 0.5, C.goldD, 'even', 0.9, 464 + i)
   blot(g, 0, 15.6, 1.6, C.gold, 1, 467, 1)
   ln(g, [[0, 16.5], [-2.4, 19.5], [-1.2, 21.5]], 1.2, C.cinnabar, 'taper', 1, 468) // tua kiếm
-  ln(g, [[-0.8, -13], [-0.6, 2]], 0.8, '#ffffff', 'taper', 0.6, 469)
+  ln(g, [[-0.8, -13], [-0.6, 2]], 0.8, WHITE, 'taper', 0.6, 469)
 }
 function orb(g: G) {
   // hoả cầu kéo đuôi xoáy
@@ -553,7 +548,7 @@ function fist(g: G) {
   ln(g, [[-9.6, -2.6], [-2, -1.2], [2, -3.4]], 1.2, C.ink, 'nail', 0.9, 484) // ngón cái
   part(g, [[-6.4, 8], [6.4, 8], [6.8, 15.5], [-6.8, 15.5]], C.silk, 485, 1.1) // băng quấn cổ tay
   for (let i = 0; i < 3; i++) ln(g, [[-6.6, 9.6 + i * 2.2], [6.6, 10.4 + i * 2.2]], 0.6, C.ink3, 'even', 0.8, 486 + i)
-  ln(g, [[-8, -7], [0, -10], [8, -8.6]], 1.1, '#ffffff', 'taper', 0.4, 489)
+  ln(g, [[-8, -7], [0, -10], [8, -8.6]], 1.1, WHITE, 'taper', 0.4, 489)
 }
 
 // ---------- Khoảnh khắc ----------
@@ -630,7 +625,7 @@ function tower(g: G) {
     ln(g, [[w * 0.3, y - 0.3], [w * 0.3, y - 1.8]], 0.5, C.cinnabar, 'even', 0.9, 620 + t)
     part(g, [[-w - 1.2, y - 1.6], [-w * 0.7, y - 3.2], [w * 0.7, y - 3.2], [w + 1.2, y - 1.6], [w * 0.7, y - 2.2], [-w * 0.7, y - 2.2]], C.malachite, 630 + t, 0.7)
   }
-  for (const [x, y, r] of [[-9, 12.4, 4.2], [-2, 13.4, 4.8], [6, 12.6, 4.4], [12, 13.8, 3.2], [-13, 14.2, 3]] as const) blot(g, x, y, r, '#ffffff', 0.95, 640 + x, 0.6)
+  for (const [x, y, r] of [[-9, 12.4, 4.2], [-2, 13.4, 4.8], [6, 12.6, 4.4], [12, 13.8, 3.2], [-13, 14.2, 3]] as const) blot(g, x, y, r, WHITE, 0.95, 640 + x, 0.6)
   ln(g, [[-14, 14.8], [0, 15.6], [14, 14.6]], 0.8, C.azurite, 'taper', 0.7, 650)
 }
 
@@ -671,7 +666,7 @@ export function medal(emblem: Emblem, tone: MedalTone): Asset {
       ring(g, 0, 0, 19.6, 1.5, C.goldL, 9, 0.9, 0.03)
       ring(g, 0, 0, 21.2, 0.6, C.goldD, 10, 0.8, 0.05)
       DRAW[emblem](g)
-      stroke(g, [[-15, -8], [-11, -13.5], [-5, -16.5]], { w: 1.6, color: '#ffffff', alpha: 0.32, press: 'swell', dry: 0.4, seed: 11 })
+      stroke(g, [[-15, -8], [-11, -13.5], [-5, -16.5]], { w: 1.6, color: WHITE, alpha: 0.32, press: 'swell', dry: 0.4, seed: 11 })
       stroke(g, [...disc, disc[0], disc[1]], { w: 1.1, color: C.ink, alpha: 0.9, press: 'even', rough: 0.3, seed: 12 })
       grain(g, 0.2)
     },
@@ -759,7 +754,7 @@ const TAB_DRAW: Record<TabIcon, (g: G) => void> = {
     part(g, [[-13, -2.6], [13, -2.6], [13, -0.6], [-13, -0.6]], C.gold, 677, 0.8)
     part(g, [[-2.6, -1], [2.6, -1], [2.2, 4.4], [-2.2, 4.4]], C.goldL, 678, 0.9)
     blot(g, 0, 1.6, 0.8, C.ink, 1, 679, 1)
-    ln(g, [[-10.6, -6.6], [-4, -7.4]], 1, '#ffffff', 'taper', 0.35, 680)
+    ln(g, [[-10.6, -6.6], [-4, -7.4]], 1, WHITE, 'taper', 0.35, 680)
   },
 }
 export const tabIcon = (id: TabIcon): Asset => ({ x: -20, y: -20, w: 40, h: 40, draw: g => (TAB_DRAW[id](g), grain(g, 0.18)) })
