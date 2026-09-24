@@ -4,7 +4,7 @@
 >
 > Lệnh: `npm run dev` (chạy game) · `npm test` · `npm run check` (kiểm tra kiểu) · `npm run sim` (bot chơi 30 ngày, in nhịp) · `npm run build`
 >
-> **Trạng thái (24/09/2026): P1 đủ tính năng, đủ điều kiện phát hành demo** — xem mục 13 › Đánh giá sẵn sàng phát hành. Việc còn lại để qua cổng P1 là việc ngoài mã: thử máy thật, dựng máy nhận analytics, đăng tải, đo người thật.
+> **Trạng thái (24/09/2026): game đã chạy online** — server trọng tài production (mục 4 › Kiến trúc online), client chỉ còn chế độ online, tiến độ lưu trên PostgreSQL. Đang làm tiếp P2/P3 theo lộ trình online (mục 5 › P2). P1 offline đã đủ tính năng (mục 13).
 
 ## 0. Giả định (sửa nếu sai)
 
@@ -89,7 +89,7 @@ Trước P3 tiến trình liên tục, luân hồi là tự nguyện.
 | Ngôn ngữ | TypeScript mọi nơi | Luật game viết 1 lần, chạy cả client lẫn server |
 | UI | Svelte 5 + Vite (lý do ở UX.md mục 1) | SLG phần lớn là màn hình UI; HTML/CSS làm UI responsive tốt nhất |
 | Cảnh núi, bản đồ, hiệu ứng | PixiJS (WebGL) + hình vẽ tay sinh bằng mã (`@rok/art`) | Texture nướng một lần, chuyển động trên GPU: mượt trên điện thoại, dùng tiếp cho bản đồ chung P3 |
-| Server (từ P2) | Node.js + PostgreSQL, 1 process, 1 VPS | Game theo timer gần như không tốn CPU |
+| Server | Node 24 + **Fastify** (API) + **Socket.IO** (thời gian thực) + **PostgreSQL** (Drizzle ORM), Zod, Pino, prom-client | Thư viện chuẩn, có sẵn nhịp tim/nối lại/ack/giới hạn tần suất; game theo timer nên 10k CCU chỉ tốn ~0,5 lõi |
 | Web + PC + mobile | PWA từ P1; Capacitor (iOS/Android) và Electron + steamworks.js (Steam) ở P4 | 1 bản build; PWA đã chạy trên trình duyệt PC và điện thoại |
 
 Tiền lệ: Melvor Idle (web, Steam, mobile), Antimatter Dimensions (web, Steam) — đều là game công nghệ web.
@@ -142,9 +142,9 @@ Tài nguyên = đã có + tốc độ × thời gian trôi (chặn bởi sức c
 
 ### An toàn
 
-- Từ P2: client chỉ gửi ý định; server kiểm tra, dùng giờ server, có rate limit.
-- Save offline của P1 **không** chuyển sang bản online (không kiểm được hack) — báo trước cho người test.
-- Safari có thể xóa dữ liệu của web ít mở → P1 có nút xuất/nhập save.
+- Client chỉ gửi ý định; server kiểm tra (`parseAction` + Zod ở biên), dùng giờ server, giới hạn tần suất (HTTP theo IP, sự kiện socket theo kết nối).
+- Save offline của P1 **không** chuyển sang bản online (không kiểm được hack) — client dọn save cũ và báo một lần.
+- Phiên: token ngẫu nhiên, DB chỉ giữ sha256; cùng origin dùng cookie HttpOnly + header chống CSRF. Safari có thể xoá storage của web ít mở → nhắc liên kết email, mã chuyển máy (M9).
 - Backup Postgres hằng ngày ra nơi khác, và thử khôi phục ít nhất 1 lần.
 
 ### Đơn giản hóa có chủ đích
@@ -153,12 +153,22 @@ Tài nguyên = đã có + tốc độ × thời gian trôi (chặn bởi sức c
 |---|---|---|
 | 1 process, xử lý tuần tự mỗi giới | ~vài nghìn người/giới | Tách process theo giới |
 | Không chặn giữa đường | Mất một chiêu chiến thuật của RoK | Người chơi đòi → tính giao điểm hai đường thẳng |
-| Polling ở P2 | Trễ vài giây | Có chat (P3) → WebSocket |
+| Nhận cả giới khi mở bản đồ (chưa chia theo ô) | ~1k người/giới | Chia theo ô |
 | State người chơi trong 1 JSONB | Khó query chéo | Bảng xếp hạng cần → tách cột |
 | Analytics bằng bảng SQL | Không có dashboard | Cần funnel phức tạp → dịch vụ ngoài |
 | Phát lại trận bằng HTML | Chưa có hiệu ứng chiêu thức trên WebGL | Cần combat nhiều hiệu ứng → dựng cảnh trận trong `apps/client/src/world/` |
 | Trận đánh gộp theo nhóm (không có đội hình, vị trí) | Ít chiều sâu chiến thuật hơn RoK | Người chơi đòi → thêm hàng trước/sau |
 | Một hàng đợi cho mỗi việc (xây, tuyển, chữa, nghiên cứu, luyện đan) | Không xếp lịch trước được | Bán "thêm 1 hàng đợi" (P4) |
+
+### Kiến trúc online (đã chạy)
+
+- **Mỗi giới là một actor đơn luồng** (`apps/server/src/game/world.ts`): mọi người chơi của giới nằm trong RAM, mọi thao tác và sự kiện tới hạn xử lý tuần tự — không khoá, không race; PvP, giúp đỡ, chợ đều nguyên tử.
+- **Node giống hệt nhau, chia giới bằng lease + epoch** (`worlds.owner/lease_until/epoch`): node chết thì lease hết, node khác nhận giới; mọi lần ghi đều kiểm epoch nên không bao giờ có hai node cùng ghi một giới. API trả về đường Socket.IO của node đang giữ giới (`/n1/socket.io`…), Caddy trỏ thẳng.
+- **RAM là chuẩn, commit gộp, ack sau khi ghi**: state đổi → commit gộp mỗi `COMMIT_MS` (30 ms) trong một transaction có fencing; ack/patch chỉ rời server sau khi commit xong → **đã ack là đã ghi**. Client đoán trước thao tác tất định nên không thấy độ trễ.
+- **Gửi patch, không gửi cả state**: khoá tầng trên có tham chiếu đổi (~500 B/thao tác); chiến báo đi luồng riêng (không nằm trong state gửi đi, cũng không nằm trong RAM server).
+- **Mầm trận không bao giờ rời server**: server bơm mầm ngẫu nhiên mới trước mọi thao tác; client luôn thấy seed = 0 (rules: mầm 0 = ẩn → không tự giải trận), kết quả trận do server đẩy xuống đúng lúc.
+- **`apply()` tự kiểm dữ liệu vào** (`parseAction`): chặn cả 8 lỗ cày thưởng / làm sập đã tìm thấy khi soát luật.
+- **Đo được** (máy dev, một node, `npm run load`): 2000 kết nối, ~500 thao tác/giây, ack p50 29 ms · p95 44 ms · p99 52 ms (mỗi ack đã commit vào Postgres), 0 lỗi; 1000 kết nối: p99 51 ms. Trên 2000 thì máy dev hết RAM trước server (swap đầy, OOM killer), nên bài 10k CCU nhiều node chạy trên máy phát tải riêng (mốc M10 trong kế hoạch online).
 
 ### Đa nền tảng
 
@@ -321,13 +331,20 @@ Bài học rút ra: nhịp bị giới hạn bởi *số lần phải xây* (m�
 - **Cloudflare Pages:** build command `npm run build`, output `apps/client/dist`.
 - **itch.io:** `npm run package` → `release.zip` (build + nén `apps/client/dist/`), chọn "This file will be played in the browser", khung 480 × 860, bật "Mobile friendly".
 - **PWA:** có manifest + icon huy hiệu vẽ tay + service worker (`apps/client/public/sw.js`): mở lần đầu xong là chơi offline được, cài lên màn hình chính được. Mỗi bản build có tên cache riêng (`rok-<mã build>`). Sau khi deploy, người chơi chạy bản mới ngay (trang HTML lấy mạng trước); service worker mới kích hoạt ở lần mở kế tiếp và xoá cache bản cũ.
-- **Analytics:** build với `VITE_ANALYTICS_URL=https://<máy chủ>/e` thì client gửi beacon JSON `{id, name, props, v, t}` (id ngẫu nhiên của máy, không có dữ liệu cá nhân) cho các sự kiện `open`, `found`, `hall`, `trib`, `rebirth`. Không đặt biến thì không gửi gì.
-  Máy nhận: `STATS_TOKEN=<bí mật> npm run analytics` (`apps/server/analytics.ts`, Node 24 thuần + SQLite có sẵn, mầm của server P2) — chạy trên VPS (Node 24) sau Caddy: cấu hình sẵn ở `apps/server/deploy/` (`Caddyfile` tự lấy HTTPS, `rok-analytics.service` cho systemd, đã đặt `TRUST_PROXY=1`; sửa tên miền, `STATS_TOKEN`, `ORIGIN`), kiểm dữ liệu đầu vào, giới hạn 120 sự kiện/phút mỗi IP. Xem số ở `/stats?token=<bí mật>`: D1/D7 theo cohort ngày cài (chỉ tính ngày đã trọn), phân bố cảnh giới cao nhất, tỉ lệ độ kiếp thành công, số lần luân hồi.
+- **Server:** `apps/server/deploy/` — Docker Compose (Postgres 17 + 2 node game + Caddy HTTPS tự động), `.env.example` (DOMAIN, DB_PASSWORD, ORIGINS). Client tĩnh do Caddy phục vụ cùng origin với API/Socket.IO. Bản itch.io (khác origin): build với `VITE_SERVER_URL=https://<máy chủ>` và thêm origin itch.io vào `ORIGINS`.
+- **Analytics:** server tự ghi sự kiện (bảng `events`: login, hall, trib, rebirth — theo ngày giờ VN), không cần client gửi gì. Số D1/D7, phân bố cảnh giới, tỉ lệ độ kiếp: `/admin/stats` (M5).
 - **Font:** giấy phép OFL nằm cạnh font trong `apps/client/public/fonts/`.
 
-**Kiểm thử trước khi phát hành:** `npm test` (luật, server analytics, và `apps/client/render.test.ts`: vẽ mọi màn hình × 6 trạng thái game × 2 ngôn ngữ bằng SSR của Svelte qua Vite — bắt lỗi vỡ lúc vẽ và chữ hỏng `NaN`/`undefined` mà không cần trình duyệt), `npm run check` (kiểu), `npm run sim` (nhịp — báo lỗi nếu bot không tới tầng 15 trong 30 ngày), rồi `npm run build && npm run e2e` (Chrome headless bấm như người chơi trên bản build: lập tông môn, 14 nhiệm vụ đầu chỉ bằng click, hai tab không đè save nhau, tắt máy chủ vẫn chơi và đổi ngôn ngữ được, console sạch — cần Chrome trên máy, không có thì tự bỏ qua; đặt `CHROME=` nếu Chrome ở chỗ khác) và chơi thử bản build (`npm run preview -w @rok/client`). CI (`.github/workflows/ci.yml`) chạy tất cả các bước này, kể cả e2e bằng Chrome có sẵn trên máy ảo, ở mỗi lần push/PR. Bản dev có công cụ tua giờ trong console: `rok.warp(60)` (tua 60 phút), `rok.get()` / `rok.set(state)`.
+**Kiểm thử trước khi phát hành:**
+- `npm test`: luật (có các lỗ khai thác đã vá, fuzz), gói tin (patch khứ hồi trên lịch sử thật, không lộ mầm), i18n, ranh giới package, **server với Postgres thật** (database tạm mỗi lần: bắt tay, ack đã ghi DB, hai tab, trận PvE đẩy đúng giờ, khởi động lại giữ tiến độ, chuyển hướng node, bị rào khi mất quyền giữ giới, giới hạn tần suất) và vẽ mọi màn hình (SSR).
+- `npm run check` (kiểu), `npm run sim` (nhịp).
+- `npm run build && npm run e2e`: Chrome headless chơi thật với server + Postgres: lập tông môn, 14 nhiệm vụ bằng click (tua giờ giới qua API dev), tải lại vẫn còn tiến độ, hai tab đồng bộ, ngăn kéo desktop, **server bị kill -9 rồi lên lại: tự nối, không mất thao tác đã ack**, mất mạng hẳn vẫn mở được và báo rõ, console sạch.
+- `npm run load`: bot socket.io thật (xem Kiến trúc online › Đo được).
+- CI (`.github/workflows/ci.yml`) chạy tất cả, có service Postgres. Bản dev: `rok.warp(60)` (tua giới 60 phút, cần server `ALLOW_WARP=1`), `rok.get()` / `rok.set(state)`.
 
 ### Đánh giá sẵn sàng phát hành demo P1 (24/09/2026)
+
+> Bảng này đánh giá **bản offline P1** trước khi chuyển sang online; các dòng save trên máy / chơi offline / máy nhận analytics không còn áp dụng (xem Kiến trúc online ở mục 4).
 
 **Kết luận: đủ điều kiện phát hành bản demo cho người thử** (không phải bản thương mại). Phần mã không còn việc chặn; phần còn lại là việc ngoài mã (bảng dưới).
 

@@ -4,33 +4,11 @@
 // Mầm trận luôn là 0 ở client (rules: mầm 0 = ẩn) nên advance ở đây không bao giờ tự bịa kết quả trận — server đẩy xuống.
 import { io, type Socket } from 'socket.io-client'
 import { advance, apply, type Action, type Report, type State } from '@rok/rules'
-import type { Ack, ClientToServer, Push, Query, Refuse, ServerToClient, View, Welcome } from '@rok/protocol'
+import type { Ack, ClientToServer, Push, Query, Refuse, ServerToClient, Welcome } from '@rok/protocol'
+import { fold, offsetOf, withReports, type Pending } from './sync'
 
 export type Status = 'boot' | 'nosect' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'update' | 'lost' | 'banned' | 'deleted'
 export type Why = 'first' | 'tick' | 'mine' | 'push' | 'resync'
-export type Pending = { a: Action; at: number; predicted: boolean; done?: (r: Ack) => void }
-
-// ---------- Phần thuần (có unit test) ----------
-
-export const withReports = (v: View, reports: Report[]): State => ({ ...v, reports })
-
-// Gập các thao tác đang chờ lên state đã xác nhận: mỗi thao tác áp tại lúc người chơi bấm (server áp muộn hơn một nhịp
-// mạng — chênh vài tài nguyên thì bản của server thắng khi ack về)
-export function fold(confirmed: State, pending: readonly Pending[]) {
-  let s = confirmed
-  for (const p of pending) {
-    if (!p.predicted) continue
-    const r = apply(s, p.a, p.at)
-    if (r.ok) s = r.state
-  }
-  return s
-}
-
-// Mẫu ping có vòng đi-về ngắn nhất là mẫu đáng tin nhất cho độ lệch đồng hồ
-export function offsetOf(samples: readonly { rtt: number; off: number }[]) {
-  return samples.reduce((a, b) => (b.rtt < a.rtt ? b : a)).off
-}
-
 // ---------- Kết nối ----------
 
 const SERVER = (import.meta.env.VITE_SERVER_URL as string | undefined) ?? '' // rỗng: cùng origin (dev proxy, Caddy)

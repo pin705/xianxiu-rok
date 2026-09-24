@@ -22,6 +22,7 @@ jobs:
       - run: npm test # luật, gói tin, i18n, ranh giới package, server với Postgres thật (database tạm), vẽ mọi màn hình
       - run: npm run check
       - run: npm run sim # bot phải tới Chủ điện tầng 15 trong 30 ngày, không thì báo lỗi
+      - run: npm run sim -- 60 4 --goal 25 # không luân hồi: phải leo hết tầng 16–25 trong 60 ngày
       - run: npm run build
       - run: npm run e2e # Chrome có sẵn trên máy ảo ubuntu: chơi thật bản online với server game + Postgres
         env:

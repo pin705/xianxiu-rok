@@ -1,4 +1,4 @@
-// Phòng thử art (chỉ bản dev): /lab.html — xem hình vẽ tay trên giấy. ?view=icons|faces|troops|decor|chrome|medals|fx|battle|result|buildings (mặc định)
+// Phòng thử art (chỉ bản dev): /lab.html — xem hình vẽ tay trên giấy. ?view=icons|faces|troops|decor|chrome|medals|fx|battle|result|home|tiers|buildings (mặc định)
 import {
   ITEMS, badgeSkin, bake, buttonSkin, cardSkin, dotsSkin, fieldSkin, fillSkin, grooveSkin, knobSkin, lacquerSkin, plankSkin, rodSkin, scrollSkin, switchSkin,
   tagSkin, toastSkin, trackSkin, type Skin, PIGMENT, BEAST_EMBLEMS, SECT_EMBLEMS, REALM_EMBLEMS, medal, emblemArt, type Emblem, type MedalTone, bamboo, battlefield, beast, blossom, building, butterfly, flyingSword, itemIcon, paper, portrait, soldier, splashTex, stairway, stoneLantern, vortexTex, type Asset, type Kind, type Look,
@@ -26,6 +26,7 @@ const put = <M,>(a: Asset<M>, x: number, y: number, px = Math.max(a.w, a.h)) => 
   out.drawImage(b.canvas as HTMLCanvasElement, (x + a.x * k) * S, (y + a.y * k) * S, a.w * k * S, a.h * k * S)
 }
 const view = new URLSearchParams(location.search).get('view') ?? 'buildings'
+const KINDS: Kind[] = ['chuDien', 'tangKinhCac', 'danPhong', 'tangBaoCac', 'dienVoTruong', 'tuLinhTran', 'khoangMach', 'linhDien', 'luyenKhiPhong']
 const t0 = performance.now()
 if (view === 'chrome') {
   // da giao diện ghép thật bằng border-image (xem giãn 9 mảnh có lộ không)
@@ -233,11 +234,15 @@ if (view === 'chrome') {
     put(portrait(l), 20 + (i % 3) * 124, 30 + Math.floor(i / 3) * 130, 110)
     put(portrait(l), 20 + (i % 3) * 124, 300 + Math.floor(i / 3) * 60, 40)
   })
+} else if (view === 'tiers') {
+  // Một công trình qua 5 bậc (&id=, mặc định Chủ điện), mỗi bậc một hàng, cỡ thật; &id=all: lưới mọi công trình × bậc, thu nhỏ
+  const id = (new URLSearchParams(location.search).get('id') ?? 'chuDien') as Kind | 'all'
+  if (id === 'all') KINDS.forEach((k, r) => [1, 6, 11, 16, 21].forEach((lv, c) => put(building(k, lv).art, 39 + c * 78, 84 + r * 92, 76)))
+  else [1, 6, 11, 16, 21].forEach((lv, i) => put(building(id, lv).art, 195, 130 + i * 160))
 } else {
   const lv = Number(new URLSearchParams(location.search).get('lv') ?? 1)
-  const ids: Kind[] = ['chuDien', 'tangKinhCac', 'danPhong', 'tangBaoCac', 'dienVoTruong', 'tuLinhTran', 'khoangMach', 'linhDien']
-  const pos: [number, number][] = [[195, 120], [80, 250], [290, 250], [80, 400], [270, 400], [100, 560], [290, 560], [195, 720]]
-  ids.forEach((id, i) => put(building(id, lv).art, ...pos[i]))
+  const pos: [number, number][] = [[195, 120], [80, 250], [290, 250], [80, 400], [270, 400], [100, 560], [290, 560], [100, 720], [290, 720]]
+  KINDS.forEach((id, i) => put(building(id, lv).art, ...pos[i]))
 }
 console.log('bake ms', (performance.now() - t0).toFixed(1))
 

@@ -5,5 +5,5 @@
     "types": ["node"],
     "erasableSyntaxOnly": true
   },
-  "include": ["architecture.test.ts", "packages/rules", "packages/i18n", "packages/protocol", "apps/server", "apps/client/render.test.ts", "apps/client/e2e.ts"]
+  "include": ["architecture.test.ts", "packages/rules", "packages/i18n", "packages/protocol", "apps/server", "apps/client/render.test.ts", "apps/client/net.test.ts", "apps/client/e2e.ts"]
 }

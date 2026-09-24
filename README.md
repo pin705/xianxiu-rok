@@ -1,20 +1,24 @@
 # Sơn Hà Tiên Tông
 
-Game tu tiên chiến lược (SLG) chạy trên trình duyệt: dựng tông môn, thu nhận trưởng lão, xuất quân đánh yêu thú, độ kiếp, luân hồi. Offline, lưu trên máy, cài được như app (PWA). Đa ngôn ngữ (hiện có Tiếng Việt, English).
+Game tu tiên chiến lược (SLG) chạy trên trình duyệt: dựng tông môn, thu nhận trưởng lão, xuất quân đánh yêu thú, độ kiếp, luân hồi. **Chơi online**: server làm trọng tài (chạy chính bộ luật của client), tiến độ lưu trên PostgreSQL. Cài được như app (PWA). Đa ngôn ngữ (hiện có Tiếng Việt, English).
 
 ```bash
 npm install
-npm run dev        # chơi thử: http://localhost:5173
-npm test           # luật game, i18n, ranh giới package, server, vẽ mọi màn hình (SSR)
+npm run db         # Postgres cho dev/test (Docker, cổng 5439) — một lần mỗi lần bật máy
+npm run server     # server game: http://localhost:8787 (tự khởi động lại khi sửa code; tài liệu API ở /docs)
+npm run dev        # chơi thử: http://localhost:5173 (proxy /api và /socket.io sang server)
+npm test           # luật game, gói tin, i18n, ranh giới package, server với Postgres thật, vẽ mọi màn hình (SSR)
 npm run check      # kiểm tra kiểu (tsc + svelte-check mọi package)
 npm run sim        # bot chơi 30 ngày ảo, in nhịp tiến độ (CI báo lỗi nếu không tới tầng 15)
 npm run build      # bản tĩnh ở apps/client/dist
-npm run e2e        # sau build: Chrome headless bấm như người chơi
-npm run package    # build + nén release.zip để tải lên itch.io
+npm run e2e        # sau build: Chrome headless chơi thật với server game + Postgres (database tạm)
+npm run load -- --clients 2000   # load test: bot socket.io thật (server cần LIMITS=off)
+npm run package    # build + nén release.zip (bản itch.io cần VITE_SERVER_URL trỏ về server)
 npm run fonts      # tải lại font tự host (sau khi thêm hệ chữ mới)
-npm run db         # Postgres cho dev/test (Docker, cổng 5439)
-npm run server     # server game (tự khởi động lại khi sửa code)
+npm run db:generate -w @rok/server   # sinh migration SQL sau khi sửa apps/server/src/db/schema.ts
 ```
+
+Triển khai: `apps/server/deploy/` (Docker Compose: Postgres + 2 node game + Caddy HTTPS). Kiến trúc server: xem [docs/PLAN.md](docs/PLAN.md) mục 4.
 
 Mọi lệnh chạy ở gốc repo. Lệnh của riêng một package: `npm run <lệnh> -w @rok/client`.
 
@@ -26,19 +30,21 @@ Mọi lệnh chạy ở gốc repo. Lệnh của riêng một package: `npm run 
 ```
 rok/
   apps/                      sản phẩm chạy được — dùng packages, không package nào import ngược lại
-    client/    @rok/client   Vite + Svelte 5 + PixiJS: HUD, bảng, cảnh WebGL, save trên máy, PWA
-    server/    @rok/server   server game: API + WebSocket + world actor + PostgreSQL (đang dựng)
+    client/    @rok/client   Vite + Svelte 5 + PixiJS: HUD, bảng, cảnh WebGL, PWA; src/net.ts nói chuyện với server
+    server/    @rok/server   Fastify (API) + Socket.IO (thời gian thực) + world actor trong RAM + PostgreSQL (Drizzle)
+                             src/game (actor, lease/epoch) · src/realtime · src/http · src/db (schema, truy vấn) · drizzle/ (migration)
   packages/                  thư viện dùng chung
-    rules/     @rok/rules    luật game thuần — không I/O, không Date, không phụ thuộc gì (client và server P2 chạy chung)
+    rules/     @rok/rules    luật game thuần — không I/O, không Date, không phụ thuộc gì (client và server chạy chung)
                              index.ts (state, advance, apply) · combat.ts (trận tất định) · data.ts (số liệu) · simulate.ts (bot chỉnh nhịp)
     art/       @rok/art      bút lông sinh hình vẽ tay (canvas → texture), icon, chân dung, bảng màu
     i18n/      @rok/i18n     chữ hiển thị mọi ngôn ngữ (locales/*.ts), chọn ngôn ngữ, tải theo nhu cầu
+    protocol/  @rok/protocol giao kèo client ↔ server: kiểu sự kiện Socket.IO, view()/diff() (patch), mã giao thức (hash luật)
   architecture.test.ts       khoá chiều phụ thuộc giữa các package
   tsconfig.base.json         cấu hình TypeScript chung, mỗi package kế thừa
-  (sau này) apps/mobile (P4, Capacitor) · apps/desktop (P4, Electron + Steam) · packages/protocol (P2, gói tin client ↔ server)
+  (sau này) apps/mobile (P4, Capacitor) · apps/desktop (P4, Electron + Steam)
 ```
 
-Chiều phụ thuộc (sai là `npm test` báo): `rules` ← `i18n` ← `client`; `art` ← `client`; `rules` ← `server`. Package mới phải được khai trong `architecture.test.ts`.
+Chiều phụ thuộc (sai là `npm test` báo): `rules` ← `i18n` ← `client`; `art` ← `client`; `rules` ← `protocol` ← `client`, `server`; `i18n` ← `server` (chữ Web Push). Package mới phải được khai trong `architecture.test.ts`.
 
 ## Đa ngôn ngữ
 

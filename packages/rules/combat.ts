@@ -1,11 +1,11 @@
-import { ADV, BEATS, DEF_K, DISADV, MAX_ROUNDS, SKILL_EVERY, type Skill, type Tier, type UnitType } from './data.ts'
+import { ADV, BEATS, DEF_K, DISADV, EL_ADV, EL_DISADV, MAX_ROUNDS, OVERCOMES, SKILL_EVERY, type Element, type Skill, type Tier, type UnitType } from './data.ts'
 
 // Trận tự động theo lượt, tất định theo seed: cùng đầu vào + seed → cùng kết quả trên mọi máy.
 // Hai bên ra đòn cùng lúc mỗi lượt (không ai được lợi vì đánh trước). Sát thương chia cho các nhóm địch
 // theo tổng máu của nhóm, nhân hệ khắc, trừ phần thủ chặn được.
 
 export type Troop = { type: UnitType; tier: Tier; n: number; atk: number; def: number; hp: number }
-export type Side = { troops: Troop[]; skill?: Skill }
+export type Side = { troops: Troop[]; skill?: Skill; el?: Element } // el: ngũ hành của người dẫn / của địch
 // n: số còn lại của từng nhóm sau lượt · cast: bên nào thi triển công pháp lượt này
 export type Round = { n: [number[], number[]]; cast: [boolean, boolean] }
 export type Fight = { win: boolean; rounds: Round[] }
@@ -23,6 +23,8 @@ export function rng(seed: number) {
 }
 
 export const advantage = (att: UnitType, def: UnitType) => (BEATS[att] === def ? ADV : BEATS[def] === att ? DISADV : 1)
+// Ngũ hành: một bên không có hành (mọi nội dung P1) thì 1 — nhân 1 giữ nguyên từng bit, trận cũ ra đúng kết quả cũ
+export const elAdv = (att?: Element, def?: Element) => (!att || !def ? 1 : OVERCOMES[att] === def ? EL_ADV : OVERCOMES[def] === att ? EL_DISADV : 1)
 
 export function fight(a: Side, b: Side, seed: number): Fight {
   const rand = rng(seed)
@@ -30,6 +32,7 @@ export function fight(a: Side, b: Side, seed: number): Fight {
   const n = sides.map(s => s.troops.map(t => t.n))
   const hurt = sides.map(s => s.troops.map(() => 0)) // sát thương lẻ chưa đủ hạ một đệ tử
   const weak = [{ v: 0, left: 0 }, { v: 0, left: 0 }]
+  const el = [elAdv(a.el, b.el), elAdv(b.el, a.el)]
   const alive = (i: number) => n[i].some(x => x > 0)
   const rounds: Round[] = []
 
@@ -57,7 +60,7 @@ export function fight(a: Side, b: Side, seed: number): Fight {
         foe.forEach((t, k) => {
           if (!n[j][k]) return
           const adv = type ? advantage(type, t.type) : 1
-          dmg[j][k] += ((power * n[j][k] * t.hp) / bulk) * adv * (DEF_K / (DEF_K + t.def)) * guard[j]
+          dmg[j][k] += ((power * n[j][k] * t.hp) / bulk) * adv * (DEF_K / (DEF_K + t.def)) * guard[j] * el[i]
         })
       sides[i].troops.forEach((t, k) => n[i][k] && hit(n[i][k] * t.atk * atkMul[i] * (0.9 + 0.2 * rand()), t.type))
       const sk = sides[i].skill

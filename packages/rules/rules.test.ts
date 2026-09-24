@@ -1,9 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  BASE_RATE, BEASTS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
+  BASE_RATE, BEASTS, BUILDINGS, MAX_LEVEL, REALMS, DAILY_RES, HOSPITAL_BASE, PILLS, QUESTS, SPEEDUP, TRIBS, advance, apply, beastStr, brewTime, buildTime, cost, count,
   elderLevel, expAt, fight, healCost, hospital, marchTime, migrate, newGame, nextDay, power, questDone, sideOf, storage, storeNeed, WEEKLY, WEEKLY_BONUS, WEEKLY_RES, nextWeek, weekOf, tradeKeep, isWeekend, eventMul, towerReward, towerStr, towerType, enemyOf, targetError,
-  techTime, trainCost, trainTime, upgradeError, winChance, parseAction, ELDER_IDS, UNITS, IDS, TECH_IDS, PILL_IDS,
+  techTime, trainCost, trainTime, upgradeError, winChance, parseAction, rate, gearTime, talentPoints, ELDER_IDS, GEAR_IDS, UNITS, IDS, TECH_IDS, PILL_IDS,
   type Action, type BuildingId, type Side, type State,
 } from './index.ts'
 
@@ -259,7 +259,8 @@ test('luân hồi: giữ trưởng lão + công pháp, làm lại tông môn, m�
   assert.equal(r.levels.tuLinhTran, 3)
   assert.equal(r.levels.tangKinhCac, 0)
   const r3 = run({ ...r, levels: rich(15).levels, res: rich(15).res }, { type: 'rebirth' })
-  assert.deepEqual(new Set(Object.values(r3.levels)), new Set([5]))
+  assert.deepEqual(new Set(IDS.filter(id => BUILDINGS[id].unlock <= 5).map(id => r3.levels[id])), new Set([5]))
+  assert.equal(r3.levels.luyenKhiPhong, 0, 'công trình mở sau tầng 5 chưa có')
   assert.equal(upgradeError(r3, 'chuDien'), 'trib')
 })
 
@@ -335,7 +336,7 @@ test('save bản 2 đọc được, giữ tiến độ và đúng nhiệm vụ',
     queue: [{ building: 'tangBaoCac', level: 1, finishAt: T0 + 5000 }],
   }
   const s = migrate(v2)!
-  assert.equal(s.v, 3)
+  assert.equal(s.v, 4)
   assert.equal(s.name, 'Lạc Hà Tông')
   assert.equal(s.levels.chuDien, 2)
   assert.deepEqual(QUESTS[s.quest], QUESTS.find(q => q.k === 'build' && q.id === 'tangBaoCac' && q.n === 1))
@@ -380,7 +381,8 @@ test('save nhập vào: đủ khuôn thì nhận nguyên vẹn, thiếu hay sai 
 test('mọi nhiệm vụ đều làm được: đích đến có thật trong dữ liệu', () => {
   for (const q of QUESTS) {
     if (q.k === 'hunt') assert.ok(q.n <= BEASTS.length)
-    if (q.k === 'build') assert.ok(q.id && q.n <= 15)
+    if (q.k === 'build') assert.ok(q.id && Object.hasOwn(BUILDINGS, q.id) && q.n <= MAX_LEVEL)
+    if (q.k === 'realm') assert.ok(REALMS[Number(q.id)] && q.n <= REALMS[Number(q.id)].floors.length)
   }
   assert.equal(questDone(newGame(T0)), false)
   assert.ok(power(rich(5)) > power(newGame(T0)))
@@ -491,13 +493,13 @@ test('thao tác JSON ngẫu nhiên: không bao giờ throw, state sau đó luôn
   let seed = 7
   const rnd = () => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296)
   const pick = <T,>(a: readonly T[]) => a[Math.floor(rnd() * a.length)]
-  const types = ['upgrade', 'claim', 'train', 'heal', 'study', 'brew', 'march', 'realm', 'tower', 'trade', 'trib', 'speed', 'feed', 'seen', 'rebirth', 'daily', 'dailyBonus', 'weekly', 'weeklyBonus', 'x']
+  const types = ['upgrade', 'claim', 'train', 'heal', 'study', 'brew', 'march', 'realm', 'tower', 'trade', 'trib', 'speed', 'feed', 'seen', 'rebirth', 'daily', 'dailyBonus', 'weekly', 'weeklyBonus', 'forge', 'equip', 'talent', 'wash', 'cure', 'focus', 'x']
   const junk = () => pick<unknown>([0, 1, 2, -1, 1.5, 1e9, NaN, '0', '', 'constructor', null, true, {}, [], { kiem1: 5 }, { kind: 'beast', i: 0 }, { kind: 'sect', i: '1' }])
-  const val = () => pick<unknown>([...IDS, ...TECH_IDS, ...PILL_IDS, ...ELDER_IDS, ...UNITS, 'build', 'train', 'linhThach', 'linhThao', junk()])
-  let s: State = { ...rich(10, 8), troops: { ...rich(10, 8).troops, kiem1: 300, phap2: 100 }, items: { tuKhi: 5, boiNguyen: 5, doKiep: 1 }, elders: { thanhPhong: 0, thachKien: 0 } }
+  const val = () => pick<unknown>([...IDS, ...TECH_IDS, ...PILL_IDS, ...ELDER_IDS, ...UNITS, ...GEAR_IDS, 'build', 'train', 'forge', 'linhThach', 'linhThao', 'daiTuKhi', junk()])
+  let s: State = { ...rich(10, 8), troops: { ...rich(10, 8).troops, kiem1: 300, phap2: 100 }, items: { tuKhi: 5, boiNguyen: 5, doKiep: 1, hoiXuan: 2, ngungThan: 2, taiTuy: 1 }, elders: { thanhPhong: expAt(15), thachKien: 0 } }
   for (let k = 0; k < 3000; k++) {
     const a: Record<string, unknown> = { type: pick(types) }
-    for (const f of ['building', 'unit', 'n', 'tech', 'pill', 'elder', 'from', 'to', 'job', 'i', 'target', 'army']) if (rnd() < 0.5) a[f] = rnd() < 0.5 ? val() : junk()
+    for (const f of ['building', 'unit', 'n', 'tech', 'pill', 'elder', 'from', 'to', 'job', 'i', 'target', 'army', 'gear', 'branch']) if (rnd() < 0.5) a[f] = rnd() < 0.5 ? val() : junk()
     if (rnd() < 0.3) a.army = { [pick(UNITS)]: Math.floor(rnd() * 50) }
     if (rnd() < 0.3) a.target = { kind: pick(['beast', 'sect']), i: Math.floor(rnd() * 5) }
     let r: ReturnType<typeof apply> | undefined
@@ -522,4 +524,120 @@ test('mầm ẩn (seed 0, như state client nhận từ server): không tự gi�
   const real = advance({ ...s, marches: s.marches.map(m => ({ ...m, seed: 12345 })) }, s.marches[0].returnAt + HOUR)
   assert.equal(real.reports.length, 1)
   assert.equal(real.marches.length, 0)
+})
+
+test('tầng 16–25: số tầng ≤ 15 giữ nguyên từng đơn vị, trên đó thoải hơn; sản lượng tầng cao gấp rưỡi', () => {
+  assert.equal(cost('chuDien', 15).linhThach, 72058)
+  assert.equal(buildTime(newGame(T0), 'chuDien', 15), Math.round(60 * 1.7 ** 14) * 1000)
+  assert.equal(cost('chuDien', 16).linhThach, 87910)
+  assert.ok(cost('chuDien', 25).linhThach < 600_000 && buildTime(newGame(T0), 'chuDien', 25) < 50 * HOUR)
+  assert.ok(storage({ ...newGame(T0), levels: { ...newGame(T0).levels, tangBaoCac: 25 } }) > cost('chuDien', 25).linhThach, 'kho tầng 25 chứa nổi Chủ điện 25')
+  const at = (l: number) => rate({ ...newGame(T0), levels: { ...newGame(T0).levels, tuLinhTran: l } }, 'linhThach')
+  assert.equal(at(16) - at(15), 1.5 * (at(15) - at(14)))
+  // độ kiếp tầng 15 và 20; luân hồi từ 15 (kể cả khi đã lên cao hơn)
+  assert.equal(upgradeError(rich(15), 'chuDien'), 'trib')
+  assert.equal(upgradeError(rich(20), 'chuDien'), 'trib')
+  assert.equal(err(rich(22), { type: 'rebirth' }), null)
+  assert.equal(err(rich(16, 16), { type: 'train', unit: 'kiem4', n: 1 }), null)
+  assert.equal(err(rich(16, 15), { type: 'train', unit: 'kiem4', n: 1 }), 'locked')
+})
+
+test('ngũ hành: không có hành thì trận y như cũ; hành khắc thì mạnh hơn, bị khắc thì yếu hơn', () => {
+  const side = (el?: Side['el']): Side => ({ el, troops: [{ type: 'kiem', tier: 1, n: 60, atk: 12, def: 5, hp: 30 }] })
+  const foe = (el?: Side['el']): Side => ({ el, troops: [{ type: 'kiem', tier: 1, n: 60, atk: 12, def: 5, hp: 30 }] })
+  assert.deepEqual(fight(side('kim'), foe(), 5), fight(side(), foe(), 5), 'địch không hành: hệ số 1')
+  // hai đội ngang nhau: không hành thì hoà dần (bên đánh rút), khắc thì thắng, bị khắc thì địch còn đông hơn
+  assert.equal(fight(side('kim'), foe('moc'), 5).win, true, 'Kim khắc Mộc')
+  const foeLeft = (f: ReturnType<typeof fight>) => f.rounds.at(-1)!.n[1][0]
+  assert.ok(foeLeft(fight(side('moc'), foe('kim'), 5)) > foeLeft(fight(side(), foe(), 5)), 'Mộc bị Kim khắc')
+  assert.equal(sideOf(rich(5), 'thanhPhong', { kiem1: 1 }).el, 'moc')
+})
+
+test('Luyện Khí Phòng: luyện pháp bảo theo tầng, đeo cho một trưởng lão, bonus chỉ cho đội người đó', () => {
+  let s: State = { ...rich(8, 3), elders: { thanhPhong: 0, thachKien: 0 } }
+  assert.equal(err({ ...s, levels: { ...s.levels, luyenKhiPhong: 0 } }, { type: 'forge', gear: 'thanhSuong' }), 'locked')
+  s = run(s, { type: 'forge', gear: 'thanhSuong' })
+  assert.equal(err(s, { type: 'forge', gear: 'hoTam' }), 'busy')
+  s = advance(s, s.forge!.finishAt)
+  assert.deepEqual(s.gear.thanhSuong, { lv: 1 })
+  s = advance(run(s, { type: 'forge', gear: 'thanhSuong' }), s.time + gearTime(s, 'thanhSuong', 2))
+  assert.equal(err(s, { type: 'forge', gear: 'thanhSuong' }), 'locked', 'tầng 3 luyện tối đa cấp 2')
+  const atk = (st: State, e: 'thanhPhong' | 'thachKien') => sideOf(st, e, { kiem1: 1 }).troops[0].atk
+  const bare = atk(s, 'thanhPhong')
+  s = run(s, { type: 'equip', gear: 'thanhSuong', elder: 'thanhPhong' })
+  assert.ok(atk(s, 'thanhPhong') > bare)
+  assert.equal(atk(s, 'thachKien'), atk({ ...s, gear: {} }, 'thachKien'), 'người khác không được gì')
+  // chuyển sang người khác; tháo ra
+  s = run(s, { type: 'equip', gear: 'thanhSuong', elder: 'thachKien' })
+  assert.equal(s.gear.thanhSuong!.on, 'thachKien')
+  assert.equal(run(s, { type: 'equip', gear: 'thanhSuong', elder: null }).gear.thanhSuong!.on, undefined)
+  assert.equal(err(s, { type: 'equip', gear: 'hoTam', elder: 'thanhPhong' }), 'locked', 'chưa luyện')
+  // đang xuất chinh: không đổi
+  const out = run({ ...s, troops: { ...s.troops, kiem1: 50 } }, { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thachKien', army: { kiem1: 50 } })
+  assert.equal(err(out, { type: 'equip', gear: 'thanhSuong', elder: 'thanhPhong' }), 'busy')
+  assert.equal(migrate(JSON.parse(JSON.stringify(s)))!.gear.thanhSuong!.on, 'thachKien')
+})
+
+test('thiên phú: mỗi 5 cấp một điểm, mỗi nhánh tối đa 5, Tẩy Tủy Đan trả lại; nhánh đạo mạnh công pháp', () => {
+  let s: State = { ...rich(16), elders: { thanhPhong: expAt(12) }, items: { taiTuy: 1 } }
+  assert.equal(talentPoints(s, 'thanhPhong'), 2)
+  s = run(s, { type: 'talent', elder: 'thanhPhong', branch: 2 })
+  s = run(s, { type: 'talent', elder: 'thanhPhong', branch: 0 })
+  assert.equal(err(s, { type: 'talent', elder: 'thanhPhong', branch: 1 }), 'not_enough')
+  assert.deepEqual(s.talents.thanhPhong, [1, 0, 1])
+  const sk = sideOf(s, 'thanhPhong', { kiem1: 1 }).skill!
+  assert.ok(sk.v > sideOf(rich(16), 'thanhPhong', { kiem1: 1 }).skill!.v)
+  assert.equal(err({ ...s, elders: { thanhPhong: expAt(40) }, talents: { thanhPhong: [5, 0, 0] } }, { type: 'talent', elder: 'thanhPhong', branch: 0 }), 'max_level')
+  s = run(s, { type: 'wash', elder: 'thanhPhong' })
+  assert.equal(s.talents.thanhPhong, undefined)
+  assert.equal(s.items.taiTuy, 0)
+  assert.equal(err(s, { type: 'wash', elder: 'thanhPhong' }), 'no_item')
+})
+
+test('đan mới: công thức cần đan khác, Hồi Xuân chữa ngay, Ngưng Thần tăng công có hạn, Đại Tụ Khí bớt 2 giờ, Phá Cảnh cho độ kiếp', () => {
+  let s: State = { ...rich(16), items: { tuKhi: 5 } }
+  assert.equal(err(s, { type: 'brew', pill: 'daiTuKhi', n: 1 }), 'no_item')
+  s = run({ ...s, items: { tuKhi: 7 } }, { type: 'brew', pill: 'daiTuKhi', n: 1 })
+  assert.equal(s.items.tuKhi, 1, 'trừ 6 viên nguyên liệu lúc bắt đầu')
+  s = advance(s, s.brew!.finishAt)
+  s = up(s, 'chuDien')
+  const before = s.queue[0].finishAt
+  assert.equal(run(s, { type: 'speed', job: 'build', n: 1, pill: 'daiTuKhi' }).queue[0]?.finishAt ?? s.time, Math.max(s.time, before - 2 * HOUR))
+  // Hồi Xuân: thương binh không nằm trong đợt đang chữa, bậc cao trước
+  const hurt: State = { ...rich(16), wounded: { ...rich(16).wounded, kiem1: 400, kiem3: 50 }, items: { hoiXuan: 1 } }
+  const c = run(hurt, { type: 'cure' })
+  assert.equal(c.troops.kiem3, 50)
+  assert.equal(c.troops.kiem1, 250)
+  assert.equal(count(c.wounded), 150)
+  assert.equal(err({ ...hurt, wounded: rich(16).wounded }, { type: 'cure' }), 'empty')
+  // Ngưng Thần: công +10 % tới lúc hết, uống thêm thì kéo dài
+  const f = run({ ...rich(16), items: { ngungThan: 2 } }, { type: 'focus' })
+  const atk = (st: State) => sideOf(st, 'thanhPhong', { kiem1: 1 }).troops[0].atk
+  assert.ok(atk(f) > atk(rich(16)))
+  assert.equal(run(f, { type: 'focus' }).buffs[0].until, f.time + 4 * HOUR)
+  assert.equal(atk(advance(f, f.time + 2 * HOUR)), atk(rich(16)), 'hết giờ thì gỡ')
+  // Phá Cảnh: tự dùng khi bật đan độ kiếp, mạnh hơn Độ Kiếp Đan
+  const t: State = { ...rich(15), troops: { ...rich(15).troops, kiem3: 1, phap3: 1, the3: 1 }, items: { doKiep: 1, phaCanh: 1 }, trib: 2 }
+  const tried = run(t, { type: 'trib', elder: 'thanhPhong', army: { kiem3: 1 }, pill: true })
+  assert.deepEqual([tried.items.phaCanh, tried.items.doKiep], [0, 1])
+})
+
+test('bí cảnh mới và tháp thu nhận trưởng lão mới; save bản 3 nâng lên bản 4', () => {
+  assert.equal(err(rich(15), { type: 'realm', i: 3, elder: 'thanhPhong', army: { kiem1: 1 } }), 'locked')
+  assert.equal(enemyOf(rich(16), { kind: 'realm', i: 3 }).el, 'moc')
+  assert.equal(towerReward(29).elder, 'macSau')
+  assert.equal(towerReward(44).elder, 'diepCoThanh')
+  // bản 3: không có công trình, bậc, bí cảnh mới
+  const v4 = { ...rich(12), troops: { ...rich(12).troops, kiem3: 7 } }
+  const v3: any = JSON.parse(JSON.stringify({ ...v4, v: 3, realms: [5, 2, 0] }))
+  for (const k of ['forge', 'gear', 'talents', 'buffs']) delete v3[k]
+  for (const u of ['kiem4', 'kiem5', 'phap4', 'phap5', 'the4', 'the5']) delete v3.troops[u], delete v3.wounded[u]
+  delete v3.levels.luyenKhiPhong
+  const m = migrate(v3)!
+  assert.equal(m.v, 4)
+  assert.equal(m.troops.kiem3, 7)
+  assert.equal(m.troops.the5, 0)
+  assert.deepEqual(m.realms, [5, 2, 0, 0, 0])
+  assert.equal(m.levels.luyenKhiPhong, 0)
+  assert.equal(m.forge, null)
 })

@@ -1,13 +1,14 @@
 // Công trình vẽ theo lối 界画: nét mực mảnh, đều tay; tô màu khoáng; mái cong đầu đao vểnh.
-// Tầng 1–5 mái ngói xám, 6–10 lưu ly xanh hai lớp, 11–15 lưu ly vàng.
+// Tầng 1–5 mái ngói xám, 6–10 lưu ly xanh hai lớp, 11–15 lưu ly vàng, 16–20 lưu ly chàm viền bạc,
+// 21–25 bạch ngọc dát vàng, cả công trình nổi trên một vầng mây.
 // Phần động (khói, lửa, cờ, cột linh khí, đệ tử, đèn đêm) không vẽ vào texture mà trả về danh sách `fx`
 // để cảnh WebGL diễn trên GPU.
 import { blot, grain, stroke, wash, type Asset, type G, type Pt } from './brush'
-import { ellipse, moss, tuft, vgrad } from './landscape'
+import { ellipse, moss, spiral, tuft, vgrad } from './landscape'
 import { rng } from './noise'
 import { PIGMENT as C, mix, rgba } from './palette'
 
-export type Kind = 'chuDien' | 'tuLinhTran' | 'linhDien' | 'khoangMach' | 'tangBaoCac' | 'dienVoTruong' | 'tangKinhCac' | 'danPhong'
+export type Kind = 'chuDien' | 'tuLinhTran' | 'linhDien' | 'khoangMach' | 'tangBaoCac' | 'dienVoTruong' | 'tangKinhCac' | 'danPhong' | 'luyenKhiPhong'
 
 // Hiệu ứng động gắn vào công trình, toạ độ DU tính từ chân công trình
 export type Fx =
@@ -18,7 +19,7 @@ export type Fx =
 
 export type Building = { art: Asset<Fx[]>; top: number; w: number }
 
-export const tierOf = (level: number) => (level <= 5 ? 1 : level <= 10 ? 2 : 3)
+export const tierOf = (level: number) => Math.min(5, Math.max(1, Math.ceil(level / 5)))
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 // điểm trên đường bậc hai
@@ -32,44 +33,68 @@ const rect = (x: number, y: number, w: number, h: number): Pt[] => [[x, y], [x +
 const STONE = mix(C.paper2, C.ink3, 0.28)
 const STONE_L = mix(C.paper, C.paper2, 0.5)
 const INKLINE = { color: C.ink, press: 'even' as const, alpha: 0.82, rough: 0.2 }
+// Bậc 4: lưu ly chàm, viền bạc. Bậc 5: bạch ngọc, dát vàng
+const LAPIS = '#34549a', LAPIS_D = '#1c2c62', SILVER = '#e9eef2'
+const JADE = mix(C.silk, C.malachiteL, 0.15), JADE_D = mix(C.malachiteL, C.silk, 0.4)
 
 function kit(g: G, tier: number, seed: number, fx: Fx[]) {
   const rn = rng(seed)
-  const roofColor = [mix(C.indigo, C.ink3, 0.35), C.malachite, C.gamboge][tier - 1]
-  const roofDark = [C.indigo, C.malachiteD, C.goldD][tier - 1]
+  const roofColor = [mix(C.indigo, C.ink3, 0.35), C.malachite, C.gamboge, LAPIS, JADE][tier - 1]
+  const roofDark = [C.indigo, C.malachiteD, C.goldD, LAPIS_D, C.gold][tier - 1]
+  // đá nền: bậc 4 cẩm thạch trắng, bậc 5 bạch ngọc
+  const stone = tier === 4 ? mix(C.silk, C.ink3, 0.22) : tier === 5 ? JADE_D : STONE
+  const stoneL = tier === 4 ? C.silk : tier === 5 ? mix(JADE, '#ffffff', 0.4) : STONE_L
+  const trim = tier === 5 ? C.gold : SILVER // viền mái, lan can bậc 4–5
   const line = (pts: Pt[], w = 0.7, a = 0.82) => stroke(g, pts, { ...INKLINE, w, alpha: a, seed: Math.floor(rn() * 9999) })
 
   return {
     rn,
     line,
+    stone,
+    stoneL,
+    trim,
     // 台基: nền đá, có bậc
     base(cx: number, y: number, w: number, h: number, stairs: boolean) {
       const p: Pt[] = [[cx - w / 2, y], [cx + w / 2, y], [cx + w / 2 - 3, y - h], [cx - w / 2 + 3, y - h]]
-      wash(g, p, { fill: STONE, alpha: 0.95, jitter: 0.5, layers: 2, edge: 1, sharp: true, seed: seed + 1 })
-      wash(g, rect(cx - w / 2 + 3, y - h, w - 6, h * 0.3), { sharp: true, fill: STONE_L, alpha: 0.6, jitter: 0.3, layers: 1, seed: seed + 2 })
+      wash(g, p, { fill: stone, alpha: 0.95, jitter: 0.5, layers: 2, edge: 1, sharp: true, seed: seed + 1 })
+      wash(g, rect(cx - w / 2 + 3, y - h, w - 6, h * 0.3), { sharp: true, fill: stoneL, alpha: 0.6, jitter: 0.3, layers: 1, seed: seed + 2 })
       line([[cx - w / 2 + 3, y - h], [cx + w / 2 - 3, y - h]], 0.9)
       line([[cx - w / 2, y], [cx + w / 2, y]], 1.1)
       line([[cx - w / 2, y], [cx - w / 2 + 3, y - h]], 0.7)
       line([[cx + w / 2, y], [cx + w / 2 - 3, y - h]], 0.7)
       if (h > 5) line([[cx - w / 2 + 1.5, y - h / 2], [cx + w / 2 - 1.5, y - h / 2]], 0.4, 0.4)
       if (stairs) {
-        wash(g, [[cx - 10, y], [cx + 10, y], [cx + 8, y - h], [cx - 8, y - h]], { sharp: true, fill: STONE_L, alpha: 0.95, jitter: 0.3, layers: 1, seed: seed + 3 })
+        wash(g, [[cx - 10, y], [cx + 10, y], [cx + 8, y - h], [cx - 8, y - h]], { sharp: true, fill: stoneL, alpha: 0.95, jitter: 0.3, layers: 1, seed: seed + 3 })
         for (const k of [0.33, 0.66]) line([[cx - 10 + k * 2, y - h * k], [cx + 10 - k * 2, y - h * k]], 0.45, 0.6)
         line([[cx - 10, y], [cx - 8, y - h]], 0.55, 0.7)
         line([[cx + 10, y], [cx + 8, y - h]], 0.55, 0.7)
+      }
+      // bậc 4–5: lan can ngọc trên mép nền (trụ nhỏ + tay vịn), chừa lối bậc
+      if (tier >= 4 && h >= 5) {
+        const top = y - h, rail = top - 3.2
+        for (const s of [-1, 1]) {
+          const x0 = cx + s * (w / 2 - 4), x1 = cx + s * (stairs ? 11 : 4)
+          wash(g, [[x0, top], [x1, top], [x1, rail], [x0, rail]], { sharp: true, fill: stoneL, alpha: 0.55, jitter: 0.2, layers: 1, seed: seed + 5 + s })
+          line([[x0, rail], [x1, rail]], 0.6, 0.85)
+          for (let k = 0; k <= Math.floor(Math.abs(x1 - x0) / 5); k++) {
+            const x = x0 + Math.sign(x1 - x0) * k * 5
+            line([[x, top], [x, rail - 0.9]], 0.5, 0.75)
+            blot(g, x, rail - 1.1, 0.55, trim, 1, seed + Math.round(x * 3))
+          }
+        }
       }
     },
     // Thân nhà: vách trắng, cột son, cửa bức bàn, dầm trên có màu
     hall(cx: number, y: number, w: number, h: number, door: boolean) {
       const x0 = cx - w / 2
-      wash(g, rect(x0, y - h, w, h), { sharp: true, fill: C.silk, alpha: 0.97, jitter: 0.35, layers: 2, seed: seed + 4 })
+      wash(g, rect(x0, y - h, w, h), { sharp: true, fill: tier === 5 ? mix(C.silk, JADE, 0.5) : C.silk, alpha: 0.97, jitter: 0.35, layers: 2, seed: seed + 4 })
       const cols = w < 40 ? [x0 + 2, x0 + w - 2] : [x0 + 2, cx - w / 6, cx + w / 6, x0 + w - 2]
       // ô cửa lưới giữa các cột
       for (let i = 0; i < cols.length - 1; i++) {
         const a = cols[i] + 2, b = cols[i + 1] - 2
         if (b - a < 4 || (door && Math.abs((a + b) / 2 - cx) < 6)) continue
         const top = y - h * 0.82, bot = y - h * 0.3
-        wash(g, rect(a, bot, b - a, h * 0.3 - 1), { sharp: true, fill: C.ochreL, alpha: 0.5, jitter: 0.3, layers: 1, seed: seed + 5 + i })
+        wash(g, rect(a, bot, b - a, h * 0.3 - 1), { sharp: true, fill: tier === 5 ? C.goldL : C.ochreL, alpha: 0.5, jitter: 0.3, layers: 1, seed: seed + 5 + i })
         const n = Math.max(2, Math.round((b - a) / 3))
         for (let k = 1; k < n; k++) line([[lerp(a, b, k / n), top], [lerp(a, b, k / n), bot]], 0.3, 0.55)
         for (let k = 1; k < 4; k++) line([[a, lerp(top, bot, k / 4)], [b, lerp(top, bot, k / 4)]], 0.3, 0.5)
@@ -84,13 +109,15 @@ function kit(g: G, tier: number, seed: number, fx: Fx[]) {
         fx.push({ k: 'light', x: cx, y: y - dh / 2, r: 9 })
       }
       for (const x of cols) {
-        wash(g, rect(x - 1.3, y - h, 2.6, h), { sharp: true, fill: C.cinnabar, alpha: 0.95, jitter: 0.2, layers: 1, seed: seed + Math.round(x) })
+        // bậc 5: cột dát vàng
+        wash(g, rect(x - 1.3, y - h, 2.6, h), { sharp: true, fill: tier === 5 ? C.gold : C.cinnabar, alpha: 0.95, jitter: 0.2, layers: 1, seed: seed + Math.round(x) })
         line([[x - 1.3, y - h], [x - 1.3, y]], 0.35, 0.7)
+        if (tier >= 4) for (const k of [0.12, 0.88]) wash(g, rect(x - 1.6, y - h * k - 0.7, 3.2, 1.4), { sharp: true, fill: tier === 5 ? C.goldL : SILVER, alpha: 1, jitter: 0.1, layers: 1, seed: seed + Math.round(x + k * 9) })
       }
-      // dầm (额枋): lam/lục theo bậc, bậc cao có điểm vàng
+      // dầm (额枋): lam/lục theo bậc, bậc cao có điểm vàng (bậc 4: điểm bạc trên dầm chàm, bậc 5: điểm vàng trên dầm ngọc)
       const band = rect(x0 - 1, y - h, w + 2, 2.6)
-      wash(g, band, { fill: tier === 1 ? C.azuriteD : tier === 2 ? C.malachiteD : C.azurite, alpha: 0.95, jitter: 0.2, layers: 1, seed: seed + 11 })
-      if (tier > 1) for (let x = x0 + 3; x < x0 + w - 2; x += 5) blot(g, x, y - h + 1.3, 0.5, C.goldL, 0.95, Math.round(x))
+      wash(g, band, { fill: tier === 1 ? C.azuriteD : tier === 2 ? C.malachiteD : tier === 4 ? LAPIS_D : tier === 5 ? C.malachite : C.azurite, alpha: 0.95, jitter: 0.2, layers: 1, seed: seed + 11 })
+      if (tier > 1) for (let x = x0 + 3; x < x0 + w - 2; x += 5) blot(g, x, y - h + 1.3, 0.5, tier === 4 ? SILVER : C.goldL, 0.95, Math.round(x))
       line([[x0, y - h], [x0, y]], 0.6)
       line([[x0 + w, y - h], [x0 + w, y]], 0.6)
       line([[x0 - 1, y - h + 2.6], [x0 + w + 1, y - h + 2.6]], 0.4, 0.6)
@@ -118,9 +145,14 @@ function kit(g: G, tier: number, seed: number, fx: Fx[]) {
         const top: Pt = [lerp(cx - a * 0.3, cx + a * 0.3, t), y - h + 1]
         const bx = lerp(cx - a * 0.66, cx + a * 0.66, t)
         const by = y + 0.6 - Math.abs(t - 0.5) * 1.2 - (Math.abs(t - 0.5) > 0.4 ? (Math.abs(t - 0.5) - 0.4) * h * 1.5 : 0)
-        stroke(g, [top, [lerp(top[0], bx, 0.55), lerp(top[1], by, 0.55)], [bx, by]], { w: 0.45, color: C.ink, press: 'even', alpha: 0.38, rough: 0.15, seed: seed + 30 + k })
+        stroke(g, [top, [lerp(top[0], bx, 0.55), lerp(top[1], by, 0.55)], [bx, by]], { w: 0.45, color: C.ink, press: 'even', alpha: tier === 5 ? 0.22 : 0.38, rough: 0.15, seed: seed + 30 + k })
       }
       if (tier === 3) for (let k = 0; k < 4; k++) stroke(g, [[cx - a * 0.25 + k * a * 0.16, y - h * 0.85], [cx - a * 0.3 + k * a * 0.2, y - h * 0.25]], { w: 0.9, color: C.goldL, press: 'taper', alpha: 0.7, seed: seed + 40 + k })
+      if (tier >= 4) {
+        // ánh men: vệt bạc/vàng dọc mái, gờ hiên sáng ngay trên nét mực
+        for (let k = 0; k < 6; k++) stroke(g, [[cx - a * 0.28 + k * a * 0.11, y - h * 0.88], [cx - a * 0.4 + k * a * 0.16, y - h * 0.22]], { w: 0.8, color: trim, press: 'taper', alpha: tier === 5 ? 0.85 : 0.55, seed: seed + 40 + k })
+        stroke(g, eave.map(([x, yy]) => [x, yy - 1.6] as Pt), { w: 0.9, color: trim, press: 'taper', alpha: 0.9, rough: 0.2, seed: seed + 46 })
+      }
       // viền: mép hiên đậm, gờ mái mảnh
       stroke(g, eave, { w: 1.5, color: C.ink, press: 'even', alpha: 0.9, rough: 0.2, seed: seed + 22 })
       line(rightHip, 0.8)
@@ -134,6 +166,23 @@ function kit(g: G, tier: number, seed: number, fx: Fx[]) {
         stroke(g, [[x, y - h + 0.2], [x + s * 1.6, y - h - 2.6], [x + s * 0.6, y - h - 4.6], [x - s * 0.8, y - h - 3.6]], { w: 1.3, color: C.ink, press: 'nail', alpha: 0.9, seed: seed + 24 + s })
         // đầu đao vểnh
         stroke(g, [[cx + s * a * 0.93, y - e * 0.9], [cx + s * (a + 1.5), y - e - 1.6], [cx + s * (a + 2.2), y - e - 3.4]], { w: 1.1, color: C.ink, press: 'nail', alpha: 0.9, seed: seed + 26 + s })
+        // bậc 4–5: chuông đồng treo đầu đao
+        if (tier >= 4 && w >= 40) {
+          const bx = cx + s * a * 0.9, by = y - e * 0.85
+          stroke(g, [[bx, by], [bx, by + 2.4]], { w: 0.35, color: C.ink, press: 'even', alpha: 0.8 })
+          wash(g, [[bx - 1, by + 2.2], [bx + 1, by + 2.2], [bx + 1.5, by + 4.4], [bx - 1.5, by + 4.4]], { fill: tier === 5 ? C.gold : mix(C.malachite, C.ochre, 0.4), alpha: 1, jitter: 0.1, layers: 1, seed: seed + 27 + s })
+          stroke(g, [[bx - 1.5, by + 4.4], [bx + 1.5, by + 4.4]], { w: 0.4, color: C.ink, press: 'even', alpha: 0.8 })
+        }
+      }
+      // bậc 4–5: hoả châu trên nóc — ngọc lam viền bạc / ngọc vàng, lưỡi lửa vây quanh
+      if (tier >= 4 && w >= 40) {
+        const py = y - h - rh - 2.4, gem = tier === 5 ? C.goldL : C.spirit
+        for (const d of [-1, 1]) stroke(g, [[cx + d * 1.2, py + 2], [cx + d * 3, py - 0.6], [cx + d * 1.4, py - 3.4]], { w: 0.9, color: tier === 5 ? C.gold : C.cinnabarL, press: 'taper', alpha: 0.95, seed: seed + 28 + d })
+        wash(g, rect(cx - 2.2, y - h - rh + 0.2, 4.4, 1.4), { sharp: true, fill: dark, alpha: 1, jitter: 0.1, layers: 1, seed: seed + 29 })
+        blot(g, cx, py, 1.9, gem, 1, seed + 30, 1)
+        blot(g, cx - 0.6, py - 0.6, 0.6, '#ffffff', 0.9, seed + 31, 1)
+        stroke(g, [...ellipse(cx, py, 1.9, 1.9, 10), [cx + 1.9, py]], { w: 0.4, color: C.ink, press: 'even', alpha: 0.7 })
+        fx.push({ k: 'spark', x: cx, y: py, s: 0.8 })
       }
     },
     // Biển hiệu: gỗ lam, viền vàng, giữa là hoa văn vàng vẽ tay theo loại công trình
@@ -158,14 +207,41 @@ function kit(g: G, tier: number, seed: number, fx: Fx[]) {
     },
     // Cột đá có quả cầu linh khí (Tụ Linh Trận)
     orbPillar(x: number, y: number) {
-      wash(g, rect(x - 2.6, y - 13, 5.2, 13), { sharp: true, fill: STONE, alpha: 1, jitter: 0.2, layers: 1, seed: seed + Math.round(x) })
-      wash(g, rect(x - 3.4, y - 14.6, 6.8, 2.2), { sharp: true, fill: STONE_L, alpha: 1, jitter: 0.2, layers: 1, seed: seed + Math.round(x) + 1 })
+      wash(g, rect(x - 2.6, y - 13, 5.2, 13), { sharp: true, fill: stone, alpha: 1, jitter: 0.2, layers: 1, seed: seed + Math.round(x) })
+      wash(g, rect(x - 3.4, y - 14.6, 6.8, 2.2), { sharp: true, fill: stoneL, alpha: 1, jitter: 0.2, layers: 1, seed: seed + Math.round(x) + 1 })
       line([[x - 2.6, y - 13], [x - 2.6, y]], 0.5)
       line([[x + 2.6, y - 13], [x + 2.6, y]], 0.4, 0.5)
       line([[x - 3.4, y - 14.6], [x + 3.4, y - 14.6]], 0.5)
       fx.push({ k: 'orb', x, y: y - 18.5, s: 1 })
     },
   }
+}
+
+// Dải mây tường vân (bậc 5): hợp các đầu mây tròn từ x0 tới x1 trên đường y, đáy võng nhẹ; xoáy ốc ở hai đầu và cứ `curl` đầu mây một
+function cloudRow(g: G, x0: number, x1: number, y: number, r0: number, r1: number, seed: number, curl = 3) {
+  const rn = rng(seed)
+  const n = Math.max(2, Math.round((x1 - x0) / (r0 + r1)))
+  const heads = Array.from({ length: n }, (_, i) => {
+    const r = lerp(r0, r1, rn())
+    return [lerp(x0 + r * 0.6, x1 - r * 0.6, i / (n - 1)), y - r * 0.3, r] as const
+  })
+  const top: Pt[] = []
+  for (let x = x0; x <= x1 + 0.1; x += 1.2) {
+    let t = y
+    for (const [hx, hy, r] of heads) if (Math.abs(x - hx) < r) t = Math.min(t, hy - Math.sqrt(r * r - (x - hx) ** 2))
+    top.push([x, t])
+  }
+  const bot = quadPts(x1, y, x0, y, 8, r1 * 0.6)
+  const body = [...top, ...bot]
+  wash(g, body, { fill: C.silk, alpha: 1, jitter: 0.4, layers: 2, seed })
+  wash(g, body, { fill: g2 => vgrad(g2, y - r1, y + r1 * 0.3, [[0, rgba(C.azuriteL, 0)], [0.5, rgba(C.azuriteL, 0.12)], [1, C.azuriteL]]), alpha: 0.55, jitter: 0.4, layers: 1, seed: seed + 1 })
+  stroke(g, top.filter((_, i) => i % 3 === 0), { w: 1.1, color: C.ink2, press: 'even', alpha: 0.8, rough: 0.25, seed: seed + 2 })
+  stroke(g, bot, { w: 0.9, color: C.ink2, press: 'taper', alpha: 0.5, seed: seed + 3 })
+  heads.forEach(([hx, hy, r], i) => {
+    if (i % curl && i !== n - 1) return
+    const dir = hx < (x0 + x1) / 2 ? 1 : -1
+    stroke(g, spiral(hx, hy + r * 0.15, r * 0.66, 1.1, dir), { w: 0.85, color: C.ink2, press: 'rise', alpha: 0.7, seed: seed + 4 + i })
+  })
 }
 
 // Hoa văn vàng trên biển hiệu (thay chữ): mây cuộn, vòng trận, bông lúa, tinh thể, đồng tiền, kiếm chéo, sách, bầu đan
@@ -206,6 +282,11 @@ function motif(g: G, kind: Kind, cx: number, cy: number, s: number, seed: number
     st([P(-3, -2.4), P(3, -2.4), P(3, 2.6), P(-3, 2.6), P(-3, -2.4)], 'even')
     st([P(0, -2.4), P(0, 2.6)], 'even', 0.7)
     for (const y of [-1, 0.4, 1.6]) st([P(-2.2, y), P(-0.8, y)], 'even', 0.5)
+  } else if (kind === 'luyenKhiPhong') {
+    // đe và búa
+    st([P(-3.8, -0.4), P(2.6, -0.8), P(2.2, 0.6), P(0.9, 0.9), P(1.6, 2.8), P(-1.8, 2.8), P(-1, 0.9), P(-2.2, 0.5), P(-3.8, -0.4)], 'even')
+    st([P(0.4, -1.9), P(3.4, -4.2)], 'even', 0.9)
+    st([P(-1.2, -3.8), P(0.8, -1.4)], 'even', 2)
   } else {
     // bầu đan: hai bầu chồng
     st(Array.from({ length: 12 }, (_, i) => P(Math.cos((i / 11) * Math.PI * 2) * 1.3, -1.8 + Math.sin((i / 11) * Math.PI * 2) * 1.3)), 'even')
@@ -218,27 +299,30 @@ export function building(id: Kind, level: number): Building {
   const tier = tierOf(Math.max(1, level))
   const seed = id.length * 97 + tier * 13
   // Khung vẽ và đỉnh (để đặt đồng hồ/biển tên) theo từng loại
+  // Bậc 4–5 giữ khung bậc 3 (vừa ô trên núi): chỉ đổi màu và hoa văn
   const dims: Record<Kind, [number, number]> = {
-    chuDien: [tier === 3 ? 180 : 116, tier === 1 ? 66 : 86],
-    tangKinhCac: [70, 50 + tier * 20],
+    chuDien: [tier >= 3 ? 180 : 116, tier === 1 ? 66 : 86],
+    tangKinhCac: [70, 50 + Math.min(3, tier) * 20],
     danPhong: [110, 52],
     tangBaoCac: [80, 70],
     dienVoTruong: [124, 66],
     tuLinhTran: [104, 30],
     khoangMach: [120, 72],
     linhDien: [128, 46],
+    luyenKhiPhong: [116, 54],
   }
   const [w, top] = dims[id]
   const art: Asset<Fx[]> = {
-    x: -w / 2 - 8, y: -top - 16, w: w + 16, h: top + 26,
+    x: -w / 2 - 8, y: -top - 16, w: w + 16, h: top + 26 + (tier === 5 ? 12 : 0),
     draw(g) {
       const fx: Fx[] = []
       const k = kit(g, tier, seed, fx)
       const { line, rn } = k
-      // bóng đổ mềm dưới chân
-      wash(g, ellipse(0, 1.5, w * 0.5, 4.5, 14), { fill: C.ink, alpha: 0.12, jitter: 1, layers: 2, seed })
+      // bóng đổ mềm dưới chân; bậc 5 thay bằng vầng mây đỡ
+      if (tier === 5) cloudRow(g, -w * 0.54, w * 0.54, 5, 6, 10, seed + 300)
+      else wash(g, ellipse(0, 1.5, w * 0.5, 4.5, 14), { fill: C.ink, alpha: 0.12, jitter: 1, layers: 2, seed })
       if (id === 'chuDien') {
-        if (tier === 3)
+        if (tier >= 3)
           for (const x of [-62, 62]) {
             k.base(x, 0, 40, 6, false)
             k.hall(x, -6, 30, 16, false)
@@ -255,7 +339,7 @@ export function building(id: Kind, level: number): Building {
         k.lantern(-42, -31)
         k.lantern(42, -31)
       } else if (id === 'tangKinhCac') {
-        const floors = tier + 2
+        const floors = Math.min(3, tier) + 2
         k.base(0, 0, 62, 6, true)
         let y = -6
         for (let i = 0; i < floors; i++) {
@@ -267,7 +351,8 @@ export function building(id: Kind, level: number): Building {
         }
         const t = y + 20 - 24
         line([[0, t + 2], [0, t - 9]], 1.2)
-        for (const [dy, r] of [[-2, 2.3], [-5.8, 1.7], [-9, 1.1]] as const) blot(g, 0, t + dy, r, C.gold, 1, Math.round(dy * 10))
+        for (const [dy, r] of [[-2, 2.3], [-5.8, 1.7], [-9, 1.1]] as const) blot(g, 0, t + dy, r, tier === 4 ? SILVER : C.gold, 1, Math.round(dy * 10))
+        if (tier >= 4) fx.push({ k: 'spark', x: 0, y: t - 11, s: 1 })
       } else if (id === 'danPhong') {
         k.base(-10, 0, 76, 6, true)
         k.hall(-10, -6, 52, 20, true)
@@ -289,19 +374,19 @@ export function building(id: Kind, level: number): Building {
         fx.push({ k: 'fire', x, y: -10, s: 1.1 }, { k: 'smoke', x, y: -21, s: 1 })
       } else if (id === 'dienVoTruong') {
         // sân đá bầu dục
-        wash(g, ellipse(0, -5, 58, 12.5, 18), { fill: STONE, alpha: 1, jitter: 0.6, layers: 2, edge: 1, seed: seed + 70 })
-        wash(g, ellipse(0, -6.2, 55, 10.5, 18), { fill: STONE_L, alpha: 0.95, jitter: 0.5, layers: 2, seed: seed + 71 })
+        wash(g, ellipse(0, -5, 58, 12.5, 18), { fill: k.stone, alpha: 1, jitter: 0.6, layers: 2, edge: 1, seed: seed + 70 })
+        wash(g, ellipse(0, -6.2, 55, 10.5, 18), { fill: k.stoneL, alpha: 0.95, jitter: 0.5, layers: 2, seed: seed + 71 })
         stroke(g, ellipse(0, -5, 58, 12.5, 18).concat([[58, -5]]), { w: 0.9, color: C.ink, press: 'even', alpha: 0.7 })
         stroke(g, ellipse(0, -6, 40, 7.5, 16).concat([[40, -6]]), { w: 0.5, color: C.ink2, press: 'even', alpha: 0.35, dry: 0.4 })
         // cổng 牌坊
         const gy = -14
         for (const x of [-24, 20]) {
-          wash(g, rect(x, gy - 34, 4, 34), { sharp: true, fill: C.cinnabar, alpha: 1, jitter: 0.2, layers: 1, seed: seed + x })
+          wash(g, rect(x, gy - 34, 4, 34), { sharp: true, fill: tier === 5 ? C.gold : C.cinnabar, alpha: 1, jitter: 0.2, layers: 1, seed: seed + x })
           line([[x, gy - 34], [x, gy]], 0.5)
           line([[x + 4, gy - 34], [x + 4, gy]], 0.4, 0.5)
-          wash(g, rect(x - 1.5, gy - 2, 7, 3), { sharp: true, fill: STONE, alpha: 1, jitter: 0.2, layers: 1, seed: seed + x + 1 })
+          wash(g, rect(x - 1.5, gy - 2, 7, 3), { sharp: true, fill: k.stone, alpha: 1, jitter: 0.2, layers: 1, seed: seed + x + 1 })
         }
-        wash(g, rect(-30, gy - 35, 60, 5.5), { sharp: true, fill: C.azuriteD, alpha: 1, jitter: 0.2, layers: 1, seed: seed + 72 })
+        wash(g, rect(-30, gy - 35, 60, 5.5), { sharp: true, fill: tier === 4 ? LAPIS_D : tier === 5 ? C.malachite : C.azuriteD, alpha: 1, jitter: 0.2, layers: 1, seed: seed + 72 })
         line([[-30, gy - 35], [30, gy - 35], [30, gy - 29.5], [-30, gy - 29.5], [-30, gy - 35]], 0.5)
         k.plaque(0, gy - 23.5, 0.8, id)
         k.roof(0, gy - 35, 70, 12)
@@ -318,7 +403,7 @@ export function building(id: Kind, level: number): Building {
         spots.slice(0, Math.min(6, 1 + Math.floor(level / 2))).forEach(([x, y]) => fx.push({ k: 'disciple', x, y: y - 3, s: 1 }))
       } else if (id === 'tangBaoCac') {
         k.base(0, 0, 72, 9, false)
-        wash(g, rect(-31, -13, 62, 4), { sharp: true, fill: STONE, alpha: 1, jitter: 0.2, layers: 1, seed: seed + 80 })
+        wash(g, rect(-31, -13, 62, 4), { sharp: true, fill: k.stone, alpha: 1, jitter: 0.2, layers: 1, seed: seed + 80 })
         line([[-31, -13], [31, -13]], 0.6)
         k.hall(0, -9, 58, 20, true)
         k.plaque(0, -25.8, 0.7, id)
@@ -330,16 +415,19 @@ export function building(id: Kind, level: number): Building {
           k.lantern(27, -28)
         }
       } else if (id === 'tuLinhTran') {
-        wash(g, ellipse(0, -3, 48, 13.5, 20), { fill: STONE, alpha: 1, jitter: 0.5, layers: 2, edge: 1, seed: seed + 90 })
-        wash(g, ellipse(0, -4.6, 46, 11.8, 20), { fill: STONE_L, alpha: 1, jitter: 0.4, layers: 2, seed: seed + 91 })
+        wash(g, ellipse(0, -3, 48, 13.5, 20), { fill: k.stone, alpha: 1, jitter: 0.5, layers: 2, edge: 1, seed: seed + 90 })
+        wash(g, ellipse(0, -4.6, 46, 11.8, 20), { fill: k.stoneL, alpha: 1, jitter: 0.4, layers: 2, seed: seed + 91 })
         stroke(g, ellipse(0, -3, 48, 13.5, 20).concat([[48, -3]]), { w: 0.9, color: C.ink, press: 'even', alpha: 0.75 })
         // khắc phù văn
+        const rune = tier === 4 ? LAPIS_D : tier === 5 ? C.goldD : C.azuriteD
         for (let i = 0; i < 8; i++) {
           const a = (i * Math.PI) / 4
           const x = 28 * Math.cos(a), y = -4.6 + 6.9 * Math.sin(a)
-          stroke(g, [[x - 2.6, y], [x, y - 0.8], [x + 2.6, y]], { w: 0.8, color: C.azuriteD, press: 'taper', alpha: 0.7 })
+          stroke(g, [[x - 2.6, y], [x, y - 0.8], [x + 2.6, y]], { w: 0.8, color: rune, press: 'taper', alpha: 0.7 })
         }
-        stroke(g, ellipse(0, -4.6, 35, 8.6, 20).concat([[35, -4.6]]), { w: 0.5, color: C.azuriteD, press: 'even', alpha: 0.5, dry: 0.3 })
+        stroke(g, ellipse(0, -4.6, 35, 8.6, 20).concat([[35, -4.6]]), { w: 0.5, color: rune, press: 'even', alpha: 0.5, dry: 0.3 })
+        // bậc 4–5: vòng phù văn thứ hai khảm bạc/vàng sát mép trận
+        if (tier >= 4) stroke(g, ellipse(0, -4.6, 42, 10.4, 24).concat([[42, -4.6]]), { w: 0.9, color: tier === 5 ? C.gold : LAPIS, press: 'even', alpha: 0.8 })
         fx.push({ k: 'rune', x: 0, y: -4.6, rx: 35, ry: 8.6 }, { k: 'rune', x: 0, y: -4.6, rx: 21, ry: 5.2 })
         k.orbPillar(-22, -13)
         k.orbPillar(22, -13)
@@ -414,6 +502,83 @@ export function building(id: Kind, level: number): Building {
         // biển cắm
         stroke(g, [[-52, -8], [-52, -20]], { w: 1.1, color: C.lacquer2, press: 'even' })
         k.plaque(-52, -24.5, 0.8, id)
+      } else if (id === 'luyenKhiPhong') {
+        // xưởng luyện khí bên trái; giữa là lò luyện (烘炉) xây gạch, miệng lò rực, lửa phụt khỏi đỉnh lò;
+        // phải: đe sắt trên gốc gỗ, thanh kiếm phôi còn đỏ, búa tựa, thỏi kim loại mới đúc
+        k.base(-28, 0, 58, 6, true)
+        k.hall(-28, -6, 40, 18, true)
+        k.plaque(-28, -21.6, 0.7, id)
+        k.roof(-28, -24, 58, 16)
+        if (tier >= 2) k.lantern(-50, -22)
+        const kx = 17, band = [C.ink2, C.malachiteD, C.gold, SILVER, C.gold][tier - 1]
+        const brick = tier === 5 ? JADE_D : mix(C.ochre, C.ink, 0.32), brickL = tier === 5 ? JADE : mix(C.ochreL, C.ochre, 0.4)
+        const kiln: Pt[] = [[kx - 16, 0], [kx + 16, 0], [kx + 12, -30], [kx - 12, -30]]
+        wash(g, kiln, { fill: g2 => vgrad(g2, -30, 0, [[0, brickL], [1, brick]]), alpha: 1, jitter: 0.3, layers: 2, edge: 0.8, sharp: true, seed: seed + 150 })
+        wash(g, [[kx + 4, 0], [kx + 16, 0], [kx + 12, -30], [kx + 4, -30]], { fill: C.ink, alpha: 0.18, jitter: 0.2, layers: 1, sharp: true, seed: seed + 151 })
+        // hàng gạch so le
+        for (let r = 1; r < 7; r++) {
+          const yy = -r * 4.3, half = 16 - (r * 4.3 * 4) / 30
+          line([[kx - half, yy], [kx + half, yy]], 0.4, 0.45)
+          for (let x = kx - half + (r % 2 ? 2 : 4.5); x < kx + half - 1; x += 5) line([[x, yy], [x, yy + 4.3]], 0.3, 0.35)
+        }
+        // đai sắt ôm lò
+        for (const yy of [-9, -24]) {
+          const half = 16 - (-yy * 4) / 30
+          wash(g, [[kx - half - 0.6, yy + 1.2], [kx + half + 0.6, yy + 1.2], [kx + half + 0.4, yy - 1.2], [kx - half - 0.4, yy - 1.2]], { fill: band, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: seed + 152 + yy })
+          line([[kx - half - 0.6, yy + 1.2], [kx + half + 0.6, yy + 1.2]], 0.4, 0.7)
+          for (const dx of [-half * 0.6, 0, half * 0.6]) blot(g, kx + dx, yy, 0.55, C.ink, 0.8, seed + Math.round(dx * 7 + yy))
+        }
+        // miệng lò: vòm tối, lõi lửa sáng dần vào trong
+        const mouth: Pt[] = [[kx - 7, 0], [kx - 7, -7], ...quadPts(kx - 7, -7, kx + 7, -7, 8, -10).slice(1, -1), [kx + 7, -7], [kx + 7, 0]]
+        wash(g, mouth, { fill: C.lacquer, alpha: 1, jitter: 0.2, layers: 1, seed: seed + 153 })
+        wash(g, mouth.map(([x, y]) => [kx + (x - kx) * 0.78, y * 0.8] as Pt), {
+          fill: g2 => { const r = g2.createRadialGradient(kx, -2, 0.5, kx, -3, 8); r.addColorStop(0, '#fff2c0'); r.addColorStop(0.45, C.gamboge); r.addColorStop(1, C.cinnabar); return r },
+          alpha: 1, jitter: 0.3, layers: 2, seed: seed + 154,
+        })
+        stroke(g, mouth, { w: 0.9, color: C.ink, press: 'even', alpha: 0.85 })
+        // miệng trên của lò
+        wash(g, rect(kx - 13.5, -32.4, 27, 3), { sharp: true, fill: mix(band, C.ink, 0.25), alpha: 1, jitter: 0.2, layers: 1, seed: seed + 155 })
+        for (const yy of [-32.4, -29.4]) line([[kx - 13.5, yy], [kx + 13.5, yy]], 0.6)
+        for (const [a, b] of [[kiln[0], kiln[3]], [kiln[1], kiln[2]]]) line([a, b], 0.9, 0.85)
+        fx.push({ k: 'fire', x: kx, y: -27, s: 1 }, { k: 'smoke', x: kx + 2, y: -46, s: 1 }, { k: 'light', x: kx, y: -4, r: 10 })
+        // thỏi kim loại mới đúc: hai dưới, một trên; thỏi trên cùng còn nóng đỏ
+        const ingot = (x: number, y: number, c: string, sd: number) => {
+          const p: Pt[] = [[x - 3.2, y], [x + 3.2, y], [x + 2.4, y - 2.2], [x - 2.4, y - 2.2]]
+          wash(g, p, { fill: c, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: sd })
+          stroke(g, [[x - 2.2, y - 1.9], [x + 1.4, y - 1.9]], { w: 0.5, color: '#ffffff', press: 'taper', alpha: 0.55 })
+          stroke(g, [...p, p[0]], { w: 0.45, color: C.ink, press: 'even', alpha: 0.8 })
+        }
+        ingot(36, 0, C.gold, seed + 160)
+        ingot(42.4, 0, mix(C.silk, C.ink3, 0.35), seed + 161)
+        ingot(39.2, -2.2, '#f08a4a', seed + 162)
+        fx.push({ k: 'light', x: 39.2, y: -3.4, r: 4 })
+        // gốc gỗ + đe
+        const ax = 47
+        wash(g, [[ax - 4.4, 0], [ax + 4.4, 0], [ax + 3.8, -6], [ax - 3.8, -6]], { fill: mix(C.ochre, C.ink, 0.2), alpha: 1, jitter: 0.2, layers: 1, sharp: true, seed: seed + 163 })
+        line([[ax - 3.8, -6], [ax + 3.8, -6]], 0.5)
+        line([[ax - 4.4, 0], [ax - 3.8, -6]], 0.5)
+        line([[ax + 4.4, 0], [ax + 3.8, -6]], 0.5)
+        line([[ax - 1, -1], [ax - 0.6, -5]], 0.3, 0.4)
+        const iron = mix(C.ink, C.indigo, 0.35)
+        const anvil: Pt[] = [[ax - 10.5, -12.4], [ax + 6, -13.4], [ax + 6, -10.4], [ax + 3, -9.8], [ax + 2.2, -8], [ax + 4.2, -6], [ax - 4.2, -6], [ax - 2.2, -8], [ax - 3, -9.8], [ax - 6, -10.2]]
+        wash(g, anvil, { fill: iron, alpha: 1, jitter: 0.15, layers: 2, sharp: true, seed: seed + 164 })
+        stroke(g, [[ax - 9.5, -12.6], [ax + 5.6, -13.3]], { w: 0.7, color: tier >= 4 ? k.trim : C.ink3, press: 'taper', alpha: 0.9 })
+        stroke(g, [...anvil, anvil[0]], { w: 0.6, color: C.ink, press: 'even', alpha: 0.9 })
+        // phôi kiếm nung đỏ trên đe
+        stroke(g, [[ax - 7, -13.4], [ax + 4.4, -14]], { w: 1.4, color: '#e0582c', press: 'taper', alpha: 1 })
+        stroke(g, [[ax - 6, -13.5], [ax + 3.4, -14]], { w: 0.55, color: '#fff0b0', press: 'taper', alpha: 1 })
+        fx.push({ k: 'spark', x: ax - 1, y: -17, s: 0.9 }, { k: 'light', x: ax - 1, y: -14.5, r: 5 })
+        // búa tựa vào gốc
+        stroke(g, [[ax + 6, 0.4], [ax + 9.4, -11.6]], { w: 1.2, color: C.ochre, press: 'even', alpha: 1 })
+        stroke(g, [[ax + 6, 0.4], [ax + 9.4, -11.6]], { w: 0.35, color: C.ink, press: 'even', alpha: 0.6 })
+        wash(g, [[ax + 6.4, -12.8], [ax + 11.8, -11.2], [ax + 11.2, -9], [ax + 5.8, -10.6]], { fill: iron, alpha: 1, jitter: 0.1, layers: 1, sharp: true, seed: seed + 165 })
+        stroke(g, [[ax + 6.4, -12.8], [ax + 11.8, -11.2], [ax + 11.2, -9], [ax + 5.8, -10.6], [ax + 6.4, -12.8]], { w: 0.5, color: C.ink, press: 'even', alpha: 0.9 })
+      }
+      if (tier === 5) {
+        // mây trước: vài cụm phủ chân nền cho công trình như nổi giữa mây
+        cloudRow(g, -w * 0.56, -w * 0.26, 9, 4.5, 7, seed + 310, 99)
+        cloudRow(g, w * 0.24, w * 0.54, 9.5, 4.5, 7, seed + 320, 99)
+        fx.push({ k: 'spark', x: -w * 0.4, y: 2, s: 0.8 }, { k: 'spark', x: w * 0.36, y: 3, s: 0.8 })
       }
       grain(g, 0.4)
       return fx

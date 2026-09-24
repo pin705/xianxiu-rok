@@ -1,6 +1,7 @@
 import {
-  ADV, BEATS, DISADV, DO_KIEP, ELDER_STEP, REBIRTH_BUILD, REBIRTH_PROD, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIB_COOLDOWN, WEEKEND, rebirthLevels,
-  type Bonus, type BuildingId, type ElderId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
+  ADV, BEATS, CURE, DISADV, DO_KIEP, ELDER_STEP, EL_ADV, EL_DISADV, FOCUS, FOCUS_TIME, OVERCOMES, PHA_CANH, REBIRTH_BUILD, REBIRTH_HALL, REBIRTH_PROD,
+  TALENT_EVERY, TALENT_MAX, TOWER, TRADE_KEEP, TRADE_KEEP_MAX, TRIBS, TRIB_COOLDOWN, WEEKEND, rebirthLevels,
+  type Bonus, type BuildingId, type ElderId, type Element, type GearId, type PillId, type Quest, type Res, type Skill, type Target, type TechId, type Tier,
   type UnitId, type UnitType,
 } from '@rok/rules'
 
@@ -9,7 +10,9 @@ const pct = (v: number) => `${Math.round(v * 100)}%`
 const perks = (n: number) =>
   `khởi đầu với công trình tầng ${rebirthLevels(n).chuDien}, sản lượng +${pct(n * REBIRTH_PROD)}, xây nhanh hơn ${pct(n * REBIRTH_BUILD)}`
 const units = { kiem: 'Kiếm tu', phap: 'Pháp tu', the: 'Thể tu' } satisfies Record<UnitType, string>
-const tiers = { 1: 'Ngoại môn', 2: 'Nội môn', 3: 'Chân truyền' } satisfies Record<Tier, string>
+const tiers = { 1: 'Ngoại môn', 2: 'Nội môn', 3: 'Chân truyền', 4: 'Hạch tâm', 5: 'Thánh tử' } satisfies Record<Tier, string>
+const el = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' } satisfies Record<Element, string>
+const and = (xs: (string | number)[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} và ${xs.at(-1)}`)
 const res = { linhThach: 'Linh thạch', linhThao: 'Linh thảo', linhKhoang: 'Linh khoáng' } satisfies Record<Res, string>
 
 export const vi = {
@@ -35,7 +38,7 @@ export const vi = {
     last: ['Tông', 'Môn', 'Phái', 'Cung'],
   },
 
-  realmName: (level: number) => ['Luyện Khí', 'Trúc Cơ', 'Kim Đan'][Math.min(3, Math.ceil(level / 5)) - 1],
+  realmName: (level: number) => ['Luyện Khí', 'Trúc Cơ', 'Kim Đan', 'Nguyên Anh', 'Hóa Thần'][Math.min(5, Math.ceil(level / 5)) - 1],
   realm: (level: number) => `${vi.realmName(level)} · tầng ${level}`,
   level: (n: number) => `Tầng ${n}`,
   lv: (n: number) => `Cấp ${n}`,
@@ -52,6 +55,7 @@ export const vi = {
     dienVoTruong: { name: 'Diễn võ trường', lore: 'Nơi đệ tử luyện kiếm mỗi sớm mai. Tầng càng cao, mỗi lượt tuyển càng đông.' },
     danPhong: { name: 'Đan phòng', lore: 'Lò đan chưa từng tắt lửa. Chữa thương binh và luyện đan dược.' },
     tangKinhCac: { name: 'Tàng Kinh Các', lore: 'Lưu giữ công pháp của các đời chưởng môn.' },
+    luyenKhiPhong: { name: 'Luyện Khí Phòng', lore: 'Lò luyện khí rèn pháp bảo cho trưởng lão. Tầng càng cao, pháp bảo luyện được càng tinh.' },
   } satisfies Record<BuildingId, { name: string; lore: string }>,
   soonTag: 'sắp có',
 
@@ -62,7 +66,7 @@ export const vi = {
       switch (q.k) {
         case 'build': {
           const b = q.id as BuildingId
-          if (b === 'chuDien' && (q.n === 6 || q.n === 11)) return `Độ kiếp — đột phá ${vi.realmName(q.n)}`
+          if (b === 'chuDien' && TRIBS.some(t => t.hall + 1 === q.n)) return `Độ kiếp — đột phá ${vi.realmName(q.n)}`
           return q.n === 1 ? `Xây ${vi.b[b].name}` : `Nâng ${vi.b[b].name} lên tầng ${q.n}`
         }
         case 'train': return `Có ${q.n} đệ tử`
@@ -71,11 +75,13 @@ export const vi = {
         case 'realm': return q.n === 1 ? `Thám hiểm ${vi.realms[id].name}` : `Qua tầng ${q.n} ${vi.realms[id].name}`
         case 'tech': return q.n === 1 ? 'Lĩnh ngộ một công pháp' : `Lĩnh ngộ tổng ${q.n} tầng công pháp`
         case 'brew': return `Luyện ${q.n} viên đan`
+        case 'tower': return `Qua tầng ${q.n} ${vi.tower.name}`
+        case 'forge': return q.n === 1 ? 'Luyện một pháp bảo' : `Luyện tổng ${q.n} cấp pháp bảo`
       }
     },
     reward: 'Thưởng',
     claim: 'Nhận thưởng',
-    allDone: 'Đã xong chuỗi nhiệm vụ. Chủ điện tầng 15 có thể luân hồi để mạnh hơn.',
+    allDone: `Đã xong chuỗi nhiệm vụ. Từ Chủ điện tầng ${REBIRTH_HALL} có thể luân hồi để mạnh hơn.`,
   },
   builder: { idle: 'Rảnh', label: 'Tạp dịch' },
   // cột trái desktop: mọi việc đang chạy
@@ -121,6 +127,12 @@ export const vi = {
     loiChan: { name: 'Lôi Chấn', title: 'Chấp pháp trưởng lão', lore: 'Kiếm khách bị Vạn Độc Cốc giam giữ. Kiếm của hắn mang theo tiếng sấm.', skill: 'Cửu Thiên Lôi Động', passives: ['Lôi Kiếm', 'Tị Lôi Quyết'] },
     vanHac: { name: 'Vân Hạc Chân Nhân', title: 'Đan sư', lore: 'Lão đan sư ẩn cư nơi Xích Viêm Bí Cảnh. Cứu người nhiều hơn giết người.', skill: 'Khô Mộc Phùng Xuân', passives: ['Dưỡng Sinh', 'Tụ Tài'] },
     hanBang: { name: 'Hàn Băng Tiên Tử', title: 'Thái thượng trưởng lão', lore: 'Tỉnh giấc giữa băng nguyên Huyền Băng. Nơi nàng đi qua, sương đọng thành băng.', skill: 'Băng Phong Thiên Lý', passives: ['Hàn Khí Hộ Thể', 'Băng Tâm'] },
+    bachVoNhai: { name: 'Bạch Vô Nhai', title: 'Kiếm tiên', lore: 'Kiếm khách áo trắng ngồi giữa Lôi Trì trăm năm, lấy sấm sét mài kiếm.', skill: 'Nhất Kiếm Phá Thiên', passives: ['Kiếm Cốt', 'Vô Nhai Kiếm Ý'] },
+    macSau: { name: 'Mạc Sầu', title: 'Ẩn tu', lore: 'Nữ ẩn tu canh tầng ba mươi Thông Thiên Tháp. Chưa ai thấy nàng cười.', skill: 'Sầu Vân Tỏa Nguyệt', passives: ['Thổ Linh Pháp Tướng', 'Hậu Thổ Hộ Thân'] },
+    hoacThienCuong: { name: 'Hoắc Thiên Cương', title: 'Hộ sơn đại tướng', lore: 'Thể tu tôi thân trong lửa Hỗn Độn. Da thịt cứng hơn sắt nung.', skill: 'Liệt Hỏa Kim Thân', passives: ['Thiết Cốt', 'Hỏa Dương Chi Lực'] },
+    toMiNuong: { name: 'Tô Mị Nương', title: 'Khách khanh', lore: 'Nữ pháp tu đi khắp các giới, chỉ ở lại với tông môn đủ náo nhiệt.', skill: 'Xuân Thủy Hoàn Sinh', passives: ['Nhu Thủy', 'Tụ Bảo Thuật'] },
+    diepCoThanh: { name: 'Diệp Cô Thành', title: 'Kiếm khách', lore: 'Một mình leo tới tầng bốn mươi lăm Thông Thiên Tháp rồi ở lại chờ đối thủ.', skill: 'Thiên Ngoại Phi Tiên', passives: ['Cô Kiếm', 'Ngộ Kiếm'] },
+    huyenMinh: { name: 'Huyền Minh Lão Tổ', title: 'Lão tổ', lore: 'Ngủ dưới đáy vực giữa giới. Lão tỉnh dậy thì trời đất đóng băng.', skill: 'Huyền Minh Hàn Ngục', passives: ['Huyền Thủy Giáp', 'Nghịch Kiếp'] },
   } satisfies Record<ElderId, { name: string; title: string; lore: string; skill: string; passives: [string, string] }>,
   unlockHint: {
     thanhPhong: '',
@@ -129,7 +141,15 @@ export const vi = {
     loiChan: 'Công phá Vạn Độc Cốc',
     vanHac: 'Qua tầng 5 Xích Viêm Bí Cảnh',
     hanBang: 'Qua tầng 5 Huyền Băng Bí Cảnh',
+    bachVoNhai: 'Qua tầng 5 Lôi Trì Bí Cảnh',
+    macSau: 'Qua tầng 30 Thông Thiên Tháp',
+    hoacThienCuong: 'Qua tầng 5 Hỗn Độn Bí Cảnh',
+    toMiNuong: 'Mốc 5 sự kiện tuần',
+    diepCoThanh: 'Qua tầng 45 Thông Thiên Tháp',
+    huyenMinh: 'Hạ yêu vương giữa giới',
   } satisfies Record<ElderId, string>,
+  el,
+  overcomes: (e: Element) => `Khắc ${el[OVERCOMES[e]]}`,
   skillText(s: Skill) {
     const who = s.type ? units[s.type] : 'cả đội'
     const text = {
@@ -148,8 +168,9 @@ export const vi = {
       atk: 'Công cả đội', def: 'Thủ cả đội', hp: 'Máu cả đội',
       'atk.kiem': `Công ${units.kiem}`, 'atk.phap': `Công ${units.phap}`, 'atk.the': `Công ${units.the}`,
       'hp.kiem': `Máu ${units.kiem}`, 'hp.phap': `Máu ${units.phap}`, 'hp.the': `Máu ${units.the}`,
+      skill: 'Sức công pháp', forge: 'Thời gian luyện khí',
     }
-    const down = ['build', 'train', 'march', 'heal', 'brew', 'trib'].includes(key)
+    const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
   },
   techs: {
@@ -158,12 +179,23 @@ export const vi = {
     canKhon: 'Càn Khôn Đại', luyenBinh: 'Luyện Binh Pháp', hoiXuan: 'Hồi Xuân Quyết', tranCo: 'Trận Cơ Đại Pháp',
     danDao: 'Đan Đạo Tâm Kinh', tuBao: 'Tụ Bảo Quyết', linhMach: 'Linh Mạch Quyết', truongSinh: 'Trường Sinh Quyết',
     vanKiem: 'Vạn Kiếm Trận', hoMach: 'Hộ Mạch Thuật', thienDien: 'Thiên Diễn Thuật', doKiepTam: 'Độ Kiếp Tâm Pháp',
+    thietQuyen: 'Thiết Quyền Công', kiemThe: 'Kiếm Thể Quyết', phapThan: 'Pháp Thân Quyết', luyenKhi: 'Luyện Khí Bí Lục',
+    thaiAt: 'Thái Ất Chân Kinh', thienMa: 'Thiên Ma Chiến Pháp', hoSon: 'Hộ Sơn Quyết', bachChien: 'Bách Chiến Tâm Kinh',
   } satisfies Record<TechId, string>,
   pills: {
     tuKhi: { name: 'Tụ Khí Đan', desc: 'Bớt 15 phút cho một việc đang chờ: xây, tuyển, chữa hay nghiên cứu.' },
     boiNguyen: { name: 'Bồi Nguyên Đan', desc: 'Một trưởng lão nhận thêm 400 kinh nghiệm.' },
-    doKiep: { name: 'Độ Kiếp Đan', desc: 'Uống trước khi độ kiếp: lôi kiếp yếu đi 30%.' },
+    doKiep: { name: 'Độ Kiếp Đan', desc: `Uống trước khi độ kiếp: lôi kiếp yếu đi ${pct(DO_KIEP)}.` },
+    hoiXuan: { name: 'Hồi Xuân Đan', desc: `Chữa ngay ${CURE} thương binh, bậc cao trước.` },
+    ngungThan: { name: 'Ngưng Thần Đan', desc: `Công mọi đội +${pct(FOCUS)} trong ${FOCUS_TIME / 3_600_000} giờ. Uống thêm thì kéo dài.` },
+    daiTuKhi: { name: 'Đại Tụ Khí Đan', desc: 'Bớt 2 giờ cho một việc đang chờ. Luyện từ 6 Tụ Khí Đan.' },
+    phaCanh: { name: 'Phá Cảnh Đan', desc: `Lôi kiếp yếu đi ${pct(PHA_CANH)}, tự dùng thay Độ Kiếp Đan. Luyện từ 2 Độ Kiếp Đan.` },
+    taiTuy: { name: 'Tẩy Tủy Đan', desc: 'Trả lại mọi điểm thiên phú của một trưởng lão để cộng lại từ đầu.' },
   } satisfies Record<PillId, { name: string; desc: string }>,
+  gear: {
+    thanhSuong: 'Thanh Sương Kiếm', xichViem: 'Xích Viêm Phiến', kimCang: 'Kim Cang Trạc', huyenVu: 'Huyền Vũ Giáp', hoTam: 'Hộ Tâm Kính',
+    thienLoi: 'Thiên Lôi Chùy', tuBao: 'Tụ Bảo Bồn', ngocGian: 'Ngộ Đạo Ngọc Giản', tiLoi: 'Tị Lôi Châu',
+  } satisfies Record<GearId, string>,
 
   // ---------- Bản đồ ----------
   beasts: ['Hắc Lang', 'Thanh Xà', 'Thiết Bối Hùng', 'Xích Hồ', 'Kim Nhãn Điêu', 'Bạch Viên', 'Phong Lang Vương', 'Hỏa Linh Báo', 'Nham Giáp Tê', 'Cửu Vĩ Hồ', 'Lôi Ưng', 'Huyền Quy', 'Bạch Hổ', 'Băng Phượng', 'Giao Long'],
@@ -178,6 +210,8 @@ export const vi = {
     { name: 'Thanh Mộc Bí Cảnh', lore: 'Rừng cổ thụ nghìn năm, yêu mộc canh giữ một phong ấn.' },
     { name: 'Xích Viêm Bí Cảnh', lore: 'Hỏa sơn ngầm, dung nham chảy thành sông.' },
     { name: 'Huyền Băng Bí Cảnh', lore: 'Băng nguyên vĩnh cửu, gió lạnh cắt da.' },
+    { name: 'Lôi Trì Bí Cảnh', lore: 'Hồ nước dưới cơn giông không bao giờ tan, sấm sét rơi không ngớt.' },
+    { name: 'Hỗn Độn Bí Cảnh', lore: 'Khe nứt dẫn về thuở trời đất chưa phân, ngũ hành đảo lộn.' },
   ],
   target(t: Target) {
     return t.kind === 'beast' ? vi.beasts[t.i] : t.kind === 'sect' ? vi.sects[t.i].name : t.kind === 'tower' ? vi.tower.name : vi.realms[t.i].name
@@ -297,6 +331,30 @@ export const vi = {
     go: 'Luyện',
     overflow: 'Đan phòng hết chỗ: thương binh mới sẽ tử trận. Chữa bớt hoặc nâng Đan phòng.',
   },
+  forge: {
+    tab: 'Luyện khí',
+    hint: 'Mỗi trưởng lão đeo một pháp bảo; bonus chỉ cho đội người đó dẫn. Pháp bảo luyện theo tầng, không may rủi.',
+    go: 'Luyện',
+    doing: (name: string, n: number) => `Đang luyện ${name} cấp ${n}`,
+    cap: (n: number) => `Luyện Khí Phòng tầng ${n}`,
+    maxed: 'Viên mãn',
+    worn: (name: string) => `${name} đang đeo`,
+    free: 'Chưa ai đeo',
+    equip: 'Đeo cho trưởng lão',
+    unequip: 'Tháo',
+    slot: 'Pháp bảo',
+    none: 'Chưa đeo pháp bảo',
+    pick: 'Đeo món nào?',
+    empty: 'Chưa có pháp bảo. Luyện ở Luyện Khí Phòng.',
+  },
+  talent: {
+    title: 'Thiên phú',
+    branch: ['Công', 'Thể', 'Đạo'],
+    points: (n: number) => (n ? `${n} điểm chưa cộng` : 'Đã cộng hết điểm'),
+    hint: `Mỗi ${TALENT_EVERY} cấp một điểm, mỗi nhánh tối đa ${TALENT_MAX}.`,
+    add: 'Cộng',
+    wash: (n: number) => `Tẩy Tủy Đan (${n})`,
+  },
   library: {
     tab: 'Công pháp',
     row: (n: number) => `Tàng Kinh Các tầng ${n}`,
@@ -308,7 +366,8 @@ export const vi = {
     title: 'Độ kiếp',
     lore: (realm: string) => `Chủ điện đã tới đỉnh cảnh giới. Muốn đột phá ${realm} phải vượt ba đợt lôi kiếp — đệ tử sống sót đi tiếp sang đợt sau.`,
     waves: 'Ba đợt lôi kiếp',
-    pill: 'Dùng Độ Kiếp Đan (lôi kiếp −30%)',
+    pill: (name: string, v: number) => `Dùng ${name} (lôi kiếp −${pct(v)})`,
+    element: (e: string) => `Hành ${e}`,
     go: 'Độ kiếp',
     wait: (t: string) => `Kinh mạch chưa ổn, thử lại sau ${t}`,
     gather: 'Kiếp vân đang tụ…',
@@ -323,9 +382,9 @@ export const vi = {
   },
   rebirth: {
     title: 'Luân hồi',
-    lore: 'Kim Đan viên mãn. Tán công trùng tu, tông môn làm lại từ đầu nhưng đạo tâm vững hơn.',
+    lore: 'Tán công trùng tu: tông môn làm lại từ đầu nhưng đạo tâm vững hơn.',
     keep: 'Giữ lại',
-    keepList: ['Trưởng lão và cấp của họ', 'Công pháp đã lĩnh ngộ', 'Đan dược trong Bảo khố'],
+    keepList: ['Trưởng lão, cấp và thiên phú của họ', 'Công pháp đã lĩnh ngộ, pháp bảo', 'Đan dược trong Bảo khố'],
     lose: 'Làm lại',
     loseList: ['Công trình (còn lại căn cơ), tài nguyên', 'Đệ tử, thương binh', 'Bản đồ và nhiệm vụ'],
     // n: số lần đã luân hồi (tính cả lần sắp làm)
@@ -369,11 +428,15 @@ export const vi = {
     noJob: 'Không có việc nào đang chờ.',
     pickElder: 'Cho trưởng lão nào?',
     auto: 'Tự dùng khi độ kiếp',
+    cure: 'Chữa ngay',
+    focus: 'Uống',
+    focusLeft: (t: string) => `Đang hiệu lực, còn ${t}`,
+    pickWash: 'Tẩy thiên phú cho ai?',
     rates: 'Sản lượng',
     stats: 'Thành tích',
     stat: { won: 'Trận thắng', lost: 'Trận thua', trained: 'Đệ tử đã tuyển', healed: 'Thương binh đã chữa', brewed: 'Đan đã luyện', rebirths: 'Lần luân hồi' },
   },
-  jobs: { build: 'Xây dựng', train: 'Tuyển đệ tử', heal: 'Chữa thương', study: 'Nghiên cứu', brew: 'Luyện đan' },
+  jobs: { build: 'Xây dựng', train: 'Tuyển đệ tử', heal: 'Chữa thương', study: 'Nghiên cứu', brew: 'Luyện đan', forge: 'Luyện khí' },
 
   settings: {
     title: 'Cài đặt',
@@ -408,7 +471,9 @@ export const vi = {
       ['Hệ khắc', `Kiếm tu khắc Pháp tu, Pháp tu khắc Thể tu, Thể tu khắc Kiếm tu: đánh hệ mình khắc thêm ${pct(ADV - 1)} sát thương, đánh hệ khắc mình bớt ${pct(1 - DISADV)}. Bảng mục tiêu ghi "Nên dùng", và tỉ lệ thắng ước lượng đã tính hệ khắc.`],
       ['Trưởng lão', `Mỗi đội cần một trưởng lão dẫn. Mỗi cấp trưởng lão cho cả đội +${pct(ELDER_STEP)} công và máu; công pháp chủ động bung ra ở lượt 3, 6, 9. Thu nhận thêm trưởng lão khi công phá tông môn đối địch và qua tầng 5 các bí cảnh.`],
       ['Thương binh', 'Đánh trận nào cũng có thương binh. Họ nằm ở Đan phòng chờ chữa; Đan phòng hết chỗ thì thương binh mới tử trận — chữa trước khi đánh tiếp, hoặc nâng Đan phòng.'],
-      ['Độ kiếp', `Chủ điện tầng 5 và 10 phải vượt ba đợt lôi kiếp, mỗi đợt một hệ, người sống sót đi tiếp — hãy mang đủ ba hệ. Độ Kiếp Đan làm sét yếu đi ${pct(DO_KIEP)}. Thất bại chỉ phải chờ ${TRIB_COOLDOWN / 60_000} phút rồi thử lại.`],
+      ['Độ kiếp', `Chủ điện tầng ${and(TRIBS.map(t => t.hall))} phải vượt ba đợt lôi kiếp, mỗi đợt một hệ, người sống sót đi tiếp — hãy mang đủ ba hệ. Độ Kiếp Đan làm sét yếu đi ${pct(DO_KIEP)}. Thất bại chỉ phải chờ ${TRIB_COOLDOWN / 60_000} phút rồi thử lại.`],
+      ['Ngũ hành', `Mỗi trưởng lão mang một hành. Từ Nguyên Anh, lôi kiếp và bí cảnh mới cũng có hành: Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim. Người dẫn khắc hành địch thì đội đánh mạnh hơn ${pct(EL_ADV - 1)}, bị khắc thì yếu đi ${pct(1 - EL_DISADV)}.`],
+      ['Pháp bảo, thiên phú', `Luyện Khí Phòng luyện pháp bảo, mỗi trưởng lão đeo một món. Mỗi ${TALENT_EVERY} cấp trưởng lão được một điểm thiên phú: Công, Thể hoặc Đạo (sức công pháp). Tẩy Tủy Đan cho cộng lại từ đầu.`],
       ['Kho đầy, kho lệch', `Tài nguyên ngừng sinh khi kho đầy: nâng Tàng Bảo Các. Thưởng nhiệm vụ và chiến lợi phẩm vẫn nhận được dù vượt sức chứa. Kho lệch (một loại cạn, loại khác đầy) thì vào Thương hội ở Tàng Bảo Các đổi phần dư — nhận về ${pct(TRADE_KEEP)} tới ${pct(TRADE_KEEP_MAX)} tuỳ tầng.`],
       ['Thông Thiên Tháp', `Mở ở Chủ điện tầng ${TOWER.hall}, trên đỉnh bản đồ. Tháp không có tầng cuối: mỗi tầng địch mạnh hơn và đổi hệ chính, nên hãy đổi đội theo hệ khắc. Thưởng chỉ nhận lần đầu qua mỗi tầng (tầng chẵn chục có Độ Kiếp Đan); kỷ lục giữ qua luân hồi.`],
       ['Nhiệm vụ ngày, tuần, luân hồi', 'Nhiệm vụ ngày làm mới lúc 0h giờ Việt Nam, nhiệm vụ tuần lúc 0h thứ Hai. Tới Chủ điện tầng 15 có thể luân hồi: giữ trưởng lão, công pháp, đan dược; kiếp sau khởi đầu với công trình tầng cao hơn (căn cơ), sinh tài nguyên nhiều hơn và xây nhanh hơn — mỗi kiếp ngắn hơn hẳn kiếp trước.'],
