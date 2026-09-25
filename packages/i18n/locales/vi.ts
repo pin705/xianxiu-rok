@@ -2132,6 +2132,7 @@ export const vi = {
       kp: 'điểm chiến công',
       explore: 'ô mê vụ đã khai',
       sites: 'thôn trang / động phủ đã ghé',
+      chain: 'yêu thú hạ bằng săn liên hoàn',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Thế lực đạt ${n}`,
@@ -2157,6 +2158,7 @@ export const vi = {
       kp: (n: string) => `Đạt ${n} chiến công`,
       explore: (n: string) => `Khai ${n} ô mê vụ`,
       sites: (n: string) => `Ghé ${n} thôn trang / động phủ`,
+      chain: (n: string) => `Săn liên hoàn hạ ${n} yêu thú giới`,
     } satisfies Record<Metric, (n: string) => string>,
     // việc đo bằng phần tăng thêm (Nhật Khóa, Minh vụ): chỉ các chỉ số có câu khác với task (tổng tích luỹ)
     gain: {
@@ -2232,7 +2234,7 @@ export const vi = {
       },
       lienTram: {
         name: 'Liên Trảm Bất Hồi',
-        desc: 'Cuối tuần chinh chiến: thắng trận, cướp thắng, leo tháp — trận nào cũng có điểm.',
+        desc: 'Cuối tuần chinh chiến: thắng trận, cướp thắng, leo tháp — trận nào cũng có điểm; săn liên hoàn yêu thú giới (không về núi) nhiều điểm nhất.',
       },
       conLon: {
         name: 'Côn Lôn Tuần Lễ',

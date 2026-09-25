@@ -41,6 +41,7 @@ const METRIC: Record<Metric, (s: State) => number> = {
   kp: s => s.stats.kp ?? 0,
   explore: s => sum(fogOf(s).rows.map(bits)),
   sites: s => s.visited?.length ?? 0,
+  chain: s => s.stats.chained ?? 0,
 }
 export const metric = (s: State, m: Metric) => METRIC[m](s)
 

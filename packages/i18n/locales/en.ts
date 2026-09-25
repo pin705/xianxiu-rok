@@ -2133,6 +2133,7 @@ export const en: Text = {
       kp: 'kill point',
       explore: 'fog cell cleared',
       sites: 'village or cave visited',
+      chain: 'beast slain on a hunting chain',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Reach ${n} power`,
@@ -2158,6 +2159,7 @@ export const en: Text = {
       kp: (n: string) => `Reach ${n} kill points`,
       explore: (n: string) => `Clear ${n} fog cells`,
       sites: (n: string) => `Visit ${n} villages or caves`,
+      chain: (n: string) => `Chain-hunt ${n} world beasts`,
     } satisfies Record<Metric, (n: string) => string>,
     gain: {
       power: (n: string) => `Gain ${n} power`,
@@ -2232,7 +2234,7 @@ export const en: Text = {
       },
       lienTram: {
         name: 'Endless Battle',
-        desc: 'A weekend of war: battles won, raids won and tower floors all score points.',
+        desc: 'A weekend of war: battles won, raids won and tower floors all score points; chain-hunting world beasts (no trip home) scores the most.',
       },
       conLon: {
         name: 'Kunlun Week',

@@ -1665,6 +1665,7 @@ export const METRICS = [
   'kp', // chiến công (thế lực đệ tử địch hạ được trong trận giữa các tông môn)
   'explore', // ô mê vụ đã khai
   'sites', // thôn trang / động phủ đã ghé
+  'chain', // yêu thú giới hạ bằng săn liên hoàn (không về núi giữa các trận)
 ] as const
 export type Metric = (typeof METRICS)[number]
 // Khung giờ: newbie — ngày thứ from..to (0 = ngày lập tông môn) · week — các thứ trong tuần giờ VN (0 = thứ Hai … 6 = Chủ nhật)
@@ -1896,11 +1897,12 @@ const fests = {
     ],
   },
   lienTram: {
-    // Liên Trảm Bất Hồi (Cornucopia): thứ Bảy – Chủ nhật tuần B, thắng trận liên tiếp
+    // Liên Trảm Bất Hồi (Cornucopia / Ghost Parade): thứ Bảy – Chủ nhật tuần B — thắng trận liên tiếp; mỗi yêu thú giới hạ bằng
+    // săn liên hoàn (đội săn đang về đi thẳng tới con khác, không về núi) điểm cao nhất
     window: { kind: 'cycle', every: 14, len: 2, offset: 16 },
     hall: 3,
     kind: 'points',
-    stages: [{ win: 10, raid: 25, tower: 10 }],
+    stages: [{ win: 10, raid: 25, tower: 10, chain: 30 }],
     goals: [50, 150, 300],
     rewards: [
       { items: { chienY: 1, thoiQuang15: 2 } },

@@ -111,6 +111,7 @@ export type Stats = {
   won: number
   lost: number
   hunted?: number // yêu thú hạ được
+  chained?: number // yêu thú giới hạ bằng săn liên hoàn
   sped?: number // phút tăng tốc đã dùng
   raided?: number // lần cướp thắng
   gathered?: number // tài nguyên khai mỏ mang về

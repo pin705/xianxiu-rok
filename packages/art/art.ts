@@ -27,11 +27,13 @@ export const artOf = (key: string): ArtEntry | undefined => art[key]
 const images = new Map<string, Promise<HTMLImageElement | undefined>>()
 const packs = new Map<string, Promise<void>>()
 const tally = { done: 0, total: 0 }
+const counted = new Set<string>() // ảnh đã tính vào tổng (artAll tính trước cả những gói chưa tới lượt: vạch không báo xong giữa hai gói)
 const listeners = new Set<(done: number, total: number) => void>()
+const count = (src: string) => void (!counted.has(src) && counted.add(src) && tally.total++)
 function image(src: string) {
   let p = images.get(src)
   if (!p) {
-    tally.total++
+    count(src)
     p = new Promise(ok => {
       const img = new Image()
       const end = (v?: HTMLImageElement) => {
@@ -66,6 +68,20 @@ export function artPack(name: string): Promise<void> {
   return p
 }
 export const artPacks = () => [...new Set(Object.values(art).flatMap(e => (e.pack ? [e.pack] : [])))]
+// Tải hết mọi gói (như gói .pck của Godot bản web): màn tiêu đề đợi cái này rồi mới vào game, sau đó không cảnh nào phải đợi.
+// Lần lượt theo thứ tự `first` (cảnh vào đầu tiên trước); gọi nhiều lần vẫn một lượt tải. Service worker giữ tranh qua các bản
+// build (tên có mã nội dung ?v=) nên lần mở sau gần như không tải gì.
+let all: Promise<void> | undefined
+export function artAll(first: readonly string[] = []) {
+  if (!all) {
+    for (const e of Object.values(art)) if (e.pack) count(e.page ?? e.src)
+    for (const f of listeners) f(tally.done, tally.total)
+    all = (async () => {
+      for (const p of new Set([...first, ...artPacks()])) await artPack(p)
+    })()
+  }
+  return all
+}
 // tiến độ tải tranh (màn tiêu đề): ảnh đã về / tổng số ảnh đã xếp hàng
 export function onArtProgress(f: (done: number, total: number) => void) {
   listeners.add(f)

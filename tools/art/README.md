@@ -55,20 +55,33 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
 | `fields [cảnh…]` | `field:<cảnh>` | Bản `wild` vẽ đè từ bản vẽ code, các cảnh khác sửa từ bản `wild`; game phủ kín sân mọi cỡ màn. | bản vẽ code + `style.jpg` |
 | `paper`, `strokes` | `skin:paper`, `skin:stroke*`, `skin:blot` | Vân giấy lát liền; nét cọ cắt từ bảng. | `icons.jpg` |
 
-## Gói theo cảnh và atlas
+## Tải tài nguyên (như Godot)
 
-Game nạp tranh như bundle của Godot hay LayaAir. `make.py pack` gán mỗi mục manifest một `pack` theo bảng `PACKS` trong `pipeline.py`. Texture của mỗi gói được gom vào vài trang atlas 2048² (`atlas/<gói>-<n>.webp`, mỗi mục ghi `page` và `frame`); file lẻ vẫn giữ để ảnh HTML dùng và để lần gói sau đọc lại.
+Game tải hết tranh ngay lúc đầu rồi mới vào, vào rồi không cảnh nào phải đợi.
+- Đợi gói `boot` (da giao diện, hình chạm huy hiệu) là hiện màn tiêu đề.
+- Màn tiêu đề kiêm màn tải (vạch + %): tải hết các gói (`artAll` trong `packages/art/art.ts`) rồi mới cho vào. Người chơi mới vẫn xem lời dẫn, đặt tên trong lúc tải.
+- Service worker giữ tranh trong kho `rok-art` qua mọi bản build. Đường dẫn mỗi tranh có `?v=<mã nội dung>` (`write_manifest`), nên lần mở sau không tải lại, bản cập nhật game cũng chỉ tải tranh nào thật sự đổi.
 
-| Gói | Có gì | Khi nào nạp |
-| --- | --- | --- |
-| `boot` | da giao diện, hình chạm huy hiệu | trước khi hiện game (giao diện nào cũng dùng) |
-| `home`, `bld1`…`bld5` | núi, đồ trang trí; công trình theo bậc | cảnh núi đợi `home` cộng các bậc đang có; màn tiêu đề đợi `home` và hiện vạch tiến độ |
-| `map`, `world`, `battle` | bản đồ vùng; token bản đồ giới; quân, yêu thú, sân trận | cảnh nào đợi gói đó (`mountScene({ art })`) |
-| (không gói) | icon, chân dung, icon thao tác, `panel:*` | trình duyệt tự tải khi hiện |
+`make.py pack` gán mỗi mục manifest một `pack` theo bảng `PACKS` trong `pipeline.py`. Texture mỗi gói được gom vào vài trang atlas 2048² (`atlas/<gói>-<n>.webp`, mục ghi `page` và `frame`): ít lượt tải, Pixi gộp được lượt vẽ. File lẻ vẫn giữ để ảnh HTML dùng và để lần gói sau đọc lại.
 
-Sau khi hiện game, các gói còn lại tải nền lần lượt (`main.ts`). Texture thuộc gói chưa về thì game tạm vẽ bằng code và gọi tải gói; lần vẽ sau khi gói về sẽ tự đổi sang tranh (`stage.ts` `painted`).
+| Gói | Có gì |
+| --- | --- |
+| `boot` | da giao diện, hình chạm huy hiệu (đợi trước khi hiện màn tiêu đề) |
+| `home`, `bld1`…`bld5` | núi, đồ trang trí; công trình theo bậc |
+| `map`, `world`, `battle` | bản đồ vùng; token bản đồ giới; quân, yêu thú, sân trận |
+| (không gói) | icon, chân dung, icon thao tác, `panel:*` — trình duyệt tự tải khi hiện |
 
-Đo trên 4G giả lập (4 Mbps, trễ 150 ms, 390×844): bản nạp một lượt (trước 26/9) hiện game sau 12,5 giây, tải 4,8 MB trước khi hiện. Bản theo gói hiện game sau 5,9 giây, trong đó tranh chỉ khoảng 0,7 MB (còn lại là JS, CSS, font).
+Cảnh vẫn đợi gói của mình (`mountScene({ art })`). Texture thuộc gói chưa về thì game tạm vẽ bằng code rồi tự đổi sang tranh (`stage.ts` `painted`). Hai lớp này để phòng khi có người vào cảnh trước lúc tải xong.
+
+Đo trên 4G giả lập (4 Mbps, trễ 150 ms, 390×844):
+
+| | Bản nạp một lượt (trước 26/9) | Bản hiện tại |
+| --- | ---: | ---: |
+| Lần đầu: hiện màn đầu tiên | 12,5 s | 6,1 s |
+| Lần đầu: tải xong hết, vào game | 12,5 s | 9,4 s |
+| Lần sau: vào game | tải lại khi có bản mới | 2,3 s (1,6 s là màn chào), 8 KB qua mạng |
+
+Trước màn tiêu đề, phần còn lại chủ yếu là JS (~1,1 MB, phần lớn là Pixi).
 
 ## Phong cách và công thức
 
@@ -90,7 +103,9 @@ Sau khi hiện game, các gói còn lại tải nền lần lượt (`main.ts`).
 | `apps/client/src/world/stage.ts` `painted` | texture Pixi: neo theo hộp bản vẽ code, cỡ theo ảnh (`tex: true` để bộ nạp tải sẵn) |
 | `packages/art/emblems.ts` `medal` | hình chạm `emblem:*` vẽ lên đĩa màu code |
 | `apps/client/src/world/battle/field.ts` | `field:<cảnh>` phủ kín sân, `beast:<hệ>` + tint |
-| `apps/client/src/main.ts` `loadArt` | đọc manifest, đợi gói `boot`, sau khi hiện game thì tải nền các gói còn lại |
+| `apps/client/src/main.ts` `loadArt` | đọc manifest, đợi gói `boot`, rồi `artAll` tải hết theo thứ tự ưu tiên |
+| `apps/client/src/Title.svelte` | màn tải: vạch + %, vào game khi `artAll` xong |
+| `apps/client/public/sw.js` | kho `rok-art` giữ tranh (`?v=`) qua các bản build |
 | `packages/art/art.ts` `artPack` | nạp một gói (ảnh hoặc trang atlas), tiến độ cho màn tiêu đề (`onArtProgress`) |
 
 ## Thêm món mới

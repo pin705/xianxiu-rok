@@ -380,7 +380,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** Bone Necklace vào túi đồ → mở; dùng Lohar's Army → boss hiện cạnh thành → mở kết trận.
 - **Vì sao giữ chân:** biến việc cày man tộc hằng ngày thành "săn vật phẩm triệu hồi boss" + có tướng miễn phí.
 - **Tu tiên hoá:** *Yêu Vương Tuần Sơn*: yêu thú rơi *yêu cốt liên*; ghép đủ thì *triệu hồi yêu vương* trước cổng núi, tiên minh kết trận hạ → nhận *truyền thừa* trưởng lão.
-- **Game mình:** ❌ (sự kiện tuần / Trung tâm sự kiện không sinh quái sự kiện; yêu vương chỉ có sẵn trên bản đồ).
+- **Game mình:** ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`): yêu cốt từ yêu thú giới cấp 6+, 10 cái triệu hồi bản mạnh (máu ×2, 2 giờ) trên một yêu vương sẵn có; quà thêm theo sát thương + phần người triệu hồi. Chưa có truyền thừa trưởng lão riêng.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### C9. Ceroli Crisis / Ceroli Assault / Realm of Mystique / Ian's Ballads — phó bản tổ đội
@@ -870,7 +870,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C5 | Barbarian Forts (cấp 1–6, kết trận) | 🟡 yêu vương cấp 2/3 (9 con), thiếu cấp thấp | P1 | S–M |
 | C6 | Marauders & Encampments | ❌ | P2 | M |
 | C7 | Barbarian Camps & Keeps (KvK) | ❌ (ngoài phạm vi) | P2 | M |
-| C8 | Lohar's Trial (vật phẩm triệu hồi boss) | ❌ | P1 | M |
+| C8 | Lohar's Trial (vật phẩm triệu hồi boss) | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
 | C9 | Ceroli Crisis / Assault / Realm of Mystique | ❌ | P2 | L |
 | C10 | Karuak Ceremony / Trial of Kau Karuak | 🟡 Thông Thiên Tháp | P2 | S–M |
 | C11 | Shadow Legion (minh thủ sóng quái) | 🟡 viện binh + hộ pháp độ kiếp | P1 | M |

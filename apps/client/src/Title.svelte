@@ -2,7 +2,7 @@
   // Màn tiêu đề. 'first': tiêu đề → lời dẫn → đặt tên (server lập tông môn). 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
   // wait: đã xong màn tiêu đề nhưng server chưa gửi state (mạng chậm) — hiện dòng "đang kết nối".
   import { onMount } from 'svelte'
-  import { artPack, onArtProgress } from '@rok/art'
+  import { artAll, onArtProgress } from '@rok/art'
   import { Button, Medal } from './ui'
   import { L, sfx, suggestNames } from './lib'
 
@@ -31,22 +31,28 @@
   let error = $state('')
   let sending = $state(false)
 
-  // tiến độ tải tranh (gói theo cảnh, @rok/art artPack): vạch mảnh dưới dòng "chạm để vào"
+  // Màn tiêu đề kiêm màn tải (như Godot): tải hết tranh (@rok/art artAll) rồi mới vào game — vào rồi không cảnh nào phải đợi.
+  // Người mới vẫn xem lời dẫn, đặt tên trong lúc tải; tới bước vào game mà chưa xong thì đợi trên vạch tiến độ.
   let loaded = $state(1)
+  let ready = $state(false) // artAll xong thật (vạch 100% giữa chừng không tính)
+  let live = true
   onMount(() => onArtProgress((done, total) => (loaded = total ? done / total : 1)))
+  onMount(() => void artAll().then(() => (ready = true)))
+  onMount(() => () => void (live = false))
+  let entered = false
+  const go = () => {
+    if (!live || entered) return
+    entered = true
+    ondone()
+  }
+  const enter = (min: number) => void Promise.all([new Promise(r => setTimeout(r, min)), artAll()]).then(go)
   onMount(() => {
-    if (mode !== 'splash') return
-    // người cũ: vào khi đủ 1.6 giây và tranh cảnh núi đã về — như màn nạp của engine (chạm thì vào ngay, cảnh tự đợi tranh)
-    let live = true
-    void Promise.all([new Promise(r => setTimeout(r, 1600)), artPack('home')]).then(() => live && ondone())
-    return () => {
-      live = false
-    }
+    if (mode === 'splash') enter(1600) // người cũ: đủ 1.6 giây và tranh đã về
   })
 
   function tapTitle() {
     sfx('tap')
-    if (mode === 'splash') return ondone()
+    if (mode === 'splash') return void (ready && go()) // đang tải: chạm không bỏ qua được
     step = 'intro'
   }
   function tapIntro() {
@@ -71,7 +77,7 @@
     }
     step = 'stamp'
     sfx('done')
-    setTimeout(ondone, 1300)
+    enter(1300)
   }
   async function login(e: SubmitEvent) {
     e.preventDefault()
@@ -83,7 +89,7 @@
       return void (error =
         step === 'code' && err === 'wrong' ? L.account.err.code : (L.account.err[err] ?? L.account.err.server))
     sfx('done')
-    ondone()
+    enter(0)
   }
   const to = (s: typeof step) => () => {
     error = ''
@@ -92,13 +98,18 @@
 </script>
 
 <div class="title-screen">
+  {#if !ready}
+    <div class="load" role="progressbar" aria-valuenow={Math.round(loaded * 100)} aria-valuemin="0" aria-valuemax="100">
+      <span class="bar"><i style:width="{loaded * 100}%"></i></span>
+      <span class="pct">{Math.round(loaded * 100)}%</span>
+    </div>
+  {/if}
   {#if step === 'title'}
     <button class="cover" onclick={tapTitle} aria-label={L.tapToStart}>
       <span class="logo"><Medal emblem="crest" tone="gold" size={104} /></span>
       <span class="name">{L.game}</span>
       <span class="tag">{L.tagline}</span>
       <span class="tap">{wait ? L.net.connecting : L.tapToStart}</span>
-      {#if loaded < 1}<span class="load" aria-hidden="true"><i style:width="{loaded * 100}%"></i></span>{/if}
     </button>
   {:else if step === 'intro'}
     <button class="cover dim" onclick={tapIntro}>
@@ -339,18 +350,34 @@
     }
   }
   .load {
-    display: block;
-    width: min(40%, 180px);
-    height: 2px;
-    margin-top: var(--sp-2, 8px);
+    position: absolute;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+    translate: -50% 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    pointer-events: none;
+  }
+  .bar {
+    width: min(46vw, 200px);
+    height: 3px;
     background: color-mix(in srgb, var(--ink) 15%, transparent);
-    border-radius: 1px;
+    border-radius: 2px;
     overflow: hidden;
   }
-  .load i {
+  .bar i {
     display: block;
     height: 100%;
     background: var(--ink);
     transition: width 0.3s;
+  }
+  .pct {
+    font-size: var(--fs-1, 12px);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    opacity: 0.7;
+    min-width: 3ch;
   }
 </style>

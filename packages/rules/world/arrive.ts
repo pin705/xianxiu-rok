@@ -261,7 +261,9 @@ function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Ar
     report: x.nextId - 1,
     returnAt: at + (at - startAt),
   })
-  if (f.win) x = addHonor({ ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1 } }, HONOR_WILD * p.lv)
+  const chained = (x.stats.chained ?? 0) + (m.chain ? 1 : 0) // Liên Trảm Bất Hồi: con hạ bằng săn liên hoàn
+  if (f.win)
+    x = addHonor({ ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1, chained } }, HONOR_WILD * p.lv)
   if (!f.win) return { changed: new Map([[pid, x]]), world: w }
   // Khai Giới Trảm Tà: pha Khai giới rơi tàn quyển, cộng giới vận cho minh · Yêu Vương Tuần Sơn: cấp cao rơi yêu cốt
   const n = map.phase === 0 ? eveFrags(p.lv) : 0

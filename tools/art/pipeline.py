@@ -130,6 +130,9 @@ def manifest():
   if _manifest is None:
     p = os.path.join(ART, 'manifest.json')
     _manifest = json.load(open(p)) if os.path.exists(p) else {}
+    for e in _manifest.values():  # bỏ mã phiên bản (?v=) — write_manifest tính lại theo nội dung file
+      for f in ('src', 'page'):
+        if f in e: e[f] = e[f].split('?')[0]
   return _manifest
 
 def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP'):
@@ -142,8 +145,18 @@ def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP'):
   return name
 
 def write_manifest():
+  """ghi manifest; mỗi đường dẫn kèm ?v=<mã nội dung>: service worker giữ tranh qua mọi bản build (kho rok-art),
+  bản cập nhật chỉ tải lại tranh thật sự đổi"""
+  import hashlib
+  vs = {}
+  def ver(src):
+    if src not in vs:
+      path = os.path.join(ART, src)
+      vs[src] = hashlib.sha1(open(path, 'rb').read()).hexdigest()[:10] if os.path.exists(path) else '0'
+    return f'{src}?v={vs[src]}'
+  out = {k: {**e, **{f: ver(e[f]) for f in ('src', 'page') if f in e}} for k, e in sorted(manifest().items())}
   p = os.path.join(ART, 'manifest.json')
-  json.dump(dict(sorted(manifest().items())), open(p, 'w'), indent=2, ensure_ascii=False)
+  json.dump(out, open(p, 'w'), indent=2, ensure_ascii=False)
   subprocess.run(['npx', 'prettier', '--write', p], cwd=ROOT, capture_output=True)
   print(f'manifest: {len(manifest())} key')
 

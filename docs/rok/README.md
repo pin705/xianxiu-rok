@@ -125,6 +125,7 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Eve of the Crusade | Khai Giới Trảm Tà: trong pha Khai giới (5 ngày đầu mùa, cổng còn đóng) hạ yêu thú giới rơi tàn quyển (cấp 1–5: 1, 6–10: 2, 11–15: 3); đủ 7 đổi một rương tiếp tế ngay trên thẻ mùa. Mỗi tàn quyển cộng một điểm giới vận cho tiên minh (thẻ mùa hiện 5 minh đầu); cổng mở thì 3 minh đầu được sản lượng +10 % trong 24 giờ, mỗi người một thư báo hạng | ✅ `world/eve.ts`, `sect/eve.ts`, `WorldView.svelte` |
 | Past Glory | Tu Bổ Thiên Môn: chương 12/13 của Thiên Đạo Biên Niên (trước chương Thiên Môn, hạn ngày 40) — lúc chương đang mở, ai cũng góp tài nguyên (10 N / 100 N / 1 Tr mỗi loại, ngay trên thẻ mùa) vào một thanh chung 10 triệu của cả giới; góp 1.000 được 1 Công Huân; đủ thì cả giới nhận quà chương như mọi chương | ✅ `world/book.ts` (`repair`), `WorldView.svelte` |
 | Tides of War | Thiên Thời: mùa băm thành nhịp 4 ngày theo vòng ngũ hành (Kim → Thủy → Mộc → Hỏa → Thổ), mỗi thời một tăng ích chung cả giới (Kiếm tu công +15 % · sản lượng +10 % · chữa thương rẻ 20 % · Pháp tu công +15 % · Thể tu sinh lực +15 %) và 3 chỉ lệnh — mỗi tông môn chọn một cho riêng mình tới hết thời, chọn rồi không đổi (thẻ mùa: nút Chỉ lệnh) | ✅ `world/thoi.ts`, `thoiBuffs` (base.ts), `WorldView.svelte` |
+| Lohar's Trial | Yêu Vương Tuần Sơn: yêu thú giới cấp 6+ rơi yêu cốt (cấp 11+ rơi 2); đủ 10 thì chọn một yêu vương đang sống (bảng yêu vương) để triệu hồi bản Tuần Sơn — máu ×2, huy hiệu son trên bản đồ, tồn tại 2 giờ. Hạ được: ngoài quà thường còn quà Tuần Sơn (Kim Duyên Phù, phù 8 giờ) chia theo sát thương (góp từ 5 % có ít nhất một món), người triệu hồi thêm một phần; hết giờ chưa hạ thì trở lại yêu vương thường | ✅ `world/lohar.ts`, `hitBoss` (arrive.ts), `TileSheet.svelte` |
 | Troop speed + load by type | Trên bản đồ Giới (bản đồ vùng giữ nguyên): kiếm tu đi nhanh ×1,15 · pháp tu ×1 · thể tu ×0,85, đội đi theo hệ chậm nhất; sức mang kiếm ×1 · pháp ×0,8 · thể ×1,25 (khai mỏ, cướp). Nút xuất quân hiện thời gian theo đội đang chọn; bảng chọn đội có dòng giải thích | ✅ `UNIT_SPEED`, `UNIT_CARRY`, `armySpeed`, `routeMs(…, army)` |
 | Friends | Đạo hữu: nút "Kết giao" trong hồ sơ (một chiều như theo dõi, tối đa 50); thẻ Truyền âm có dải đạo hữu (chấm lục: đang chơi, đang chơi xếp trước), chạm tên để truyền âm | ✅ `friend` (sect/inbox.ts), truy vấn `friends` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
@@ -155,7 +156,7 @@ dưới phần bảo hộ: còn 23 %.
 3. (Tốc độ và sức mang theo hệ: đã xong.)
 
 **Đợt E — bản đồ & PvE** (file 3) (đã xong: mê vụ + linh điểu + thôn trang / động phủ)
-- Sự kiện yêu vương theo đợt (Lohar), vật phẩm hồi hành lực, Sơn Hà Đồ (Kingdom Map: tan mê vụ ngẫu nhiên),
+- (Yêu Vương Tuần Sơn — Lohar: đã xong.) Vật phẩm hồi hành lực, Sơn Hà Đồ (Kingdom Map: tan mê vụ ngẫu nhiên),
   tổ đội PvE (Ceroli), biên niên giới kiểu Monument.
 
 **Đợt F — mùa giải & đấu trường** (file 6, mục 3 có thiết kế chi tiết)

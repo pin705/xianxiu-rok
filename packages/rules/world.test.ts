@@ -909,6 +909,7 @@ test('săn liên hoàn: đội săn đang về đi thẳng tới con khác từ 
   assert.ok((home.gain!.res.linhThach ?? 0) > loot1, 'chiến lợi phẩm cộng dồn hai trận')
   assert.deepEqual(home.path![0], seat, 'về núi theo đường mới từ chỗ yêu thú')
   assert.ok(home.returnAt > m1.arriveAt)
+  assert.equal(ps.get(1)!.stats.chained, 1, 'Liên Trảm Bất Hồi: đếm con hạ bằng săn liên hoàn (con đầu không tính)')
 })
 
 test('yêu thú giới: săn một mình, thắng thì chiến lợi phẩm + kinh nghiệm theo đội về, con đó hồi sau 20 phút', () => {
