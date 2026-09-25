@@ -13,6 +13,7 @@ import {
   REALMS,
   SECTS,
   SUPPLY_HALL,
+  QUIZ_KEY,
   advance,
   dayOf,
   apply,
@@ -69,6 +70,7 @@ async function load(lang: 'vi' | 'en') {
     'Supply',
     'Honor',
     'Drill',
+    'Quiz',
     'Advisor',
     'Chat',
     'world/WorldView',
@@ -775,6 +777,11 @@ test('tiên minh, chat', async () => {
         )
       }
       social.drill = false
+      social.quiz = true
+      const quiz = paint('Quiz', { game: s }, `${label}, Vấn Đạo Đài`)
+      if (s.levels.chuDien >= 3) assert.ok(quiz.includes(L.quiz.step(1, 5)), 'câu đầu hôm nay')
+      assert.equal(L.quiz.q.length, QUIZ_KEY.length, 'mỗi đáp án một câu hỏi')
+      social.quiz = false
       const sup = paint(
         'Supply',
         {
