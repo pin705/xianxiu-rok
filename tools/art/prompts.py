@@ -144,10 +144,11 @@ EMBLEM_SHEETS = {
 }
 
 # Icon thao tác đơn sắc (packages/art/actions.ts MONO): game chỉ lấy alpha rồi tô bằng màu chữ.
+# Nghĩa theo bản vẽ code (trang Icon trên canvas thiết kế): power = lực chiến (thanh kiếm), minus = nét ngang, rank = bục xếp hạng.
 MASK_NOTE = 'Paint each one as a SOLID BLACK ink brush glyph silhouette (pure black on the magenta background, no color, no grey fill), simple and bold like a UI icon. '
 MASK_SHEETS = {
   'K1': [('hammer', 'a hammer'), ('lock', 'a padlock'), ('check', 'a check mark'), ('cross', 'an X cross'), ('close', 'a thin X close mark'),
-         ('power', 'a power symbol'), ('sound', 'a speaker with sound waves'), ('mute', 'a speaker with a slash'), ('music', 'a music note')],
+         ('power', 'a single straight sword held diagonally (combat power)'), ('sound', 'a speaker with sound waves'), ('mute', 'a speaker with a slash'), ('music', 'a music note')],
   'K2': [('clock', 'a clock face'), ('arrow', 'an arrow pointing right'), ('back', 'an arrow pointing left'), ('plus', 'a plus sign'),
          ('minus', 'a minus sign'), ('gear', 'a gear cog'), ('people', 'two people silhouettes'), ('swords', 'two crossed swords'), ('skull', 'a skull')],
   'K3': [('download', 'an arrow pointing down into a tray'), ('upload', 'an arrow pointing up out of a tray'), ('globe', 'a globe'),
@@ -166,7 +167,7 @@ PROP_SHEETS = {
          ('fly-shut', 'the same small butterfly with wings nearly closed'), ('pearl', 'a softly glowing white spirit pearl')],
   'P3': [('walker-0', 'a tiny chibi disciple in blue robes walking to the right, left foot forward'), ('walker-1', 'the same tiny chibi disciple walking, right foot forward'),
          ('worker', 'a tiny chibi worker in brown clothes carrying a hammer'), ('disciple', 'a tiny chibi disciple in blue robes standing'),
-         ('flag', 'a small red sect banner on a pole'), ('lotus', 'a pink lotus flower on a lily pad'), ('ring', 'a thin golden halo ring'),
+         ('flag', 'a small red sect banner on a pole'), ('lotus', 'a pink lotus flower on a lily pad'), ('_ring', 'a thin golden ring'),
          ('march', 'a small round bronze token with a red banner'), ('scaffold', 'a bamboo scaffold frame tied with rope')],
 }
 PROP_KEYS = {  # ô → key trong manifest (key nào không có trong keys.json thì bỏ qua)
@@ -175,7 +176,7 @@ PROP_KEYS = {  # ô → key trong manifest (key nào không có trong keys.json 
   'lantern': ['lantern:0.9', 'lantern:0.8'], 'sun': ['sun'], 'moon': ['moon'], 'crane-up': ['crane:up'], 'crane-down': ['crane:down'],
   'bird-up': ['bird:up'], 'bird-down': ['bird:down'], 'fly-open': ['fly:open'], 'fly-shut': ['fly:shut'], 'pearl': ['pearl:1', 'pearl:1.2', 'pearl:1.5'],
   'walker-0': ['walker:0'], 'walker-1': ['walker:1'], 'worker': ['worker'], 'disciple': ['disciple'], 'flag': ['flag'], 'lotus': ['lotus'],
-  'ring': ['ring'], 'march': ['march', 'wtoken'], 'scaffold': ['scaffold:120:72', 'scaffold:128:46'],
+  'march': ['march', 'wtoken'], 'scaffold': ['scaffold:120:72', 'scaffold:128:46'],
 }
 
 # Quân (packages/art/figures.ts soldier): key sold:<hệ>:<phe 0 ta / 1 địch>:<bậc 3–5>. Quay mặt sang phải.

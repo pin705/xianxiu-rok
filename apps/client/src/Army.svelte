@@ -24,6 +24,7 @@
   import { Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Section, Slider } from './ui'
   import { EMBLEM, L, LOOK, num } from './lib'
+  import Help from './Help.svelte'
   import { useGame } from './game'
 
   let {
@@ -119,6 +120,7 @@
 </div>
 
 <Section title={L.army.elder}>
+  {#snippet aside()}<Help k={1} />{/snippet}
   {#if idle.length}
     <div class="row scroll">
       {#each idle as e (e)}

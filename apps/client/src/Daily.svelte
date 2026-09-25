@@ -29,6 +29,7 @@
   import { Icon } from '@rok/art'
   import { Bag, Button, Card, Meter, Section, Sheet, fly } from './ui'
   import { L, clock, num, sfx } from './lib'
+  import Help from './Help.svelte'
   import { useGame } from './game'
 
   let { open, onclose }: { open: boolean; onclose: () => void } = $props()
@@ -273,6 +274,7 @@
   {/if}
 
   <Section title={L.weekly.title}>
+    {#snippet aside()}<Help k={9} />{/snippet}
     <p class="t-small t-soft">{L.weekly.reset(nextWeek(now) - now)}</p>
     <ul class="stack mt-2">
       {#each WEEKLY as w, i (w.id)}

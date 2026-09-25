@@ -30,7 +30,7 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
    tools/art/.venv/bin/python tools/art/make.py <nhóm> --dry     # chỉ in prompt, không tốn tiền
    tools/art/.venv/bin/python tools/art/make.py <nhóm> --fit     # ghép lại từ ảnh thô đã có (sửa cách ghép, không gọi API)
    ```
-   Ảnh thô nằm ở `tools/art/.work/raw/` (không commit). Muốn vẽ lại một món thì xoá ảnh thô của nó rồi chạy lại.
+   Chạy từng nhóm một, không chạy song song (các lệnh cùng ghi `manifest.json`). Ảnh thô nằm ở `tools/art/.work/raw/` (không commit). Muốn vẽ lại một món thì xoá ảnh thô của nó rồi chạy lại.
    Lệnh tắt: `npm run art -- <nhóm> …`, `npm run art:export -- --player art`, `npm run art:spec`.
 3. **Xem**: chạy game bình thường và mở thêm `?art=0` để so. Chạy `node tools/art/spec.ts` để cập nhật tiến độ.
 4. **Commit** `apps/client/public/art/` (ảnh + `manifest.json`), `tools/art/keys.json`, `docs/ART_SPEC.md`.

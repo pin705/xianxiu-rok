@@ -55,6 +55,7 @@
   import Merchant from './Merchant.svelte'
   import DaoPick from './DaoPick.svelte'
   import { L, LANG, clock, num, type PanelTab } from './lib'
+  import Help from './Help.svelte'
   import { useGame } from './game'
   import { social } from './social.svelte'
 
@@ -276,6 +277,7 @@
         {@const tp = tribPill(game, true)}
         {@const cloud = game.marches.find(m => m.target.kind === 'trib')}
         <Section title={L.trib.title}>
+          {#snippet aside()}<Help k={4} />{/snippet}
           <p class="t-small t-lore">{L.trib.lore(L.realmName(tr.hall + 1))}</p>
           {#if game.seat}<p class="t-small t-soft">
               {L.trib.public(clock(TRIB_CLOUD[game.trib]), HO_PHAP, PHA_KIEP)}

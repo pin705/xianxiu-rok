@@ -3,21 +3,21 @@
 Mọi hình trong game có một **key**. Tranh vẽ tay nằm ở `apps/client/public/art/`, khai trong `manifest.json`; key chưa có tranh thì game vẽ bằng code như cũ.
 Mở game với `?art=0` để tắt toàn bộ tranh (so trước/sau). Cách vẽ thêm, prompt và công cụ: [tools/art/README.md](../tools/art/README.md).
 
-**Đã có tranh 193/325 (59%)**, không tính hiệu ứng:
+**Đã có tranh 315/325 (97%)**, không tính hiệu ứng:
 
 | Nhóm | Số key | Đã có tranh | Lệnh (`make.py`) |
 | --- | ---: | ---: | --- |
 | Chân dung | 13 | 13 | faces |
 | Công trình | 53 | 53 | buildings |
-| Núi, bậc đá, cầu thang | 20 | 18 | scenery · far |
-| Đồ trang trí | 40 | 16 | props |
-| Da giao diện | 49 | 43 | skins · paper · strokes |
+| Núi, bậc đá, cầu thang | 20 | 20 | scenery · far |
+| Đồ trang trí | 40 | 34 | props |
+| Da giao diện | 49 | 48 | skins · paper · strokes |
 | Icon màu | 44 | 44 | icons |
-| Icon thao tác đơn sắc | 22 | 0 | masks |
+| Icon thao tác đơn sắc | 22 | 22 | masks |
 | Icon thanh điều hướng | 6 | 6 | icons (bảng F) |
-| Huy hiệu | 66 | 0 | emblems |
-| Bản đồ | 4 | 0 | map · props |
-| Chiến trường | 8 | 0 | troops · beasts · fields |
+| Huy hiệu | 66 | 66 | emblems |
+| Bản đồ | 4 | 4 | map · props |
+| Chiến trường | 8 | 5 | troops · beasts · fields |
 | Hiệu ứng (giữ vẽ bằng code) | 19 | — | — |
 
 ## Chân dung
@@ -106,8 +106,8 @@ Vẽ đè giữ nguyên đường bao bản code (công trình đứng trên b�
 
 | Key | Loại | Hộp | Nguồn đề xuất |
 | --- | --- | ---: | ---: |
-| `far1` | texture cảnh | 2600×154 | 3900×232 |
-| `far2` | texture cảnh | 2600×124 | 3900×188 |
+| ✓ `far1` | texture cảnh | 2600×154 | 3900×232 |
+| ✓ `far2` | texture cảnh | 2600×124 | 3900×188 |
 | ✓ `ledge:0` | texture cảnh | 309×117 | 1508×576 |
 | ✓ `ledge:1` | texture cảnh | 266×108 | 1300×528 |
 | ✓ `ledge:2` | texture cảnh | 259×103 | 1268×508 |
@@ -135,25 +135,25 @@ Cắt từ bảng 3×3, đặt theo chân khớp khung bao bản code.
 | --- | --- | ---: | ---: |
 | ✓ `bamboo:0.8:4` | texture cảnh | 29×43 | 144×212 |
 | ✓ `bamboo:0.85:8` | texture cảnh | 31×46 | 152×224 |
-| `bird:down` | texture cảnh | 12×8 | 60×40 |
-| `bird:up` | texture cảnh | 12×8 | 60×40 |
+| ✓ `bird:down` | texture cảnh | 12×8 | 60×40 |
+| ✓ `bird:up` | texture cảnh | 12×8 | 60×40 |
 | ✓ `blossom:0.8:7` | texture cảnh | 48×40 | 236×196 |
 | ✓ `blossom:0.9:13` | texture cảnh | 54×45 | 264×220 |
 | ✓ `blossom:0.95:3` | texture cảnh | 57×48 | 280×232 |
 | ✓ `blossom:1:11` | texture cảnh | 60×50 | 296×244 |
-| `crane:down` | texture cảnh | 44×26 | 216×128 |
-| `crane:up` | texture cảnh | 44×26 | 216×128 |
-| `disciple` | texture cảnh | 16×15 | 80×76 |
-| `flag` | texture cảnh | 16×16 | 80×80 |
-| `fly:open` | texture cảnh | 14×12 | 72×60 |
-| `fly:shut` | texture cảnh | 14×12 | 72×60 |
+| ✓ `crane:down` | texture cảnh | 44×26 | 216×128 |
+| ✓ `crane:up` | texture cảnh | 44×26 | 216×128 |
+| ✓ `disciple` | texture cảnh | 16×15 | 80×76 |
+| ✓ `flag` | texture cảnh | 16×16 | 80×80 |
+| ✓ `fly:open` | texture cảnh | 14×12 | 72×60 |
+| ✓ `fly:shut` | texture cảnh | 14×12 | 72×60 |
 | ✓ `lantern:0.8` | texture cảnh | 13×22 | 64×112 |
 | ✓ `lantern:0.9` | texture cảnh | 14×25 | 72×124 |
-| `lotus` | ảnh HTML | 40×40 | 128×128 |
-| `moon` | texture cảnh | 44×44 | 216×216 |
-| `pearl:1` | texture cảnh | 7×7 | 36×36 |
-| `pearl:1.2` | texture cảnh | 8×8 | 44×44 |
-| `pearl:1.5` | texture cảnh | 10×10 | 48×48 |
+| ✓ `lotus` | ảnh HTML | 40×40 | 128×128 |
+| ✓ `moon` | texture cảnh | 44×44 | 216×216 |
+| ✓ `pearl:1` | texture cảnh | 7×7 | 36×36 |
+| ✓ `pearl:1.2` | texture cảnh | 8×8 | 44×44 |
+| ✓ `pearl:1.5` | texture cảnh | 10×10 | 48×48 |
 | ✓ `pine:2` | texture cảnh | 68×62 | 332×304 |
 | ✓ `pine:5` | texture cảnh | 61×56 | 300×276 |
 | ✓ `pine:8` | texture cảnh | 54×50 | 268×244 |
@@ -167,12 +167,12 @@ Cắt từ bảng 3×3, đặt theo chân khớp khung bao bản code.
 | `ring` | ảnh HTML | 48×48 | 192×192 |
 | ✓ `rock:l` | texture cảnh | 122×80 | 596×392 |
 | ✓ `rock:r` | texture cảnh | 102×66 | 500×324 |
-| `scaffold:120:72` | texture cảnh | 116×76 | 568×376 |
+| ✓ `scaffold:120:72` | texture cảnh | 116×76 | 568×376 |
 | `scaffold:128:46` | texture cảnh | 123×52 | 372×156 |
-| `sun` | texture cảnh | 48×48 | 236×236 |
-| `walker:0` | texture cảnh | 16×15 | 80×76 |
-| `walker:1` | texture cảnh | 16×15 | 80×76 |
-| `worker` | texture cảnh | 16×15 | 80×76 |
+| ✓ `sun` | texture cảnh | 48×48 | 236×236 |
+| ✓ `walker:0` | texture cảnh | 16×15 | 80×76 |
+| ✓ `walker:1` | texture cảnh | 16×15 | 80×76 |
+| ✓ `worker` | texture cảnh | 16×15 | 80×76 |
 
 ## Da giao diện
 
@@ -182,7 +182,7 @@ Cắt từ bảng 3×3, đặt theo chân khớp khung bao bản code.
 | --- | --- | ---: | ---: | --- |
 | ✓ `skin:badge` | da | 30×22 | 92×68 | 10 11 10 11 |
 | ✓ `skin:badge-fresh` | da | 30×22 | 92×68 | 10 11 10 11 |
-| `skin:blot` | da | 128×128 | 384×384 |  |
+| ✓ `skin:blot` | da | 128×128 | 384×384 |  |
 | ✓ `skin:btn` | da | 200×58 | 600×176 | 18 24 22 24 |
 | ✓ `skin:btn-danger` | da | 200×58 | 600×176 | 18 24 22 24 |
 | ✓ `skin:btn-ghost` | da | 200×58 | 600×176 | 18 24 22 24 |
@@ -207,16 +207,16 @@ Cắt từ bảng 3×3, đặt theo chân khớp khung bao bản code.
 | ✓ `skin:fill-good` | da | 120×12 | 360×36 | 5 7 5 6 |
 | ✓ `skin:groove` | da | 200×44 | 600×132 | 12 12 12 12 |
 | ✓ `skin:knob` | da | 26×26 | 80×80 | 0 0 0 0 |
-| `skin:paper` | da | 128×128 | 384×384 |  |
+| ✓ `skin:paper` | da | 128×128 | 384×384 |  |
 | ✓ `skin:plate` | da | 120×30 | 360×92 | 12 14 12 14 |
 | ✓ `skin:rod` | da | 240×22 | 720×68 | 0 22 0 22 |
 | ✓ `skin:scroll` | da | 144×144 | 432×432 | 24 24 24 24 |
 | ✓ `skin:slip` | da | 240×44 | 720×132 | 12 22 13 22 |
 | ✓ `skin:slip-bad` | da | 240×44 | 720×132 | 12 22 13 22 |
 | ✓ `skin:strip` | da | 124×124 | 372×372 | 14 14 14 14 |
-| `skin:stroke` | da | 160×14 | 480×44 |  |
-| `skin:stroke-gold` | da | 160×14 | 480×44 |  |
-| `skin:stroke-red` | da | 160×14 | 480×44 |  |
+| ✓ `skin:stroke` | da | 160×14 | 480×44 |  |
+| ✓ `skin:stroke-gold` | da | 160×14 | 480×44 |  |
+| ✓ `skin:stroke-red` | da | 160×14 | 480×44 |  |
 | ✓ `skin:switch` | da | 54×30 | 164×92 | 0 0 0 0 |
 | ✓ `skin:switch-on` | da | 54×30 | 164×92 | 0 0 0 0 |
 | ✓ `skin:tag` | da | 72×28 | 216×84 | 9 10 9 10 |
@@ -287,28 +287,28 @@ Game chỉ lấy alpha, tô bằng màu chữ nơi đặt.
 
 | Key | Loại | Hộp | Nguồn đề xuất |
 | --- | --- | ---: | ---: |
-| `mask:arrow` | ảnh HTML | 24×24 | 128×128 |
-| `mask:back` | ảnh HTML | 24×24 | 128×128 |
-| `mask:check` | ảnh HTML | 24×24 | 128×128 |
-| `mask:clock` | ảnh HTML | 24×24 | 128×128 |
-| `mask:close` | ảnh HTML | 24×24 | 128×128 |
-| `mask:cross` | ảnh HTML | 24×24 | 128×128 |
-| `mask:download` | ảnh HTML | 24×24 | 128×128 |
-| `mask:gear` | ảnh HTML | 24×24 | 128×128 |
-| `mask:globe` | ảnh HTML | 24×24 | 128×128 |
-| `mask:hammer` | ảnh HTML | 24×24 | 128×128 |
-| `mask:lock` | ảnh HTML | 24×24 | 128×128 |
-| `mask:mail` | ảnh HTML | 24×24 | 128×128 |
-| `mask:minus` | ảnh HTML | 24×24 | 128×128 |
-| `mask:music` | ảnh HTML | 24×24 | 128×128 |
-| `mask:people` | ảnh HTML | 24×24 | 128×128 |
-| `mask:plus` | ảnh HTML | 24×24 | 128×128 |
-| `mask:power` | ảnh HTML | 24×24 | 128×128 |
-| `mask:rank` | ảnh HTML | 24×24 | 128×128 |
-| `mask:skull` | ảnh HTML | 24×24 | 128×128 |
-| `mask:sound` | ảnh HTML | 24×24 | 128×128 |
-| `mask:swords` | ảnh HTML | 24×24 | 128×128 |
-| `mask:upload` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:arrow` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:back` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:check` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:clock` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:close` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:cross` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:download` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:gear` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:globe` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:hammer` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:lock` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:mail` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:minus` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:music` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:people` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:plus` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:power` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:rank` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:skull` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:sound` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:swords` | ảnh HTML | 24×24 | 128×128 |
+| ✓ `mask:upload` | ảnh HTML | 24×24 | 128×128 |
 
 ## Icon thanh điều hướng
 
@@ -329,72 +329,72 @@ Game chỉ lấy alpha, tô bằng màu chữ nơi đặt.
 
 | Key | Loại | Hộp | Nguồn đề xuất |
 | --- | --- | ---: | ---: |
-| `medal:ape:beast` | ảnh HTML | 48×48 | 144×144 |
-| `medal:bear:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:blood:sect` | ảnh HTML | 48×48 | 128×128 |
-| `medal:chaos:realm` | ảnh HTML | 48×48 | 128×128 |
-| `medal:crest:gold` | ảnh HTML | 48×48 | 312×312 |
-| `medal:crest:ink` | ảnh HTML | 48×48 | 192×192 |
-| `medal:crest:pvp` | ảnh HTML | 48×48 | 192×192 |
-| `medal:demon:sect` | ảnh HTML | 48×48 | 128×128 |
-| `medal:dragon:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:eagle:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:fire:realm` | ảnh HTML | 48×48 | 128×128 |
-| `medal:fist:the` | ảnh HTML | 48×48 | 128×128 |
-| `medal:fox:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:ghost:sect` | ảnh HTML | 48×48 | 128×128 |
-| `medal:hawk:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:ice:realm` | ảnh HTML | 48×48 | 128×128 |
-| `medal:leopard:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:lotus:jade` | ảnh HTML | 48×48 | 348×348 |
-| `medal:nineFox:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:orb:phap` | ảnh HTML | 48×48 | 128×128 |
-| `medal:phoenix:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:poison:sect` | ảnh HTML | 48×48 | 128×128 |
-| `medal:rhino:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:snake:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:sword:kiem` | ảnh HTML | 48×48 | 128×128 |
-| `medal:thunder:thunder` | ảnh HTML | 48×48 | 128×128 |
-| `medal:thunderPool:realm` | ảnh HTML | 48×48 | 128×128 |
-| `medal:tiger:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:tower:tower` | ảnh HTML | 48×48 | 128×128 |
-| `medal:turtle:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:win:red` | ảnh HTML | 48×48 | 420×420 |
-| `medal:wind:sect` | ảnh HTML | 48×48 | 128×128 |
-| `medal:windWolf:beast` | ảnh HTML | 48×48 | 128×128 |
-| `medal:wolf:beast` | ảnh HTML | 48×48 | 192×192 |
-| `medal:wood:realm` | ảnh HTML | 48×48 | 128×128 |
-| `wmark:ape:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:bear:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:blood:ink` | texture cảnh | 48×48 | 128×128 |
-| `wmark:blood:red` | texture cảnh | 48×48 | 128×128 |
-| `wmark:chaos:realm` | texture cảnh | 48×48 | 128×128 |
-| `wmark:crest:gold` | texture cảnh | 48×48 | 128×128 |
-| `wmark:crest:red` | texture cảnh | 48×48 | 128×128 |
-| `wmark:demon:ink` | texture cảnh | 48×48 | 128×128 |
-| `wmark:dragon:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:eagle:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:earth:gold` | texture cảnh | 48×48 | 128×128 |
-| `wmark:fox:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:ghost:ink` | texture cảnh | 48×48 | 128×128 |
-| `wmark:ghost:realm` | texture cảnh | 48×48 | 128×128 |
-| `wmark:hawk:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:leopard:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:lotus:jade` | texture cảnh | 48×48 | 128×128 |
-| `wmark:lotus:realm` | texture cảnh | 48×48 | 128×128 |
-| `wmark:nineFox:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:phoenix:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:poison:ink` | texture cảnh | 48×48 | 128×128 |
-| `wmark:rebirth:gold` | texture cảnh | 48×48 | 128×128 |
-| `wmark:rhino:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:snake:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:tiger:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:tower:ink` | texture cảnh | 48×48 | 128×128 |
-| `wmark:turtle:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:wind:ink` | texture cảnh | 48×48 | 128×128 |
-| `wmark:windWolf:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:wolf:beast` | texture cảnh | 48×48 | 128×128 |
-| `wmark:wood:gold` | texture cảnh | 48×48 | 128×128 |
+| ✓ `medal:ape:beast` | ảnh HTML | 48×48 | 144×144 |
+| ✓ `medal:bear:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:blood:sect` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:chaos:realm` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:crest:gold` | ảnh HTML | 48×48 | 312×312 |
+| ✓ `medal:crest:ink` | ảnh HTML | 48×48 | 192×192 |
+| ✓ `medal:crest:pvp` | ảnh HTML | 48×48 | 192×192 |
+| ✓ `medal:demon:sect` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:dragon:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:eagle:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:fire:realm` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:fist:the` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:fox:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:ghost:sect` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:hawk:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:ice:realm` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:leopard:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:lotus:jade` | ảnh HTML | 48×48 | 348×348 |
+| ✓ `medal:nineFox:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:orb:phap` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:phoenix:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:poison:sect` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:rhino:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:snake:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:sword:kiem` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:thunder:thunder` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:thunderPool:realm` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:tiger:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:tower:tower` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:turtle:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:win:red` | ảnh HTML | 48×48 | 420×420 |
+| ✓ `medal:wind:sect` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:windWolf:beast` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `medal:wolf:beast` | ảnh HTML | 48×48 | 192×192 |
+| ✓ `medal:wood:realm` | ảnh HTML | 48×48 | 128×128 |
+| ✓ `wmark:ape:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:bear:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:blood:ink` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:blood:red` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:chaos:realm` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:crest:gold` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:crest:red` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:demon:ink` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:dragon:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:eagle:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:earth:gold` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:fox:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:ghost:ink` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:ghost:realm` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:hawk:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:leopard:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:lotus:jade` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:lotus:realm` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:nineFox:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:phoenix:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:poison:ink` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:rebirth:gold` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:rhino:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:snake:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:tiger:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:tower:ink` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:turtle:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:wind:ink` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:windWolf:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:wolf:beast` | texture cảnh | 48×48 | 128×128 |
+| ✓ `wmark:wood:gold` | texture cảnh | 48×48 | 128×128 |
 
 ## Bản đồ
 
@@ -402,10 +402,10 @@ Nền bản đồ vùng (vẽ đè), tông môn trên bản đồ, quân hành q
 
 | Key | Loại | Hộp | Nguồn đề xuất |
 | --- | --- | ---: | ---: |
-| `map` | texture cảnh | 400×1000 | 1800×4500 |
-| `map:home` | texture cảnh | 132×92 | 596×416 |
-| `march` | texture cảnh | 20×21 | 92×96 |
-| `wtoken` | texture cảnh | 20×21 | 92×96 |
+| ✓ `map` | texture cảnh | 400×1000 | 1800×4500 |
+| ✓ `map:home` | texture cảnh | 132×92 | 596×416 |
+| ✓ `march` | texture cảnh | 20×21 | 92×96 |
+| ✓ `wtoken` | texture cảnh | 20×21 | 92×96 |
 
 ## Chiến trường
 
@@ -413,14 +413,14 @@ Quân `sold:<hệ>:<phe>:<bậc>`; yêu thú một dáng xám mỗi hệ (`beast
 
 | Key | Loại | Hộp | Nguồn đề xuất |
 | --- | --- | ---: | ---: |
-| `beast:kiem:#a8784a` | texture cảnh | 60×32 | 180×96 |
-| `beast:the:#a8784a` | texture cảnh | 60×32 | 180×96 |
-| `field:wild:400x866` | texture cảnh | 400×866 | 1200×2600 |
+| ✓ `beast:kiem:#a8784a` | texture cảnh | 60×32 | 180×96 |
+| ✓ `beast:the:#a8784a` | texture cảnh | 60×32 | 180×96 |
+| ✓ `field:wild:400x866` | texture cảnh | 400×866 | 1200×2600 |
 | `item:linhKhoang` | texture cảnh | 24×24 | 72×72 |
 | `item:linhThach` | texture cảnh | 24×24 | 72×72 |
 | `item:linhThao` | texture cảnh | 24×24 | 72×72 |
-| `sold:kiem:0:3` | texture cảnh | 24×26 | 72×80 |
-| `sold:the:0:3` | texture cảnh | 24×26 | 72×80 |
+| ✓ `sold:kiem:0:3` | texture cảnh | 24×26 | 72×80 |
+| ✓ `sold:the:0:3` | texture cảnh | 24×26 | 72×80 |
 
 ## Hiệu ứng (giữ vẽ bằng code)
 

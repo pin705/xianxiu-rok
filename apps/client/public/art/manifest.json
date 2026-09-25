@@ -754,6 +754,14 @@
   "face:vanHac": {
     "src": "face/face-vanHac.webp"
   },
+  "far1": {
+    "src": "scene/far1.webp",
+    "tex": true
+  },
+  "far2": {
+    "src": "scene/far2.webp",
+    "tex": true
+  },
   "field:fire": {
     "src": "battle/field-fire.webp",
     "tex": true
@@ -1308,9 +1316,6 @@
   "pointer": {
     "src": "icon/pointer.webp"
   },
-  "ring": {
-    "src": "scene/ring.webp"
-  },
   "rock:l": {
     "src": "scene/rock-l.webp",
     "tex": true
@@ -1336,6 +1341,9 @@
     "width": [10, 11, 10, 11],
     "outset": 0,
     "repeat": "stretch"
+  },
+  "skin:blot": {
+    "src": "skin/skin-blot.webp"
   },
   "skin:btn": {
     "src": "skin/skin-btn.webp",
@@ -1478,6 +1486,9 @@
   "skin:knob": {
     "src": "skin/skin-knob.webp"
   },
+  "skin:paper": {
+    "src": "skin/skin-paper.webp"
+  },
   "skin:plate": {
     "src": "skin/skin-plate.webp",
     "slice": [36, 42, 36, 42],
@@ -1519,6 +1530,15 @@
     "width": [14, 14, 14, 14],
     "outset": 0,
     "repeat": "round"
+  },
+  "skin:stroke": {
+    "src": "skin/skin-stroke.webp"
+  },
+  "skin:stroke-gold": {
+    "src": "skin/skin-stroke-gold.webp"
+  },
+  "skin:stroke-red": {
+    "src": "skin/skin-stroke-red.webp"
   },
   "skin:switch": {
     "src": "skin/skin-switch.webp"

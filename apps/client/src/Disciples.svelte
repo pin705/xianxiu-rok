@@ -33,6 +33,7 @@
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Page, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num, type PanelTab } from './lib'
+  import Help from './Help.svelte'
   import { useGame } from './game'
 
   let {
@@ -68,6 +69,7 @@
     </Section>
   {/if}
   <Section title={L.monHa.elders}>
+    {#snippet aside()}<Help k={2} />{/snippet}
     <ul class="grid">
       {#each ELDER_IDS as e (e)}
         {@const has = game.elders[e] !== undefined}
@@ -137,6 +139,7 @@
   </Section>
 
   <Section title="{L.monHa.wounded} · {num(hurt)}/{num(hospital(game))}">
+    {#snippet aside()}<Help k={3} />{/snippet}
     <Card>
       <div class="row between">
         {#if game.heal}

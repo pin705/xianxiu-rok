@@ -76,6 +76,7 @@ async function load(lang: 'vi' | 'en') {
     'Unlocks',
     'GiftStrip',
     'PowerSheet',
+    'Help',
     'Advisor',
     'Chat',
     'world/WorldView',
@@ -849,6 +850,9 @@ test('tiên minh, chat', async () => {
       social.gift = { thoiQuang60: 2, kinhThu500: 1 }
       assert.ok(paint('GiftStrip', {}, `${label}, Tạ lễ`).includes(L.gift.title), 'dải vật phẩm vừa nhận')
       social.gift = null
+      // nút "?" theo ngữ cảnh: đúng mục Cẩm nang (chỉ số dùng ở Army 1, Disciples 2/3, Panel 4, Daily 9, Rivals 10)
+      for (const k of [1, 2, 3, 4, 9, 10])
+        assert.ok(paint('Help', { k }, `${label}, ?`).includes(L.guide.items[k][0]), `mục Cẩm nang ${k}`)
       const pw = paint(
         'PowerSheet',
         { open: true, game: s, onclose: noop, onfocus: noop, ontab: noop },

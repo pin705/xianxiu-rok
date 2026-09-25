@@ -63,6 +63,7 @@
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
+  let picking = $state(false) // đang chọn chỉ lệnh Thiên Thời
   const fxText = (fx: Partial<Record<Bonus, number>>) =>
     Object.entries(fx)
       .map(([k, v]) => L.bonus(k as Bonus, v ?? 0))
@@ -70,8 +71,18 @@
   const now = $derived(g.now)
 
   const T = WORLD_DU / MAP_W
-  const home = () => ({ x: ((game.seat?.x ?? MAP_W / 2) + 0.5) * T, y: ((game.seat?.y ?? MAP_W / 2) + 0.5) * T })
-  let cam = $state<Cam>({ ...home(), z: 0.55 })
+  // giữ khung nhìn trong giới: phóng to thì mép màn không vượt mép giới (thu nhỏ hết thì giới nằm giữa)
+  // Kéo quá mép bằng chiều cao lớp phủ (px CSS): trên — HUD + thẻ mùa (đo thật: thẻ cao lên khi mở biên niên, tìm…),
+  // dưới — tab + dải chat. Tông môn / điểm sát mép giới vẫn kéo ra được chỗ trống giữa màn, không nằm kẹt dưới thẻ
+  let topCard = $state<HTMLDivElement>()
+  const PAD = { top: 260, bottom: 160, side: 48 }
+  const padTop = () => Math.max(PAD.top, (topCard?.getBoundingClientRect().bottom ?? 0) + 40)
+  // tông môn mình: giữa khoảng trống dưới thẻ mùa và trên tab + dải chat (thẻ cao quá giữa màn thì không nằm dưới thẻ)
+  const home = (z: number): Cam => {
+    const dy = typeof innerHeight === 'undefined' ? 0 : (padTop() - PAD.bottom) / 2
+    return { x: ((game.seat?.x ?? MAP_W / 2) + 0.5) * T, y: ((game.seat?.y ?? MAP_W / 2) + 0.5) * T - dy / z, z }
+  }
+  let cam = $state<Cam>(home(0.55))
   onMount(() => void (cam = clamp(cam)))
   let scene = $state.raw<WorldScene>()
   let layer = $state<HTMLDivElement>()
@@ -100,16 +111,10 @@
   const phase = $derived(phaseOf(day))
   const zMin = () => Math.min(innerWidth - railPx(), innerHeight) / WORLD_DU
   const center = () => ({ x: railPx() + (innerWidth - railPx()) / 2, y: innerHeight / 2 })
-  // giữ khung nhìn trong giới: phóng to thì mép màn không vượt mép giới (thu nhỏ hết thì giới nằm giữa)
-  // Kéo quá mép bằng chiều cao lớp phủ (px CSS): trên — HUD + thẻ mùa (đo thật: thẻ cao lên khi mở biên niên, tìm…),
-  // dưới — tab + dải chat. Tông môn / điểm sát mép giới vẫn kéo ra được chỗ trống giữa màn, không nằm kẹt dưới thẻ
-  let topCard = $state<HTMLDivElement>()
-  const PAD = { top: 260, bottom: 160, side: 48 }
-  const padTop = () => Math.max(PAD.top, (topCard?.getBoundingClientRect().bottom ?? 0) + 40)
   // thẻ đổi cỡ (dữ liệu bản đồ tới sau): chưa ai kéo / nhảy khung nhìn thì đưa lại về tông môn, khỏi nằm dưới thẻ
   let steered = false
   onMount(() => {
-    const ro = new ResizeObserver(() => void (steered || (cam = clamp({ ...home(), z: cam.z }))))
+    const ro = new ResizeObserver(() => void (steered || (cam = clamp(home(cam.z)))))
     if (topCard) ro.observe(topCard)
     return () => ro.disconnect()
   })
@@ -385,37 +390,6 @@
           </span>
         {/if}
         {#if !slim}<small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>{/if}
-        {#if !slim}
-          <!-- Thiên Thời: thời ngũ hành đang chạy (tăng ích cả giới) và chỉ lệnh riêng của mình cho thời này -->
-          {@const t = thoiAt(day)}
-          <small class="t-tiny" title={L.thoi.hint}
-            ><b>{L.thoi.names[t.el]}</b> · {fxText(t.fx)} · {L.thoi.left(t.end - day)}</small
-          >
-          {#if game.thoi?.n === t.n}<small class="t-tiny t-gold"
-              >{L.thoi.picked}: {fxText(t.picks[game.thoi?.pick ?? 0] ?? {})}</small
-            >{:else if send}
-            <span class="row wrap" style:--gap="4px">
-              <small class="t-tiny">{L.thoi.pick}:</small>
-              {#each t.picks as p, k (k)}
-                <Button size="sm" variant="ghost" onclick={() => send({ type: 'thoi', pick: k })}>{fxText(p)}</Button>
-              {/each}
-            </span>
-          {/if}
-        {/if}
-        {#if !slim && phase === 0}
-          <!-- Khai Giới Trảm Tà: yêu thú giới rơi tàn quyển (đủ thì đổi rương), giới vận của các minh đầu -->
-          <span class="row wrap" style:--gap="6px">
-            <small class="t-tiny" title={L.eve.hint}><b>{L.eve.title}</b> · {L.eve.frags(game.frag ?? 0)}</small>
-            {#if (game.frag ?? 0) >= EVE_CHEST_N}<Button
-                size="sm"
-                variant="gold"
-                onclick={() => g.act({ type: 'eveChest' }, 'reward')}>{L.eve.open}</Button
-              >{/if}
-          </span>
-          {#if snap?.eve}<small class="t-tiny t-soft"
-              >{L.eve.top(snap.eve.map(x => `[${x.tag}] ${num(x.pts)}`).join(' · '))}</small
-            >{/if}
-        {/if}
         {#if !slim && snap?.eveWin && snap.eveWin.until > now && snap.eveWin.tags.length}<small class="t-tiny t-gold"
             >{L.eve.won(snap.eveWin.tags.join(', '), clock(snap.eveWin.until - now))}</small
           >{/if}
@@ -423,11 +397,7 @@
       <Button size="sm" variant="ghost" onclick={() => (finding = !finding)}
         ><Icon name="globe" size={14} />{L.world.find}</Button
       >
-      <Button
-        size="sm"
-        variant="ghost"
-        label={L.world.you}
-        onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}
+      <Button size="sm" variant="ghost" label={L.world.you} onclick={() => (cam = clamp(home(Math.max(cam.z, 0.7))))}
         ><Icon name="flag" size={14} /><span class="lbl">{L.world.you}</span></Button
       >
       <button
@@ -438,6 +408,47 @@
         onclick={fold}><Icon name="arrow" size={14} /></button
       >
     </div>
+    {#if !slim}
+      <!-- Thiên Thời: thời ngũ hành đang chạy (tăng ích cả giới); chỉ lệnh riêng cho thời này ẩn sau một nút cho thẻ gọn -->
+      {@const t = thoiAt(day)}
+      <div class="row wrap" style:--gap="6px">
+        <small class="t-tiny grow" title={L.thoi.hint}
+          ><b>{L.thoi.names[t.el]}</b> · {fxText(t.fx)} · {L.thoi.left(t.end - day)}{#if game.thoi?.n === t.n}
+            · <span class="t-gold">{L.thoi.picked}: {fxText(t.picks[game.thoi?.pick ?? 0] ?? {})}</span>{/if}</small
+        >
+        {#if send && game.thoi?.n !== t.n}<Button size="sm" variant="gold" onclick={() => (picking = !picking)}
+            >{L.thoi.pick}</Button
+          >{/if}
+      </div>
+      {#if picking && send && game.thoi?.n !== t.n}
+        <div class="row wrap" style:--gap="4px">
+          {#each t.picks as p, k (k)}
+            <Button
+              size="sm"
+              variant="ghost"
+              onclick={() => {
+                picking = false
+                void send({ type: 'thoi', pick: k })
+              }}>{fxText(p)}</Button
+            >
+          {/each}
+        </div>
+      {/if}
+    {/if}
+    {#if !slim && phase === 0}
+      <!-- Khai Giới Trảm Tà: yêu thú giới rơi tàn quyển (đủ thì đổi rương), giới vận của các minh đầu -->
+      <span class="row wrap" style:--gap="6px">
+        <small class="t-tiny" title={L.eve.hint}><b>{L.eve.title}</b> · {L.eve.frags(game.frag ?? 0)}</small>
+        {#if (game.frag ?? 0) >= EVE_CHEST_N}<Button
+            size="sm"
+            variant="gold"
+            onclick={() => g.act({ type: 'eveChest' }, 'reward')}>{L.eve.open}</Button
+          >{/if}
+      </span>
+      {#if snap?.eve}<small class="t-tiny t-soft"
+          >{L.eve.top(snap.eve.map(x => `[${x.tag}] ${num(x.pts)}`).join(' · '))}</small
+        >{/if}
+    {/if}
     {#if finding}
       <div class="stack find" style:--gap="6px">
         <div class="row wrap" style:--gap="4px">

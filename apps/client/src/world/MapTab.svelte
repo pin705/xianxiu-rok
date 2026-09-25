@@ -81,7 +81,18 @@
 {/snippet}
 
 {#if mode === 'world' && info && world}
-  <WorldView {info} {me} {snap} {allies} marks={ally?.marks ?? []} {goto} {ongone} onpick={p => (pick = p)} {toggle} />
+  <WorldView
+    {info}
+    {me}
+    {snap}
+    {allies}
+    marks={ally?.marks ?? []}
+    {goto}
+    {ongone}
+    onpick={p => (pick = p)}
+    {toggle}
+    {send}
+  />
   <TileSheet
     {info}
     atlas={world}

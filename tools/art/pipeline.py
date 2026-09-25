@@ -43,15 +43,27 @@ def feather(im, frac=0.04):
   a[..., 3] *= np.minimum.outer(fy, fx)
   return Image.fromarray(a.astype(np.uint8), 'RGBA')
 
-def main_blob(im):
-  """chỉ giữ khối liền lớn nhất trong ô (bỏ vệt lẫn và phần ô bên cạnh lấn sang)"""
+def main_blob(im, keep_ratio=0.04):
+  """giữ hình trong ô: khối lớn nhất + mọi mảnh không chạm mép ô và đủ lớn (sóng loa, gạch chéo, giọt nước tách rời);
+  bỏ mảnh chạm mép (phần ô bên cạnh lấn sang) và vụn nhỏ"""
   a = ndimage.binary_closing(np.asarray(im.getchannel('A')) > 90, iterations=3)
   lab, n = ndimage.label(a)
   if n == 0: return im
-  keep = ndimage.binary_dilation(lab == 1 + int(np.argmax(ndimage.sum(a, lab, range(1, n + 1)))), iterations=4)
+  sizes = ndimage.sum(a, lab, range(1, n + 1))
+  big = 1 + int(np.argmax(sizes))
+  edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+  ids = [big] + [i + 1 for i, sz in enumerate(sizes) if i + 1 != big and i + 1 not in edge and sz >= keep_ratio * sizes[big - 1]]
+  keep = ndimage.binary_dilation(np.isin(lab, ids), iterations=4)
   arr = np.asarray(im).copy()
   arr[..., 3] = (arr[..., 3] * keep).astype(np.uint8)
   return Image.fromarray(arr, 'RGBA')
+
+def depink(im):
+  """vệt hồng mờ còn sót (quầng sáng model vẽ bằng màu hồng của nền): điểm nửa trong suốt ngả hồng tím → bỏ"""
+  a = np.asarray(im).astype(np.int16)
+  pink = (a[..., 0] - a[..., 1] > 50) & (a[..., 2] - a[..., 1] > 30) & (a[..., 3] < 242)
+  a[pink, 3] = 0
+  return Image.fromarray(a.astype(np.uint8), 'RGBA')
 
 def cut_sheet(path, items):
   """bảng 3×3 đã tách nền → {tên ô: ảnh}; ô tên '_…' là ô đệm, bỏ"""
@@ -61,7 +73,7 @@ def cut_sheet(path, items):
   for i, (name, _) in enumerate(items):
     if name.startswith('_'): continue
     c = im.crop((round((i % 3) * cw), round((i // 3) * ch), round((i % 3 + 1) * cw), round((i // 3 + 1) * ch)))
-    out[name] = trim(main_blob(c))
+    out[name] = trim(main_blob(depink(c)))
   return out
 
 def calm(im, ins, k=0.35):

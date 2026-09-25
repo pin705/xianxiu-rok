@@ -215,7 +215,8 @@ def strokes():
   k = X.raw('sheet-strokes') + '.png'
   X.key_magenta(X.raw('sheet-strokes'), k)
   for name, im in X.cut_sheet(k, P.STROKES).items():
-    X.save(f'skin:{name}', X.fit_square(im, 384, 0.01, 1 if name == 'blot' else 320 / 28), 'skin')
+    # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 480×42 (bản code 320×28 ở 2x); vết mực: vuông
+    X.save(f'skin:{name}', X.fit_square(im, 384, 0.01) if name == 'blot' else im.resize((480, 42), X.Image.LANCZOS), 'skin')
 
 GROUPS = {'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}

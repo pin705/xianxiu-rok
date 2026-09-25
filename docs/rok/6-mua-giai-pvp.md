@@ -437,7 +437,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **Hấp dẫn:** mùa dài được băm thành nhịp 4 ngày, mỗi nhịp một "thời tiết chiến tranh".
 - **Tu tiên hoá:** **Linh Triều Mùa** — 49 ngày ≈ 12 "triều" × 4 ngày; mỗi triều một luật (ví dụ "Kim triều" +20% công hệ Kiếm, "Thủy triều" khai mỏ ×2,
   "Mộc triều" chữa rẻ); mỗi tông môn chọn 1/4 chỉ lệnh; minh chủ chọn 2 minh lệnh.
-- **Game mình:** ❌, nhưng có nền: linh triều 8 giờ/lần (`tide()`), khung `cycle` của sự kiện · **Ưu tiên:** **P1** (luật mùa rẻ nhất, hợp tên game) ·
+- **Game mình:** ✅ **Thiên Thời** (`world/thoi.ts`): 4 ngày một thời ngũ hành, tăng ích chung + mỗi tông môn chọn 1/3 chỉ lệnh. Chưa có minh lệnh / Merit Shop · **Ưu tiên:** **P1** (luật mùa rẻ nhất, hợp tên game) ·
   **Công sức:** M.
 
 #### B13. Alliance Invictus — "Vạn Minh Bất Bại"
@@ -816,7 +816,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | B9 | Warriors Unbound (Artifact) | Thần Binh mùa | ❌ | P2 | S–M |
 | B10 | Siege of Orléans (auxiliary skills) | Mượn Pháp | ❌ | P2 | M |
 | B11 | Storm of Stratagems | Binh Thư Phong Vân | ❌ | P2 | M |
-| B12 | Tides of War | Linh Triều Mùa | ❌ (có `tide()`) | P1 | M |
+| B12 | Tides of War | Thiên Thời | ✅ 5 thời ngũ hành × 4 ngày + chỉ lệnh (`world/thoi.ts`) | P1 | M |
 | B13 | Alliance Invictus | — | ❌ | P2 | — |
 | B14 | Shifting Gears | Cơ Quan Khôi Lỗi | ❌ | P2 | L |
 | B15 | Keener Blades | Tinh Binh Luận Kiếm | ❌ | P2 | L |

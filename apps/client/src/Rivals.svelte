@@ -9,6 +9,7 @@
   import ArmyPick from './Army.svelte'
   import { Button, Card, Medal, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num } from './lib'
+  import Help from './Help.svelte'
   import { useGame } from './game'
 
   let {
@@ -84,6 +85,7 @@
   {:else if pick}
     {@const r = pick}
     <Section title={L.pvp.defense}>
+      {#snippet aside()}<Help k={10} />{/snippet}
       <ul class="row wrap">
         {#each r.scout.side.troops as t (`${t.type}${t.tier}`)}
           <li class="row" style:--gap="5px">

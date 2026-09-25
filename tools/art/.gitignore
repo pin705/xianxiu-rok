@@ -1,3 +1,4 @@
 # ảnh thô, ảnh mẫu gửi lên, bản vẽ code xuất ra, nhật ký gọi API — sinh lại được
 .work/
 .venv/
+__pycache__/
