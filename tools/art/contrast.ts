@@ -10,11 +10,18 @@ import { join } from 'node:path'
 const HERE = import.meta.dirname
 const arg = (k: string) => process.argv[process.argv.indexOf(k) + 1]
 const player = process.argv.includes('--player') ? arg('--player') : undefined
-const label = process.argv.slice(2).filter(a => !a.startsWith('--') && a !== player && a !== arg('--port')).pop() ?? 'screen'
+const label =
+  process.argv
+    .slice(2)
+    .filter(a => !a.startsWith('--') && a !== player && a !== arg('--port'))
+    .pop() ?? 'screen'
 const port = player
-  ? JSON.parse(readFileSync(join(process.env.PLAY_DIR ?? join(tmpdir(), 'rok-play'), `player.${player}.json`), 'utf8')).debug
+  ? JSON.parse(readFileSync(join(process.env.PLAY_DIR ?? join(tmpdir(), 'rok-play'), `player.${player}.json`), 'utf8'))
+      .debug
   : Number(arg('--port') ?? 9222)
-const tabs: { type: string; webSocketDebuggerUrl: string }[] = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
+const tabs: { type: string; webSocketDebuggerUrl: string }[] = await (
+  await fetch(`http://127.0.0.1:${port}/json/list`)
+).json()
 const ws = new WebSocket(tabs.find(t => t.type === 'page')!.webSocketDebuggerUrl)
 await new Promise(r => ws.addEventListener('open', r))
 let id = 0

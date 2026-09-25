@@ -37,10 +37,37 @@ function reborn(s: State, t: number, n: number): State {
     tower: s.tower, // kỷ lục tháp giữ qua luân hồi (thưởng chỉ lần đầu nên không cày lại được)
     // Phi Thăng Tệ mang sang mùa sau; Tông vụ giữ tiến độ (không nhận lại quà các tầng đã qua); tàn quyển, yêu cốt là vật liệu
     ...(s.honorAll !== undefined && { honorAll: s.honorAll }),
+    ...(s.crowns && { crowns: s.crowns }),
     ...(s.coinSpent !== undefined && { coinSpent: s.coinSpent }),
     ...(s.side && { side: s.side }),
     ...(s.frag !== undefined && { frag: s.frag }),
     ...(s.bones !== undefined && { bones: s.bones }),
+    // không mang tính mùa (xoá là nhận lại được quà, hay mất thứ đã bỏ công / tiền mua): thành tựu, sự kiện (cả tân thủ — theo `born`),
+    // Hương Hỏa, Chiêu Hiền Đài, sao / tín vật trưởng lão, bạn bè, cống hiến, Minh vụ, Luận Kiếm Đài, thương nhân, đội hình lưu, cặp phó,
+    // tạp dịch thuê, lễ nhập minh, đạo thống, việc trong ngày (Vấn Đạo, Luận Võ, tháp), Vân Du Khách, phù tăng ích đã dùng
+    ...(s.ach && { ach: s.ach }),
+    fest: s.fest,
+    vip: s.vip,
+    tavern: s.tavern,
+    tokens: s.tokens,
+    ...(s.stars && { stars: s.stars }),
+    ...(s.friends && { friends: s.friends }),
+    ...(s.contrib && { contrib: s.contrib }),
+    ...(s.mob && { mob: s.mob }),
+    ...(s.arena && { arena: s.arena }),
+    ...(s.merchant && { merchant: s.merchant }),
+    ...(s.presets && { presets: s.presets }),
+    ...(s.pairs && { pairs: s.pairs }),
+    ...(s.builder2 !== undefined && { builder2: s.builder2 }),
+    ...(s.joined !== undefined && { joined: s.joined }),
+    ...(s.dao && { dao: s.dao }),
+    ...(s.quiz && { quiz: s.quiz }),
+    ...(s.drill && { drill: s.drill }),
+    ...(s.towerDay !== undefined && { towerDay: s.towerDay }),
+    ...(s.guestAt !== undefined && { guestAt: s.guestAt }),
+    ...(s.guests !== undefined && { guests: s.guests }),
+    ...(s.born !== undefined && { born: s.born }),
+    buffs: s.buffs.filter(b => b.src.startsWith('phu.')),
   }
 }
 

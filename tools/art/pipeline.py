@@ -219,11 +219,24 @@ def building_dims(bid, tier):
     'khoangMach': (120, 72), 'linhDien': (128, 46), 'luyenKhiPhong': (116, 54), 'hoSonDaiTran': (124, 66),
   }[bid]
 
+def cloud_bank(im):
+  """bậc 5: mây đỡ model hay vẽ thành khối kín ngang ảnh → bo hai bên phần dưới thành hình bầu, tan dần (không thành hộp)"""
+  a = np.asarray(im).astype(np.float32)
+  h, w = a.shape[:2]
+  y = np.linspace(0, 1, h)[:, None]
+  x = np.abs(np.linspace(-1, 1, w))[None, :]
+  low = np.clip((y - 0.45) / 0.55, 0, 1)             # 0 ở nửa trên (công trình), 1 ở đáy
+  edge = 1 - 0.55 * low                               # đáy càng hẹp: mây tụ giữa
+  keep = np.clip((edge - x) / 0.22, 0, 1)            # mờ dần 22% bề ngang
+  a[..., 3] *= 1 - low * (1 - keep)
+  return Image.fromarray(a.astype(np.uint8), 'RGBA')
+
 def fit_building(bid, tier, src, lift=4, S=S):
   """tranh rộng bằng công trình, chân ở y=+lift (gốc hộp là giữa chân nền)"""
   w, top = building_dims(bid, tier)
   W, H = w + 16, top + 26 + (12 if tier == 5 else 0)
-  im = trim(feather(Image.open(src).convert('RGBA')))
+  im = feather(Image.open(src).convert('RGBA'))
+  im = trim(cloud_bank(trim(im)) if tier == 5 else im)
   s = min(w / im.width, (top + 16 + lift) / im.height)
   cw, ch = round(im.width * s * S), round(im.height * s * S)
   out = Image.new('RGBA', (round(W * S), round(H * S)), (0, 0, 0, 0))

@@ -406,6 +406,7 @@ export const vi = {
       'hp.the': `Máu ${units.the}`,
       skill: 'Sức công pháp',
       forge: 'Thời gian luyện khí',
+      cap: 'Trận dung',
     }
     const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
@@ -1119,6 +1120,7 @@ export const vi = {
     mine: 'Hồ sơ chưởng môn',
     noAlly: 'Chưa vào tiên minh',
     offline: 'Đang bế quan',
+    crown: (n: number) => `Đệ nhất Công Huân · mùa ${n}`,
     ascended: (n: number) => `Phi thăng ${n} mùa`,
     pvp: 'Tranh đoạt thắng / thua',
     wl: (w: number, l: number) => `${w} / ${l}`,
@@ -1334,6 +1336,7 @@ export const vi = {
   },
   // Luận Kiếm Đài (Sunset Canyon bất đồng bộ)
   arena: {
+    ticket: (n: number) => `Dùng Luận Kiếm Lệnh (+1 lượt) · còn ${n}`,
     title: 'Luận Kiếm Đài',
     lore: 'Đấu đội hình trưởng lão với các tông môn khác: đệ tử ảo, không mất quân, không mất tài nguyên. Trận xa luân — đội thắng đánh tiếp với quân còn lại.',
     pts: 'Điểm đài',
@@ -2414,6 +2417,18 @@ export const vi = {
       huongHoa: {
         name: 'Hương Hỏa Lệnh',
         desc: 'Dâng lên tổ sư: cộng điểm Hương Hỏa ngay (lên cấp Hương Hỏa, mở thêm tăng ích và rương ngày).',
+      },
+      hanhLuc: {
+        name: 'Hành Lực Đan',
+        desc: 'Hồi hành lực ngay để săn thêm yêu thú giới — được vượt mức tối đa (khi đó hành lực không tự hồi thêm tới khi tiêu xuống).',
+      },
+      luanKiem: {
+        name: 'Luận Kiếm Lệnh',
+        desc: 'Thêm một lượt Luận Kiếm Đài hôm nay — dùng ở Luận Kiếm Đài khi đã hết lượt. Có trong rương Nhật Khóa.',
+      },
+      khuechTran: {
+        name: 'Khuếch Trận Kỳ',
+        desc: 'Mở rộng trận dung: mỗi trưởng lão dẫn thêm 10 % đệ tử trong 8 giờ (dùng thêm thì kéo dài).',
       },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },

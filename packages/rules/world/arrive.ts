@@ -167,7 +167,7 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
     changed.set(p2, addHonor(x, mine2 / HONOR_BOSS))
   })
   const hp = (sp.hp ?? boss.str) - dmg
-  if (hp > 0) return { changed, world: setSpot(w, i, { hp, dmg: dmgs }) }
+  if (hp > 0) return { changed, world: setSpot(w, i, { ...sp, hp, dmg: dmgs }) } // giữ dấu Tuần Sơn (lohar)
   // hạ yêu vương: thưởng chia theo sát thương (qua thư); người đánh nhiều nhất nhận trưởng lão (nếu có)
   const sum = Object.values(dmgs).reduce((a, b) => a + b, 0) || 1
   Object.entries(dmgs)

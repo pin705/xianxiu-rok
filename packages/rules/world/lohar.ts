@@ -18,9 +18,11 @@ export const loharActions: WorldActions<LoharAction> = {
       if ((sp.until ?? 0) > s.time || (sp.lohar && sp.lohar.until > s.time)) return no('busy') // đang hồi / đã có Tuần Sơn
       if ((s.bones ?? 0) < LOHAR_BONES) return no('not_enough')
       const lohar = { by: pid, until: s.time + LOHAR_TIME }
+      // thêm máu cho bản Tuần Sơn, giữ phần sát thương đã đánh (và công của từng người) — không phá tiến độ người khác
+      const hp = (sp.hp ?? boss.str) + boss.str * (LOHAR_HP - 1)
       return {
         ok: true,
-        world: setSpot(w, a.i, { ...sp, hp: boss.str * LOHAR_HP, dmg: {}, lohar }),
+        world: setSpot(w, a.i, { ...sp, hp, dmg: sp.dmg ?? {}, lohar }),
         changed: new Map([[pid, { ...s, bones: (s.bones ?? 0) - LOHAR_BONES }]]),
       }
     },

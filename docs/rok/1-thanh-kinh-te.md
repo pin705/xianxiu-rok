@@ -990,7 +990,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H15 | Nguyên liệu, bản vẽ | ❌ chủ đích (file 2) | P2 | L |
 | H16 | Vật phẩm nâng nhà đặc biệt (sách, tên, Blueprint) | ❌ | P2 | S |
 | H17 | Vật phẩm điểm VIP | ✅ Hương Hỏa Lệnh | P1 | S |
-| H18 | Hồi AP | ❌ (không có AP) | — | — |
+| H18 | Hồi AP | ✅ Hành Lực Đan (hành lực săn yêu thú giới) | — | — |
 | H19 | Thuê thợ 2 ngày | ✅ Tạp Dịch Lệnh 48 giờ | P1 | S |
 | H20 | Bản đồ xoá sương | ❌ (file 3) | P2 | — |
 | H21 | Hộ chiếu di cư | ⛔ | — | — |

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { COIN_PER, COIN_SHOP, HONOR_KP, HONOR_TIERS, apply, coins, newGame, type State } from './index.ts'
+import { COIN_PER, COIN_SHOP, HONOR_KP, HONOR_TIERS, apply, coins, newGame, seasonEnd, type State } from './index.ts'
 import { addHonor, addKp, atlas, campOf, campPts, endSeason, freshWorld, type Players } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -37,6 +37,7 @@ test('Công Huân: chiến công cộng Công Huân; mốc nhận lần lượt;
   ])
   const end = endSeason(ps, freshWorld(), { atlas: atlas(7), phase: 3 }, T0 + 3_600_000, 1, new Set([4]))
   const [a, b, c] = [1, 2, 3].map(p => end.changed.get(p)!)
+  assert.deepEqual([a.crowns, b.crowns], [[1], undefined], 'danh hiệu mùa: đệ nhất Công Huân')
   // thứ tự thư: hạng Công Huân (nếu có) → kết mùa → tổng kết mùa
   assert.deepEqual(a.mail.at(-3)!.a, [1, 900])
   assert.equal(a.mail.at(-3)!.k, 'honorTop')
@@ -102,4 +103,25 @@ test('Chính Tà Phân Tranh: phái theo chẵn lẻ mã phe, điểm mùa cộn
   const kinds = (p: number) => end.changed.get(p)!.mail.map(m => m.k)
   assert.ok(kinds(2).includes('camp'), 'phái thắng có thư quà')
   assert.ok(!kinds(3).includes('camp'))
+})
+
+test('hết mùa (luân hồi): giữ thành tựu đã nhận, sự kiện, Hương Hỏa, sao / tín vật, bạn bè — không nhận lại quà, không mất thứ đã bỏ công', () => {
+  const s0 = sect('Giữ')
+  const s: State = {
+    ...s0,
+    ach: { build: 3 } as State['ach'],
+    vip: { ...s0.vip, pts: 5000 },
+    stars: { thanhPhong: 3 },
+    tokens: { thanhPhong: 7 },
+    friends: [9],
+    builder2: T0 + 86_400_000,
+    joined: T0 - 1000,
+  }
+  const x = seasonEnd(s, T0, 1)
+  assert.deepEqual(x.ach, s.ach)
+  assert.equal(x.vip.pts, 5000)
+  assert.deepEqual([x.stars, x.tokens, x.friends], [s.stars, s.tokens, s.friends])
+  assert.deepEqual([x.builder2, x.joined, x.born], [s.builder2, s.joined, s.born])
+  assert.deepEqual(x.fest, s.fest, 'sự kiện tân thủ không mở lại')
+  assert.equal(x.rebirths, s.rebirths + 1)
 })

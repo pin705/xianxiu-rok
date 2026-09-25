@@ -6,14 +6,14 @@ import { advance, jobOf, shorten } from '../core/time.ts'
 import { type Buff, type Err, type JobKind, type State } from '../core/types.ts'
 import { BAG_IDS, HOUR } from '../core/util.ts'
 import { ELDER_MAX, BAG_USE_MAX, BAG, type ElderId, type BagId } from '../data.ts'
-import { elderLevel } from '../core/stats.ts'
+import { elderLevel, spendAp } from '../core/stats.ts'
 
 export type BagAction = { type: 'use'; item: BagId; n: number; job?: JobKind; elder?: ElderId }
 
 // Vì sao không dùng được (null: dùng được). Client dùng để tắt nút và nói lý do.
 export function useError(s: State, a: BagAction): Err | null {
   const d = BAG[a.item]
-  if (d.use === 'key') return 'bad' // thiếp Chiêu Hiền Đài mở ở Chiêu Hiền Đài
+  if (d.use === 'key' || d.use === 'ticket') return 'bad' // thiếp mở ở Chiêu Hiền Đài, Luận Kiếm Lệnh dùng ở Luận Kiếm Đài
   if (a.n > (s.items[a.item] ?? 0)) return 'no_item'
   if (d.use === 'speed') {
     // luyện đan không rút ngắn được (có giảm thời gian là thành vòng lặp đẻ đan); phù riêng chỉ cho đúng việc
@@ -59,6 +59,7 @@ export const bagActions: Actions<BagAction> = {
       if (d.use === 'shield') return ok({ ...st, shield: Math.max(st.shield, s.time) + d.hours * HOUR * a.n })
       if (d.use === 'builder') return ok({ ...st, builder2: Math.max(st.builder2 ?? 0, s.time) + d.hours * HOUR * a.n })
       if (d.use === 'vip') return ok({ ...st, vip: { ...st.vip, pts: st.vip.pts + d.n * a.n } })
+      if (d.use === 'ap') return ok(spendAp(st, s.time, -d.n * a.n)) // tiêu âm = cộng (giữ mốc hồi)
       return d.use === 'exp' ? ok(giveExp(st, a.elder!, d.n * a.n)) : no('bad')
     },
   },

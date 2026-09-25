@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  ARENA_TRIES,
   DAY,
   DRILL_EVERY,
   DRILL_GIFTS,
@@ -212,4 +213,15 @@ test('Bế Quan Lệnh: không ai cướp được, tông môn chỉ nhận thư
   assert.deepEqual(run(out.state, { type: 'seclude', days: 3 }), { ok: false, error: 'cooldown' })
   assert.ok(apply(out.state, { type: 'seclude', days: 7 }, t + SECLUDE_COOL + 1).ok, 'hết hồi thì bế quan lại được')
   assert.ok(!secluded({ ...s, time: t + 3 * DAY + 1 }), 'hết hạn thì tự xuất quan')
+})
+
+test('Luận Kiếm Lệnh: hết lượt Luận Kiếm Đài thì dùng lệnh thêm một lượt; không dùng thẳng từ túi', () => {
+  const s0 = { ...sect(), items: { ...sect().items, luanKiem: 2 } }
+  assert.deepEqual(run(s0, { type: 'use', item: 'luanKiem', n: 1 }), { ok: false, error: 'bad' }, 'không dùng từ túi')
+  const r = run(s0, { type: 'arenaTicket' })
+  assert.ok(r.ok)
+  assert.equal(r.state.arena!.left, ARENA_TRIES + 1)
+  assert.equal(r.state.items.luanKiem, 1)
+  const none = run({ ...s0, items: {} }, { type: 'arenaTicket' })
+  assert.deepEqual(none, { ok: false, error: 'no_item' })
 })

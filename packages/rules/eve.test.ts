@@ -185,6 +185,22 @@ test('Yêu Vương Tuần Sơn: yêu thú giới cấp cao rơi yêu cốt; đ�
   assert.deepEqual(summon(), { ok: false, error: 'busy' }, 'một lần một Tuần Sơn')
   assert.equal(mapOf(ps, T0, new Set(), [], w).spots.find(x => x.i === boss.i)?.lohar, 'Triệu Yêu')
 
+  // đánh một đòn chưa hạ: vẫn là Tuần Sơn, máu trừ đúng phần đánh
+  const poke = worldAct(
+    ps,
+    1,
+    { type: 'go', i: boss.i, task: 'hit', elder: 'thanhPhong', army: { kiem3: 10 } },
+    T0,
+    1,
+    map,
+    w,
+  )
+  assert.ok(poke.ok)
+  const q = new Map(ps)
+  for (const [k, v] of poke.changed) q.set(k, v)
+  const hit1 = advanceAll(q, poke.world, q.get(1)!.marches[0].arriveAt, map)
+  assert.ok(hit1.world.spots[boss.i].lohar, 'một đòn chưa hạ: vẫn giữ dấu Tuần Sơn')
+  assert.ok((hit1.world.spots[boss.i].hp ?? 0) < BOSSES[boss.lv]!.str * LOHAR_HP)
   // hạ khi còn chút máu: quà thường + quà Tuần Sơn, người triệu hồi thêm phần
   w = { ...w, spots: { ...w.spots, [boss.i]: { ...w.spots[boss.i], hp: 1 } } }
   const go = worldAct(

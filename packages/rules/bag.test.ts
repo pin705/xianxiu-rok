@@ -1,6 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { BAG_IDS, BAG, HOUR, addItems, advance, apply, newGame, rate, useError, vipLevel, type State } from './index.ts'
+import {
+  BAG_IDS,
+  BAG,
+  HOUR,
+  addItems,
+  advance,
+  apOf,
+  apply,
+  capOf,
+  newGame,
+  rate,
+  useError,
+  vipLevel,
+  type State,
+} from './index.ts'
 
 const T0 = Date.UTC(2026, 0, 5, 3) // thứ Hai
 const run = (s: State, a: object, t = s.time) => {
@@ -88,4 +102,27 @@ test('Hương Hỏa Lệnh: dùng thì cộng điểm Hương Hỏa ngay (có th
   assert.equal(r.state.vip.pts, s.vip.pts + 400)
   assert.ok(vipLevel(r.state) >= vipLevel(s))
   assert.equal(r.state.items.huongHoa200 ?? 0, 0)
+})
+
+test('Hành Lực Đan: cộng hành lực, được vượt tối đa (khi đó không tự hồi thêm tới khi tiêu xuống)', () => {
+  const t = Date.UTC(2026, 8, 25, 3)
+  const s0 = newGame(t)
+  const s = { ...s0, items: { ...s0.items, hanhLuc50: 2 }, ap: { n: 30, at: t } }
+  const r = apply(s, { type: 'use', item: 'hanhLuc50', n: 1 }, t)
+  assert.ok(r.ok)
+  assert.equal(apOf(r.state, t), 80)
+  const over = apply(r.state, { type: 'use', item: 'hanhLuc50', n: 1 }, t)
+  assert.ok(over.ok)
+  assert.equal(apOf(over.state, t), 130, 'vượt AP_MAX')
+  assert.equal(apOf(over.state, t + 3_600_000), 130, 'quá tối đa: không hồi thêm')
+})
+
+test('Khuếch Trận Kỳ: trận dung +10 % trong 8 giờ', () => {
+  const t = Date.UTC(2026, 8, 25, 3)
+  const s0 = newGame(t)
+  const s = { ...s0, items: { ...s0.items, khuechTran8: 1 } }
+  const before = capOf(s, 'thanhPhong')
+  const r = apply(s, { type: 'use', item: 'khuechTran8', n: 1 }, t)
+  assert.ok(r.ok)
+  assert.equal(capOf(r.state, 'thanhPhong'), Math.floor(before * 1.1))
 })

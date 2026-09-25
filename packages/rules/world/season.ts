@@ -2,6 +2,7 @@
 // Điều phối nhiều tính năng (như act.ts, advance.ts) nên được import các file tính năng khác trong world/.
 import { ASCEND, ASCEND_HALL, CAMP_WIN, EVENT_PRIZES, EVENT_TOP, HONOR_RANKS, MAX_LEVEL, honorPrize } from '../data.ts'
 import type { State } from '../core/types.ts'
+import { advance } from '../core/time.ts'
 import { mail } from '../sect/inbox.ts'
 import { seasonEnd } from '../sect/rebirth.ts'
 import { freshWorld, sideKey, type MapCtx, type Players, type World } from './base.ts'
@@ -25,14 +26,16 @@ export function endSeason(
   const camps = campPts(top)
   const won = camps[0] === camps[1] ? null : camps[0] > camps[1] ? 0 : 1 // Chính Tà Phân Tranh: phái thắng mùa
   const changed: Players = new Map()
-  for (const [pid, s] of ps) {
+  for (const [pid, s0] of ps) {
     if (skip.has(pid)) continue
+    const s = advance(s0, now) // việc xong lúc offline (Chủ điện vừa lên tầng…) cũng tính cho phi thăng, tổng kết
     const side = sideKey(w, pid)
     const up = (side === first && s.levels.chuDien >= ASCEND_HALL) || s.levels.chuDien >= MAX_LEVEL
     // Công Huân: top HONOR_RANKS nhận quà theo hạng (thư trước thư kết mùa); mùa mới mọi người về 0
     let x: State = { ...seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined), honor: 0, honorGot: 0 }
     const hr = honors.findIndex(([id]) => id === pid)
     if (hr >= 0) x = mail(x, { at: now, k: 'honorTop', a: [hr + 1, s.honor ?? 0], gift: honorPrize(hr) })
+    if (hr === 0) x = { ...x, crowns: [...(x.crowns ?? []), season] } // danh hiệu mùa: đệ nhất Công Huân
     // Chính Tà Phân Tranh: người phái thắng mùa có quà (thư trước thư kết mùa)
     if (won !== null && campOf(side) === won)
       x = mail(x, { at: now, k: 'camp', a: [won, camps[won], camps[won ? 0 : 1]], gift: CAMP_WIN })

@@ -121,7 +121,7 @@ export type ChatMsg = { id: number; pid: number; name: string; text: string; at:
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
 export type { AllyInfo, AllyRow, MapSnap, Rival }
 // Hồ sơ như người xem thấy; supply: cùng minh — Vận Linh Trận còn gửi được bao nhiêu (null: không gửi được / chợ tắt)
-export type Profile = BaseProfile & { supply?: SupplyRoom | null }
+export type Profile = BaseProfile & { supply?: SupplyRoom | null; crowns?: number[] } // crowns: mùa đệ nhất Công Huân
 // Một cuộc truyền âm gần đây: người bên kia, tin cuối
 export type Dm = { pid: number; name: string; last: ChatMsg }
 // Trả lời từng truy vấn. Server trả null khi không trả lời được (truy vấn sai, lỗi) — client coi như không có.

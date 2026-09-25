@@ -54,7 +54,8 @@ export const answersOf = (w: World): Answers => ({
     const crown = lord === sock.data.pid
     // Vận Linh Trận: còn gửi được bao nhiêu cho người này (chỉ người cùng minh; chợ tắt thì tắt cả tiếp tế)
     const supply = w.info.market ? supplyRoom(w.shared, w.ps, sock.data.pid, q.pid, now) : null
-    return p && { ...p, crown, boon: crown ? boonLeft(w.shared, now) : 0, invite, supply }
+    const crowns = w.ps.get(q.pid)?.crowns ?? [] // danh hiệu mùa (đệ nhất Công Huân)
+    return p && { ...p, crown, boon: crown ? boonLeft(w.shared, now) : 0, invite, supply, crowns }
   },
   dms: sock => dmsOf(w, sock.data.pid),
   groups: sock => groupViews(w, sock.data.pid),

@@ -175,5 +175,5 @@ export function robArrive(ps: Players, w: World, [pid, att, m]: Party[number], a
     [prey.pid, addKp({ ...withMarch(y, beaten), foes }, pow(a.hurt))],
   ])
   const sp = spotOf(w, map, i, at)
-  return { changed, world: f.win ? setSpot(w, i, { left: (sp.left ?? 0) + (mine.amount - got) }) : w }
+  return { changed, world: f.win ? setSpot(w, i, { ...sp, left: (sp.left ?? 0) + (mine.amount - got) }) : w } // giữ đồng hồ hồi mỏ
 }

@@ -60,6 +60,7 @@
             >{/if}
           <Tag tone={p.online ? 'good' : 'plain'}>{p.online ? L.ally.online : L.profile.offline}</Tag>
           {#if p.ascended}<Tag tone="gold" icon="star">{L.profile.ascended(p.ascended)}</Tag>{/if}
+          {#each p.crowns ?? [] as n (n)}<Tag tone="gold" icon="rank">{L.profile.crown(n)}</Tag>{/each}
           {#if p.dao}<Tag tone="plain">{L.dao.names[p.dao].name}</Tag>{/if}
           {#if p.lord}<Tag tone="gold" icon="flag">{L.lord.is}</Tag>{/if}
           {#if p.title}<Tag tone={TITLES[p.title].good ? 'good' : 'bad'}

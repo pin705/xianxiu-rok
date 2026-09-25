@@ -407,6 +407,7 @@ export const en: Text = {
       'hp.the': `${short.the} HP`,
       skill: 'Technique power',
       forge: 'Forging time',
+      cap: 'March capacity',
     }
     const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
@@ -1132,6 +1133,7 @@ export const en: Text = {
     mine: 'Sect master profile',
     noAlly: 'No alliance',
     offline: 'In seclusion',
+    crown: (n: number) => `Honor champion · season ${n}`,
     ascended: (n: number) => `Ascended ${n} seasons`,
     pvp: 'Raids won / lost',
     wl: (w: number, l: number) => `${w} / ${l}`,
@@ -1340,6 +1342,7 @@ export const en: Text = {
     row: (a: string, b: string, wa: number, wb: number) => `[${a}] ${wa} – ${wb} [${b}]`,
   },
   arena: {
+    ticket: (n: number) => `Use a Duel Token (+1 attempt) · ${n} left`,
     title: 'Sword Arena',
     lore: 'Pit your elders’ lineup against other sects: illusory disciples, no losses, no resources at stake. Relay battle — the winning team fights on with what it has left.',
     pts: 'Arena points',
@@ -2409,6 +2412,18 @@ export const en: Text = {
       huongHoa: {
         name: 'Incense Token',
         desc: 'Offer it to the founders: adds Incense points at once (level up Incense for more boosts and a bigger daily chest).',
+      },
+      hanhLuc: {
+        name: 'Stamina Pill',
+        desc: 'Restores action points at once to hunt more world beasts — can go above the cap (no natural regen until you spend back down).',
+      },
+      luanKiem: {
+        name: 'Duel Token',
+        desc: 'One extra Arena attempt today — use it in the Arena once your attempts run out. Found in daily objective chests.',
+      },
+      khuechTran: {
+        name: 'Array Banner',
+        desc: 'Expands march capacity: every elder leads 10% more disciples for 8 hours (using more extends it).',
       },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },

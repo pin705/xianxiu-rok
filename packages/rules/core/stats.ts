@@ -216,7 +216,9 @@ export const isMarching = (s: State, e?: ElderId | null) => !!e && s.marches.som
 // Trận dung: số đệ tử tối đa một đội ra bản đồ giới do trưởng lão e dẫn
 export const capOf = (s: State, e: ElderId) =>
   Math.floor(
-    (MARCH_CAP + MARCH_CAP_STEP * (elderLevel(s.elders[e]) - 1)) * (1 + MARCH_CAP_STAR * ((s.stars?.[e] ?? 1) - 1)),
+    (MARCH_CAP + MARCH_CAP_STEP * (elderLevel(s.elders[e]) - 1)) *
+      (1 + MARCH_CAP_STAR * ((s.stars?.[e] ?? 1) - 1)) *
+      (1 + bonus(s, 'cap')), // Khuếch Trận Kỳ
   )
 // Phó trưởng lão đi cùng chủ tướng e lúc này: đã ghép, đã mở (Chủ điện), đang ở nhà (không dẫn / không làm phó đội khác)
 export function deputyOf(s: State, e: ElderId | null): ElderId | undefined {
@@ -226,8 +228,13 @@ export function deputyOf(s: State, e: ElderId | null): ElderId | undefined {
     : undefined
 }
 // Hành lực lúc t (chưa từng dùng: đầy)
+// quá AP_MAX (nhờ Hành Lực Đan) thì không hồi thêm, tiêu dần xuống
 export const apOf = (s: State, t: number) =>
-  s.ap ? Math.min(AP_MAX, s.ap.n + Math.floor(Math.max(0, t - s.ap.at) / AP_EVERY)) : AP_MAX
+  !s.ap
+    ? AP_MAX
+    : s.ap.n >= AP_MAX
+      ? s.ap.n
+      : Math.min(AP_MAX, s.ap.n + Math.floor(Math.max(0, t - s.ap.at) / AP_EVERY))
 // Tiêu n hành lực lúc t (phần lẻ chưa đủ một lượt hồi vẫn giữ: mốc tính từ lúc hồi gần nhất)
 export function spendAp(s: State, t: number, n: number): State {
   const have = apOf(s, t)

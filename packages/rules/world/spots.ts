@@ -186,7 +186,7 @@ function recallAct({ ps, w, pid, s, map }: Ctx, mid: number): WorldResult {
   return {
     ok: true,
     changed: new Map([[pid, next]]),
-    world: setSpot(w, i, { left: (sp.left ?? 0) + (mine.amount - got) }),
+    world: setSpot(w, i, { ...sp, left: (sp.left ?? 0) + (mine.amount - got) }), // giữ đồng hồ hồi mỏ
   }
 }
 

@@ -122,7 +122,7 @@ export const arkActions: WorldActions<ArkAction> = {
       const f = ark.live[k]
       const me = f.units.find(u => u.pid === pid)!
       if (a.to === home(me.side ? 0 : 1)) return no('bad') // Linh Đài bên kia: không vào được
-      if (a.all && !officer(w, pid)) return no('locked')
+      if (a.all && officer(w, pid)?.id !== (me.side ? f.b : f.a)) return no('locked') // trưởng lão của chính minh đang đánh
       const units = f.units.map(u => ((a.all ? u.side === me.side : u.pid === pid) ? { ...u, to: a.to } : u))
       const live = ark.live.map((x, j) => (j === k ? { ...f, units } : x))
       return { ok: true, changed: new Map(), world: { ...w, ark: { ...ark, live } } }
@@ -179,19 +179,23 @@ export function arkRound(ps: Players, f0: ArkFight, seed: number): ArkFight {
     })
     const res = fight(sides[0].side, sides[1].side, (seed + r * 7919 + node * 104_729) >>> 0)
     const last = res.rounds.at(-1)?.n ?? sides.map(x => x.side.troops.map(t => t.n))
-    const win = res.win ? 0 : 1
-    f.log.push([r, 'win', win as 0 | 1, node])
+    // bên thắng: bên duy nhất còn quân; hoà (hết lượt, hai bên còn quân — hay cùng hết) thì bên đang giữ ô thắng, ô trống thì không ai lui
+    const alive = last.map(n => n.some(x => x > 0))
+    let win: 0 | 1 | null = f.own[node]
+    if (alive[0] !== alive[1]) win = alive[0] ? 0 : 1
+    if (win !== null) f.log.push([r, 'win', win, node])
     const after = new Map<number, ArkUnit>()
+    const dropped = orb?.by !== undefined && here.some(us => us.some(u => u.pid === orb.by))
     here.forEach((us, sd) =>
       us.forEach((u, j) => {
         const from = sides[sd].at[j]
         const n = (sideOfUnit(ps, u)?.troops ?? []).map((_, g) => last[sd][from + g])
-        const lost = sd !== win || !n.some(x => x > 0)
+        const lost = (win !== null && sd !== win) || !n.some(x => x > 0)
         after.set(u.pid, lost ? { ...u, at: home(u.side), n: [], rest: r + 1 } : { ...u, n })
         if (lost && orb?.by === u.pid) Object.assign(orb, { by: undefined, at: node }) // Châu rơi tại ô
-        if (lost && orb?.by === undefined && orb?.at === node) f.log.push([r, 'drop', u.side, node])
       }),
     )
+    if (dropped && orb?.by === undefined) f.log.push([r, 'drop', win === 0 ? 1 : 0, node])
     units = units.map(u => after.get(u.pid) ?? u)
   }
   // 3. chiếm (ô chỉ còn một bên) — lần đầu mỗi bên mỗi ô ra điểm; giữ mỗi hiệp ra điểm
@@ -241,7 +245,8 @@ export function arkRound(ps: Players, f0: ArkFight, seed: number): ArkFight {
 export function arkStep(ps: Players, w: World, now: number, seed: number) {
   const changed: Players = new Map()
   const ark = arkOf(w)
-  const wk = weekOf(now)
+  // trận của tuần trước chưa kết thúc (server tắt qua thứ Hai): kết thúc nó trước, quà và điểm như thường
+  const wk = ark.live.length && ark.on > ark.done ? ark.on : weekOf(now)
   const start = arkAt(wk)
   if (now < start || ark.done >= wk) return { changed, world: w }
   let next: Ark = ark
@@ -253,7 +258,7 @@ export function arkStep(ps: Players, w: World, now: number, seed: number) {
       .sort((x, y) => pts(y.id) - pts(x.id) || x.id - y.id)
     const live: ArkFight[] = []
     for (let k = 0; k + 1 < teams.length; k += 2) live.push(setup(ps, teams[k], teams[k + 1]))
-    next = { ...ark, on: wk, live }
+    next = { ...ark, on: wk, live, signed: [] } // ghi danh đã dùng; ghi danh trong giờ trận là cho tuần sau
   }
   const due = Math.min(ARK_ROUNDS, Math.floor((now - start) / ARK_ROUND))
   if (next.live.some(f => f.round < due))
@@ -276,28 +281,23 @@ export function arkStep(ps: Players, w: World, now: number, seed: number) {
     const d = elo(pa, pb, aWins)
     war.pts[f.a] = pa + d
     war.pts[f.b] = pb - d
-    for (const [id, win, foe] of [
-      [f.a, aWins, f.bn],
-      [f.b, !aWins, f.an],
-    ] as const)
-      for (const pid of Object.keys(w.allies[id]?.members ?? {}).map(Number)) {
-        const s: State | undefined = changed.get(pid) ?? ps.get(pid)
-        if (s)
-          changed.set(
-            pid,
-            mail(s, {
-              at: now,
-              k: 'ark',
-              a: [win ? 1 : 0, foe, f.pts[id === f.a ? 0 : 1], f.pts[id === f.a ? 1 : 0]],
-              gift: win ? ARK_WIN : ARK_LOSE,
-            }),
-          )
-      }
+    // quà cho người đã ra trận (đội trên chiến trường), dù sau đó rời minh
+    for (const u of f.units) {
+      const s: State | undefined = changed.get(u.pid) ?? ps.get(u.pid)
+      const win = u.side === 0 ? aWins : !aWins
+      const a = [win ? 1 : 0, u.side ? f.an : f.bn, f.pts[u.side], f.pts[u.side ? 0 : 1]] as [
+        0 | 1,
+        string,
+        number,
+        number,
+      ]
+      if (s) changed.set(u.pid, mail(s, { at: now, k: 'ark', a, gift: win ? ARK_WIN : ARK_LOSE }))
+    }
     return { a: f.a, b: f.b, an: f.an, bn: f.bn, wa: f.pts[0], wb: f.pts[1] }
   })
   return {
     changed,
-    world: { ...w, war, ark: { on: wk, done: wk, signed: [], live: [], last: last.length ? last : ark.last } },
+    world: { ...w, war, ark: { on: wk, done: wk, signed: next.signed, live: [], last: last.length ? last : ark.last } },
   }
 }
 

@@ -167,6 +167,7 @@ export type Bonus =
   | `hp.${UnitType}`
   | 'skill'
   | 'forge'
+  | 'cap' // trận dung (sức chứa đệ tử mỗi đội)
 
 // ---------- Ngũ hành ----------
 
@@ -449,6 +450,8 @@ export type BagDef =
   | { use: 'key' } // thiếp Chiêu Hiền Đài: mở ở Chiêu Hiền Đài, không dùng thẳng từ túi
   | { use: 'builder'; hours: number } // thuê tạp dịch thứ hai (xây song song hai công trình)
   | { use: 'vip'; n: number } // Hương Hỏa Lệnh: cộng điểm Hương Hỏa (VIP)
+  | { use: 'ap'; n: number } // Hành Lực Đan: cộng hành lực (được vượt AP_MAX)
+  | { use: 'ticket' } // Luận Kiếm Lệnh: dùng ở Luận Kiếm Đài (+1 lượt hôm nay), không dùng thẳng từ túi
 const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
 const speeds = <P extends string>(prefix: P, job?: SpeedJob) =>
@@ -487,6 +490,9 @@ const bag = {
   tapDich48: { use: 'builder', hours: 48 }, // Tạp Dịch Lệnh: thuê tạp dịch thứ hai 48 giờ (dùng thêm thì kéo dài)
   huongHoa50: { use: 'vip', n: 50 }, // Hương Hỏa Lệnh: điểm Hương Hỏa
   huongHoa200: { use: 'vip', n: 200 },
+  hanhLuc50: { use: 'ap', n: 50 }, // Hành Lực Đan: hồi hành lực (săn yêu thú giới)
+  luanKiem: { use: 'ticket' }, // Luận Kiếm Lệnh: thêm một lượt Luận Kiếm Đài
+  khuechTran8: { use: 'buff', key: 'cap', v: 0.1, hours: 8 }, // Khuếch Trận Kỳ: trận dung +10 %
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -511,6 +517,9 @@ export const BAG_FAMILIES = [
   'kimDuyen',
   'tapDich',
   'huongHoa',
+  'hanhLuc',
+  'luanKiem',
+  'khuechTran',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -1038,6 +1047,7 @@ export const COIN_SHOP: { reward: Reward; price: number }[] = [
   { reward: { items: { kinhThu8k: 1 } }, price: 25 },
   { reward: { items: { daiTuKhi: 1 } }, price: 20 },
   { reward: { items: { huongHoa200: 1 } }, price: 25 },
+  { reward: { items: { khuechTran8: 2 } }, price: 20 },
   { reward: { items: { chienY: 1, kimCuong: 1, hoThe: 1 } }, price: 30 },
 ]
 export const HONOR_TIERS: { n: number; reward: Reward }[] = [
@@ -1102,6 +1112,8 @@ export const MERCHANT_POOL: { item: BagId; n: number; res: Res; price: number; w
   { item: 'chienY', n: 1, res: 'linhThach', price: 700, w: 3 },
   { item: 'hoSon8', n: 1, res: 'linhThach', price: 1500, w: 3 },
   { item: 'huongHoa50', n: 1, res: 'linhThao', price: 1000, w: 4 },
+  { item: 'hanhLuc50', n: 1, res: 'linhKhoang', price: 600, w: 6 },
+  { item: 'khuechTran8', n: 1, res: 'linhThach', price: 900, w: 3 },
 ]
 
 // ---------- Thiên Đạo Biên Niên (Monument của RoK) ----------
@@ -1306,6 +1318,7 @@ export const GUEST_GIFTS: Reward[] = [
   { items: { khoangNang1k: 2 } },
   { items: { thoiQuang60: 1 } },
   { items: { nganDuyen: 1 } },
+  { items: { hanhLuc50: 1 } },
 ]
 // Vấn Đạo Đài (Peerless Scholar của RoK): mỗi ngày QUIZ_DAY câu hỏi rút từ bộ câu (chữ ở i18n `quiz.q`, đáp án đúng ở đây theo
 // thứ tự câu), trả lời lần lượt; xong thì quà theo số câu đúng (QUIZ_GIFTS[số đúng])
@@ -1784,9 +1797,9 @@ const fests = {
     rewards: [
       { hallRes: 80, items: { thoiQuang5: 1 } },
       { hallRes: 100, items: { tuKhi: 1 } },
-      { hallRes: 120, items: { boiNguyen: 1, nganDuyen: 1 } },
+      { hallRes: 120, items: { boiNguyen: 1, nganDuyen: 1, luanKiem: 1 } },
       { hallRes: 150, items: { thoiQuang15: 1 } },
-      { hallRes: 200, items: { thoiQuang60: 1, kimDuyen: 1 } },
+      { hallRes: 200, items: { thoiQuang60: 1, kimDuyen: 1, luanKiem: 1 } },
     ],
   },
   // Thất Nhật Lễ: 7 phần quà cho 7 ngày đăng nhập đầu (trong 14 ngày đầu), quà sau lớn hơn quà trước

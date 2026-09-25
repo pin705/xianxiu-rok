@@ -88,6 +88,13 @@
         <p class="row between t-small">
           <span>{L.arena.left(a.left, ARENA_TRIES)}</span><b class="t-gold t-num">{L.arena.ky} {num(a.ky ?? 0)}</b>
         </p>
+        <!-- hết lượt mà còn Luận Kiếm Lệnh (từ Nhật Khóa): thêm một lượt -->
+        {#if a.left < 1 && (game.items.luanKiem ?? 0) > 0}<Button
+            size="sm"
+            variant="gold"
+            icon="swords"
+            onclick={() => g.act({ type: 'arenaTicket' }, 'reward')}>{L.arena.ticket(game.items.luanKiem ?? 0)}</Button
+          >{/if}
         <div class="row between mt-2">
           <span class="stack" style:--gap="2px"
             ><small class="t-tiny">{L.arena.chest(L.arena.band[band])}</small><Bag

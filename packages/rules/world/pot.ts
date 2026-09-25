@@ -49,12 +49,15 @@ export const potActions: WorldActions<PotAction> = {
       const al = allyOf(w, pid)
       if (!al) return no('locked')
       if (!potChests(al, pid, s.time)) return no('not_done')
+      const week = weekOf(s.time)
+      const had = s.potOpened?.week === week ? s.potOpened.n : 0
+      if (had >= POT_MAX) return no('limit') // đã mở đủ tuần này (kể cả ở minh khác)
       const p = potOf(al, s.time)
       const pot = { ...p, opened: { ...p.opened, [pid]: (p.opened[pid] ?? 0) + 1 } }
       return {
         ok: true,
         world: { ...w, allies: { ...w.allies, [al.id]: { ...al, pot } } },
-        changed: new Map([[pid, grant(s, POT_CHEST)]]),
+        changed: new Map([[pid, grant({ ...s, potOpened: { week, n: had + 1 } }, POT_CHEST)]]),
       }
     },
   },

@@ -65,6 +65,12 @@ test('Tranh Đoạt Linh Châu: ghi danh, 20h Chủ nhật dựng trận, mỗi 
   assert.equal(act(5, { type: 'arkOrder', to: 0 }, start + 2000), 'bad')
   assert.equal(act(5, { type: 'arkOrder', to: 1, all: true }, start + 2000), 'locked')
   assert.equal(arkOf(w).live[0].units.find(u => u.pid === 5)!.to, 3)
+  // người của minh 1 rời đi lập minh khác (thành minh chủ) — không được ra lệnh cho cả minh 1
+  const spy = { ...w, allies: { ...w.allies, 1: ally(1, 'VK', { 1: 2, 3: 0 }), 3: ally(3, 'GI', { 2: 2 }) } }
+  assert.deepEqual(worldAct(ps, 2, { type: 'arkOrder', to: 0, all: true } as never, start + 2000, 1, undefined, spy), {
+    ok: false,
+    error: 'locked',
+  })
   // hiệp 1: hai bên gặp nhau ở Tiểu Trận Bắc (đường ngắn nhất tới Trung Điện) — bên mạnh thắng, bên thua về Linh Đài nghỉ
   r = arkStep(ps, w, start + ARK_ROUND + 1000, 7)
   w = r.world
@@ -82,6 +88,10 @@ test('Tranh Đoạt Linh Châu: ghi danh, 20h Chủ nhật dựng trận, mỗi 
   )
   assert.equal(f1.units.find(u => u.pid === 5)!.at, 3, 'đội đi riêng tới Tiểu Trận Nam')
   assert.equal(f1.own[3], 1)
+  // server tắt qua thứ Hai: lần gọi sau (tuần mới) kết thúc trận cũ trước, quà vẫn tới
+  const late = arkStep(ps, w, start + 8 * 86_400_000, 7)
+  assert.equal(arkOf(late.world).live.length, 0)
+  assert.equal(late.changed.get(1)!.mail.at(-1)!.k, 'ark')
   // hết mọi hiệp: kết quả, thư, điểm minh chiến
   r = arkStep(ps, w, start + ARK_ROUNDS * ARK_ROUND + 1000, 7)
   w = r.world

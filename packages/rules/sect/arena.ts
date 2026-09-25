@@ -1,7 +1,7 @@
 // Luận Kiếm Đài (Sunset Canyon của RoK, bất đồng bộ): đội hình thủ của mình, rương ngày theo bậc điểm, và luật trận xa luân
 // (dùng chung cho thao tác đánh ở world/arena.ts và ước lượng trên giao diện). Không mất quân, không mất tài nguyên.
 import { fight, rng, type Fight, type Side } from '../combat.ts'
-import { no, type Actions } from '../core/action.ts'
+import { no, ok, use, type Actions } from '../core/action.ts'
 import { grant, sideOf } from '../core/battle.ts'
 import { dayOf, weekOf } from '../core/calendar.ts'
 import { int, isElder, obj, oneOf } from '../core/parse.ts'
@@ -87,16 +87,27 @@ export function duel(att: Side[], def: Side[], seed: number): { win: boolean; bo
 }
 
 export type ArenaAction =
-  { type: 'arenaSet'; lineup: ArenaTeam[] } | { type: 'arenaChest' } | { type: 'arenaBuy'; i: number }
+  | { type: 'arenaSet'; lineup: ArenaTeam[] }
+  | { type: 'arenaChest' }
+  | { type: 'arenaBuy'; i: number }
+  | { type: 'arenaTicket' } // dùng một Luận Kiếm Lệnh: +1 lượt hôm nay
 
 const isType = oneOf(TYPES)
 export const arenaActions: Actions<ArenaAction> = {
+  arenaTicket: {
+    pick: () => ({ type: 'arenaTicket' }),
+    run: s => {
+      if ((s.items.luanKiem ?? 0) < 1) return no('no_item')
+      const a = arenaOf(s, s.time)
+      return ok({ ...s, items: use(s, 'luanKiem', 1), arena: { ...a, left: a.left + 1 } })
+    },
+  },
   arenaSet: {
     pick: a => {
       if (!Array.isArray(a.lineup) || a.lineup.length > 5) return null
       const lineup = a.lineup.filter(obj).map(x => ({ elder: x.elder, type: x.type }))
-      const ok = lineup.every(x => isElder(x.elder) && isType(x.type))
-      return ok && lineup.length === a.lineup.length && new Set(lineup.map(x => x.elder)).size === lineup.length
+      const valid = lineup.every(x => isElder(x.elder) && isType(x.type))
+      return valid && lineup.length === a.lineup.length && new Set(lineup.map(x => x.elder)).size === lineup.length
         ? { type: 'arenaSet', lineup: lineup as ArenaTeam[] }
         : null
     },

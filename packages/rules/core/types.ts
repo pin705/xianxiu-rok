@@ -275,6 +275,8 @@ export type State = {
   thoi?: { n: number; pick: number } // Thiên Thời: chỉ lệnh đã chọn cho thời thứ n của mùa
   bones?: number // Yêu Vương Tuần Sơn: yêu cốt đang có (đủ LOHAR_BONES triệu hồi)
   yb?: { kp: number; hunted: number; raided: number; gathered: number } // bộ đếm lúc đầu mùa (Tổng kết mùa tính phần tăng)
+  potOpened?: { week: number; n: number } // Tụ Bảo Minh Đỉnh: rương đã mở tuần này (mọi minh cộng lại — chống nhảy minh)
+  crowns?: number[] // danh hiệu mùa: các mùa đứng đầu Công Huân cả giới (giữ qua luân hồi)
   honorAll?: number // Công Huân kiếm được cả đời (không về 0 khi hết mùa) — ra Phi Thăng Tệ
   coinSpent?: number // Phi Thăng Tệ đã tiêu ở Thiên Môn Thương Điếm
   seclude?: { until: number; shield: number } // Bế Quan Lệnh: bế quan tới until (shield: khiên trước khi bế quan, xuất quan thì trả)
