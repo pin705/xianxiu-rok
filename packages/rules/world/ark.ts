@@ -24,6 +24,8 @@ import {
   ARK_TAKE,
   ARK_WIN,
   DAY_OFFSET,
+  LEAGUE_LOSE,
+  LEAGUE_WIN,
   PVP_HALL,
   PVP_START,
 } from '../data.ts'
@@ -274,6 +276,11 @@ export function arkStep(ps: Players, w: World, now: number, seed: number) {
   if (due < ARK_ROUNDS && next.live.length) return { changed, world: next === ark ? w : { ...w, ark: next } }
   // hết trận: minh nhiều điểm thắng (bằng điểm: minh ít điểm minh chiến hơn thắng); đổi điểm minh chiến, quà cho mọi người
   const war = { ...(w.war ?? { done: -1, signed: [], pts: {}, last: [] }), pts: { ...w.war?.pts } }
+  const league = { ...ark.league }
+  const score = (id: number, won: boolean) => {
+    const [wn, l, p] = league[id] ?? [0, 0, 0]
+    league[id] = won ? [wn + 1, l, p + LEAGUE_WIN] : [wn, l + 1, p + LEAGUE_LOSE]
+  }
   const last = next.live.map(f => {
     const pa = war.pts[f.a] ?? PVP_START,
       pb = war.pts[f.b] ?? PVP_START
@@ -281,6 +288,8 @@ export function arkStep(ps: Players, w: World, now: number, seed: number) {
     const d = elo(pa, pb, aWins)
     war.pts[f.a] = pa + d
     war.pts[f.b] = pb - d
+    score(f.a, aWins) // Cửu Thiên Luận Đạo Hội
+    score(f.b, !aWins)
     // quà cho người đã ra trận (đội trên chiến trường), dù sau đó rời minh
     for (const u of f.units) {
       const s: State | undefined = changed.get(u.pid) ?? ps.get(u.pid)
@@ -297,7 +306,11 @@ export function arkStep(ps: Players, w: World, now: number, seed: number) {
   })
   return {
     changed,
-    world: { ...w, war, ark: { on: wk, done: wk, signed: next.signed, live: [], last: last.length ? last : ark.last } },
+    world: {
+      ...w,
+      war,
+      ark: { on: wk, done: wk, signed: next.signed, live: [], last: last.length ? last : ark.last, league },
+    },
   }
 }
 
@@ -309,5 +322,12 @@ export function arkRow(w: World, aid: number) {
     signed: ark.signed.includes(aid),
     live: ark.live.find(f => f.a === aid || f.b === aid) ?? null,
     last: ark.last.filter(x => x.a === aid || x.b === aid),
+    league: leagueBoard(w).slice(0, 8), // Cửu Thiên Luận Đạo Hội: 8 minh đầu
   }
 }
+// Bảng Cửu Thiên Luận Đạo Hội của mùa: điểm giải cao trước, bằng thì nhiều trận thắng hơn, rồi mã minh
+export const leagueBoard = (w: World) =>
+  Object.entries(arkOf(w).league ?? {})
+    .filter(([id]) => w.allies[Number(id)])
+    .map(([id, [wn, l, pts]]) => ({ id: Number(id), tag: w.allies[Number(id)].tag, w: wn, l, pts }))
+    .sort((a, b) => b.pts - a.pts || b.w - a.w || a.id - b.id)

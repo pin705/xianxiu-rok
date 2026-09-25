@@ -50,6 +50,7 @@
   import AllyMob from './AllyMob.svelte'
   import AllyPot from './AllyPot.svelte'
   import ArkCard from './ArkCard.svelte'
+  import AllyParty from './AllyParty.svelte'
   import { social } from './social.svelte'
 
   type ATab = 'home' | 'people' | 'war' | 'chat'
@@ -499,6 +500,7 @@
       </Section>
 
       {#if me !== null}<ArkCard row={ally.ark} {me} aid={ally.id} officer={myRole >= 1} {go} />{/if}
+      {#if me !== null}<AllyParty {ally} {me} {go} />{/if}
 
       <Section title={L.legion.title}>
         <p class="t-small t-soft">{L.legion.lore}</p>

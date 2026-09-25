@@ -3,12 +3,12 @@
   // bật thông báo đẩy, đăng xuất / đăng xuất mọi nơi, xoá tài khoản. Server kiểm mọi thứ (apps/server/src/http/account.ts).
   import { onMount } from 'svelte'
   import type { Net } from './net'
-  import { Button, Card, Section } from './ui'
+  import { Button, Card, Section, Toggle } from './ui'
   import { L, clock, sfx } from './lib'
 
   let { account, now, onout }: { account: Net['account']; now: number; onout: () => void } = $props()
 
-  let info = $state<{ email: string | null; push: string | null } | null>(null)
+  let info = $state<{ email: string | null; push: string | null; off: string[] } | null>(null)
   let email = $state('')
   let pass = $state('')
   let old = $state('')
@@ -64,6 +64,15 @@
     pushed = r === 'on'
     if (r === 'denied') msg = { text: L.push.denied, bad: true }
     else if (r !== 'on') fail('server')
+  }
+  // chọn loại thông báo đẩy: tắt / bật từng loại (server lọc trước khi gửi)
+  const TAGS = ['done', 'raid', 'dm', 'trib', 'ark'] as const
+  async function toggle(tag: string, on: boolean) {
+    if (!info) return
+    const off = on ? info.off.filter(t => t !== tag) : [...info.off, tag]
+    const r = await account.pushOff(off)
+    if (r.ok) info = { ...info, off }
+    else fail(r.error)
   }
   async function leave() {
     const r = out === 'remove' ? await account.remove(pass || undefined) : await account.logout(out === 'all')
@@ -134,6 +143,12 @@
     {#if info.push && !pushed}<Button variant="ghost" wide icon="mail" onclick={push}
         >{L.push.toggle}: {L.push.on}</Button
       >{/if}
+    {#if info.push && pushed}
+      <small class="t-tiny t-soft">{L.push.kinds}</small>
+      {#each TAGS as tag (tag)}
+        <Toggle checked={!info.off.includes(tag)} onchange={on => toggle(tag, on)}>{L.push.kind[tag]}</Toggle>
+      {/each}
+    {/if}
     {#if msg}<p class="t-small" class:t-bad={msg.bad} class:t-good={!msg.bad} role="status">{msg.text}</p>{/if}
 
     {#if out}

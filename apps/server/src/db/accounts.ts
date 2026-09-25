@@ -183,10 +183,21 @@ export const addPushSub = (db: Database, account: number, sub: { endpoint: strin
     .onConflictDoUpdate({ target: pushSubs.endpoint, set: { accountId: account, p256dh: sub.p256dh, auth: sub.auth } })
 export const dropPushSub = (db: Database, endpoint: string, account?: number) =>
   db.delete(pushSubs).where(and(eq(pushSubs.endpoint, endpoint), account ? eq(pushSubs.accountId, account) : undefined))
-// Đăng ký push của người chơi pid, kèm ngôn ngữ tài khoản (server dựng chữ thông báo)
+// Loại thông báo đẩy tài khoản đã tắt
+export const pushOffOf = async (db: Database, account: number) =>
+  (await db.select({ off: accounts.pushOff }).from(accounts).where(eq(accounts.id, account)))[0]?.off ?? []
+export const setPushOff = (db: Database, account: number, off: string[]) =>
+  db.update(accounts).set({ pushOff: off }).where(eq(accounts.id, account))
+// Đăng ký push của người chơi pid, kèm ngôn ngữ tài khoản (server dựng chữ thông báo) và loại đã tắt
 export const pushSubsOf = (db: Database, pid: number) =>
   db
-    .select({ endpoint: pushSubs.endpoint, p256dh: pushSubs.p256dh, auth: pushSubs.auth, locale: accounts.locale })
+    .select({
+      endpoint: pushSubs.endpoint,
+      p256dh: pushSubs.p256dh,
+      auth: pushSubs.auth,
+      locale: accounts.locale,
+      off: accounts.pushOff,
+    })
     .from(pushSubs)
     .innerJoin(accounts, eq(accounts.id, pushSubs.accountId))
     .innerJoin(players, eq(players.accountId, accounts.id))

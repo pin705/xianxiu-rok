@@ -1,7 +1,7 @@
 # Vẽ và ghép tranh vào game. Mỗi nhóm: vẽ (bỏ qua ảnh đã có trong .work/raw) rồi ghép vào apps/client/public/art + manifest.
 #   tools/art/.venv/bin/python tools/art/make.py <nhóm> [tên…] [--fit] [--dry]
 #   --fit: chỉ ghép lại từ ảnh thô đã có (không gọi API) · --dry: in prompt, không gọi API
-# Nhóm: buildings faces icons emblems masks props troops beasts skins scenery fields map far paper strokes
+# Nhóm: buildings faces icons emblems figures masks props troops beasts skins scenery fields map far paper strokes
 # Xong thì chạy `pack` (chia gói theo cảnh + dựng atlas) — game nạp theo gói.
 import json, os, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -85,6 +85,22 @@ def icons():
 def emblems():
   for name, im in sheets(P.EMBLEM_SHEETS, 'emblem figures for round medallions', P.EMBLEM_NOTE, parts=True).items():
     X.save(f'emblem:{name}', X.fit_square(im, 128, 0.02), 'emblem', tex=True)  # medal() vẽ lên đĩa: nằm trong gói boot; 128 px đủ cho huy hiệu to nhất (logo 104 px CSS)
+
+def figures():  # tổ sư chín đạo thống: một bảng; model hay xếp 4 + 5 hình, đổi chỗ (thứ tự thật: P.FIGURES_DRAWN)
+  run([('sheet-figures', P.figures_sheet(), [X.ref(FACE)], '1:1', '2K')])
+  if not os.path.exists(X.raw('sheet-figures')): return
+  k = X.raw('sheet-figures') + '.png'
+  X.key_magenta(X.raw('sheet-figures'), k)
+  im = Image.open(k).convert('RGBA')
+  bs = X.blobs(im)
+  if len(bs) != len(P.FIGURES_DRAWN): sys.exit(f'sheet-figures: {len(bs)} hình ≠ {len(P.FIGURES_DRAWN)} — sửa FIGURES_DRAWN')
+  for i, (ys, xs) in enumerate(bs):
+    # mỗi hình lấy trọn khoảng tới giữa hai hình bên cạnh cùng hàng: giữ mảnh rời (lửa trên tay, hổ con), mảnh lấn mép thì main_blob bỏ
+    prev = bs[i - 1][1] if i and bs[i - 1][1].start < xs.start else None
+    nxt = bs[i + 1][1] if i + 1 < len(bs) and bs[i + 1][1].start > xs.start else None
+    box = ((prev.stop + xs.start) // 2 if prev else 0, max(0, ys.start - 24), (xs.stop + nxt.start) // 2 if nxt else im.width, min(im.height, ys.stop + 24))
+    c = X.trim(X.main_blob(X.depink(im.crop(box)), 0.015))  # lửa trên tay ~1,9 %, mẩu tay áo hình bên ~1,1 %
+    X.save(f'fig:{P.FIGURES_DRAWN[i]}', X.fit_square(c, 720, 0.02, 0.75), 'fig')  # 3:4, ~360 px CSS trên màn 2x
 
 def masks():
   for name, im in sheets(P.MASK_SHEETS, 'UI glyph icons', P.MASK_NOTE, parts=True).items():
@@ -270,7 +286,7 @@ def strokes():
     # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 320×28 (như bản code, 2x); vết mực: vuông
     X.save(f'skin:{name}', X.fit_square(im, 256, 0.01) if name == 'blot' else im.resize((320, 28), X.Image.LANCZOS), 'skin')
 
-GROUPS = {'pack': X.pack_all, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'masks': masks, 'props': props, 'troops': troops,
+GROUPS = {'pack': X.pack_all, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}
 
 if __name__ == '__main__':

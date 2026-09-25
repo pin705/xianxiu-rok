@@ -253,11 +253,6 @@
     return s
   }
 
-  // null: đã lập xong (đang nối tới server); chuỗi: mã lỗi để màn đặt tên báo
-  async function found(name: string) {
-    return net ? net.found(name) : 'offline'
-  }
-
   function select(id: BuildingId, v: PanelTab | null = null) {
     sfx('tap')
     view = v
@@ -667,7 +662,7 @@
       <Title
         mode={status === 'nosect' ? 'first' : 'splash'}
         wait={entered && !game}
-        onstart={found}
+        onstart={(name, dao) => (net ? net.found(name, dao) : Promise.resolve('offline'))}
         onlogin={how => (net ? net.login(how) : Promise.resolve('offline'))}
         ondone={() => (entered = true)}
       />

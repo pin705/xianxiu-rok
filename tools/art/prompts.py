@@ -143,7 +143,37 @@ EMBLEM_SHEETS = {
   'M5': [('crest', 'a small sect crest shield'), ('tick', 'a bold brush check mark'), ('tower', 'a small pagoda tower'),
          ('anvil', 'an anvil with a hammer'), ('_1', 'a small cloud'), ('_2', 'a small leaf'),
          ('_3', 'a small star'), ('_4', 'a small flame'), ('_5', 'a small drop')],
+  # đạo thống của người chơi (rules DAOS, cùng thứ tự): màn chọn lúc lập tông môn, Chủ điện, hồ sơ
+  'M6': [('kiemTong', 'a flying sword pointing up above a small curling cloud'), ('phapTong', 'a swirling ball of flame floating above an open palm'),
+         ('theTong', 'a big bronze temple bell'), ('danTong', 'a small bronze three-legged cauldron with a golden pill rising above it'),
+         ('tranTong', 'an octagonal bagua formation disc with trigram bars around a yin-yang centre'), ('khiTong', 'a forging hammer crossed over a glowing sword blade with sparks'),
+         ('phuTong', 'a yellow paper talisman strip with red cinnabar swirl strokes and a tiny lightning spark'), ('thuTong', 'a green-maned qilin head in profile'),
+         ('maTong', 'a crimson blood-red crescent moon with a black bat silhouette')],
 }
+
+# Tổ sư chín đạo thống (màn chọn đạo thống, Title.svelte / DaoChoose.svelte): cả người, cùng cỡ, cùng đường chân. Màu áo theo tông đĩa
+# huy hiệu (emblems.ts DAO_TONES) để tranh và huy hiệu khớp nhau.
+FIGURES = [
+  ('kiemTong', 'a young sword immortal in a white robe with azure-blue trim, black hair in a high topknot, both hands resting on the pommel of a long straight sword planted point-down in front of him, calm piercing gaze'),
+  ('phapTong', 'a graceful woman mage in a flowing cinnabar-red robe with gold trim, long black hair with a gold hairpin, one palm raised with a small ball of fire floating above it'),
+  ('theTong', 'a burly bare-chested monk with bronze skin, bald head, ochre-yellow trousers and sash, big prayer beads around the neck, fists clenched in a powerful stance'),
+  ('danTong', 'a kind old alchemist with a long white beard in a jade-green robe, a small golden pill held up in one hand, a medicine gourd hanging at his belt'),
+  ('tranTong', 'a stern middle-aged strategist in a dark robe with gold trim and a neat black beard, holding a round bronze formation compass disc in both hands'),
+  ('khiTong', 'a muscular smith cultivator in grey-silver robes with a leather apron, sleeves rolled up, a big forging hammer resting on his shoulder'),
+  ('phuTong', 'a Taoist priest in a violet robe with a small black hat, a yellow paper talisman held between two raised fingers, a peachwood sword on his back'),
+  ('thuTong', 'a wild young woman beast tamer in an indigo-blue robe with a fur collar, a small white spirit tiger cub sitting at her feet'),
+  ('maTong', 'a menacing demonic cultivator in black robes with crimson lining, long loose black hair, pale face, red eyes, a crimson curved saber at his side'),
+]
+# thứ tự model thật sự vẽ trên sheet-figures (đọc trái → phải, trên → dưới; bảng 25/9: hàng 4 + hàng 5). Vẽ lại thì xem ảnh rồi sửa.
+FIGURES_DRAWN = ['kiemTong', 'phapTong', 'theTong', 'danTong', 'phuTong', 'tranTong', 'thuTong', 'khiTong', 'maTong']
+def figures_sheet():
+  lst = ' '.join(f'{i + 1}) {d}.' for i, (_, d) in enumerate(FIGURES))
+  return ('Image 1 is a portrait from our game: it is the ART STYLE reference for faces, hair and robes only (do not copy that person). '
+          f'Paint a NEW sheet of 9 separate full-body characters, the founders of nine cultivation sects, in exactly this art style — {INK}; '
+          'with a confident dark ink outline so each one reads clearly. Arrange them in a neat 3 by 3 grid, row by row from the top-left: ' + lst + ' '
+          'Each character stands alone, the whole body from head to feet visible, about 6 heads tall, facing the viewer at a slight three-quarter angle, '
+          'centered in its own cell, all the same height with the feet on the same line, wide empty gaps between them and nothing crossing into another cell. '
+          f'No ground, no shadow, no glow, no aura. {NO_TEXT} No grid lines. {MAGENTA}')
 
 # Icon thao tác đơn sắc (packages/art/actions.ts MONO): game chỉ lấy alpha rồi tô bằng màu chữ.
 # Nghĩa theo bản vẽ code (trang Icon trên canvas thiết kế): power = lực chiến (thanh kiếm), minus = nét ngang, rank = bục xếp hạng.

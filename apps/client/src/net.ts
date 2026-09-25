@@ -3,7 +3,7 @@
 //   hiển thị = gập các thao tác đang chờ lên confirmed, rồi advance tới giờ server hiện tại.
 // Mầm trận luôn là 0 ở client (rules: mầm 0 = ẩn) nên advance ở đây không bao giờ tự bịa kết quả trận — server đẩy xuống.
 import { io, type Socket } from 'socket.io-client'
-import { advance, apply, type Action, type Report, type State } from '@rok/rules'
+import { advance, apply, type Action, type DaoId, type Report, type State } from '@rok/rules'
 import type { WorldAction } from '@rok/rules/world'
 import type {
   Ack,
@@ -324,14 +324,15 @@ export function createNet(h: Handlers, lang: string) {
       connect()
     },
     // Lập tông môn (tài khoản khách + tông môn + phiên), rồi nối
-    found: async (name: string) => enter(await api<Signed>('/guest', { name, lang })),
+    found: async (name: string, dao?: DaoId) => enter(await api<Signed>('/guest', { name, lang, dao })),
     // Vào tông môn đã có từ máy khác: email + mật khẩu, hoặc mã chuyển máy (dùng một lần), rồi nối như người cũ
     login: async (how: { email: string; pass: string } | { code: string }) =>
       enter(await api<Signed>('code' in how ? '/login/code' : '/login', how)),
     // Tài khoản: gắn email, đổi mật khẩu, mã chuyển máy, đăng xuất (mọi nơi), xoá. Đăng xuất / xoá xong: quên phiên, ngắt nối
     // (App tải lại trang về màn mở đầu)
     account: {
-      info: () => api<{ email: string | null; push: string | null }>('/account'),
+      info: () => api<{ email: string | null; push: string | null; off: string[] }>('/account'),
+      pushOff: (off: string[]) => api<{ ok: boolean }>('/push/off', { off }), // loại thông báo đẩy đã tắt
       link: (email: string, pass: string) => api<{ ok: boolean }>('/account/link', { email, pass }),
       password: (old: string, pass: string) => api<{ ok: boolean }>('/account/password', { old, pass }),
       code: () => api<{ code: string; until: number }>('/account/code', {}),

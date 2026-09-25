@@ -279,6 +279,7 @@ const validFest = (s: any) =>
   (s.frag === undefined || num(s.frag)) &&
   (s.bones === undefined || num(s.bones)) &&
   (s.honorAll === undefined || num(s.honorAll)) &&
+  (s.partyDay === undefined || num(s.partyDay)) &&
   (s.potOpened === undefined || (obj(s.potOpened) && num(s.potOpened.week) && num(s.potOpened.n))) &&
   (s.crowns === undefined || (Array.isArray(s.crowns) && s.crowns.every(num))) &&
   (s.yb === undefined || (obj(s.yb) && num(s.yb.kp) && num(s.yb.hunted) && num(s.yb.raided) && num(s.yb.gathered))) &&

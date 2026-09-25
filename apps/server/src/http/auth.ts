@@ -2,7 +2,7 @@
 import { randomInt } from 'node:crypto'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
-import { newGame, type State } from '@rok/rules'
+import { DAO_IDS, newGame, type DaoId, type State } from '@rok/rules'
 import type { Database } from '../db/index.ts'
 import * as accounts from '../db/accounts.ts'
 import { COOKIE, cleanName, cookieOptions, hashToken, newToken } from '../lib/auth.ts'
@@ -26,6 +26,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
             .regex(/^[a-z]{2}(-[A-Za-z]{2})?$/)
             .catch('en'),
           world: z.number().int().positive().optional(),
+          dao: z.enum(DAO_IDS as [DaoId, ...DaoId[]]).optional(), // đạo thống chọn trên màn lập tông môn
         }),
         response: {
           200: z.object({ token: z.string(), pid: z.number(), world: z.number(), path: z.string() }),
@@ -38,7 +39,13 @@ export const authRoutes: FastifyPluginAsyncZod<AuthOptions> = async (app, o) => 
       const n = cleanName(req.body.name)
       if (!n) return reply.code(400).send({ error: 'name' })
       const token = newToken()
-      const state: State = { ...newGame(Date.now(), n.name), seed: randomInt(1, 2 ** 32 - 1) }
+      const now = Date.now()
+      const dao = req.body.dao
+      const state: State = {
+        ...newGame(now, n.name),
+        seed: randomInt(1, 2 ** 32 - 1),
+        ...(dao && { dao: { id: dao, at: now } }),
+      }
       try {
         const g = await accounts.createGuest(o.db, {
           hash: hashToken(token),

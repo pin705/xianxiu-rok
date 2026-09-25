@@ -9,6 +9,7 @@ import {
   apOf,
   apply,
   capOf,
+  metric,
   newGame,
   rate,
   useError,
@@ -125,4 +126,16 @@ test('Khuếch Trận Kỳ: trận dung +10 % trong 8 giờ', () => {
   const r = apply(s, { type: 'use', item: 'khuechTran8', n: 1 }, t)
   assert.ok(r.ok)
   assert.equal(capOf(r.state, 'thanhPhong'), Math.floor(before * 1.1))
+})
+
+test('Sơn Hà Đồ: tan 12 ô mê vụ chưa khai gần tông môn nhất; chưa có chỗ trên bản đồ giới thì không dùng được', () => {
+  const t = Date.UTC(2026, 8, 25, 3)
+  const s0 = newGame(t)
+  const noSeat = { ...s0, items: { ...s0.items, sonHa12: 1 } }
+  assert.deepEqual(apply(noSeat, { type: 'use', item: 'sonHa12', n: 1 }, t), { ok: false, error: 'locked' })
+  const s = { ...noSeat, seat: { x: 75, y: 75 } }
+  const before = metric(s, 'explore')
+  const r = apply(s, { type: 'use', item: 'sonHa12', n: 1 }, t)
+  assert.ok(r.ok)
+  assert.equal(metric(r.state, 'explore'), before + 12, 'đúng 12 ô mới')
 })

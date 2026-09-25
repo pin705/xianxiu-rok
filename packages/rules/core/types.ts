@@ -203,6 +203,8 @@ export type MailArgs = {
   firstTake: [kind: string, lv: number] // tiên minh chiếm lần đầu một điểm (loại, cấp) trong mùa
   eveTop: [rank: number, pts: number] // Khai Giới Trảm Tà: cổng mở, minh mình hạng rank giới vận, điểm
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
+  party: [lv: number, waves: number, n: number] // Man Hoang Cổ Tộc: độ khó, số đợt qua, số người trong đội
+  league: [rank: number] // Cửu Thiên Luận Đạo Hội: minh mình hạng rank cả mùa
   camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
   ark: [win: 0 | 1, foe: string, mine: number, theirs: number] // Tranh Đoạt Linh Châu: thắng / thua minh foe, điểm hai bên
   // Tổng kết mùa (Yearbook): mùa, tầng Chủ điện, Công Huân (hạng, 0: ngoài bảng), chiến công, yêu thú hạ, cướp thắng, khai mỏ
@@ -275,6 +277,7 @@ export type State = {
   thoi?: { n: number; pick: number } // Thiên Thời: chỉ lệnh đã chọn cho thời thứ n của mùa
   bones?: number // Yêu Vương Tuần Sơn: yêu cốt đang có (đủ LOHAR_BONES triệu hồi)
   yb?: { kp: number; hunted: number; raided: number; gathered: number } // bộ đếm lúc đầu mùa (Tổng kết mùa tính phần tăng)
+  partyDay?: number // Man Hoang Cổ Tộc: ngày (dayOf) đã vào tổ đội — mỗi ngày một lần
   potOpened?: { week: number; n: number } // Tụ Bảo Minh Đỉnh: rương đã mở tuần này (mọi minh cộng lại — chống nhảy minh)
   crowns?: number[] // danh hiệu mùa: các mùa đứng đầu Công Huân cả giới (giữ qua luân hồi)
   honorAll?: number // Công Huân kiếm được cả đời (không về 0 khi hết mùa) — ra Phi Thăng Tệ

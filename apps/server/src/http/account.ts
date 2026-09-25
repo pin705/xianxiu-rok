@@ -34,6 +34,8 @@ export type AccountOptions = {
 
 // Dịch vụ push của các trình duyệt (Chrome/Edge qua FCM, Firefox, Safari, Windows)
 const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com']
+// Loại thông báo đẩy (tag của Note) người chơi tắt được
+const PUSH_TAGS = ['done', 'raid', 'dm', 'trib', 'ark'] as const
 
 const Email = z.string().max(254).transform(cleanEmail).pipe(z.email())
 const Pass = z.string().min(8).max(128)
@@ -113,11 +115,17 @@ function profileRoutes(app: App, o: AccountOptions, auth: Auth) {
     '/account',
     {
       preHandler: auth,
-      schema: { response: { 200: z.object({ email: z.string().nullable(), push: z.string().nullable() }), ...errors } },
+      schema: {
+        response: {
+          200: z.object({ email: z.string().nullable(), push: z.string().nullable(), off: z.array(z.string()) }),
+          ...errors,
+        },
+      },
     },
     async req => {
       const s = req.session
-      return { email: (await accounts.accountOf(o.db, s.account))?.email ?? null, push: o.pushKey }
+      const [a, off] = await Promise.all([accounts.accountOf(o.db, s.account), accounts.pushOffOf(o.db, s.account)])
+      return { email: a?.email ?? null, push: o.pushKey, off }
     },
   )
 
@@ -229,6 +237,21 @@ function pushRoutes(app: App, o: AccountOptions, auth: Auth) {
       const s = req.session
       if (!o.pushKey) return reply.code(400).send({ error: 'push_off' })
       await accounts.addPushSub(o.db, s.account, { endpoint: req.body.endpoint, ...req.body.keys })
+      return { ok: true }
+    },
+  )
+  // loại thông báo đẩy muốn tắt (việc xong, bị cướp, truyền âm, kiếp vân, sự kiện tiên minh)
+  app.post(
+    '/push/off',
+    {
+      preHandler: auth,
+      schema: {
+        body: z.object({ off: z.array(z.enum(PUSH_TAGS)).max(PUSH_TAGS.length) }),
+        response: { 200: Ok, ...errors },
+      },
+    },
+    async req => {
+      await accounts.setPushOff(o.db, req.session.account, [...new Set(req.body.off)])
       return { ok: true }
     },
   )

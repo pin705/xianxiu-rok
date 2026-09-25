@@ -18,7 +18,14 @@ export const ELEMENT_EMBLEMS = { kim: 'metal', moc: 'wood', thuy: 'water', hoa: 
 export type Emblem =
   | (typeof BEAST_EMBLEMS)[number] | (typeof SECT_EMBLEMS)[number] | (typeof REALM_EMBLEMS)[number]
   | (typeof UNIT_EMBLEMS)[keyof typeof UNIT_EMBLEMS] | (typeof ELEMENT_EMBLEMS)[keyof typeof ELEMENT_EMBLEMS]
-  | 'thunder' | 'win' | 'lose' | 'rebirth' | 'lotus' | 'crest' | 'tick' | 'tower' | 'anvil'
+  | 'thunder' | 'win' | 'lose' | 'rebirth' | 'lotus' | 'crest' | 'tick' | 'tower' | 'anvil' | DaoEmblem
+// Đạo thống của người chơi (rules DAOS): hình chạm vẽ tay riêng mỗi đạo (bảng M6), tông đĩa riêng — chín màu khác nhau để dải
+// chọn đọc được. Bản vẽ code (?art=0) mượn hình gần nghĩa.
+export const DAO_TONES = {
+  kiemTong: 'kiem', phapTong: 'phap', theTong: 'the', danTong: 'jade', tranTong: 'gold',
+  khiTong: 'kim', phuTong: 'thunder', thuTong: 'thuy', maTong: 'ink',
+} as const satisfies Record<string, MedalTone>
+export type DaoEmblem = keyof typeof DAO_TONES
 
 const DISC: Record<MedalTone, [string, string]> = {
   kiem: [C.azuriteL, C.azuriteD],
@@ -639,6 +646,7 @@ const DRAW: Record<Emblem, (g: G) => void> = {
   wolf, snake, bear, fox, eagle, ape, windWolf, leopard, rhino, nineFox, hawk, turtle, tiger, phoenix, dragon,
   wind, blood, poison, demon, ghost, wood, fire, ice, thunderPool, chaos, thunder, sword, orb, fist, win, lose, rebirth, lotus, crest, tick, tower,
   metal, water, earth, anvil,
+  kiemTong: sword, phapTong: orb, theTong: fist, danTong: lotus, tranTong: crest, khiTong: anvil, phuTong: thunder, thuTong: tiger, maTong: blood,
 }
 
 // Huy hiệu: đĩa màu khoáng loang sáng trên tối dưới, vòng vàng một nét, viền mực, hình chạm ở giữa, ánh men

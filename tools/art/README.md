@@ -99,7 +99,15 @@ Trước màn tiêu đề, phần còn lại chủ yếu là JS (~1,1 MB, phần
 - **Chữ giả**: model hay viết chữ Hán vô nghĩa lên biển hiệu; mọi prompt có "no writing / no text".
 - **Độ phân giải ảnh gốc**: Nano Banana Pro khi sửa từ ảnh mẫu trả ảnh khoảng 2752 px dù chọn 1K hay 2K. Xem cỡ ảnh thô trong `.work/raw` trước khi trả tiền vẽ lại "cho nét hơn" (26/9: phí 2.700đ vì vẽ lại núi mà không tăng độ phân giải). Tạo mới không có ảnh mẫu ở 1K (sân trận cũ) mới chỉ ~768 px, và chọn 2K thì tăng thật.
 - **Vẽ lại thì so từng tấm**: model có lúc vẽ chồng 2 tầng bậc đá, hoặc loang màu lạ. Tấm hỏng thì lấy lại bản cũ (`.work/old1k`).
+- **Quầng sáng quanh mái** (bậc cao) thành mảng trắng mờ hình hộp sau khi tách nền: `fit_building` bỏ phần gần trong suốt (dưới 35%). Mây đỡ bậc 5 chạm mép ảnh thì `cloud_bank` cắt theo elip.
+- **Khung HUD và bảng** (`strip`, `scroll`) cũng lấy từ nhóm `kit`: dải xanh ngọc phẳng, viền đều 4 cạnh (`symmetric`). Viền tay thường đậm hơn ở cạnh dưới, trông như bóng đổ nặng. Không vẽ họa tiết lặp dọc viền: lặp lại trông rẻ.
 - **Mây bậc 5 chạm mép ảnh**: `feather` làm mờ 4% sát mép trước khi cắt sát.
+
+## Soi lỗi hiển thị
+
+- **Chữ khó đọc**: `node tools/art/contrast.ts --player <tên> <nhãn>` đo tương phản thật của mọi đoạn chữ đang hiện trên ảnh chụp, vì chữ nằm trên da vẽ tay nên CSS không biết màu nền. Ngưỡng là 4,5, hoặc 3 với chữ to/đậm. Nó in danh sách chỗ dưới ngưỡng và ảnh đánh dấu đỏ ở `.work/contrast/`. Chạy lại sau mỗi lần đổi da hay bảng màu.
+- **Nền icon chưa sạch**: xem icon trên nền tối (nền giấy che mất vệt sót). Bảng bị lệch lưới (model vẽ 4 hình một hàng, thêm hình thừa) thì `cut_sheet` tách theo hình rời. Nếu có hình thừa thì khai `ICON_SKIP`; khi số hình không khớp, công cụ báo ra.
+- **Nền không phải hồng thuần**: có khi model tô nền tím nhạt hay hồng đậm. `key_magenta` khi đó lấy màu nền từ mép ảnh và báo "nền không phải hồng thuần"; gặp thông báo này thì xem lại tranh.
 
 ## Nối vào game
 

@@ -75,6 +75,7 @@ import {
   type BuildingId,
   type ElderId,
   type Element,
+  type PartyRole,
   type EventId,
   type GearId,
   type PillId,
@@ -519,17 +520,52 @@ export const vi = {
   // Đạo thống (Civilization): mỗi tông môn theo một đạo thống
   dao: {
     title: 'Đạo thống',
-    lore: 'Tông môn theo đạo thống nào thì được hai điều lợi của đạo ấy. Chọn lần đầu miễn phí; đổi đạo cần tịnh tâm 7 ngày giữa hai lần.',
+    lore: 'Tông môn theo đạo thống nào thì được ba tiềm năng của đạo ấy. Đổi đạo cần tịnh tâm 7 ngày giữa hai lần.',
     change: 'Cải tu',
     keep: 'Giữ đạo cũ',
     wait: (t: string) => `Cải tu được sau ${t}`,
+    pick: 'Chọn đạo thống',
+    pickHint: 'Chín đạo, mỗi đạo một thế mạnh. Theo đạo nào, tông môn mạnh về đó.',
+    potential: 'Tiềm năng',
+    go: 'Theo đạo này',
+    note: 'Về sau cải tu được ở Chủ điện, 7 ngày một lần.',
+    prev: 'Đạo trước',
+    next: 'Đạo sau',
     names: {
-      kiemTong: { name: 'Kiếm Tông', desc: 'Lấy kiếm nhập đạo, xuất quân như gió.' },
-      phapTong: { name: 'Pháp Tông', desc: 'Thuật pháp tinh thâm, công pháp uy lực hơn.' },
-      theTong: { name: 'Thể Tông', desc: 'Luyện thân như sắt, thương binh mau lành.' },
-      danTong: { name: 'Đan Tông', desc: 'Lò đan không tắt, linh điền sung túc.' },
-      tranTong: { name: 'Trận Tông', desc: 'Trận pháp hộ sơn vững chãi, dựng điện nhanh hơn.' },
-    } satisfies Record<DaoId, { name: string; desc: string }>,
+      kiemTong: { name: 'Kiếm Tông', desc: 'Lấy kiếm nhập đạo, xuất quân như gió.', style: 'Tấn công · Viễn chinh' },
+      phapTong: {
+        name: 'Pháp Tông',
+        desc: 'Thuật pháp tinh thâm, trưởng lão ngộ đạo nhanh.',
+        style: 'Công pháp · Trưởng lão',
+      },
+      theTong: { name: 'Thể Tông', desc: 'Luyện thân như sắt, thương binh mau lành.', style: 'Bền bỉ · Hồi phục' },
+      danTong: { name: 'Đan Tông', desc: 'Lò đan không tắt, linh điền sung túc.', style: 'Kinh tế · Luyện đan' },
+      tranTong: {
+        name: 'Trận Tông',
+        desc: 'Trận pháp hộ sơn vững chãi, kho tàng đầy ắp.',
+        style: 'Phòng thủ · Hợp người mới',
+      },
+      khiTong: {
+        name: 'Luyện Khí Tông',
+        desc: 'Búa rèn ngày đêm, pháp bảo ra lò nhanh.',
+        style: 'Pháp bảo · Khai khoáng',
+      },
+      phuTong: {
+        name: 'Phù Lục Tông',
+        desc: 'Chu sa vẽ bùa, lôi kiếp cũng phải nể ba phần.',
+        style: 'Độ kiếp · Công pháp',
+      },
+      thuTong: {
+        name: 'Ngự Thú Tông',
+        desc: 'Kết khế cùng linh thú: đệ tử luyện nhanh, chạy xa.',
+        style: 'Tuyển quân · Cơ động',
+      },
+      maTong: {
+        name: 'Huyết Ma Tông',
+        desc: 'Tà đạo lấy chiến dưỡng chiến, đánh đâu vơ đó.',
+        style: 'Tà đạo · Chiến lợi phẩm',
+      },
+    } satisfies Record<DaoId, { name: string; desc: string; style: string }>,
   },
   // Ma Triều Công Sơn (Shadow Legion): sự kiện giữ núi của tiên minh tối thứ Tư
   legion: {
@@ -655,6 +691,25 @@ export const vi = {
     at: (n: number) => `${n} trận`,
     fightN: (n: number) => `Luận võ · trận ${n}`,
   },
+  // Man Hoang Cổ Tộc: phó bản tổ đội của tiên minh
+  party: {
+    title: 'Man Hoang Cổ Tộc',
+    hint: 'Phó bản tổ đội: một người mở phòng (độ khó, vai), người trong minh vào trong 10 phút, tối đa 4 người — mỗi người mỗi ngày một lần. Cả đội (đội đầu đội hình Luận Kiếm Đài, không mất quân) đánh 5 đợt hung thú mạnh dần; quà theo độ khó và số đợt qua.',
+    locked: (n: number) => `Mở khi Chủ điện tầng ${n}`,
+    lv: (n: number, might: string) => `Độ khó ${n} · ${might}`,
+    room: (n: number, might: string) => `Phòng chờ · độ khó ${n} (đợt đầu ${might})`,
+    left: (t: string, n: number, max: number) => `${n}/${max} người · xuất phát sau ${t}`,
+    pick: 'Vai',
+    roles: { hoPhap: 'Hộ Pháp', chuCong: 'Chủ Công', triLieu: 'Trị Liệu' } as Record<PartyRole, string>,
+    roleHint: {
+      hoPhap: 'Hộ Pháp: cả đội thủ +15 %, máu +10 %.',
+      chuCong: 'Chủ Công: cả đội công +12 % (tối đa hai người tính).',
+      triLieu: 'Trị Liệu: sau mỗi đợt hồi 20 % quân đã ngã (tối đa hai người tính).',
+    } as Record<PartyRole, string>,
+    open: 'Mở tổ đội',
+    join: 'Vào đội',
+    done: 'Hôm nay đã đi phó bản — mai quay lại.',
+  },
   // Tranh Đoạt Linh Châu: chiến trường 5 ô theo hiệp
   ark: {
     title: 'Tranh Đoạt Linh Châu',
@@ -680,6 +735,8 @@ export const vi = {
       drop: (who: string, node: string) => `${who} làm rơi Linh Châu ở ${node}`,
     },
     last: (a: string, b: string, pa: number, pb: number) => `[${a}] ${pa} – ${pb} [${b}]`,
+    league: 'Cửu Thiên Luận Đạo Hội — bảng giải mùa này (thắng 3, thua 1 điểm; hết mùa ba minh đầu có quà)',
+    leagueRow: (w: number, l: number, pts: number) => `${w} thắng · ${l} thua · ${pts} điểm`,
   },
   // Tụ Bảo Minh Đỉnh: góp tài nguyên vào đỉnh hương của minh, đỉnh đầy thì ai góp đủ mở rương
   pot: {
@@ -1271,7 +1328,7 @@ export const vi = {
     later: 'Để sau',
     dao: {
       title: 'Chọn đạo thống',
-      text: 'Tông môn nên theo một đạo thống: Kiếm, Pháp, Thể, Đan hay Trận Tông — mỗi đạo hai điều lợi. Chọn ở Chủ điện, lần đầu miễn phí.',
+      text: 'Tông môn nên theo một đạo thống — chín đạo, mỗi đạo ba tiềm năng. Chọn ở Chủ điện, lần đầu miễn phí.',
     },
     events: {
       title: 'Trung tâm sự kiện',
@@ -1537,6 +1594,14 @@ export const vi = {
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
       ],
+      party: (lv: number, waves: number, n: number): [string, string] => [
+        `Man Hoang Cổ Tộc · độ khó ${lv}`,
+        `Tổ đội ${n} người ${waves >= 5 ? 'đã quét sạch cả năm đợt hung thú' : waves ? `qua được ${waves}/5 đợt hung thú` : 'chưa qua được đợt nào'}. Quà cho mọi người trong đội ở dưới.`,
+      ],
+      league: (rank: number): [string, string] => [
+        `Cửu Thiên Luận Đạo Hội · minh hạng ${rank}`,
+        `Mùa này tiên minh đứng hạng ${rank} giải Cửu Thiên Luận Đạo Hội (các trận Tranh Đoạt Linh Châu). Quà cho mọi người trong minh ở dưới.`,
+      ],
       camp: (camp: 0 | 1, pts: number, other: number): [string, string] => [
         `${camp ? 'Tà phái' : 'Chính phái'} thắng mùa`,
         `Chính Tà Phân Tranh khép lại: ${camp ? 'Tà phái' : 'Chính phái'} của bạn ${pts.toLocaleString('vi')} điểm mùa, phái kia ${other.toLocaleString('vi')}. Quà phái thắng ở dưới.`,
@@ -1727,6 +1792,14 @@ export const vi = {
     denied: 'Trình duyệt đang chặn thông báo của game — mở lại trong cài đặt trình duyệt',
     dm: (name: string) => `${name} truyền âm cho bạn`,
     arkSoon: 'Tranh Đoạt Linh Châu bắt đầu sau 10 phút — vào đặt lệnh cho đội!',
+    kinds: 'Nhận thông báo về:',
+    kind: {
+      done: 'Việc dài xong (xây, tuyển, nghiên cứu, đội về)',
+      raid: 'Địch kéo tới / bị cướp',
+      dm: 'Truyền âm',
+      trib: 'Kiếp vân giáng',
+      ark: 'Trận tiên minh (Linh Châu)',
+    } as Record<string, string>,
     done: {
       build: 'Công trình đã xây xong — tạp dịch đang rảnh',
       train: 'Đệ tử mới đã nhập môn',
@@ -2429,6 +2502,10 @@ export const vi = {
       khuechTran: {
         name: 'Khuếch Trận Kỳ',
         desc: 'Mở rộng trận dung: mỗi trưởng lão dẫn thêm 10 % đệ tử trong 8 giờ (dùng thêm thì kéo dài).',
+      },
+      sonHa: {
+        name: 'Sơn Hà Đồ',
+        desc: 'Tấm địa đồ vẽ tay: tan ngay 12 ô mê vụ chưa khai gần tông môn nhất trên bản đồ giới.',
       },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },

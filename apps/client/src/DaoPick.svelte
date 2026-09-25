@@ -1,11 +1,10 @@
 <script lang="ts">
-  // Đạo thống (Civilization của RoK) trong bảng Chủ điện: đạo thống đang theo và hai tăng ích; chưa chọn thì bày năm đạo thống
-  // để chọn (miễn phí); đã chọn thì "Đổi" mở danh sách, đổi lại được sau DAO_COOL.
+  // Đạo thống (Civilization của RoK) trong bảng Chủ điện: đạo đang theo (huy hiệu, ba tiềm năng); "Cải tu" mở màn chọn lớn
+  // (DaoChoose, như lúc lập tông môn), đổi lại được sau DAO_COOL. Save cũ chưa theo đạo nào: chọn miễn phí.
   import {
     DAOS,
     DAO_COOL,
     DAO_HALL,
-    DAO_IDS,
     STRATS,
     STRAT_HALL,
     STRAT_IDS,
@@ -13,9 +12,11 @@
     type DaoId,
     type StratId,
   } from '@rok/rules'
-  import { Button, Card, Section } from './ui'
+  import { DAO_TONES } from '@rok/art'
+  import { Button, Card, Medal, Section, Sheet } from './ui'
   import { L, clock } from './lib'
   import { useGame } from './game'
+  import DaoChoose from './DaoChoose.svelte'
 
   const g = useGame()
   const game = $derived(g.game)
@@ -29,38 +30,45 @@
   }
 </script>
 
-{#if game.levels.chuDien >= DAO_HALL}
+{#if game.levels.chuDien >= DAO_HALL || game.dao}
   <Section title={L.dao.title}>
     <p class="t-small t-lore">{L.dao.lore}</p>
-    {#if game.dao && !open}
-      <Card tone="silk">
-        <div class="row between">
-          <span class="stack" style:--gap="2px">
-            <b>{L.dao.names[game.dao.id].name}</b>
-            {#each fx(game.dao.id) as f (f)}<small class="t-small t-good">{f}</small>{/each}
+    <Card tone="silk">
+      <div class="row between">
+        {#if game.dao}
+          <span class="row" style:--gap="10px">
+            <Medal emblem={game.dao.id} tone={DAO_TONES[game.dao.id]} size={48} />
+            <span class="stack" style:--gap="2px">
+              <b>{L.dao.names[game.dao.id].name}</b>
+              {#each fx(game.dao.id) as f (f)}<small class="t-small t-good">{f}</small>{/each}
+            </span>
           </span>
-          <Button size="sm" variant="ghost" disabled={wait > 0} onclick={() => (open = true)}>{L.dao.change}</Button>
-        </div>
-        {#if wait > 0}<small class="t-tiny t-soft">{L.dao.wait(wait >= 3_600_000 ? L.ago(wait) : clock(wait))}</small
-          >{/if}
-      </Card>
-    {:else}
-      <ul class="stack rows">
-        {#each DAO_IDS as id (id)}
-          <li>
-            <Card selected={game.dao?.id === id} onclick={() => pick(id)} label={L.dao.names[id].name}>
-              <span class="stack" style:--gap="2px">
-                <b>{L.dao.names[id].name}</b>
-                <small class="t-tiny t-soft">{L.dao.names[id].desc}</small>
-                <small class="t-small t-good">{fx(id).join(' · ')}</small>
-              </span>
-            </Card>
-          </li>
-        {/each}
-      </ul>
-      {#if game.dao}<Button size="sm" variant="quiet" onclick={() => (open = false)}>{L.dao.keep}</Button>{/if}
-    {/if}
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={wait > 0 || game.levels.chuDien < DAO_HALL}
+            onclick={() => (open = true)}>{L.dao.change}</Button
+          >
+        {:else}
+          <small class="t-small">{L.tips.dao.text}</small>
+          <Button size="sm" variant="gold" onclick={() => (open = true)}>{L.dao.pick}</Button>
+        {/if}
+      </div>
+      {#if wait > 0}<small class="t-tiny t-soft">{L.dao.wait(wait >= 3_600_000 ? L.ago(wait) : clock(wait))}</small
+        >{/if}
+    </Card>
   </Section>
+  <Sheet {open} onclose={() => (open = false)} center title={L.dao.pick} sub={L.dao.pickHint}>
+    {#if open}
+      <DaoChoose
+        value={game.dao?.id}
+        current={game.dao?.id}
+        go={game.dao ? L.dao.change : L.dao.go}
+        compact
+        onpick={pick}
+      />
+    {/if}
+  </Sheet>
 {/if}
 
 <!-- Chiến lược mùa (Seasonal Strategies của RoK): mỗi mùa chọn một, miễn phí; luân hồi thì chọn lại -->

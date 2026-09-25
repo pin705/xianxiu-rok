@@ -130,6 +130,17 @@
       <small class="t-small t-strong">{L.ark.last(r.an, r.bn, r.wa, r.wb)}</small>
     {/each}
   {/if}
+  {#if row?.league?.length}
+    <!-- Cửu Thiên Luận Đạo Hội: bảng giải cả mùa, minh mình tô vàng -->
+    <small class="t-tiny t-soft mt-2">{L.ark.league}</small>
+    <ol class="stack league" style:--gap="1px">
+      {#each row.league as r, k (r.id)}
+        <li class="row between t-small" class:t-gold={r.id === aid}>
+          <span>{k + 1}. [{r.tag}]</span><span class="t-num">{L.ark.leagueRow(r.w, r.l, r.pts)}</span>
+        </li>
+      {/each}
+    </ol>
+  {/if}
 </Section>
 
 <style>
@@ -178,6 +189,11 @@
     fill: #e8c24a;
     stroke: #8a6a14;
     stroke-width: 1.5;
+  }
+  .league {
+    list-style: none;
+    padding: 0;
+    margin: 2px 0 0;
   }
   .log {
     list-style: none;

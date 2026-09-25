@@ -16,6 +16,7 @@ import {
   QUIZ_KEY,
   PVP_HALL,
   BOOK,
+  DAO_IDS,
   advance,
   dayOf,
   apply,
@@ -60,6 +61,7 @@ async function load(lang: 'vi' | 'en') {
     'Settings',
     'Daily',
     'Title',
+    'DaoChoose',
     'Rivals',
     'Ranks',
     'Alliance',
@@ -319,6 +321,9 @@ test('màn tiêu đề, núi và HUD ở mọi trạng thái', async () => {
     await load(lang)
     paint('Title', { mode: 'first', onstart: noop, ondone: noop }, 'lần đầu')
     paint('Title', { mode: 'splash', onstart: noop, ondone: noop }, 'quay lại')
+    const pick = paint('DaoChoose', { onpick: noop }, 'chọn đạo thống')
+    for (const id of DAO_IDS) assert.ok(pick.includes(L.dao.names[id].name), `dải chọn thiếu ${id}`)
+    paint('DaoChoose', { onpick: noop, value: 'maTong', current: 'maTong', compact: true }, 'cải tu')
     for (const f of L.naming.first)
       for (const l of L.naming.last) assert.ok(`${f} ${l}`.length <= 20, `tên gợi ý quá dài (tối đa 20): ${f} ${l}`)
     for (const [label, s] of STATES) {
@@ -790,10 +795,16 @@ test('tiên minh, chat', async () => {
       const go = async () => true
       const signUp = paint(
         'ArkCard',
-        { row: { signed: false, live: null, last: [] }, me: 1, aid: 1, officer: true, go },
+        {
+          row: { signed: false, live: null, last: [], league: [{ id: 1, tag: 'VK', w: 2, l: 1, pts: 7 }] },
+          me: 1,
+          aid: 1,
+          officer: true,
+          go,
+        },
         `${label}, Linh Châu`,
       )
-      assert.ok(signUp.includes(L.ark.sign), 'nút ghi danh')
+      assert.ok(signUp.includes(L.ark.sign) && signUp.includes(L.ark.leagueRow(2, 1, 7)), 'nút ghi danh, bảng giải')
       const live = {
         a: 1,
         b: 2,
@@ -816,7 +827,7 @@ test('tiên minh, chat', async () => {
       }
       const during = paint(
         'ArkCard',
-        { row: { signed: true, live, last: [] }, me: 1, aid: 1, officer: true, go },
+        { row: { signed: true, live, last: [], league: [] }, me: 1, aid: 1, officer: true, go },
         `${label}, Linh Châu đang trận`,
       )
       assert.ok(

@@ -1,12 +1,23 @@
 // Lật mùa và lật tuần của cả giới: hết mùa (phi thăng / luân hồi, trả hàng chợ, làm mới phần chung), top sự kiện tuần.
 // Điều phối nhiều tính năng (như act.ts, advance.ts) nên được import các file tính năng khác trong world/.
-import { ASCEND, ASCEND_HALL, CAMP_WIN, EVENT_PRIZES, EVENT_TOP, HONOR_RANKS, MAX_LEVEL, honorPrize } from '../data.ts'
+import {
+  ASCEND,
+  ASCEND_HALL,
+  CAMP_WIN,
+  EVENT_PRIZES,
+  EVENT_TOP,
+  HONOR_RANKS,
+  LEAGUE_PRIZES,
+  MAX_LEVEL,
+  honorPrize,
+} from '../data.ts'
 import type { State } from '../core/types.ts'
 import { advance } from '../core/time.ts'
 import { mail } from '../sect/inbox.ts'
 import { seasonEnd } from '../sect/rebirth.ts'
 import { freshWorld, sideKey, type MapCtx, type Players, type World } from './base.ts'
 import { unsold } from './market.ts'
+import { leagueBoard } from './ark.ts'
 import { campOf, campPts, type SeasonRow, seasonBoard } from './points.ts'
 
 // Hết mùa cho cả giới (trừ skip: NPC, server làm mới riêng): minh đứng đầu (người từ ASCEND_HALL) và ai ở tầng cao nhất phi thăng,
@@ -24,6 +35,11 @@ export function endSeason(
   const rank = new Map(top.map((r, k) => [r.side, k + 1]))
   const honors = honorBoard(ps, skip).slice(0, HONOR_RANKS)
   const camps = campPts(top)
+  const league = new Map(
+    leagueBoard(w)
+      .slice(0, LEAGUE_PRIZES.length)
+      .map((r, k) => [r.id, k]),
+  ) // Cửu Thiên: minh → hạng
   const won = camps[0] === camps[1] ? null : camps[0] > camps[1] ? 0 : 1 // Chính Tà Phân Tranh: phái thắng mùa
   const changed: Players = new Map()
   for (const [pid, s0] of ps) {
@@ -36,6 +52,9 @@ export function endSeason(
     const hr = honors.findIndex(([id]) => id === pid)
     if (hr >= 0) x = mail(x, { at: now, k: 'honorTop', a: [hr + 1, s.honor ?? 0], gift: honorPrize(hr) })
     if (hr === 0) x = { ...x, crowns: [...(x.crowns ?? []), season] } // danh hiệu mùa: đệ nhất Công Huân
+    // Cửu Thiên Luận Đạo Hội: người trong minh top giải có quà theo hạng
+    const lr = side > 0 ? league.get(side) : undefined
+    if (lr !== undefined) x = mail(x, { at: now, k: 'league', a: [lr + 1], gift: LEAGUE_PRIZES[lr] })
     // Chính Tà Phân Tranh: người phái thắng mùa có quà (thư trước thư kết mùa)
     if (won !== null && campOf(side) === won)
       x = mail(x, { at: now, k: 'camp', a: [won, camps[won], camps[won ? 0 : 1]], gift: CAMP_WIN })

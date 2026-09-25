@@ -28,6 +28,7 @@ export const accounts = pgTable('accounts', {
   pass: text(), // scrypt$muối$khoá (lib/auth.ts)
   locale: text().notNull().default('en'),
   cosmetics: jsonb().notNull().default({}), // danh hiệu, khung (giữ qua mùa)
+  pushOff: text('push_off').array().notNull().default([]), // loại thông báo đẩy đã tắt (tag: done, raid, dm, trib, ark)
   createdAt: ts('created_at').notNull().defaultNow(),
   bannedAt: ts('banned_at'),
   banReason: text(),

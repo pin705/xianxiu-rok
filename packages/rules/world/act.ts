@@ -34,6 +34,7 @@ import { thoiActions, type ThoiAction } from './thoi.ts'
 import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
+import { partyActions, type PartyAction } from './party.ts'
 
 export type WorldAction =
   | RaidAction
@@ -57,6 +58,7 @@ export type WorldAction =
   | LoharAction
   | PotAction
   | ArkAction
+  | PartyAction
 
 const WORLD: WorldActions<WorldAction> = {
   ...raidActions,
@@ -80,6 +82,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...loharActions,
   ...potActions,
   ...arkActions,
+  ...partyActions,
 }
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 

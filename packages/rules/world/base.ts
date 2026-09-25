@@ -27,6 +27,7 @@ import {
   TRIBE_LEN,
   TRIBE_PTS,
   BLESSINGS,
+  type PartyRole,
   TITLE_IDS,
   TITLES,
   type TitleId,
@@ -107,7 +108,10 @@ export type Alliance = {
   fundAt?: number // kho minh: lãnh thổ đã sinh Minh khố tới lúc này
   offices?: Partial<Record<OfficeId, number>> // chức vị đường chủ: ai giữ
   pot?: Pot // Tụ Bảo Minh Đỉnh tuần này
+  party?: PartyRoom // Man Hoang Cổ Tộc: phòng tổ đội đang chờ (mỗi minh một phòng)
 }
+// Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
+export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
 // Tụ Bảo Minh Đỉnh: tuần, điểm cả minh, điểm từng người đã góp, số rương từng người đã mở
 export type Pot = { week: number; pts: number; by: Record<number, number>; opened: Record<number, number> }
 // Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
@@ -234,7 +238,16 @@ export type ArkFight = {
   orb: { at: number; by?: number; back?: number; n: number } | null
   log: ArkLog[]
 }
-export type Ark = { on: number; done: number; signed: number[]; live: ArkFight[]; last: WarResult[]; warned?: number } // warned: tuần đã nhắc
+// warned: tuần đã nhắc · league: Cửu Thiên Luận Đạo Hội của mùa — mỗi minh [thắng, thua, điểm giải]
+export type Ark = {
+  on: number
+  done: number
+  signed: number[]
+  live: ArkFight[]
+  last: WarResult[]
+  warned?: number
+  league?: Record<number, [w: number, l: number, pts: number]>
+}
 // Một tước: ai giữ, phong lúc nào, tới lúc nào
 export type Title = { pid: number; at: number; until: number }
 export const freshWorld = (): World => ({

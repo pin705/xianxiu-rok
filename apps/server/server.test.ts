@@ -181,6 +181,11 @@ test('tên trùng trong cùng giới, tên bẩn, thiếu header chống CSRF đ
   assert.equal((await guest(a, 'trùng   tên tông')).status, 409)
   assert.equal((await guest(a, 'x')).status, 400)
   assert.equal((await guest(a, '<script>')).status, 400)
+  // đạo thống chọn trên màn lập tông môn: lưu vào state; mã lạ bị từ chối
+  const d = await api(a, '/guest', { name: `Tông ${randomBytes(3).toString('hex')}`, lang: 'vi', dao: 'maTong' })
+  const dp = ((await d.json()) as { pid: number }).pid
+  assert.equal(((await row(a, dp)).state as State).dao?.id, 'maTong')
+  assert.equal((await api(a, '/guest', { name: 'Đạo Lạ Tông', lang: 'vi', dao: 'xx' })).status, 400)
   assert.equal((await guest(a, 'Tông Đéo Gì')).status, 400, 'tên có từ tục')
   const r = await fetch(`http://127.0.0.1:${a.port}/api/guest`, {
     method: 'POST',
@@ -907,6 +912,11 @@ test(
       'B'.repeat(87),
       'client lấy khoá công khai VAPID',
     )
+    // chọn loại thông báo: tắt "raid" rồi bật lại; loại lạ thì từ chối
+    assert.equal((await api(n, '/push/off', { off: ['raid', 'raid'] }, V.token)).status, 200)
+    assert.deepEqual(((await (await api(n, '/account', undefined, V.token)).json()) as { off: string[] }).off, ['raid'])
+    assert.equal((await api(n, '/push/off', { off: ['spam'] }, V.token)).status, 400)
+    assert.equal((await api(n, '/push/off', { off: [] }, V.token)).status, 200)
 
     // V giao việc xây 30 phút rồi rời game → tới giờ xong thì được nhắc; đang chơi thì không
     const cv = client(n, V.token)

@@ -1332,7 +1332,7 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C13 + G5 Trận đồ (preset đội) | ✅ | P1 | M |
 | C16 Tìm mục tiêu trên bản đồ Giới (loại + cấp) | ✅ | P1 | M |
 | E3 Cảnh báo có tông môn kéo quân tới (viền son, thẻ đồng hồ, đẩy) | ✅ | P1 | M |
-| E4 Thông báo đẩy chọn theo loại | 🟡 | P1 | M |
+| E4 Thông báo đẩy chọn theo loại | ✅ công tắc 5 loại (`/push/off`) | P1 | M |
 | F1 Trưởng lão dẫn đường nói chuyện ở 5–6 mốc đầu | ✅ | P1 | M |
 | A3 Điểm danh sơn môn / chuỗi 7 ngày | ❌ | P2 | S |
 | A10 Chương nhiệm vụ có tên, thẻ thu gọn | 🟡 | P2 | S |

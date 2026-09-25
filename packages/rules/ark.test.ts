@@ -1,13 +1,26 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { ARK_CHARGE, ARK_ROUND, ARK_ROUNDS, ARK_TAKE, expAt, newGame, type State } from './index.ts'
+import {
+  ARK_CHARGE,
+  ARK_ROUND,
+  ARK_ROUNDS,
+  ARK_TAKE,
+  LEAGUE_LOSE,
+  LEAGUE_WIN,
+  expAt,
+  newGame,
+  type State,
+} from './index.ts'
 import {
   arkAt,
   arkOf,
   arkRound,
   arkRow,
   arkStep,
+  atlas,
+  endSeason,
   freshWorld,
+  leagueBoard,
   worldAct,
   type ArkFight,
   type Players,
@@ -103,6 +116,17 @@ test('Tranh Đoạt Linh Châu: ghi danh, 20h Chủ nhật dựng trận, mỗi 
   assert.equal(r.changed.get(1)!.mail.at(-1)!.a![0], 1)
   assert.equal(r.changed.get(4)!.mail.at(-1)!.a![0], 0)
   assert.equal(arkStep(ps, w, start + ARK_ROUNDS * ARK_ROUND + 60_000, 7).world, w, 'tuần này xong rồi')
+  // Cửu Thiên Luận Đạo Hội: thắng 3 điểm, thua 1; hết mùa minh top giải có quà
+  assert.deepEqual(
+    leagueBoard(w).map(x => [x.id, x.w, x.l, x.pts]),
+    [
+      [1, 1, 0, LEAGUE_WIN],
+      [2, 0, 1, LEAGUE_LOSE],
+    ],
+  )
+  const end = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, start + 86_400_000, 1, new Set())
+  assert.deepEqual(end.changed.get(1)!.mail.find(m => m.k === 'league')?.a, [1])
+  assert.deepEqual(end.changed.get(4)!.mail.find(m => m.k === 'league')?.a, [2])
 })
 
 test('Linh Châu: người mang đi về Tiểu Trận mình giữ chưa nạp, nạp được điểm (lần sau ×1,5), Châu về Trung Điện sau một hiệp', () => {

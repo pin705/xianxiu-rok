@@ -107,8 +107,8 @@ export const RAGE_HURT = 600
 // Phó trưởng lão (Secondary Commander của RoK): từ Chủ điện tầng DEPUTY_HALL, mỗi trưởng lão ghép một phó; phó đi cùng đội,
 // tâm pháp (bị động đã mở) của phó cộng vào đội, công pháp của phó nổ ngay sau chủ tướng với DEPUTY_SKILL sức.
 // Thiên phú, pháp bảo, sao, ngũ hành chỉ của chủ tướng.
-// Đạo thống (Civilization của RoK): mỗi tông môn theo một đạo thống, hai tăng ích nhỏ; chọn lần đầu miễn phí từ Chủ điện
-// tầng DAO_HALL, đổi lại được sau DAO_COOL.
+// Đạo thống (Civilization của RoK): mỗi tông môn theo một đạo thống; chọn lúc lập tông môn (save cũ chưa có thì chọn miễn phí
+// từ Chủ điện tầng DAO_HALL), đổi lại được sau DAO_COOL.
 // Chiến lược mùa (Seasonal Strategies của RoK — King of the Nile): mỗi mùa chọn một, miễn phí, luân hồi thì chọn lại
 export const STRAT_HALL = 5
 export const STRATS = {
@@ -120,12 +120,18 @@ export type StratId = keyof typeof STRATS
 export const STRAT_IDS = Object.keys(STRATS) as StratId[]
 export const DAO_HALL = 2
 export const DAO_COOL = 7 * 24 * 3_600_000
+// Chín đạo thống như các nền văn minh của RoK: chọn ngay lúc lập tông môn, mỗi đạo ba tiềm năng (một chiến, một phát triển,
+// một sở trường riêng). Thứ tự = thứ tự trên màn chọn.
 export const DAOS = {
-  kiemTong: { 'atk.kiem': 0.05, march: 0.05 },
-  phapTong: { 'atk.phap': 0.05, skill: 0.05 },
-  theTong: { 'hp.the': 0.05, heal: 0.1 },
-  danTong: { brew: 0.1, prod: 0.03 },
-  tranTong: { def: 0.05, build: 0.03 },
+  kiemTong: { 'atk.kiem': 0.05, march: 0.05, cap: 0.05 },
+  phapTong: { 'atk.phap': 0.05, skill: 0.05, exp: 0.1 },
+  theTong: { 'hp.the': 0.05, heal: 0.1, hospital: 0.1 },
+  danTong: { brew: 0.1, prod: 0.03, 'prod.linhThao': 0.05 },
+  tranTong: { def: 0.05, build: 0.03, storage: 0.1 },
+  khiTong: { forge: 0.15, 'prod.linhKhoang': 0.05, atk: 0.02 },
+  phuTong: { trib: 0.1, skill: 0.03, def: 0.02 },
+  thuTong: { train: 0.05, hp: 0.03, march: 0.03 },
+  maTong: { loot: 0.1, atk: 0.03, train: 0.03 },
 } as const satisfies Record<string, Partial<Record<Bonus, number>>>
 export type DaoId = keyof typeof DAOS
 export const DAO_IDS = Object.keys(DAOS) as DaoId[]
@@ -451,6 +457,7 @@ export type BagDef =
   | { use: 'builder'; hours: number } // thuê tạp dịch thứ hai (xây song song hai công trình)
   | { use: 'vip'; n: number } // Hương Hỏa Lệnh: cộng điểm Hương Hỏa (VIP)
   | { use: 'ap'; n: number } // Hành Lực Đan: cộng hành lực (được vượt AP_MAX)
+  | { use: 'map'; n: number } // Sơn Hà Đồ: tan n ô mê vụ gần tông môn nhất
   | { use: 'ticket' } // Luận Kiếm Lệnh: dùng ở Luận Kiếm Đài (+1 lượt hôm nay), không dùng thẳng từ túi
 const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
@@ -493,6 +500,7 @@ const bag = {
   hanhLuc50: { use: 'ap', n: 50 }, // Hành Lực Đan: hồi hành lực (săn yêu thú giới)
   luanKiem: { use: 'ticket' }, // Luận Kiếm Lệnh: thêm một lượt Luận Kiếm Đài
   khuechTran8: { use: 'buff', key: 'cap', v: 0.1, hours: 8 }, // Khuếch Trận Kỳ: trận dung +10 %
+  sonHa12: { use: 'map', n: 12 }, // Sơn Hà Đồ: tan 12 ô mê vụ gần nhất
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -520,6 +528,7 @@ export const BAG_FAMILIES = [
   'hanhLuc',
   'luanKiem',
   'khuechTran',
+  'sonHa',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -980,6 +989,15 @@ export const ARK_HOLD = [0, 20, 40, 20, 0]
 export const ARK_CHARGE = 400
 export const ARK_WIN: Reward = { items: { thoiQuang180: 1, kimDuyen: 1, kinhThu2k: 2 } }
 export const ARK_LOSE: Reward = { items: { thoiQuang60: 2, nganDuyen: 1 } }
+// Cửu Thiên Luận Đạo Hội (Osiris League giản lược): cả mùa mỗi trận Linh Châu cộng điểm giải (thắng LEAGUE_WIN, thua LEAGUE_LOSE);
+// hết mùa LEAGUE_PRIZES.length minh đầu — mọi người trong minh nhận quà theo hạng
+export const LEAGUE_WIN = 3
+export const LEAGUE_LOSE = 1
+export const LEAGUE_PRIZES: Reward[] = [
+  { items: { kimDuyen: 3, thoiQuang480: 2, huongHoa200: 1 } },
+  { items: { kimDuyen: 2, thoiQuang480: 1 } },
+  { items: { kimDuyen: 1, thoiQuang180: 2 } },
+]
 // Ma Triều Công Sơn (Shadow Legion của RoK): tiên minh ghi danh cả tuần; thứ Tư (LEGION_DAY) từ LEGION_HOUR giờ VN,
 // LEGION_WAVES đợt cách nhau LEGION_GAP đánh vào tông môn từng người trong minh. Sức mỗi đợt = LEGION_POW[k] × lực phòng thủ
 // của chính người đó (viện binh đồng minh không làm địch mạnh thêm — kéo viện binh về giữ nhà là cách qua đợt khó). Giữ được
@@ -1114,6 +1132,7 @@ export const MERCHANT_POOL: { item: BagId; n: number; res: Res; price: number; w
   { item: 'huongHoa50', n: 1, res: 'linhThao', price: 1000, w: 4 },
   { item: 'hanhLuc50', n: 1, res: 'linhKhoang', price: 600, w: 6 },
   { item: 'khuechTran8', n: 1, res: 'linhThach', price: 900, w: 3 },
+  { item: 'sonHa12', n: 1, res: 'linhThao', price: 700, w: 4 },
 ]
 
 // ---------- Thiên Đạo Biên Niên (Monument của RoK) ----------
@@ -1450,6 +1469,27 @@ export const MINE_RATE = [3_000, 5_000, 5_000]
 export const MINE_RESPAWN = 2 * 3_600_000
 // Yêu vương: kho máu chung (tính bằng số đệ tử bậc 1), mỗi đội đánh một "lát" SLICE = str / slices — đội nhỏ đánh một mình thì thua,
 // cả minh kết trận thì hạ được (Lanchester). Chết thì thưởng chia theo sát thương, hồi sau respawn.
+// Man Hoang Cổ Tộc (Ceroli Crisis của RoK, giản lược): phó bản tổ đội của tiên minh — một người mở phòng (chọn độ khó 1–5 và
+// vai), người trong minh vào trong PARTY_WAIT (tối đa PARTY_MAX, mỗi người mỗi ngày một lần). Đủ người hay hết giờ chờ thì cả đội
+// (đội đầu đội hình Luận Kiếm Đài của từng người, đệ tử ảo — không mất quân) đánh PARTY_WAVES đợt hung thú mạnh dần, quân không
+// hồi (trừ vai Trị Liệu). Vai: Hộ Pháp (cả đội thủ, máu), Chủ Công (công, tối đa hai người tính), Trị Liệu (hồi một phần quân ngã
+// sau mỗi đợt, tối đa hai người tính). Quà theo độ khó và số đợt qua, cho mọi người trong đội qua thư.
+export const PARTY_HALL = 8
+export const PARTY_MAX = 4
+export const PARTY_WAIT = 10 * 60_000
+export const PARTY_WAVES = 5
+export const PARTY_MIGHT = [2500, 6000, 12000, 22000, 36000] // lực chiến đợt đầu mỗi độ khó
+export const PARTY_GROW = 1.25
+export const PARTY_ROLES = { hoPhap: { def: 0.15, hp: 0.1 }, chuCong: { atk: 0.12 }, triLieu: { heal: 0.2 } } as const
+export type PartyRole = keyof typeof PARTY_ROLES
+export function partyGift(lv: number, waves: number): Reward {
+  if (!waves) return { items: { kinhThu500: 1 } } // có đi là có chút quà
+  const speed = (['thoiQuang15', 'thoiQuang60', 'thoiQuang60', 'thoiQuang180', 'thoiQuang180'] as const)[lv - 1]
+  const book = (['kinhThu500', 'kinhThu2k', 'kinhThu2k', 'kinhThu8k', 'kinhThu8k'] as const)[lv - 1]
+  const items: Partial<Record<ItemId, number>> = { [speed]: waves, ...(waves >= 3 && { [book]: 1 }) }
+  if (waves >= PARTY_WAVES) items[lv >= 4 ? 'kimDuyen' : 'nganDuyen'] = 1
+  return { items }
+}
 // Yêu Vương Tuần Sơn (Lohar's Trial của RoK): yêu thú giới cấp LOHAR_WILD+ rơi yêu cốt (cấp 11+ rơi 2); đủ LOHAR_BONES thì triệu
 // hồi một yêu vương đang sống thành bản Tuần Sơn — máu ×LOHAR_HP, tồn tại LOHAR_TIME. Hạ được: ngoài quà thường còn LOHAR_GIFT chia
 // theo sát thương (ai góp từ 5 % được ít nhất một món), người triệu hồi thêm LOHAR_SUMMONER. Hết giờ chưa hạ: trở lại yêu vương thường.

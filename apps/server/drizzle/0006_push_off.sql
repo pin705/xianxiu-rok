@@ -1,0 +1,1 @@
+ALTER TABLE "accounts" ADD COLUMN "push_off" text[] DEFAULT '{}' NOT NULL;

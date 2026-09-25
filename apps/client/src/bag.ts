@@ -14,6 +14,7 @@ const TAB_OF = {
   vip: 'other',
   ap: 'other',
   ticket: 'other',
+  map: 'other',
 } as const satisfies Record<(typeof BAG)[BagId]['use'], BagTab>
 export const BAG_TABS: BagTab[] = ['speed', 'res', 'buff', 'other']
 export const tabOf = (id: BagId): BagTab => TAB_OF[BAG[id].use]

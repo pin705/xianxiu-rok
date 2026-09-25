@@ -19,6 +19,7 @@ import {
   arkAt,
   arkOf,
   arkStep,
+  partyStep,
 } from '@rok/rules/world'
 import { npcState } from '@rok/rules/bot'
 import type { World } from './world.ts'
@@ -102,10 +103,21 @@ export function allyEvents(w: World, now: number) {
   legionCheck(w, now)
   warCheck(w, now)
   arkCheck(w, now)
+  partyCheck(w, now)
 }
 // Ma Triều Công Sơn: tới giờ thì giải các đợt (mỗi đợt một lần), đợt cuối xong thì quà qua thư
 function legionCheck(w: World, now: number) {
   const r = legionStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Man Hoang Cổ Tộc: phòng tổ đội đủ người hay hết giờ chờ thì giải (mầm bí mật của server), quà qua thư
+function partyCheck(w: World, now: number) {
+  const r = partyStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
   if (r.world === w.shared) return
   w.share(r.world)
   for (const [pid, s] of r.changed) {

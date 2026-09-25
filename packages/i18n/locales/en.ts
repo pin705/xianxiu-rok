@@ -75,6 +75,7 @@ import {
   type BuildingId,
   type ElderId,
   type Element,
+  type PartyRole,
   type EventId,
   type GearId,
   type PillId,
@@ -531,17 +532,64 @@ export const en: Text = {
   },
   dao: {
     title: 'Lineage',
-    lore: 'Your sect follows one lineage and gains its two advantages. The first choice is free; changing needs 7 days of stillness between changes.',
+    lore: 'Your sect follows one lineage and gains its three strengths. Changing needs 7 days of stillness between changes.',
     change: 'Change',
     keep: 'Keep current',
     wait: (t: string) => `You can change again in ${t}`,
+    pick: 'Choose a lineage',
+    pickHint: 'Nine lineages, each with its own strength. Your sect grows strong where its lineage leads.',
+    potential: 'Strengths',
+    go: 'Follow this path',
+    note: 'You can change later at the Main Hall, once every 7 days.',
+    prev: 'Previous',
+    next: 'Next',
     names: {
-      kiemTong: { name: 'Sword Lineage', desc: 'The way of the blade: armies march like the wind.' },
-      phapTong: { name: 'Arcane Lineage', desc: 'Profound spellcraft: techniques strike harder.' },
-      theTong: { name: 'Body Lineage', desc: 'Bodies tempered like iron: the wounded heal cheaply.' },
-      danTong: { name: 'Alchemy Lineage', desc: 'The furnace never cools and the fields stay rich.' },
-      tranTong: { name: 'Formation Lineage', desc: 'Steadfast guardian arrays and faster construction.' },
-    } satisfies Record<DaoId, { name: string; desc: string }>,
+      kiemTong: {
+        name: 'Sword Lineage',
+        desc: 'The way of the blade: armies march like the wind.',
+        style: 'Attack · Expedition',
+      },
+      phapTong: {
+        name: 'Arcane Lineage',
+        desc: 'Profound spellcraft; elders grasp the Dao quickly.',
+        style: 'Techniques · Elders',
+      },
+      theTong: {
+        name: 'Body Lineage',
+        desc: 'Bodies tempered like iron: the wounded heal cheaply.',
+        style: 'Endurance · Recovery',
+      },
+      danTong: {
+        name: 'Alchemy Lineage',
+        desc: 'The furnace never cools and the fields stay rich.',
+        style: 'Economy · Alchemy',
+      },
+      tranTong: {
+        name: 'Formation Lineage',
+        desc: 'Steadfast guardian arrays and overflowing vaults.',
+        style: 'Defense · Beginner friendly',
+      },
+      khiTong: {
+        name: 'Forge Lineage',
+        desc: 'Hammers ring day and night; treasures leave the forge fast.',
+        style: 'Treasures · Mining',
+      },
+      phuTong: {
+        name: 'Talisman Lineage',
+        desc: 'Cinnabar talismans that even heavenly tribulation respects.',
+        style: 'Tribulation · Techniques',
+      },
+      thuTong: {
+        name: 'Beast Taming Lineage',
+        desc: 'Bonded to spirit beasts: disciples train fast and travel far.',
+        style: 'Training · Mobility',
+      },
+      maTong: {
+        name: 'Blood Demon Lineage',
+        desc: 'The demonic path feeds war with war and takes all it can.',
+        style: 'Demonic · Spoils',
+      },
+    } satisfies Record<DaoId, { name: string; desc: string; style: string }>,
   },
   legion: {
     title: 'Shadow Tide',
@@ -676,6 +724,24 @@ export const en: Text = {
     at: (n: number) => `${n} wins`,
     fightN: (n: number) => `Arms Training · fight ${n}`,
   },
+  party: {
+    title: 'Primal Tribes',
+    hint: 'Party dungeon: one member opens a room (difficulty, role), alliance members join within 10 minutes, up to 4 — once per person per day. The party (each first Arena lineup team, no troops lost) fights 5 waves of stronger beasts; rewards depend on difficulty and waves cleared.',
+    locked: (n: number) => `Unlocks at Main Hall level ${n}`,
+    lv: (n: number, might: string) => `Difficulty ${n} · ${might}`,
+    room: (n: number, might: string) => `Waiting room · difficulty ${n} (first wave ${might})`,
+    left: (t: string, n: number, max: number) => `${n}/${max} members · departs in ${t}`,
+    pick: 'Role',
+    roles: { hoPhap: 'Guardian', chuCong: 'Striker', triLieu: 'Healer' } as Record<PartyRole, string>,
+    roleHint: {
+      hoPhap: 'Guardian: party defense +15%, health +10%.',
+      chuCong: 'Striker: party attack +12% (counts up to two).',
+      triLieu: 'Healer: restores 20% of fallen troops after each wave (counts up to two).',
+    } as Record<PartyRole, string>,
+    open: 'Open a party',
+    join: 'Join',
+    done: 'You already ran the dungeon today — come back tomorrow.',
+  },
   ark: {
     title: 'Spirit Orb Battle',
     hint: 'Sunday 20:00: alliance vs alliance on a 5-node battlefield, 6 rounds × 10 minutes. Each warrior fields one team (the first Arena lineup team, no troops lost). Take the outposts and the Central Hall for points; escort the Spirit Orb to an outpost you hold for a big score.',
@@ -700,6 +766,8 @@ export const en: Text = {
       drop: (who: string, node: string) => `${who} dropped the Orb at ${node}`,
     },
     last: (a: string, b: string, pa: number, pb: number) => `[${a}] ${pa} – ${pb} [${b}]`,
+    league: 'Nine Heavens League — this season (win 3, loss 1 point; the top 3 alliances get season rewards)',
+    leagueRow: (w: number, l: number, pts: number) => `${w} W · ${l} L · ${pts} pts`,
   },
   pot: {
     title: 'Alliance Treasure Cauldron',
@@ -1281,7 +1349,7 @@ export const en: Text = {
     later: 'Later',
     dao: {
       title: 'Choose a lineage',
-      text: 'Your sect should follow a lineage: Sword, Arcane, Body, Alchemy or Formation — each brings two advantages. Choose at the Main Hall; the first choice is free.',
+      text: 'Your sect should follow a lineage — nine paths, each with three strengths. Choose at the Main Hall; the first choice is free.',
     },
     events: {
       title: 'Event Center',
@@ -1541,6 +1609,14 @@ export const en: Text = {
         `First capture · ${({ vein: 'Spirit vein', gate: 'Array eye', heaven: 'Heaven Gate' } as Record<string, string>)[kind] ?? kind} level ${lv}`,
         'Your alliance is the first this season to hold this point. A reward for every member is below.',
       ],
+      party: (lv: number, waves: number, n: number): [string, string] => [
+        `Primal Tribes · difficulty ${lv}`,
+        `Your party of ${n} ${waves >= 5 ? 'cleared all five waves of beasts' : waves ? `cleared ${waves}/5 waves of beasts` : 'did not clear a wave'}. A reward for every member is below.`,
+      ],
+      league: (rank: number): [string, string] => [
+        `Nine Heavens League · alliance rank ${rank}`,
+        `This season your alliance placed ${rank} in the Nine Heavens League (the Spirit Orb battles). A reward for every member is below.`,
+      ],
       camp: (camp: 0 | 1, pts: number, other: number): [string, string] => [
         `${camp ? 'Darkness' : 'Light'} wins the season`,
         `Light versus Darkness is over: your ${camp ? 'Darkness' : 'Light'} camp scored ${pts.toLocaleString('en')} season points, the other ${other.toLocaleString('en')}. The winning camp's reward is below.`,
@@ -1737,6 +1813,14 @@ export const en: Text = {
     denied: 'Your browser is blocking notifications for this game — allow them in the browser settings',
     dm: (name: string) => `${name} sent you a message`,
     arkSoon: 'The Spirit Orb battle starts in 10 minutes — come set your orders!',
+    kinds: 'Notify me about:',
+    kind: {
+      done: 'Long tasks done (building, training, research, returning armies)',
+      raid: 'Incoming attacks / raids',
+      dm: 'Direct messages',
+      trib: 'Tribulation strikes',
+      ark: 'Alliance battles (Spirit Orb)',
+    } as Record<string, string>,
     done: {
       build: 'Construction finished — your builders are free',
       train: 'New disciples have joined',
@@ -2424,6 +2508,10 @@ export const en: Text = {
       khuechTran: {
         name: 'Array Banner',
         desc: 'Expands march capacity: every elder leads 10% more disciples for 8 hours (using more extends it).',
+      },
+      sonHa: {
+        name: 'Realm Chart',
+        desc: 'A hand-drawn chart: instantly clears the 12 nearest fogged cells around your sect on the realm map.',
       },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },

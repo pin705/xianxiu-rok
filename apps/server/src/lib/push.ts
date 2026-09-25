@@ -20,7 +20,9 @@ export function makePusher(
   return (pid, note) =>
     void (async () => {
       for (const s of await accounts.pushSubsOf(db, pid)) {
-        const body = JSON.stringify(note(await loadText(pick(s.locale, []))))
+        const n = note(await loadText(pick(s.locale, [])))
+        if (s.off.includes(n.tag)) continue // người chơi đã tắt loại thông báo này
+        const body = JSON.stringify(n)
         await webpush
           .sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, {
             TTL: 6 * 3600,

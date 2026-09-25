@@ -1,10 +1,12 @@
 <script lang="ts">
-  // Màn tiêu đề. 'first': tiêu đề → lời dẫn → đặt tên (server lập tông môn). 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
+  // Màn tiêu đề. 'first': tiêu đề → lời dẫn → chọn đạo thống → đặt tên (server lập tông môn). 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
   // wait: đã xong màn tiêu đề nhưng server chưa gửi state (mạng chậm) — hiện dòng "đang kết nối".
   import { onMount } from 'svelte'
-  import { artAll, onArtProgress } from '@rok/art'
+  import { DAO_IDS, type DaoId } from '@rok/rules'
+  import { DAO_TONES, artAll, onArtProgress } from '@rok/art'
   import { Button, Medal } from './ui'
   import { L, sfx, suggestNames } from './lib'
+  import DaoChoose from './DaoChoose.svelte'
 
   let {
     mode,
@@ -15,12 +17,13 @@
   }: {
     mode: 'first' | 'splash'
     wait?: boolean
-    onstart: (name: string) => Promise<string | null>
+    onstart: (name: string, dao: DaoId) => Promise<string | null>
     ondone: () => void
     onlogin?: (how: { email: string; pass: string } | { code: string }) => Promise<string | null> // vào tông môn đã có (máy khác)
   } = $props()
 
-  let step: 'title' | 'intro' | 'name' | 'stamp' | 'email' | 'code' = $state('title')
+  let step: 'title' | 'intro' | 'dao' | 'name' | 'stamp' | 'email' | 'code' = $state('title')
+  let dao: DaoId = $state(DAO_IDS[0])
   let email = $state('')
   let pass = $state('')
   let code = $state('')
@@ -58,7 +61,7 @@
   function tapIntro() {
     sfx('tap')
     if (line < L.intro.length - 1) line++
-    else step = 'name'
+    else step = 'dao'
   }
   async function found(e: SubmitEvent) {
     e.preventDefault()
@@ -69,7 +72,7 @@
       return
     }
     sending = true
-    const err = await onstart(n)
+    const err = await onstart(n, dao)
     sending = false
     if (err) {
       error = err === 'name_taken' ? L.naming.taken : err === 'name' ? L.naming.bad : L.err.offline
@@ -118,7 +121,13 @@
       </span>
       <span class="tap">{L.tapToContinue}</span>
     </button>
-    <span class="skip"><Button variant="ghost" size="sm" onclick={() => (step = 'name')}>{L.skip}</Button></span>
+    <span class="skip"><Button variant="ghost" size="sm" onclick={() => (step = 'dao')}>{L.skip}</Button></span>
+  {:else if step === 'dao'}
+    <div class="cover dim pick">
+      <h2 class="t-title">{L.dao.pick}</h2>
+      <p class="t-small hint">{L.dao.pickHint}</p>
+      <DaoChoose bind:value={dao} note={L.dao.note} onpick={() => (step = 'name')} />
+    </div>
   {:else if step === 'email' || step === 'code'}
     <div class="cover dim">
       <form class="card scroll-skin stack center" onsubmit={login}>
@@ -168,6 +177,11 @@
   {:else}
     <div class="cover dim">
       <form class="card scroll-skin stack center" class:gone={step === 'stamp'} onsubmit={found}>
+        <button type="button" class="dao row center" onclick={to('dao')} aria-label={L.dao.pick}>
+          <Medal emblem={dao} tone={DAO_TONES[dao]} size={44} />
+          <b>{L.dao.names[dao].name}</b>
+          <small class="t-tiny t-soft">· {L.dao.change}</small>
+        </button>
         <h2 class="t-title">{L.naming.title}</h2>
         <p class="t-small t-lore">{L.naming.hint}</p>
         <input bind:value={name} maxlength="20" aria-label={L.naming.title} oninput={() => (error = '')} />
@@ -190,7 +204,7 @@
       </form>
       {#if step === 'stamp'}
         <div class="stamp stack center">
-          <span class="slam"><Medal emblem="crest" tone="red" size={136} /></span>
+          <span class="slam"><Medal emblem={dao} tone={DAO_TONES[dao]} size={136} /></span>
           <span class="sectname">{name.trim()}</span>
           {#if wait}<span class="tap">{L.net.connecting}</span>{/if}
         </div>
@@ -285,6 +299,33 @@
     font-style: italic;
     line-height: 1.55;
     animation: ink 1.2s var(--ease) both;
+  }
+  /* chọn đạo thống: cả màn, trên nền núi tối — chữ sáng */
+  .pick {
+    --gap: var(--sp-1);
+    justify-content: flex-start;
+    gap: var(--sp-1);
+    padding: calc(var(--sp-4) + var(--safe-t)) var(--sp-4) calc(var(--sp-4) + var(--safe-b));
+    overflow-y: auto;
+  }
+  .pick .t-title {
+    margin: 0;
+    color: var(--gold-l);
+  }
+  .hint {
+    max-width: 320px;
+    margin: 0 0 var(--sp-2);
+    opacity: 0.85;
+  }
+  .dao {
+    gap: var(--sp-2);
+    padding: 4px 12px 4px 4px;
+    color: inherit;
+    font: inherit;
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
   }
   .skip {
     position: absolute;

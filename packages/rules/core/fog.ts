@@ -45,5 +45,23 @@ export function fold(f: Fog, t: number): Fog {
     fly: f.fly.filter(x => x.back > t).map(x => ({ ...x, cells: x.at <= t ? [] : x.cells })),
   }
 }
+// Sơn Hà Đồ: tan n ô sương chưa khai gần tông môn nhất (tất định: gần trước, bằng nhau thì theo thứ tự ô)
+export function revealNear(s: State, n: number, t: number): Fog {
+  const f = fold(fogOf(s), t)
+  if (!s.seat) return f
+  const { cx, cy } = cellOf(s.seat)
+  const hidden: [d: number, cell: number][] = []
+  for (let y = 0; y < FOG_N; y++)
+    for (let x = 0; x < FOG_N; x++)
+      if (!((f.rows[y] >>> x) & 1)) hidden.push([Math.hypot(x - cx, y - cy), y * FOG_N + x])
+  hidden.sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  return {
+    ...f,
+    rows: lift(
+      f.rows,
+      hidden.slice(0, n).map(h => h[1]),
+    ),
+  }
+}
 export const cranes = (s: State) => Math.min(CRANE_MAX, 1 + Math.floor(s.levels.chuDien / CRANE_PER))
 export const cranesOut = (f: Fog, t: number) => f.fly.filter(x => x.back > t).length
