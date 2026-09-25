@@ -9,6 +9,7 @@ export const social = $state<{
   market: boolean
   honor: boolean
   drill: boolean
+  quiz: boolean
 }>({
   profile: null,
   dm: null,
@@ -16,4 +17,5 @@ export const social = $state<{
   market: false,
   honor: false,
   drill: false,
+  quiz: false,
 })

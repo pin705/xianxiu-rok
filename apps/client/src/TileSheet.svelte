@@ -24,6 +24,8 @@
     PVP_HALL,
     BOSSES,
     apOf,
+    armySpeed,
+    count,
     cutOf,
     might,
     type Army,
@@ -99,7 +101,7 @@
   const regionName = (r: number) => `${L.world.regions[r] ?? r} · ${L.world.ring[atlas.regions[r].ring]}`
   // đường đi từ tông môn mình; null: chưa có đường (cổng chưa mở)
   const road = (to: { x: number; y: number }) => (game.seat ? route(atlas, game.seat, to, phase) : null)
-  const time = (len: number) => clock(len * TILE_TIME * cutOf(game, 'march'))
+  const time = (len: number, a?: Army) => clock((len * TILE_TIME * cutOf(game, 'march')) / (a ? armySpeed(a) : 1))
   const seat = $derived(pick?.kind === 'seat' ? snap?.seats.find(s => s.pid === pick.pid) : undefined)
   const point = $derived(pick?.kind === 'point' ? atlas.points[pick.i] : undefined)
   const spot = $derived(point ? snap?.spots.find(s => s.i === point.i) : undefined)
@@ -161,6 +163,10 @@
     return pick?.kind === 'tile' ? { x: pick.x, y: pick.y } : null
   })
   const officer = $derived(!!ally && me !== null && (ally.members[me] ?? -9) >= 1)
+  // đội săn đang về còn quân: săn liên hoàn được
+  const chainable = $derived(
+    game.marches.find(m => m.task === 'hunt' && m.returnAt > now && m.back && count(m.back) > 0),
+  )
   const marker = $derived(!!ally && me !== null && (ally.members[me] ?? -9) >= 0) // dấu của minh: từ R3
   const markHere = $derived(pos ? ally?.marks?.find(m => m.x === pos.x && m.y === pos.y) : undefined)
   let markText = $state('')
@@ -245,7 +251,14 @@
     </Card>
     {#if seat.pid !== me && isAlly(seat.pid) && r}
       {#if aiding}
-        <ArmyPick field cta={L.world.aid} time={time(r.len)} disabled={busy} onsubmit={(e, a) => aid(seat.pid, e, a)} />
+        <ArmyPick
+          field
+          cta={L.world.aid}
+          time={time(r.len)}
+          timeOf={a => time(r.len, a)}
+          disabled={busy}
+          onsubmit={(e, a) => aid(seat.pid, e, a)}
+        />
       {:else}
         <div class="mt-3">
           <Button variant="gold" wide icon="shield" onclick={() => (aiding = true)}>{L.world.aid}</Button>
@@ -361,12 +374,25 @@
           {/if}
         </Section>
       {/if}
+      {#if task === 'hunt' && chainable}
+        <!-- săn liên hoàn: đội săn đang về đi thẳng tới con này (quân không hồi, chiến lợi phẩm cộng dồn) -->
+        <Button
+          wide
+          variant="gold"
+          icon="swords"
+          disabled={busy || apOf(game, now) < AP_HUNT}
+          onclick={async () =>
+            chainable && (await send({ type: 'huntChain', id: chainable.id, i: point.i })).ok && sent()}
+          >{L.world.chain(num(count(chainable.back ?? {})))}</Button
+        >
+      {/if}
       <ArmyPick
         field
         foe={slice ? might(slice) : undefined}
         chance={slice ? (e, a) => raidChance(game, e, a, slice) : undefined}
         cta={{ take: L.world.take, gather: L.world.gather, hit: L.world.hit, hunt: L.world.hunt }[task]}
         time={time(r.len)}
+        timeOf={a => time(r.len, a)}
         disabled={busy || (task === 'hunt' && apOf(game, now) < AP_HUNT)}
         onsubmit={(e, a) => go(task, e, a)}
         counter={slice ? TYPES.find(x => BEATS[x] === TYPES[point.i % TYPES.length]) : undefined}
@@ -472,6 +498,7 @@
                 field
                 cta={L.world.terr.guard}
                 time={fr ? time(fr.len) : undefined}
+                timeOf={a => (fr ? time(fr.len, a) : '')}
                 disabled={busy || !fr}
                 onsubmit={async (e, a) =>
                   (await send({ type: 'flagGuard', id: flag.id, elder: e, army: a })).ok && sent()}
@@ -493,6 +520,7 @@
             field
             cta={L.world.terr.raze}
             time={fr ? time(fr.len) : undefined}
+            timeOf={a => (fr ? time(fr.len, a) : '')}
             disabled={busy || !fr}
             onsubmit={async (e, a) => (await send({ type: 'raze', id: flag.id, elder: e, army: a })).ok && sent()}
           />

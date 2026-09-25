@@ -202,7 +202,7 @@ export class WorldScene {
       s.anchor.set(0.5)
       s.position.set((p.x + 0.5) * T, (p.y + 0.5) * T)
       s.alpha = alpha
-      this.sized.push([s, (size * MARK) / (t.tex.width / (DPR * 1.5)), minZ])
+      this.sized.push([s, (size * MARK) / ((t.tex.width / t.scale) * (MARK / 48)), minZ]) // theo hộp asset: đúng cả khi thay tranh vẽ tay
       this.marks.addChild(s)
       return s
     }
@@ -372,7 +372,7 @@ export class WorldScene {
       if (!m) return
       const p = marchAt(m, now)
       c.position.set((p.x + 0.5) * T, (p.y + 0.5) * T)
-      c.scale.set((22 * Math.max(0.55, lod)) / (tok.tex.width / (DPR * 1.5)) / z)
+      c.scale.set((22 * Math.max(0.55, lod)) / (tok.tex.width / tok.scale) / z)
     })
   }
   // Linh triều: quầng sáng trên vùng đang có triều

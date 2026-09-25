@@ -891,7 +891,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | F1 | Gửi tài nguyên (Trading Post) | ✅ Vận Linh Trận (25/09): hao tổn 35 → 8 %, trần ngày theo sức chứa kho hai bên | P2 | S–M |
 | G1 | Hồ sơ người chơi | ✅ hồ sơ chưởng môn (từ chat, minh, bản đồ, chân dung): truyền âm, chặn, mời, tiếp tế | P1 | M |
 | G2 | Bảng xếp hạng | ✅ 5 bảng + mùa + phong thần; thiếu bảng chiến công/minh | P2 | S |
-| G3 | Bạn bè và chặn | 🟡 có chặn; thiếu bạn bè | P2 | S–M |
+| G3 | Bạn bè và chặn | ✅ chặn + kết giao đạo hữu (25/09) | P2 | S–M |
 | G4 | Báo vương quốc | 🟡 có biên niên giới | P2 | S |
 | H1 | Vua và Lost Temple | ✅ Giới Chủ (minh chủ giữ Thiên Môn) | P1 | M |
 | H2 | Title vương quốc buff/debuff | ✅ sắc phong 4 phúc / 4 hoạ, giữ 24 giờ | P1 | M |

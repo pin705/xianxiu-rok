@@ -3,7 +3,7 @@
   // Chữ đã lọc ở server; người mình chặn thì ẩn ở đây (danh sách chặn nằm trong state của mình).
   // Toạ độ "(x,y)" trong tin (chia sẻ từ bản đồ giới) thành nút nhảy tới ô đó, như link toạ độ xanh của RoK.
   // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo. Truyền âm: nhóm chat tự tạo + cuộc gần đây → từng cuộc.
-  import type { Ack, Channel, ChatMsg, Dm, GroupView } from '@rok/protocol'
+  import type { Ack, Channel, ChatMsg, Dm, FriendView, GroupView } from '@rok/protocol'
   import type { WorldAction } from '@rok/rules/world'
   import type { Report } from '@rok/rules'
   import { MAP_W } from '@rok/rules/world'
@@ -50,6 +50,7 @@
   let logs = $state<Record<string, ChatMsg[]>>({})
   let dms = $state<Dm[]>([]) // các cuộc truyền âm, mới nhất trước
   let groups = $state<GroupView[]>([]) // nhóm chat tự tạo của mình
+  let friends = $state<FriendView[]>([]) // đạo hữu đã kết giao (tải khi mở thẻ Truyền âm)
   let unread = $state<string[]>([]) // kênh truyền âm / nhóm có tin chưa đọc
   let groupName = $state('')
   const loadGroups = () => api?.ask({ k: 'groups' }).then(list => list && (groups = list))
@@ -63,6 +64,7 @@
       void api.ask({ k: 'chat', ch: c }).then(list => list && put(c, list))
     void api.ask({ k: 'dms' }).then(list => list && (dms = list))
     void loadGroups()
+    void api.ask({ k: 'friends' }).then(list => list && (friends = list))
     return api.onChat((c, ms) => {
       put(c, [...(logs[c] ?? []), ...ms])
       if (c[0] !== 'p' && c[0] !== 'g') return
@@ -149,12 +151,23 @@
       tab = t
       peer = null
       pick = null
-      if (t === 'dm') void loadGroups()
+      if (t === 'dm') {
+        void loadGroups()
+        void api?.ask({ k: 'friends' }).then(list => list && (friends = list))
+      }
     }}
   />
   {#if tab === 'dm' && !peer}
     <ul class="log stack" style:--gap="4px">
-      <!-- nhóm chat tự tạo trước, rồi các cuộc truyền âm -->
+      <!-- đạo hữu (đang chơi trước), nhóm chat tự tạo, rồi các cuộc truyền âm -->
+      {#if friends.length}
+        <li class="row wrap" style:--gap="4px">
+          <small class="t-tiny t-soft">{L.chat.friends}</small>
+          {#each [...friends].sort((a, b) => Number(b.online) - Number(a.online)) as f (f.pid)}
+            <button class="friend" class:on={f.online} onclick={() => openDm(f)}>{f.name}</button>
+          {/each}
+        </li>
+      {/if}
       {#each groups as x (x.id)}
         <li>
           <button class="msg" onclick={() => openPeer({ ch: `g${x.id}`, name: x.name })}>
@@ -282,6 +295,21 @@
 {/if}
 
 <style>
+  .friend {
+    padding: 2px 8px;
+    font: inherit;
+    font-size: var(--fs-1);
+    color: var(--text);
+    background: color-mix(in srgb, var(--paper2) 80%, transparent);
+    border: 1px solid var(--line, rgb(var(--shade) / 0.2));
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .friend.on::before {
+    content: '●';
+    margin-right: 3px;
+    color: var(--malachite);
+  }
   .strip {
     position: fixed;
     left: 50%;

@@ -231,7 +231,7 @@ function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Ar
   })
   // săn liên hoàn: cộng dồn chiến lợi phẩm, thương vong của các trận trước; về núi theo đường mới từ chỗ yêu thú
   const home = m.chain && s.seat ? route(map.atlas, s.seat, p, map.phase) : null
-  const startAt = home ? at - routeMs(s, home.len) : m.startAt
+  const startAt = home ? at - routeMs(s, home.len, left) : m.startAt
   x = withMarch(x, {
     ...m,
     ...(home && { path: home.path, startAt }),

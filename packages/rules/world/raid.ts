@@ -93,7 +93,7 @@ function sortie({ ps, w, pid, s: att, now, seed, map }: Ctx, to: number, elder: 
   const e = raidError(att, other && advance(other, now), pid, to, t, map, w) ?? fieldError(att, elder, raw)
   if (e) return no(e)
   const army = compact(raw)
-  const go = raidPath(att, other!, map)!
+  const go = raidPath(att, other!, map, army)!
   const at = !muster ? t + go.ms : 'wait' in muster ? t + Math.max(muster.wait, go.ms) : muster.at
   if (at < t + go.ms) return no('far') // không kịp tới lúc hẹn
   const rally = muster && ('rally' in muster ? muster.rally : w.nextRally)

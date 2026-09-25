@@ -89,7 +89,10 @@ export type Query =
   | { k: 'arena' }
   | { k: 'honor' }
   | { k: 'groups' }
+  | { k: 'friends' }
   | { k: 'shared'; pid: number; id: number }
+// Đạo hữu đã kết giao: tên, cảnh giới, đang chơi không
+export type FriendView = { pid: number; name: string; hall: number; online: boolean }
 // Nhóm chat của mình: tên, người trong nhóm (tên theo state hiện tại), tin cuối
 export type GroupView = {
   id: number
@@ -129,6 +132,7 @@ export type Answer = {
   arena: ArenaView
   honor: HonorView
   groups: GroupView[]
+  friends: FriendView[]
   shared: Report | null // chiến báo người khác chia sẻ vào kênh mình nghe được
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>

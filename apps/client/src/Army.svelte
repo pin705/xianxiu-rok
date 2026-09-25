@@ -31,6 +31,7 @@
     chance,
     cta,
     time,
+    timeOf,
     disabled = false,
     onsubmit,
     onrecruit,
@@ -41,6 +42,7 @@
     chance?: (elder: ElderId, army: Army) => number // tỉ lệ thắng ước lượng (rules.winChance); không có: không đoán
     cta: string
     time?: string
+    timeOf?: (a: Army) => string // thời gian đi theo đội đang chọn (bản đồ Giới: tốc hệ chậm nhất)
     disabled?: boolean
     onsubmit: (elder: ElderId, army: Army) => void
     onrecruit?: () => void
@@ -225,6 +227,7 @@
 {/if}
 <!-- yếu thế mà vẫn còn quân: chỉ đường đi tuyển thêm (không quân thì nút đã có ở trên) -->
 {#if over}<p class="center t-small t-bad mt-2">{L.army.over(num(cap))}</p>{/if}
+{#if field}<p class="t-tiny t-soft mt-2">{L.army.traits}</p>{/if}
 {#if chance && verdict === 'weak' && home.length && onrecruit}
   <div class="row center mt-2">
     <Button variant="ghost" size="sm" icon="people" onclick={onrecruit}>{L.army.recruit}</Button>
@@ -236,7 +239,7 @@
     wide
     size="lg"
     icon="flag"
-    trail={time}
+    trail={timeOf && count(army) ? timeOf(army) : time}
     trailIcon="clock"
     disabled={disabled || !lead || !count(army) || over}
     onclick={() => lead && onsubmit(lead, army)}>{cta}</Button

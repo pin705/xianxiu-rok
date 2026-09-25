@@ -865,7 +865,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | B6 | Anti-scouting & Watchtower / cảnh báo | 🟡 Hộ Sơn Đại Trận; chưa báo đội địch đang tới | P1 / P2 | S |
 | C1 | Action Points | ✅ hành lực săn yêu thú giới | P1 | S |
 | C2 | Barbarians (man tộc trên bản đồ chung) | 🟡 15 yêu thú cố định trên bản đồ vùng riêng | **P0** | M |
-| C3 | Continuous attack / chain farming | ❌ | P2 | S / M |
+| C3 | Continuous attack / chain farming | ✅ săn liên hoàn yêu thú giới (25/09) | P2 | S / M |
 | C4 | Barbarian Buster, Clarion Call | 🟡 nhiệm vụ "hạ yêu thú cấp n"; Săn Yêu Lệnh (Chủ nhật), Tông Môn Tranh Bá | P2 | S |
 | C5 | Barbarian Forts (cấp 1–6, kết trận) | 🟡 yêu vương cấp 2/3 (9 con), thiếu cấp thấp | P1 | S–M |
 | C6 | Marauders & Encampments | ❌ | P2 | M |

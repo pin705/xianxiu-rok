@@ -62,6 +62,7 @@ import {
   TRADE_KEEP_MAX,
   TRADE_STEP,
   UNIT_BASE,
+  UNIT_SPEED,
   UNITS,
   STAR_BONUS,
   VIP_LEVELS,
@@ -144,6 +145,9 @@ export const baseRate = (s: State, r: Res) =>
   )
 export const rate = (s: State, r: Res) => Math.round(baseRate(s, r) * (1 + bonus(s, 'prod') + bonus(s, `prod.${r}`)))
 
+// Tốc của một đội trên bản đồ Giới: hệ chậm nhất có mặt (đội trống: 1)
+export const armySpeed = (a: Army) =>
+  Math.min(1.15, ...UNITS.filter(u => (a[u] ?? 0) > 0).map(u => UNIT_SPEED[unitOf(u).type]))
 export const unitOf = (u: UnitId) => ({ type: u.slice(0, -1) as UnitType, tier: Number(u.slice(-1)) as Tier })
 export const HIGH_FIRST = [...UNITS].sort((a, b) => unitOf(b).tier - unitOf(a).tier) // bậc cao trước
 export const trainCost = (u: UnitId, n: number) => {

@@ -55,6 +55,11 @@ export const answersOf = (w: World): Answers => ({
   },
   dms: sock => dmsOf(w, sock.data.pid),
   groups: sock => groupViews(w, sock.data.pid),
+  friends: sock =>
+    (w.ps.get(sock.data.pid)?.friends ?? []).flatMap(pid => {
+      const s = w.ps.get(pid)
+      return s ? [{ pid, name: s.name, hall: s.levels.chuDien, online: !!w.slots.get(pid)?.conns.size }] : []
+    }),
   arena: sock => {
     const now = w.now()
     w.tick(now)

@@ -8,6 +8,9 @@
     HO_PHAP,
     MARKET_HALL,
     DRILL_HALL,
+    QUIZ_DAY,
+    QUIZ_HALL,
+    quizToday,
     MAX_LEVEL,
     PHA_CANH,
     PHA_KIEP,
@@ -169,6 +172,28 @@
       <Alchemy />
     {:else if tab === 'library'}
       <Library />
+      <!-- Vấn Đạo Đài: năm câu mỗi ngày (từ tầng QUIZ_HALL) -->
+      <Card tone="silk">
+        <div class="row">
+          <Icon name="scroll" size={26} />
+          <span class="grow stack" style:--gap="2px"
+            ><b>{L.quiz.title}</b><small class="t-tiny t-soft"
+              >{game.levels.chuDien >= QUIZ_HALL
+                ? L.quiz.step(Math.min(QUIZ_DAY, quizToday(game).n + 1), QUIZ_DAY)
+                : L.quiz.locked(QUIZ_HALL)}</small
+            ></span
+          >
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={game.levels.chuDien < QUIZ_HALL}
+            onclick={() => {
+              onclose()
+              social.quiz = true
+            }}>{L.quiz.open}</Button
+          >
+        </div>
+      </Card>
     {:else if tab === 'trade'}
       <Trade />
       <Merchant />

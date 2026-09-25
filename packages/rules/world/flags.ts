@@ -120,7 +120,7 @@ export const flagActions: WorldActions<FlagAction> = {
         task: 'aid',
         seed,
         startAt: t,
-        arriveAt: t + routeMs(s, r.len),
+        arriveAt: t + routeMs(s, r.len, army),
         returnAt: 0,
         path: r.path,
       }
@@ -151,7 +151,7 @@ export const flagActions: WorldActions<FlagAction> = {
         target: { kind: 'flag', i: f.id },
         seed: 0,
         startAt: t,
-        arriveAt: t + routeMs(s, r.len),
+        arriveAt: t + routeMs(s, r.len, army),
         returnAt: 0,
         path: r.path,
         foe: `[${w.allies[f.aid]?.tag ?? '?'}]`,

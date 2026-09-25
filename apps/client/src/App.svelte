@@ -29,6 +29,7 @@
   import Market from './Market.svelte'
   import Honor from './Honor.svelte'
   import Drill from './Drill.svelte'
+  import Quiz from './Quiz.svelte'
   import Advisor from './Advisor.svelte'
   import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
@@ -417,12 +418,6 @@
   }
 
   // Đi cướp: luật giới (server kiểm cả hai bên) nên không đoán trước — chờ server
-  async function raid(a: WorldAction) {
-    if (!(await waiting(n => n.send(a)))?.ok) return
-    sfx('march')
-    rivalsOpen = false
-  }
-
   // Tiên minh: của mình (server báo khi đổi), hoặc danh sách để vào
   async function loadAlly() {
     if (!net) return
@@ -545,6 +540,7 @@
     <Market api={net ?? null} send={sendWorld} />
     <Honor api={net ?? null} />
     <Drill onfight={() => fightNow({ type: 'drillFight' })} onreplay={r => (replay = r)} />
+    <Quiz />
     {#if tab === 'tongMon' && !selected && !storm}<Advisor
         game={shown}
         ontab={t => (tab = t)}
@@ -617,7 +613,11 @@
         rivalsFocus = null
       }}
       {ally}
-      onraid={raid}
+      onraid={async a => {
+        if (!(await waiting(n => n.send(a)))?.ok) return
+        sfx('march')
+        rivalsOpen = false
+      }}
       onrecruit={() => {
         rivalsOpen = false
         focus('dienVoTruong', 'train')

@@ -110,6 +110,9 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Seasonal strategies | Chiến lược mùa (từ tầng 5, ở bảng Chủ điện dưới Đạo thống): mỗi mùa chọn một, miễn phí, luân hồi xong chọn lại — Diệu Thủ (chữa thương rẻ + nhanh 15 %), Toàn Thân Nhi Thoái (Đan phòng +25 %: bớt tử trận), Tích Cốc (sức chứa kho +20 %: phần bảo hộ khi bị cướp lớn theo) | ✅ `STRATS`, `strat` (sect/elders.ts), `DaoPick.svelte` |
 | Map HUD density | Thẻ mùa trên bản đồ Giới thu gọn được (nút mũi tên): gọn chỉ còn dòng mùa · Công Huân · Tìm · Tông môn của bạn, ẩn gợi ý pha / phúc / Biên Niên / biên niên; nhớ theo máy (bộ nhớ trình duyệt hỏng thì mở rộng) | ✅ `WorldView.svelte` |
 | Alliance menu (C25) | Trang Tiên minh chia 4 thẻ như menu minh RoK: Tổng quan (bố cáo, thư minh, giúp đỡ, rời minh) · Thành viên (cửa minh + đơn, người trong minh, xếp bậc, chức vị) · Chiến sự (dấu bản đồ, Minh chiến, Ma Triều, minh ước, Phá Yêu Trại, kết trận) · Trò chuyện; số trên thẻ: đơn chờ duyệt, kết trận đang mở | ✅ `Alliance.svelte` |
+| Chain farming | Săn liên hoàn: đội vừa săn yêu thú giới, đang trên đường về, chạm yêu thú khác → nút "Đánh liên hoàn" đi thẳng từ chỗ đang đứng (tính theo đường về), quân còn lại giữ nguyên (không hồi), chiến lợi phẩm + thương vong cộng dồn, tốn hành lực như một lần săn; hạ xong về núi theo đường mới | ✅ `huntChain` (spots.ts), `marchAt` (base.ts) |
+| Troop speed + load by type | Trên bản đồ Giới (bản đồ vùng giữ nguyên): kiếm tu đi nhanh ×1,15 · pháp tu ×1 · thể tu ×0,85, đội đi theo hệ chậm nhất; sức mang kiếm ×1 · pháp ×0,8 · thể ×1,25 (khai mỏ, cướp). Nút xuất quân hiện thời gian theo đội đang chọn; bảng chọn đội có dòng giải thích | ✅ `UNIT_SPEED`, `UNIT_CARRY`, `armySpeed`, `routeMs(…, army)` |
+| Friends | Đạo hữu: nút "Kết giao" trong hồ sơ (một chiều như theo dõi, tối đa 50); thẻ Truyền âm có dải đạo hữu (chấm lục: đang chơi, đang chơi xếp trước), chạm tên để truyền âm | ✅ `friend` (sect/inbox.ts), truy vấn `friends` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
 
 Nhịp sau các thay đổi (`npm run sim`, 25/09 tối): bot giỏi Chủ điện 15 ngày 8,5, tầng 25 ngày 27,5; người chơi thường
@@ -135,7 +138,7 @@ dưới phần bảo hộ: còn 23 %.
 **Đợt D — chiến đấu & trưởng lão** (đã xong: phó trưởng lão, chân nguyên, trận dung)
 1. Vật phẩm mở rộng trận dung (Khuếch Trận Kỳ), thiên phú trận dung.
 2. Phẩm cấp, sao, hồn ấn nâng công pháp; thiên phú sâu hơn; pháp bảo theo bộ.
-3. Tốc độ và sức mang theo hệ.
+3. (Tốc độ và sức mang theo hệ: đã xong.)
 
 **Đợt E — bản đồ & PvE** (file 3) (đã xong: mê vụ + linh điểu + thôn trang / động phủ)
 - Sự kiện yêu vương theo đợt (Lohar), vật phẩm hồi hành lực, Sơn Hà Đồ (Kingdom Map: tan mê vụ ngẫu nhiên),

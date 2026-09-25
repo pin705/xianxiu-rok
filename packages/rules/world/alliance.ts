@@ -397,7 +397,7 @@ function aidAct({ ps, w, pid, s, seed, map }: Ctx, a: { pid: number; elder: Elde
   if (allyOf(w, pid)?.members[a.pid] === undefined) return no('locked')
   if (aidAt(ps, a.pid).length >= REINFORCE_MAX) return no('full')
   if (s.marches.some(m => m.task === 'aid' && m.target.i === a.pid)) return no('busy')
-  const go = raidPath(s, to, map)
+  const go = raidPath(s, to, map, a.army)
   if (!go) return no('far')
   const e = fieldError(s, a.elder, a.army)
   if (e) return no(e)

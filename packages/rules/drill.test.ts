@@ -4,8 +4,12 @@ import {
   DAY,
   DRILL_EVERY,
   DRILL_GIFTS,
+  FRIENDS_MAX,
   GUEST_EVERY,
   GUEST_GIFTS,
+  QUIZ_DAY,
+  QUIZ_GIFTS,
+  QUIZ_KEY,
   STRATS,
   STRAT_HALL,
   apply,
@@ -14,6 +18,7 @@ import {
   guestAt,
   guestGift,
   newGame,
+  quizOf,
   seasonEnd,
   storage,
   type State,
@@ -107,4 +112,39 @@ test('Chiến lược mùa: chọn một lần mỗi mùa, cộng tăng ích; lu
   )
   const next = seasonEnd(r.state, s0.time + DAY, 1)
   assert.equal(next.strat, undefined, 'mùa mới: chọn lại')
+})
+
+test('kết giao đạo hữu: thêm / bỏ, không trùng, tối đa FRIENDS_MAX', () => {
+  let s = sect()
+  s = (apply(s, { type: 'friend', pid: 7, on: true }, s.time) as { state: State }).state
+  s = (apply(s, { type: 'friend', pid: 7, on: true }, s.time) as { state: State }).state
+  assert.deepEqual(s.friends, [7], 'không trùng')
+  s = (apply(s, { type: 'friend', pid: 7, on: false }, s.time) as { state: State }).state
+  assert.deepEqual(s.friends, [])
+  const full = { ...s, friends: Array.from({ length: FRIENDS_MAX }, (_, i) => i + 100) }
+  assert.deepEqual(apply(full, { type: 'friend', pid: 9, on: true }, s.time), { ok: false, error: 'full' })
+})
+
+test('Vấn Đạo Đài: năm câu khác nhau mỗi ngày, trả lời lần lượt, xong nhận quà theo số câu đúng; ngày mới làm lại', () => {
+  let s = sect()
+  const day = Math.floor((s.time + 7 * 3_600_000) / DAY)
+  const list = quizOf(day)
+  assert.equal(new Set(list).size, QUIZ_DAY, 'năm câu khác nhau')
+  assert.notDeepEqual(quizOf(day + 1), list, 'ngày khác bộ câu khác')
+  const before = s.items.nganDuyen ?? 0
+  for (let k = 0; k < QUIZ_DAY; k++) {
+    const pick = k === 0 ? (QUIZ_KEY[list[k]] + 1) % 4 : QUIZ_KEY[list[k]] // câu đầu sai, còn lại đúng
+    const r = apply(s, { type: 'quiz', pick }, s.time)
+    assert.ok(r.ok)
+    s = r.state
+    assert.equal(s.quiz!.last, k !== 0)
+  }
+  assert.deepEqual([s.quiz!.n, s.quiz!.right], [QUIZ_DAY, QUIZ_DAY - 1])
+  assert.equal(
+    (s.items.nganDuyen ?? 0) - before,
+    QUIZ_GIFTS[QUIZ_DAY - 1].items?.nganDuyen ?? 0,
+    'quà theo số câu đúng',
+  )
+  assert.deepEqual(apply(s, { type: 'quiz', pick: 0 }, s.time), { ok: false, error: 'claimed' }, 'hôm nay xong rồi')
+  assert.ok(apply(s, { type: 'quiz', pick: 0 }, s.time + DAY).ok, 'ngày mới làm lại')
 })

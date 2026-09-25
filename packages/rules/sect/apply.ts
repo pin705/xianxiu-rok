@@ -17,6 +17,7 @@ import { pinActions, type PinAction } from './pins.ts'
 import { honorActions, type HonorAction } from './honor.ts'
 import { drillActions, type DrillAction } from './drill.ts'
 import { guestActions, type GuestAction } from './guest.ts'
+import { quizActions, type QuizAction } from './quiz.ts'
 import { buildingActions, type BuildingAction } from './buildings.ts'
 import { elderActions, type ElderAction } from './elders.ts'
 import { expeditionActions, type ExpeditionAction } from './expedition.ts'
@@ -50,6 +51,7 @@ export type Action =
   | HonorAction
   | DrillAction
   | GuestAction
+  | QuizAction
 
 const ACTIONS: Actions<Action> = {
   ...buildingActions,
@@ -74,6 +76,7 @@ const ACTIONS: Actions<Action> = {
   ...honorActions,
   ...drillActions,
   ...guestActions,
+  ...quizActions,
 }
 
 export const ACTION_TYPES = Object.keys(ACTIONS) as Action['type'][]

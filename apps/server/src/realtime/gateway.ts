@@ -41,6 +41,7 @@ const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('arena') }),
   z.object({ k: z.literal('honor') }),
   z.object({ k: z.literal('groups') }),
+  z.object({ k: z.literal('friends') }),
   z.object({ k: z.literal('shared'), pid: z.number().int().positive(), id: z.number().int().positive() }),
 ]) satisfies z.ZodType<Q>
 const Say = z.object({ ch: Chan, text: z.string().max(400) }) // độ dài thật (200 ký tự) world.say kiểm sau khi chuẩn hoá

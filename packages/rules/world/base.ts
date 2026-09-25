@@ -3,9 +3,9 @@ import { route, TILE_TIME, type Atlas, type Pos } from '../atlas.ts'
 import { might } from '../combat.ts'
 import { type Pick } from '../core/action.ts'
 import { marchSide, marchTime } from '../core/battle.ts'
-import { cutOf } from '../core/stats.ts'
+import { armySpeed, cutOf } from '../core/stats.ts'
 import { dayOf, weekOf } from '../core/calendar.ts'
-import { type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
+import { type Army, type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
 import {
   ALLY_WELCOME,
   ALLY_GIFT_LV,
@@ -43,13 +43,14 @@ import { mail } from '../sect/inbox.ts'
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
 export type MapCtx = { atlas: Atlas; phase: number }
 // Đường đi cướp giữa hai chỗ ngồi; null: chưa có đường (cổng chưa mở)
-export function raidPath(att: State, def: State, map?: MapCtx): { path?: Pos[]; ms: number } | null {
+export function raidPath(att: State, def: State, map?: MapCtx, army?: Army): { path?: Pos[]; ms: number } | null {
   if (!map || !att.seat || !def.seat) return { ms: marchTime(att, { kind: 'pvp', i: 0 }) }
   const r = route(map.atlas, att.seat, def.seat, map.phase)
-  return r && { path: r.path, ms: routeMs(att, r.len) }
+  return r && { path: r.path, ms: routeMs(att, r.len, army) }
 }
-// Thời gian đi hết len ô đường trên bản đồ giới (công pháp hành quân rút ngắn)
-export const routeMs = (s: State, len: number) => Math.round(len * TILE_TIME * cutOf(s, 'march'))
+// Thời gian đi hết len ô đường trên bản đồ giới (công pháp hành quân rút ngắn; có đội thì theo tốc hệ chậm nhất)
+export const routeMs = (s: State, len: number, army?: Army) =>
+  Math.round((len * TILE_TIME * cutOf(s, 'march')) / (army ? armySpeed(army) : 1))
 
 export type Players = Map<number, State>
 

@@ -80,6 +80,10 @@ export const UNIT_BASE: Record<UnitType, { atk: number; def: number; hp: number;
   phap: { atk: 14, def: 3, hp: 26, cost: b(36, 12, 12), time: 4 },
   the: { atk: 8, def: 9, hp: 42, cost: b(12, 36, 12), time: 4 },
 }
+// Tốc hành quân và sức mang theo hệ (bộ / kỵ / cung của RoK) — chỉ trên bản đồ Giới: kiếm tu nhanh, thể tu chậm mà mang nhiều,
+// pháp tu mang ít; đội đi theo tốc hệ chậm nhất có trong đội
+export const UNIT_SPEED: Record<UnitType, number> = { kiem: 1.15, phap: 1, the: 0.85 }
+export const UNIT_CARRY: Record<UnitType, number> = { kiem: 1, phap: 0.8, the: 1.25 }
 export type UnitId = `${UnitType}${Tier}`
 export const UNITS = TYPES.flatMap(t => TIERS.map(n => `${t}${n}` as UnitId))
 
@@ -1208,6 +1212,19 @@ export const GUEST_GIFTS: Reward[] = [
   { items: { khoangNang1k: 2 } },
   { items: { thoiQuang60: 1 } },
   { items: { nganDuyen: 1 } },
+]
+// Vấn Đạo Đài (Peerless Scholar của RoK): mỗi ngày QUIZ_DAY câu hỏi rút từ bộ câu (chữ ở i18n `quiz.q`, đáp án đúng ở đây theo
+// thứ tự câu), trả lời lần lượt; xong thì quà theo số câu đúng (QUIZ_GIFTS[số đúng])
+export const QUIZ_HALL = 3
+export const QUIZ_DAY = 5
+export const QUIZ_KEY = [0, 2, 1, 3, 0, 1, 2, 0, 3, 1, 2, 0, 1, 3, 2]
+export const QUIZ_GIFTS: Reward[] = [
+  { items: { kinhThu500: 1 } },
+  { items: { thoiQuang15: 1 } },
+  { items: { thoiQuang15: 1, kinhThu500: 1 } },
+  { items: { thoiQuang60: 1, kinhThu500: 1 } },
+  { items: { thoiQuang60: 1, kinhThu2k: 1 } },
+  { items: { thoiQuang60: 1, kinhThu2k: 1, nganDuyen: 1 } },
 ]
 // Quà gắn email (tài khoản không mất khi đổi máy): một lần, server gửi qua thư ngay khi gắn
 export const LINK_GIFT: Reward = { items: { kimDuyen: 1, thoiQuang60: 2, hoSon8: 1 } }

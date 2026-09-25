@@ -575,6 +575,46 @@ export const en: Text = {
     expires: (t: string) => `${t} left`,
   },
   guest: 'A wandering cultivator visits — tap for a gift',
+  quiz: {
+    title: 'Hall of Inquiry',
+    lore: 'Each day the Scripture Hall elder asks five questions about the Way and the arts of cultivation. The more you answer right, the richer the gift.',
+    open: 'Enter the Hall of Inquiry',
+    locked: (n: number) => `Unlocks at Main Hall level ${n}`,
+    step: (n: number, of: number) => `Question ${n}/${of}`,
+    good: 'Correct!',
+    bad: (a: string) => `Not quite — the answer: ${a}`,
+    done: (r: number, of: number) => `${r}/${of} correct today. The elder asks again tomorrow.`,
+    gift: 'Gift by correct answers',
+    q: [
+      ['Sword cultivators counter which type?', ['Spell cultivators', 'Body cultivators', 'Sword cultivators', 'None']],
+      ['When raided, how much of your storage capacity is always safe?', ['25%', '30%', '45%', '60%']],
+      ['After losing a defense, how long is your peace shield?', ['4 hours', '8 hours', '12 hours', '24 hours']],
+      ['At the Recruitment Hall, a free silver invitation comes every…', ['1 hour', '3 hours', '12 hours', '6 hours']],
+      ['Five elements: Metal overcomes…', ['Wood', 'Water', 'Fire', 'Earth']],
+      ['How many armies can join one rally?', ['5', '8', '10', '12']],
+      ['Arms Training: every how many wins do you pick a technique for the drill master?', ['1', '2', '3', '5']],
+      [
+        'Which type marches fastest on the world map?',
+        ['Sword cultivators', 'Spell cultivators', 'Body cultivators', 'All the same'],
+      ],
+      ['How long does an Ancient Ruin stay open each time?', ['10 minutes', '30 minutes', '2 hours', '1 hour']],
+      ['After how many days of leader absence can a hall master take over?', ['3', '7', '14', '30']],
+      [
+        'What does a Mountain Guard charm do?',
+        ['Boost production', 'Heal faster', 'Raise a peace shield', 'March faster'],
+      ],
+      [
+        'Where is the Heaven Gate on the world map?',
+        ['The heart of the world', 'The outer ring', 'The far north', 'The middle ring'],
+      ],
+      ['What is the lowest transit loss of the Spirit Conduit (high Treasure Pavilion)?', ['0%', '8%', '20%', '35%']],
+      ['Five elements: Fire overcomes…', ['Wood', 'Earth', 'Water', 'Metal']],
+      [
+        'What are spirit cranes for?',
+        ['Delivering mail', 'Carrying resources', 'Clearing the fog on the world map', 'Raiding sects'],
+      ],
+    ] as [string, [string, string, string, string]][],
+  },
   strat: {
     title: 'Season strategy',
     lore: 'Pick one strategy each season, free, kept until the season ends — choose again after rebirth.',
@@ -721,6 +761,8 @@ export const en: Text = {
       "The deputy marches along: their unlocked passives boost the army, and their technique fires right after the leader's (at half power). Each elder remembers their deputy.",
     deputyOut: 'With another army',
     over: (n: string) => `Over capacity: this elder can lead at most ${n} disciples on the realm map`,
+    traits:
+      'On the world map: sword cultivators march fast · body cultivators march slow but carry more · spell cultivators carry less. An army moves at its slowest type.',
     duo: (lead: string, deputy: string) => `${lead} + ${deputy}`,
   },
   report: {
@@ -926,6 +968,7 @@ export const en: Text = {
     ruinHint:
       'Can only be taken while open. Whoever holds it at closing: season points by hours held, and every garrisoned member earns honor per minute; then the troops return.',
     minimap: 'Minimap — tap to go there',
+    chain: (n: string) => `Chain attack · returning hunt army (${n} disciples)`,
     less: 'Collapse season card',
     more: 'Expand season card',
     minimapHide: 'Hide minimap',
@@ -1320,6 +1363,9 @@ export const en: Text = {
     groupNew: 'Create group',
     groupHint: 'Custom group chats (up to 20 people): add people from their profile — Profile → Add to group.',
     groupLeave: 'Leave group',
+    friends: 'Friends:',
+    befriend: 'Add friend',
+    unfriend: 'Remove friend',
     groupAdd: (name: string) => `Add to ${name}`,
     back: 'All messages',
     empty: 'No messages yet.',

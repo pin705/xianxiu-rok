@@ -3,7 +3,7 @@ import { fight, type Side, type Round } from '../combat.ts'
 import { sideOf, chance } from '../core/battle.ts'
 import { deputyOf, elderLevel, unitOf, isMarching, power } from '../core/stats.ts'
 import { type Army, type Err, type March, type State } from '../core/types.ts'
-import { CARRY, GUARD_STEP, PVP_FLOOR, PVP_HALL, REVENGE_TIME, TIER, UNITS, type ElderId } from '../data.ts'
+import { CARRY, GUARD_STEP, PVP_FLOOR, PVP_HALL, REVENGE_TIME, TIER, UNIT_CARRY, UNITS, type ElderId } from '../data.ts'
 import { compact } from '../core/util.ts'
 import { allyOf, napBetween, raidPath, type MapCtx, type World } from './base.ts'
 
@@ -34,7 +34,7 @@ export function scout(s: State): Scout {
 }
 
 export const carryOf = (army: Army) =>
-  UNITS.reduce((sum, u) => sum + (army[u] ?? 0) * CARRY * TIER[unitOf(u).tier].stat, 0)
+  UNITS.reduce((sum, u) => sum + (army[u] ?? 0) * CARRY * TIER[unitOf(u).tier].stat * UNIT_CARRY[unitOf(u).type], 0)
 // Gộp nhiều đội thành một bên (quân đóng ở điểm, kết trận): nối các nhóm quân; công pháp (cả của phó) và hành của đội đầu
 // at[j]: nhóm quân đầu tiên của đội j trong bên gộp
 export function combine(parts: Side[]): { side: Side; at: number[] } {

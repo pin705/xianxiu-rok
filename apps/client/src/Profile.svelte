@@ -46,6 +46,7 @@
     if (p && send && (await send({ type: 'crown', title, pid: p.pid })).ok) void reload()
   }
   const blocked = $derived(p ? game.blocks.includes(p.pid) : false)
+  const friend = $derived(p ? !!game.friends?.includes(p.pid) : false)
 </script>
 
 <Sheet open={social.profile !== null} onclose={close} title={p?.name ?? '…'} sub={p ? L.realm(p.hall) : undefined}>
@@ -116,6 +117,13 @@
               onclick={async () => p && (await send({ type: 'allyInvite', pid: p.pid })).ok && reload()}
               >{L.ally.invite}</Button
             >{/if}
+          <Button
+            size="sm"
+            variant={friend ? 'quiet' : 'ghost'}
+            icon="people"
+            onclick={() => g.act({ type: 'friend', pid: p!.pid, on: !friend })}
+            >{friend ? L.chat.unfriend : L.chat.befriend}</Button
+          >
           <Button size="sm" variant="quiet" onclick={() => g.act({ type: 'block', pid: p!.pid, on: !blocked })}
             >{blocked ? L.chat.unblock : L.chat.block}</Button
           >

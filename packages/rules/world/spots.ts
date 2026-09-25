@@ -108,7 +108,7 @@ function chainAct({ w, pid, s, map }: Ctx, a: Extract<SpotAction, { type: 'huntC
     target: { kind: 'spot', i: a.i },
     spot: p.kind,
     startAt: t,
-    arriveAt: t + routeMs(s, r.len),
+    arriveAt: t + routeMs(s, r.len, m.back),
     returnAt: 0,
     path: r.path,
     back: undefined,
@@ -152,7 +152,7 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
     spot: p.kind,
     seed,
     startAt: t,
-    arriveAt: t + routeMs(s, r.len),
+    arriveAt: t + routeMs(s, r.len, army),
     returnAt: 0,
     path: r.path,
   }
@@ -209,7 +209,7 @@ function rallyAct(
   if (!ruinWindow(map.atlas, p, t).open) return no('locked')
   const r = route(map.atlas, s.seat, p, map.phase)
   if (!r) return no('far')
-  const ms = routeMs(s, r.len)
+  const ms = routeMs(s, r.len, a.army)
   if (task === 'hit' && (spotOf(w, map, i, t).until ?? 0) > t) return no('cooldown')
   const members = [...ps.values()].flatMap(x => x.marches.filter(m => rally && m.rally === rally.id)).length
   if (rally && (members >= RALLY_MAX || s.marches.some(m => m.rally === rally.id))) return no('full')

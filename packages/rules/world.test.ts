@@ -874,11 +874,13 @@ test('săn liên hoàn: đội săn đang về đi thẳng tới con khác từ 
   const a = atlas(777)
   const map = { atlas: a, phase: 0 }
   const p = a.points.find(x => x.kind === 'wild' && x.lv <= 3)!
-  const q = a.points.find(x => x.kind === 'wild' && x.region === p.region && x.i !== p.i && x.lv <= 3)!
+  const q = a.points
+    .filter(x => x.kind === 'wild' && x.region === p.region && x.i !== p.i)
+    .sort((x, y) => x.lv - y.lv)[0]
   const seat = { x: a.regions[p.region].cx, y: a.regions[p.region].cy }
   const ps = world({ ...sect('Săn', 12, { kiem3: 900 }), seat })
   let w = freshWorld()
-  const run = (x: object, at: number) => {
+  const order = (x: object, at: number) => {
     const r = worldAct(ps, 1, x as never, at, 5, map, w)
     if (!r.ok) return r.error
     for (const [k, v] of r.changed) ps.set(k, v)
@@ -890,14 +892,14 @@ test('săn liên hoàn: đội săn đang về đi thẳng tới con khác từ 
     for (const [k, v] of r.changed) ps.set(k, v)
     w = r.world
   }
-  assert.equal(run({ type: 'go', i: p.i, task: 'hunt', elder: 'thanhPhong', army: { kiem3: 900 } }, T0), null)
+  assert.equal(order({ type: 'go', i: p.i, task: 'hunt', elder: 'thanhPhong', army: { kiem3: 900 } }, T0), null)
   const m0 = ps.get(1)!.marches[0]
-  assert.equal(run({ type: 'huntChain', id: m0.id, i: q.i }, T0 + 1), 'locked', 'chưa săn xong: chưa liên hoàn được')
+  assert.equal(order({ type: 'huntChain', id: m0.id, i: q.i }, T0 + 1), 'locked', 'chưa săn xong: chưa liên hoàn được')
   step(m0.arriveAt)
   const back = ps.get(1)!.marches[0]
   const loot1 = back.gain!.res.linhThach ?? 0
   const t1 = back.arriveAt + Math.round((back.returnAt - back.arriveAt) / 3)
-  assert.equal(run({ type: 'huntChain', id: back.id, i: q.i }, t1), null)
+  assert.equal(order({ type: 'huntChain', id: back.id, i: q.i }, t1), null)
   const m1 = ps.get(1)!.marches[0]
   assert.deepEqual([m1.target.i, m1.chain, m1.returnAt], [q.i, true, 0])
   assert.deepEqual(m1.army, back.back, 'quân còn lại đi tiếp, không hồi')

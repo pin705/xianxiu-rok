@@ -714,10 +714,7 @@ test('tiên minh, chat', async () => {
       assert.ok(war.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')
       const crew = paint('Alliance', { ...mine, start: 'people' }, `${label}, trong minh · thành viên`)
       if (s.time >= late.time)
-        assert.ok(
-          crew.includes(L.ally.idle(dayOf(s.time) - dayOf(late.time) + 8)),
-          'thành viên vắng lâu: ghi số ngày',
-        )
+        assert.ok(crew.includes(L.ally.idle(dayOf(s.time) - dayOf(late.time) + 8)), 'thành viên vắng lâu: ghi số ngày')
       for (const officer of [false, true]) {
         const who = officer ? 'trưởng lão' : 'thành viên'
         const sheet = { game: s, ally: info, officer, open: true, onclose: noop, send: async () => ({ ok: true }) }
