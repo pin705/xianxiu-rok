@@ -85,9 +85,8 @@
             <span class="row">
               <Portrait look={LOOK[e]} size={50} dim={!has} />
               <span class="grow stack" style:--gap="2px">
-                <b class="t-small rar{RARITY[e]}"
-                  >{has ? L.elders[e].name : '???'} <small class="t-tiny">{L.rarity[RARITY[e]]}</small></b
-                >
+                <b class="t-small rar{RARITY[e]}">{has ? L.elders[e].name : '???'}</b>
+                <small class="t-tiny t-strong rar{RARITY[e]}">{L.rarity[RARITY[e]]}</small>
                 {#if has}
                   <small class="t-tiny t-soft"
                     >{L.elders[e].title} · {L.units[ELDERS[e].type]} · {L.el[ELDERS[e].el]}</small

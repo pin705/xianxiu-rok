@@ -47,6 +47,7 @@
   import AllyTech from './AllyTech.svelte'
   import AllyShop from './AllyShop.svelte'
   import AllyMob from './AllyMob.svelte'
+  import AllyPot from './AllyPot.svelte'
   import { social } from './social.svelte'
 
   type ATab = 'home' | 'people' | 'war' | 'chat'
@@ -376,6 +377,7 @@
           onclick={() => go({ type: 'helpAll' }, 'reward')}>{L.ally.helpAll(helpable.length)}</Button
         >
       </Section>
+      {#if me !== null}<AllyPot {ally} {me} {go} />{/if}
     {/if}
 
     {#if atab === 'people'}

@@ -66,3 +66,17 @@ test('Phi Thăng Tệ: mỗi COIN_PER Công Huân kiếm được thành một �
   assert.equal(coins(after), coins(r.state), 'tiền mang sang mùa sau')
   assert.ok(cheap === -1 || cheap >= 0)
 })
+
+test('Tổng kết mùa: hết mùa ai cũng nhận thư tổng kết phần tăng trong mùa (so với mốc đầu mùa), rồi ghi mốc mới', () => {
+  const s0 = {
+    ...sect('Tổng Kết', 900),
+    stats: { ...newGame(T0).stats, kp: 5000, hunted: 40, raided: 3, gathered: 70_000 },
+  }
+  const s = { ...s0, yb: { kp: 1000, hunted: 10, raided: 1, gathered: 20_000 } }
+  const ps: Players = new Map([[1, s]])
+  const end = endSeason(ps, freshWorld(), { atlas: atlas(7), phase: 3 }, T0, 2, new Set())
+  const x = end.changed.get(1)!
+  const yb = x.mail.find(m => m.k === 'yearbook')!
+  assert.deepEqual(yb.a, [2, s.levels.chuDien, 900, 1, 4000, 30, 2, 50_000])
+  assert.deepEqual(x.yb, { kp: 5000, hunted: 40, raided: 3, gathered: 70_000 }, 'mốc cho mùa sau')
+})

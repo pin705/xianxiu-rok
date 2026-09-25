@@ -1,7 +1,21 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { DAY, SUPPLY_GET, SUPPLY_HALL, SUPPLY_SEND, apply, newGame, storage, supplyTax, type State } from './index.ts'
-import { freshWorld, supplyRoom, worldAct, type Players, type World } from './world.ts'
+import {
+  DAY,
+  POT_CHEST,
+  POT_FULL,
+  POT_MIN,
+  POT_RATE,
+  SUPPLY_GET,
+  SUPPLY_HALL,
+  SUPPLY_SEND,
+  apply,
+  newGame,
+  storage,
+  supplyTax,
+  type State,
+} from './index.ts'
+import { freshWorld, potChests, potOf, supplyRoom, worldAct, type Players, type World } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
 function sect(name: string, hall: number): State {
@@ -70,4 +84,45 @@ test('Vận Linh Trận: gửi cho người cùng minh, hao tổn theo Tàng B�
   assert.equal(supplyRoom(w, ps, 1, 2, T0 + DAY)!.get, SUPPLY_GET * storage(ps.get(2)!), 'ngày mới')
   assert.equal(act(1, 2, { linhThao: 1000 }, T0 + DAY), null)
   assert.equal(supplyRoom(w, ps, 1, 3, T0), null, 'khác minh: hồ sơ không hiện Vận Linh Trận')
+})
+
+test('Tụ Bảo Minh Đỉnh: góp tài nguyên vào đỉnh của minh; mỗi lần đầy ai góp đủ mở một rương; tuần mới làm lại', () => {
+  const ps: Players = new Map([
+    [1, sect('Đại Gia', 12)],
+    [2, sect('Góp Ít', 12)],
+    [3, sect('Ngoài', 12)],
+  ])
+  let w: World = {
+    ...freshWorld(),
+    allies: { 1: { id: 1, name: 'Vạn Kiếm', tag: 'VK', members: { 1: 2, 2: 0 }, notice: '', at: T0, helps: [] } },
+  }
+  const act = (pid: number, raw: object, at = T0) => {
+    const r = worldAct(ps, pid, raw as never, at, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  const give = (pid: number, n: number, at = T0) =>
+    act(pid, { type: 'potGive', res: { linhThach: n, linhThao: n, linhKhoang: n } }, at)
+  assert.equal(give(3, 10_000), 'locked', 'ngoài minh')
+  assert.equal(give(1, 3e6), 'not_enough')
+  assert.equal(act(1, { type: 'potGive', res: { linhThach: 10 } }), 'bad', 'dưới 1 điểm')
+  // người 1 góp đủ đầy đỉnh 2 lần; người 2 góp dưới POT_MIN
+  const need = (POT_FULL * 2 * POT_RATE) / 3
+  assert.equal(give(1, need), null)
+  const few = Math.floor(((POT_MIN - 1) * POT_RATE) / 3)
+  assert.equal(give(2, few), null)
+  const al = w.allies[1]
+  assert.equal(potOf(al, T0).pts, POT_FULL * 2 + Math.floor((3 * few) / POT_RATE))
+  assert.equal(potChests(al, 1, T0), 2)
+  assert.equal(potChests(al, 2, T0), 0, 'góp dưới mức: chưa mở được')
+  assert.equal(act(2, { type: 'potOpen' }), 'not_done')
+  const before = ps.get(1)!.items.nganDuyen ?? 0
+  assert.equal(act(1, { type: 'potOpen' }), null)
+  assert.equal(act(1, { type: 'potOpen' }), null)
+  assert.equal(act(1, { type: 'potOpen' }), 'not_done', 'hết rương')
+  assert.equal((ps.get(1)!.items.nganDuyen ?? 0) - before, 2 * (POT_CHEST.items?.nganDuyen ?? 0))
+  // tuần mới: đỉnh trống
+  assert.equal(potOf(w.allies[1], T0 + 7 * DAY).pts, 0)
 })

@@ -279,6 +279,7 @@ const validFest = (s: any) =>
   (s.frag === undefined || num(s.frag)) &&
   (s.bones === undefined || num(s.bones)) &&
   (s.honorAll === undefined || num(s.honorAll)) &&
+  (s.yb === undefined || (obj(s.yb) && num(s.yb.kp) && num(s.yb.hunted) && num(s.yb.raided) && num(s.yb.gathered))) &&
   (s.coinSpent === undefined || num(s.coinSpent)) &&
   (s.seclude === undefined || (obj(s.seclude) && num(s.seclude.until) && num(s.seclude.shield))) &&
   (s.secludeAt === undefined || num(s.secludeAt)) &&

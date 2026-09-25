@@ -1405,6 +1405,13 @@ export const MINE_RESPAWN = 2 * 3_600_000
 // Yêu Vương Tuần Sơn (Lohar's Trial của RoK): yêu thú giới cấp LOHAR_WILD+ rơi yêu cốt (cấp 11+ rơi 2); đủ LOHAR_BONES thì triệu
 // hồi một yêu vương đang sống thành bản Tuần Sơn — máu ×LOHAR_HP, tồn tại LOHAR_TIME. Hạ được: ngoài quà thường còn LOHAR_GIFT chia
 // theo sát thương (ai góp từ 5 % được ít nhất một món), người triệu hồi thêm LOHAR_SUMMONER. Hết giờ chưa hạ: trở lại yêu vương thường.
+// Tụ Bảo Minh Đỉnh (rương liên minh ngày lễ của RoK): mỗi tuần người trong minh góp tài nguyên vào đỉnh hương (POT_RATE tài nguyên
+// = 1 điểm); đỉnh đầy mỗi POT_FULL điểm — ai đã góp từ POT_MIN điểm tuần này mở được một rương cho mỗi lần đầy, tối đa POT_MAX
+export const POT_RATE = 1000
+export const POT_FULL = 600
+export const POT_MIN = 30
+export const POT_MAX = 10
+export const POT_CHEST: Reward = { items: { thoiQuang60: 1, nganDuyen: 1, thachNang5k: 1 } }
 export const LOHAR_WILD = 6
 export const LOHAR_BONES = 10
 export const LOHAR_HP = 2
@@ -2052,6 +2059,35 @@ const fests = {
     goals: [60, 200, 450],
     rewards: [
       { items: { thoiQuang60: 2, kinhThu500: 2 } },
+      { items: { thoiQuang180: 1, nganDuyen: 2 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Ô Thước Kiều (Thất Tịch, 7/7 âm lịch): 7 ngày — giúp đồng minh, cung phụng, thắng trận, săn liên hoàn ra Hỷ Thước, đổi quà.
+  // Mùng 7 tháng Bảy từng năm (lịch âm): 19/8/2026 (đã qua), 8/8/2027, 26/8/2028
+  thatTich: {
+    window: { kind: 'dates', from: [vnDay(2027, 8, 5), vnDay(2028, 8, 23)], len: 7 },
+    hall: 3,
+    kind: 'shop',
+    stages: [{ ally: 4, win: 2, chain: 5, duel: 3 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 100, max: 1 },
+      { reward: { items: { thanHanh: 1 } }, price: 30, max: 3 },
+      { reward: { items: { thoiQuang180: 1 } }, price: 40, max: 3 },
+      { reward: { items: { nganDuyen: 1 } }, price: 20, max: 5 },
+      { reward: { items: { kinhThu2k: 1 } }, price: 25, max: 4 },
+    ],
+  },
+  // Trung Nguyên Quỷ Tiết (rằm tháng Bảy — Vu Lan, tương ứng Halloween): 5 ngày — hạ yêu thú, yêu vương, thắng trận ra điểm, 3 rương
+  // mốc. Rằm tháng Bảy từng năm: 16/8/2027, 3/9/2028
+  quyTiet: {
+    window: { kind: 'dates', from: [vnDay(2027, 8, 14), vnDay(2028, 9, 1)], len: 5 },
+    hall: 3,
+    kind: 'points',
+    stages: [{ hunt: 6, chain: 8, win: 4, kp: 0.002 }],
+    goals: [60, 200, 450],
+    rewards: [
+      { items: { hoSon8: 1, kinhThu500: 2 } },
       { items: { thoiQuang180: 1, nganDuyen: 2 } },
       { items: { thoiQuang480: 1, kimDuyen: 1 } },
     ],

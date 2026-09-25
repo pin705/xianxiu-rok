@@ -31,7 +31,26 @@ export function endSeason(
     let x: State = { ...seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined), honor: 0, honorGot: 0 }
     const hr = honors.findIndex(([id]) => id === pid)
     if (hr >= 0) x = mail(x, { at: now, k: 'honorTop', a: [hr + 1, s.honor ?? 0], gift: honorPrize(hr) })
-    changed.set(pid, mail(x, { at: now, k: 'season', a: [season, rank.get(side) ?? 0, up ? 1 : 0] }))
+    x = mail(x, { at: now, k: 'season', a: [season, rank.get(side) ?? 0, up ? 1 : 0] })
+    // Tổng kết mùa: phần bộ đếm tăng trong mùa (so với lúc đầu mùa), rồi ghi mốc cho mùa sau
+    const now4 = {
+      kp: s.stats.kp ?? 0,
+      hunted: s.stats.hunted ?? 0,
+      raided: s.stats.raided ?? 0,
+      gathered: s.stats.gathered ?? 0,
+    }
+    const d = (k: keyof typeof now4) => now4[k] - (s.yb?.[k] ?? 0)
+    const book = [
+      season,
+      s.levels.chuDien,
+      s.honor ?? 0,
+      hr + 1,
+      d('kp'),
+      d('hunted'),
+      d('raided'),
+      d('gathered'),
+    ] as const
+    changed.set(pid, { ...mail(x, { at: now, k: 'yearbook', a: [...book] }), yb: now4 })
   }
   // hàng đang treo trên chợ: trả về qua thư (thư giữ qua luân hồi)
   for (const [k, v] of unsold(new Map([...ps, ...changed]), w, Object.values(w.orders)).changed) changed.set(k, v)

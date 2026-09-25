@@ -677,7 +677,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 
 | # | Tính năng (RoK) | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|
-| 2.1 | Độ hiếm tướng (4 bậc màu) | ❌ | P1 | S |
+| 2.1 | Độ hiếm tướng (4 bậc màu) | ✅ phẩm trưởng lão (`RARITY`) | P1 | S |
 | 2.2 | Chuyên môn / vai trò tướng (15+ nhánh) | 🟡 1 hệ + 1 hành, bị động có vai trò | P1 | M |
 | 2.3 | Nguồn tướng đa dạng (sự kiện, VIP, shop) | ✅ cột mốc + tín vật Chiêu Hiền Đài (thiếp từ sự kiện, cửa hàng) | P1 | M |
 | 2.4 | Tavern (rương tướng, bảo hiểm) | ✅ Chiêu Hiền Đài (thiếp miễn phí, bảo hiểm thiếp vàng; không bán) | P1 (free) / P2 (bán) | M |

@@ -203,6 +203,17 @@ export type MailArgs = {
   firstTake: [kind: string, lv: number] // tiên minh chiếm lần đầu một điểm (loại, cấp) trong mùa
   eveTop: [rank: number, pts: number] // Khai Giới Trảm Tà: cổng mở, minh mình hạng rank giới vận, điểm
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
+  // Tổng kết mùa (Yearbook): mùa, tầng Chủ điện, Công Huân (hạng, 0: ngoài bảng), chiến công, yêu thú hạ, cướp thắng, khai mỏ
+  yearbook: [
+    season: number,
+    hall: number,
+    honor: number,
+    rank: number,
+    kp: number,
+    hunted: number,
+    raided: number,
+    gathered: number,
+  ]
 }
 export type MailKind = keyof MailArgs
 // Thư mới (chưa có id): a bắt buộc, đúng kiểu theo khoá
@@ -261,6 +272,7 @@ export type State = {
   frag?: number // Khai Giới Trảm Tà: tàn quyển đang có (đủ EVE_CHEST_N đổi rương)
   thoi?: { n: number; pick: number } // Thiên Thời: chỉ lệnh đã chọn cho thời thứ n của mùa
   bones?: number // Yêu Vương Tuần Sơn: yêu cốt đang có (đủ LOHAR_BONES triệu hồi)
+  yb?: { kp: number; hunted: number; raided: number; gathered: number } // bộ đếm lúc đầu mùa (Tổng kết mùa tính phần tăng)
   honorAll?: number // Công Huân kiếm được cả đời (không về 0 khi hết mùa) — ra Phi Thăng Tệ
   coinSpent?: number // Phi Thăng Tệ đã tiêu ở Thiên Môn Thương Điếm
   seclude?: { until: number; shield: number } // Bế Quan Lệnh: bế quan tới until (shield: khiên trước khi bế quan, xuất quan thì trả)

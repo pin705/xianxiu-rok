@@ -784,6 +784,7 @@ test('tiên minh, chat', async () => {
       )
       const mine = { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }), onraid: noop }
       const inside = paint('Alliance', mine, `${label}, trong minh`)
+      assert.ok(inside.includes(L.pot.title), 'Tụ Bảo Minh Đỉnh ở tab nhà')
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       const war = paint('Alliance', { ...mine, start: 'war' }, `${label}, trong minh · chiến sự`)
       assert.ok(war.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')

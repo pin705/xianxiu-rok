@@ -54,6 +54,8 @@
     trungThu: 'star',
     tanXuan: 'mail',
     dongChi: 'star',
+    thatTich: 'heal',
+    quyTiet: 'skull',
   }
   // lịch 7 ngày (sự kiện tương lai chưa mở vẫn hiện để người chơi chuẩn bị, như Event Calendar của RoK)
   const cal = $derived(

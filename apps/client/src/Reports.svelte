@@ -81,7 +81,7 @@
                   >{L.ago(Math.max(60_000, game.time - m.at))}</small
                 ></span
               >
-              <p class="t-small t-lore">{body}</p>
+              <p class="t-small t-lore" style:white-space="pre-line">{body}</p>
               {#if m.gift}
                 <div class="row between">
                   <Bag res={m.gift.res} items={m.gift.items} size="sm" />

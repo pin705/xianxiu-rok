@@ -221,3 +221,18 @@ test('Tân Xuân Khai Sơn (lì xì 7 ngày từ mùng Một) và Đông Chí Tu
   const x = run(run(advance(s, t), { type: 'login' }, t), { type: 'fest', id: 'tanXuan', i: 0 }, t)
   assert.equal(x.items.nganDuyen ?? 0, (s.items.nganDuyen ?? 0) + 1)
 })
+
+test('Ô Thước Kiều (Thất Tịch) và Trung Nguyên Quỷ Tiết (rằm tháng Bảy) mở đúng ngày', () => {
+  const at = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 5)
+  const s0 = newGame(at(2027, 7, 1))
+  const s = { ...s0, levels: { ...s0.levels, chuDien: 5 } }
+  const open = (id: 'thatTich' | 'quyTiet', t: number) => festOpen(advance(s, t), id, t)
+  assert.deepEqual(
+    [open('thatTich', at(2027, 8, 4)), open('thatTich', at(2027, 8, 8)), open('thatTich', at(2027, 8, 12))],
+    [false, true, false],
+  )
+  assert.deepEqual(
+    [open('quyTiet', at(2027, 8, 13)), open('quyTiet', at(2027, 8, 16)), open('quyTiet', at(2027, 8, 19))],
+    [false, true, false],
+  )
+})

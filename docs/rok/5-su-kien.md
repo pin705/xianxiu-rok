@@ -1269,7 +1269,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | E1 | Alliance Mobilization | Tiên Minh Động Viên | ✅ Minh vụ đường | P1 | M |
 | E2 | Silk Road Speculators | Linh Thương Hộ Tống | ❌ | P2 | L |
 | E3 | Shadow Legion Invasion | Ma Triều Công Sơn | ✅ | P1 | M |
-| E4 | Rương liên minh ngày lễ | Tụ Bảo Minh Đỉnh | ❌ | P1 | S–M |
+| E4 | Rương liên minh ngày lễ | Tụ Bảo Minh Đỉnh | ✅ đỉnh tuần, góp tài nguyên (`world/pot.ts`) | P1 | S–M |
 | E5 | Alliance Quiz | Luận Đạo Vấn Đáp | ❌ | P2 | M |
 | F1 | More Than Gems | Tiên Ngọc Hồi Lễ | ❌ | P2 | S |
 | F2 | Wheel of Fortune | Thiên Cơ Luân | ⛔ | — | — |
@@ -1294,9 +1294,9 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | H5 | Grand Museum Day | Tàng Bảo Các Triển Lãm | ❌ | P2 | S |
 | H6 | Dragon Boat (Zongzi) | Đoan Ngọ Tống Tử | ❌ | P2 | S |
 | H7 | Summer Festival / Summer of Passion | Hạ Chí Thịnh Hội | ❌ | P2 | S |
-| H8 | Qixi Rendezvous | Ô Thước Kiều | ❌ | P1 | S |
+| H8 | Qixi Rendezvous | Ô Thước Kiều | ✅ fest `thatTich` | P1 | S |
 | H9 | Anniversary (Yearbook, Sign-in, Reunion…) | Khánh Điển Khai Tông | ❌ | P1 / P2 | S / M |
-| H10 | Halloween | Trung Nguyên Quỷ Tiết | ❌ | P1 | S |
+| H10 | Halloween | Trung Nguyên Quỷ Tiết | ✅ fest `quyTiet` | P1 | S |
 | H11 | Thanksgiving | Bách Vị Tiên Yến | ❌ | P2 | S–M |
 | H12 | Christmas (+ Treasure Hunt) | Đông Chí Tuyết Dạ + Tàng Bảo Đồ | 🟡 Đông Chí Tuyết Dạ (fest `dongChi`), chưa có Tàng Bảo Đồ | P1 / P2 | M / S |
 | H13 | New Year Fireworks | Nguyên Tiêu Hoa Đăng | ❌ | P2 | S |

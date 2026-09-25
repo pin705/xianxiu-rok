@@ -675,6 +675,15 @@ export const en: Text = {
     at: (n: number) => `${n} wins`,
     fightN: (n: number) => `Arms Training · fight ${n}`,
   },
+  pot: {
+    title: 'Alliance Treasure Cauldron',
+    hint: (min: number) =>
+      `The whole alliance donates resources to the incense cauldron (1,000 = 1 point). Each time it fills, everyone who gave ${min}+ points this week opens a chest. Resets on Monday.`,
+    filled: (n: number, max: number) => `Filled ${n}/${max} times`,
+    mine: (n: string) => `You gave ${n} points`,
+    give: (n: string, pts: string) => `Give ${n} of each (+${pts})`,
+    open: (n: number) => (n ? `Open chest (${n})` : 'Open chest'),
+  },
   lohar: {
     name: 'Roaming Demon King',
     by: (who: string, t: string) => `Summoned by ${who} · ${t} left`,
@@ -1499,6 +1508,24 @@ export const en: Text = {
         `First capture · ${({ vein: 'Spirit vein', gate: 'Array eye', heaven: 'Heaven Gate' } as Record<string, string>)[kind] ?? kind} level ${lv}`,
         'Your alliance is the first this season to hold this point. A reward for every member is below.',
       ],
+      yearbook: (
+        season: number,
+        hall: number,
+        honor: number,
+        rank: number,
+        kp: number,
+        hunted: number,
+        raided: number,
+        gathered: number,
+      ): [string, string] => [
+        `Season ${season} yearbook`,
+        [
+          `Season ${season} is over. Your sect reached Main Hall level ${hall}.`,
+          `Honor ${honor.toLocaleString('en')}${rank ? ` — rank ${rank} in the realm` : ''}.`,
+          `Kill points ${kp.toLocaleString('en')} · beasts slain ${hunted.toLocaleString('en')} · raids won ${raided.toLocaleString('en')} · resources gathered ${gathered.toLocaleString('en')}.`,
+          'See you next season.',
+        ].join('\n'),
+      ],
       lohar: (share: number, summoner: 0 | 1): [string, string] => [
         'Roaming Demon King slain',
         `The roaming demon king has fallen — you dealt ${share}% of the damage.${summoner ? ' As the summoner you get an extra share.' : ''} Your reward is below.`,
@@ -2266,11 +2293,20 @@ export const en: Text = {
         name: 'Winter Solstice Night',
         desc: 'Winter solstice: win battles, hunt beasts (chains score more), heal and help allies for points — open the snow-night chests at each milestone.',
       },
+      thatTich: {
+        name: 'Magpie Bridge',
+        desc: 'Qixi: magpies bridge the sky for the Cowherd and the Weaver. Help allies, win battles, chain-hunt and duel to earn Magpies — trade for golden invitations, march boosts and speedups.',
+      },
+      quyTiet: {
+        name: 'Ghost Festival',
+        desc: 'Full moon of the seventh month, the ghost gate opens: slay beasts (chains score more), win battles and earn kill points — open the ghost-warding chests at each milestone.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: '7-day calendar',
     tokens: (n: string, name = 'Sect Tokens') => `${name}: ${n}`,
     tokenName: {
       trungThu: 'Mooncakes',
+      thatTich: 'Magpies',
       conLon: 'Kunlun Tokens',
       thucSon: 'Shushan Tokens',
       ngaMi: 'Emei Tokens',

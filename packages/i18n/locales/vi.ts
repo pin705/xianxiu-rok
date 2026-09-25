@@ -654,6 +654,16 @@ export const vi = {
     at: (n: number) => `${n} trận`,
     fightN: (n: number) => `Luận võ · trận ${n}`,
   },
+  // Tụ Bảo Minh Đỉnh: góp tài nguyên vào đỉnh hương của minh, đỉnh đầy thì ai góp đủ mở rương
+  pot: {
+    title: 'Tụ Bảo Minh Đỉnh',
+    hint: (min: number) =>
+      `Cả minh góp tài nguyên vào đỉnh hương (1.000 = 1 điểm). Mỗi lần đỉnh đầy, ai đã góp từ ${min} điểm tuần này mở được một rương. Làm mới thứ Hai.`,
+    filled: (n: number, max: number) => `Đỉnh đầy ${n}/${max} lần`,
+    mine: (n: string) => `Bạn đã góp ${n} điểm`,
+    give: (n: string, pts: string) => `Góp ${n} mỗi loại (+${pts})`,
+    open: (n: number) => (n ? `Mở rương (${n})` : 'Mở rương'),
+  },
   // Yêu Vương Tuần Sơn: yêu cốt từ yêu thú giới, triệu hồi yêu vương bản mạnh
   lohar: {
     name: 'Yêu Vương Tuần Sơn',
@@ -1492,6 +1502,24 @@ export const vi = {
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
       ],
+      yearbook: (
+        season: number,
+        hall: number,
+        honor: number,
+        rank: number,
+        kp: number,
+        hunted: number,
+        raided: number,
+        gathered: number,
+      ): [string, string] => [
+        `Tổng kết mùa ${season}`,
+        [
+          `Mùa ${season} khép lại. Tông môn đã đi tới Chủ điện tầng ${hall}.`,
+          `Công Huân ${honor.toLocaleString('vi')}${rank ? ` — hạng ${rank} cả giới` : ''}.`,
+          `Chiến công ${kp.toLocaleString('vi')} · yêu thú hạ ${hunted.toLocaleString('vi')} · cướp thắng ${raided.toLocaleString('vi')} · khai mỏ ${gathered.toLocaleString('vi')} tài nguyên.`,
+          'Hẹn gặp ở mùa sau.',
+        ].join('\n'),
+      ],
       lohar: (share: number, summoner: 0 | 1): [string, string] => [
         'Hạ Yêu Vương Tuần Sơn',
         `Yêu vương tuần sơn đã ngã — bạn góp ${share} % sát thương.${summoner ? ' Người triệu hồi được thêm một phần quà.' : ''} Quà Tuần Sơn ở dưới.`,
@@ -2266,10 +2294,19 @@ export const vi = {
         name: 'Đông Chí Tuyết Dạ',
         desc: 'Tiết Đông Chí: thắng trận, săn yêu thú (săn liên hoàn càng nhiều), chữa thương, giúp đồng minh ra điểm — đủ mốc mở rương tuyết dạ.',
       },
+      thatTich: {
+        name: 'Ô Thước Kiều',
+        desc: 'Thất Tịch: bầy hỷ thước bắc cầu cho Ngưu Lang Chức Nữ. Giúp đồng minh, thắng trận, săn liên hoàn, luận kiếm ra Hỷ Thước — đổi Kim Duyên Phù, Thần Hành Phù, phù tăng tốc.',
+      },
+      quyTiet: {
+        name: 'Trung Nguyên Quỷ Tiết',
+        desc: 'Rằm tháng Bảy, cửa âm mở: hạ yêu thú (săn liên hoàn càng nhiều), thắng trận, lập chiến công ra điểm — đủ mốc mở rương trấn quỷ.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: 'Lịch 7 ngày',
     tokens: (n: string, name = 'Tông Môn Lệnh') => `${name}: ${n}`,
     tokenName: {
+      thatTich: 'Hỷ Thước',
       conLon: 'Côn Lôn Lệnh',
       thucSon: 'Thục Sơn Lệnh',
       ngaMi: 'Nga Mi Lệnh',

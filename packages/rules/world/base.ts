@@ -108,7 +108,10 @@ export type Alliance = {
   mailAt?: number // lúc gửi thư minh gần nhất
   fundAt?: number // kho minh: lãnh thổ đã sinh Minh khố tới lúc này
   offices?: Partial<Record<OfficeId, number>> // chức vị đường chủ: ai giữ
+  pot?: Pot // Tụ Bảo Minh Đỉnh tuần này
 }
+// Tụ Bảo Minh Đỉnh: tuần, điểm cả minh, điểm từng người đã góp, số rương từng người đã mở
+export type Pot = { week: number; pts: number; by: Record<number, number>; opened: Record<number, number> }
 // Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
 // tuần và số thứ tự nên client tự vẽ được), điểm từng người đã góp
 export type MobBoard = { week: number; pts: number; next: number; board: number[]; by: Record<number, number> }

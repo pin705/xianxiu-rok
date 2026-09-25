@@ -1,52 +1,31 @@
 {
   "bamboo:0.85:8": {
     "src": "scene/bamboo-0.85-8.webp?v=64117c1dfc",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1295, 408, 93, 138]
+    "tex": true
   },
   "bamboo:0.8:4": {
     "src": "scene/bamboo-0.8-4.webp?v=e855c13d60",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1688, 408, 87, 130]
+    "tex": true
   },
   "beast:kiem": {
     "src": "battle/beast-kiem.webp?v=7179f6cf4f",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1030, 1303, 180, 96]
+    "tex": true
   },
   "beast:phap": {
     "src": "battle/beast-phap.webp?v=d4752e556a",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1212, 1303, 180, 96]
+    "tex": true
   },
   "beast:the": {
     "src": "battle/beast-the.webp?v=3c79d5848a",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1394, 1303, 180, 96]
+    "tex": true
   },
   "bird:down": {
     "src": "scene/bird-down.webp?v=d0d2ce1f08",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [755, 562, 36, 24]
+    "tex": true
   },
   "bird:up": {
     "src": "scene/bird-up.webp?v=68c3e4387a",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [793, 562, 36, 24]
+    "tex": true
   },
   "bld:chuDien:1": {
     "src": "bld/bld-chuDien-1.webp?v=f42de0fbfa",
@@ -54,10 +33,7 @@
   },
   "bld:chuDien:1:0": {
     "src": "bld/bld-chuDien-1.webp?v=f42de0fbfa",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [962, 2, 396, 276]
+    "tex": true
   },
   "bld:chuDien:2": {
     "src": "bld/bld-chuDien-2.webp?v=de956dc3d9",
@@ -65,10 +41,7 @@
   },
   "bld:chuDien:2:0": {
     "src": "bld/bld-chuDien-2.webp?v=de956dc3d9",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [262, 2, 396, 336]
+    "tex": true
   },
   "bld:chuDien:3": {
     "src": "bld/bld-chuDien-3.webp?v=d90f234051",
@@ -76,10 +49,7 @@
   },
   "bld:chuDien:3:0": {
     "src": "bld/bld-chuDien-3.webp?v=d90f234051",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [262, 2, 588, 336]
+    "tex": true
   },
   "bld:chuDien:4": {
     "src": "bld/bld-chuDien-4.webp?v=6995d1048f",
@@ -87,10 +57,7 @@
   },
   "bld:chuDien:4:0": {
     "src": "bld/bld-chuDien-4.webp?v=6995d1048f",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [262, 2, 588, 336]
+    "tex": true
   },
   "bld:chuDien:5": {
     "src": "bld/bld-chuDien-5.webp?v=e4ed3d1420",
@@ -98,10 +65,7 @@
   },
   "bld:chuDien:5:0": {
     "src": "bld/bld-chuDien-5.webp?v=e4ed3d1420",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [262, 2, 588, 372]
+    "tex": true
   },
   "bld:danPhong:1": {
     "src": "bld/bld-danPhong-1.webp?v=6380bfa920",
@@ -109,10 +73,7 @@
   },
   "bld:danPhong:1:0": {
     "src": "bld/bld-danPhong-1.webp?v=6380bfa920",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [822, 298, 378, 234]
+    "tex": true
   },
   "bld:danPhong:2": {
     "src": "bld/bld-danPhong-2.webp?v=c841817569",
@@ -120,10 +81,7 @@
   },
   "bld:danPhong:2:0": {
     "src": "bld/bld-danPhong-2.webp?v=c841817569",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [822, 352, 378, 234]
+    "tex": true
   },
   "bld:danPhong:3": {
     "src": "bld/bld-danPhong-3.webp?v=08fe286a99",
@@ -131,10 +89,7 @@
   },
   "bld:danPhong:3:0": {
     "src": "bld/bld-danPhong-3.webp?v=08fe286a99",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [822, 412, 378, 234]
+    "tex": true
   },
   "bld:danPhong:4": {
     "src": "bld/bld-danPhong-4.webp?v=eabb8caa7e",
@@ -142,10 +97,7 @@
   },
   "bld:danPhong:4:0": {
     "src": "bld/bld-danPhong-4.webp?v=eabb8caa7e",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [822, 412, 378, 234]
+    "tex": true
   },
   "bld:danPhong:5": {
     "src": "bld/bld-danPhong-5.webp?v=6e5923f662",
@@ -153,10 +105,7 @@
   },
   "bld:danPhong:5:0": {
     "src": "bld/bld-danPhong-5.webp?v=6e5923f662",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [822, 448, 378, 270]
+    "tex": true
   },
   "bld:dienVoTruong:1": {
     "src": "bld/bld-dienVoTruong-1.webp?v=3603543404",
@@ -164,45 +113,27 @@
   },
   "bld:dienVoTruong:1:1": {
     "src": "bld/bld-dienVoTruong-1.webp?v=3603543404",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:1:2": {
     "src": "bld/bld-dienVoTruong-1.webp?v=3603543404",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:1:3": {
     "src": "bld/bld-dienVoTruong-1.webp?v=3603543404",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:1:4": {
     "src": "bld/bld-dienVoTruong-1.webp?v=3603543404",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:1:5": {
     "src": "bld/bld-dienVoTruong-1.webp?v=3603543404",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:1:6": {
     "src": "bld/bld-dienVoTruong-1.webp?v=3603543404",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:2": {
     "src": "bld/bld-dienVoTruong-2.webp?v=c317d9109e",
@@ -210,45 +141,27 @@
   },
   "bld:dienVoTruong:2:1": {
     "src": "bld/bld-dienVoTruong-2.webp?v=c317d9109e",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:2:2": {
     "src": "bld/bld-dienVoTruong-2.webp?v=c317d9109e",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:2:3": {
     "src": "bld/bld-dienVoTruong-2.webp?v=c317d9109e",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:2:4": {
     "src": "bld/bld-dienVoTruong-2.webp?v=c317d9109e",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:2:5": {
     "src": "bld/bld-dienVoTruong-2.webp?v=c317d9109e",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:2:6": {
     "src": "bld/bld-dienVoTruong-2.webp?v=c317d9109e",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1360, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:3": {
     "src": "bld/bld-dienVoTruong-3.webp?v=c220b06064",
@@ -256,45 +169,27 @@
   },
   "bld:dienVoTruong:3:1": {
     "src": "bld/bld-dienVoTruong-3.webp?v=c220b06064",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:3:2": {
     "src": "bld/bld-dienVoTruong-3.webp?v=c220b06064",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:3:3": {
     "src": "bld/bld-dienVoTruong-3.webp?v=c220b06064",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:3:4": {
     "src": "bld/bld-dienVoTruong-3.webp?v=c220b06064",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:3:5": {
     "src": "bld/bld-dienVoTruong-3.webp?v=c220b06064",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:3:6": {
     "src": "bld/bld-dienVoTruong-3.webp?v=c220b06064",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:4": {
     "src": "bld/bld-dienVoTruong-4.webp?v=c59ff2b1c4",
@@ -302,45 +197,27 @@
   },
   "bld:dienVoTruong:4:1": {
     "src": "bld/bld-dienVoTruong-4.webp?v=c59ff2b1c4",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:4:2": {
     "src": "bld/bld-dienVoTruong-4.webp?v=c59ff2b1c4",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:4:3": {
     "src": "bld/bld-dienVoTruong-4.webp?v=c59ff2b1c4",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:4:4": {
     "src": "bld/bld-dienVoTruong-4.webp?v=c59ff2b1c4",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:4:5": {
     "src": "bld/bld-dienVoTruong-4.webp?v=c59ff2b1c4",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:4:6": {
     "src": "bld/bld-dienVoTruong-4.webp?v=c59ff2b1c4",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1552, 2, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:5": {
     "src": "bld/bld-dienVoTruong-5.webp?v=4e7d44b6e0",
@@ -348,45 +225,27 @@
   },
   "bld:dienVoTruong:5:1": {
     "src": "bld/bld-dienVoTruong-5.webp?v=4e7d44b6e0",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1552, 2, 420, 312]
+    "tex": true
   },
   "bld:dienVoTruong:5:2": {
     "src": "bld/bld-dienVoTruong-5.webp?v=4e7d44b6e0",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1552, 2, 420, 312]
+    "tex": true
   },
   "bld:dienVoTruong:5:3": {
     "src": "bld/bld-dienVoTruong-5.webp?v=4e7d44b6e0",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1552, 2, 420, 312]
+    "tex": true
   },
   "bld:dienVoTruong:5:4": {
     "src": "bld/bld-dienVoTruong-5.webp?v=4e7d44b6e0",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1552, 2, 420, 312]
+    "tex": true
   },
   "bld:dienVoTruong:5:5": {
     "src": "bld/bld-dienVoTruong-5.webp?v=4e7d44b6e0",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1552, 2, 420, 312]
+    "tex": true
   },
   "bld:dienVoTruong:5:6": {
     "src": "bld/bld-dienVoTruong-5.webp?v=4e7d44b6e0",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1552, 2, 420, 312]
+    "tex": true
   },
   "bld:hoSonDaiTran:1": {
     "src": "bld/bld-hoSonDaiTran-1.webp?v=cb19b67dd0",
@@ -394,10 +253,7 @@
   },
   "bld:hoSonDaiTran:1:0": {
     "src": "bld/bld-hoSonDaiTran-1.webp?v=cb19b67dd0",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [2, 298, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:2": {
     "src": "bld/bld-hoSonDaiTran-2.webp?v=b88419b9ee",
@@ -405,10 +261,7 @@
   },
   "bld:hoSonDaiTran:2:0": {
     "src": "bld/bld-hoSonDaiTran-2.webp?v=b88419b9ee",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [2, 352, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:3": {
     "src": "bld/bld-hoSonDaiTran-3.webp?v=210fe09bdc",
@@ -416,10 +269,7 @@
   },
   "bld:hoSonDaiTran:3:0": {
     "src": "bld/bld-hoSonDaiTran-3.webp?v=210fe09bdc",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [2, 412, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:4": {
     "src": "bld/bld-hoSonDaiTran-4.webp?v=07eccb62df",
@@ -427,10 +277,7 @@
   },
   "bld:hoSonDaiTran:4:0": {
     "src": "bld/bld-hoSonDaiTran-4.webp?v=07eccb62df",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [2, 412, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:5": {
     "src": "bld/bld-hoSonDaiTran-5.webp?v=c690581ff3",
@@ -438,10 +285,7 @@
   },
   "bld:hoSonDaiTran:5:0": {
     "src": "bld/bld-hoSonDaiTran-5.webp?v=c690581ff3",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [2, 448, 420, 312]
+    "tex": true
   },
   "bld:khoangMach:1": {
     "src": "bld/bld-khoangMach-1.webp?v=1c7a293287",
@@ -449,10 +293,7 @@
   },
   "bld:khoangMach:1:0": {
     "src": "bld/bld-khoangMach-1.webp?v=1c7a293287",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [2, 2, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:2": {
     "src": "bld/bld-khoangMach-2.webp?v=d481edd1cc",
@@ -460,10 +301,7 @@
   },
   "bld:khoangMach:2:0": {
     "src": "bld/bld-khoangMach-2.webp?v=d481edd1cc",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [660, 2, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:3": {
     "src": "bld/bld-khoangMach-3.webp?v=0784197393",
@@ -471,10 +309,7 @@
   },
   "bld:khoangMach:3:0": {
     "src": "bld/bld-khoangMach-3.webp?v=0784197393",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [852, 2, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:4": {
     "src": "bld/bld-khoangMach-4.webp?v=37f73af102",
@@ -482,10 +317,7 @@
   },
   "bld:khoangMach:4:0": {
     "src": "bld/bld-khoangMach-4.webp?v=37f73af102",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [852, 2, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:5": {
     "src": "bld/bld-khoangMach-5.webp?v=73514bdc65",
@@ -493,10 +325,7 @@
   },
   "bld:khoangMach:5:0": {
     "src": "bld/bld-khoangMach-5.webp?v=73514bdc65",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [852, 2, 408, 330]
+    "tex": true
   },
   "bld:linhDien:1": {
     "src": "bld/bld-linhDien-1.webp?v=e8565afa60",
@@ -504,10 +333,7 @@
   },
   "bld:linhDien:1:0": {
     "src": "bld/bld-linhDien-1.webp?v=e8565afa60",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1202, 298, 432, 216]
+    "tex": true
   },
   "bld:linhDien:2": {
     "src": "bld/bld-linhDien-2.webp?v=839125f146",
@@ -515,10 +341,7 @@
   },
   "bld:linhDien:2:0": {
     "src": "bld/bld-linhDien-2.webp?v=839125f146",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1202, 352, 432, 216]
+    "tex": true
   },
   "bld:linhDien:3": {
     "src": "bld/bld-linhDien-3.webp?v=4c2866a560",
@@ -526,10 +349,7 @@
   },
   "bld:linhDien:3:0": {
     "src": "bld/bld-linhDien-3.webp?v=4c2866a560",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1202, 412, 432, 216]
+    "tex": true
   },
   "bld:linhDien:4": {
     "src": "bld/bld-linhDien-4.webp?v=54a60d2750",
@@ -537,10 +357,7 @@
   },
   "bld:linhDien:4:0": {
     "src": "bld/bld-linhDien-4.webp?v=54a60d2750",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1202, 412, 432, 216]
+    "tex": true
   },
   "bld:linhDien:5": {
     "src": "bld/bld-linhDien-5.webp?v=28d0b2605a",
@@ -548,10 +365,7 @@
   },
   "bld:linhDien:5:0": {
     "src": "bld/bld-linhDien-5.webp?v=28d0b2605a",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1202, 448, 432, 252]
+    "tex": true
   },
   "bld:luyenKhiPhong:1": {
     "src": "bld/bld-luyenKhiPhong-1.webp?v=b959436058",
@@ -559,10 +373,7 @@
   },
   "bld:luyenKhiPhong:1:0": {
     "src": "bld/bld-luyenKhiPhong-1.webp?v=b959436058",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [424, 298, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:2": {
     "src": "bld/bld-luyenKhiPhong-2.webp?v=16dd4adacc",
@@ -570,10 +381,7 @@
   },
   "bld:luyenKhiPhong:2:0": {
     "src": "bld/bld-luyenKhiPhong-2.webp?v=16dd4adacc",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [424, 352, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:3": {
     "src": "bld/bld-luyenKhiPhong-3.webp?v=812f36de8f",
@@ -581,10 +389,7 @@
   },
   "bld:luyenKhiPhong:3:0": {
     "src": "bld/bld-luyenKhiPhong-3.webp?v=812f36de8f",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [424, 412, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:4": {
     "src": "bld/bld-luyenKhiPhong-4.webp?v=3763904313",
@@ -592,10 +397,7 @@
   },
   "bld:luyenKhiPhong:4:0": {
     "src": "bld/bld-luyenKhiPhong-4.webp?v=3763904313",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [424, 412, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:5": {
     "src": "bld/bld-luyenKhiPhong-5.webp?v=b4c2a1fe35",
@@ -603,10 +405,7 @@
   },
   "bld:luyenKhiPhong:5:0": {
     "src": "bld/bld-luyenKhiPhong-5.webp?v=b4c2a1fe35",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [424, 448, 396, 276]
+    "tex": true
   },
   "bld:tangBaoCac:1": {
     "src": "bld/bld-tangBaoCac-1.webp?v=29fb1995ec",
@@ -614,10 +413,7 @@
   },
   "bld:tangBaoCac:1:0": {
     "src": "bld/bld-tangBaoCac-1.webp?v=29fb1995ec",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [412, 2, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:2": {
     "src": "bld/bld-tangBaoCac-2.webp?v=ada2e8138b",
@@ -625,10 +421,7 @@
   },
   "bld:tangBaoCac:2:0": {
     "src": "bld/bld-tangBaoCac-2.webp?v=ada2e8138b",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1070, 2, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:3": {
     "src": "bld/bld-tangBaoCac-3.webp?v=ed71ef61f4",
@@ -636,10 +429,7 @@
   },
   "bld:tangBaoCac:3:0": {
     "src": "bld/bld-tangBaoCac-3.webp?v=ed71ef61f4",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1262, 2, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:4": {
     "src": "bld/bld-tangBaoCac-4.webp?v=82a7a3ee34",
@@ -647,10 +437,7 @@
   },
   "bld:tangBaoCac:4:0": {
     "src": "bld/bld-tangBaoCac-4.webp?v=82a7a3ee34",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1262, 2, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:5": {
     "src": "bld/bld-tangBaoCac-5.webp?v=4e1b16123c",
@@ -658,10 +445,7 @@
   },
   "bld:tangBaoCac:5:0": {
     "src": "bld/bld-tangBaoCac-5.webp?v=4e1b16123c",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1262, 2, 288, 324]
+    "tex": true
   },
   "bld:tangKinhCac:1": {
     "src": "bld/bld-tangKinhCac-1.webp?v=d9a0882cff",
@@ -669,10 +453,7 @@
   },
   "bld:tangKinhCac:1:0": {
     "src": "bld/bld-tangKinhCac-1.webp?v=d9a0882cff",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [702, 2, 258, 288]
+    "tex": true
   },
   "bld:tangKinhCac:2": {
     "src": "bld/bld-tangKinhCac-2.webp?v=40b4a27e00",
@@ -680,10 +461,7 @@
   },
   "bld:tangKinhCac:2:0": {
     "src": "bld/bld-tangKinhCac-2.webp?v=40b4a27e00",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [2, 2, 258, 348]
+    "tex": true
   },
   "bld:tangKinhCac:3": {
     "src": "bld/bld-tangKinhCac-3.webp?v=a833547d95",
@@ -691,10 +469,7 @@
   },
   "bld:tangKinhCac:3:0": {
     "src": "bld/bld-tangKinhCac-3.webp?v=a833547d95",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [2, 2, 258, 408]
+    "tex": true
   },
   "bld:tangKinhCac:4": {
     "src": "bld/bld-tangKinhCac-4.webp?v=62091f0de9",
@@ -702,10 +477,7 @@
   },
   "bld:tangKinhCac:4:0": {
     "src": "bld/bld-tangKinhCac-4.webp?v=62091f0de9",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [2, 2, 258, 408]
+    "tex": true
   },
   "bld:tangKinhCac:5": {
     "src": "bld/bld-tangKinhCac-5.webp?v=574df0ad54",
@@ -713,10 +485,7 @@
   },
   "bld:tangKinhCac:5:0": {
     "src": "bld/bld-tangKinhCac-5.webp?v=574df0ad54",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [2, 2, 258, 444]
+    "tex": true
   },
   "bld:tuLinhTran:1": {
     "src": "bld/bld-tuLinhTran-1.webp?v=d0f22ea56b",
@@ -724,10 +493,7 @@
   },
   "bld:tuLinhTran:1:0": {
     "src": "bld/bld-tuLinhTran-1.webp?v=d0f22ea56b",
-    "tex": true,
-    "pack": "bld1",
-    "page": "atlas/bld1-0.webp?v=c01b7a0487",
-    "frame": [1636, 298, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:2": {
     "src": "bld/bld-tuLinhTran-2.webp?v=710db63a6f",
@@ -735,10 +501,7 @@
   },
   "bld:tuLinhTran:2:0": {
     "src": "bld/bld-tuLinhTran-2.webp?v=710db63a6f",
-    "tex": true,
-    "pack": "bld2",
-    "page": "atlas/bld2-0.webp?v=d5e1c5b9df",
-    "frame": [1636, 352, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:3": {
     "src": "bld/bld-tuLinhTran-3.webp?v=433d373bee",
@@ -746,10 +509,7 @@
   },
   "bld:tuLinhTran:3:0": {
     "src": "bld/bld-tuLinhTran-3.webp?v=433d373bee",
-    "tex": true,
-    "pack": "bld3",
-    "page": "atlas/bld3-0.webp?v=f8f4da89a0",
-    "frame": [1636, 412, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:4": {
     "src": "bld/bld-tuLinhTran-4.webp?v=b573905881",
@@ -757,10 +517,7 @@
   },
   "bld:tuLinhTran:4:0": {
     "src": "bld/bld-tuLinhTran-4.webp?v=b573905881",
-    "tex": true,
-    "pack": "bld4",
-    "page": "atlas/bld4-0.webp?v=eb6d5e2f74",
-    "frame": [1636, 412, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:5": {
     "src": "bld/bld-tuLinhTran-5.webp?v=2614016aae",
@@ -768,80 +525,47 @@
   },
   "bld:tuLinhTran:5:0": {
     "src": "bld/bld-tuLinhTran-5.webp?v=2614016aae",
-    "tex": true,
-    "pack": "bld5",
-    "page": "atlas/bld5-0.webp?v=629ca0ca00",
-    "frame": [1636, 448, 360, 204]
+    "tex": true
   },
   "blossom:0.8:7": {
     "src": "scene/blossom-0.8-7.webp?v=1dcae3ece9",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1777, 408, 144, 120]
+    "tex": true
   },
   "blossom:0.95:3": {
     "src": "scene/blossom-0.95-3.webp?v=2cdd166385",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1122, 408, 171, 142]
+    "tex": true
   },
   "blossom:0.9:13": {
     "src": "scene/blossom-0.9-13.webp?v=f8047e9344",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1390, 408, 162, 135]
+    "tex": true
   },
   "blossom:1:11": {
     "src": "scene/blossom-1-11.webp?v=b9f4821a21",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [628, 408, 180, 150]
+    "tex": true
   },
   "cloud:*0": {
     "src": "scene/cloud-v0.webp?v=fb372e27ea",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [1278, 528, 512, 256]
+    "tex": true
   },
   "cloud:*1": {
     "src": "scene/cloud-v1.webp?v=e5fa0f01b6",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [2, 854, 512, 256]
+    "tex": true
   },
   "cloud:*2": {
     "src": "scene/cloud-v2.webp?v=80061793f1",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [516, 854, 512, 256]
+    "tex": true
   },
   "crane:down": {
     "src": "scene/crane-down.webp?v=d7521c62ae",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [2, 562, 132, 78]
+    "tex": true
   },
   "crane:up": {
     "src": "scene/crane-up.webp?v=fa51a0f6e2",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [136, 562, 132, 78]
+    "tex": true
   },
   "disciple": {
     "src": "scene/disciple.webp?v=58eda62eb4",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [407, 562, 48, 45]
+    "tex": true
   },
   "emblem:anvil": {
     "src": "emblem/emblem-anvil.webp?v=2a9d9dc955",
@@ -1173,81 +897,48 @@
     "pack": "home"
   },
   "field:fire": {
-    "src": "battle/field-fire.webp?v=b537da20b7",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-0.webp?v=0a2ced7dea",
-    "frame": [2, 2, 600, 1299]
+    "src": "battle/field-fire.webp?v=b48a3729e6",
+    "tex": true
   },
   "field:forest": {
-    "src": "battle/field-forest.webp?v=2208857cde",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-0.webp?v=0a2ced7dea",
-    "frame": [604, 2, 600, 1299]
+    "src": "battle/field-forest.webp?v=81fcc6d4ba",
+    "tex": true
   },
   "field:ice": {
-    "src": "battle/field-ice.webp?v=3e8d718d5c",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-0.webp?v=0a2ced7dea",
-    "frame": [1206, 2, 600, 1299]
+    "src": "battle/field-ice.webp?v=db754ade6a",
+    "tex": true
   },
   "field:storm": {
-    "src": "battle/field-storm.webp?v=ddf37198ac",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [2, 2, 600, 1299]
+    "src": "battle/field-storm.webp?v=9170ac2637",
+    "tex": true
   },
   "field:wild": {
-    "src": "battle/field-wild.webp?v=b00a6dde38",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [604, 2, 600, 1299]
+    "src": "battle/field-wild.webp?v=5698da97d7",
+    "tex": true
   },
   "flag": {
     "src": "scene/flag.webp?v=a81d1eadce",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [357, 562, 48, 48]
+    "tex": true
   },
   "fly:open": {
     "src": "scene/fly-open.webp?v=93ef3d9f2a",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [607, 562, 42, 36]
+    "tex": true
   },
   "fly:shut": {
     "src": "scene/fly-shut.webp?v=373eda5443",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [651, 562, 42, 36]
+    "tex": true
   },
   "fog:*0": {
     "src": "scene/fog-v0.webp?v=78dcdfe138",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [1030, 854, 512, 256]
+    "tex": true
   },
   "fog:*1": {
     "src": "scene/fog-v1.webp?v=e7c388aba5",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [2, 1112, 512, 256]
+    "tex": true
   },
   "fog:*2": {
     "src": "scene/fog-v2.webp?v=24968b0658",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [516, 1112, 512, 256]
+    "tex": true
   },
   "icon:boiNguyen": {
     "src": "icon/icon-boiNguyen.webp?v=b55f6f5bd4"
@@ -1386,104 +1077,62 @@
   },
   "lantern:0.8": {
     "src": "scene/lantern-0.8.webp?v=ecf2069a14",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [316, 562, 39, 68]
+    "tex": true
   },
   "lantern:0.9": {
     "src": "scene/lantern-0.9.webp?v=473f7ade80",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [270, 562, 44, 76]
+    "tex": true
   },
   "ledge:0": {
-    "src": "scene/ledge-0.webp?v=0352739a14",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [2, 1612, 618, 235]
+    "src": "scene/ledge-0.webp?v=1a071e1054",
+    "tex": true
   },
   "ledge:1": {
-    "src": "scene/ledge-1.webp?v=b8f1be6018",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [2, 2, 532, 216]
+    "src": "scene/ledge-1.webp?v=4b524094c5",
+    "tex": true
   },
   "ledge:2": {
-    "src": "scene/ledge-2.webp?v=a6a57721ad",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [630, 2, 519, 207]
+    "src": "scene/ledge-2.webp?v=9c9e2e6799",
+    "tex": true
   },
   "ledge:3": {
-    "src": "scene/ledge-3.webp?v=ca7e0867a7",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [370, 1370, 1077, 238]
+    "src": "scene/ledge-3.webp?v=aff0b501ac",
+    "tex": true
   },
   "ledge:4": {
-    "src": "scene/ledge-4.webp?v=4321836427",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [972, 1612, 716, 226]
+    "src": "scene/ledge-4.webp?v=a4b6bf8543",
+    "tex": true
   },
   "ledge:5": {
-    "src": "scene/ledge-5.webp?v=f60ffdddf7",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [1030, 1112, 801, 246]
+    "src": "scene/ledge-5.webp?v=b4d24503c0",
+    "tex": true
   },
   "ledge:6": {
-    "src": "scene/ledge-6.webp?v=cfea3d2778",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [414, 220, 460, 185]
+    "src": "scene/ledge-6.webp?v=fc904382e6",
+    "tex": true
   },
   "ledge:7": {
-    "src": "scene/ledge-7.webp?v=8057d2565c",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [876, 220, 532, 180]
+    "src": "scene/ledge-7.webp?v=cc6656c45f",
+    "tex": true
   },
   "ledge:8": {
-    "src": "scene/ledge-8.webp?v=1bdfba9685",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [2, 408, 624, 152]
+    "src": "scene/ledge-8.webp?v=a16a7628d1",
+    "tex": true
   },
   "lotus": {
     "src": "scene/lotus.webp?v=759f551f6d"
   },
   "map": {
-    "src": "map/map.webp?v=b5f396ab48",
-    "tex": true,
-    "pack": "map",
-    "page": "atlas/map-0.webp?v=8c4c4beae2",
-    "frame": [2, 2, 600, 1500]
+    "src": "map/map.webp?v=120f67a185",
+    "tex": true
   },
   "map:home": {
     "src": "map/map-home.webp?v=cd470ba88f",
-    "tex": true,
-    "pack": "map",
-    "page": "atlas/map-0.webp?v=8c4c4beae2",
-    "frame": [604, 2, 396, 276]
+    "tex": true
   },
   "march": {
     "src": "scene/march.webp?v=36d3856095",
-    "tex": true,
-    "pack": "map",
-    "page": "atlas/map-0.webp?v=8c4c4beae2",
-    "frame": [1002, 2, 60, 63]
+    "tex": true
   },
   "mask:arrow": {
     "src": "icon/mask-arrow.png?v=2ce8681ac7"
@@ -1556,10 +1205,7 @@
   },
   "moon": {
     "src": "scene/moon.webp?v=90464c0dfd",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1554, 408, 132, 132]
+    "tex": true
   },
   "panel:chuDien:1": {
     "src": "bld/bld-chuDien-1.webp?v=f42de0fbfa",
@@ -1762,119 +1408,71 @@
     "tex": true
   },
   "peak:cliff": {
-    "src": "scene/peak-cliff.webp?v=99377a21bf",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [2, 2, 532, 524]
+    "src": "scene/peak-cliff.webp?v=5b76e7e438",
+    "tex": true
   },
   "peak:l": {
-    "src": "scene/peak-l.webp?v=cc262b31e5",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [496, 528, 472, 284]
+    "src": "scene/peak-l.webp?v=6038a2510b",
+    "tex": true
   },
   "peak:main": {
-    "src": "scene/peak-main.webp?v=e63fe4b616",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [536, 2, 632, 404]
+    "src": "scene/peak-main.webp?v=f71a5ea731",
+    "tex": true
   },
   "peak:r": {
-    "src": "scene/peak-r.webp?v=ef2b80a056",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [2, 528, 492, 324]
+    "src": "scene/peak-r.webp?v=8f6148e978",
+    "tex": true
   },
   "pearl:1": {
     "src": "scene/pearl-1.webp?v=147fcff77f",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [831, 562, 22, 22]
+    "tex": true
   },
   "pearl:1.2": {
     "src": "scene/pearl-1.2.webp?v=00d50bc9a6",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [727, 562, 26, 26]
+    "tex": true
   },
   "pearl:1.5": {
     "src": "scene/pearl-1.5.webp?v=a68f0925b0",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [695, 562, 30, 30]
+    "tex": true
   },
   "pine:14": {
     "src": "scene/pine-14.webp?v=bc5a215c00",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [2, 220, 204, 186]
+    "tex": true
   },
   "pine:2": {
     "src": "scene/pine-2.webp?v=0501919dc1",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [208, 220, 204, 186]
+    "tex": true
   },
   "pine:5": {
     "src": "scene/pine-5.webp?v=6b12f7ae5a",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1410, 220, 184, 168]
+    "tex": true
   },
   "pine:8": {
     "src": "scene/pine-8.webp?v=0052feef96",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [810, 408, 164, 150]
+    "tex": true
   },
   "pine:fg1": {
     "src": "scene/pine-fg1.webp?v=a32b63a291",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [1170, 2, 388, 354]
+    "tex": true
   },
   "pine:fg2": {
     "src": "scene/pine-fg2.webp?v=05a7a52773",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [970, 528, 306, 279]
+    "tex": true
   },
   "pointer": {
     "src": "icon/pointer.webp?v=c37c52a78c"
   },
   "rock:l": {
     "src": "scene/rock-l.webp?v=2d3811f4f9",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [2, 1370, 366, 240]
+    "tex": true
   },
   "rock:r": {
     "src": "scene/rock-r.webp?v=0d768ae4d8",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1549, 2, 306, 198]
+    "tex": true
   },
   "scaffold:120:72": {
     "src": "scene/scaffold-120-72.webp?v=a7eb6bf2a7",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp?v=b36f721eb2",
-    "frame": [622, 1612, 348, 230]
+    "tex": true
   },
   "skin:badge": {
     "src": "skin/skin-badge.webp?v=1513e66417",
@@ -2214,171 +1812,99 @@
   },
   "sold:kiem:0:3": {
     "src": "battle/sold-kiem-0-3.webp?v=ca7d33a5b3",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1576, 1303, 72, 78]
+    "tex": true
   },
   "sold:kiem:0:4": {
     "src": "battle/sold-kiem-0-4.webp?v=38c85fa251",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1650, 1303, 72, 78]
+    "tex": true
   },
   "sold:kiem:0:5": {
     "src": "battle/sold-kiem-0-5.webp?v=f0b5adbc81",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1724, 1303, 72, 78]
+    "tex": true
   },
   "sold:kiem:1:3": {
     "src": "battle/sold-kiem-1-3.webp?v=a6705cb32d",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1798, 1303, 72, 78]
+    "tex": true
   },
   "sold:kiem:1:4": {
     "src": "battle/sold-kiem-1-4.webp?v=eabbb1e848",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1872, 1303, 72, 78]
+    "tex": true
   },
   "sold:kiem:1:5": {
     "src": "battle/sold-kiem-1-5.webp?v=3cc24d9cc7",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1946, 1303, 72, 78]
+    "tex": true
   },
   "sold:phap:0:3": {
     "src": "battle/sold-phap-0-3.webp?v=1c4b95184c",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [2, 1561, 72, 78]
+    "tex": true
   },
   "sold:phap:0:4": {
     "src": "battle/sold-phap-0-4.webp?v=c14916a537",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [76, 1561, 72, 78]
+    "tex": true
   },
   "sold:phap:0:5": {
     "src": "battle/sold-phap-0-5.webp?v=89ea493d46",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [150, 1561, 72, 78]
+    "tex": true
   },
   "sold:phap:1:3": {
     "src": "battle/sold-phap-1-3.webp?v=d917c2024d",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [224, 1561, 72, 78]
+    "tex": true
   },
   "sold:phap:1:4": {
     "src": "battle/sold-phap-1-4.webp?v=93a2ed9ef6",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [298, 1561, 72, 78]
+    "tex": true
   },
   "sold:phap:1:5": {
     "src": "battle/sold-phap-1-5.webp?v=40e37670e0",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [372, 1561, 72, 78]
+    "tex": true
   },
   "sold:the:0:3": {
     "src": "battle/sold-the-0-3.webp?v=ed91da8592",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [446, 1561, 72, 78]
+    "tex": true
   },
   "sold:the:0:4": {
     "src": "battle/sold-the-0-4.webp?v=521589a718",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [520, 1561, 72, 78]
+    "tex": true
   },
   "sold:the:0:5": {
     "src": "battle/sold-the-0-5.webp?v=5e45ccfc97",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [594, 1561, 72, 78]
+    "tex": true
   },
   "sold:the:1:3": {
     "src": "battle/sold-the-1-3.webp?v=c104f06d94",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [668, 1561, 72, 78]
+    "tex": true
   },
   "sold:the:1:4": {
     "src": "battle/sold-the-1-4.webp?v=1de5cf79f2",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [742, 1561, 72, 78]
+    "tex": true
   },
   "sold:the:1:5": {
     "src": "battle/sold-the-1-5.webp?v=1e94596bc6",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [816, 1561, 72, 78]
+    "tex": true
   },
   "stair:126,506": {
-    "src": "scene/stair-126,506.webp?v=a77e1e472a",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [536, 2, 92, 208]
+    "src": "scene/stair-126,506.webp?v=723d28d37c",
+    "tex": true
   },
   "stair:150,606": {
-    "src": "scene/stair-150,606.webp?v=270f13ecb3",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1151, 2, 98, 204]
+    "src": "scene/stair-150,606.webp?v=ee8512ba45",
+    "tex": true
   },
   "stair:200,404": {
-    "src": "scene/stair-200,404.webp?v=db4fedd49d",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1351, 2, 100, 200]
+    "src": "scene/stair-200,404.webp?v=fc6f29eecc",
+    "tex": true
   },
   "stair:216,708": {
-    "src": "scene/stair-216,708.webp?v=be6ab1dedb",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1251, 2, 98, 204]
+    "src": "scene/stair-216,708.webp?v=13e891d12e",
+    "tex": true
   },
   "stair:276,508": {
-    "src": "scene/stair-276,508.webp?v=63898216ca",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [1453, 2, 94, 200]
+    "src": "scene/stair-276,508.webp?v=b3f32fae11",
+    "tex": true
   },
   "sun": {
     "src": "scene/sun.webp?v=1fe83d8a76",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [976, 408, 144, 144]
+    "tex": true
   },
   "tab:banDo": {
     "src": "icon/tab-banDo.webp?v=d7e22f3ddc"
@@ -2397,51 +1923,30 @@
   },
   "thunder:*0": {
     "src": "scene/thunder-v0.webp?v=4f5cb23dec",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [1206, 2, 512, 256]
+    "tex": true
   },
   "thunder:*1": {
     "src": "scene/thunder-v1.webp?v=266f9b7217",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [2, 1303, 512, 256]
+    "tex": true
   },
   "thunder:*2": {
     "src": "scene/thunder-v2.webp?v=d1cb7e18db",
-    "tex": true,
-    "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6832c3befa",
-    "frame": [516, 1303, 512, 256]
+    "tex": true
   },
   "walker:0": {
     "src": "scene/walker-0.webp?v=ac04512d53",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [457, 562, 48, 45]
+    "tex": true
   },
   "walker:1": {
     "src": "scene/walker-1.webp?v=2aeef6f704",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [507, 562, 48, 45]
+    "tex": true
   },
   "worker": {
     "src": "scene/worker.webp?v=667934d4fc",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp?v=f35c24ba8b",
-    "frame": [557, 562, 48, 45]
+    "tex": true
   },
   "wtoken": {
     "src": "scene/wtoken.webp?v=d9d962e955",
-    "tex": true,
-    "pack": "world",
-    "page": "atlas/world-0.webp?v=3dd6a0f0a5",
-    "frame": [2, 2, 90, 94]
+    "tex": true
   }
 }
