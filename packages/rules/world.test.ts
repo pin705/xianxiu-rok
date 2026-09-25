@@ -76,6 +76,7 @@ import {
 import {
   MAP_W,
   advanceAll,
+  veinBuffs,
   groupsOf,
   officeBuffs,
   tribeBank,
@@ -1030,9 +1031,28 @@ test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác
   step(m.arriveAt)
   assert.equal(ps.get(1)!.marches[0].stay, true)
   assert.equal(w.spots[vein.i].own, 1, 'điểm thuộc minh')
-  // buff linh mạch cho cả minh (A và C), B không có
+  // chiếm lần đầu trong mùa: cả minh nhận quà, mỗi điểm một lần
+  assert.deepEqual(w.firsts, [vein.i])
+  assert.deepEqual([ps.get(1)!.mail.at(-1)!.k, ps.get(3)!.mail.at(-1)!.k], ['firstTake', 'firstTake'])
+  // buff linh mạch cho cả minh (A và C), B không có — loại buff theo điểm (cấp 1: sản lượng / xây / tuyển / chữa)
   for (const [k, v] of worldBuffs(ps, w, map, m.arriveAt)) ps.set(k, v)
   assert.ok(ps.get(1)!.buffs.some(b => b.src === 'vein') && ps.get(3)!.buffs.some(b => b.src === 'vein'))
+  assert.deepEqual(
+    ps
+      .get(1)!
+      .buffs.filter(b => b.src === 'vein')
+      .map(b => b.key),
+    veinBuffs(vein).map(b => b.key),
+  )
+  assert.equal(
+    new Set(a.points.filter(p => p.kind === 'vein' && p.lv === 1).map(p => veinBuffs(p)[0].key)).size,
+    4,
+    'bốn loại',
+  )
+  assert.deepEqual(
+    veinBuffs(a.points.find(p => p.kind === 'vein' && p.lv === 3)!).map(b => b.key),
+    ['prod', 'atk'],
+  )
   assert.ok(!ps.get(2)!.buffs.some(b => b.src === 'vein'))
   // B (một mình, mạnh hơn) đánh bật A
   assert.equal(
@@ -1042,6 +1062,7 @@ test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác
   const mb = ps.get(2)!.marches[0]
   step(mb.arriveAt)
   assert.equal(w.spots[vein.i].own, -2, 'người giữ một mình')
+  assert.deepEqual(w.firsts, [vein.i], 'đã có người chiếm lần đầu: không quà nữa')
   assert.equal(ps.get(1)!.marches[0].stay, false, 'A bị đánh bật, đang về')
   assert.ok(
     (ps.get(2)!.stats.kp ?? 0) > 0 && (ps.get(1)!.stats.kp ?? 0) > 0,

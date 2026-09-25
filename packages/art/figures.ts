@@ -4,6 +4,7 @@ import { blot, ellipse, grain, lerp, stroke, wash, type Asset, type G, type Pt, 
 import { PIGMENT as C, mix, rgba, WHITE } from './palette'
 
 export type Look = {
+  id?: string // tên tranh vẽ tay thay thế (key 'face:<id>'), thường là mã trưởng lão
   robe: string
   trim: string
   hair: string

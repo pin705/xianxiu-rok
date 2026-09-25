@@ -851,8 +851,8 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | A3 | Passes Lv.1–3 | 🟡 40 cổng trận nhãn mở theo pha; giữ cổng không chặn phe khác, không NPC giữ | P1 | M |
 | A4 | Alliance Territory (Fortress, Flags) | ✅ lãnh thổ + trận kỳ (chưa phá cờ) | P1 (theo vùng) / P2 (cờ từng ô) | M / L |
 | A5 | Holy Sites — luật chung (kỳ 3 ngày, giữ 4 giờ, không cộng dồn, NPC giữ) | 🟡 linh mạch luôn mở, cộng dồn tới 30 % | P1 | M |
-| A6 | Sanctum (4 loại buff) | 🟡 linh mạch cấp 1, chỉ buff sản lượng | P1 | S |
-| A7 | Altar (6 loại buff) | 🟡 như trên | P1 | S |
+| A6 | Sanctum (4 loại buff) | ✅ linh mạch cấp 1: sản lượng / xây / tuyển / chữa (25/09) | P1 | S |
+| A7 | Altar (6 loại buff) | ✅ linh mạch cấp 2: công / thủ / sinh lực / hành quân (25/09) | P1 | S |
 | A8 | Shrine (4 loại buff kép) | 🟡 linh mạch cấp 2 | P1 | S–M |
 | A9 | Lost Temple & King (tước hiệu, buff vương quốc) | 🟡 Thiên Môn cho điểm mùa; chưa có Giới Chủ / phong hào | P2 | M |
 | A10 | Monument (dòng thời gian, mục tiêu chung, thưởng mốc) | 🟡 pha mùa theo ngày + biên niên giới | **P1** | M |

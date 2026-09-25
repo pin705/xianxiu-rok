@@ -59,6 +59,7 @@ import {
   type FestId,
   type DrillMod,
   type OfficeId,
+  type StratId,
   type DaoId,
   type Metric,
   type AchId,
@@ -574,6 +575,16 @@ export const en: Text = {
     expires: (t: string) => `${t} left`,
   },
   guest: 'A wandering cultivator visits — tap for a gift',
+  strat: {
+    title: 'Season strategy',
+    lore: 'Pick one strategy each season, free, kept until the season ends — choose again after rebirth.',
+    chosen: 'this season',
+    names: {
+      dieuThu: ['Medical Skills', 'Master healers: healing is cheaper and faster.'],
+      toanThan: ['Safe Return', 'A bigger infirmary: more wounded find a bed, fewer die.'],
+      tichCoc: ['Frugal Stores', 'Bigger storehouses: hold more, and the protected share grows too.'],
+    } as Record<StratId, [string, string]>,
+  },
   tribe: {
     title: 'King of the Tribes',
     hint: 'Tuesday – Wednesday: defeating beast kings and forts (rally with your alliance) earns alliance points split by damage. When it ends, every member of the top 3 alliances gets a reward by mail.',

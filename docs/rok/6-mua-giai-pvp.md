@@ -409,7 +409,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **Hấp dẫn:** một lựa chọn đầu mùa có trần — dễ hiểu, tạo khác biệt lối chơi.
 - **Tu tiên hoá:** đầu mùa mỗi tông môn chọn 1 **chiến lược mùa**: Tiết Kiệm (chữa rẻ) / Diệu Thủ (chữa nhanh) / Toàn Thân Nhi Thoái (bớt tử trận), mỗi cái
   có trần như RoK.
-- **Game mình:** ❌ · **Ưu tiên:** P1 (rất rẻ) · **Công sức:** S.
+- **Game mình:** ✅ (25/09) Diệu Thủ / Toàn Thân Nhi Thoái / Tích Cốc, chọn mỗi mùa ở bảng Chủ điện · **Ưu tiên:** P1 · **Công sức:** S.
 
 #### B9. Warriors Unbound — "Thần Binh Xuất Thế"
 - **RoK:** 6 vùng khởi đầu; pháo đài minh chỉ xây sát thánh địa hoặc đèo. **Artifact** (trang bị huyền thoại mới): khi tướng làm phó, kỹ năng một loại quân
@@ -793,7 +793,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A1 | Kingdom lifecycle (Preparation → Season 1–3 → SoC) | Giới Luân | ✅ mùa 49 ngày, 4 pha | P0 (có) | — |
 | A2 | Eve of the Crusade | Khai Giới Trảm Tà | ❌ | P1 | M |
 | A3 | Matchmaking, story registration, bỏ phiếu | Thiên Mệnh Chọn Luật (bỏ phiếu luật mùa) | ❌ (liên server ⛔) | P2 | S |
-| A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | 🟡 thiếu buff theo loại điểm, thưởng chiếm lần đầu | P1 | S–M |
+| A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | ✅ buff theo loại linh mạch + thưởng chiếm lần đầu (25/09) | P1 | S–M |
 | A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 pha theo ngày cứng, biên niên chỉ là nhật ký | **P0** | M |
 | A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | ✅ Công Huân cá nhân (25/09) + điểm mùa theo phe + chiến công | P1 | S |
 | A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ✅ (25/09) | P1 | S–M |
@@ -812,7 +812,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | B5 | Strife of the Eight | Bát Phương Hỗn Chiến | ❌ | P2 | S |
 | B6 | March of the Ages | Cổ Tháp Hành Quân | ❌ | P2 | M |
 | B7 | Desert Conquest | Tử Hải Hoang Mạc | ❌ | P2 | M |
-| B8 | King of the Nile (Seasonal Strategies) | Chiến Lược Mùa | ❌ | P1 | S |
+| B8 | King of the Nile (Seasonal Strategies) | Chiến Lược Mùa | ✅ (25/09) | P1 | S |
 | B9 | Warriors Unbound (Artifact) | Thần Binh mùa | ❌ | P2 | S–M |
 | B10 | Siege of Orléans (auxiliary skills) | Mượn Pháp | ❌ | P2 | M |
 | B11 | Storm of Stratagems | Binh Thư Phong Vân | ❌ | P2 | M |

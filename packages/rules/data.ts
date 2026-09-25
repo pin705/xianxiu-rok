@@ -105,6 +105,15 @@ export const RAGE_HURT = 600
 // Thiên phú, pháp bảo, sao, ngũ hành chỉ của chủ tướng.
 // Đạo thống (Civilization của RoK): mỗi tông môn theo một đạo thống, hai tăng ích nhỏ; chọn lần đầu miễn phí từ Chủ điện
 // tầng DAO_HALL, đổi lại được sau DAO_COOL.
+// Chiến lược mùa (Seasonal Strategies của RoK — King of the Nile): mỗi mùa chọn một, miễn phí, luân hồi thì chọn lại
+export const STRAT_HALL = 5
+export const STRATS = {
+  dieuThu: { heal: 0.15 }, // Diệu Thủ: chữa thương rẻ và nhanh hơn 15 %
+  toanThan: { hospital: 0.25 }, // Toàn Thân Nhi Thoái: Đan phòng chứa thêm 25 % — bớt tử trận
+  tichCoc: { storage: 0.2 }, // Tích Cốc: sức chứa kho +20 % — phần được bảo hộ cũng lớn theo
+} satisfies Record<string, Partial<Record<Bonus, number>>>
+export type StratId = keyof typeof STRATS
+export const STRAT_IDS = Object.keys(STRATS) as StratId[]
 export const DAO_HALL = 2
 export const DAO_COOL = 7 * 24 * 3_600_000
 export const DAOS = {

@@ -5,6 +5,9 @@ import { int, isElder, oneOf } from '../core/parse.ts'
 import { talentPoints, talentUsed, isMarching } from '../core/stats.ts'
 import { type Talent } from '../core/types.ts'
 import {
+  STRAT_HALL,
+  STRAT_IDS,
+  type StratId,
   BOI_NGUYEN_EXP,
   DAO_COOL,
   DAO_HALL,
@@ -22,6 +25,7 @@ export type ElderAction =
   | { type: 'guard'; elder: ElderId | null } // trưởng lão giữ nhà
   | { type: 'pair'; elder: ElderId; deputy: ElderId | null } // phó trưởng lão của chủ tướng elder (null: bỏ ghép)
   | { type: 'dao'; id: DaoId } // theo đạo thống (lần đầu miễn phí, đổi lại sau DAO_COOL)
+  | { type: 'strat'; id: StratId } // chiến lược mùa (một lần mỗi mùa)
 
 export const elderActions: Actions<ElderAction> = {
   feed: {
@@ -74,6 +78,14 @@ export const elderActions: Actions<ElderAction> = {
       if (a.deputy === a.elder) return no('bad')
       const { [a.elder]: _, ...rest } = s.pairs ?? {}
       return ok({ ...s, pairs: a.deputy ? { ...rest, [a.elder]: a.deputy } : rest })
+    },
+  },
+  strat: {
+    pick: a => (oneOf(STRAT_IDS)(a.id) ? { type: 'strat', id: a.id } : null),
+    run: (s, a) => {
+      if (s.levels.chuDien < STRAT_HALL) return no('locked')
+      if (s.strat) return no('claimed') // mỗi mùa một lần
+      return ok({ ...s, strat: a.id })
     },
   },
   dao: {

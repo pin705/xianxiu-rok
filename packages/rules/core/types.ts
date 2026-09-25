@@ -6,6 +6,7 @@ import {
   type BuildingId,
   type DailyId,
   type DrillMod,
+  type StratId,
   type ElderId,
   type GearId,
   type ItemId,
@@ -275,6 +276,7 @@ export type State = {
   honor?: number // Công Huân trong mùa (hết mùa về 0)
   honorGot?: number // số mốc Chinh Chiến Công Tích đã nhận trong mùa
   drill?: Drill // Luận Võ Liên Hoàn hôm nay
+  strat?: StratId // chiến lược mùa này (luân hồi: chọn lại)
   guestAt?: number // Vân Du Khách kế tiếp ghé núi lúc này (chưa có: born + GUEST_EVERY)
   guests?: number // số lần đã nhận quà khách (xoay vòng GUEST_GIFTS)
   fog?: Fog // mê vụ đã khai (chưa có: chỉ quanh tông môn)

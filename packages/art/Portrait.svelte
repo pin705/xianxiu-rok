@@ -13,7 +13,7 @@
 <img
   class="portrait"
   class:dim
-  src={paintedUrl(`face:${JSON.stringify(look)}`, () => portrait(look), size)}
+  src={paintedUrl(`face:${look.id ?? JSON.stringify(look)}`, () => portrait(look), size)}
   width={size}
   height={size}
   alt=""

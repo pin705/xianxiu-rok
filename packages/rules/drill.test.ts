@@ -6,12 +6,16 @@ import {
   DRILL_GIFTS,
   GUEST_EVERY,
   GUEST_GIFTS,
+  STRATS,
+  STRAT_HALL,
   apply,
   drillFoe,
   expAt,
   guestAt,
   guestGift,
   newGame,
+  seasonEnd,
+  storage,
   type State,
 } from './index.ts'
 import { might } from './combat.ts'
@@ -87,4 +91,20 @@ test('Vân Du Khách: tới giờ thì ghé, chạm nhận quà xoay vòng; khô
   assert.equal(r.state.items.thoiQuang15, (s0.items.thoiQuang15 ?? 0) + 1, 'quà đầu trong vòng')
   assert.equal(guestAt(r.state), at + 10 * GUEST_EVERY + GUEST_EVERY, 'không dồn: hẹn một chu kỳ sau lúc nhận')
   assert.deepEqual(guestGift(r.state), GUEST_GIFTS[1], 'quà kế tiếp xoay vòng')
+})
+
+test('Chiến lược mùa: chọn một lần mỗi mùa, cộng tăng ích; luân hồi (hết mùa) thì chọn lại', () => {
+  const s0 = sect()
+  const low = { ...s0, levels: { ...s0.levels, chuDien: STRAT_HALL - 1 } }
+  assert.deepEqual(apply(low, { type: 'strat', id: 'tichCoc' }, s0.time), { ok: false, error: 'locked' })
+  const r = apply(s0, { type: 'strat', id: 'tichCoc' }, s0.time)
+  assert.ok(r.ok)
+  assert.equal(storage(r.state), Math.round((storage(s0) * (1 + STRATS.tichCoc.storage)) / (1 + 0)), 'kho +20 %')
+  assert.deepEqual(
+    apply(r.state, { type: 'strat', id: 'dieuThu' }, s0.time),
+    { ok: false, error: 'claimed' },
+    'mỗi mùa một lần',
+  )
+  const next = seasonEnd(r.state, s0.time + DAY, 1)
+  assert.equal(next.strat, undefined, 'mùa mới: chọn lại')
 })

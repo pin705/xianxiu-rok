@@ -14,6 +14,7 @@ import {
   DAILY,
   DAOS,
   DRILL_MODS,
+  STRATS,
   ELDERS,
   EVENT_GOALS,
   FESTS,
@@ -274,6 +275,7 @@ const validFest = (s: any) =>
   (s.honor === undefined || num(s.honor)) &&
   (s.honorGot === undefined || num(s.honorGot)) &&
   (s.guestAt === undefined || num(s.guestAt)) &&
+  (s.strat === undefined || Object.hasOwn(STRATS, s.strat)) &&
   (s.guests === undefined || num(s.guests)) &&
   (s.drill === undefined ||
     (obj(s.drill) &&

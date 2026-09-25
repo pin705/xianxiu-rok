@@ -5,6 +5,9 @@
 // (cùng cache với service worker: bản mới thì vẽ lại, bản cũ tự dọn) — lần mở sau chỉ đọc lại.
 import {
   PIGMENT,
+  artOf,
+  noteArt,
+  type ArtEntry,
   badgeSkin,
   brushBar,
   buttonSkin,
@@ -44,7 +47,13 @@ const store =
 
 // Một ảnh: đọc từ cache nếu đã vẽ ở bản build này, không thì vẽ + mã hoá (PNG, ngoài luồng chính) rồi cất.
 // nine: kèm thông số 9 mảnh (cất trong header để lần sau khỏi vẽ lại chỉ để biết slice).
-async function image(name: string, draw: () => Skin | Canvas): Promise<{ url: string; skin?: Omit<Skin, 'cv'> }> {
+async function image(
+  name: string,
+  draw: () => Skin | Canvas,
+): Promise<{ url: string; skin?: Omit<Skin, 'cv'>; art?: ArtEntry }> {
+  // tranh vẽ tay (art.ts) thay cho da vẽ bằng code
+  const art = artOf(`skin:${name}`)
+  if (art) return { url: `url(${art.src})`, art }
   const c = await store
   const req = `./__skin/${name}@${S}.png`
   const hit = await c?.match(req).catch(() => undefined)
@@ -52,9 +61,11 @@ async function image(name: string, draw: () => Skin | Canvas): Promise<{ url: st
     const meta = hit.headers.get('x-skin')
     return { url: `url(${URL.createObjectURL(await hit.blob())})`, skin: meta ? JSON.parse(meta) : undefined }
   }
-  const art = draw()
-  const skin = 'cv' in art ? art : undefined
-  const blob = await encode(skin ? skin.cv : (art as Canvas))
+  const drawn = draw()
+  const skin = 'cv' in drawn ? drawn : undefined
+  const cv = skin ? skin.cv : (drawn as Canvas)
+  noteArt(`skin:${name}`, { kind: 'skin', w: skin?.w ?? cv.width / S, h: skin?.h ?? cv.height / S, px: S })
+  const blob = await encode(cv)
   const meta = skin && { w: skin.w, h: skin.h, slice: skin.slice, outset: skin.outset, repeat: skin.repeat }
   c?.put(
     req,
@@ -65,7 +76,12 @@ async function image(name: string, draw: () => Skin | Canvas): Promise<{ url: st
 const img = async (name: string, draw: () => Skin | Canvas) => (await image(name, draw)).url
 // 9 mảnh: ảnh, slice (px thật), bề dày (px CSS), phần tràn, giãn/lặp. Lòng được lấp (fill) trừ khi fill = false.
 const nine = async (name: string, draw: () => Skin, fill = true) => {
-  const { url, skin } = await image(name, draw)
+  const { url, skin, art } = await image(name, draw)
+  if (art?.slice) {
+    const [t, r, b, l] = art.slice
+    const [wt, wr, wb, wl] = art.width ?? art.slice.map(v => v / 2)
+    return `${url} ${t} ${r} ${b} ${l}${(art.fill ?? fill) ? ' fill' : ''} / ${wt}px ${wr}px ${wb}px ${wl}px / ${art.outset ?? 0}px ${art.repeat ?? 'stretch'}`
+  }
   const [t, r, b, l] = skin!.slice
   return `${url} ${t * S} ${r * S} ${b * S} ${l * S}${fill ? ' fill' : ''} / ${t}px ${r}px ${b}px ${l}px / ${skin!.outset ?? 0}px ${skin!.repeat ?? 'stretch'}`
 }

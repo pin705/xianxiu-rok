@@ -18,6 +18,7 @@ import {
   BASE_CAP,
   BASE_RATE,
   DAOS,
+  STRATS,
   DEPUTY_HALL,
   MARCH_CAP,
   MARCH_CAP_STAR,
@@ -86,6 +87,7 @@ export function bonus(s: State, key: Bonus) {
   if (key === 'build') v += REBIRTH_BUILD * Math.min(REBIRTH_MAX, s.rebirths)
   for (const b of s.buffs) if (b.key === key) v += b.v
   if (s.dao) v += (DAOS[s.dao.id] as Partial<Record<Bonus, number>>)[key] ?? 0
+  if (s.strat) v += (STRATS[s.strat] as Partial<Record<Bonus, number>>)[key] ?? 0
   return v + (VIP_PERKS[vipLevel(s)][key] ?? 0)
 }
 // Cấp Hương Hỏa theo tổng điểm (save cũ chưa có: cấp 0)

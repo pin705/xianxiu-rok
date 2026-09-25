@@ -81,6 +81,7 @@
   } = $props()
 
   const MASTER: Look = {
+    id: 'master',
     robe: '#1b4566',
     trim: '#c9a14a',
     hair: '#211c17',

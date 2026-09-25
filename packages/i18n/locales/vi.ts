@@ -59,6 +59,7 @@ import {
   type FestId,
   type DrillMod,
   type OfficeId,
+  type StratId,
   type DaoId,
   type Metric,
   type AchId,
@@ -562,6 +563,16 @@ export const vi = {
     expires: (t: string) => `còn ${t}`,
   },
   guest: 'Vân du khách ghé núi — chạm nhận quà',
+  strat: {
+    title: 'Chiến lược mùa',
+    lore: 'Mỗi mùa chọn một chiến lược, miễn phí, giữ tới hết mùa — luân hồi xong thì chọn lại.',
+    chosen: 'mùa này',
+    names: {
+      dieuThu: ['Diệu Thủ', 'Y thuật tinh thông: chữa thương rẻ và nhanh hơn.'],
+      toanThan: ['Toàn Thân Nhi Thoái', 'Đan phòng rộng hơn: thương binh có chỗ nằm, ít tử trận.'],
+      tichCoc: ['Tích Cốc', 'Kho rộng hơn: chứa nhiều, phần được bảo hộ khi bị cướp cũng lớn theo.'],
+    } as Record<StratId, [string, string]>,
+  },
   tribe: {
     title: 'Phá Yêu Trại',
     hint: 'Thứ Ba – thứ Tư: hạ yêu vương, yêu trại (kết trận cùng minh) ra điểm minh chia theo sát thương. Hết khung, top 3 minh — mọi người trong minh — nhận quà qua thư.',

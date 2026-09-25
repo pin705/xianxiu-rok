@@ -142,6 +142,8 @@ export const LOOK: Record<ElderId, Look> = {
     mark: '#7fd6dc',
   },
 }
+// mã trưởng lão làm tên tranh chân dung vẽ tay (key 'face:<mã>')
+for (const [id, l] of Object.entries(LOOK)) l.id = id
 
 // Thẻ trong bảng công trình (mở sẵn từ HUD, nhiệm vụ, trang khác)
 export type PanelTab = 'upgrade' | 'train' | 'alchemy' | 'library' | 'trade' | 'forge' | 'guard'
