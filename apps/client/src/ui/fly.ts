@@ -1,12 +1,13 @@
 // Phần thưởng bay: icon vẽ tay bay theo đường cong từ nút nhận vào ô tài nguyên trên HUD (đan dược vào tab Bảo khố),
 // ô đích nảy lên khi nhận. Đích đánh dấu bằng data-res="<tài nguyên>" / data-tab="baoKho".
 import { isItem, itemIcon, paintedUrl } from '@rok/art'
+import { calm } from '../lib'
 
 type Bag = Partial<Record<string, number>>
 
 // into: lớp chứa (mặc định: hộp thoại đang mở trên cùng, để icon không bị che)
 export function fly(from: Element | null | undefined, bag: Bag, into?: Element) {
-  if (!from || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (!from || calm()) return
   const a = from.getBoundingClientRect()
   const layer = into ?? [...document.querySelectorAll('dialog[open]')].at(-1) ?? document.body
   let wave = 0

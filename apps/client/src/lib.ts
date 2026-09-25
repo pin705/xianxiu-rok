@@ -241,6 +241,17 @@ export function setMusicOn(on: boolean) {
   write('rok.music', on ? '1' : '0')
 }
 export const isMuted = () => muted
+// Giảm chuyển động / tiết kiệm pin: theo cài đặt hệ điều hành, hoặc công tắc trong game (lưu theo máy). data-calm trên <html>
+// để CSS tắt hiệu ứng (Settings.svelte), cảnh núi thôi mây bay / rung (home.ts), phần thưởng thôi bay (fly.ts)
+let calmOn = read('rok.calm') === '1'
+const calmMq = typeof matchMedia === 'undefined' ? null : matchMedia('(prefers-reduced-motion: reduce)')
+export const calm = () => calmOn || !!calmMq?.matches
+export function setCalm(on: boolean) {
+  calmOn = on
+  write('rok.calm', on ? '1' : '0')
+  if (typeof document !== 'undefined') document.documentElement.toggleAttribute('data-calm', on)
+}
+if (calmOn && typeof document !== 'undefined') document.documentElement.toggleAttribute('data-calm', true)
 export function setMuted(m: boolean) {
   muted = m
   write('rok.mute', m ? '1' : '0')

@@ -628,6 +628,7 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
         },
         label,
       )
+      assert.ok(settings.includes(L.settings.calm), 'công tắc giảm chuyển động')
       assert.ok(
         L.guide.items.every(([q]) => settings.includes(q)),
         'Cài đặt phải có đủ mục Cẩm nang',

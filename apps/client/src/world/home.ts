@@ -3,6 +3,7 @@
 import { Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
 import { BUILDINGS, IDS, storage, type BuildingId, type State } from '@rok/rules'
 import { SLOT } from './layout'
+import { calm } from '../lib'
 import type { Pt } from '@rok/art'
 import { fxTex } from './stage'
 import { burst, make, poke } from './home/bursts'
@@ -73,7 +74,9 @@ export class Home {
   lightsLevel = 0
   private view?: HomeView
   still: boolean
-  private reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  private get reduced() {
+    return calm()
+  }
 
   constructor(opts: { still?: boolean } = {}) {
     this.still = !!opts.still

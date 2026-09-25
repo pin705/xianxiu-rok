@@ -1790,6 +1790,7 @@ export const en: Text = {
     title: 'Settings',
     sound: 'Sound effects',
     music: 'Music',
+    calm: 'Reduce motion · save battery',
     account: 'Account',
     accountHint: (name: string) =>
       `${name} is stored on the server: switching devices or clearing browser data keeps your progress when you sign in again.`,

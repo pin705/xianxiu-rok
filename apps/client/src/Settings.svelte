@@ -3,7 +3,7 @@
   import { Icon } from '@rok/art'
   import { Card, Section, Sheet, Toggle } from './ui'
   import { LOCALES, LOCALE_IDS, type Locale } from '@rok/i18n'
-  import { L, LANG, isMusicOn, setLang, setMusicOn } from './lib'
+  import { L, LANG, calm, isMusicOn, setCalm, setLang, setMusicOn } from './lib'
   import { startMusic, stopMusic } from './music'
   import Account from './Account.svelte'
   import type { Net } from './net'
@@ -30,6 +30,7 @@
   const now = $derived(g.now)
 
   let music = $state(isMusicOn())
+  let calmOn = $state(calm())
 </script>
 
 <Sheet {open} {onclose} title={L.settings.title}>
@@ -44,6 +45,14 @@
       if (on) startMusic()
       else stopMusic()
     }}><Icon name="music" size={20} />{L.settings.music}</Toggle
+  >
+  <!-- Giảm chuyển động / tiết kiệm pin: tắt hiệu ứng, mây bay, phần thưởng bay (hệ điều hành đã bật thì game theo sẵn) -->
+  <Toggle
+    checked={calmOn}
+    onchange={on => {
+      calmOn = on
+      setCalm(on)
+    }}><Icon name="power" size={20} />{L.settings.calm}</Toggle
   >
   <!-- tên mỗi ngôn ngữ viết bằng chính ngôn ngữ đó: người đọc không hiểu ngôn ngữ đang hiện vẫn tìm được tiếng mình -->
   <label class="lang row">
@@ -81,6 +90,19 @@
 </Sheet>
 
 <style>
+  /* công tắc giảm chuyển động (data-calm trên <html>): như prefers-reduced-motion ở theme.css, cả hiệu ứng chuyển tab */
+  :global(:root[data-calm] *),
+  :global(:root[data-calm] *::before),
+  :global(:root[data-calm] *::after) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  :global(:root[data-calm]::view-transition-group(*)),
+  :global(:root[data-calm]::view-transition-old(*)),
+  :global(:root[data-calm]::view-transition-new(*)) {
+    animation: none !important;
+  }
   .lang {
     min-height: 50px;
     padding: 0 var(--sp-1);

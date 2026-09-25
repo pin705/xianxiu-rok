@@ -2,6 +2,7 @@
 #   tools/art/.venv/bin/python tools/art/make.py <nhóm> [tên…] [--fit] [--dry]
 #   --fit: chỉ ghép lại từ ảnh thô đã có (không gọi API) · --dry: in prompt, không gọi API
 # Nhóm: buildings faces icons emblems masks props troops beasts skins scenery fields map far paper strokes
+# Xong thì chạy `pack` (chia gói theo cảnh + dựng atlas) — game nạp theo gói.
 import json, os, sys
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
@@ -148,10 +149,11 @@ def trace(keys, k=1.5, sub='scene'):
 
 def scenery():
   metas = json.load(open(os.path.join(X.WORK, 'proc', 'meta.json')))
-  trace([key for key in metas if key.split(':')[0] in ('peak', 'ledge', 'stair') and (not args[1:] or key in args[1:])])
+  # mảng mực mềm: 2 px/DU đủ (k=1 trên bản code 2x), nhẹ hơn 3x khoảng 55%
+  trace([key for key in metas if key.split(':')[0] in ('peak', 'ledge', 'stair') and (not args[1:] or key in args[1:])], 1.0)
 
 def map_():
-  trace(['map'], 1.0, 'map')
+  trace(['map'], 0.75, 'map')  # 1,5 px/DU: nền giấy mờ, không cần nét hơn
   # tông môn trên bản đồ vùng: cùng hộp Chủ điện bậc 1, dùng tranh Chủ điện bậc 4 (mái lam) như bản vẽ code
   X.save('map:home', X.fit_building('chuDien', 1, os.path.join(X.ART, 'bld', 'bld-chuDien-4.webp')), 'map', tex=True)
 
@@ -218,7 +220,7 @@ def strokes():
     # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 480×42 (bản code 320×28 ở 2x); vết mực: vuông
     X.save(f'skin:{name}', X.fit_square(im, 384, 0.01) if name == 'blot' else im.resize((480, 42), X.Image.LANCZOS), 'skin')
 
-GROUPS = {'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'masks': masks, 'props': props, 'troops': troops,
+GROUPS = {'pack': X.pack_all, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}
 
 if __name__ == '__main__':

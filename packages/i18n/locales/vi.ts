@@ -1777,6 +1777,7 @@ export const vi = {
     title: 'Cài đặt',
     sound: 'Hiệu ứng âm thanh',
     music: 'Nhạc nền',
+    calm: 'Giảm chuyển động · tiết kiệm pin',
     account: 'Tài khoản',
     accountHint: (name: string) =>
       `${name} được lưu trên máy chủ: đổi máy hay xoá dữ liệu trình duyệt vẫn giữ nguyên tiến độ khi đăng nhập lại.`,

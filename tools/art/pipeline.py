@@ -12,6 +12,7 @@ WORK = os.path.join(HERE, '.work')                              # ảnh thô, �
 ANCHORS = os.path.join(HERE, 'anchors')                         # ảnh mẫu phong cách (commit)
 PAPER = (232, 222, 196, 255)
 S = 3  # px mỗi DU của tranh xuất ra (màn 3x vẫn nét)
+Q = 82  # chất lượng WebP: 90 nặng hơn ~40% mà mắt không thấy khác trên nét thủy mặc
 KEYS = json.load(open(os.path.join(HERE, 'keys.json')))
 RATIOS = {'1:1': 1, '3:2': 1.5, '4:3': 4 / 3, '16:9': 16 / 9, '2:3': 2 / 3, '3:4': 3 / 4, '9:16': 9 / 16}
 
@@ -135,7 +136,7 @@ def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP'):
   """ghi ảnh vào public/art/<sub>/ và dòng manifest cho key (+ các key dùng chung file). tex: texture cảnh (bộ nạp giải mã sẵn)."""
   name = fname(key) + ('.webp' if fmt == 'WEBP' else '.png')
   os.makedirs(os.path.join(ART, sub), exist_ok=True)
-  im.save(os.path.join(ART, sub, name), fmt, **({'quality': 90, 'method': 6} if fmt == 'WEBP' else {}))
+  im.save(os.path.join(ART, sub, name), fmt, **({'quality': Q, 'method': 6} if fmt == 'WEBP' else {}))
   for k in (key, *aliases):
     manifest()[k] = {'src': f'{sub}/{name}', **({'tex': True} if tex else {}), **(extra or {})}
   return name
@@ -210,3 +211,48 @@ def fit_trace(painted_src, box, proc_im, k=1.5):
   out.alpha_composite(p)
   out.putalpha(base.getchannel('A'))
   return out
+
+# ---------- gói theo cảnh + atlas (như bundle/atlas của Godot, LayaAir) ----------
+# Mỗi mục manifest được gán `pack` theo cảnh dùng nó; game chỉ đợi gói 'boot' rồi hiện, gói của cảnh nào thì cảnh đó đợi
+# (packages/art/art.ts artPack), còn lại tải nền. Texture (tex) của một gói gom vào vài trang atlas 2048² (`page` + `frame`):
+# ít lượt tải, Pixi gộp được lượt vẽ. File lẻ vẫn giữ (ảnh HTML như panel:* dùng file lẻ; lần gói sau đọc lại từ đây).
+PACKS = [  # (gói, key) — mục đầu tiên khớp thì lấy; không khớp: không gói, trình duyệt tự tải khi cần (icon, chân dung…)
+  ('boot', r'^(skin|emblem):'),  # giao diện nào cũng dùng: da, hình chạm huy hiệu (huy hiệu nướng lên canvas ngay khi hiện)
+  ('home', r'^(bld|peak|ledge|stair|far\d|pine|rock|bamboo|blossom|lantern|sun|moon|crane|bird|fly|pearl|walker|worker|disciple|flag|scaffold)(:|$)'),
+  ('map', r'^(map|march)(:|$)'),
+  ('world', r'^wtoken$'),
+  ('battle', r'^(sold|beast|field):'),
+]
+PAGE, PAD = 2048, 2
+
+def pack_all():
+  import re, glob
+  m = manifest()
+  for e in m.values():
+    for f in ('pack', 'page', 'frame'): e.pop(f, None)
+  for f in glob.glob(os.path.join(ART, 'atlas', '*.webp')): os.remove(f)
+  groups = {}
+  for key, e in m.items():
+    name = next((n for n, rx in PACKS if re.search(rx, key)), None)
+    if name:
+      e['pack'] = name
+      if e.get('tex'): groups.setdefault(name, {}).setdefault(e['src'], []).append(key)
+  os.makedirs(os.path.join(ART, 'atlas'), exist_ok=True)
+  for name, files in groups.items():
+    ims = {src: Image.open(os.path.join(ART, src)).convert('RGBA') for src in files}
+    fits = sorted((s for s in ims if ims[s].width <= PAGE - 2 * PAD and ims[s].height <= PAGE - 2 * PAD), key=lambda s: -ims[s].height)
+    pages, x, y, row, cur = [], PAD, PAD, 0, None
+    for src in fits:  # xếp theo kệ: cao trước, hết hàng xuống kệ mới, hết trang sang trang mới
+      im = ims[src]
+      if x + im.width + PAD > PAGE: x, y, row = PAD, y + row + PAD, 0
+      if cur is None or y + im.height + PAD > PAGE:
+        cur = Image.new('RGBA', (PAGE, PAGE), (0, 0, 0, 0)); pages.append([cur, 0])
+        x, y, row = PAD, PAD, 0
+      cur.alpha_composite(im, (x, y))
+      pages[-1][1] = max(pages[-1][1], y + im.height + PAD)
+      for key in files[src]: m[key].update(page=f'atlas/{name}-{len(pages) - 1}.webp', frame=[x, y, im.width, im.height])
+      x, row = x + im.width + PAD, max(row, im.height)
+    for i, (pg, used) in enumerate(pages):  # cắt phần thừa dưới trang cuối cho nhẹ
+      pg.crop((0, 0, PAGE, min(PAGE, used))).save(os.path.join(ART, 'atlas', f'{name}-{i}.webp'), 'WEBP', quality=Q, method=6)
+    big = len(ims) - len(fits)
+    print(f'gói {name}: {len(fits)} ảnh → {len(pages)} trang atlas' + (f', {big} ảnh lớn giữ file lẻ' if big else ''))

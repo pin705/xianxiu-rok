@@ -1311,19 +1311,19 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | A1 + C34 Hồ sơ chưởng môn (chân dung → hồ sơ; thành tích, thế lực, luân hồi, xếp hạng) | ✅ | P1 | S–M |
 | A2 + D2 Thế lực: chạm xem nguồn, "+N Thế lực" bay lên | ✅ `PowerSheet.svelte` | P1 | S |
 | A5 + F4 Dải buff dưới chân dung (khiên, đan) đọc được trên điện thoại | ✅ | P1 | S |
-| A15 Dải Truyền âm 1 dòng ở mọi tab (hiện chỉ Bản đồ, Tiên minh) | 🟡 | P1 | S |
+| A15 Dải Truyền âm 1 dòng ở mọi tab (hiện chỉ Bản đồ, Tiên minh) | ✅ dải chat ở núi + bản đồ + tiên minh | P1 | S |
 | A17 + G1 Đĩa "Tương trợ" (giúp tất cả) nổi trên HUD | ✅ | P1 | S |
-| A18 Nút "?" theo ngữ cảnh → đúng mục Cẩm nang | 🟡 | P1 | S |
+| A18 Nút "?" theo ngữ cảnh → đúng mục Cẩm nang | ✅ `Help.svelte` | P1 | S |
 | C1 Xem trước "Lên tầng N mở ra" + "xong lúc hh:mm" trong bảng | ✅ | P1 | S |
 | C3 + G4 Tụ khí: dùng nhiều viên, "Dùng vừa đủ", xem trước kết quả | ✅ `SpeedUp.svelte` | P1 | S |
-| C4 Xin tương trợ ngay từ bảng công trình / bong bóng | 🟡 | P1 | S |
+| C4 Xin tương trợ ngay từ bảng công trình / bong bóng | ✅ việc mới tự nhờ minh (`newHelps`) | P1 | S |
 | C12 Màn xuất quân: thời gian đi / về, nút "Mang hệ khắc" | ✅ | P1 | S |
 | C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | ✅ `verdict.ts` (chưa chia sẻ vào chat minh) | P1 | S |
 | C32 + G2 "Nhận tất cả" (thư có quà, nhiệm vụ ngày, mốc sự kiện) | ✅ | P1 | S |
-| C36 + G11 Chế độ nhẹ / tiết kiệm pin, giảm chuyển động trong game | 🟡 | P1 | S |
+| C36 + G11 Chế độ nhẹ / tiết kiệm pin, giảm chuyển động trong game | ✅ công tắc trong Cài đặt (chưa chọn loại thông báo) | P1 | S |
 | D4 Màn "Mở khoá" khi Chủ điện lên tầng (huy hiệu bấm là tới) | ✅ `Unlocks.svelte` | P1 | S |
 | D5 Dải "Tạ lễ" liệt kê vật phẩm nhận được | ✅ `GiftStrip.svelte` | P1 | S |
-| E1 Bổ sung chấm: Tiên minh có người xin giúp, chat chưa đọc, sự kiện có mốc nhận | 🟡 | P1 | S |
+| E1 Bổ sung chấm: Tiên minh có người xin giúp, chat chưa đọc, sự kiện có mốc nhận | ✅ | P1 | S |
 | F2 Mũi tên dẫn trong bảng cho lần đầu (Tuyển, Xuất quân, Độ kiếp) | 🟡 | P1 | S |
 | F5 Thẻ "lần đầu" khi mở tính năng mới (Tranh đoạt, Tiên minh, Giới) | 🟡 | P1 | S |
 | H4 Soát tương phản chữ vàng trên giấy | 🟡 | P1 | S |
