@@ -23,7 +23,12 @@ export async function pollInbox(w: World) {
 function command(w: World, r: store.InboxRow, now: number) {
   w.applied.add(r.id)
   w.persist.pending.inboxDone.push(r.id)
-  const b = r.body as { pid?: number; mail?: Omit<Extract<NewMail, { k: 'admin' }>, 'at'>; until?: number }
+  const b = r.body as {
+    pid?: number
+    mail?: Omit<Extract<NewMail, { k: 'admin' }>, 'at'>
+    until?: number
+    name?: string
+  }
   if (r.kind === 'mute' && b.pid) {
     w.chat.mute(b.pid, b.until ?? 0, now)
   } else if (r.kind === 'mail' && b.mail) {
@@ -33,6 +38,14 @@ function command(w: World, r: store.InboxRow, now: number) {
       if (slot && s) w.commit(slot, mail(s, { ...b.mail, at: now }))
     }
   } else if (r.kind === 'delete' && b.pid) remove(w, b.pid, now)
+  else if (r.kind === 'rename' && b.pid && b.name) {
+    // Cải Danh Lệnh: API đã giữ khoá tên mới trong DB; ở đây đổi tên trong state và trừ một lệnh
+    const slot = w.slots.get(b.pid),
+      s = w.ps.get(b.pid)
+    if (slot && s)
+      w.commit(slot, { ...s, name: b.name, items: { ...s.items, caiDanh: Math.max(0, (s.items.caiDanh ?? 0) - 1) } })
+    w.maps.changed()
+  }
   else w.env.log.warn({ id: r.id, kind: r.kind }, 'unknown inbox command, skipped')
   w.persist.schedule()
 }

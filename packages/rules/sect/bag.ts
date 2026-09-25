@@ -15,7 +15,7 @@ export type BagAction = { type: 'use'; item: BagId; n: number; job?: JobKind; el
 // Vì sao không dùng được (null: dùng được). Client dùng để tắt nút và nói lý do.
 export function useError(s: State, a: BagAction): Err | null {
   const d = BAG[a.item]
-  if (d.use === 'key' || d.use === 'ticket') return 'bad' // thiếp mở ở Chiêu Hiền Đài, Luận Kiếm Lệnh dùng ở Luận Kiếm Đài
+  if (d.use === 'key' || d.use === 'ticket' || d.use === 'move' || d.use === 'rename') return 'bad' // thiếp: Chiêu Hiền Đài · Luận Kiếm Lệnh: Luận Kiếm Đài · phù dời núi: bản đồ giới
   if (a.n > (s.items[a.item] ?? 0)) return 'no_item'
   if (d.use === 'speed') {
     // luyện đan không rút ngắn được (có giảm thời gian là thành vòng lặp đẻ đan); phù riêng chỉ cho đúng việc

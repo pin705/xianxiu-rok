@@ -226,7 +226,14 @@ export const en: Text = {
     claim: 'Claim',
     allDone: `Quest chain complete. From Main Hall level ${REBIRTH_HALL} you can reincarnate to grow stronger.`,
   },
-  builder: { idle: 'Idle', label: 'Builder' },
+  builder: {
+    idle: 'Idle',
+    label: 'Builder',
+    second: 'Second builder',
+    rent: 'Hire',
+    rentHint: (item: string) =>
+      `Second builder: use a ${item} (48 h) — from the Sect Token Vault, the Heaven Gate Shop and quest rewards.`,
+  },
   activity: {
     title: 'In progress',
     empty: 'Nothing is running.',
@@ -303,7 +310,7 @@ export const en: Text = {
       title: 'Alchemist',
       lore: 'An old alchemist hermit of the Crimson Flame Realm. Has saved more lives than he has taken.',
       skill: 'Spring Revival',
-      passives: ['Nurture Life', 'Gather Wealth'],
+      passives: ['Nurture Life', 'Gather Wealth', 'Vein Opening'],
     },
     hanBang: {
       name: 'Frost Fairy Hanbing',
@@ -338,7 +345,7 @@ export const en: Text = {
       title: 'Guest Elder',
       lore: 'A spell cultivator who roams every realm and stays only with sects lively enough for her.',
       skill: 'Spring Water Revival',
-      passives: ['Gentle Water', 'Treasure Gathering'],
+      passives: ['Gentle Water', 'Treasure Gathering', 'Ore-Sniffing Beasts'],
     },
     diepCoThanh: {
       name: 'Ye Gucheng',
@@ -354,7 +361,7 @@ export const en: Text = {
       skill: 'Dark Frost Prison',
       passives: ['Dark Water Armor', 'Defy Tribulation'],
     },
-  } satisfies Record<ElderId, { name: string; title: string; lore: string; skill: string; passives: [string, string] }>,
+  } satisfies Record<ElderId, { name: string; title: string; lore: string; skill: string; passives: string[] }>,
   unlockHint: {
     thanhPhong: '',
     thachKien: 'Conquer Black Wind Stronghold',
@@ -409,6 +416,7 @@ export const en: Text = {
       skill: 'Technique power',
       forge: 'Forging time',
       cap: 'March capacity',
+      gather: 'Gathering speed',
     }
     const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
@@ -1142,6 +1150,8 @@ export const en: Text = {
       newbieHint: `New sects may relocate once to any free tile in the outer ring (before Main Hall level ${NEWBIE_MOVE_HALL}) — move next to friends or an alliance. Every army must be home.`,
       flag: (tag: string) => `[${tag}] banner`,
       fort: (tag: string) => `[${tag}] stronghold`,
+      diSon: (n: number) => `Mountain-Shift: random move (${n} left)`,
+      canKhon: (n: number) => `Heaven-Earth: move here (${n} left)`,
       fortPlant: (cost: string) => `Build the stronghold · ${cost} alliance funds`,
       fortHint: (min: number, r: number, h: number) =>
         `Stronghold: one per alliance, needs ${min}+ members. Builds in ${h} h; then territory spreads ${r} tiles around it and the whole alliance gets DEF +3%, HP +3%, march speed +5%.`,
@@ -2643,6 +2653,22 @@ export const en: Text = {
       sonHa: {
         name: 'Realm Chart',
         desc: 'A hand-drawn chart: instantly clears the 12 nearest fogged cells around your sect on the realm map.',
+      },
+      caiDanh: {
+        name: 'Renaming Decree',
+        desc: 'Rename your sect once (Settings → Account). The new name must not match another sect in the realm.',
+      },
+      diSon: {
+        name: 'Mountain-Shift Talisman',
+        desc: 'Moves your whole sect to a random free spot in the outer realm. Use it from your own sect on the realm map; all armies must be home and War Frenzy blocks it.',
+      },
+      canKhon: {
+        name: 'Heaven-Earth Talisman',
+        desc: 'Moves your whole sect to a free tile of your choice in any region open this season phase, with no teleport cooldown. Tap a tile on the realm map to use it.',
+      },
+      khaiLinh: {
+        name: 'Vein-Opening Talisman',
+        desc: 'Every gathering army on the realm map works +50% faster (using more extends it).',
       },
       tucHoa: {
         name: 'Fire-Quench Talisman',

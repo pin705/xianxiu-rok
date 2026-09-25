@@ -188,6 +188,7 @@ export type Bonus =
   | 'skill'
   | 'forge'
   | 'cap' // trận dung (sức chứa đệ tử mỗi đội)
+  | 'gather' // tốc khai mỏ trên bản đồ giới
 
 // ---------- Ngũ hành ----------
 
@@ -250,6 +251,7 @@ const elders = {
     passives: [
       { at: 5, key: 'hp', v: 0.06 },
       { at: 12, key: 'loot', v: 0.2 },
+      { at: 20, key: 'gather', v: 0.2 }, // khai mỏ nhanh (tướng khai mỏ của RoK)
     ],
   },
   hanBang: {
@@ -296,6 +298,7 @@ const elders = {
     passives: [
       { at: 5, key: 'hp', v: 0.06 },
       { at: 12, key: 'loot', v: 0.25 },
+      { at: 20, key: 'gather', v: 0.3 }, // khai mỏ nhanh (tướng khai mỏ của RoK)
     ],
   },
   diepCoThanh: {
@@ -474,6 +477,8 @@ export type BagDef =
   | { use: 'map'; n: number } // Sơn Hà Đồ: tan n ô mê vụ gần tông môn nhất
   | { use: 'ticket' } // Luận Kiếm Lệnh: dùng ở Luận Kiếm Đài (+1 lượt hôm nay), không dùng thẳng từ túi
   | { use: 'douse' } // Tức Hỏa Phù: dập linh hỏa đang thiêu núi (trận lực thôi tụt)
+  | { use: 'move'; pick: boolean } // Di Sơn Phù (ngẫu nhiên) / Càn Khôn Phù (chọn chỗ): dời núi ở bản đồ giới, không dùng thẳng từ túi
+  | { use: 'rename' } // Cải Danh Lệnh: đổi tên tông môn (Cài đặt → Tài khoản; server chặn tên trùng)
 const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
 const speeds = <P extends string>(prefix: P, job?: SpeedJob) =>
@@ -497,6 +502,8 @@ const bag = {
   ...packs('khoangNang', 'linhKhoang'),
   tuLinh8: { use: 'buff', key: 'prod', v: 0.5, hours: 8 }, // Tụ Linh Phù: sản lượng +50 %
   tuLinh24: { use: 'buff', key: 'prod', v: 0.5, hours: 24 },
+  khaiLinh8: { use: 'buff', key: 'gather', v: 0.5, hours: 8 }, // Khai Linh Phù: khai mỏ nhanh +50 % (Enhanced Gathering)
+  khaiLinh24: { use: 'buff', key: 'gather', v: 0.5, hours: 24 },
   thanHanh: { use: 'buff', key: 'march', v: 0.25, hours: 8 }, // Thần Hành Phù: hành quân nhanh 25 %
   chienY: { use: 'buff', key: 'atk', v: 0.1, hours: 8 }, // Chiến Ý Phù: công +10 %
   kimCuong: { use: 'buff', key: 'def', v: 0.1, hours: 8 }, // Kim Cương Phù: thủ +10 %
@@ -517,6 +524,9 @@ const bag = {
   khuechTran8: { use: 'buff', key: 'cap', v: 0.1, hours: 8 }, // Khuếch Trận Kỳ: trận dung +10 %
   sonHa12: { use: 'map', n: 12 }, // Sơn Hà Đồ: tan 12 ô mê vụ gần nhất
   tucHoa: { use: 'douse' }, // Tức Hỏa Phù: dập linh hỏa thiêu núi
+  diSon: { use: 'move', pick: false }, // Di Sơn Phù: dời tông môn tới chỗ trống ngẫu nhiên vùng ngoài (Random Teleport)
+  canKhon: { use: 'move', pick: true }, // Càn Khôn Phù: dời tới ô chọn ở vùng đã mở (Advanced Teleport)
+  caiDanh: { use: 'rename' }, // Cải Danh Lệnh: đổi tên tông môn (Rename của RoK)
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -546,6 +556,10 @@ export const BAG_FAMILIES = [
   'khuechTran',
   'sonHa',
   'tucHoa',
+  'khaiLinh',
+  'diSon',
+  'canKhon',
+  'caiDanh',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -1102,6 +1116,11 @@ export const COIN_SHOP: { reward: Reward; price: number }[] = [
   { reward: { items: { khuechTran8: 2 } }, price: 20 },
   { reward: { items: { chienY: 1, kimCuong: 1, hoThe: 1 } }, price: 30 },
   { reward: { items: { tucHoa: 2 } }, price: 15 },
+  { reward: { items: { khaiLinh24: 1 } }, price: 30 },
+  { reward: { items: { diSon: 1 } }, price: 15 },
+  { reward: { items: { canKhon: 1 } }, price: 45 },
+  { reward: { items: { tapDich48: 1 } }, price: 50 },
+  { reward: { items: { caiDanh: 1 } }, price: 20 },
 ]
 export const HONOR_TIERS: { n: number; reward: Reward }[] = [
   { n: 50, reward: { items: { thoiQuang60: 2, thachNang5k: 1 } } },
@@ -1422,7 +1441,7 @@ export const SIDE_GIFTS: Record<SideLine, Reward[]> = {
   ],
 }
 // Quà gắn email (tài khoản không mất khi đổi máy): một lần, server gửi qua thư ngay khi gắn
-export const LINK_GIFT: Reward = { items: { kimDuyen: 1, thoiQuang60: 2, hoSon8: 1 } }
+export const LINK_GIFT: Reward = { items: { kimDuyen: 1, thoiQuang60: 2, hoSon8: 1, caiDanh: 1 } }
 // Bế Quan Lệnh (Vacation Permit của RoK): bế quan SECLUDE_DAYS ngày — không ai cướp được, nhưng chỉ làm được SECLUDE_OK; xuất quan
 // xong SECLUDE_COOL mới bế quan lại
 export const SECLUDE_DAYS = [3, 7, 14]
@@ -1806,9 +1825,13 @@ export const VIP_PERKS: Partial<Record<Bonus, number>>[] = [
   { prod: 0.06, heal: 0.18, train: 0.06, storage: 0.16, march: 0.09, build: 0.04, atk: 0.03, hp: 0.02 },
   { prod: 0.07, heal: 0.2, train: 0.07, storage: 0.18, march: 0.1, build: 0.05, atk: 0.03, hp: 0.03 },
 ]
-// Việc đang chờ còn dưới chừng ấy phút thì xong ngay miễn phí (như "free speedup" của RoK). Nhỏ vì nhịp bị giới hạn bởi
-// số lần xây mỗi phiên (PLAN mục 5): miễn phí 30 phút như RoK làm bot giỏi tới Chủ điện 25 sớm hơn 4 ngày
+// Việc đang chờ còn dưới chừng ấy phút thì xong ngay miễn phí (như "free speedup" của RoK: ai cũng có, Hương Hỏa nới thêm). Nhỏ
+// vì nhịp bị giới hạn bởi số lần xây mỗi phiên (PLAN mục 5): miễn phí 30 phút như RoK làm bot giỏi tới Chủ điện 25 sớm hơn 4 ngày
 export const VIP_FREE = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 8]
+// Người mới (Chủ điện dưới NEWBIE_FREE_HALL) ai cũng có NEWBIE_FREE phút miễn phí — như RoK dạy nút "Miễn phí" từ đầu game.
+// Cho mọi người 1 phút thì nhịp nhanh lên ~2 ngày (sim), nên chỉ tới lúc hết giai đoạn tân thủ
+export const NEWBIE_FREE = 1
+export const NEWBIE_FREE_HALL = 4
 // Rương Hương Hỏa mỗi ngày (theo cấp)
 // Tài nguyên trong lễ vật là nang (nằm trong túi, không bị cướp — như rương VIP của RoK), mở khi cần
 const packsOf = (n: number): Partial<Record<ItemId, number>> =>
@@ -2267,6 +2290,7 @@ const fests = {
       { reward: { items: { khuechTran8: 1 } }, price: 20, max: 2 },
       { reward: { items: { hanhLuc50: 1 } }, price: 10, max: 10 },
       { reward: { items: { thoiQuang60: 1 } }, price: 5, max: 10 },
+      { reward: { items: { khaiLinh8: 1 } }, price: 15, max: 3 },
     ],
   },
   // Nga Mi: luyện đan, chữa thương, khai mỏ, giúp đồng minh

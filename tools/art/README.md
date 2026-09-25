@@ -51,6 +51,7 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
 | `landmarks` | `lm:<đạo>` | Trấn phái chi bảo cạnh Tụ Linh Trận: bảng 3×3, khớp hộp `LANDMARK_BOX` 52×64 DU (chân chạm đáy) như `daoMark()` trong emblems.ts. Gói `home`. | `icons.jpg` |
 | `beasts` | `beast:<hệ>` → mọi `beast:<hệ>:<màu>` | Một dáng lông xám mỗi hệ; game tô màu loài bằng tint (`world/battle/field.ts`). | `icons.jpg` |
 | `concept [màn] [hướng]` | (không vào game) | Ảnh concept toàn màn từ ảnh chụp `.work/concept/<màn>-src.png`, mỗi hướng trong `CONCEPT_STYLES`. Chốt hướng trước khi vẽ mảnh giao diện; ảnh 2K giá gấp đôi. | ảnh chụp màn |
+| `chrome [tên…]` | `skin:<tên>` | Khung viền kép, nhãn, viên, rãnh, thanh, công tắc, nút tròn, gạch dưới tiêu đề — vẽ bằng code (`chrome.py`), không tốn tiền. Chạy lại khi đổi màu. | — |
 | `kit [tên…]` | `skin:<tên>` (thẻ, nút, nhãn, thanh) | **Cách đang dùng.** Vẽ 3 mẫu gốc sạch (`KIT_BASES`: giấy, sơn mài, nhãn), rồi suy ra mọi da trong `KIT`: co giãn 9 mảnh đúng thông số từng da (`nine`), đổi màu theo độ sáng (`tint`). Không hoa văn, không loang, nên giao diện yên và tranh nổi. | bản vẽ code |
 | `skins [tên…]` | `skin:<tên>` | Cách cũ: thiết kế riêng từng da. Chỉ còn dùng cho khung bảng (`scroll`), `strip`, `rod`, đĩa, công tắc. Đừng dùng lại cho thẻ, nút, nhãn: mỗi món một hoa văn là giao diện rối và lòe loẹt, hoa văn ở góc 9 mảnh còn đè chữ nút nhỏ. | bản vẽ code + `icons.jpg` |
 | `clouds` | `fog:*0…2`, `cloud:*…`, `thunder:*…` | Mây cho key động (`fog:<rộng>:<hạt>`): game chọn 1 trong 3 biến thể theo key (`stage.ts` `artFor`). | `icons.jpg` |
@@ -102,8 +103,11 @@ Trước màn tiêu đề, phần còn lại chủ yếu là JS (~1,1 MB, phần
   - Bề mặt lam sẫm, chữ ngà. Kim loại chỉ là đồng cổ mảnh ở viền và góc chạm.
   - Nút chính dùng son, nút phụ dùng ngọc lam. **Không tô mảng vàng hay giấy ngà**: người chơi thấy "vàng quá, giống giấy, rẻ tiền".
   - Màu giao diện nằm ở `LACQUER` trong `apps/client/src/ui/theme.ts`, ghi đè các màu gốc chỉ cho HTML; cảnh Pixi vẫn dùng `PIGMENT`.
-  - Khung (`card`, `card-glow`, `toast`, `scroll`, `strip`) dùng mẫu có góc chạm `ornate`, giữ nguyên màu vẽ.
-  - Nút dùng mẫu `plaque`, chỉ nhuộm phần mặt xám (`tint_grey`), viền đồng giữ nguyên.
+  - Khung (thẻ, bảng, HUD: `card*`, `toast*`, `slip*`, `scroll`, `strip`) là **viền kép mảnh** vẽ bằng code (`make.py chrome`, `chrome.py` `DOUBLE`): một nét ngoài và một nét trong mảnh màu đồng dịu, độ đậm dao động nhẹ như nét bút. Người chơi thấy kiểu này đẹp ("nhẹ nhàng").
+  - Không dùng góc đồng chạm nặng (mẫu `ornate`), khung vát bóng, hay mặt nhuộm phẳng một màu: người chơi thấy "rẻ", "như nhựa".
+  - Nhãn, viên, rãnh, thanh, công tắc, nút tròn cũng do `chrome.py` vẽ (PNG 3x, vân nhẹ).
+  - Mẫu vẽ tay chỉ còn cắt ở độ nét gốc (`HIRES`, không thu về khổ bản code rồi phóng lên) và khử tím mép (`despill`).
+  - Nút dùng mẫu `plaque`. Mặt nút qua `lacquer` (sâu sáng trên tối dưới, vân lớp sơn, không vệt bóng trắng), màu sơn trầm; viền đồng giữ nguyên.
   - Hình chữ nhật trơn là thứ làm giao diện "như web app".
 - **Giao diện phải yên**: trang trí chỉ ở khung bảng lớn, còn thẻ, nút, nhãn phẳng một màu với viền mực mảnh (nhóm `kit`). Tranh (công trình, icon, chân dung) mới là thứ nổi. Bài học 26/9: bộ 43 da mỗi món một hoa văn và loang màu nhìn lung tung, lòe loẹt; hoa văn trong vùng góc 9 mảnh đè chữ ở nút nhỏ.
 - **Chữ giả**: model hay viết chữ Hán vô nghĩa lên biển hiệu; mọi prompt có "no writing / no text".

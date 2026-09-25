@@ -7,7 +7,7 @@ import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { z } from 'zod'
 import type { Database } from '../db/index.ts'
 import * as accounts from '../db/accounts.ts'
-import { addInbox } from '../db/store.ts'
+import { addInbox, findPlayer } from '../db/store.ts'
 import { LINK_GIFT } from '@rok/rules'
 import {
   CODE_TTL,
@@ -15,6 +15,7 @@ import {
   checkPass,
   cleanCode,
   cleanEmail,
+  cleanName,
   cookieOptions,
   hashPass,
   hashToken,
@@ -57,6 +58,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
   loginRoutes(app, o)
   profileRoutes(app, o, auth)
   pushRoutes(app, o, auth)
+  renameRoutes(app, o, auth)
 }
 
 // Đăng nhập bằng email + mật khẩu, hoặc bằng mã chuyển máy
@@ -264,6 +266,30 @@ function pushRoutes(app: App, o: AccountOptions, auth: Auth) {
     async req => {
       const s = req.session
       await accounts.dropPushSub(o.db, req.body.endpoint, s.account)
+      return { ok: true }
+    },
+  )
+}
+
+// Đổi tên tông môn bằng Cải Danh Lệnh (Rename của RoK): tên như lúc lập (cleanName: độ dài, ký tự, từ tục), không trùng trong
+// giới (khoá DB). Khoá tên đổi ngay ở đây; chủ giới áp tên mới vào state và trừ lệnh qua hộp lệnh (state sống trong RAM của nó).
+function renameRoutes(app: App, o: AccountOptions, auth: Auth) {
+  app.post(
+    '/account/rename',
+    {
+      preHandler: auth,
+      config: strict,
+      schema: { body: z.object({ name: z.string().max(64) }), response: { 200: Ok, ...errors } },
+    },
+    async (req, reply) => {
+      const s = req.session
+      const n = cleanName(req.body.name)
+      if (!n) return reply.code(400).send({ error: 'name' })
+      if (!s.pid || !s.world) return reply.code(403).send({ error: 'nosect' })
+      const p = await findPlayer(o.db, s.pid)
+      if (!p || !(p.state.items.caiDanh ?? 0)) return reply.code(403).send({ error: 'no_item' })
+      if (!(await accounts.renamePlayer(o.db, s.pid, n.name, n.key))) return reply.code(409).send({ error: 'name_taken' })
+      await addInbox(o.db, s.world, 'rename', { pid: s.pid, name: n.name })
       return { ok: true }
     },
   )

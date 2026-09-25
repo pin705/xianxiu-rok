@@ -867,7 +867,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C2 | Barbarians (man tộc trên bản đồ chung) | 🟡 15 yêu thú cố định trên bản đồ vùng riêng | **P0** | M |
 | C3 | Continuous attack / chain farming | ✅ săn liên hoàn yêu thú giới (25/09) | P2 | S / M |
 | C4 | Barbarian Buster, Clarion Call | 🟡 nhiệm vụ "hạ yêu thú cấp n"; Săn Yêu Lệnh (Chủ nhật), Tông Môn Tranh Bá | P2 | S |
-| C5 | Barbarian Forts (cấp 1–6, kết trận) | 🟡 yêu vương cấp 2/3 (9 con), thiếu cấp thấp | P1 | S–M |
+| C5 | Barbarian Forts (cấp 1–6, kết trận) | ✅ yêu trại / yêu vương 3 cấp (vòng ngoài 12.000 hồi 8 giờ · giữa · tâm), kết trận, chia thưởng theo sát thương; chưa có cấp 4–6 | P1 | S–M |
 | C6 | Marauders & Encampments | ❌ | P2 | M |
 | C7 | Barbarian Camps & Keeps (KvK) | ❌ (ngoài phạm vi) | P2 | M |
 | C8 | Lohar's Trial (vật phẩm triệu hồi boss) | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
@@ -877,7 +877,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C12 | Holy-site Guardians & Runes | ❌ | P2 | M |
 | C13 | Race Against Time, Protect the Supplies, Silk Road, Halloween… | ❌ | P2 | S–M |
 | D1 | Resource Points | ✅ 144 mỏ, 2 cấp, hồi 2 giờ, linh triều +50 % | P0 | — |
-| D2 | Gathering buffs & commanders | 🟡 không có bonus khai thác (thiếu khoá `gather`) | P1 | S |
+| D2 | Gathering buffs & commanders | ✅ khoá `gather`: Khai Linh Phù, bị động khai mỏ của 2 trưởng lão (+ linh triều, lãnh thổ); chưa có công pháp / Hương Hỏa khai mỏ | P1 | S |
 | D3 | Gem Deposits | ❌ | P2 | S |
 | D4 | Alliance Resource Points / Centers | ❌ | P2 | M |
 | D5 | Attacked while gathering | ✅ Cướp khoáng (`world/rob.ts`) | P1 | M |

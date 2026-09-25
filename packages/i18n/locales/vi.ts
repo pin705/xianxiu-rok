@@ -224,7 +224,14 @@ export const vi = {
     claim: 'Nhận thưởng',
     allDone: `Đã xong chuỗi nhiệm vụ. Từ Chủ điện tầng ${REBIRTH_HALL} có thể luân hồi để mạnh hơn.`,
   },
-  builder: { idle: 'Rảnh', label: 'Tạp dịch' },
+  builder: {
+    idle: 'Rảnh',
+    label: 'Tạp dịch',
+    second: 'Tạp dịch thứ hai',
+    rent: 'Thuê',
+    rentHint: (item: string) =>
+      `Tạp dịch thứ hai: dùng ${item} (48 giờ) — có ở Tông Lệnh Bảo Khố, Thiên Môn Thương Điếm, quà nhiệm vụ.`,
+  },
   // cột trái desktop: mọi việc đang chạy
   activity: {
     title: 'Đang diễn ra',
@@ -302,7 +309,7 @@ export const vi = {
       title: 'Đan sư',
       lore: 'Lão đan sư ẩn cư nơi Xích Viêm Bí Cảnh. Cứu người nhiều hơn giết người.',
       skill: 'Khô Mộc Phùng Xuân',
-      passives: ['Dưỡng Sinh', 'Tụ Tài'],
+      passives: ['Dưỡng Sinh', 'Tụ Tài', 'Khai Mạch Thuật'],
     },
     hanBang: {
       name: 'Hàn Băng Tiên Tử',
@@ -337,7 +344,7 @@ export const vi = {
       title: 'Khách khanh',
       lore: 'Nữ pháp tu đi khắp các giới, chỉ ở lại với tông môn đủ náo nhiệt.',
       skill: 'Xuân Thủy Hoàn Sinh',
-      passives: ['Nhu Thủy', 'Tụ Bảo Thuật'],
+      passives: ['Nhu Thủy', 'Tụ Bảo Thuật', 'Linh Thú Tầm Khoáng'],
     },
     diepCoThanh: {
       name: 'Diệp Cô Thành',
@@ -353,7 +360,7 @@ export const vi = {
       skill: 'Huyền Minh Hàn Ngục',
       passives: ['Huyền Thủy Giáp', 'Nghịch Kiếp'],
     },
-  } satisfies Record<ElderId, { name: string; title: string; lore: string; skill: string; passives: [string, string] }>,
+  } satisfies Record<ElderId, { name: string; title: string; lore: string; skill: string; passives: string[] }>,
   unlockHint: {
     thanhPhong: '',
     thachKien: 'Công phá Hắc Phong Trại',
@@ -408,6 +415,7 @@ export const vi = {
       skill: 'Sức công pháp',
       forge: 'Thời gian luyện khí',
       cap: 'Trận dung',
+      gather: 'Tốc khai mỏ',
     }
     const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
@@ -1131,6 +1139,8 @@ export const vi = {
       // Trận kỳ (Alliance Flag)
       flag: (tag: string) => `Trận kỳ [${tag}]`,
       fort: (tag: string) => `Tổng đà [${tag}]`,
+      diSon: (n: number) => `Di Sơn Phù: dời ngẫu nhiên (còn ${n})`,
+      canKhon: (n: number) => `Càn Khôn Phù: dời tới đây (còn ${n})`,
       fortPlant: (cost: string) => `Dựng Tổng đà · ${cost} Minh khố`,
       fortHint: (min: number, r: number, h: number) =>
         `Tổng đà: mỗi minh một, cần ${min} người trở lên. Dựng ${h} giờ; xong thì lãnh thổ nới ${r} ô quanh đó, cả minh thủ +3 %, máu +3 %, hành quân nhanh 5 %.`,
@@ -2653,6 +2663,22 @@ export const vi = {
       sonHa: {
         name: 'Sơn Hà Đồ',
         desc: 'Tấm địa đồ vẽ tay: tan ngay 12 ô mê vụ chưa khai gần tông môn nhất trên bản đồ giới.',
+      },
+      caiDanh: {
+        name: 'Cải Danh Lệnh',
+        desc: 'Đổi tên tông môn một lần (Cài đặt → Tài khoản). Tên mới không được trùng tông môn khác trong giới.',
+      },
+      diSon: {
+        name: 'Di Sơn Phù',
+        desc: 'Dời cả tông môn tới một chỗ trống ngẫu nhiên ở vùng ngoài bản đồ giới. Dùng ở bảng chạm tông môn mình; mọi đội phải ở nhà, đang sát khí thì không dời được.',
+      },
+      canKhon: {
+        name: 'Càn Khôn Phù',
+        desc: 'Dời cả tông môn tới ô trống tự chọn ở vùng đã mở theo pha mùa, không chờ lượt dời núi. Chạm ô trên bản đồ giới để dùng.',
+      },
+      khaiLinh: {
+        name: 'Khai Linh Phù',
+        desc: 'Mọi đội khai mỏ trên bản đồ giới nhanh +50 % (dùng thêm thì kéo dài).',
       },
       tucHoa: {
         name: 'Tức Hỏa Phù',

@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  type ElderId,
   cranes,
   SPY_COST,
   FORT_BUFFS,
@@ -2122,5 +2123,74 @@ test('do thám: tốn linh thạch theo tầng bên kia, chiếm một linh đi�
     ),
     'friend',
     'cùng minh',
+  )
+})
+
+test('tốc khai mỏ: Khai Linh Phù (+50 %) rút thời gian khai; bị động khai mỏ chỉ khi trưởng lão đó dẫn đội', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const mine = a.points.find(p => p.kind === 'mine' && p.region === 0)!
+  const seat = { x: a.regions[0].cx, y: a.regions[0].cy }
+  const dig = (s: State, elder: ElderId = 'thanhPhong') => {
+    const ps = world({ ...s, seat })
+    const r = worldAct(
+      ps,
+      1,
+      { type: 'go', i: mine.i, task: 'gather', elder, army: { kiem2: 100 } },
+      T0,
+      1,
+      map,
+      freshWorld(),
+    )
+    assert.ok(r.ok, JSON.stringify(r))
+    for (const [k, v] of r.changed) ps.set(k, v)
+    const m = ps.get(1)!.marches[0]
+    const g = advanceAll(ps, freshWorld(), m.arriveAt, map).changed.get(1)!.marches[0]
+    return g.mine!.end - g.arriveAt
+  }
+  const base = sect('A', 10, { kiem2: 100 })
+  const plain = dig(base)
+  const buffed = dig({ ...base, buffs: [{ key: 'gather', v: 0.5, until: T0 + 8 * 3_600_000, src: 'phu.gather' }] })
+  assert.ok(Math.abs(buffed - plain / 1.5) <= 1000, `${buffed} ~ ${plain / 1.5}`)
+  const van = { ...base, elders: { ...base.elders, vanHac: expAt(20) } }
+  assert.ok(dig(van, 'vanHac') < plain, 'Vân Hạc cấp 20 dẫn đội: khai nhanh hơn')
+})
+
+test('phù dời núi: Càn Khôn Phù tới ô chọn ở vùng đã mở (không chờ lượt, không cần lãnh thổ); Di Sơn Phù tới chỗ ngẫu nhiên vùng ngoài; sát khí thì không dời', () => {
+  const a = atlas(777)
+  const r0 = a.regions.find(r => r.ring === 0)!
+  const mid = a.regions.find(r => r.ring === 1)!
+  const home = { x: r0.cx, y: r0.cy }
+  const me = { ...sect('Dời', 10), seat: home, items: { canKhon: 2, diSon: 1 }, moved: T0 }
+  const ps = world(me)
+  const act = (raw: object, phase = 1, s: State = me) =>
+    worldAct(new Map([[1, s]]), 1, raw as never, T0 + 1000, 7, { atlas: a, phase }, freshWorld())
+  // ô trống ở vùng giữa: cách mọi điểm từ 3 ô
+  let spot = { x: mid.cx, y: mid.cy }
+  for (let r = 0; r < 12 && a.points.some(p => Math.hypot(p.x - spot.x, p.y - spot.y) < 3); r++)
+    spot = { x: mid.cx + r, y: mid.cy - r }
+  assert.equal(regionOf(a, spot), mid.i)
+  const go = { type: 'move', x: spot.x, y: spot.y, item: true }
+  assert.equal(err(act(go, 1)), 'far', 'vùng giữa chưa mở ở pha 1')
+  assert.equal(
+    err(act({ type: 'move', x: spot.x, y: spot.y }, 2)),
+    'locked',
+    'dời thường: không minh, hết lượt tân thủ',
+  )
+  const r = act(go, 2)
+  assert.ok(r.ok, JSON.stringify(r))
+  assert.deepEqual(r.changed.get(1)!.seat, spot)
+  assert.equal(r.changed.get(1)!.items.canKhon, 1)
+  assert.equal(err(act(go, 2, { ...me, frenzy: T0 + 60_000 })), 'frenzy', 'vừa đi cướp: sát khí chặn dời núi')
+  assert.equal(err(act(go, 2, { ...me, items: {} })), 'no_item')
+  const rr = act({ type: 'moveRandom' })
+  assert.ok(rr.ok, JSON.stringify(rr))
+  const s = rr.changed.get(1)!
+  assert.notDeepEqual(s.seat, home)
+  assert.equal(a.regions[regionOf(a, s.seat!)].ring, 0, 'Di Sơn Phù: vùng ngoài')
+  assert.equal(s.items.diSon ?? 0, 0)
+  assert.equal(
+    err(act({ type: 'moveRandom' }, 1, { ...me, marches: ps.get(1)!.marches.concat([{ id: 9 } as never]) })),
+    'busy',
   )
 })

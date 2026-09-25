@@ -136,6 +136,16 @@ export async function linkEmail(db: Database, account: number, email: string, pa
     throw e
   }
 }
+// Đổi tên tông môn (Cải Danh Lệnh): false nếu tên mới trùng tông môn khác trong giới (khoá players_world_name)
+export async function renamePlayer(db: Database, pid: number, name: string, nameKey: string) {
+  try {
+    await db.update(players).set({ name, nameKey }).where(eq(players.id, pid))
+    return true
+  } catch (e) {
+    if (pgError(e).code === UNIQUE) return false
+    throw e
+  }
+}
 export const setPass = (db: Database, account: number, pass: string) =>
   db.update(accounts).set({ pass }).where(eq(accounts.id, account))
 

@@ -104,7 +104,12 @@ function gather(ps: Players, w: World, map: MapCtx, [pid, att, m]: Party[number]
   const t = tide(map.atlas, at)
   const mine = allyOf(w, pid)?.id
   const terr = mine !== undefined && ownerAt(claimsOf(ps, w, map.atlas, at), p.x, p.y) === mine ? 1 + TERR_GATHER : 1
-  const rate = MINE_RATE[p.lv - 1] * (t.active && t.region === p.region ? 1 + TIDE_MINE : 1) * terr
+  // tốc khai: linh triều, lãnh thổ minh, và khoá 'gather' (Khai Linh Phù, bị động trưởng lão dẫn đội)
+  const rate =
+    MINE_RATE[p.lv - 1] *
+    (t.active && t.region === p.region ? 1 + TIDE_MINE : 1) *
+    terr *
+    (1 + lead(att, m.elder, 'gather'))
   const end = at + Math.round((amount / rate) * HOUR)
   const res = RESOURCES[i % RESOURCES.length]
   const changed: Players = new Map()

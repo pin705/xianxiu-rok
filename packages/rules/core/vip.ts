@@ -3,7 +3,7 @@
 import { dayOf } from './calendar.ts'
 import { vipLevel } from './stats.ts'
 import { type State, type Vip } from './types.ts'
-import { VIP_DAILY, VIP_FREE } from '../data.ts'
+import { NEWBIE_FREE, NEWBIE_FREE_HALL, VIP_DAILY, VIP_FREE } from '../data.ts'
 
 export const freshVip = (): Vip => ({ pts: 0, streak: 0, day: -1, chest: -1 })
 // Vào game hôm nay: nối chuỗi (hôm qua có vào) hay bắt đầu lại, cộng điểm ngày thứ n của chuỗi
@@ -16,4 +16,5 @@ export function vipLogin(s: State, t: number): State {
 }
 // Điểm hôm nay nhận được (để hiện "mai được +N")
 export const vipToday = (streak: number) => VIP_DAILY[Math.min(Math.max(1, streak), VIP_DAILY.length) - 1]
-export const vipFree = (s: State) => VIP_FREE[vipLevel(s)] * 60_000
+export const vipFree = (s: State) =>
+  Math.max(VIP_FREE[vipLevel(s)], s.levels.chuDien < NEWBIE_FREE_HALL ? NEWBIE_FREE : 0) * 60_000

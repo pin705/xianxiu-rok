@@ -149,6 +149,15 @@
   })
   const cap = $derived(storage(game))
   const job = $derived(game.queue[0])
+  // tạp dịch thứ hai (thuê bằng Tạp Dịch Lệnh): đang thuê thì hiện việc thứ hai; chưa thuê thì chạm để dùng lệnh, hết lệnh thì gợi ý
+  const rent2 = $derived((game.builder2 ?? 0) > now)
+  let hint2 = $state(false)
+  function second() {
+    if (rent2) return onbuilder()
+    if (game.items.tapDich48) return void g.act({ type: 'use', item: 'tapDich48', n: 1 }, 'reward')
+    hint2 = true
+    setTimeout(() => (hint2 = false), 4000)
+  }
   const live = $derived(questOf(game))
   const liveProg = $derived(
     live && live.k !== 'build' && live.k !== 'hunt' && live.k !== 'sect' ? questProgress(game, live) : null,
@@ -499,6 +508,26 @@
       <!-- tạp dịch thứ hai (Tạp Dịch Lệnh) đang rảnh: chấm son nhắc xây thêm một công trình -->
       {#if job && (game.builder2 ?? 0) > now && game.queue.length < 2}<Badge dot />{/if}
     </button>
+    <!-- ô tạp dịch thứ hai (như hàng xây thứ hai của RoK) -->
+    <button
+      class="builder2"
+      class:away={tab !== 'tongMon'}
+      class:locked={!rent2}
+      onclick={second}
+      aria-label="{L.builder.second}: {rent2
+        ? game.queue[1]
+          ? clock(game.queue[1].finishAt - now)
+          : L.builder.idle
+        : L.builder.rent}"
+    >
+      <Icon name={rent2 ? 'hammer' : 'lock'} size={16} />
+      <span class="b2t"
+        >{rent2 ? (game.queue[1] ? clock(game.queue[1].finishAt - now) : L.builder.idle) : L.builder.rent}</span
+      >
+    </button>
+    {#if hint2}<small class="b2hint" class:away={tab !== 'tongMon'} role="status"
+        >{L.builder.rentHint(L.bag.family.tapDich.name)}</small
+      >{/if}
   {/if}
 
   {#if helpable && onhelp && !storm}
@@ -909,6 +938,41 @@
   }
   .builder:active {
     transform: scale(0.94);
+  }
+  /* tạp dịch thứ hai: đĩa nhỏ bên trái nút tạp dịch; chưa thuê thì mờ, có khoá */
+  .builder2 {
+    position: absolute;
+    right: calc(var(--sp-3) + 72px);
+    bottom: calc(118px + var(--safe-b));
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    color: var(--text);
+    background: var(--img-disc-silk) center / 100% 100% no-repeat;
+  }
+  .builder2.locked {
+    opacity: 0.72;
+  }
+  .builder2:active {
+    transform: scale(0.94);
+  }
+  .b2t {
+    font-size: var(--fs-1);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .b2hint {
+    position: absolute;
+    right: var(--sp-3);
+    bottom: calc(182px + var(--safe-b));
+    max-width: 240px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: var(--fs-1);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 30%);
   }
   /* giúp đỡ đồng minh: đĩa vàng nổi trên nút tạp dịch, mọi tab */
   .helpall {

@@ -49,6 +49,7 @@
     flagHp,
     flagMax,
     newbieMove,
+    ringOpen,
     ownerAt,
     phaseOf,
     snapClaims,
@@ -244,8 +245,17 @@
     if (game.marches.length) return L.world.terr.moveAway
     return newbie ? L.world.terr.newbieHint : L.world.terr.moveHint
   })
-  async function move() {
-    if (!pos || !(await send({ type: 'move', x: pos.x, y: pos.y })).ok) return
+  async function move(item = false) {
+    if (!pos || !(await send({ type: 'move', x: pos.x, y: pos.y, ...(item && { item: true }) })).ok) return
+    sfx('reward')
+    onclose()
+  }
+  // phù dời núi: Càn Khôn Phù tới ô chọn ở vùng đã mở; Di Sơn Phù tới chỗ ngẫu nhiên (bảng chạm tông môn mình)
+  const canKhonHere = $derived(
+    !!game.items.canKhon && pick?.kind === 'tile' && ringOpen(atlas.regions[regionOf(atlas, pick)].ring, phase),
+  )
+  async function moveRandom() {
+    if (!(await send({ type: 'moveRandom' })).ok) return
     sfx('reward')
     onclose()
   }
@@ -306,6 +316,13 @@
         {/if}
         {#if !seat.npc && seat.pid !== me}<Button size="sm" variant="ghost" onclick={() => (social.profile = seat.pid)}
             >{L.profile.open}</Button
+          >{/if}
+        {#if seat.pid === me && game.items.diSon}<Button
+            size="sm"
+            variant="ghost"
+            icon="diSon"
+            disabled={busy || !!game.marches.length || (game.frenzy ?? 0) > now}
+            onclick={moveRandom}>{L.world.terr.diSon(game.items.diSon)}</Button
           >{/if}
       </div>
     </Card>
@@ -669,10 +686,23 @@
         {/if}
       {/if}
       {#if pick?.kind === 'tile' && !flag && game.seat && (newbie || (ally && owner === ally.id))}
-        <Button size="sm" variant="ghost" icon="flag" disabled={moveWait > 0 || !!game.marches.length} onclick={move}
-          >{newbie ? L.world.terr.newbie : L.world.terr.move}</Button
+        <Button
+          size="sm"
+          variant="ghost"
+          icon="flag"
+          disabled={moveWait > 0 || !!game.marches.length}
+          onclick={() => move()}>{newbie ? L.world.terr.newbie : L.world.terr.move}</Button
         >
         <small class="t-tiny t-soft">{moveNote}</small>
+      {/if}
+      {#if canKhonHere && !flag && game.seat}
+        <Button
+          size="sm"
+          variant="gold"
+          icon="canKhon"
+          disabled={busy || !!game.marches.length || (game.frenzy ?? 0) > now}
+          onclick={() => move(true)}>{L.world.terr.canKhon(game.items.canKhon ?? 0)}</Button
+        >
       {/if}
     </div>
   {/if}
