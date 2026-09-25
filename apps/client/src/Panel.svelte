@@ -171,7 +171,6 @@
     {:else if tab === 'alchemy'}
       <Alchemy />
     {:else if tab === 'library'}
-      <Library />
       <!-- Vấn Đạo Đài: năm câu mỗi ngày (từ tầng QUIZ_HALL) -->
       <Card tone="silk">
         <div class="row">
@@ -194,6 +193,7 @@
           >
         </div>
       </Card>
+      <Library />
     {:else if tab === 'trade'}
       <Trade />
       <Merchant />

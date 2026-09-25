@@ -954,7 +954,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | D6/I1 | Cửa hàng VIP (làm mới tuần) | ❌ | P1 | M |
 | D7/I4 | Thương nhân bí ẩn | ❌ | P1 | S–M |
 | D8 | Đài kỷ niệm: mốc chung cả vương quốc | 🟡 biên niên giới, pha mùa | P1 | M |
-| D9 | Lyceum (câu đố) | ❌ | P2 | M |
+| D9 | Lyceum (câu đố) | ✅ Vấn Đạo Đài | P2 | M |
 | D10 | Bảng tin | 🟡 thư admin | P2 | S |
 | D11 | State Forum (armaments) | ❌ (file 2) | P2 | L |
 | D12 | Bảo tàng (buff mùa) | ❌ | P2 | M |

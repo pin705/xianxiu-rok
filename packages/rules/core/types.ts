@@ -54,7 +54,8 @@ export type March = {
   returnAt: number // 0: chưa hẹn (đi cướp: server giải trận lúc tới nơi rồi mới biết giờ về)
   foe?: string // đi cướp: tên tông môn bên kia (để hiện)
   path?: { x: number; y: number }[] // đi trên bản đồ giới: các điểm dừng (đi, …cổng, tới) — theo ô
-  task?: 'take' | 'gather' | 'hit' | 'hunt' | 'aid' // điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương · săn yêu thú; aid: viện binh nhà đồng minh
+  task?: 'take' | 'gather' | 'hit' | 'hunt' | 'aid' | 'rob' // điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương · săn yêu thú · cướp khoáng; aid: viện binh nhà đồng minh
+  prey?: { pid: number; id: number } // cướp khoáng: đội khai mỏ bị nhắm
   rally?: number // thuộc kết trận này (mọi đội cùng tới lúc hẹn, đánh như một bên)
   spot?: string // loại điểm (để hiện tên): vein, mine, boss, gate, heaven
   stay?: boolean // đang đóng quân ở điểm (chỉ về khi bị đánh bật hoặc gọi về)
@@ -169,7 +170,7 @@ export type Mob = { week: number; task: MobTask | null; day: number; took: numbe
 // Mê vụ: hàng rows[cy] bit cx = ô sương đã khai; fly: linh điểu đang bay — các ô sương tan lúc at, điểu về lúc back
 export type Fog = { rows: number[]; fly: { cells: number[]; at: number; back: number }[] }
 // Đội đang kéo tới: mã hành quân và người chơi bên kia (để gỡ đúng lúc trận giải), tên tông môn, lúc tới nơi
-export type Incoming = { id: number; pid: number; foe: string; at: number }
+export type Incoming = { id: number; pid: number; foe: string; at: number; spot?: number } // spot: tới cướp đội khai ở điểm này
 // Thư: chữ dựng ở client theo khoá k và tham số a (@rok/i18n mailText), quà nhận đúng một lần.
 // Thêm loại thư: thêm khoá vào MailArgs — i18n báo thiếu chữ ở mọi ngôn ngữ.
 export type MailArgs = {

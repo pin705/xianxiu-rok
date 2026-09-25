@@ -273,6 +273,11 @@ export const aidAt = (ps: Players, pid: number): [number, March][] =>
   )
 
 // Đội quay về tay không (mục tiêu không còn, vừa có khiên, điểm đầy quân)
+// Gỡ cảnh báo của một đội (trận đã giải / đội quay về)
+export const dropIncoming = (s: State, pid: number, id: number): State =>
+  s.incoming?.some(x => x.pid === pid && x.id === id)
+    ? { ...s, incoming: s.incoming.filter(x => !(x.pid === pid && x.id === id)) }
+    : s
 export const turnBack = (s: State, m: March, at: number): State => ({
   ...s,
   marches: s.marches.map(x =>

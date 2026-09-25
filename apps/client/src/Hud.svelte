@@ -59,6 +59,7 @@
     ally = null,
     me = null,
     onhelp,
+    onrecall = () => {},
   }: {
     game: State
     now: number
@@ -78,6 +79,7 @@
     ally?: AllyInfo | null // tiên minh của mình: nút giúp đỡ nổi (như bàn tay giúp của RoK)
     me?: number | null
     onhelp?: () => Promise<unknown>
+    onrecall?: (id: number) => void // gọi đội khai mỏ về (địch đang tới cướp khoáng)
   } = $props()
 
   const MASTER: Look = {
@@ -101,7 +103,12 @@
   const g = useGame()
   // đội địch đang kéo tới; các đội tới cùng lúc là một kết trận — một thẻ, đếm số đội
   const incoming = $derived.by(() => {
-    const live = (game.incoming ?? []).filter(x => x.at > now && game.shield <= now)
+    // cướp khoáng: khiên không che đội khai; đội đã gọi về (không còn khai ở đó) thì thôi báo
+    const digs = (i: number) =>
+      game.marches.some(m => m.target.kind === 'spot' && m.target.i === i && (m.mine?.end ?? 0) > now)
+    const live = (game.incoming ?? []).filter(
+      x => x.at > now && (x.spot === undefined ? game.shield <= now : digs(x.spot)),
+    )
     return live
       .filter((x, k) => live.findIndex(y => y.at === x.at) === k)
       .map(x => ({
@@ -328,13 +335,25 @@
     </ul>
     <!-- Tháp canh (như RoK): đội địch đang kéo tới — thẻ son ở mọi tab, bật khiên ngay tại đây -->
     {#each incoming as x (`${x.pid}:${x.id}`)}
+      {@const digger = game.marches.find(
+        m => m.target.kind === 'spot' && m.target.i === x.spot && m.mine && m.mine.end > now,
+      )}
       <div class="alarm" role="alert">
         <Icon name="swords" size={18} />
         <span class="grow"
-          ><b>{x.n > 1 ? L.pvp.incomingRally(x.foe, x.n) : L.pvp.incoming(x.foe)}</b>
-          <span class="t-num">{clock(x.at - now)}</span><br /><small>{L.pvp.incomingHint}</small></span
+          ><b
+            >{x.spot !== undefined
+              ? L.pvp.robIncoming(x.foe)
+              : x.n > 1
+                ? L.pvp.incomingRally(x.foe, x.n)
+                : L.pvp.incoming(x.foe)}</b
+          >
+          <span class="t-num">{clock(x.at - now)}</span><br /><small
+            >{x.spot !== undefined ? L.pvp.robIncomingHint : L.pvp.incomingHint}</small
+          ></span
         >
-        {#if ward}
+        {#if digger}<button class="shieldup" onclick={() => onrecall(digger.id)}>{L.world.recall}</button>{/if}
+        {#if ward && x.spot === undefined}
           <button
             class="shieldup"
             disabled={(game.frenzy ?? 0) > now}

@@ -525,7 +525,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chạm đội đang khai của người khác → Tấn công; hai bên nhận báo cáo trận.
 - **Vì sao giữ chân:** tạo rủi ro – phần thưởng cho khai mỏ xa, là "mồi" giao tranh nhỏ hằng ngày.
 - **Tu tiên hoá:** *Cướp khoáng* — tà tu (hoặc tông môn đối địch) phục kích đội khai linh khoáng.
-- **Game mình:** ❌ đội khai mỏ không bị đánh (chỉ điểm "chiếm" mới có trận với quân đang đóng). Đây là mục tiêu **đứng yên**, không vi phạm nguyên tắc "không chặn giữa đường" của PLAN.
+- **Game mình:** ✅ *Cướp khoáng* (`world/rob.ts`): chạm đội đang khai (trên bản đồ, hay danh sách "Đội đang khai" ở bảng mỏ) → chọn quân → đi thẳng tới mỏ; tới nơi mà đội kia còn khai thì giao chiến. Thắng lấy 50 % phần đã khai (không quá sức mang), đội kia về với phần còn lại, phần chưa khai trả về mỏ; thua thì đội kia khai tiếp. Điều kiện như cướp tông môn (tầng 6, chênh lực chiến, không đồng minh / minh ước), khiên không che đội ngoài bản đồ; khai trong lãnh thổ minh mình thì an toàn. Bên bị nhắm thấy cảnh báo Tháp canh có nút *Gọi về*; gọi kịp thì đội cướp về tay không (không chặn giữa đường).
 - **Ưu tiên:** P1 · **Công sức:** M (task `raidMine`: trận với đội đang khai, bên thắng lấy một phần `mine.amount`).
 
 ### 2.E Dịch chuyển và bảo vệ
@@ -880,7 +880,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | D2 | Gathering buffs & commanders | 🟡 không có bonus khai thác (thiếu khoá `gather`) | P1 | S |
 | D3 | Gem Deposits | ❌ | P2 | S |
 | D4 | Alliance Resource Points / Centers | ❌ | P2 | M |
-| D5 | Attacked while gathering | ❌ | P1 | M |
+| D5 | Attacked while gathering | ✅ Cướp khoáng (`world/rob.ts`) | P1 | M |
 | E1 | Beginner's Teleport | ✅ dời núi tân thủ | **P1** | S |
 | E2 | Random Teleport | ❌ | P2 | S |
 | E3 | Targeted Teleport | ❌ | P2 | S |
@@ -890,7 +890,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | E7 | Beginner's protection & Peace Shield | 🟡 khiên 72 giờ / 8 giờ; Hộ Sơn Phù 8/24/72 giờ trong túi đồ | P1 | S |
 | F1 | Expedition | 🟡 bí cảnh + Thông Thiên Tháp; thiếu sao, rương ngày | P2 | M / L |
 | F2 | Expedition Store | ❌ | P2 | S |
-| F3 | Lyceum of Wisdom | ❌ | P2 | M |
+| F3 | Lyceum of Wisdom | ✅ Vấn Đạo Đài | P2 | M |
 | F4 | Sunset Canyon | 🟡 cướp bất đồng bộ (có mất tài nguyên) | P2 | M |
 | F5 | Arms Training, Golden Kingdom… (PvE sự kiện) | 🟡 khung tháp có sẵn | P2 | S / M |
 | G1 | Tactical / Strategic View | ✅ (thiếu lớp chiến lược, zoom đặt sẵn) | P2 | S–M |

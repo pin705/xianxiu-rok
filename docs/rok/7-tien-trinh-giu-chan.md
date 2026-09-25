@@ -995,7 +995,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | B5 Crusader Achievements → Chiến tích mùa | ❌ | P2 | S |
 | C4 Cửa hàng VIP → cửa hàng Công đức / cống hiến | ⛔ VIP | P2 | S |
 | C5 Mysterious Merchant → **Vân Du Tán Tu** | ❌ (có Thương hội, chợ) | P2 | S |
-| C9 Peerless Scholar → Vấn Đạo Đài | ❌ | P2 | S |
+| C9 Peerless Scholar → Vấn Đạo Đài | ✅ | P2 | S |
 | C10 Kingdom Newspaper → Giới báo | ✅/🟡 biên niên giới | P2 | S |
 | C13 Power + mốc → mốc thế lực có quà | ✅ / 🟡 | P2 | S |
 | D4 Lohar's Trial → Yêu triều | 🟡 cuối tuần ×1,5, `sanYeu` đang làm | P2 | S |

@@ -22,10 +22,14 @@ export const remindNote =
   (k: Remind['k']) =>
   (L: Text): Note => ({ title: L.push.title, body: L.push.done[k], tag: 'done' })
 
-// Tháp canh: có đội vừa xuất quân cướp mình — báo sớm để kịp vào bật khiên
+// Tháp canh: có đội vừa xuất quân cướp mình (hay cướp đội khai mỏ) — báo sớm để kịp vào bật khiên / gọi đội về
 export const incomingNote =
-  (foe: string) =>
-  (L: Text): Note => ({ title: L.push.title, body: L.pvp.incoming(foe), tag: 'raid' })
+  ({ foe, spot }: { foe: string; spot?: number }) =>
+  (L: Text): Note => ({
+    title: L.push.title,
+    body: spot === undefined ? L.pvp.incoming(foe) : L.pvp.robIncoming(foe),
+    tag: 'raid',
+  })
 
 // Truyền âm tới lúc offline: ai nhắn, nhắn gì
 export const dmNote =

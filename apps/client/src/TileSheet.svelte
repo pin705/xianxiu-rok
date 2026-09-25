@@ -55,6 +55,7 @@
     TASK_OF,
     type AllyInfo,
     type Atlas,
+    type MapMarch,
     type MapSnap,
     type Task,
     type WorldAction,
@@ -135,11 +136,34 @@
     if (!pick) return
     way = 'solo'
     guarding = false
+    prey = null
   })
   const rallies = $derived(
     point && ally ? ally.rallies.filter(r => r.task !== 'raid' && r.i === point.i && r.at > now) : [],
   )
   const isAlly = (pid: number) => !!ally?.people.some(p => p.pid === pid)
+  // cướp khoáng: đội tông môn khác (không phải đồng minh) đang khai ở mỏ này; khai trong lãnh thổ minh mình thì an toàn
+  const digging = (m: MapMarch) => (m.dig ?? 0) > now && m.pid !== me && !isAlly(m.pid)
+  const diggers = $derived(
+    point?.kind === 'mine' && snap
+      ? snap.marches.filter(m => digging(m) && m.path.at(-1)?.x === point.x && m.path.at(-1)?.y === point.y)
+      : [],
+  )
+  const safeDig = (m: MapMarch) => {
+    const side = snap?.seats.find(s => s.pid === m.pid)?.aid
+    const end = m.path.at(-1)
+    return !!side && !!end && ownerAt(claims, end.x, end.y) === side
+  }
+  // đội đang xem: đang khai (cướp được), đang đi, đang về, hay đóng quân
+  const marchState = (m: MapMarch) => {
+    if ((m.dig ?? 0) > now) return L.world.digging(clock((m.dig ?? now) - now))
+    if (now < m.arriveAt) return `${L.map.out} ${clock(m.arriveAt - now)}`
+    return m.returnAt ? `${L.map.back} ${clock(m.returnAt - now)}` : L.world.stay
+  }
+  let prey = $state<MapMarch | null>(null)
+  async function rob(d: MapMarch, elder: ElderId, army: Army) {
+    if ((await send({ type: 'rob', pid: d.pid, id: d.id, elder, army })).ok) sent()
+  }
   const sent = () => {
     sfx('march')
     onclose()
@@ -209,6 +233,19 @@
     if (r.ok) sent()
   }
 </script>
+
+{#snippet robPick(d: MapMarch, len: number)}
+  <p class="t-tiny t-soft mt-3">{L.world.robHint}</p>
+  <ArmyPick
+    field
+    foe={d.might}
+    cta={L.world.rob}
+    time={time(len)}
+    timeOf={a => time(len, a)}
+    disabled={busy}
+    onsubmit={(e, a) => rob(d, e, a)}
+  />
+{/snippet}
 
 <Sheet
   open={!!pick}
@@ -332,7 +369,31 @@
         <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : L.err.far}</small>
       </div>
     </Card>
-    {#if mine}
+    {#if diggers.length && game.levels.chuDien >= PVP_HALL}
+      <Section title={L.world.diggers}>
+        {#each diggers as d (`${d.pid}:${d.id}`)}
+          {@const safe = safeDig(d)}
+          <div class="row">
+            <span class="grow stack" style:--gap="1px"
+              ><b class="t-small">{snap?.seats.find(s => s.pid === d.pid)?.name ?? ''}</b><small class="t-tiny t-soft"
+                >{safe
+                  ? L.world.robSafe
+                  : `${L.world.might}: ${num(d.might ?? 0)} · ${L.world.digging(clock((d.dig ?? now) - now))}`}</small
+              ></span
+            >
+            <Button
+              size="sm"
+              variant={prey?.pid === d.pid && prey.id === d.id ? 'gold' : 'danger'}
+              disabled={safe}
+              onclick={() => (prey = d)}>{L.world.rob}</Button
+            >
+          </div>
+        {/each}
+      </Section>
+    {/if}
+    {#if prey && r}
+      {@render robPick(prey, r.len)}
+    {:else if mine}
       <div class="mt-3">
         <Card tone="silk">
           <div class="row">
@@ -399,15 +460,19 @@
       />
     {/if}
   {:else if march}
+    {@const end = march.path.at(-1)}
+    {@const rr = end ? road(end) : null}
     <Card>
       <p class="t-small">
-        {march.foe ?? spotName(march.spot)} · {now < march.arriveAt
-          ? `${L.map.out} ${clock(march.arriveAt - now)}`
-          : march.returnAt
-            ? `${L.map.back} ${clock(march.returnAt - now)}`
-            : L.world.stay}
+        {march.foe ?? spotName(march.spot)} · {marchState(march)}
       </p>
     </Card>
+    {#if digging(march) && game.levels.chuDien >= PVP_HALL && rr}
+      {#if safeDig(march)}<p class="t-small t-soft mt-3">{L.world.robSafe}</p>{:else}{@render robPick(
+          march,
+          rr.len,
+        )}{/if}
+    {/if}
   {:else if site}
     {@const gift = (site.kind === 'village' ? VILLAGE_GIFTS : CAVE_GIFTS)[site.ring]}
     <Card>

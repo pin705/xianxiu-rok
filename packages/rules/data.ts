@@ -878,6 +878,10 @@ export const SHIELD_TIME = 8 * 3_600_000
 export const NEWBIE_SHIELD = 72 * 3_600_000
 export const REVENGE_TIME = 24 * 3_600_000
 export const FRENZY_TIME = 30 * 60_000 // cơn sát khí: vừa xuất quân cướp thì chừng ấy chưa dùng được Hộ Sơn Phù (War Frenzy)
+// Cướp khoáng (Attacked while gathering của RoK): đánh đội đang khai mỏ của tông môn khác — cùng điều kiện như cướp tông môn
+// (tầng, chênh lực chiến, đồng minh / minh ước) nhưng khiên không che đội ngoài bản đồ; khai trong lãnh thổ minh mình thì an toàn.
+// Thắng: lấy ROB_SHARE phần đội kia đã khai (không quá sức mang), đội kia về với phần còn lại, phần chưa khai trả về mỏ.
+export const ROB_SHARE = 0.5
 export const FOES_MAX = 5
 export const PVP_START = 1000 // điểm kiểu Elo
 export const ELO_K = 32

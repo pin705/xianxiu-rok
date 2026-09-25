@@ -14,6 +14,7 @@ import {
   SECTS,
   SUPPLY_HALL,
   QUIZ_KEY,
+  PVP_HALL,
   advance,
   dayOf,
   apply,
@@ -487,6 +488,34 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
         'khiên',
       ).includes(L.rank.open),
     )
+    // cướp khoáng: đội khai của mình bị nhắm — cảnh báo hiện cả khi đang có khiên, kèm nút gọi đội về
+    const gather = {
+      target: { kind: 'spot' as const, i: 3 },
+      task: 'gather' as const,
+      seed: 1,
+      startAt: victim.time - 9e4,
+    }
+    const digging: State = {
+      ...victim,
+      marches: [
+        {
+          ...gather,
+          id: 77,
+          elder: 'thanhPhong',
+          army: { kiem1: 10 },
+          arriveAt: victim.time - 1000,
+          returnAt: victim.time + 3_600_000,
+          mine: { end: victim.time + 1_800_000, amount: 500, res: 'linhThach' },
+        },
+      ],
+      incoming: [{ id: 9, pid: 2, foe: 'Hắc Sơn', at: victim.time + 60_000, spot: 3 }],
+    }
+    const alarm = paint(
+      'Hud',
+      { game: digging, now: victim.time, tab: 'banDo', gain: null, onclaim: noop, onquest: noop, onbuilder: noop },
+      'bị cướp khoáng',
+    )
+    assert.ok(alarm.includes(L.pvp.robIncoming('Hắc Sơn')) && alarm.includes(L.world.recall), 'cảnh báo + gọi về')
     paint('Replay', { report: rep, onclose: noop, onrevenge: noop, now: rep.at + 1000 }, 'bị cướp')
     // Thông Thiên Tháp: đánh một tầng ở cuối game → chiến báo loại tháp phát lại được, bản đồ có nút tháp
     const climbed = run(
@@ -882,6 +911,41 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
         { game, now, info, atlas: a, me: 1, snap, pick, onclose: noop, onraid: noop, send: async () => ({ ok: true }) },
         `chạm ${pick.kind} ${JSON.stringify(pick)}`,
       )
+    // cướp khoáng: đội tông môn khác đang khai ở mỏ → danh sách + nút cướp; chạm đội đó → thấy đang khai
+    const dig = {
+      pid: 2,
+      id: 5,
+      startAt: now - 60_000,
+      arriveAt: now - 1000,
+      returnAt: now + 3_600_000,
+      path: [{ x: mine.x - 3, y: mine.y }, mine],
+      spot: 'mine',
+      dig: now + 1_800_000,
+      might: 1234,
+    }
+    const digSnap = { ...snap, marches: [...snap.marches, dig] }
+    const sheetAt = (pick: object) =>
+      paint(
+        'TileSheet',
+        {
+          game,
+          now,
+          info,
+          atlas: a,
+          me: 1,
+          snap: digSnap,
+          pick,
+          onclose: noop,
+          onraid: noop,
+          send: async () => ({ ok: true }),
+        },
+        `cướp khoáng: chạm ${JSON.stringify(pick)}`,
+      )
+    assert.equal(sheetAt({ kind: 'point', i: mine.i }).includes(L.world.diggers), game.levels.chuDien >= PVP_HALL)
+    assert.ok(
+      sheetAt({ kind: 'march', pid: 2, id: 5 }).includes(L.world.digging('|').split('|')[0]),
+      'đội đang khai, không phải đang về',
+    )
     // trong minh, là minh chủ: chia sẻ toạ độ vào chat và đặt / gỡ dấu cho cả minh
     const ally = {
       id: 1,

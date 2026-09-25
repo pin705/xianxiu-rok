@@ -567,6 +567,7 @@
       {ally}
       {me}
       onhelp={() => sendWorld({ type: 'helpAll' })}
+      onrecall={id => sendWorld({ type: 'recall', id })}
     />
     <Daily open={dailyOpen} onclose={() => (dailyOpen = false)} />
     <Events open={festsOpen} onclose={() => (festsOpen = false)} />

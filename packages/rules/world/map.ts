@@ -2,6 +2,8 @@
 import { type BlessKey } from '../data.ts'
 import { type Pos } from '../atlas.ts'
 import { power } from '../core/stats.ts'
+import { might } from '../combat.ts'
+import { marchSide } from '../core/battle.ts'
 import { type Atlas } from '../atlas.ts'
 import { TERR_SEAT } from '../data.ts'
 import {
@@ -50,6 +52,8 @@ export type MapMarch = {
   returnAt: number
   foe?: string
   spot?: string
+  dig?: number // đang khai mỏ tới lúc này (cướp khoáng được)
+  might?: number // lực chiến đội đang khai
 }
 // Điểm khác mặc định: phe giữ (tên minh/tông môn), số đội đóng, mỏ còn bao nhiêu, yêu vương còn máu, lúc hồi
 // side: phe giữ (> 0: tiên minh — mốc lãnh thổ)
@@ -106,6 +110,7 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
           returnAt: m.returnAt,
           ...(m.foe && { foe: m.foe }),
           ...(m.spot && { spot: m.spot }),
+          ...(m.mine && m.mine.end > now && { dig: m.mine.end, might: might(marchSide(s, m)) }),
         })
   }
   const spots: SpotView[] = []

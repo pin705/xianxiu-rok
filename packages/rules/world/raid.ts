@@ -37,12 +37,6 @@ import {
 } from './base.ts'
 import { addArmy, combine, defense, guardOf, raidError, split, carryOf, flipRounds } from './fight.ts'
 
-// Gỡ cảnh báo của một đội (trận đã giải / đội quay về)
-export const dropIncoming = (s: State, pid: number, id: number): State =>
-  s.incoming?.some(x => x.pid === pid && x.id === id)
-    ? { ...s, incoming: s.incoming.filter(x => !(x.pid === pid && x.id === id)) }
-    : s
-
 export type RaidAction =
   | { type: 'raid'; pid: number; elder: ElderId; army: Army }
   | { type: 'raidRally'; pid: number; wait: 0 | 1 | 2; elder: ElderId; army: Army } // mở kết trận công sơn

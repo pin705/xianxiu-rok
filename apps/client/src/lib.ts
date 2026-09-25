@@ -193,10 +193,11 @@ export function reportName(r: Report) {
 // Trận PvP nhìn từ bên thủ: đẩy lui được, hay bị cướp
 export const defended = (r: Report) => (r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''))
 // Đội đang làm gì: tụ kiếp vân, đóng quân, khai mỏ, đang đi tới, đang về
-export function marchDoing(m: Pick<March, 'target' | 'stay' | 'mine' | 'arriveAt'>, now: number) {
+export function marchDoing(m: Pick<March, 'target' | 'stay' | 'mine' | 'arriveAt' | 'task'>, now: number) {
   if (m.target.kind === 'trib') return L.trib.gather
   if (m.stay) return L.world.stay
   if (m.mine && m.mine.end > now) return L.world.gathering
+  if (m.task === 'rob' && now < m.arriveAt) return L.world.robbing
   return now < m.arriveAt ? L.map.out : L.map.back
 }
 export const marchName = (m: { target: { kind: string; i: number }; foe?: string; spot?: string }) =>

@@ -7,6 +7,7 @@ import { tribEnd } from '../sect/trib.ts'
 import {
   aidAt,
   allyOf,
+  dropIncoming,
   freshWorld,
   turnBack,
   withMarch,
@@ -16,8 +17,9 @@ import {
   type World,
 } from './base.ts'
 import { unsold } from './market.ts'
-import { dropIncoming, raid } from './raid.ts'
+import { raid } from './raid.ts'
 import { spotArrive } from './arrive.ts'
+import { robArrive } from './rob.ts'
 import { razeArrive } from './flags.ts'
 import { ruinClose } from './ruins.ts'
 import { storeStep } from './storehouse.ts'
@@ -83,6 +85,12 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     }
     if (m.target.kind === 'flag') {
       const r = razeArrive(view(), w, [pid, att, m], at)
+      for (const [k, v] of r.changed) changed.set(k, v)
+      w = r.world
+      continue
+    }
+    if (m.task === 'rob') {
+      const r = robArrive(view(), w, [pid, att, m], at, map) // cướp khoáng
       for (const [k, v] of r.changed) changed.set(k, v)
       w = r.world
       continue

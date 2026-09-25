@@ -338,7 +338,7 @@ export class World {
   // Offline mà có đội kéo tới / bị cướp / kiếp vân vừa giáng: báo qua Web Push
   private notify(slot: Slot, rep: Report[], warn: NonNullable<State['incoming']>) {
     if (!this.env.push || this.npc.has(slot.id)) return
-    for (const x of warn) this.env.push(slot.id, incomingNote(x.foe))
+    for (const x of warn) this.env.push(slot.id, incomingNote(x))
     for (const r of rep) {
       const note = reportNote(r)
       if (note) this.env.push(slot.id, note)

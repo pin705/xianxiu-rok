@@ -223,7 +223,11 @@
     {L.army.verdict[verdict]} · {L.army.chance(Math.round(p * 100))}
   </p>
 {:else}
-  <p class="center t-small mt-4"><span class="t-soft">{L.army.might}:</span> <b class="t-num">{num(ours)}</b></p>
+  <p class="center t-small mt-4">
+    <span class="t-soft">{L.army.might}:</span> <b class="t-num">{num(ours)}</b>
+    <!-- chỉ biết lực chiến bên kia (không dò được đội hình): hiện cạnh nhau, không đoán tỉ lệ thắng -->
+    {#if foe !== undefined}· <span class="t-soft">{L.army.theirs}:</span> <b class="t-num">{num(foe)}</b>{/if}
+  </p>
 {/if}
 <!-- yếu thế mà vẫn còn quân: chỉ đường đi tuyển thêm (không quân thì nút đã có ở trên) -->
 {#if over}<p class="center t-small t-bad mt-2">{L.army.over(num(cap))}</p>{/if}
