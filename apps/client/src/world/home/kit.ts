@@ -1,6 +1,6 @@
 // Phần dùng chung của cảnh núi: sprite cộng sáng, kiểu slot / hiệu ứng, đặt hình vẽ tay, dải sương.
 import { Container, Sprite, TilingSprite, type Texture } from 'pixi.js'
-import { PIGMENT as C, mistTex } from '@rok/art'
+import { PIGMENT as C, artOf, mistTex } from '@rok/art'
 import { hex, sprite, texOf, type Hue, type Painted } from '../stage'
 import type { Home } from '../home'
 
@@ -47,7 +47,8 @@ export function mist(h: Home, y: number, tall: number, speed: number, alpha: num
   })
   m.position.set(-(w - 400) / 2, y - tall * 0.8)
   m.tileScale.set(1.1, (tall * 1.6) / 96)
-  m.alpha = alpha
+  // núi vẽ tay đã có chân mờ vào sương: phủ thêm dải sương đậm như bản vẽ code thì cả cảnh đục
+  m.alpha = artOf('ledge:0')?.img ? alpha * 0.45 : alpha
   h.land.addChild(m)
   h.anims.push((_, dt) => (m.tilePosition.x += speed * dt))
 }

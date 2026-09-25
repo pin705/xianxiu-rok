@@ -797,7 +797,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 Thiên Đạo Biên Niên 12 chương (hạn theo ngày mùa); chưa mở khoá theo chương | **P0** | M |
 | A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | ✅ Công Huân cá nhân (25/09) + điểm mùa theo phe + chiến công | P1 | S |
 | A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ✅ (25/09) | P1 | S–M |
-| A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | 🟡 Chinh Chiến Công Tích (6 mốc Công Huân); chưa có Phi Thăng Tệ, Thiên Môn Thương Điếm | P1 | M |
+| A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | ✅ mốc Công Huân + Phi Thăng Tệ + cửa hàng | P1 | M |
 | A9 | Hall of Heroes | Anh Linh Điện | ❌ | P2 | S |
 | A10 | Past Glory | Tu Bổ Thiên Môn | ✅ chương biên niên `repair` | P1 (trong A5) | S |
 | A11 | Coalition, Camp, Camp Treaty | Minh Ước, Hiệp Ước Thiên Môn | 🟡 minh ước bất xâm phạm (hai minh); chưa chung kết trận / viện binh | P2 | M |

@@ -17,7 +17,12 @@ import {
   type Asset,
 } from '@rok/art'
 
-export const DPR = Math.min(globalThis.devicePixelRatio || 1, 2)
+// Độ phân giải vẽ cảnh theo màn hình, tối đa 3 (iPhone): cảnh sắc như chữ HTML bên cạnh — cảnh 2x trên màn 3x bị phóng 1,5 lần
+// trông nhoè. Máy ít nhân (dưới 6) giữ 2 cho nhẹ.
+export const DPR = Math.min(
+  globalThis.devicePixelRatio || 1,
+  (globalThis.navigator?.hardwareConcurrency ?? 4) >= 6 ? 3 : 2,
+)
 // Cảnh rộng 400 DU. Màn hẹp: cả bề ngang, tối đa bề rộng cột (--col: 480px điện thoại, 620px máy tính bảng).
 // Desktop (theme.css đặt --rail): vùng bên phải cột trái, tối đa WIDE px. Số đọc từ CSS để cảnh và HTML luôn khớp.
 export const WIDE = 600

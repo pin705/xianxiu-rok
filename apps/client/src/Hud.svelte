@@ -1074,6 +1074,15 @@
   .run.idle b {
     color: var(--cinnabar);
   }
+  /* màn hẹp: nhà rảnh chỉ còn icon viền son (chữ "Rảnh" nằm trong aria-label) — ba viên cùng ghi "Rảnh" đè lên cảnh, rối mắt */
+  @media (max-width: 1023px), (max-height: 599px) {
+    .run.idle {
+      padding: 4px 7px;
+    }
+    .run.idle b {
+      display: none;
+    }
+  }
   @keyframes nudge {
     0%,
     70%,

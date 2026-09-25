@@ -298,6 +298,21 @@ const elders = {
 } satisfies Record<string, ElderDef>
 export type ElderId = keyof typeof elders
 export const ELDERS: Record<ElderId, ElderDef> = elders
+// Phẩm trưởng lão (độ hiếm 4 bậc màu của RoK — chỉ để hiện, theo độ khó thu nhận): 2 Tinh (lam) · 3 Huyền (tím) · 4 Tiên (vàng)
+export const RARITY: Record<ElderId, 1 | 2 | 3 | 4> = {
+  thanhPhong: 2,
+  thachKien: 2,
+  nhuYen: 2,
+  loiChan: 3,
+  vanHac: 3,
+  hanBang: 3,
+  macSau: 3,
+  toMiNuong: 3,
+  bachVoNhai: 4,
+  hoacThienCuong: 4,
+  huyenMinh: 4,
+  diepCoThanh: 4,
+}
 export const FIRST_ELDER: ElderId = 'thanhPhong'
 
 // Thiên phú: mỗi 5 cấp trưởng lão một điểm, chia vào 3 nhánh (công · thể · đạo), mỗi nhánh tối đa TALENT_MAX.

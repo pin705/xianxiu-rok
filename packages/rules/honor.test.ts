@@ -60,7 +60,7 @@ test('Phi Thăng Tệ: mỗi COIN_PER Công Huân kiếm được thành một �
   assert.ok((r.state.items.kimDuyen ?? 0) > (s.items.kimDuyen ?? 0))
   // hết mùa: Công Huân về 0, Công Huân cả đời (và Phi Thăng Tệ) còn nguyên
   const ps: Players = new Map([[1, r.state]])
-  const end = endSeason(ps, freshWorld(), atlas(7), T0, 1)
+  const end = endSeason(ps, freshWorld(), { atlas: atlas(7), phase: 3 }, T0, 1, new Set())
   const after = end.changed.get(1) ?? r.state
   assert.equal(after.honor ?? 0, 0)
   assert.equal(coins(after), coins(r.state), 'tiền mang sang mùa sau')

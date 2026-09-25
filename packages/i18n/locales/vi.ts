@@ -155,6 +155,7 @@ export const vi = {
   level: (n: number) => `Tầng ${n}`,
   lv: (n: number) => `Cấp ${n}`,
   power: 'Thế lực',
+  rarity: ['', 'Phàm phẩm', 'Tinh phẩm', 'Huyền phẩm', 'Tiên phẩm'], // phẩm trưởng lão (RARITY)
   // bảng Thế lực: chia theo nguồn, mỗi nguồn một nút tăng
   powerSheet: {
     sub: 'Thế lực là tổng của năm nguồn — chạm Tăng để tới chỗ nâng',

@@ -321,11 +321,13 @@
     width: min(92vw, calc(var(--col) - 24px));
     padding: 6px 12px;
     font-size: 13px;
-    color: var(--paper);
+    color: var(--text);
     text-align: left;
     white-space: nowrap;
-    background: color-mix(in srgb, var(--ink) 72%, transparent);
-    border: 0;
+    /* nền giấy mờ thay viên mực đen: hoà vào tranh thủy mặc, không thành vệt tối đè ngang cảnh */
+    background: color-mix(in srgb, var(--silk) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--paper3) 80%, transparent);
+    box-shadow: 0 1px 4px rgb(var(--shade) / 0.15);
     border-radius: 999px;
     translate: -50% 0;
     cursor: pointer;

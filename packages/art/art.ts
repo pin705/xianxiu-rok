@@ -13,6 +13,8 @@ export type ArtEntry = {
   pack?: string // gói theo cảnh (tools/art pipeline.PACKS) — nạp cùng nhau qua artPack; không có: trình duyệt tự tải khi cần
   page?: string // trang atlas chứa ảnh này; frame = [x, y, rộng, cao] trên trang (px ảnh)
   frame?: readonly [number, number, number, number]
+  // bản HD (màn to độ nét cao, xem main.ts): trang atlas HD + khung, hoặc file lẻ khi quá khổ
+  hd?: { page?: string; frame?: readonly [number, number, number, number]; src?: string }
   img?: HTMLImageElement // ảnh đã tải (trang atlas nếu có)
 }
 export type ArtManifest = Record<string, ArtEntry>

@@ -823,7 +823,12 @@ test('tiên minh, chat', async () => {
       paint('Market', { game: s, api, send: async () => ({ ok: true }) }, `${label}, Phường thị`)
       social.market = false
       social.honor = true
-      const hon = paint('Honor', { game: { ...s, honor: 420, honorGot: 1 }, api }, `${label}, Công Huân`)
+      const hon = paint(
+        'Honor',
+        { game: { ...s, honor: 420, honorGot: 1, honorAll: 5000 }, api },
+        `${label}, Công Huân`,
+      )
+      assert.ok(hon.includes(L.honor.shop) && hon.includes(L.honor.coins('250')), 'Thiên Môn Thương Điếm, Phi Thăng Tệ')
       assert.ok(hon.includes(L.honor.mine('420')) && hon.includes(L.honor.claim), 'điểm của mình + mốc nhận được')
       social.honor = false
       social.drill = true

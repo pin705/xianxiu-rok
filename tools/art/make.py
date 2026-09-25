@@ -97,7 +97,7 @@ def props():
     for key in P.PROP_KEYS.get(name, []):
       try:
         pim, _ = X.proc(key)
-        X.save(key, X.fit_prop(im, pim), 'scene', tex=True)
+        X.save(key, X.fit_prop(im, pim), 'scene', tex=True, hd=X.fit_prop(im, pim, k=3))
       except (KeyError, FileNotFoundError):  # ảnh HTML (hoa sen, vòng sáng) không có trong cache texture: ghép theo hộp trong keys.json
         k = X.KEYS.get(key)
         if k and k['kind'] == 'dom': X.save(key, X.fit_square(im, X.dom_side(key), 0.03, k['w'] / k['h']), 'scene')
@@ -105,7 +105,7 @@ def props():
 def troops():
   ref_im, _ = X.proc('sold:kiem:0:3')  # mọi quân cùng một hộp
   for key, im in sheets(P.TROOP_SHEETS, 'tiny chibi battle troops').items():
-    X.save(key, X.fit_prop(im, ref_im), 'battle', tex=True)
+    X.save(key, X.fit_prop(im, ref_im), 'battle', tex=True, hd=X.fit_prop(im, ref_im, k=3))
 
 def beasts():
   run([('sheet-beasts', P.sheet(P.BEAST_SHEET, 'battle beasts', P.BEAST_NOTE), [X.ref(ICONS)], '1:1', '2K')])
@@ -114,7 +114,7 @@ def beasts():
   X.key_magenta(X.raw('sheet-beasts'), k)
   ref_im, _ = X.proc('beast:the:#a8784a')  # ba hệ cùng một hộp
   for key, im in X.cut_sheet(k, P.BEAST_SHEET).items():
-    X.save(key, X.fit_prop(im, ref_im, 1.0), 'battle', tex=True)
+    X.save(key, X.fit_prop(im, ref_im, 1.0), 'battle', tex=True, hd=X.fit_prop(im, ref_im, 1.0, k=3))
 
 # ---------- da giao diện ----------
 def skins():
@@ -159,34 +159,39 @@ def kit():
 
 def clouds():
   """mây: bảng 3×3 → 'fog:*0'…, 'cloud:*0'…, 'thunder:*0'… — khung 2:1, đáy mây ở 88% chiều cao (như neo của cloud() vẽ bằng code)"""
-  for key, im in sheets({'C1': P.CLOUD_SHEET}, 'cloud shapes', P.CLOUD_NOTE).items():
-    W, H = 512, 256
+  def frame(im, W, H):
     s = min(W * 0.92 / im.width, H * 0.84 / im.height)
     a = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS)
     out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     out.alpha_composite(a, ((W - a.width) // 2, round(H * 0.88) - a.height))
-    X.save(key, out, 'scene', tex=True)
+    return out
+  for key, im in sheets({'C1': P.CLOUD_SHEET}, 'cloud shapes', P.CLOUD_NOTE).items():
+    X.save(key, frame(im, 512, 256), 'scene', tex=True, hd=frame(im, 1024, 512))
 
 # ---------- vẽ đè giữ hình ----------
-def trace(keys, k=1.5, sub='scene'):
+def trace(keys, k=1.5, sub='scene', res='2K'):
   metas = json.load(open(os.path.join(X.WORK, 'proc', 'meta.json')))
   keys = [key for key in keys if key in metas]
   pads = {key: X.padded(os.path.join(X.WORK, 'proc', X.fname(key) + '.png'), X.PAPER, 'trace') for key in keys}
-  run([(f'trace-{X.fname(key)}', P.TRACE.format(what=P.TRACE_WHAT[key.split(':')[0]]), [pads[key][0], X.ref(STYLE)], pads[key][1], '1K') for key in keys])
+  run([(f'trace-{X.fname(key)}', P.TRACE.format(what=P.TRACE_WHAT[key.split(':')[0]]), [pads[key][0], X.ref(STYLE)], pads[key][1], res) for key in keys])
   for key in keys:
-    if os.path.exists(X.raw(f'trace-{X.fname(key)}')):
+    src = X.raw(f'trace-{X.fname(key)}')
+    if os.path.exists(src):
       pim, _ = X.proc(key)
-      X.save(key, X.fit_trace(X.raw(f'trace-{X.fname(key)}'), pads[key][2], pim, k), sub, tex=True)
+      k_hd = max(k, min(k * 2, X.raw_k(src, pads[key][2], pim)))  # bản HD: gấp đôi, không vượt độ phân giải thật của ảnh vẽ
+      X.save(key, X.fit_trace(src, pads[key][2], pim, k), sub, tex=True, hd=X.fit_trace(src, pads[key][2], pim, k_hd))
 
 def scenery():
   metas = json.load(open(os.path.join(X.WORK, 'proc', 'meta.json')))
-  # mảng mực mềm: 2 px/DU đủ (k=1 trên bản code 2x), nhẹ hơn 3x khoảng 55%
-  trace([key for key in metas if key.split(':')[0] in ('peak', 'ledge', 'stair') and (not args[1:] or key in args[1:])], 1.0)
+  # vẽ ở 2K (ảnh 1K chỉ được 2–4 px/DU, desktop nhoè); bản thường 3 px/DU (k=1,5 trên bản code 2x), bản HD tới 6
+  trace([key for key in metas if key.split(':')[0] in ('peak', 'ledge', 'stair') and (not args[1:] or key in args[1:])], 1.5)
 
 def map_():
-  trace(['map'], 0.75, 'map')  # 1,5 px/DU: nền giấy mờ, không cần nét hơn
+  trace(['map'], 0.75, 'map', '4K')  # 4K: bản đồ cao 1000 DU, desktop cần ~4 px/DU; bản thường 1,5 px/DU
   # tông môn trên bản đồ vùng: cùng hộp Chủ điện bậc 1, dùng tranh Chủ điện bậc 4 (mái lam) như bản vẽ code
-  X.save('map:home', X.fit_building('chuDien', 1, os.path.join(X.ART, 'bld', 'bld-chuDien-4.webp')), 'map', tex=True)
+  hd4 = os.path.join(X.WORK, 'hd', 'bld', 'bld-chuDien-4.webp')
+  X.save('map:home', X.fit_building('chuDien', 1, os.path.join(X.ART, 'bld', 'bld-chuDien-4.webp')), 'map', tex=True,
+         hd=X.fit_building('chuDien', 1, hd4 if os.path.exists(hd4) else os.path.join(X.ART, 'bld', 'bld-chuDien-4.webp'), S=X.S_HD))
 
 def far():
   """dải núi xa 2600 DU: cắt 3 khúc chồng nhau, vẽ đè từng khúc, ghép lại mờ dần ở chỗ chồng, lấy alpha bản code"""
@@ -220,17 +225,21 @@ def fields():
   wild = X.raw('trace-field-wild')
   pim, _ = X.proc('field:wild:400x866')
   pad = X.padded(os.path.join(X.WORK, 'proc', 'field-wild-400x866.png'), X.PAPER, 'trace')
-  run([('trace-field-wild', P.TRACE.format(what='a battlefield background') + ' ' + P.FIELD_THEMES['wild'] + '.', [pad[0], X.ref(STYLE)], pad[1], '1K')])
+  run([('trace-field-wild', P.TRACE.format(what='a battlefield background') + ' ' + P.FIELD_THEMES['wild'] + '.', [pad[0], X.ref(STYLE)], pad[1], '2K')])
   if not os.path.exists(wild): return
-  base = X.uncrop(Image.open(wild).convert('RGB'), pad[2]).resize((600, 1299), Image.LANCZOS)  # 1,5 px/DU: nền sau quân, không cần nét hơn
+  full = X.uncrop(Image.open(wild).convert('RGB'), pad[2])
+  hd = full.resize((min(1200, full.width), round(min(1200, full.width) * 866 / 400)), Image.LANCZOS)  # HD tới 3 px/DU
+  base = full.resize((600, 1299), Image.LANCZOS)  # 1,5 px/DU: nền sau quân
   base_path = os.path.join(X.WORK, 'ref', 'field-wild-painted.png')
-  base.save(base_path)
-  X.save('field:wild', base.convert('RGBA'), 'battle', tex=True)
+  hd.save(base_path)
+  X.save('field:wild', base.convert('RGBA'), 'battle', tex=True, hd=hd.convert('RGBA'))
   themes = [t for t in P.FIELD_THEMES if t != 'wild' and (not args[1:] or t in args[1:])]
-  run([(f'field-{t}', P.field_theme(t), [base_path, X.ref(STYLE)], '9:16', '1K') for t in themes])
+  run([(f'field-{t}', P.field_theme(t), [base_path, X.ref(STYLE)], '9:16', '2K') for t in themes])
   for t in themes:
     if os.path.exists(X.raw(f'field-{t}')):
-      X.save(f'field:{t}', Image.open(X.raw(f'field-{t}')).convert('RGBA').resize((600, 1299), Image.LANCZOS), 'battle', tex=True)
+      im = Image.open(X.raw(f'field-{t}')).convert('RGBA')
+      hw = min(1200, im.width)
+      X.save(f'field:{t}', im.resize((600, 1299), Image.LANCZOS), 'battle', tex=True, hd=im.resize((hw, round(hw * 866 / 400)), Image.LANCZOS))
 
 # ---------- vân giấy, nét cọ ----------
 def paper():

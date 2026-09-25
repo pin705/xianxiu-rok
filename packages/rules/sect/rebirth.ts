@@ -7,7 +7,8 @@ import { IDS } from '../core/util.ts'
 import { BUILDINGS, REBIRTH_HALL, REBIRTH_HEAD, REBIRTH_HEAD_MAX, type BuildingId } from '../data.ts'
 
 // Luân hồi n kiếp: công trình về căn cơ, tài nguyên / đệ tử / hàng đợi / tiến độ bản đồ / nhiệm vụ chính / độ kiếp làm lại.
-// Giữ: trưởng lão, thiên phú, công pháp, pháp bảo, đan (và việc đang luyện), tháp, danh hiệu, thư, nhiệm vụ ngày / tuần / sự kiện
+// Giữ: trưởng lão, thiên phú, công pháp, pháp bảo, đan (và việc đang luyện), tháp, danh hiệu, thư, nhiệm vụ ngày / tuần / sự kiện,
+// Phi Thăng Tệ, tiến độ Tông vụ, tàn quyển / yêu cốt
 function reborn(s: State, t: number, n: number): State {
   const fresh = newGame(t, s.name)
   return {
@@ -34,6 +35,12 @@ function reborn(s: State, t: number, n: number): State {
     blocks: s.blocks,
     ascended: s.ascended,
     tower: s.tower, // kỷ lục tháp giữ qua luân hồi (thưởng chỉ lần đầu nên không cày lại được)
+    // Phi Thăng Tệ mang sang mùa sau; Tông vụ giữ tiến độ (không nhận lại quà các tầng đã qua); tàn quyển, yêu cốt là vật liệu
+    ...(s.honorAll !== undefined && { honorAll: s.honorAll }),
+    ...(s.coinSpent !== undefined && { coinSpent: s.coinSpent }),
+    ...(s.side && { side: s.side }),
+    ...(s.frag !== undefined && { frag: s.frag }),
+    ...(s.bones !== undefined && { bones: s.bones }),
   }
 }
 

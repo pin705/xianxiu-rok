@@ -2,6 +2,7 @@
   // Trang Môn hạ: trưởng lão (trụ cột "truyền thừa của riêng mình": hành, pháp bảo, thiên phú), đệ tử theo hệ × bậc, thương binh.
   import {
     ELDERS,
+    RARITY,
     ELDER_IDS,
     ELDER_MAX,
     GEAR,
@@ -84,7 +85,9 @@
             <span class="row">
               <Portrait look={LOOK[e]} size={50} dim={!has} />
               <span class="grow stack" style:--gap="2px">
-                <b class="t-small">{has ? L.elders[e].name : '???'}</b>
+                <b class="t-small rar{RARITY[e]}"
+                  >{has ? L.elders[e].name : '???'} <small class="t-tiny">{L.rarity[RARITY[e]]}</small></b
+                >
                 {#if has}
                   <small class="t-tiny t-soft"
                     >{L.elders[e].title} · {L.units[ELDERS[e].type]} · {L.el[ELDERS[e].el]}</small
@@ -168,7 +171,7 @@
   }}
   title={open ? L.elders[open].name : ''}
   sub={open
-    ? `${L.elders[open].title} · ${L.units[ELDERS[open].type]} · ${L.el[ELDERS[open].el]} (${L.overcomes(ELDERS[open].el)})`
+    ? `${L.rarity[RARITY[open]]} · ${L.elders[open].title} · ${L.units[ELDERS[open].type]} · ${L.el[ELDERS[open].el]} (${L.overcomes(ELDERS[open].el)})`
     : ''}
   lore={open ? L.elders[open].lore : ''}
 >
@@ -320,6 +323,16 @@
 </Sheet>
 
 <style>
+  /* phẩm trưởng lão: lam · tím · vàng */
+  .rar2 {
+    color: #2f6aa8;
+  }
+  .rar3 {
+    color: #7a47a6;
+  }
+  .rar4 {
+    color: var(--gold-d, #9a6b16);
+  }
   .table {
     display: grid;
     grid-template-columns: 1.7fr repeat(var(--n), 1fr);

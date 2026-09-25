@@ -1,6 +1,6 @@
 // Núi: núi xa (thị sai), mây tường vân, hạc, núi chính, các tầng núi xen sương, bậc đá, thác nước, tiền cảnh.
 import { Container, TilingSprite, type Texture } from 'pixi.js'
-import { PIGMENT as C, cloud, crane, fallTex, farRange, ledge, mix, peak, pine, rock, stairway } from '@rok/art'
+import { PIGMENT as C, artOf, cloud, crane, fallTex, farRange, ledge, mix, peak, pine, rock, stairway } from '@rok/art'
 import { LEDGES, MISTS, PINES, STAIRS } from '../layout'
 import { painted, sprite, texOf } from '../stage'
 import type { Home } from '../home'
@@ -17,6 +17,7 @@ export function buildMountains(h: Home, glowT: Texture) {
   ]
   ranges.forEach((p, k) => {
     const c = new Container()
+    if (artOf('far1')?.img) c.alpha = 0.7 // dải núi xa vẽ tay đậm nét hơn bản code: lùi ra xa cho cảnh trong
     c.addChild(sprite(p, -1100, k ? 410 : 330))
     h.far.push(c)
     h.land.addChild(c)

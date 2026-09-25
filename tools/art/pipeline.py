@@ -12,6 +12,7 @@ WORK = os.path.join(HERE, '.work')                              # ảnh thô, �
 ANCHORS = os.path.join(HERE, 'anchors')                         # ảnh mẫu phong cách (commit)
 PAPER = (232, 222, 196, 255)
 S = 3  # px mỗi DU của tranh xuất ra (màn 3x vẫn nét)
+S_HD = 6  # bản HD cho màn to độ nét cao (desktop Retina: cảnh ~2,85 px CSS/DU × 2) — chỉ máy cần mới tải (main.ts)
 Q = 82  # chất lượng WebP: 90 nặng hơn ~40% mà mắt không thấy khác trên nét thủy mặc
 KEYS = json.load(open(os.path.join(HERE, 'keys.json')))
 RATIOS = {'1:1': 1, '3:2': 1.5, '4:3': 4 / 3, '16:9': 16 / 9, '2:3': 2 / 3, '3:4': 3 / 4, '9:16': 9 / 16}
@@ -131,17 +132,21 @@ def manifest():
     p = os.path.join(ART, 'manifest.json')
     _manifest = json.load(open(p)) if os.path.exists(p) else {}
     for e in _manifest.values():  # bỏ mã phiên bản (?v=) — write_manifest tính lại theo nội dung file
-      for f in ('src', 'page'):
-        if f in e: e[f] = e[f].split('?')[0]
+      for o in (e, e.get('hd') or {}):
+        for f in ('src', 'page'):
+          if f in o: o[f] = o[f].split('?')[0]
   return _manifest
 
-def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP'):
+def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP', hd=None):
   """ghi ảnh vào public/art/<sub>/ và dòng manifest cho key (+ các key dùng chung file). tex: texture cảnh (bộ nạp giải mã sẵn)."""
   name = fname(key) + ('.webp' if fmt == 'WEBP' else '.png')
   os.makedirs(os.path.join(ART, sub), exist_ok=True)
   im.save(os.path.join(ART, sub, name), fmt, **({'quality': Q, 'method': 6} if fmt == 'WEBP' else {}))
   for k in (key, *aliases):
     manifest()[k] = {'src': f'{sub}/{name}', **({'tex': True} if tex else {}), **(extra or {})}
+  if hd is not None:  # bản HD: nguồn cho atlas HD (pack_all), không nằm trong public
+    os.makedirs(os.path.join(WORK, 'hd', sub), exist_ok=True)
+    hd.save(os.path.join(WORK, 'hd', sub, name), fmt, **({'quality': Q, 'method': 6} if fmt == 'WEBP' else {}))
   return name
 
 def write_manifest():
@@ -154,7 +159,11 @@ def write_manifest():
       path = os.path.join(ART, src)
       vs[src] = hashlib.sha1(open(path, 'rb').read()).hexdigest()[:10] if os.path.exists(path) else '0'
     return f'{src}?v={vs[src]}'
-  out = {k: {**e, **{f: ver(e[f]) for f in ('src', 'page') if f in e}} for k, e in sorted(manifest().items())}
+  def vers(e):
+    o = {**e, **{f: ver(e[f]) for f in ('src', 'page') if f in e}}
+    if 'hd' in e: o['hd'] = {**e['hd'], **{f: ver(e['hd'][f]) for f in ('src', 'page') if f in e['hd']}}
+    return o
+  out = {k: vers(e) for k, e in sorted(manifest().items())}
   p = os.path.join(ART, 'manifest.json')
   json.dump(out, open(p, 'w'), indent=2, ensure_ascii=False)
   subprocess.run(['npx', 'prettier', '--write', p], cwd=ROOT, capture_output=True)
@@ -169,7 +178,7 @@ def building_dims(bid, tier):
     'khoangMach': (120, 72), 'linhDien': (128, 46), 'luyenKhiPhong': (116, 54), 'hoSonDaiTran': (124, 66),
   }[bid]
 
-def fit_building(bid, tier, src, lift=4):
+def fit_building(bid, tier, src, lift=4, S=S):
   """tranh rộng bằng công trình, chân ở y=+lift (gốc hộp là giữa chân nền)"""
   w, top = building_dims(bid, tier)
   W, H = w + 16, top + 26 + (12 if tier == 5 else 0)
@@ -184,7 +193,7 @@ def save_building(bid, tier, src):
   """một tranh → mọi key của công trình ở bậc đó: bld (+ biến thể số hình nhân của Diễn võ trường) và panel (đầu bảng chi tiết)"""
   vs = range(1, 7) if bid == 'dienVoTruong' else [0]
   keys = [f'bld:{bid}:{tier}:{v}' for v in vs] + [f'panel:{bid}:{tier}']
-  return save(f'bld:{bid}:{tier}', fit_building(bid, tier, src), 'bld', keys, tex=True)
+  return save(f'bld:{bid}:{tier}', fit_building(bid, tier, src), 'bld', keys, tex=True, hd=fit_building(bid, tier, src, S=S_HD))
 
 def fit_square(im, side, pad=0.03, aspect=1.0):
   """icon, chân dung, hình chạm: vào giữa khung (rộng/cao = aspect), chừa lề pad"""
@@ -205,14 +214,14 @@ def proc(key):
   meta = json.load(open(os.path.join(WORK, 'proc', 'meta.json')))
   return Image.open(os.path.join(WORK, 'proc', fname(key) + '.png')).convert('RGBA'), meta[key]
 
-def fit_prop(art, proc_im, grow=1.05):
+def fit_prop(art, proc_im, grow=1.05, k=1.5):
   """đồ trang trí, quân, yêu thú: khớp khung chữ nhật bao của bản vẽ code, chân chạm chân, giữa thẳng giữa"""
-  W, H = round(proc_im.width * 1.5), round(proc_im.height * 1.5)
+  W, H = round(proc_im.width * k), round(proc_im.height * k)
   bx = proc_im.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox() or (0, 0, proc_im.width, proc_im.height)
-  s = min((bx[2] - bx[0]) * 1.5 / art.width, (bx[3] - bx[1]) * 1.5 / art.height) * grow
+  s = min((bx[2] - bx[0]) * k / art.width, (bx[3] - bx[1]) * k / art.height) * grow
   a = art.resize((max(1, round(art.width * s)), max(1, round(art.height * s))), Image.LANCZOS)
   out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-  out.alpha_composite(a, (round((bx[0] + bx[2]) / 2 * 1.5 - a.width / 2), max(0, round(bx[3] * 1.5 - a.height))))
+  out.alpha_composite(a, (round((bx[0] + bx[2]) / 2 * k - a.width / 2), max(0, round(bx[3] * k - a.height))))
   return out
 
 def fit_trace(painted_src, box, proc_im, k=1.5):
@@ -239,72 +248,63 @@ PACKS = [  # (gói, key) — mục đầu tiên khớp thì lấy; không khớp
 ]
 PAGE, PAD = 2048, 2
 
+PAGE_HD = 4096  # atlas HD chỉ máy desktop tải: GPU nào cũng nhận texture 4096
+
+def shelf(ims, page, prefix):
+  """xếp ảnh vào các trang atlas theo kệ (cao trước, hết hàng xuống kệ, hết trang sang trang) → ({src: (trang, khung)}, ảnh quá khổ)"""
+  fits = sorted((s for s in ims if ims[s].width <= page - 2 * PAD and ims[s].height <= page - 2 * PAD), key=lambda s: -ims[s].height)
+  where, pages, x, y, row, cur = {}, [], PAD, PAD, 0, None
+  for src in fits:
+    im = ims[src]
+    if x + im.width + PAD > page: x, y, row = PAD, y + row + PAD, 0
+    if cur is None or y + im.height + PAD > page:
+      cur = Image.new('RGBA', (page, page), (0, 0, 0, 0))
+      pages.append([cur, 0])
+      x, y, row = PAD, PAD, 0
+    cur.alpha_composite(im, (x, y))
+    pages[-1][1] = max(pages[-1][1], y + im.height + PAD)
+    where[src] = (f'{prefix}-{len(pages) - 1}.webp', [x, y, im.width, im.height])
+    x, row = x + im.width + PAD, max(row, im.height)
+  for i, (pg, used) in enumerate(pages):  # cắt phần thừa dưới trang cuối cho nhẹ
+    pg.crop((0, 0, page, min(page, used))).save(os.path.join(ART, f'{prefix}-{i}.webp'), 'WEBP', quality=Q, method=6)
+  return where, [s for s in ims if s not in where], len(pages)
+
 def pack_all():
-  import re, glob
+  import re, glob, shutil
   m = manifest()
   for e in m.values():
-    for f in ('pack', 'page', 'frame'): e.pop(f, None)
-  for f in glob.glob(os.path.join(ART, 'atlas', '*.webp')): os.remove(f)
+    for f in ('pack', 'page', 'frame', 'hd'): e.pop(f, None)
+  for d in ('atlas', 'atlas-hd'):
+    for f in glob.glob(os.path.join(ART, d, '*.webp')): os.remove(f)
+    os.makedirs(os.path.join(ART, d), exist_ok=True)
+  shutil.rmtree(os.path.join(ART, 'hd'), ignore_errors=True)
   groups = {}
   for key, e in m.items():
     name = next((n for n, rx in PACKS if re.search(rx, key)), None)
     if name:
       e['pack'] = name
       if e.get('tex'): groups.setdefault(name, {}).setdefault(e['src'], []).append(key)
-  os.makedirs(os.path.join(ART, 'atlas'), exist_ok=True)
   for name, files in groups.items():
     ims = {src: Image.open(os.path.join(ART, src)).convert('RGBA') for src in files}
-    fits = sorted((s for s in ims if ims[s].width <= PAGE - 2 * PAD and ims[s].height <= PAGE - 2 * PAD), key=lambda s: -ims[s].height)
-    pages, x, y, row, cur = [], PAD, PAD, 0, None
-    for src in fits:  # xếp theo kệ: cao trước, hết hàng xuống kệ mới, hết trang sang trang mới
-      im = ims[src]
-      if x + im.width + PAD > PAGE: x, y, row = PAD, y + row + PAD, 0
-      if cur is None or y + im.height + PAD > PAGE:
-        cur = Image.new('RGBA', (PAGE, PAGE), (0, 0, 0, 0)); pages.append([cur, 0])
-        x, y, row = PAD, PAD, 0
-      cur.alpha_composite(im, (x, y))
-      pages[-1][1] = max(pages[-1][1], y + im.height + PAD)
-      for key in files[src]: m[key].update(page=f'atlas/{name}-{len(pages) - 1}.webp', frame=[x, y, im.width, im.height])
-      x, row = x + im.width + PAD, max(row, im.height)
-    for i, (pg, used) in enumerate(pages):  # cắt phần thừa dưới trang cuối cho nhẹ
-      pg.crop((0, 0, PAGE, min(PAGE, used))).save(os.path.join(ART, 'atlas', f'{name}-{i}.webp'), 'WEBP', quality=Q, method=6)
-    big = len(ims) - len(fits)
-    print(f'gói {name}: {len(fits)} ảnh → {len(pages)} trang atlas' + (f', {big} ảnh lớn giữ file lẻ' if big else ''))
+    where, big, n = shelf(ims, PAGE, f'atlas/{name}')
+    for src, (pg, fr) in where.items():
+      for key in files[src]: m[key].update(page=pg, frame=fr)
+    # bản HD: nguồn .work/hd (thiếu thì bản thường), trang 4096; ảnh quá khổ giữ file lẻ ở art/hd
+    hims = {}
+    for src in files:
+      hp = os.path.join(WORK, 'hd', src)
+      hims[src] = Image.open(hp if os.path.exists(hp) else os.path.join(ART, src)).convert('RGBA')
+    hwhere, hbig, hn = shelf(hims, PAGE_HD, f'atlas-hd/{name}')
+    for src, (pg, fr) in hwhere.items():
+      for key in files[src]: m[key]['hd'] = {'page': pg, 'frame': fr}
+    for src in hbig:
+      if src in big: continue  # bản thường cũng quá khổ (núi xa): không có HD
+      os.makedirs(os.path.dirname(os.path.join(ART, 'hd', src)), exist_ok=True)
+      hims[src].save(os.path.join(ART, 'hd', src), 'WEBP', quality=Q, method=6)
+      for key in files[src]: m[key]['hd'] = {'src': f'hd/{src}'}
+    print(f'gói {name}: {len(where)} ảnh → {n} trang' + (f', {len(big)} ảnh lớn giữ file lẻ' if big else '') + f' · HD {hn} trang 4096')
 
-# ---------- bộ giao diện: co giãn 9 mảnh + đổi màu ----------
-def nine(img, bins, W, H, ins):
-  """co giãn ảnh 9 mảnh (viền bins = trên, phải, dưới, trái px) sang khung W×H với viền ins — góc giữ hình, cạnh và lòng giãn"""
-  bt, br, bb, bl = bins
-  t, r, b, l = ins
-  bw, bh = img.size
-  out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-  xs = [(0, bl, 0, l), (bl, bw - br, l, W - r), (bw - br, bw, W - r, W)]
-  ys = [(0, bt, 0, t), (bt, bh - bb, t, H - b), (bh - bb, bh, H - b, H)]
-  for sx0, sx1, dx0, dx1 in xs:
-    for sy0, sy1, dy0, dy1 in ys:
-      if sx1 > sx0 and sy1 > sy0 and dx1 > dx0 and dy1 > dy0:
-        out.paste(img.crop((sx0, sy0, sx1, sy1)).resize((dx1 - dx0, dy1 - dy0), Image.LANCZOS), (dx0, dy0))
-  return out
-
-def _rgb(h): return np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)], np.float32)
-
-def tint(img, dark, light=None):
-  """đổi màu theo độ sáng (giữ nét cọ, bỏ mọi màu cũ): tối → `dark`, sáng → `light`.
-  light None (tấm sơn mài): `dark` là màu chính, tối/sáng tự suy (viền đậm hơn, vệt sáng nhạt hơn)"""
-  a = np.asarray(img).astype(np.float32)
-  L = a[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)
-  vis = a[..., 3] > 128
-  if light is None:  # tấm phẳng một màu: lấy trung vị làm màu chính, không kéo giãn tương phản (kéo thì nhiễu li ti thành lốm đốm)
-    med = np.median(L[vis]) if vis.any() else 128
-    t = np.clip(0.5 + (L - med) / 140, 0, 1)[..., None]
-  else:
-    lo, hi = (np.percentile(L[vis], [3, 97]) if vis.any() else (0, 255))
-    t = np.clip((L - lo) / max(1, hi - lo), 0, 1)[..., None]
-  if light is None:
-    c = _rgb(dark)
-    d, m, w = c * 0.45, c, c + (255 - c) * 0.45
-    rgb = np.where(t < 0.5, d + (m - d) * (t * 2), m + (w - m) * ((t - 0.5) * 2))
-  else:
-    rgb = _rgb(dark) + (_rgb(light) - _rgb(dark)) * t
-  a[..., :3] = rgb
-  return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
+def raw_k(painted_src, box, proc_im):
+  """độ phân giải thật của ảnh vẽ đè so với bản code (px ảnh gốc / px bản code 2x) — bản HD không phóng quá mức này"""
+  x0, _, x1, _ = box
+  return Image.open(painted_src).width * (x1 - x0) / proc_im.width
