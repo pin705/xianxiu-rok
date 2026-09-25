@@ -151,6 +151,8 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Alliance Center / Fortress (giản lược) | Tổng đà: trưởng lão / minh chủ dựng trong lãnh thổ minh mình khi minh có ≥ 5 người, 3.000 Minh khố, dựng 6 giờ; mỗi minh một (không tính vào số trận kỳ). Xong thì nới lãnh thổ 7 ô, độ bền 150.000 (bị phá, được đóng giữ như trận kỳ), cả minh thủ +3 %, máu +3 %, hành quân nhanh 5 % (nguồn "Tổng đà của minh" ở bảng Tăng ích). Trên bản đồ giới: đài vàng dưới lá cờ lớn | ✅ `fort` / `plant` / `fortOf` / `flagMax` (world/flags.ts), `fortBuffs` (points.ts) |
 | Scouting (do thám tông môn) | Do thám: ở bảng Tranh đoạt, thả một linh điểu tới tông môn khác (hai bên từ tầng 6, không cùng phe / minh ước) — 200 × tầng Chủ điện bên kia linh thạch, linh điểu bận tới khi bay về; báo cáo qua thư và hiện ngay dưới bảng: tài nguyên ước cướp được, quân giữ nhà + lực chiến, số đội viện binh, trưởng lão trấn thủ, trận lực, khiên. Bên kia nhận thư "bị do thám" + Web Push | ✅ `world/spy.ts`, `Rivals.svelte` |
 | Gathering buffs & commanders | Tốc khai mỏ (khoá `gather`): Khai Linh Phù 8 / 24 giờ +50 % (Thiên Môn Thương Điếm, kho lễ Thôn Trang), bị động khai mỏ của Vân Hạc Chân Nhân (+20 %) và Tô Mị Nương (+30 %) từ cấp 20 khi dẫn đội; cộng với linh triều và lãnh thổ minh | ✅ `gather()` (world/arrive.ts) dùng `lead(…, 'gather')` |
+| Tiện ích nhỏ (25/09) | Xong miễn phí 1 phút cho người mới (dưới Chủ điện 4, sim: MH15 ngày 8,75 → 7,3, vẫn qua gate); ô tạp dịch thứ hai trên HUD; Di Sơn Phù / Càn Khôn Phù (dời núi ngẫu nhiên / tự chọn, sát khí chặn dời); Cải Danh Lệnh đổi tên (endpoint `/account/rename` giữ khoá tên, chủ giới áp qua hộp lệnh); Tạp Dịch Lệnh, Cải Danh Lệnh, phù dời núi ở Thiên Môn Thương Điếm; quà gắn email thêm Cải Danh Lệnh | ✅ `world/territory.ts`, `http/account.ts`, `game/inbox.ts`, `Hud.svelte`, `Account.svelte` |
+| Light and Darkness — chặng thi đua | Chính Tà: mùa chia chặng 3 ngày, mỗi chặng một việc xoay vòng (khai mỏ, tăng tốc, săn yêu, tuyển đệ tử, chiến công); phần tăng của mỗi người cộng cho phái. Hết chặng phái thắng: người có góp nhận quà qua thư, phái +200 điểm mùa (cộng vào điểm phái lúc tính phái thắng mùa). Bảng xếp hạng → Mùa: chặng đang chạy, điểm hai phái, phần mình góp, số chặng đã thắng | ✅ `world/camp.ts` (campStep trong advance.ts), `campTotal`, server `stageView`, `Ranks.svelte` |
 | Cornucopia / Ghost Parade | Liên Trảm Bất Hồi (sự kiện cuối tuần B): ngoài điểm thắng trận / cướp / leo tháp, mỗi yêu thú giới hạ bằng săn liên hoàn (đội săn đang về đi thẳng tới con khác, không về núi) được 30 điểm — chỉ số mới `chain` | ✅ fest `lienTram`, `hunt()` (arrive.ts) |
 | Holiday event template (file 5 H0) + Mid-Autumn | Khung sự kiện theo lịch (`dates`: mỗi năm một mốc, vì lễ âm lịch đổi ngày) + Trung Thu Vọng Nguyệt: 5 ngày quanh rằm tháng Tám (25/9/2026, 15/9/2027, 3/10/2028) — thắng trận, săn yêu thú (săn liên hoàn nhiều nhất), khai mỏ, chữa thương, giúp đồng minh ra Nguyệt Bính; đổi Kim Duyên Phù, Tụ Linh Phù, phù tăng tốc, kinh thư | ✅ fest `trungThu`, `festWindow` (core/fest.ts) |
 | Lunar New Year + Christmas (file 5 H1, H12) | Tân Xuân Khai Sơn: 7 ngày từ mùng Một (6/2/2027, 26/1/2028, 13/2/2029), mỗi ngày vào núi mở một bao lì xì (sự kiện đăng nhập, bao sau dày hơn) · Đông Chí Tuyết Dạ: 21–25/12 hằng năm, thắng trận / săn yêu (liên hoàn nhiều điểm) / chữa thương / giúp đồng minh ra điểm, 3 rương mốc | ✅ fest `tanXuan`, `dongChi` |
@@ -167,6 +169,34 @@ trong sim một người.
 Tranh đoạt (`30 4 --pvp 20`): kinh tế giàu hơn làm phần bị cướp lên 37 % sản lượng (cổng CI ≤ 25 %) → kho bảo hộ 30 % → 45 %
 sức chứa (`PROTECT`), tài nguyên trong lễ vật Hương Hỏa thành nang (nằm trong túi, không bị cướp), bot chỉ mở nang khi kho còn
 dưới phần bảo hộ: còn 23 %.
+
+## Tiện ích nhỏ kiểu RoK (rà trong mã, 25/09)
+
+| Tiện ích RoK | Ở game mình | Trạng thái |
+| --- | --- | --- |
+| Tăng tốc chung / xây / nghiên cứu / luyện quân / chữa thương (5 phút → 24 giờ) | Thời Quang / Lỗ Ban / Ngộ Đạo / Luyện Binh / Diệu Thủ Phù; bảng Tăng tốc có "Dùng vừa đủ" | ✅ |
+| Tăng tốc bằng đan | Tụ Khí Đan, Đại Tụ Khí Đan (xây) | ✅ |
+| Xong miễn phí khi còn ít phút | Người mới (Chủ điện dưới tầng 4) 1 phút; Hương Hỏa 1 → 8 phút theo cấp | ✅ |
+| Xin trợ giúp minh, giúp tất cả | Tự nhờ giúp khi bắt đầu việc (xây, nghiên cứu, tuyển, chữa, luyện khí); nút Giúp tất cả nổi ở mọi tab; 10 → 15 lượt theo Hộ Minh Đại Trận | ✅ |
+| VIP: điểm, chuỗi ngày, rương ngày, tăng ích | Hương Hỏa 12 cấp, chuỗi ngày vào game, rương mỗi ngày, Hương Hỏa Lệnh | ✅ (chưa có cửa hàng VIP) |
+| Hàng xây thứ hai | Tạp Dịch Lệnh 48 giờ; ô tạp dịch thứ hai trên HUD (chạm để dùng lệnh / xem nơi lấy); có ở Tông Lệnh Bảo Khố, Thiên Môn Thương Điếm | ✅ |
+| Thiếu tài nguyên → dùng nang ngay | Nút nạp từ túi ở bảng nâng cấp | ✅ |
+| Khiên hòa bình, khiên tân thủ, War Frenzy | Hộ Sơn Phù 8/24/72 giờ, khiên 72 giờ, sát khí | ✅ |
+| Dịch chuyển: tân thủ / lãnh thổ / ngẫu nhiên / tự chọn | Dời núi tân thủ, dời vào lãnh thổ minh, Di Sơn Phù (ngẫu nhiên), Càn Khôn Phù (tự chọn ở vùng đã mở); sát khí chặn dời | ✅ |
+| Đổi tên | Cải Danh Lệnh (Cài đặt → Tài khoản), server chặn tên trùng / từ tục | ✅ |
+| Hồi AP, sách kinh nghiệm, tượng tướng, tẩy thiên phú | Hành Lực Đan, Tâm Đắc Kinh Thư, tín vật + sao, Tẩy Tủy Đan | ✅ |
+| Rương bạc / vàng, lượt miễn phí | Chiêu Hiền Đài: thiếp bạc 6 giờ, thiếp vàng 48 giờ | ✅ |
+| Tăng ích: sản lượng, hành quân, công/thủ/máu, trận dung, khai mỏ | Tụ Linh, Thần Hành, Chiến Ý / Kim Cương / Hộ Thể, Khuếch Trận Kỳ, Khai Linh Phù | ✅ |
+| Thư hệ thống, nhận tất cả, chia sẻ chiến báo | Thư + quà, Nhận tất cả, chia sẻ vào chat, xem lại trận | ✅ |
+| Chat giới / minh / riêng / nhóm, chặn, bạn bè | Có đủ | ✅ (chưa có dịch tự động) |
+| Dấu bản đồ, toạ độ bấm được, tìm điểm | Ghi nhớ, dấu minh, "Tới (x,y)", Tìm, Sơn Hà Xã Tắc Đồ | ✅ |
+| Nhiệm vụ chính / phụ / ngày / tuần, thành tựu | Có đủ | ✅ |
+| Trung tâm sự kiện + lịch | Có | ✅ |
+| Do thám, cảnh báo địch tới | Do thám, Tháp canh | ✅ |
+| Đổi chân dung | — | ❌ (hồ sơ người khác hiện huy hiệu đạo thống) |
+| Mã quà tặng (redeem code) | — | ❌ (cần bảng mã + trang admin) |
+| Điểm danh hằng tháng | Thất Nhật Lễ chỉ cho tân thủ | 🟡 (quà điểm danh làm lệch sim) |
+| Gói nạp, Growth Fund, gem | — | ❌ cố ý (không bán) |
 
 ## Lộ trình (theo 8 file nghiên cứu, P0 trước, rẻ trước)
 

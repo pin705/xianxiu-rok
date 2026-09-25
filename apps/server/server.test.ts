@@ -706,9 +706,18 @@ test(
     const w1 = await c.welcome
     assert.equal(w1.world.season, 1)
     const board = await c.ask({ k: 'season' })
-    const { camps, camp, ...rest } = board as { camps: [number, number]; camp: 0 | 1 }
+    const { camps, camp, stage, ...rest } = board as {
+      camps: [number, number]
+      camp: 0 | 1
+      stage: { n: number; m: string; score: [number, number]; mine: number }
+    }
     assert.deepEqual(rest, { rows: [], me: null, fame: [] })
     assert.deepEqual([camps, [0, 1].includes(camp)], [[0, 0], true], 'Chính Tà: điểm hai phái, phái của mình')
+    assert.deepEqual(
+      [stage.n, stage.m, stage.score, stage.mine],
+      [0, 'gather', [0, 0], 0],
+      'chặng thi đua đầu mùa: khai mỏ',
+    )
     const bye = new Promise<string>(ok => c.s.once('bye', m => ok(m.reason)))
     await api(n, '/dev/warp', { min: SEASON_DAYS * 24 * 60 + 5 }, A.token)
     assert.equal(await bye, 'season')
@@ -1041,5 +1050,37 @@ test(
     assert.ok((await c.act({ type: 'upgrade', building: 'khoangMach' })).ok)
     c.close()
     proxy.close()
+  },
+)
+
+test(
+  'đổi tên tông môn: cần Cải Danh Lệnh, tên như lúc lập, không trùng trong giới; chủ giới áp tên mới và trừ lệnh',
+  { skip },
+  async () => {
+    const n = await boot('ren')
+    const w = await newWorld(n)
+    const A = await guest(n, undefined, w)
+    await guest(n, 'Tông Trùng Tên', w)
+    const ca = client(n, A.token)
+    await ca.welcome
+    const rename = async (name: string) => {
+      const r = await api(n, '/account/rename', { name }, A.token)
+      return { status: r.status, ...((await r.json()) as { ok?: boolean; error?: string }) }
+    }
+    assert.equal((await rename('Tân Danh Môn')).error, 'no_item')
+    const st = await getState(n, A.token)
+    await api(n, '/dev/state', { state: { ...st.state, items: { ...st.state.items, caiDanh: 1 } } }, A.token)
+    const saved = await until(
+      async () =>
+        ((await n.db.client`select state from players where id = ${A.pid}`)[0].state as State).items.caiDanh === 1,
+    )
+    assert.ok(saved, 'lệnh đã ghi DB')
+    assert.equal((await rename('!!')).error, 'name')
+    assert.equal((await rename('tông trùng tên')).error, 'name_taken', 'không phân biệt hoa thường')
+    assert.equal((await rename('  Tân   Danh Môn ')).ok, true)
+    const done = await until(async () => (await getState(n, A.token)).state.name === 'Tân Danh Môn', 10_000)
+    assert.ok(done, 'chủ giới áp tên mới qua hộp lệnh')
+    assert.equal((await getState(n, A.token)).state.items.caiDanh ?? 0, 0, 'trừ một lệnh')
+    ca.close()
   },
 )

@@ -45,8 +45,7 @@ function command(w: World, r: store.InboxRow, now: number) {
     if (slot && s)
       w.commit(slot, { ...s, name: b.name, items: { ...s.items, caiDanh: Math.max(0, (s.items.caiDanh ?? 0) - 1) } })
     w.maps.changed()
-  }
-  else w.env.log.warn({ id: r.id, kind: r.kind }, 'unknown inbox command, skipped')
+  } else w.env.log.warn({ id: r.id, kind: r.kind }, 'unknown inbox command, skipped')
   w.persist.schedule()
 }
 

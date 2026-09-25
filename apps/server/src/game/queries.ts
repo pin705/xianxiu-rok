@@ -1,7 +1,7 @@
 // Truy vấn chỉ đọc của client: mỗi khoá một hàm, trả đúng kiểu Answer[k] (@rok/protocol). Thêm truy vấn: thêm khoá vào
 // Query/Answer ở protocol — thiếu hàm ở đây là lỗi biên dịch.
 import type { Report } from '@rok/rules'
-import { weekOf } from '@rok/rules'
+import { CAMP_STAGE_DAYS, weekOf } from '@rok/rules'
 import {
   allyInfo,
   allyOf,
@@ -20,7 +20,10 @@ import {
   territoryTiles,
   arkRow,
   campOf,
-  campPts,
+  campTotal,
+  stageGain,
+  stageMetric,
+  stageScore,
 } from '@rok/rules/world'
 import type { Answer, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
@@ -30,6 +33,21 @@ import type { Sock, World } from './world.ts'
 const SEASON_ROWS = 20 // bảng điểm mùa gửi client: top này
 const ARENA_ROWS = 20 // bảng tuần Luận Kiếm Đài: top này
 const HONOR_ROWS = 20 // bảng Công Huân mùa: top này
+
+// Chặng thi đua Chính Tà đang chạy (bảng mùa): việc, lúc hết, điểm hai phái, phần người hỏi góp, số chặng đã thắng, chặng vừa xong
+function stageView(w: World, pid: number) {
+  const st = w.shared.stage
+  if (!st) return undefined
+  return {
+    n: st.n,
+    m: stageMetric(st.n),
+    end: w.opened + (st.n + 1) * CAMP_STAGE_DAYS * 86_400_000,
+    score: stageScore(w.ps, w.shared),
+    mine: stageGain(w.ps, w.shared, pid),
+    wins: w.shared.stageWins ?? ([0, 0] as [number, number]),
+    ...(w.shared.stageLast && { last: { n: w.shared.stageLast.n, won: w.shared.stageLast.won } }),
+  }
+}
 
 export type Answers = { [K in Query['k']]: (sock: Sock, q: QueryOf<K>) => Answer[K] | Promise<Answer[K]> }
 
@@ -103,8 +121,9 @@ export const answersOf = (w: World): Answers => ({
       rows: rows.slice(0, SEASON_ROWS).map(({ name, pts }) => ({ name, pts })),
       me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts },
       fame: w.fame,
-      camps: campPts(rows), // Chính Tà Phân Tranh: điểm mùa hai phái, phái của mình
+      camps: campTotal(rows, w.shared), // Chính Tà Phân Tranh: điểm mùa hai phái (cả chặng thắng), phái của mình
       camp: campOf(side),
+      stage: stageView(w, sock.data.pid),
     }
   },
   map: sock => {

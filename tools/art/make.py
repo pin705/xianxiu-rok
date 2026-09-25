@@ -355,7 +355,27 @@ def chrome():
   if not args[1:]:
     for n, c in C.UNDERLINES.items(): X.save(f'skin:{n}', C.underline(c), 'skin', fmt='PNG')
 
-GROUPS = {'pack': X.pack_all, 'chrome': chrome, 'concept': concept, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'landmarks': landmarks, 'masks': masks, 'props': props, 'troops': troops,
+def creative():
+  """concept sáng tạo (prompts.CREATIVE): ảnh bố cục của mình + ảnh mẫu phong cách → .work/raw/creative-<tên>"""
+  d = os.path.join(X.WORK, 'concept')
+  names = [n for n in P.CREATIVE if not args[1:] or n in args[1:]]
+  run([(f'creative-{n}', P.CREATIVE[n][2] + P.CREATIVE_STYLE,
+        [X.ref(os.path.join(d, P.CREATIVE[n][0]), side=1600), X.ref(os.path.join(d, P.CREATIVE[n][1]), side=1600)], '9:16', '2K') for n in names])
+
+def ui():
+  """đồ vật giao diện theo concept sáng tạo (prompts.UI_SHEETS) → public/art/ui/<tên>.webp, manifest 'ui:<tên>'"""
+  anchor = X.ref(X.raw('creative-home'), side=1024)
+  sheets_ = {k: v for k, v in P.UI_SHEETS.items() if not args[1:] or k in args[1:]}
+  run([(f'sheet-{sid}', P.uisheet(items, 'game UI objects'), [anchor], '1:1', '2K') for sid, items in sheets_.items()])
+  for sid, items in sheets_.items():
+    if not os.path.exists(X.raw(f'sheet-{sid}')): continue
+    k = X.raw(f'sheet-{sid}') + '.png'
+    X.key_magenta(X.raw(f'sheet-{sid}'), k)
+    for name, im in X.cut_sheet(k, items, name_ok := True).items():
+      side = 192 if name.startswith(('nav-', 'frame-', 'sundial', 'ev-')) else 144
+      X.save(f'ui:{name}', X.fit_square(im, side, 0.02, im.width / im.height if name in ('ribbon', 'signboard', 'back') else 1.0), 'ui')
+
+GROUPS = {'pack': X.pack_all, 'ui': ui, 'creative': creative, 'chrome': chrome, 'concept': concept, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'landmarks': landmarks, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}
 
 if __name__ == '__main__':

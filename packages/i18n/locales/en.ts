@@ -861,6 +861,12 @@ export const en: Text = {
     names: ['Light', 'Darkness'],
     hint: (mine: string) =>
       `Every alliance and solo sect belongs to one of two camps; season points add up per camp — the winning camp gets a reward at season end. You are with ${mine}.`,
+    what: { gather: 'gathering', speed: 'speedups', hunt: 'beast hunting', train: 'recruiting', kp: 'kill points' },
+    stage: (n: number, what: string, t: string) => `Stage ${n}: ${what} · ${t} left`,
+    mine: (n: string) => `Your share ${n}`,
+    last: (n: number, camp: string) => `Stage ${n}: ${camp} won`,
+    stageHint: (pts: number) =>
+      `Each 3-day stage scores one activity; everyone's gain counts for their camp. The stage winner earns ${pts} season points and contributors get a reward.`,
   },
   thoi: {
     names: { kim: 'Metal tide', thuy: 'Water tide', moc: 'Wood tide', hoa: 'Fire tide', tho: 'Earth tide' } as Record<
@@ -1727,6 +1733,14 @@ export const en: Text = {
             `• ${guard ? `Garrison elder level ${level}` : 'No garrison elder'} · array ${wall}%${shield ? ' · shield up' : ''}`,
         ]
       },
+      campStage: (n: number, m: string, won: 0 | 1, a: number, b: number): [string, string] => {
+        const camp = won ? 'Darkness' : 'Light'
+        const what = en.camp.what[m as keyof typeof en.camp.what] ?? m
+        return [
+          `Stage ${n} · ${camp} wins`,
+          `The ${what} stage is over: Light ${a.toLocaleString('en')} – Darkness ${b.toLocaleString('en')}. Your camp, ${camp}, won the stage and earns extra season points. A reward for contributors is below.`,
+        ]
+      },
       spied: (foe: string): [string, string] => [
         'You were scouted',
         `A crane from ${foe} just circled your mountain — someone is eyeing your sect. Raise a shield or call reinforcements if needed.`,
@@ -1893,7 +1907,7 @@ export const en: Text = {
   },
   account: {
     guest:
-      'Guest account: your sect lives in this browser. Link an email to play from other devices and keep your sect if the browser clears its data — the first link comes with a gift (gold summon, speedups, peace shield).',
+      'Guest account: your sect lives in this browser. Link an email to play from other devices and keep your sect if the browser clears its data — the first link comes with a gift (gold summon, speedups, peace shield, a Renaming Decree).',
     linked: (email: string) => `Linked to ${email}`,
     email: 'Email',
     pass: 'Password (8+ characters)',
@@ -1914,6 +1928,14 @@ export const en: Text = {
     remove: 'Delete account',
     removeHint: 'Permanently deletes your sect and all its data and leaves your alliance. This cannot be undone.',
     removeSure: 'Delete forever?',
+    rename: 'Rename sect',
+    renameHint: (n: number) =>
+      n
+        ? `Uses one Renaming Decree (${n} left). 2–20 characters, not used by another sect in the realm.`
+        : 'Needs a Renaming Decree — from the Heaven Gate Shop or the first email-link gift.',
+    renameTo: 'New name',
+    renameGo: 'Rename',
+    renamed: 'Renamed — the new name shows in a few seconds',
     login: 'Sign in',
     have: 'Already have an account?',
     enterCode: 'Enter transfer code',
@@ -1929,6 +1951,10 @@ export const en: Text = {
       code: 'Wrong or expired code',
       server: 'The server is busy, try again later',
       offline: 'No connection',
+      name: 'Letters, numbers and spaces only (2–20), no profanity',
+      name_taken: 'Another sect already uses this name',
+      no_item: 'Needs a Renaming Decree',
+      nosect: 'No sect yet',
     } as Record<string, string>,
   },
   push: {

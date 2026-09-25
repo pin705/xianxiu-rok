@@ -588,6 +588,7 @@
   .quest,
   .daily,
   .builder,
+  .builder2,
   .tabs {
     pointer-events: auto;
   }

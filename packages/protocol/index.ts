@@ -114,6 +114,16 @@ export type Season = {
   fame: Fame[]
   camps?: [number, number] // Chính Tà Phân Tranh: điểm mùa Chính phái, Tà phái
   camp?: 0 | 1 // phái của mình
+  // chặng thi đua đang chạy: thứ tự (từ 0), việc, lúc hết, điểm hai phái, phần mình góp, số chặng mỗi phái đã thắng, chặng vừa xong
+  stage?: {
+    n: number
+    m: string
+    end: number
+    score: [number, number]
+    mine: number
+    wins: [number, number]
+    last?: { n: number; won: 0 | 1 | null }
+  }
 }
 // Chat: kênh giới (từ tầng 3), kênh tiên minh, truyền âm 1-1 với người chơi pid ('p<pid>'). Chữ đã lọc ở server.
 export type Channel = 'world' | 'ally' | `p${number}` | `g${number}` // g<id>: nhóm chat tự tạo

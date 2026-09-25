@@ -407,3 +407,79 @@ CONCEPT_STYLES = {
           'round jade disc buttons with gold rims, pale rice-paper panels inside carved jade frames — elegant, airy, immortal-realm xianxia '
           'like premium Chinese cultivation games.',
 }
+
+# ---------- concept sáng tạo (27/9/2026) ----------
+# Người dùng: "HUD không sáng tạo, menu để như app, UI khác làm cho có". Hướng: giao diện là ĐỒ VẬT trong thế giới tông môn tu tiên,
+# không phải widget web. Ảnh mẫu: game quảng cáo người dùng gửi (.work/concept/ad-*.png) — chibi thủy mặc, trắng sương, mực, son.
+CREATIVE_STYLE = ('Palette: cool misty white paper, black ink linework, cinnabar red accents, soft jade and pale gold — NOT yellow paper, '
+  'NOT dark panels. Hand-drawn, one consistent cute chibi ink-wash style like the reference image. Crafted, studio-quality mobile game UI, '
+  'NOT a web app: no full-width bars, no app tab bar, no plain rectangular cards, no paragraphs of text. Vietnamese labels only, '
+  'no Chinese characters. Portrait phone screen.')
+CREATIVE = {  # tên → (ảnh bố cục của mình, ảnh mẫu phong cách, mô tả)
+  'home': ('home-src.png', 'ad-home.png',
+    'Image 1 is our current home screen (keep the painted mountain sect with its buildings and name plates). Image 2 is the style and '
+    'quality reference. Redesign the HUD and navigation as diegetic objects of a xianxia sect: '
+    'TOP-LEFT: the sect master portrait inside a round jade disc with a thin glowing qi ring around it showing cultivation progress, the realm '
+    'name "Trúc Cơ · tầng 8" on a small red silk ribbon below. TOP-RIGHT: three resources shown as small illustrated containers — a jade bowl '
+    'of blue spirit stones, a woven basket of spirit herbs, a small cart of ore — each with its number on a dark ink pill and a tiny "+". '
+    'Beside them a small round sundial medallion showing daytime and the season. LEFT EDGE: two round ink-circle buttons with hand-lettered '
+    'labels "Thư" and "Sự kiện". RIGHT EDGE: a vertical column of three small illustrated event paintings with characters and short labels, '
+    'with a small red arrow tab to collapse it. The current quest is a paper notice pinned on a little wooden signboard standing in the scene, '
+    'with a small red seal button "Nhận". A tiny chibi worker with a hammer stands near the bottom right with a hanging wooden timer tag. '
+    'BOTTOM: five round illustrated medallions resting on a soft cloud band — sect gate "Tông môn", a disciple "Môn hạ", a map scroll "Bản đồ", '
+    'two banners "Tiên minh", a treasure chest "Bảo khố" — each with a vertical red ribbon label; the selected one rises larger with a red seal '
+    'stamp behind it. '),
+  'monha': ('panel-src.png', 'ad-panel.png',
+    'Image 1 is one of our current panels (layout reference only). Image 2 is the style and quality reference. Draw our DISCIPLES screen '
+    '"Môn hạ" as a hall of hanging portrait scrolls: full screen on misty paper with faint ink mountains at the bottom; a hand-lettered brush '
+    'title "Môn hạ" at the top-left with a brush stroke under it; on the left edge a vertical silk bookmark tab "Trưởng lão"; at the top the '
+    'active team as five round portraits sitting on a wooden beam, each with a name ribbon and a power number; below, a grid of disciple '
+    'portrait scrolls (chibi busts) with small name ribbons, a little status stamp "Rảnh" or "Đang tu", and a power number with an icon; '
+    'at the bottom a dark ink strip with tabs where the active tab sits on a red seal; a back button shaped like a curling cloud. '),
+  'nangcap': ('panel-src.png', 'ad-panel.png',
+    'Image 1 is one of our current building panels (layout reference only). Image 2 is the style and quality reference. Draw the building '
+    'UPGRADE screen for "Đan phòng" as a ceremony: a hand-lettered brush title at the top; in the middle, the current building painting on '
+    'the left and the next, grander tier on the right glowing softly, joined by an ornate ink arrow; below, the required resources laid out '
+    'as offerings on a small red lacquer altar table (spirit stones, herbs, ore, each with a number); a large round red seal button '
+    '"Nâng cấp" with a small timer beside it; a tiny "?" to open the description; a back button shaped like a curling cloud. '),
+}
+
+# ---------- đồ vật giao diện theo concept sáng tạo (27/9/2026) ----------
+# Ảnh 1 = concept màn chính đã chốt (.work/raw/creative-home.webp): vẽ đúng phong cách đó. Lưu thành 'ui:<tên>' trong manifest.
+def uisheet(items, what):
+  lst = ' '.join(f'{i + 1}) {d}.' for i, (_, d) in enumerate(items))
+  return ('Image 1 is our approved game UI concept: it is the ART STYLE reference (hand-drawn chibi ink-wash, black ink lines, misty white, '
+          f'cinnabar red, soft jade). Paint a sheet of 9 separate {what} in exactly this style, clean and readable at small size. '
+          f'Arrange them in a neat 3 by 3 grid, row by row from the top-left: {lst} Each one is a single object centered in its own cell, '
+          f'all about the same size, with wide empty gaps, nothing crossing into another cell. {NO_TEXT} {MAGENTA}')
+MEDAL = 'a round medallion: a misty white paper disc with a thin black ink rim, a small painting inside of '
+TILE = 'a small square framed painting: misty white paper inside a thin black ink line frame, painted inside: '
+UI_SHEETS = {
+  'U1': [('nav-tongMon', MEDAL + 'a small Chinese sect gate archway with a jade-green roof'),
+         ('nav-monHa', MEDAL + 'a young chibi disciple in blue robes, bust'),
+         ('nav-banDo', MEDAL + 'a partly unrolled old map scroll'),
+         ('nav-tienMinh', MEDAL + 'two crossed red and blue banners'),
+         ('nav-baoKho', MEDAL + 'a red lacquered treasure chest with gold fittings'),
+         ('res-linhThach', 'a jade-green bowl heaped with glowing pale-blue spirit crystals'),
+         ('res-linhThao', 'a small woven basket full of green spirit herbs with a golden flower'),
+         ('res-linhKhoang', 'a small wooden cart loaded with grey ore and purple crystals'),
+         ('sundial', 'a round stone sundial medallion with a jade rim, a small sun on one side and a crescent moon on the other')],
+  'U2': [('frame-portrait', 'an empty round jade ring frame with a thin gold inner rim, the hollow center is empty magenta background'),
+         ('ribbon', 'a horizontal red silk ribbon banner with swallowtail ends, blank'),
+         ('signboard', 'a small wooden signboard standing on two posts with a blank white paper notice pinned by a red pin'),
+         ('worker', 'a tiny chibi worker in grey work clothes holding a hammer over the shoulder, full body, standing'),
+         ('tag', 'a small hanging wooden tag with a red cord and tassel, blank'),
+         ('back', 'a curling ink-wash cloud shape with a bold left-pointing arrow inside'),
+         ('seal', 'a round cinnabar red seal stamp with an inner ring, blank, slightly irregular edges'),
+         ('ribbon-v', 'a vertical red ribbon label banner with a notched bottom, blank'),
+         ('ring', 'a round black ink brush circle (enso) with an empty center')],
+  'U3': [('ev-fest', TILE + 'a festival night with red lanterns and a chibi girl holding a lantern'),
+         ('ev-arena', TILE + 'two chibi swordsmen dueling on a stone platform'),
+         ('ev-daily', TILE + 'a wooden board with paper talismans pinned on it'),
+         ('ev-vip', TILE + 'a bronze incense burner with rising smoke before a small shrine'),
+         ('ev-mail', TILE + 'a white crane carrying a sealed letter'),
+         ('ev-help', TILE + 'two chibi disciples joining hands, helping each other'),
+         ('ev-tavern', TILE + 'a small recruitment hall with a red lantern and a guest arriving'),
+         ('ev-market', TILE + 'a small market stall with goods and a chibi merchant'),
+         ('ev-report', TILE + 'a sealed battle report scroll with crossed swords')],
+}

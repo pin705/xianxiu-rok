@@ -848,6 +848,13 @@ export const vi = {
     names: ['Chính phái', 'Tà phái'],
     hint: (mine: string) =>
       `Mọi tiên minh và tông môn lẻ chia hai phái; điểm mùa cộng theo phái — hết mùa người phái thắng nhận quà. Bạn thuộc ${mine}.`,
+    // chặng thi đua: mỗi 3 ngày một việc
+    what: { gather: 'khai mỏ', speed: 'tăng tốc', hunt: 'săn yêu thú', train: 'tuyển đệ tử', kp: 'chiến công' },
+    stage: (n: number, what: string, t: string) => `Chặng ${n}: ${what} · còn ${t}`,
+    mine: (n: string) => `Bạn góp ${n}`,
+    last: (n: number, camp: string) => `Chặng ${n}: ${camp} thắng`,
+    stageHint: (pts: number) =>
+      `Mỗi chặng 3 ngày một việc; phần tăng của mỗi người cộng cho phái. Phái thắng chặng được ${pts} điểm mùa, người có góp nhận quà.`,
   },
   // Thiên Thời: mỗi 4 ngày một thời ngũ hành, tăng ích chung + chỉ lệnh riêng
   thoi: {
@@ -1728,6 +1735,14 @@ export const vi = {
             `• ${guard ? `Trưởng lão trấn thủ cấp ${level}` : 'Không có trưởng lão trấn thủ'} · trận lực ${wall} %${shield ? ' · đang bật khiên' : ''}`,
         ]
       },
+      campStage: (n: number, m: string, won: 0 | 1, a: number, b: number): [string, string] => {
+        const camp = won ? 'Tà phái' : 'Chính phái'
+        const what = vi.camp.what[m as keyof typeof vi.camp.what] ?? m
+        return [
+          `Chặng ${n} · ${camp} thắng`,
+          `Chặng thi đua ${what} khép lại: Chính phái ${a.toLocaleString('vi')} – Tà phái ${b.toLocaleString('vi')}. ${camp} của bạn thắng chặng, cả phái được thêm điểm mùa. Quà cho người có góp ở dưới.`,
+        ]
+      },
       spied: (foe: string): [string, string] => [
         'Bị do thám',
         `Linh điểu của ${foe} vừa lượn qua núi — có kẻ đang nhắm tông môn. Bật khiên, gọi viện binh nếu cần.`,
@@ -1890,7 +1905,7 @@ export const vi = {
   },
   account: {
     guest:
-      'Tài khoản khách: tông môn gắn với trình duyệt này. Gắn email để vào từ máy khác và không mất tông môn khi trình duyệt xoá dữ liệu — lần gắn đầu có quà (Kim Duyên Phù, phù tăng tốc, Hộ Sơn Phù).',
+      'Tài khoản khách: tông môn gắn với trình duyệt này. Gắn email để vào từ máy khác và không mất tông môn khi trình duyệt xoá dữ liệu — lần gắn đầu có quà (Kim Duyên Phù, phù tăng tốc, Hộ Sơn Phù, Cải Danh Lệnh).',
     linked: (email: string) => `Đã gắn với ${email}`,
     email: 'Email',
     pass: 'Mật khẩu (ít nhất 8 ký tự)',
@@ -1909,6 +1924,14 @@ export const vi = {
     remove: 'Xoá tài khoản',
     removeHint: 'Xoá hẳn tông môn và mọi dữ liệu, rời tiên minh. Không khôi phục được.',
     removeSure: 'Chắc chắn xoá vĩnh viễn?',
+    rename: 'Đổi tên tông môn',
+    renameHint: (n: number) =>
+      n
+        ? `Dùng một Cải Danh Lệnh (còn ${n}). Tên 2–20 ký tự, không trùng tông môn khác trong giới.`
+        : 'Cần Cải Danh Lệnh — có ở Thiên Môn Thương Điếm, quà gắn email lần đầu.',
+    renameTo: 'Tên mới',
+    renameGo: 'Đổi tên',
+    renamed: 'Đã đổi tên — tên mới hiện trong vài giây',
     login: 'Đăng nhập',
     have: 'Đã có tài khoản?',
     enterCode: 'Nhập mã chuyển máy',
@@ -1924,6 +1947,10 @@ export const vi = {
       code: 'Mã không đúng hoặc đã hết hạn',
       server: 'Máy chủ đang bận, thử lại sau',
       offline: 'Không có mạng',
+      name: 'Tên chỉ gồm chữ, số, dấu cách (2–20 ký tự) và không chứa từ tục',
+      name_taken: 'Tên này đã có tông môn khác dùng',
+      no_item: 'Cần Cải Danh Lệnh',
+      nosect: 'Chưa có tông môn',
     } as Record<string, string>,
   },
   push: {

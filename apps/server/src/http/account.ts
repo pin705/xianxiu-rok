@@ -288,7 +288,8 @@ function renameRoutes(app: App, o: AccountOptions, auth: Auth) {
       if (!s.pid || !s.world) return reply.code(403).send({ error: 'nosect' })
       const p = await findPlayer(o.db, s.pid)
       if (!p || !(p.state.items.caiDanh ?? 0)) return reply.code(403).send({ error: 'no_item' })
-      if (!(await accounts.renamePlayer(o.db, s.pid, n.name, n.key))) return reply.code(409).send({ error: 'name_taken' })
+      if (!(await accounts.renamePlayer(o.db, s.pid, n.name, n.key)))
+        return reply.code(409).send({ error: 'name_taken' })
       await addInbox(o.db, s.world, 'rename', { pid: s.pid, name: n.name })
       return { ok: true }
     },

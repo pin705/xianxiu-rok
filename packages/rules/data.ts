@@ -827,6 +827,13 @@ export const ASCEND_HALL = 16
 // Chính Tà Phân Tranh (Light and Darkness của RoK): mọi phe trong giới chia hai phái — Chính phái (0) · Tà phái (1); điểm mùa cộng theo
 // phái, hết mùa người phái nhiều điểm hơn nhận CAMP_WIN qua thư
 export const CAMP_WIN: Reward = { items: { thoiQuang480: 1, kimDuyen: 1, huongHoa200: 1 } }
+// Chặng thi đua (các chặng của Light and Darkness): mùa chia chặng CAMP_STAGE_DAYS ngày, mỗi chặng một việc (CAMP_STAGES xoay vòng);
+// phần tăng của mỗi người trong chặng cộng cho phái mình. Hết chặng phái nhiều hơn thắng: người phái thắng có góp nhận
+// CAMP_STAGE_GIFT qua thư, phái được CAMP_STAGE_PTS điểm mùa (cộng vào điểm phái khi tính phái thắng mùa)
+export const CAMP_STAGE_DAYS = 3
+export const CAMP_STAGES: Metric[] = ['gather', 'speed', 'hunt', 'train', 'kp']
+export const CAMP_STAGE_PTS = 200
+export const CAMP_STAGE_GIFT: Reward = { items: { thoiQuang60: 2, kinhThu2k: 1 } }
 // Khai Giới Trảm Tà (Eve of the Crusade của RoK): pha Khai giới (pha 0, cổng còn đóng) hạ yêu thú giới rơi tàn quyển (eveFrags
 // theo cấp); đủ EVE_CHEST_N đổi một rương tiếp tế. Mỗi tàn quyển cộng một điểm giới vận cho tiên minh; cổng mở (hết pha 0) thì
 // EVE_TOP minh đầu được sản lượng +EVE_BUFF trong EVE_BUFF_TIME, mỗi người trong minh một thư báo hạng

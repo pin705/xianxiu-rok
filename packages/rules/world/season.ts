@@ -18,7 +18,7 @@ import { seasonEnd } from '../sect/rebirth.ts'
 import { freshWorld, sideKey, type MapCtx, type Players, type World } from './base.ts'
 import { unsold } from './market.ts'
 import { leagueBoard } from './ark.ts'
-import { campOf, campPts, type SeasonRow, seasonBoard } from './points.ts'
+import { campOf, campTotal, type SeasonRow, seasonBoard } from './points.ts'
 
 // Hết mùa cho cả giới (trừ skip: NPC, server làm mới riêng): minh đứng đầu (người từ ASCEND_HALL) và ai ở tầng cao nhất phi thăng,
 // còn lại luân hồi một kiếp; ai cũng nhận thư kết quả. Phần chung làm mới, giữ tiên minh (bỏ các việc đang nhờ giúp).
@@ -34,7 +34,7 @@ export function endSeason(
   const first = top.find(r => r.side > 0)?.side
   const rank = new Map(top.map((r, k) => [r.side, k + 1]))
   const honors = honorBoard(ps, skip).slice(0, HONOR_RANKS)
-  const camps = campPts(top)
+  const camps = campTotal(top, w)
   const league = new Map(
     leagueBoard(w)
       .slice(0, LEAGUE_PRIZES.length)

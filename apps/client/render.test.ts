@@ -1094,6 +1094,31 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
       'Tổng đà',
     )
     assert.ok(fortSheet.includes(L.world.terr.fort('VK')), 'bảng chạm Tổng đà')
+    // phù dời núi: Di Sơn Phù ở bảng chạm tông môn mình, Càn Khôn Phù ở ô trống vùng đã mở
+    const porter = { ...game, items: { ...game.items, diSon: 1, canKhon: 2 } }
+    const porterSheet = (pick: object) =>
+      paint(
+        'TileSheet',
+        {
+          game: porter,
+          now,
+          info,
+          atlas: a,
+          me: 1,
+          snap,
+          pick,
+          onclose: noop,
+          onraid: noop,
+          send: async () => ({ ok: true }),
+        },
+        `phù dời núi ${JSON.stringify(pick)}`,
+      )
+    assert.ok(porterSheet({ kind: 'seat', pid: 1 }).includes(L.world.terr.diSon(1)), 'Di Sơn Phù trên tông môn mình')
+    const home = porter.seat!
+    assert.ok(
+      porterSheet({ kind: 'tile', x: home.x + 3, y: home.y + 3 }).includes(L.world.terr.canKhon(2)),
+      'Càn Khôn Phù ở ô trống',
+    )
     // cướp khoáng: đội tông môn khác đang khai ở mỏ → danh sách + nút cướp; chạm đội đó → thấy đang khai
     const dig = {
       pid: 2,

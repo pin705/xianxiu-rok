@@ -3,7 +3,8 @@
   // tô đậm; chạm một dòng: hồ sơ) và điểm mùa theo phe + bảng phong thần các mùa trước (actor của giới tính lúc hỏi).
   import type { Season } from '@rok/protocol'
   import type { Ranks } from './net'
-  import { Card, Sheet, Tabs } from './ui'
+  import { CAMP_STAGE_PTS } from '@rok/rules'
+  import { Card, Meter, Sheet, Tabs } from './ui'
   import { L, num } from './lib'
   import { social } from './social.svelte'
 
@@ -56,6 +57,33 @@
         {/each}
       </p>
       <small class="t-tiny t-soft">{L.camp.hint(L.camp.names[sea.camp ?? 0])}</small>
+      {#if sea.stage}
+        <!-- chặng thi đua đang chạy: việc, giờ còn lại, điểm hai phái, phần mình góp -->
+        {@const st = sea.stage}
+        {@const tot = st.score[0] + st.score[1]}
+        <Card tone="silk">
+          <div class="stack" style:--gap="4px">
+            <b class="t-small"
+              >{L.camp.stage(
+                st.n + 1,
+                L.camp.what[st.m as keyof typeof L.camp.what] ?? st.m,
+                L.ago(Math.max(0, st.end - Date.now())),
+              )}</b
+            >
+            <Meter value={tot ? st.score[0] / tot : 0.5} tone="azure" size="sm" label={L.camp.names[0]} />
+            <p class="row between t-tiny">
+              {#each [0, 1] as const as c (c)}
+                <span class:t-gold={sea.camp === c}>{L.camp.names[c]} · {num(st.score[c])} · {st.wins[c]}✓</span>
+              {/each}
+            </p>
+            <small class="t-tiny"
+              >{L.camp.mine(num(st.mine))}{#if st.last && st.last.won !== null}
+                · {L.camp.last(st.last.n + 1, L.camp.names[st.last.won])}{/if}</small
+            >
+            <small class="t-tiny t-soft">{L.camp.stageHint(CAMP_STAGE_PTS)}</small>
+          </div>
+        </Card>
+      {/if}
     {/if}
     {#if sea.me}<p class="t-small t-gold t-strong mt-2">
         {L.rank.me}: #{sea.me.rank} · {L.rank.pts(num(sea.me.pts))}

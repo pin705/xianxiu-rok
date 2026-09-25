@@ -5,6 +5,7 @@
   import type { Net } from './net'
   import { Button, Card, Section, Toggle } from './ui'
   import { L, clock, sfx } from './lib'
+  import { useGame } from './game'
 
   let { account, now, onout }: { account: Net['account']; now: number; onout: () => void } = $props()
 
@@ -23,6 +24,17 @@
     return out === 'all' ? L.account.logoutAll : L.account.logout
   })
   let pushed = $state(typeof Notification !== 'undefined' && Notification.permission === 'granted')
+  // đổi tên tông môn (Cải Danh Lệnh)
+  const g = useGame()
+  const decrees = $derived(g.game.items.caiDanh ?? 0)
+  let fresh = $state('')
+  async function renameSect(e: SubmitEvent) {
+    e.preventDefault()
+    if (await run(() => account.rename(fresh.trim()), L.account.renamed)) {
+      fresh = ''
+      sfx('reward')
+    }
+  }
 
   onMount(() => void account.info().then(r => r.ok && (info = r.data)))
   const fail = (e: string) => {
@@ -139,6 +151,15 @@
         {/if}
       </div>
     </Card>
+
+    <form class="stack" onsubmit={renameSect}>
+      <b class="t-small">{L.account.rename} · {g.game.name}</b>
+      <small class="t-tiny t-soft">{L.account.renameHint(decrees)}</small>
+      <input bind:value={fresh} maxlength="20" placeholder={L.account.renameTo} aria-label={L.account.renameTo} />
+      <Button variant="ghost" wide type="submit" disabled={busy || !decrees || [...fresh.trim()].length < 2}
+        >{L.account.renameGo}</Button
+      >
+    </form>
 
     {#if info.push && !pushed}<Button variant="ghost" wide icon="mail" onclick={push}
         >{L.push.toggle}: {L.push.on}</Button

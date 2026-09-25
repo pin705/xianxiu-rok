@@ -117,6 +117,8 @@ export type Alliance = {
 }
 // Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
 export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
+// Chặng thi đua Chính Tà: chặng thứ n của mùa, mốc chỉ số của từng người lúc chặng mở (hay lúc thấy lần đầu)
+export type CampStage = { n: number; base: Record<number, number> }
 // Minh sự lịch: việc chung lúc at (người hẹn, lời nhắn, ai tham gia, đã nhắc trước giờ chưa)
 export type Plan = { id: number; by: number; at: number; text: string; go: number[]; warned?: boolean }
 // Tụ Bảo Minh Đỉnh: tuần, điểm cả minh, điểm từng người đã góp, số rương từng người đã mở
@@ -202,6 +204,9 @@ export type World = {
   firsts?: number[] // điểm đã có tiên minh chiếm lần đầu trong mùa (quà chiếm lần đầu)
   nextGroup?: number
   eve?: Record<number, number> // Khai Giới Trảm Tà: giới vận từng tiên minh trong pha Khai giới
+  stage?: CampStage // Chính Tà: chặng thi đua đang chạy (mốc chỉ số từng người)
+  stageWins?: [number, number] // số chặng mỗi phái đã thắng trong mùa
+  stageLast?: { n: number; score: [number, number]; won: 0 | 1 | null } // chặng vừa xong
   eveWin?: { ids: number[]; until: number } // minh đứng đầu giới vận lúc cổng mở: tăng ích tới until
   repair?: number // Tu Bổ Thiên Môn: tài nguyên cả giới đã góp
   ark?: Ark // Tranh Đoạt Linh Châu tuần này (on: tuần đã dựng trận)

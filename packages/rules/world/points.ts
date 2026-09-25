@@ -18,6 +18,7 @@ import {
   SEASON_HEAVEN,
   SEASON_RUIN,
   SEASON_VEIN,
+  CAMP_STAGE_PTS,
   FLAG_R,
   FORT_BUFFS,
   FORT_R,
@@ -149,6 +150,12 @@ export type SeasonRow = { side: number; name: string; pts: number } // side > 0:
 export const campOf = (side: number) => (((side % 2) + 2) % 2) as 0 | 1
 export const campPts = (rows: SeasonRow[]): [number, number] =>
   rows.reduce<[number, number]>((t, r) => (campOf(r.side) ? [t[0], t[1] + r.pts] : [t[0] + r.pts, t[1]]), [0, 0])
+// Điểm phái cả mùa: điểm mùa các phe + CAMP_STAGE_PTS mỗi chặng thi đua thắng
+export const campTotal = (rows: SeasonRow[], w: World): [number, number] => {
+  const [a, b] = campPts(rows),
+    [x, y] = w.stageWins ?? [0, 0]
+  return [a + x * CAMP_STAGE_PTS, b + y * CAMP_STAGE_PTS]
+}
 export function seasonBoard(w: World, ps: Players, map: MapCtx, now: number): SeasonRow[] {
   return Object.entries(seasonPts(w, map, now))
     .map(([k, pts]) => ({ side: Number(k), name: sideName(w, ps, Number(k)) ?? '', pts: Math.floor(pts) }))

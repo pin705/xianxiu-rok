@@ -806,7 +806,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A14 | Migration | — | ⛔ | — | — |
 | A15 | Vacation Permit, Rest Mode | Bế Quan Lệnh | 🟡 Hộ Sơn Phù, khiên | P2 | S |
 | B1 | The Lost Kingdom (Season 1–2) | Tranh Mạch Luật (mặc định) | ✅ | P0 (có) | — |
-| B2 | Light and Darkness | Chính Tà Phân Tranh | 🟡 hai phái + điểm mùa theo phái + quà phái thắng; chưa có chặng thi đua / Linh Nguyên | P1 | M |
+| B2 | Light and Darkness | Chính Tà Phân Tranh | ✅ hai phái + điểm mùa theo phái + chặng thi đua 3 ngày xoay vòng (`world/camp.ts`) + quà phái thắng; chưa có Linh Nguyên | P1 | M |
 | B3 | King of All Britain (+ Holmgang) | Nhân Yêu Tranh Bá + Sinh Tử Đài | ❌ | P2 | M |
 | B4 | Heroic Anthem | Tứ Tượng Tranh Hùng | ❌ | P2 | L |
 | B5 | Strife of the Eight | Bát Phương Hỗn Chiến | ❌ | P2 | S |
