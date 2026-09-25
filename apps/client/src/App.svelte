@@ -623,6 +623,7 @@
         sfx('march')
         rivalsOpen = false
       }}
+      onspy={async pid => !!(await waiting(n => n.send({ type: 'spy', pid })))?.ok}
       onrecruit={() => {
         rivalsOpen = false
         focus('dienVoTruong', 'train')

@@ -216,7 +216,16 @@ export type Legion = {
   held: Record<number, number>
 }
 // Trận kỳ: của minh aid, ở ô (x, y), dựng xong lúc done (từ đó mới nới lãnh thổ); hp / hit: độ bền còn lại sau lần bị đánh gần nhất
-export type Flag = { id: number; aid: number; x: number; y: number; done: number; hp?: number; hit?: number }
+export type Flag = {
+  id: number
+  aid: number
+  x: number
+  y: number
+  done: number
+  hp?: number
+  hit?: number
+  fort?: boolean
+} // fort: Tổng đà
 // Minh chiến: tuần đã giải gần nhất, các minh ghi danh tuần này, điểm minh chiến (Elo) từng minh, kết quả lần giải gần nhất
 export type WarResult = { a: number; b: number; an: string; bn: string; wa: number; wb: number }
 export type War = { done: number; signed: number[]; pts: Record<number, number>; last: WarResult[] }

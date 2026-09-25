@@ -20,7 +20,10 @@
     fold,
     FLAG_COST,
     FLAG_GUARD_MAX,
-    FLAG_HP,
+    FORT_BUILD,
+    FORT_COST,
+    FORT_MIN,
+    FORT_R,
     PVP_HALL,
     BOSSES,
     LOHAR_BONES,
@@ -44,6 +47,7 @@
     sitesOf,
     flagCap,
     flagHp,
+    flagMax,
     newbieMove,
     ownerAt,
     phaseOf,
@@ -226,7 +230,8 @@
   const claims = $derived(snap ? snapClaims(snap, atlas, now) : [])
   // trận kỳ ở ô đang xem; trưởng lão / minh chủ cắm được ở ô trống trong lãnh thổ minh mình
   const flag = $derived(pos ? snap?.flags?.find(f => f.x === pos.x && f.y === pos.y) : undefined)
-  const flagCount = $derived(ally ? (snap?.flags ?? []).filter(f => f.aid === ally.id).length : 0)
+  const flagCount = $derived(ally ? (snap?.flags ?? []).filter(f => f.aid === ally.id && !f.fort).length : 0)
+  const hasFort = $derived(!!ally && (snap?.flags ?? []).some(f => f.aid === ally.id && f.fort))
   // phá trận kỳ minh khác (không minh ước), từ tầng mở Tranh đoạt
   const canRaze = $derived(
     !!flag && game.levels.chuDien >= PVP_HALL && flag.aid !== ally?.id && !ally?.naps?.includes(flag.aid),
@@ -577,14 +582,17 @@
       >
       {#if flag}
         <span class="row wrap" style:--gap="4px"
-          ><Tag icon="flag">{L.world.terr.flag(snap.allies?.find(a => a.id === flag.aid)?.tag ?? '?')}</Tag
+          ><Tag icon="flag" tone={flag.fort ? 'gold' : undefined}
+            >{(flag.fort ? L.world.terr.fort : L.world.terr.flag)(
+              snap.allies?.find(a => a.id === flag.aid)?.tag ?? '?',
+            )}</Tag
           >{#if flag.done > now}<small class="t-tiny t-soft">{L.world.terr.building(clock(flag.done - now))}</small
             >{/if}</span
         >
         {@const hp = flagHp(flag, now)}
         <span class="row" style:--gap="6px"
-          ><span class="grow"><Meter value={hp / FLAG_HP} tone="bad" size="sm" /></span><small class="t-tiny t-num"
-            >{L.world.terr.hp(Math.ceil((hp / FLAG_HP) * 100))}</small
+          ><span class="grow"><Meter value={hp / flagMax(flag)} tone="bad" size="sm" /></span><small
+            class="t-tiny t-num">{L.world.terr.hp(Math.ceil((hp / flagMax(flag)) * 100))}</small
           ></span
         >
         {#if flag.guard}<small class="t-tiny t-soft">{L.world.terr.guards(flag.guard[0], num(flag.guard[1]))}</small
@@ -647,6 +655,18 @@
           >{L.world.terr.plant(num(FLAG_COST))}</Button
         >
         <small class="t-tiny t-soft">{L.world.terr.plantHint(flagCount, flagCap(ally), num(ally.fund ?? 0))}</small>
+        {#if !hasFort}
+          <!-- Tổng đà: mỗi minh một, cần đủ người; nới lãnh thổ rộng, tăng ích cho cả minh -->
+          <Button
+            size="sm"
+            variant="gold"
+            icon="flag"
+            disabled={ally.people.length < FORT_MIN || (ally.fund ?? 0) < FORT_COST}
+            onclick={async () => pos && (await send({ type: 'fort', x: pos.x, y: pos.y })).ok && sent()}
+            >{L.world.terr.fortPlant(num(FORT_COST))}</Button
+          >
+          <small class="t-tiny t-soft">{L.world.terr.fortHint(FORT_MIN, FORT_R, FORT_BUILD / 3_600_000)}</small>
+        {/if}
       {/if}
       {#if pick?.kind === 'tile' && !flag && game.seat && (newbie || (ally && owner === ally.id))}
         <Button size="sm" variant="ghost" icon="flag" disabled={moveWait > 0 || !!game.marches.length} onclick={move}
@@ -714,7 +734,7 @@
     min-width: 0;
     padding: 6px 10px;
     font: inherit;
-    border: 1.5px solid var(--rim);
+    border: 1.5px solid var(--rim, var(--ink3));
     border-radius: var(--cut);
     background: var(--paper);
   }

@@ -1130,6 +1130,10 @@ export const vi = {
       newbieHint: `Tông môn mới được dời núi một lần tới bất kỳ ô trống nào ở vùng ngoài (trước Chủ điện tầng ${NEWBIE_MOVE_HALL}) — về gần bạn bè, tiên minh. Mọi đội phải ở nhà.`,
       // Trận kỳ (Alliance Flag)
       flag: (tag: string) => `Trận kỳ [${tag}]`,
+      fort: (tag: string) => `Tổng đà [${tag}]`,
+      fortPlant: (cost: string) => `Dựng Tổng đà · ${cost} Minh khố`,
+      fortHint: (min: number, r: number, h: number) =>
+        `Tổng đà: mỗi minh một, cần ${min} người trở lên. Dựng ${h} giờ; xong thì lãnh thổ nới ${r} ô quanh đó, cả minh thủ +3 %, máu +3 %, hành quân nhanh 5 %.`,
       building: (t: string) => `Đang dựng · xong sau ${t}`,
       plant: (cost: string) => `Cắm trận kỳ · ${cost} Minh khố`,
       plantHint: (n: number, of: number, fund: string) =>
@@ -1171,6 +1175,7 @@ export const vi = {
     shut: 'Chưa mở (theo pha mùa)',
     troopsAt: (n: number) => `${n} đội đóng`,
     flyTo: 'Tới',
+    inFog: 'trong mê vụ',
     left: 'Còn',
     refill: (t: string) => `Mỏ cạn, đầy lại sau ${t}`,
     hp: 'Máu',
@@ -1242,6 +1247,11 @@ export const vi = {
     defense: 'Quân giữ nhà',
     guard: 'Trưởng lão giữ nhà',
     noGuard: 'Không ai trấn thủ',
+    // Do thám (Scout): thả linh điểu, báo cáo qua thư, bên kia biết bị do thám
+    spy: (cost: string) => `Do thám · ${cost} linh thạch`,
+    spyHint: 'Thả một linh điểu: biết tài nguyên cướp được, viện binh, trận lực — nhưng bên kia sẽ biết bị do thám.',
+    spyBusy: 'Linh điểu đều đang bay — chờ về.',
+    spyAt: (t: string) => `Báo cáo do thám · ${t} trước`,
     pickGuard: 'Chọn người trấn thủ',
     guardAway: 'Đang xuất chinh — lúc này không tính',
     wall: (n: number) => `Hộ Sơn Đại Trận tầng ${n}`,
@@ -1684,6 +1694,34 @@ export const vi = {
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
       ],
+      spy: (
+        foe: string,
+        x: number,
+        y: number,
+        thach: number,
+        thao: number,
+        khoang: number,
+        troops: number,
+        might: number,
+        aid: number,
+        wall: number,
+        shield: number,
+        guard: string,
+        level: number,
+      ): [string, string] => {
+        const n = (v: number) => v.toLocaleString('vi')
+        return [
+          `Do thám · ${foe}`,
+          `Linh điểu lượn qua ${foe} (${x},${y}):\n` +
+            `• Ước cướp được: ${n(thach)} linh thạch · ${n(thao)} linh thảo · ${n(khoang)} linh khoáng\n` +
+            `• Giữ nhà: ${n(troops)} đệ tử · lực chiến ${n(might)}${aid ? ` · ${aid} đội viện binh` : ''}\n` +
+            `• ${guard ? `Trưởng lão trấn thủ cấp ${level}` : 'Không có trưởng lão trấn thủ'} · trận lực ${wall} %${shield ? ' · đang bật khiên' : ''}`,
+        ]
+      },
+      spied: (foe: string): [string, string] => [
+        'Bị do thám',
+        `Linh điểu của ${foe} vừa lượn qua núi — có kẻ đang nhắm tông môn. Bật khiên, gọi viện binh nếu cần.`,
+      ],
       wallFall: (x: number, y: number): [string, string] => [
         'Sơn môn thất thủ',
         `Trận lực Hộ Sơn Đại Trận cạn giữa biển linh hỏa — tông môn bị đánh bật tới (${x},${y}). Lần sau hãy tu bổ trận cơ và dập lửa sớm.`,
@@ -1888,6 +1926,7 @@ export const vi = {
     arkSoon: 'Tranh Đoạt Linh Châu bắt đầu sau 10 phút — vào đặt lệnh cho đội!',
     wallFall: 'Sơn môn thất thủ! Trận lực cạn giữa linh hỏa, tông môn bị đánh bật sang chỗ khác.',
     plan: (text: string) => `Minh sự sau 10 phút: ${text}`,
+    spied: (name: string) => `Linh điểu của ${name} vừa do thám tông môn bạn`,
     kinds: 'Nhận thông báo về:',
     kind: {
       done: 'Việc dài xong (xây, tuyển, nghiên cứu, đội về)',
@@ -2329,6 +2368,9 @@ export const vi = {
       vein: 'Linh mạch phe mình giữ',
       tide: 'Linh triều vùng mình',
       ally: 'Hộ Minh Đại Trận',
+      fort: 'Tổng đà của minh',
+      eve: 'Khai Giới Trảm Tà: minh đứng đầu',
+      thoi: 'Thiên Thời',
       office: 'Chức vị trong tiên minh',
       title: 'Sắc phong của Giới Chủ',
       bless: 'Phúc của Giới Chủ',

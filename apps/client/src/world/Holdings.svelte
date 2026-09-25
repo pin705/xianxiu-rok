@@ -1,6 +1,7 @@
 <script lang="ts">
   // Sơn Hà Xã Tắc Đồ (Kingdom Overview của RoK): mọi linh mạch / trận nhãn / Thiên Môn của giới và phe đang giữ, lọc được
   // "chỉ minh mình" — bấm Tới để bay khung nhìn tới đó (và mở bảng của điểm).
+  import { cellOf, clear, type Fog } from '@rok/rules'
   import { veinBuffs, type Atlas, type MapSnap } from '@rok/rules/world'
   import { Badge, Button, Card, Sheet } from '../ui'
   import { L, spotName } from '../lib'
@@ -11,6 +12,8 @@
     snap,
     side,
     phase,
+    fog = null,
+    now = 0,
     onclose,
     onfly,
   }: {
@@ -19,6 +22,8 @@
     snap: MapSnap | null
     side: number // phe của mình (tiên minh > 0, một mình: −mã người chơi)
     phase: number
+    fog?: Fog | null // mê vụ của mình: điểm chưa khai ghi "trong mê vụ" (bay tới thì thả linh điểu)
+    now?: number
     onclose: () => void
     onfly: (x: number, y: number) => void
   } = $props()
@@ -56,7 +61,11 @@
         <Card tone={sp?.side === side ? 'glow' : undefined}>
           <div class="row">
             <span class="grow stack" style:--gap="1px">
-              <b class="t-small">{spotName(p.kind)} · {L.lv(p.lv)} <span class="t-soft t-num">({p.x},{p.y})</span></b>
+              <b class="t-small"
+                >{spotName(p.kind)} · {L.lv(p.lv)}
+                <span class="t-soft t-num">({p.x},{p.y})</span>{#if fog && !clear(fog, cellOf(p).cx, cellOf(p).cy, now)}
+                  <span class="t-tiny t-soft">· {L.world.inFog}</span>{/if}</b
+              >
               <small class="t-tiny" class:t-gold={sp?.side === side} class:t-soft={!sp?.own}
                 >{shut(p) ? L.world.shut : (sp?.own ?? L.world.nobody)}{#if sp?.n}
                   · {L.world.troopsAt(sp.n)}{/if}</small

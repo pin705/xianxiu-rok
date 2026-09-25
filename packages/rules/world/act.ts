@@ -37,6 +37,7 @@ import { arkActions, type ArkAction } from './ark.ts'
 import { partyActions, type PartyAction } from './party.ts'
 import { rescueActions, type RescueAction } from './rescue.ts'
 import { planActions, type PlanAction } from './plans.ts'
+import { spyActions, type SpyAction } from './spy.ts'
 import { shutGates } from './points.ts'
 
 export type WorldAction =
@@ -64,6 +65,7 @@ export type WorldAction =
   | PartyAction
   | RescueAction
   | PlanAction
+  | SpyAction
 
 const WORLD: WorldActions<WorldAction> = {
   ...raidActions,
@@ -90,6 +92,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...partyActions,
   ...rescueActions,
   ...planActions,
+  ...spyActions,
 }
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 

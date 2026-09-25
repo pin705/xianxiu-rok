@@ -6,11 +6,10 @@
   import type { Ack, Channel, ChatMsg, Dm, FriendView, GroupView } from '@rok/protocol'
   import type { WorldAction } from '@rok/rules/world'
   import type { Report } from '@rok/rules'
-  import { MAP_W } from '@rok/rules/world'
   import type { Net } from './net'
   import { Icon } from '@rok/art'
   import { Button, Sheet, Tabs } from './ui'
-  import { L, clock } from './lib'
+  import { L, clock, coords } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
 
@@ -133,11 +132,6 @@
     open = false
     onreplay?.(r)
   }
-  // toạ độ trong tin: "(x,y)" nằm trong bản đồ giới
-  const coords = (t: string) =>
-    [...t.matchAll(/\((\d{1,3}), ?(\d{1,3})\)/g)]
-      .map(m => ({ x: Number(m[1]), y: Number(m[2]) }))
-      .filter(c => c.x < MAP_W && c.y < MAP_W)
 </script>
 
 {#snippet body()}
@@ -403,7 +397,7 @@
     min-width: 0;
     padding: 8px 10px;
     font: inherit;
-    border: 1.5px solid var(--rim);
+    border: 1.5px solid var(--rim, var(--ink3));
     border-radius: var(--cut);
     background: var(--paper);
   }

@@ -209,6 +209,24 @@ export type MailArgs = {
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
   party: [lv: number, waves: number, n: number] // Man Hoang Cổ Tộc: độ khó, số đợt qua, số người trong đội
   wallFall: [x: number, y: number] // sơn môn thất thủ: trận lực về 0, tông môn bị đánh bật tới (x, y)
+  // do thám: tên, toạ độ, tài nguyên ước cướp được (thạch, thảo, khoáng), đệ tử giữ nhà, lực chiến giữ nhà, số đội viện binh,
+  // trận lực (%), khiên (1/0), trưởng lão trấn thủ ('' nếu không) và cấp
+  spy: [
+    foe: string,
+    x: number,
+    y: number,
+    thach: number,
+    thao: number,
+    khoang: number,
+    troops: number,
+    might: number,
+    aid: number,
+    wall: number,
+    shield: number,
+    guard: string,
+    level: number,
+  ]
+  spied: [foe: string] // bị do thám
   league: [rank: number] // Cửu Thiên Luận Đạo Hội: minh mình hạng rank cả mùa
   camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
   ark: [win: 0 | 1, foe: string, mine: number, theirs: number] // Tranh Đoạt Linh Châu: thắng / thua minh foe, điểm hai bên

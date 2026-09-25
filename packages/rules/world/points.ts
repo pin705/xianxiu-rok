@@ -19,6 +19,8 @@ import {
   SEASON_RUIN,
   SEASON_VEIN,
   FLAG_R,
+  FORT_BUFFS,
+  FORT_R,
   TERR_POINT,
   TERR_SEAT,
   TYPES,
@@ -156,7 +158,7 @@ export function seasonBoard(w: World, ps: Players, map: MapCtx, now: number): Se
 
 // ---------- Lãnh thổ tiên minh (Alliance Territory của RoK) ----------
 // Mốc lãnh thổ: tông môn người trong minh (bán kính TERR_SEAT ô), điểm minh đang giữ — linh mạch, cổng, Thiên Môn (TERR_POINT),
-// trận kỳ đã dựng xong (FLAG_R).
+// trận kỳ đã dựng xong (FLAG_R), Tổng đà đã dựng xong (FORT_R).
 // Mỗi ô thuộc minh có mốc gần nhất (khoảng cách ô Chebyshev, trong bán kính); hai minh cùng gần nhất: ô tranh chấp, không của ai.
 export type Claim = { x: number; y: number; r: number; side: number }
 const TERR_KINDS: PointKind[] = ['vein', 'gate', 'heaven']
@@ -177,12 +179,18 @@ export function claimsOf(ps: Players, w: World, a: Atlas, now: number): Claim[] 
   for (const f of Object.values(w.flags ?? {})) if (f.done <= now && w.allies[f.aid]) out.push(flagClaim(f))
   return out
 }
-export const flagClaim = (f: { x: number; y: number; aid: number }): Claim => ({
+export const flagClaim = (f: { x: number; y: number; aid: number; fort?: boolean }): Claim => ({
   x: f.x,
   y: f.y,
-  r: FLAG_R,
+  r: f.fort ? FORT_R : FLAG_R,
   side: f.aid,
 })
+// Tổng đà của minh đã dựng xong lúc t: người trong minh có FORT_BUFFS
+export function fortBuffs(w: World, pid: number, t: number): Buff[] {
+  const al = allyOf(w, pid)
+  const done = !!al && Object.values(w.flags ?? {}).some(f => f.fort && f.aid === al.id && f.done <= t)
+  return done ? FORT_BUFFS.map(b => ({ ...b, until: 0, src: 'fort' })) : []
+}
 // Chủ ô (x, y): id tiên minh; 0 — không của ai hoặc tranh chấp
 export function ownerAt(claims: Claim[], x: number, y: number): number {
   let best = Infinity,

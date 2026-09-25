@@ -291,7 +291,7 @@
     height: 8px;
     border-radius: 50%;
     background: var(--gold-l);
-    box-shadow: 0 0 0 1.5px var(--rim);
+    box-shadow: 0 0 0 1.5px var(--rim, var(--ink3));
   }
   .note {
     opacity: 0.75;

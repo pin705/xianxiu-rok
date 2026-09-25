@@ -102,9 +102,9 @@ const nine = async (name: string, draw: () => Skin, fill = true) => {
 // Giao diện sơn mài (27/9/2026): bề mặt lam sẫm, chữ ngà, vàng chỉ là đường viền đồng cổ — không tô mảng vàng/giấy (người chơi
 // thấy rẻ). Ghi đè các màu gốc mà giao diện dùng làm bề mặt/chữ; tranh cảnh (Pixi) vẫn dùng PIGMENT gốc.
 const LACQUER = {
-  paper: '#172528', // bề mặt bảng, thẻ
-  paper2: '#1f3236', // bề mặt nổi (ô, thẻ con)
-  paper3: '#3a5156', // đường chia, viền mảnh
+  paper: '#0f272b', // bề mặt bảng, thẻ — cùng tông lòng khung góc chạm (không thành hộp lồng hộp)
+  paper2: '#16343a', // bề mặt nổi (ô, thẻ con)
+  paper3: '#35534f', // đường chia, viền mảnh
   rim: '#9a8456', // viền đồng cổ
   ivory: '#efe7d6', // chữ chính
   ivory2: '#c3baa8',
@@ -122,7 +122,9 @@ const LACQUER = {
 export async function applyTheme() {
   const root = document.documentElement.style
   for (const [k, v] of Object.entries(PIGMENT)) root.setProperty(`--${kebab(k)}`, v)
-  for (const [k, v] of Object.entries(LACQUER)) root.setProperty(`--${kebab(k)}`, v)
+  // chỉ khi da sơn mài (tranh) đã có: thiếu tranh (mất mạng lần đầu, ?art=0) thì da vẽ bằng code là giấy sáng → giữ chữ mực
+  if (artOf('skin:card')) for (const [k, v] of Object.entries(LACQUER)) root.setProperty(`--${kebab(k)}`, v)
+  else root.colorScheme = 'light'
   const P = PIGMENT
   const vars: Record<string, Promise<string>> = {
     '--paper-tex': img('paper', () => paper(256)),

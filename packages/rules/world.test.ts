@@ -1,6 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  cranes,
+  SPY_COST,
+  FORT_BUFFS,
+  FORT_BUILD,
+  FORT_COST,
+  FORT_HP,
+  FORT_R,
   ALLY_IDLE,
   GROUPS_PER,
   TRIBE_PTS,
@@ -75,6 +82,8 @@ import {
   type State,
 } from './index.ts'
 import {
+  flagsOf,
+  fortBuffs,
   recallable,
   MAP_W,
   advanceAll,
@@ -2028,4 +2037,90 @@ test('cửa ải: trận nhãn phe khác đang giữ chặn đường (blocked);
   assert.equal(go(held(-1)), null, 'mình giữ')
   assert.equal(go(held(7, { 1: ally(1, { 1: 2 }, [7]), 7: ally(7, { 2: 2 }, [1]) })), null, 'minh ước giữ')
   assert.equal(go(held(7, { 1: ally(1, { 1: 2 }), 7: ally(7, { 2: 2 }) })), 'blocked', 'minh khác giữ')
+})
+
+test('Tổng đà: minh đủ người dựng một cái bằng Minh khố, xong thì nới lãnh thổ FORT_R, độ bền lớn, cả minh được tăng ích', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const r0 = a.regions.find(r => r.ring === 0)!
+  const home = { x: r0.cx, y: r0.cy }
+  const seats = [home, ...[3, 6, 9, 12].map(k => ({ x: 3 + k, y: 3 }))]
+  const ps = world(...seats.map((seat, k) => ({ ...sect(`S${k}`, 10), seat })))
+  const members = Object.fromEntries(seats.map((_, k) => [k + 1, k ? 0 : 2])) as Record<number, 0 | 2>
+  const al = { id: 1, name: 'M', tag: 'T', members, notice: '', at: T0, helps: [], fund: FORT_COST + 5 }
+  let w: World = { ...freshWorld(), allies: { 1: al } }
+  const fort = (x: number, y: number, ww = w, pid = 1) => worldAct(ps, pid, { type: 'fort', x, y }, T0, 1, map, ww)
+  const spot = [-1, 0, 1]
+    .flatMap(k => [
+      { x: home.x + TERR_SEAT, y: home.y + k },
+      { x: home.x - TERR_SEAT, y: home.y + k },
+    ])
+    .find(p => fort(p.x, p.y).ok)!
+  assert.ok(spot, 'có ô dựng được')
+  assert.equal(
+    err(fort(spot.x, spot.y, { ...w, allies: { 1: { ...al, members: { 1: 2, 2: 0 } } } })),
+    'limit',
+    'chưa đủ người',
+  )
+  assert.equal(err(fort(spot.x, spot.y, w, 2)), 'locked', 'thành viên thường không dựng')
+  const r = fort(spot.x, spot.y)
+  assert.ok(r.ok)
+  w = r.world
+  const f = Object.values(w.flags!)[0]
+  assert.ok(f.fort && f.done === T0 + FORT_BUILD)
+  assert.equal(w.allies[1].fund, 5)
+  assert.equal(flagsOf(w, 1).length, 0, 'không tính vào số trận kỳ')
+  assert.equal(
+    err(fort(home.x, home.y + TERR_SEAT, { ...w, allies: { 1: { ...w.allies[1], fund: 99_999 } } })),
+    'limit',
+    'mỗi minh một',
+  )
+  const far = { x: spot.x + Math.sign(spot.x - home.x) * FORT_R, y: spot.y }
+  assert.equal(ownerAt(claimsOf(ps, w, a, T0), far.x, far.y), 0, 'đang dựng: chưa nới')
+  assert.equal(ownerAt(claimsOf(ps, w, a, f.done), far.x, far.y), 1, 'dựng xong: nới FORT_R ô')
+  assert.equal(flagHp(f, f.done), FORT_HP)
+  assert.deepEqual(fortBuffs(w, 1, T0), [], 'đang dựng: chưa có tăng ích')
+  assert.deepEqual(
+    fortBuffs(w, 3, f.done).map(b => [b.key, b.v, b.src]),
+    FORT_BUFFS.map(b => [b.key, b.v, 'fort']),
+  )
+})
+
+test('do thám: tốn linh thạch theo tầng bên kia, chiếm một linh điểu tới khi về, thư báo cáo cho mình và thư "bị do thám" cho bên kia', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const r0 = a.regions.find(r => r.ring === 0)!
+  const me = { ...sect('Dò', 10), seat: { x: r0.cx, y: r0.cy }, res: { linhThach: 5000, linhThao: 0, linhKhoang: 0 } }
+  const foe = {
+    ...sect('Nhà', 12, { kiem2: 300 }),
+    seat: { x: r0.cx + 12, y: r0.cy },
+    res: { linhThach: 900_000, linhThao: 0, linhKhoang: 0 },
+  }
+  const ps = world(me, foe)
+  const w = freshWorld()
+  const spy = (pid = 1, at = T0, pp = ps) => worldAct(pp, pid, { type: 'spy', pid: pid === 1 ? 2 : 1 }, at, 1, map, w)
+  const r = spy()
+  assert.ok(r.ok, JSON.stringify(r))
+  const s = r.changed.get(1)!
+  assert.equal(s.res.linhThach, 5000 - SPY_COST * 12)
+  const rep = s.mail.at(-1)!
+  assert.equal(rep.k, 'spy')
+  assert.equal(rep.a![0], 'Nhà')
+  assert.ok((rep.a![3] as number) > 0, 'thấy tài nguyên cướp được')
+  assert.equal(rep.a![6], 300, 'thấy quân giữ nhà')
+  assert.equal(r.changed.get(2)!.mail.at(-1)!.k, 'spied')
+  // linh điểu bận tới khi về: hết linh điểu thì không thả được
+  const busy = new Map([...ps, [1, s]])
+  assert.equal(err(spy(1, T0 + 1000, busy)), cranes(s) > 1 ? null : 'busy')
+  assert.equal(err(spy(1, T0, new Map([...ps, [1, { ...me, res: { ...me.res, linhThach: 10 } }]]))), 'not_enough')
+  assert.equal(
+    err(
+      worldAct(ps, 1, { type: 'spy', pid: 2 }, T0, 1, map, {
+        ...w,
+        allies: { 1: { id: 1, name: 'M', tag: 'M', members: { 1: 2, 2: 0 }, notice: '', at: T0, helps: [] } },
+      }),
+    ),
+    'friend',
+    'cùng minh',
+  )
 })

@@ -18,6 +18,7 @@ import {
   type State,
   type UnitType,
 } from '@rok/rules'
+import { MAP_W } from '@rok/rules/world'
 import type { Net } from './net'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
@@ -359,3 +360,8 @@ export function devTools(n: Pick<Net, 'dev'>, get: () => State | null) {
     rok: { get, warp: (min: number) => n.dev('warp', { min }), set: (s: State) => n.dev('state', { state: s }) },
   })
 }
+// Toạ độ trong chữ người chơi gõ (tin chat, lịch minh): "(x,y)" nằm trong bản đồ giới
+export const coords = (t: string) =>
+  [...t.matchAll(/\((\d{1,3}), ?(\d{1,3})\)/g)]
+    .map(m => ({ x: Number(m[1]), y: Number(m[2]) }))
+    .filter(c => c.x < MAP_W && c.y < MAP_W)

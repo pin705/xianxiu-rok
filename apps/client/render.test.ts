@@ -1071,6 +1071,29 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
         { game, now, info, atlas: a, me: 1, snap, pick, onclose: noop, onraid: noop, send: async () => ({ ok: true }) },
         `chạm ${pick.kind} ${JSON.stringify(pick)}`,
       )
+    // Tổng đà của minh khác đang dựng ở ô (3, 4): tên, giờ xong, độ bền theo FORT_HP
+    const forted = {
+      ...snap,
+      allies: [{ id: 3, tag: 'VK' }],
+      flags: [{ id: 5, aid: 3, x: 3, y: 4, done: now + 3_600_000, fort: true }],
+    }
+    const fortSheet = paint(
+      'TileSheet',
+      {
+        game,
+        now,
+        info,
+        atlas: a,
+        me: 1,
+        snap: forted,
+        pick: { kind: 'tile', x: 3, y: 4 },
+        onclose: noop,
+        onraid: noop,
+        send: async () => ({ ok: true }),
+      },
+      'Tổng đà',
+    )
+    assert.ok(fortSheet.includes(L.world.terr.fort('VK')), 'bảng chạm Tổng đà')
     // cướp khoáng: đội tông môn khác đang khai ở mỏ → danh sách + nút cướp; chạm đội đó → thấy đang khai
     const dig = {
       pid: 2,

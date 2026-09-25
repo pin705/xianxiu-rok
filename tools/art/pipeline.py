@@ -420,3 +420,41 @@ def tint_grey(img, color):
   t = np.asarray(tint(img, color)).astype(np.float32)
   a[..., :3] = a[..., :3] * keep + t[..., :3] * (1 - keep)
   return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
+
+# ---------- khung/nút vẽ tay ở độ nét gốc (27/9: bản thu nhỏ về khổ bản code rồi phóng lên → mờ, mặt nút nhuộm phẳng → "nhựa") ----------
+def despill(im):
+  """tím/hồng còn sót ở mép sau khi tách nền (r > g và b > g) → xám. Chỉ dùng cho khung/nút (tranh tím thật như đan dược thì không)"""
+  a = np.asarray(im).astype(np.int16).copy()
+  r, g, b = a[..., 0], a[..., 1], a[..., 2]
+  m = (r > g + 6) & (b > g + 6)
+  a[..., 0] = np.where(m, g, r)
+  a[..., 2] = np.where(m, g, b)
+  return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
+
+def raw_frame(src, width):
+  """mẫu gốc đã tách nền → cắt sát khối (alpha > 200), khử tím, thu về bề ngang `width` (px ảnh 3x)"""
+  im = despill(Image.open(src).convert('RGBA'))
+  bx = im.getchannel('A').point(lambda v: 255 if v > 200 else 0).getbbox()
+  im = im.crop(bx)
+  return im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
+
+def lacquer(img, color, seed=7):
+  """mặt nút sơn mài: phần xám → màu sơn có chiều sâu (sáng trên, tối dưới và hai đầu), vân lớp sơn rất nhẹ, không vệt bóng trắng;
+  phần có màu (viền, đầu bịt đồng) giữ nguyên"""
+  a = np.asarray(img).astype(np.float32)
+  h, w = a.shape[:2]
+  mx, mn = a[..., :3].max(-1), a[..., :3].min(-1)
+  keep = np.clip(((mx - mn) / np.maximum(mx, 1) - 0.12) / 0.12, 0, 1)[..., None]  # 1 = đồng, 0 = mặt xám
+  L = a[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)
+  med = np.median(L[(a[..., 3] > 128) & (keep[..., 0] < 0.5)]) if ((a[..., 3] > 128) & (keep[..., 0] < 0.5)).any() else 128
+  detail = np.clip((L - med) / 420, -0.12, 0.12)[..., None]      # giữ gờ vát của tranh, bỏ vệt sáng mạnh
+  y = np.linspace(0, 1, h)[:, None, None]
+  x = np.abs(np.linspace(-1, 1, w))[None, :, None]
+  shade = 1.10 - 0.30 * y - 0.18 * x ** 4                          # sáng trên, tối dưới, hai đầu tối hơn
+  rng = np.random.default_rng(seed)
+  low = np.asarray(Image.fromarray((rng.random((h // 6 + 1, w // 6 + 1)) * 255).astype(np.uint8)).resize((w, h), Image.BICUBIC), np.float32)[..., None] / 255
+  grain = rng.normal(0, 1, (h, w, 1)).astype(np.float32)
+  c = _rgb(color)
+  face = c * (shade + detail + (low - 0.5) * 0.06) + grain * 2.2
+  a[..., :3] = a[..., :3] * keep + face * (1 - keep)
+  return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')

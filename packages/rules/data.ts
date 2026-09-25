@@ -959,6 +959,10 @@ export const SHIELD_TIME = 8 * 3_600_000
 export const NEWBIE_SHIELD = 72 * 3_600_000
 export const REVENGE_TIME = 24 * 3_600_000
 export const FRENZY_TIME = 30 * 60_000 // cơn sát khí: vừa xuất quân cướp thì chừng ấy chưa dùng được Hộ Sơn Phù (War Frenzy)
+// Do thám (Scout của RoK): thả một linh điểu tới tông môn khác (hai bên từ tầng PVP_HALL, không cùng phe / minh ước) — tốn SPY_COST ×
+// tầng Chủ điện bên kia linh thạch, linh điểu bay đi về (CRANE_TIME mỗi ô sương mỗi chiều). Báo cáo qua thư ngay: tài nguyên ước
+// cướp được, quân giữ nhà, viện binh, trấn thủ, trận lực, khiên. Bên kia nhận thư "bị do thám" (và Web Push)
+export const SPY_COST = 200
 // Trận lực Hộ Sơn Đại Trận + linh hỏa thiêu sơn (độ bền tường, thành cháy, bị buộc dời thành của RoK): trận lực tối đa WALL_HP ×
 // (1 + tầng Hộ Sơn Đại Trận). Thủ thua: mất WALL_HIT phần trận lực tối đa, núi bốc linh hỏa FIRE_TIME (thua tiếp thì cháy lại từ
 // đầu); đang cháy mất FIRE_DRAIN phần mỗi phút, hết cháy thì tự hồi WALL_REGEN phần mỗi giờ. Tu bổ trận cơ: miễn phí mỗi
@@ -1622,6 +1626,19 @@ export const NEWBIE_MOVE_HALL = 8
 // FLAG_BUILD thì nới lãnh thổ bán kính FLAG_R. Mỗi minh tối đa FLAG_BASE + 1 mỗi FLAG_PER người (trần FLAG_MAX); cách điểm,
 // tông môn, trận kỳ khác từ FLAG_GAP ô.
 export const FLAG_R = 4
+// Tổng đà (Alliance Center / Fortress của RoK): trưởng lão / minh chủ dựng trong lãnh thổ minh mình khi minh có ≥ FORT_MIN người,
+// tốn FORT_COST Minh khố, dựng xong sau FORT_BUILD; mỗi minh một Tổng đà (không tính vào số trận kỳ). Xong thì nới lãnh thổ bán
+// kính FORT_R, độ bền FORT_HP (bị phá, được giữ như trận kỳ), người trong minh có FORT_BUFFS (nguồn "fort").
+export const FORT_MIN = 5
+export const FORT_COST = 3000
+export const FORT_BUILD = 6 * 3_600_000
+export const FORT_R = 7
+export const FORT_HP = 150_000
+export const FORT_BUFFS: { key: Bonus; v: number }[] = [
+  { key: 'def', v: 0.03 },
+  { key: 'hp', v: 0.03 },
+  { key: 'march', v: 0.05 },
+]
 export const FLAG_COST = 1000
 export const FLAG_BUILD = 3_600_000
 export const FLAG_BASE = 2

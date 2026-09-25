@@ -18,6 +18,10 @@ import {
   FLAG_MAX,
   FLAG_PER,
   FLAG_REPAIR,
+  FORT_BUILD,
+  FORT_COST,
+  FORT_HP,
+  FORT_MIN,
   HONOR_RAZE,
   PVP_HALL,
   type ElderId,
@@ -34,57 +38,72 @@ import {
   turnBack,
   withMarch,
   type Alliance,
+  type Ctx,
   type Flag,
   type Players,
   type World,
   type WorldActions,
+  type WorldResult,
 } from './base.ts'
 import { claimsOf, ownerAt } from './points.ts'
 
-// Số trận kỳ tối đa của minh: theo số người
+// Số trận kỳ tối đa của minh: theo số người (Tổng đà không tính)
 export const flagCap = (al: Alliance) =>
   Math.min(FLAG_MAX, FLAG_BASE + Math.floor(Object.keys(al.members).length / FLAG_PER))
-export const flagsOf = (w: World, aid: number) => Object.values(w.flags ?? {}).filter(f => f.aid === aid)
+export const flagsOf = (w: World, aid: number) => Object.values(w.flags ?? {}).filter(f => f.aid === aid && !f.fort)
+export const fortOf = (w: World, aid: number) => Object.values(w.flags ?? {}).find(f => f.aid === aid && f.fort)
 
-// Độ bền lúc t: không bị đánh FLAG_REPAIR thì liền đầy
+// Độ bền lúc t: không bị đánh FLAG_REPAIR thì liền đầy (Tổng đà: FORT_HP)
+export const flagMax = (f: { fort?: boolean }) => (f.fort ? FORT_HP : FLAG_HP)
 export const flagHp = (f: Flag, t: number) =>
-  f.hit !== undefined && t - f.hit < FLAG_REPAIR ? (f.hp ?? FLAG_HP) : FLAG_HP
+  f.hit !== undefined && t - f.hit < FLAG_REPAIR ? (f.hp ?? flagMax(f)) : flagMax(f)
 
 export type FlagAction =
   | { type: 'flag'; x: number; y: number }
+  | { type: 'fort'; x: number; y: number } // dựng Tổng đà
   | { type: 'unflag'; id: number }
   | { type: 'raze'; id: number; elder: ElderId; army: Army }
   | { type: 'flagGuard'; id: number; elder: ElderId; army: Army } // đóng quân giữ cờ minh mình
 
+// Cắm trận kỳ / dựng Tổng đà ở (x, y): trong lãnh thổ minh mình, cách điểm, tông môn, cờ khác từ FLAG_GAP ô, tốn Minh khố
+function plant({ ps, w, pid, s, map }: Ctx, a: { x: number; y: number }, fort: boolean): WorldResult {
+  const al = allyOf(w, pid)
+  if (!al || (al.members[pid] ?? 0) < 1 || !map) return no('locked')
+  if (fort ? !!fortOf(w, al.id) || Object.keys(al.members).length < FORT_MIN : flagsOf(w, al.id).length >= flagCap(al))
+    return no('limit')
+  const cost = fort ? FORT_COST : FLAG_COST
+  if ((al.fund ?? 0) < cost) return no('not_enough')
+  const at = { x: a.x, y: a.y }
+  const near = (p: { x: number; y: number }) => dist(p, at) < FLAG_GAP
+  if (
+    map.atlas.points.some(near) ||
+    [...ps.values()].some(o => o.seat && near(o.seat)) ||
+    Object.values(w.flags ?? {}).some(near)
+  )
+    return no('taken')
+  if (ownerAt(claimsOf(ps, w, map.atlas, s.time), a.x, a.y) !== al.id) return no('bad')
+  const id = w.nextFlag ?? 1
+  const next = put(w, { ...al, fund: (al.fund ?? 0) - cost })
+  const done = s.time + (fort ? FORT_BUILD : FLAG_BUILD)
+  return {
+    ok: true,
+    changed: new Map(),
+    world: {
+      ...next,
+      flags: { ...next.flags, [id]: { id, aid: al.id, x: a.x, y: a.y, done, ...(fort && { fort: true }) } },
+      nextFlag: id + 1,
+    },
+  }
+}
+
 export const flagActions: WorldActions<FlagAction> = {
   flag: {
     pick: a => (int(1, MAP_W - 2)(a.x) && int(1, MAP_W - 2)(a.y) ? { type: 'flag', x: a.x, y: a.y } : null),
-    run: ({ ps, w, pid, s, map }, a) => {
-      const al = allyOf(w, pid)
-      if (!al || (al.members[pid] ?? 0) < 1 || !map) return no('locked')
-      if (flagsOf(w, al.id).length >= flagCap(al)) return no('limit')
-      if ((al.fund ?? 0) < FLAG_COST) return no('not_enough')
-      const at = { x: a.x, y: a.y }
-      const near = (p: { x: number; y: number }) => dist(p, at) < FLAG_GAP
-      if (
-        map.atlas.points.some(near) ||
-        [...ps.values()].some(o => o.seat && near(o.seat)) ||
-        Object.values(w.flags ?? {}).some(near)
-      )
-        return no('taken')
-      if (ownerAt(claimsOf(ps, w, map.atlas, s.time), a.x, a.y) !== al.id) return no('bad')
-      const id = w.nextFlag ?? 1
-      const next = put(w, { ...al, fund: (al.fund ?? 0) - FLAG_COST })
-      return {
-        ok: true,
-        changed: new Map(),
-        world: {
-          ...next,
-          flags: { ...next.flags, [id]: { id, aid: al.id, x: a.x, y: a.y, done: s.time + FLAG_BUILD } },
-          nextFlag: id + 1,
-        },
-      }
-    },
+    run: (c, a) => plant(c, a, false),
+  },
+  fort: {
+    pick: a => (int(1, MAP_W - 2)(a.x) && int(1, MAP_W - 2)(a.y) ? { type: 'fort', x: a.x, y: a.y } : null),
+    run: (c, a) => plant(c, a, true),
   },
   unflag: {
     pick: a => (isId(a.id) ? { type: 'unflag', id: a.id } : null),
@@ -172,7 +191,7 @@ export function razeArrive(ps: Players, w: World, [pid, s, m]: [number, State, M
   const before = flagHp(f, at)
   // quân đóng giữ chặn bớt: chỉ phần lực chiến vượt lực chiến của họ mới phá được độ bền
   const hp = Math.max(0, before - Math.max(0, Math.round(might(marchSide(s, m))) - guardMight(flagGuards(ps, f.id))))
-  const left = Math.ceil((hp / FLAG_HP) * 100)
+  const left = Math.ceil((hp / flagMax(f)) * 100)
   const { [f.id]: _, ...rest } = w.flags!
   const flags = hp ? { ...rest, [f.id]: { ...f, hp, hit: at } } : rest
   const changed: Players = hp ? new Map() : guardsHome(ps, f.id, at) // cờ đổ: quân giữ về

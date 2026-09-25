@@ -20,9 +20,10 @@
   --fs-7: 32px;
 
   /* Màu theo vai trò (pigment do theme.ts bơm vào) */
-  --text: var(--ivory);
-  --text-soft: var(--ivory2);
-  --text-faint: var(--ivory3);
+  /* chữ ngà (giao diện sơn mài); thiếu tranh thì theme.ts không bơm --ivory → rơi về mực trên giấy */
+  --text: var(--ivory, var(--ink));
+  --text-soft: var(--ivory2, var(--ink2));
+  --text-faint: var(--ivory3, var(--ink3));
   --text-inv: var(--silk);
   --text-inv-soft: color-mix(in srgb, var(--silk) 68%, var(--ochre-l));
   --good: var(--malachite);

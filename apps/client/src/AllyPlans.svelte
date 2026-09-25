@@ -4,14 +4,20 @@
   import { PLAN_AHEAD, PLAN_MAX, PLAN_TEXT, PLAN_WARN } from '@rok/rules'
   import type { AllyInfo, WorldAction } from '@rok/rules/world'
   import { Button, Card, Section, Tag } from './ui'
-  import { L, LANG, clock } from './lib'
+  import { L, LANG, clock, coords } from './lib'
   import { useGame } from './game'
 
   let {
     ally,
     me,
     go,
-  }: { ally: AllyInfo; me: number; go: (a: WorldAction, sound?: 'reward' | 'tap') => Promise<boolean> } = $props()
+    onmap,
+  }: {
+    ally: AllyInfo
+    me: number
+    go: (a: WorldAction, sound?: 'reward' | 'tap') => Promise<boolean>
+    onmap?: (x: number, y: number) => void // toạ độ trong lời nhắn: bay tới trên bản đồ giới
+  } = $props()
   const g = useGame()
   const now = $derived(g.now)
   const officer = $derived((ally.members[me] ?? -9) >= 1)
@@ -58,6 +64,14 @@
               >
             </p>
             <p class="t-small">{p.text}</p>
+            {#if onmap}
+              {#each coords(p.text) as c, k (k)}<Button
+                  size="sm"
+                  variant="quiet"
+                  icon="flag"
+                  onclick={() => onmap(c.x, c.y)}>{L.chat.goto(c.x, c.y)}</Button
+                >{/each}
+            {/if}
             <small class="t-tiny t-soft">{L.plan.by(name(p.by))} · {L.plan.going(p.go.length)}</small>
             {#if p.go.length}
               <div class="row wrap" style:--gap="4px">
@@ -109,7 +123,7 @@
     width: 100%;
     min-width: 0;
     padding: 8px 10px;
-    border: 1.5px solid var(--rim);
+    border: 1.5px solid var(--rim, var(--ink3));
     border-radius: var(--cut);
     background: var(--paper);
   }

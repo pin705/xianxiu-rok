@@ -13,7 +13,9 @@ export const newSeed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước m
 function publicText(a: WorldAction) {
   if (a.type === 'allyFound') return [a.name, a.tag]
   if (a.type === 'groupNew') return [a.name]
-  return a.type === 'allyNotice' || a.type === 'allyMark' || a.type === 'allyMail' ? [a.text] : []
+  return a.type === 'allyNotice' || a.type === 'allyMark' || a.type === 'allyMail' || a.type === 'planAdd'
+    ? [a.text]
+    : []
 }
 
 export function intent(w: World, sock: Sock, a: Action | WorldAction, ack: (r: Ack) => void) {
@@ -73,5 +75,10 @@ function social(w: World, slot: Slot, sock: Sock, raw: unknown, now: number, ack
     if (other) w.commit(other, s, pid === slot.id ? { sock, ack } : undefined)
   }
   if (!mine) w.persist.deliver(() => ack({ ok: true }), true) // chỉ đổi phần chung (tiên minh): ack sau khi ghi
+  // bị do thám: báo bên kia qua Web Push (Tháp canh của RoK báo cả trinh sát)
+  if (a?.type === 'spy' && !w.npc.has(a.pid)) {
+    const name = w.ps.get(slot.id)?.name ?? ''
+    w.env.push?.(a.pid, L => ({ title: L.push.title, body: L.push.spied(name), tag: 'raid' }))
+  }
   w.armRaid()
 }

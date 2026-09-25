@@ -1141,6 +1141,10 @@ export const en: Text = {
       newbie: "Newcomer's relocation here",
       newbieHint: `New sects may relocate once to any free tile in the outer ring (before Main Hall level ${NEWBIE_MOVE_HALL}) — move next to friends or an alliance. Every army must be home.`,
       flag: (tag: string) => `[${tag}] banner`,
+      fort: (tag: string) => `[${tag}] stronghold`,
+      fortPlant: (cost: string) => `Build the stronghold · ${cost} alliance funds`,
+      fortHint: (min: number, r: number, h: number) =>
+        `Stronghold: one per alliance, needs ${min}+ members. Builds in ${h} h; then territory spreads ${r} tiles around it and the whole alliance gets DEF +3%, HP +3%, march speed +5%.`,
       building: (t: string) => `Under construction · done in ${t}`,
       plant: (cost: string) => `Plant a banner · ${cost} alliance funds`,
       plantHint: (n: number, of: number, fund: string) =>
@@ -1180,6 +1184,7 @@ export const en: Text = {
     shut: 'Not open yet (season phase)',
     troopsAt: (n: number) => `${n} garrisoned`,
     flyTo: 'Go',
+    inFog: 'in fog',
     free: 'Unclaimed — garrison it to seize it',
     left: 'Left',
     refill: (t: string) => `Depleted, refills in ${t}`,
@@ -1251,6 +1256,11 @@ export const en: Text = {
     defense: 'Home guard',
     guard: 'Guarding elder',
     noGuard: 'No one on guard',
+    spy: (cost: string) => `Scout · ${cost} spirit stone`,
+    spyHint:
+      'Send a crane: see lootable resources, reinforcements and array strength — but they will know they were scouted.',
+    spyBusy: 'All cranes are out — wait for one to return.',
+    spyAt: (t: string) => `Scout report · ${t} ago`,
     pickGuard: 'Choose a guard',
     guardAway: 'Away on a march — not counted now',
     wall: (n: number) => `Mountain Guard Array lv ${n}`,
@@ -1683,6 +1693,34 @@ export const en: Text = {
         `First capture · ${({ vein: 'Spirit vein', gate: 'Array eye', heaven: 'Heaven Gate' } as Record<string, string>)[kind] ?? kind} level ${lv}`,
         'Your alliance is the first this season to hold this point. A reward for every member is below.',
       ],
+      spy: (
+        foe: string,
+        x: number,
+        y: number,
+        thach: number,
+        thao: number,
+        khoang: number,
+        troops: number,
+        might: number,
+        aid: number,
+        wall: number,
+        shield: number,
+        guard: string,
+        level: number,
+      ): [string, string] => {
+        const n = (v: number) => v.toLocaleString('en')
+        return [
+          `Scout report · ${foe}`,
+          `Your crane circled ${foe} (${x},${y}):\n` +
+            `• Lootable (est.): ${n(thach)} spirit stone · ${n(thao)} spirit herb · ${n(khoang)} spirit ore\n` +
+            `• At home: ${n(troops)} disciples · power ${n(might)}${aid ? ` · ${aid} reinforcing armies` : ''}\n` +
+            `• ${guard ? `Garrison elder level ${level}` : 'No garrison elder'} · array ${wall}%${shield ? ' · shield up' : ''}`,
+        ]
+      },
+      spied: (foe: string): [string, string] => [
+        'You were scouted',
+        `A crane from ${foe} just circled your mountain — someone is eyeing your sect. Raise a shield or call reinforcements if needed.`,
+      ],
       wallFall: (x: number, y: number): [string, string] => [
         'Sect overrun',
         `The Guardian Array gave out amid the spirit fire — your sect was driven to (${x},${y}). Next time, mend the array and douse the fire early.`,
@@ -1893,6 +1931,7 @@ export const en: Text = {
     arkSoon: 'The Spirit Orb battle starts in 10 minutes — come set your orders!',
     wallFall: 'Your sect was overrun! The array gave out in the spirit fire and your sect was driven elsewhere.',
     plan: (text: string) => `Alliance event in 10 minutes: ${text}`,
+    spied: (name: string) => `A crane from ${name} just scouted your sect`,
     kinds: 'Notify me about:',
     kind: {
       done: 'Long tasks done (building, training, research, returning armies)',
@@ -2324,6 +2363,9 @@ export const en: Text = {
       vein: 'Spirit veins held by your side',
       tide: 'Spirit tide in your region',
       ally: 'Alliance Guardian Array',
+      fort: 'Alliance stronghold',
+      eve: 'Realm Dawn: leading alliance',
+      thoi: 'Heavenly Timing',
       office: 'Alliance office',
       title: "Realm Lord's title",
       bless: "Realm Lord's blessing",

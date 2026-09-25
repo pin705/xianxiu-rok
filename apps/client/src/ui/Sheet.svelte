@@ -189,6 +189,7 @@
   }
   /* trục gỗ sơn mài, hai đầu bịt đồng chạm hoa (vẽ tay) */
   .rod {
+    visibility: hidden; /* sơn mài: khung góc chạm đã đủ, trục gỗ nâu trông như khúc gỗ — giữ chỗ để kéo bảng */
     position: absolute;
     top: -10px;
     right: -14px;

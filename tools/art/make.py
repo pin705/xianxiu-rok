@@ -159,6 +159,13 @@ def skins():
       if n not in ('scroll', 'strip'): out = X.calm(out, extra['slice'])  # hai da này không vẽ lòng
     X.save(f'skin:{n}', out, 'skin', extra=extra)
 
+# mẫu gốc cắt thẳng từ ảnh vẽ: (bề ngang px ảnh 3x, hàm → viền 9 mảnh trên mẫu). ornate: góc chạm ~23% bề ngang, 36% bề cao;
+# plaque: đầu bịt đồng ~6% bề ngang mỗi bên, góc bo ~20% bề cao
+HIRES = {
+  'ornate': (420, lambda im: [round(im.width * 0.24)] * 4),
+  'plaque': (640, lambda im: [round(im.height * 0.3), round(im.height * 0.5), round(im.height * 0.3), round(im.height * 0.5)]),
+}
+
 def kit():
   """bộ giao diện sạch: 3 mẫu gốc (KIT_BASES) → mọi da trong KIT, đúng khung + thông số 9 mảnh của từng da (bản vẽ code)"""
   meta = json.load(open(os.path.join(X.WORK, 'skins', 'meta.json')))
@@ -175,6 +182,11 @@ def kit():
     if not os.path.exists(X.raw(f'kit-{b}')): continue
     k = X.raw(f'kit-{b}') + '.png'
     X.key_magenta(X.raw(f'kit-{b}'), k)
+    if b in HIRES:  # khung/nút vẽ tay: cắt thẳng từ ảnh gốc ở độ nét 3x (không qua khổ bản code rồi phóng lên)
+      img = X.raw_frame(k, HIRES[b][0])
+      if b == 'ornate': img = X.symmetric(img)
+      bases[b] = (img, HIRES[b][1](img))
+      continue
     img = X.fit_trace(k, pads[b][2], Image.open(os.path.join(X.WORK, 'skins', f'{src}.png')).convert('RGBA'), 1.0)
     if b not in ('plate', 'plaque'): img = X.symmetric(img)  # tấm sơn mài giữ vệt sáng phía trên
     bases[b] = (img, [v * meta[src]['S'] for v in meta[src]['slice']])
@@ -182,6 +194,15 @@ def kit():
     b, dark, light = entry[:3]
     if b not in bases: continue
     m = meta[n]
+    if b in HIRES:  # xuất 3x (px ảnh = px CSS × 3) — sắc trên iPhone, không phóng
+      img, bins = bases[b]
+      W, H = round(m['pw'] * 3 / m['S']), round(m['ph'] * 3 / m['S'])
+      wcss = [entry[3]] * 4 if len(entry) > 3 else [round(v / 3) for v in bins]
+      ins = [v * 3 for v in wcss]
+      if dark: img = X.lacquer(img, dark)
+      out = X.nine(img, bins, W, H, ins)
+      X.save(f'skin:{n}', out, 'skin', extra={'slice': ins, 'width': wcss, 'outset': m.get('outset') or 0, 'repeat': 'stretch'}, fmt='PNG')
+      continue
     ins = [v * m['S'] for v in m['slice']]  # ảnh 2x như bản code: px ảnh = px CSS × 2
     wcss = m['slice']
     if len(entry) > 3:  # mẫu có góc chạm: viền riêng (to hơn lát của bản code)
@@ -198,7 +219,7 @@ def kit():
     if dark and b == 'plaque': img = X.tint_grey(img, dark)  # nút: nhuộm mặt, giữ viền đồng
     elif dark: img = X.tint(img, dark, light)  # (None, None): giữ màu vẽ sẵn — đổi màu trên cả mẫu gốc (đủ viền lẫn lòng) rồi mới co giãn: lòng phẳng không bị kéo nhiễu
     out = X.nine(img, bins, m['pw'], m['ph'], ins) if any(ins) else img.resize((m['pw'], m['ph']), Image.LANCZOS)
-    extra = {'slice': ins, 'width': wcss, 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
+    extra = {'slice': ins, 'width': wcss, 'outset': m.get('outset') or 0, 'repeat': 'stretch' if len(entry) > 3 else (m.get('repeat') or 'stretch')}
     X.save(f'skin:{n}', out, 'skin', extra=extra)
 
 def clouds():
@@ -296,7 +317,7 @@ def paper():
   wgt = np.clip(d * 2, 0, 1)[..., None]  # giữa lấy bản gốc (che đường nối giữa của bản cuộn), mép lấy bản cuộn
   tex = Image.fromarray((a * wgt + rolled * (1 - wgt)).astype(np.uint8)).convert('RGBA')
   # sơn mài: vân giấy nhuộm thành vân sơn lam sẫm, độ tương phản thấp (nền mọi bảng, trang)
-  X.save('skin:paper', X.tint(tex, '#121e21', '#1b2b2f'), 'skin')
+  X.save('skin:paper', X.tint(tex, '#0d2326', '#12292d'), 'skin')  # vân rất nhẹ: chỉ đủ thấy chất liệu, không loang lổ
 
 def strokes():
   run([('sheet-strokes', P.sheet(P.STROKES, 'ink brush marks'), [X.ref(ICONS)], '1:1', '2K')])
@@ -323,7 +344,18 @@ def concept():
       jobs.append((f'concept-{scr}-{st}', P.CONCEPT_BASE.format(style=P.CONCEPT_STYLES[st]), [X.ref(src, side=1600)], '9:16' if h > w else '16:9', '2K'))
   run(jobs)
 
-GROUPS = {'pack': X.pack_all, 'concept': concept, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'landmarks': landmarks, 'masks': masks, 'props': props, 'troops': troops,
+def chrome():
+  """khung sắc nét vẽ bằng code (tools/art/chrome.py): thẻ, nhãn, viên, rãnh, thanh, công tắc, nút tròn — vát đồng, lòng chuyển sắc"""
+  import chrome as C
+  meta = json.load(open(os.path.join(X.WORK, 'skins', 'meta.json')))
+  for n in (args[1:] or [*C.SKINS, *C.DOUBLE]):
+    if n not in meta: continue
+    im, extra = C.render_double(n, meta[n]) if n in C.DOUBLE else C.render(n, meta[n])
+    X.save(f'skin:{n}', im, 'skin', extra=extra, fmt='PNG')  # PNG: mép kim loại sắc, không nhoè nén
+  if not args[1:]:
+    for n, c in C.UNDERLINES.items(): X.save(f'skin:{n}', C.underline(c), 'skin', fmt='PNG')
+
+GROUPS = {'pack': X.pack_all, 'chrome': chrome, 'concept': concept, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'landmarks': landmarks, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}
 
 if __name__ == '__main__':

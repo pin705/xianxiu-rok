@@ -189,7 +189,7 @@
     width: 100%;
     padding: 8px 10px;
     font: inherit;
-    border: 1.5px solid var(--rim);
+    border: 1.5px solid var(--rim, var(--ink3));
     border-radius: var(--cut);
     background: var(--paper);
   }

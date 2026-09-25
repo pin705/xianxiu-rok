@@ -931,7 +931,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | # | Tính năng RoK | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|
 | A1 | Tòa thị chính 1–25, trần cấp, mở khoá | ✅ Chủ điện 1–25 (+độ kiếp) | — | — |
-| A1b | Điều kiện phụ mỗi cấp CH (Tường N−1 + 1 nhà xoay vòng) | ❌ | P1 | S |
+| A1b | Điều kiện phụ mỗi cấp CH (Tường N−1 + 1 nhà xoay vòng) | ❌ đã thử 25/09 rồi bỏ: nhịp hiện tại cân theo lối dồn Chủ điện — lệch 1: tầng 25 không tới trong 60 ngày (22); lệch 3: vẫn 24/25, sim tranh đoạt trung vị tầng 15, người chơi thường MH15 ngày 26. Muốn có thì phải chỉnh lại chi phí / thời gian xây cả chuỗi | P1 | S (+ chỉnh nhịp L) |
 | A1c | Thưởng mỗi cấp CH, "Era Breakthrough" | 🟡 qua nhiệm vụ chính tuyến | P1 | S |
 | A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới; 🟡 chưa có hình tầng 16–25 | P2 | S–M |
 | A3 | Văn minh (kiến trúc + buff) | ✅ Chín đạo thống: 3 tiềm năng, đệ tử đặc trưng, trấn phái chi bảo trên núi, tổ sư + huy hiệu riêng, chọn lúc lập tông môn | P2 | M |

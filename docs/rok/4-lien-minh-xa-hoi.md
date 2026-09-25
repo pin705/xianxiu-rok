@@ -872,7 +872,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | B3 | Công nghệ liên minh và quyên góp | ✅ Hộ Minh Đại Trận 9 trận × 5 tầng, cung phụng, trận minh chủ điểm | **P0** | L |
 | B4 | Điểm cá nhân/quỹ minh và cửa hàng minh | ✅ cống hiến + Minh khố + Cống Hiến Các | **P0** | M |
 | B5 | Kỹ năng liên minh (buff có thời hạn) | ❌ | P2 | M |
-| C1 | Pháo đài trung tâm/phụ | ❌ | P1 | L |
+| C1 | Pháo đài trung tâm/phụ | 🟡 Tổng đà (một mỗi minh, `world/flags.ts`); chưa có pháo đài phụ, góp quân xây | P1 | L |
 | C2 | Cờ, tiền đồn, khiên cờ, tháp tên | ✅ trận kỳ (cắm, nới lãnh thổ, bị phá, tự hồi) + đóng quân giữ cờ (25/09) | P1 | L |
 | C3 | Trung tâm tài nguyên minh (thu an toàn) | 🟡 mỏ chung, ai cũng tranh được | P2 | M |
 | C4 | Điểm tài nguyên minh và kho minh | 🟡 kho minh: lãnh thổ sinh Minh khố theo giờ (25/09); chưa có điểm tài nguyên riêng của minh | P1 | M |
@@ -904,7 +904,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | I2 | Khiên chủ động, War Frenzy | ✅ Hộ Sơn Phù 8–72 giờ + sát khí 30 phút | P1 | S |
 | I3 | Đốt thành, độ bền tường, dời thành | ❌ | P2 | M |
 | I4 | Cướp tài nguyên và kho bảo hộ | ✅ | — | — |
-| I5 | Do thám, chống do thám | 🟡 xem miễn phí trong danh sách đối thủ | P1 | S–M |
+| I5 | Do thám, chống do thám | ✅ Do thám bằng linh điểu (`world/spy.ts`): báo cáo tài nguyên / viện binh / trận lực, bên kia được báo; chưa có chống do thám | P1 | S–M |
 | I6 | Cảnh báo bị tấn công | ✅ Tháp canh: thẻ son mọi tab + Web Push khi địch xuất quân | **P0** | S |
 | I7 | Phản công, phản kết trận | ✅ báo thù 24 giờ; thiếu phản kết trận | P2 | M |
 | I8 | Thương nặng/tử trận, bệnh viện | ✅ Đan phòng | — | — |

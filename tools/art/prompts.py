@@ -370,26 +370,14 @@ KIT_BASES.update({
              'left and right ends, a soft highlight along the top edge', KIT_ORNATE),
 })
 # viền 9 mảnh riêng của mẫu gốc có góc chạm (px ảnh 2x trên mẫu đã khớp khung) — góc chạm to hơn lát của da vẽ bằng code
-KIT_BINS = {'ornate': [40, 40, 40, 40]}
+KIT_BINS = {'ornate': [56, 56, 56, 56]}  # phủ trọn hoa văn góc — nhỏ hơn thì đuôi hoa văn lọt vào cạnh và bị lặp
 KIT_REFS = {'ornate': 'concept-home-lacquer', 'plaque': 'concept-home-lacquer'}  # ảnh .work/raw/<tên>.webp gửi kèm làm ảnh 2
-KIT = {  # da (ui/theme.ts) → (mẫu gốc, màu tối: viền / nền tối, màu sáng: lòng) — plate: màu chính, sáng tối tự suy
-  'card': ('ornate', None, None, 20), 'card-plain': ('paper', LINE, FACE), 'card-sel': ('paper', '#d8604c', FACE),
-  'card-glow': ('ornate', None, None, 20), 'card-silk': ('paper', LINE, FACE2), 'groove': ('paper', DEEP, '#132023'),
-  'field': ('paper', LINE, DEEP), 'toast': ('ornate', None, None, 18), 'toast-bad': ('paper', '#d8604c', '#2c1d1b'),
-  'slip': ('paper', LINE, FACE), 'slip-bad': ('paper', '#d8604c', '#2c1d1b'), 'btn-ghost': ('plaque', FACE, None),
-  'btn': ('plaque', '#2d6b64', None), 'btn-gold': ('plaque', '#a8352a', None), 'btn-danger': ('plaque', '#6e1f18', None),
-  'btn-off': ('plaque', '#2a3336', None),
-  # khung: HUD, thanh tab, cột trái (strip), bảng (scroll)
-  'strip': ('ornate', None, None, 18), 'scroll': ('ornate', None, None, 22),
-  'switch': ('pill', DEEP, '#2a3b3e'), 'switch-on': ('pill', '#2f6b3d', '#4f9a6a'),
-  'disc-paper': ('disc', RIM, FACE), 'disc-azure': ('disc', RIM, '#2c4d6e'), 'disc-gold': ('disc', '#6d5418', '#a8864a'),
-  'disc-silk': ('disc', LINE, FACE2),
-  'capsule': ('pill', LINE, FACE), 'plate': ('pill', RIM, FACE), 'tag': ('pill', LINE, FACE2),
-  'tag-good': ('pill', '#4f9a6a', '#1c3326'), 'tag-bad': ('pill', '#d8604c', '#331d1a'), 'tag-gold': ('pill', '#b8964f', '#2e2a1d'),
-  'tag-dark': ('pill', RIM, DEEP), 'tag-red': ('pill', '#6e1f18', '#a8352a'), 'tag-silk': ('pill', LINE, FACE2),
-  'badge': ('pill', '#6e1f18', '#c0392b'), 'badge-fresh': ('pill', '#6d5418', '#b8904a'), 'track': ('pill', DEEP, '#26383b'),
-  'fill': ('pill', '#2f6f7a', '#6fc3cf'), 'fill-gold': ('pill', '#7a5a18', '#c9a14a'), 'fill-good': ('pill', '#2f6b3d', '#7fbf7a'),
-  'fill-bad': ('pill', '#7d2218', '#d45a45'), 'fill-azure': ('pill', '#2d4c7c', '#6f9fd8'),
+KIT = {  # da (ui/theme.ts) → (mẫu gốc, màu tối, màu sáng[, bề dày viền px CSS]). Thẻ, nhãn, viên, rãnh, nút tròn: tools/art/chrome.py
+  # khung (thẻ, bảng, HUD): viền kép mảnh vẽ bằng code (chrome.py DOUBLE) — mẫu góc chạm 'ornate' vẫn còn nhưng không dùng: nặng, rẻ
+  # nút: tấm sơn mài đầu bịt đồng, chỉ nhuộm mặt
+  # màu sơn trầm (son đỏ thắm, ngọc lam) — không đỏ tươi bão hoà như nhựa
+  'btn': ('plaque', '#2a5c55', None, 16), 'btn-gold': ('plaque', '#8e2c22', None, 16), 'btn-danger': ('plaque', '#5a1c16', None, 16),
+  'btn-off': ('plaque', '#263033', None, 16), 'btn-ghost': ('plaque', '#16302f', None, 16),
 }
 
 # ---------- mây (key động: fog:<rộng>:<hạt>, cloud:…, thunder:…) ----------

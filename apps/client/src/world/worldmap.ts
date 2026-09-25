@@ -246,7 +246,8 @@ export class WorldScene {
       const s = new Sprite(flagTex(terrColor(f.aid, mine)))
       s.anchor.set(0.35, 0.9)
       s.position.set((f.x + 0.5) * T, (f.y + 0.5) * T)
-      this.sized.push([s, (MARK * 1.2) / 64, 0.2])
+      if (f.fort) add(f, 'tower', 'gold', 1.2) // Tổng đà: đài vàng dưới lá cờ lớn, thấy ở mọi độ phóng
+      this.sized.push([s, (MARK * (f.fort ? 2 : 1.2)) / 64, f.fort ? 0 : 0.2])
       this.flagMarks.push([s, f.done])
       this.marks.addChild(s)
     }

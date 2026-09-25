@@ -399,9 +399,12 @@
   {snap}
   {side}
   {phase}
+  fog={game.seat ? fogOf(game) : null}
+  {now}
   onclose={() => (overview = false)}
   onfly={(x, y) => {
     overview = false
+    finding = false
     fly(x, y)
   }}
 />

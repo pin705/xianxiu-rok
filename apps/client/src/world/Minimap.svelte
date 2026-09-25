@@ -141,7 +141,7 @@
     width: 116px;
     height: 116px;
     overflow: hidden;
-    border: 2px solid var(--rim);
+    border: 2px solid var(--rim, var(--ink3));
     border-radius: 6px;
     box-shadow: 0 4px 12px rgb(var(--shade) / 0.35);
     touch-action: none;

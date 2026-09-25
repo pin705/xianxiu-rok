@@ -739,7 +739,7 @@
     font-weight: 800;
     color: var(--gold-d);
     background: color-mix(in srgb, var(--paper) 70%, transparent);
-    border: 1px solid color-mix(in srgb, var(--rim) 80%, transparent);
+    border: 1px solid color-mix(in srgb, var(--rim, var(--ink3)) 80%, transparent);
     border-radius: 999px;
     cursor: pointer;
   }

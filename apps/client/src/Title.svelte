@@ -355,7 +355,7 @@
     text-align: center;
     background: transparent;
     border: 0;
-    border-bottom: 2px solid var(--rim);
+    border-bottom: 2px solid var(--rim, var(--ink3));
   }
   input:focus {
     outline: none;

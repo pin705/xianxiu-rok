@@ -3,7 +3,21 @@
   // (một mình, mở kết trận công sơn, hay góp vào kết trận đồng minh đang mở nhắm tông môn đó — mặc định góp nếu có).
   // Danh sách do server ghép (cần state của cả giới); tỉ lệ thắng ước lượng theo phòng thủ đã dò thám (chỉ khi đi một mình).
   import { untrack } from 'svelte'
-  import { PVP_HALL, RALLY_WAIT, marchSlots, marchTime, might, type Army, type ElderId } from '@rok/rules'
+  import { mailText } from '@rok/i18n'
+  import {
+    PVP_HALL,
+    RALLY_WAIT,
+    SPY_COST,
+    cranes,
+    cranesOut,
+    fogOf,
+    fold,
+    marchSlots,
+    marchTime,
+    might,
+    type Army,
+    type ElderId,
+  } from '@rok/rules'
   import { raidChance, type AllyInfo, type Rival, type WorldAction } from '@rok/rules/world'
   import { Icon, Portrait } from '@rok/art'
   import ArmyPick from './Army.svelte'
@@ -19,6 +33,7 @@
     load,
     onclose,
     onraid,
+    onspy,
     onrecruit,
   }: {
     open: boolean
@@ -27,6 +42,7 @@
     load: (pid?: number) => Promise<Rival[] | null>
     onclose: () => void
     onraid: (a: WorldAction) => void
+    onspy?: (pid: number) => Promise<boolean> // do thám (thả linh điểu); báo cáo hiện ngay dưới đây
     onrecruit: () => void
   } = $props()
   const g = useGame()
@@ -34,6 +50,9 @@
   const now = $derived(g.now)
   const busy = $derived(g.busy)
 
+  // Do thám: báo cáo mới nhất về tông môn này (thư 'spy'), linh điểu còn rảnh
+  const spyOf = (r: Rival) => game.mail.filter(m => m.k === 'spy' && m.a?.[0] === r.name).at(-1)
+  const freeCranes = $derived(cranes(game) - cranesOut(fold(fogOf(game), now), now))
   let list = $state<Rival[] | null>(null)
   let pick = $state<Rival | null>(null)
   let loading = $state(false)
@@ -108,6 +127,25 @@
         {/if}
         {#if r.scout.wall}<Tag icon="shield">{L.pvp.wall(r.scout.wall)}</Tag>{/if}
       </div>
+      {#if onspy}
+        {@const rep = spyOf(r)}
+        {#if rep}
+          <Card tone="silk">
+            <small class="t-tiny t-soft">{L.pvp.spyAt(L.ago(Math.max(0, now - rep.at)))}</small>
+            <p class="t-small report">{mailText(L, rep)[1]}</p>
+          </Card>
+        {/if}
+        <div class="row" style:--gap="6px">
+          <Button
+            size="sm"
+            variant="ghost"
+            icon="globe"
+            disabled={busy || freeCranes < 1 || game.res.linhThach < SPY_COST * r.hall}
+            onclick={() => onspy(r.pid)}>{L.pvp.spy(num(SPY_COST * r.hall))}</Button
+          >
+          <small class="t-tiny t-soft grow">{freeCranes < 1 ? L.pvp.spyBusy : L.pvp.spyHint}</small>
+        </div>
+      {/if}
     </Section>
     {#if ally}
       <Section title={L.world.rally}>
@@ -180,3 +218,9 @@
     <div class="mt-3"><Button variant="ghost" wide disabled={loading} onclick={refresh}>{L.pvp.refresh}</Button></div>
   {/if}
 </Sheet>
+
+<style>
+  .report {
+    white-space: pre-line; /* thư do thám nhiều dòng */
+  }
+</style>

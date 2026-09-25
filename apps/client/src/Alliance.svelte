@@ -459,7 +459,7 @@
     {/if}
 
     {#if atab === 'war'}
-      {#if me !== null}<AllyPlans {ally} {me} {go} />{/if}
+      {#if me !== null}<AllyPlans {ally} {me} {go} {onmap} />{/if}
       <Section title={L.world.marks}>
         {#if ally.marks?.length}
           <div class="row wrap">
@@ -607,7 +607,7 @@
     width: 100%;
     padding: 8px 10px;
     font: inherit;
-    border: 1.5px solid var(--rim);
+    border: 1.5px solid var(--rim, var(--ink3));
     border-radius: var(--cut);
     background: var(--paper);
   }

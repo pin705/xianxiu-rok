@@ -40,7 +40,7 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
-import { eveBuffs, hold, marchAt, ruinWindow, TASK_OF, spotOf, thoiBuffs, veinBuffs } from './points.ts'
+import { eveBuffs, fortBuffs, hold, marchAt, ruinWindow, TASK_OF, spotOf, thoiBuffs, veinBuffs } from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
 const rallyTask = (p: Point) => (TASK_OF[p.kind] === 'gather' ? null : (TASK_OF[p.kind] as 'take' | 'hit'))
@@ -311,6 +311,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     b.src === 'bless' ||
     b.src === 'eve' ||
     b.src === 'thoi' ||
+    b.src === 'fort' ||
     b.src.startsWith('tide')
   for (const [pid, s] of ps) {
     const want: Buff[] = [
@@ -329,6 +330,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
       ...blessBuffs(w, at), // Giới Chủ ban phúc cả giới
       ...eveBuffs(w, pid, at), // Khai Giới Trảm Tà: minh đứng đầu giới vận
       ...thoiBuffs(map, s), // Thiên Thời: thời đang chạy + chỉ lệnh đã chọn
+      ...fortBuffs(w, pid, at), // Tổng đà của minh
     ]
     const keep = s.buffs.filter(b => !mapped(b))
     const have = s.buffs.filter(mapped)
