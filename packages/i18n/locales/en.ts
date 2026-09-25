@@ -681,6 +681,7 @@ export const en: Text = {
     sign: 'Sign up for the Orb battle',
     unsign: 'Withdraw',
     signed: 'Signed up — battle on Sunday 20:00',
+    when: (t: string) => `Battle starts in ${t}`,
     nodes: ['Base', 'North Outpost', 'Central Hall', 'South Outpost', 'Base'],
     round: (r: number, of: number, t: string) => `Round ${r}/${of} · next in ${t}`,
     ended: 'All rounds done — tallying',
@@ -2394,6 +2395,10 @@ export const en: Text = {
       tapDich: {
         name: 'Builder Writ',
         desc: 'Hire a second builder: construct two buildings at once. Using more extends it; work in progress still finishes when it expires.',
+      },
+      huongHoa: {
+        name: 'Incense Token',
+        desc: 'Offer it to the founders: adds Incense points at once (level up Incense for more boosts and a bigger daily chest).',
       },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },

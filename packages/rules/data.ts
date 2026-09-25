@@ -448,6 +448,7 @@ export type BagDef =
   | { use: 'exp'; n: number }
   | { use: 'key' } // thiếp Chiêu Hiền Đài: mở ở Chiêu Hiền Đài, không dùng thẳng từ túi
   | { use: 'builder'; hours: number } // thuê tạp dịch thứ hai (xây song song hai công trình)
+  | { use: 'vip'; n: number } // Hương Hỏa Lệnh: cộng điểm Hương Hỏa (VIP)
 const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
 const speeds = <P extends string>(prefix: P, job?: SpeedJob) =>
@@ -484,6 +485,8 @@ const bag = {
   nganDuyen: { use: 'key' }, // Ngân Duyên Phù: một lần mở thiếp bạc ở Chiêu Hiền Đài
   kimDuyen: { use: 'key' }, // Kim Duyên Phù: một lần mở thiếp vàng
   tapDich48: { use: 'builder', hours: 48 }, // Tạp Dịch Lệnh: thuê tạp dịch thứ hai 48 giờ (dùng thêm thì kéo dài)
+  huongHoa50: { use: 'vip', n: 50 }, // Hương Hỏa Lệnh: điểm Hương Hỏa
+  huongHoa200: { use: 'vip', n: 200 },
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -507,6 +510,7 @@ export const BAG_FAMILIES = [
   'nganDuyen',
   'kimDuyen',
   'tapDich',
+  'huongHoa',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -1030,6 +1034,7 @@ export const COIN_SHOP: { reward: Reward; price: number }[] = [
   { reward: { items: { thoiQuang480: 1 } }, price: 30 },
   { reward: { items: { kinhThu8k: 1 } }, price: 25 },
   { reward: { items: { daiTuKhi: 1 } }, price: 20 },
+  { reward: { items: { huongHoa200: 1 } }, price: 25 },
   { reward: { items: { chienY: 1, kimCuong: 1, hoThe: 1 } }, price: 30 },
 ]
 export const HONOR_TIERS: { n: number; reward: Reward }[] = [
@@ -1093,6 +1098,7 @@ export const MERCHANT_POOL: { item: BagId; n: number; res: Res; price: number; w
   { item: 'thanHanh', n: 1, res: 'linhKhoang', price: 600, w: 4 },
   { item: 'chienY', n: 1, res: 'linhThach', price: 700, w: 3 },
   { item: 'hoSon8', n: 1, res: 'linhThach', price: 1500, w: 3 },
+  { item: 'huongHoa50', n: 1, res: 'linhThao', price: 1000, w: 4 },
 ]
 
 // ---------- Thiên Đạo Biên Niên (Monument của RoK) ----------

@@ -95,6 +95,7 @@ def sheet(items, what='game item icons', extra=''):
 # lá phù: dải giấy hẹp, hơi nghiêng, treo dây đỏ — không vẽ thành thẻ chữ nhật đứng (thu nhỏ trông như icon còn nền vuông)
 TALI = 'a narrow pale-yellow paper talisman slip, slightly tilted and curled, hanging from a short red cord with a tassel, with a red ink rune of '
 # tên ô → key manifest: 'tab:…' giữ nguyên, 'pointer' giữ nguyên, '_…' bỏ, còn lại thành 'icon:<tên>'
+ICON_SKIP = {'D': [7]}  # bảng D: model vẽ thêm một túi vàng (hình thứ 8 theo thứ tự đọc)
 ICON_SHEETS = {
   'A': [('linhThach', 'a faceted pale-blue spirit crystal'), ('linhThao', 'a spirit herb sprig with green leaves and a small golden flower'),
         ('linhKhoang', 'a grey ore rock with small purple crystals'), ('tuKhi', 'a round cyan pill with a white swirl'),

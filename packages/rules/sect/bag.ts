@@ -58,6 +58,7 @@ export const bagActions: Actions<BagAction> = {
       if (d.use === 'buff') return ok({ ...st, buffs: extend(st, d.key, d.v, d.hours * HOUR * a.n) })
       if (d.use === 'shield') return ok({ ...st, shield: Math.max(st.shield, s.time) + d.hours * HOUR * a.n })
       if (d.use === 'builder') return ok({ ...st, builder2: Math.max(st.builder2 ?? 0, s.time) + d.hours * HOUR * a.n })
+      if (d.use === 'vip') return ok({ ...st, vip: { ...st.vip, pts: st.vip.pts + d.n * a.n } })
       return d.use === 'exp' ? ok(giveExp(st, a.elder!, d.n * a.n)) : no('bad')
     },
   },

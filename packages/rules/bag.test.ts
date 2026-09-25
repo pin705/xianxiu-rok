@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { BAG_IDS, BAG, HOUR, addItems, advance, apply, newGame, rate, useError, type State } from './index.ts'
+import { BAG_IDS, BAG, HOUR, addItems, advance, apply, newGame, rate, useError, vipLevel, type State } from './index.ts'
 
 const T0 = Date.UTC(2026, 0, 5, 3) // thứ Hai
 const run = (s: State, a: object, t = s.time) => {
@@ -78,4 +78,14 @@ test('túi đồ: mọi vật phẩm có định nghĩa hợp lệ; cộng vào 
 test('túi đồ: mỗi vật phẩm thuộc đúng một họ đã khai báo', async () => {
   const { BAG_FAMILIES, bagFamily } = await import('./index.ts')
   for (const id of BAG_IDS) assert.ok(BAG_FAMILIES.includes(bagFamily(id)), id)
+})
+
+test('Hương Hỏa Lệnh: dùng thì cộng điểm Hương Hỏa ngay (có thể lên cấp)', () => {
+  const s0 = newGame(Date.UTC(2026, 8, 25, 3))
+  const s = { ...s0, items: { ...s0.items, huongHoa200: 2 } }
+  const r = apply(s, { type: 'use', item: 'huongHoa200', n: 2 }, s.time)
+  assert.ok(r.ok)
+  assert.equal(r.state.vip.pts, s.vip.pts + 400)
+  assert.ok(vipLevel(r.state) >= vipLevel(s))
+  assert.equal(r.state.items.huongHoa200 ?? 0, 0)
 })

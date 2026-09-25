@@ -67,18 +67,18 @@ def faces():
       X.save(f'face:{fid}', X.fit_square(im, max(288, X.dom_side(f'face:{fid}')), 0), 'face')
 
 # ---------- các bảng 3×3 ----------
-def sheets(tables, what, extra='', parts=False):
+def sheets(tables, what, extra='', parts=False, skip=None):
   run([(f'sheet-{sid}', P.sheet(items, what, extra), [X.ref(ICONS)], '1:1', '2K') for sid, items in pick(tables).items()])
   cells = {}
   for sid, items in pick(tables).items():
     if os.path.exists(X.raw(f'sheet-{sid}')):
       k = X.raw(f'sheet-{sid}') + '.png'
       X.key_magenta(X.raw(f'sheet-{sid}'), k)
-      cells.update(X.cut_sheet(k, items, parts))
+      cells.update(X.cut_sheet(k, items, parts, (skip or {}).get(sid, ())))
   return cells
 
 def icons():
-  for name, im in sheets(P.ICON_SHEETS, 'game item icons').items():
+  for name, im in sheets(P.ICON_SHEETS, 'game item icons', skip=P.ICON_SKIP).items():
     key = name if name.startswith('tab:') or name == 'pointer' else f'icon:{name}'
     X.save(key, X.fit_square(im, X.dom_side(key, 144)), 'icon')
 
@@ -155,7 +155,9 @@ def kit():
     m = meta[n]
     ins = [v * m['S'] for v in m['slice']]  # ảnh 2x như bản code: px ảnh = px CSS × 2
     if not any(ins): ins = [0, 0, 0, 0]  # ảnh nguyên tấm (đĩa, công tắc): co giãn cả tấm
-    out = X.tint(X.nine(*bases[b], m['pw'], m['ph'], ins), dark, light)
+    img, bins = bases[b]
+    img = X.tint(img, dark, light)  # đổi màu trên cả mẫu gốc (đủ viền lẫn lòng) rồi mới co giãn: lòng phẳng không bị kéo nhiễu
+    out = X.nine(img, bins, m['pw'], m['ph'], ins) if any(ins) else img.resize((m['pw'], m['ph']), Image.LANCZOS)
     extra = {'slice': ins, 'width': m['slice'], 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
     X.save(f'skin:{n}', out, 'skin', extra=extra)
 

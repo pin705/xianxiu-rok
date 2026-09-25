@@ -661,6 +661,7 @@ export const vi = {
     sign: 'Ghi danh trận Linh Châu',
     unsign: 'Rút ghi danh',
     signed: 'Đã ghi danh — trận 20h Chủ nhật',
+    when: (t: string) => `Trận bắt đầu sau ${t}`,
     nodes: ['Linh Đài', 'Tiểu Trận Bắc', 'Trung Điện', 'Tiểu Trận Nam', 'Linh Đài'],
     round: (r: number, of: number, t: string) => `Hiệp ${r}/${of} · hiệp sau ${t}`,
     ended: 'Đã hết hiệp — đang tính kết quả',
@@ -2398,6 +2399,10 @@ export const vi = {
       tapDich: {
         name: 'Tạp Dịch Lệnh',
         desc: 'Thuê thêm một tạp dịch: xây song song hai công trình. Dùng thêm thì kéo dài; việc đang xây dở vẫn xong khi hết hạn.',
+      },
+      huongHoa: {
+        name: 'Hương Hỏa Lệnh',
+        desc: 'Dâng lên tổ sư: cộng điểm Hương Hỏa ngay (lên cấp Hương Hỏa, mở thêm tăng ích và rương ngày).',
       },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },

@@ -27,11 +27,11 @@
   const side = $derived(f?.b === aid ? 1 : 0)
   // sơ đồ: Linh Đài hai đầu, hai Tiểu Trận trên / dưới, Trung Điện giữa — minh mình luôn bên trái
   const POS = [
-    [40, 90],
-    [150, 30],
-    [150, 90],
-    [150, 150],
-    [260, 90],
+    [40, 100],
+    [150, 40],
+    [150, 100],
+    [150, 160],
+    [260, 100],
   ]
   const at = (node: number) => (side === 1 ? POS[4 - node] : POS[node])
   const EDGES = [
@@ -69,7 +69,7 @@
         >{f.round < ARK_ROUNDS ? L.ark.round(f.round + 1, ARK_ROUNDS, clock(Math.max(0, next))) : L.ark.ended}</span
       >
     </p>
-    <svg viewBox="0 0 300 180" class="field" role="img" aria-label={L.ark.title}>
+    <svg viewBox="0 0 300 200" class="field" role="img" aria-label={L.ark.title}>
       {#each EDGES as [x, y] (`${x}-${y}`)}
         <line x1={at(x)[0]} y1={at(x)[1]} x2={at(y)[0]} y2={at(y)[1]} class="road" />
       {/each}
@@ -115,7 +115,7 @@
     {/if}
   {:else}
     <p class="row between t-small">
-      <b>{row?.signed ? L.ark.signed : L.war.when(clock(Math.max(0, start - g.now)))}</b>
+      <b>{row?.signed ? L.ark.signed : L.ark.when(clock(Math.max(0, start - g.now)))}</b>
     </p>
     {#if officer}
       <Button

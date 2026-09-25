@@ -67,14 +67,37 @@ def depink(im):
   a[pink, 3] = 0
   return Image.fromarray(a.astype(np.uint8), 'RGBA')
 
-def cut_sheet(path, items, parts=True):
+def blobs(im, min_frac=0.012):
+  """các hình rời trên bảng (đã tách nền), xếp theo thứ tự đọc: gom hàng theo tâm dọc, trong hàng trái → phải"""
+  a = ndimage.binary_closing(np.asarray(im.getchannel('A')) > 60, iterations=6)
+  lab, n = ndimage.label(a)
+  boxes = [b for i, b in enumerate(ndimage.find_objects(lab)) if (lab[b] == i + 1).sum() >= min_frac * a.size]
+  boxes.sort(key=lambda b: (b[0].start + b[0].stop) / 2)
+  rows, cur = [], []
+  for b in boxes:
+    cy = (b[0].start + b[0].stop) / 2
+    if cur and cy - (cur[-1][0].start + cur[-1][0].stop) / 2 > im.height * 0.12: rows.append(cur); cur = []
+    cur.append(b)
+  if cur: rows.append(cur)
+  return [b for r in rows for b in sorted(r, key=lambda b: b[1].start)]
+
+def cut_sheet(path, items, parts=True, skip=()):
   """bảng 3×3 đã tách nền → {tên ô: ảnh}; ô tên '_…' là ô đệm, bỏ"""
   im = Image.open(path).convert('RGBA')
   cw, ch = im.width / 3, im.height / 3
+  # model hay không xếp đúng lưới 3×3 (hàng 4 hình, thêm hình thừa): tách theo hình rời nếu đếm khớp (bỏ các chỉ số `skip`)
+  found = [b for i, b in enumerate(blobs(im)) if i not in skip]
+  by_blob = len(found) == len(items)
+  if not by_blob: print(f'  {os.path.basename(path)}: {len(found)} hình ≠ {len(items)} ô — cắt theo lưới 3×3 (xem lại, thêm skip nếu có hình thừa)')
   out = {}
   for i, (name, _) in enumerate(items):
     if name.startswith('_'): continue
-    c = im.crop((round((i % 3) * cw), round((i // 3) * ch), round((i % 3 + 1) * cw), round((i // 3 + 1) * ch)))
+    if by_blob:
+      ys, xs = found[i]
+      m = round(min(im.width, im.height) * 0.01)
+      c = im.crop((max(0, xs.start - m), max(0, ys.start - m), min(im.width, xs.stop + m), min(im.height, ys.stop + m)))
+    else:
+      c = im.crop((round((i % 3) * cw), round((i // 3) * ch), round((i % 3 + 1) * cw), round((i // 3 + 1) * ch)))
     c = main_blob(depink(c), 0.04 if parts else 1.01)  # parts=False: chỉ khối lớn nhất (đồ vật một khối — bỏ mảnh lạc của ô bên)
     if not parts:  # gọn quầng mờ quanh đồ vật: icon nhỏ cần mép rõ
       a = np.asarray(c).copy()

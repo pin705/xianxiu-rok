@@ -913,7 +913,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | I11 | Kill points, honor, lực chiến | ✅ chiến công (bảng xếp hạng), Công Huân, lực chiến, Elo | P1 | S |
 | I12 | KvK, xếp hạng vương quốc | ⛔ thay bằng mùa 49 ngày | — | — |
 | J1 | Động viên liên minh (Mobilization) | ✅ Minh vụ đường | **P0** | M |
-| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến (minh đấu minh mỗi tuần); chưa có chiến trường, khán giả | P1 | L |
+| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu giản lược | P1 | L |
 | J3 | Karuak Ceremony / Trial | 🟡 có Tháp, yêu vương | P2 | S |
 | J4 | Ceroli Crisis/Assault (tổ đội PvE) | ❌ | P2 | L |
 | J5 | Shadow Legion (ma triều công sơn) | ✅ | P1 | M |

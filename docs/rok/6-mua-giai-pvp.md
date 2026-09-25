@@ -821,7 +821,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | B14 | Shifting Gears | Cơ Quan Khôi Lỗi | ❌ | P2 | L |
 | B15 | Keener Blades | Tinh Binh Luận Kiếm | ❌ | P2 | L |
 | B16 | Blood Moon Rising, Sea of Strife, Mighty Assembly, Song of Troy | — | ❌ | P2 | — |
-| C1 | Ark of Osiris (Golden) | Tranh Đoạt Linh Châu (theo hiệp) | ❌ | P1 | L (giản lược M) |
+| C1 | Ark of Osiris (Golden) | Tranh Đoạt Linh Châu (theo hiệp) | 🟡 bản giản lược 5 ô / 6 hiệp (`world/ark.ts`) | P1 | L (giản lược M) |
 | C2 | Ark of Osiris (Silver) | Tán Tu Tranh Châu | ❌ | P2 | S |
 | C3 | Osiris League + Bets + xem trực tiếp | Cửu Thiên Luận Đạo Hội | ❌ | P2 | M |
 | C4 | Canyon Clash | Luận Kiếm Minh Chiến | ✅ Luận Kiếm Minh Chiến | P1 | S–M |
