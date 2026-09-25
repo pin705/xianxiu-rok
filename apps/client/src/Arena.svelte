@@ -283,7 +283,7 @@
     align-items: center;
     gap: 4px;
     padding: 2px 8px 2px 2px;
-    background: var(--silk);
+    background: var(--paper2);
     border: 1px solid var(--paper3);
     border-radius: 999px;
   }
@@ -305,7 +305,7 @@
     gap: 3px;
     padding: 8px;
     text-align: center;
-    background: var(--silk);
+    background: var(--paper2);
     border: 1.5px solid var(--paper3);
     border-radius: 12px;
   }

@@ -848,7 +848,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 |---|---|---|---|---|
 | A1 | Kingdom Map | ✅ Giới 150 × 150, sinh từ seed, reset theo mùa | P0 | — |
 | A2 | Zones 1–2–3 | ✅ 16 vùng ngoài / 8 giữa / 1 tâm | P0 | — |
-| A3 | Passes Lv.1–3 | 🟡 40 cổng trận nhãn mở theo pha; giữ cổng không chặn phe khác, không NPC giữ | P1 | M |
+| A3 | Passes Lv.1–3 | ✅ 40 cổng trận nhãn mở theo pha; phe giữ chặn đường phe khác (trừ minh ước); chưa có NPC giữ | P1 | M |
 | A4 | Alliance Territory (Fortress, Flags) | ✅ lãnh thổ + trận kỳ (chưa phá cờ) | P1 (theo vùng) / P2 (cờ từng ô) | M / L |
 | A5 | Holy Sites — luật chung (kỳ 3 ngày, giữ 4 giờ, không cộng dồn, NPC giữ) | 🟡 linh mạch luôn mở, cộng dồn tới 30 % | P1 | M |
 | A6 | Sanctum (4 loại buff) | ✅ linh mạch cấp 1: sản lượng / xây / tuyển / chữa (25/09) | P1 | S |
@@ -871,7 +871,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C6 | Marauders & Encampments | ❌ | P2 | M |
 | C7 | Barbarian Camps & Keeps (KvK) | ❌ (ngoài phạm vi) | P2 | M |
 | C8 | Lohar's Trial (vật phẩm triệu hồi boss) | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
-| C9 | Ceroli Crisis / Assault / Realm of Mystique | ❌ | P2 | L |
+| C9 | Ceroli Crisis / Assault / Realm of Mystique | 🟡 Man Hoang Cổ Tộc (`world/party.ts`): Crisis 4 người 3 vai 5 độ khó, giải tự động; thiếu Assault 12 người, Realm | P2 | L |
 | C10 | Karuak Ceremony / Trial of Kau Karuak | 🟡 Thông Thiên Tháp | P2 | S–M |
 | C11 | Shadow Legion (minh thủ sóng quái) | 🟡 viện binh + hộ pháp độ kiếp | P1 | M |
 | C12 | Holy-site Guardians & Runes | ❌ | P2 | M |
@@ -903,10 +903,10 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | G8 | Tap tile → action menu | ✅ (thiếu chia sẻ, dò thám, đánh dấu) | P0 | — |
 | G9 | Troop Dispatch Queue | ✅ (thiếu hàng đội trên bản đồ giới – điện thoại) | P1 | S |
 | G10 | Return to City | ✅ | P0 | — |
-| G11 | Kingdom Overview (danh sách linh địa theo phe) | 🟡 | P1 | S |
+| G11 | Kingdom Overview (danh sách linh địa theo phe) | ✅ Sơn Hà Xã Tắc Đồ (`Holdings.svelte`) | P1 | S |
 | H1 | March Speed | ✅ 12 giây/ô, công pháp Thần Hành | P0 | — |
 | H2 | Redirect giữa đường | ❌ | P2 | M |
-| H3 | Recall | 🟡 chỉ đội đóng / khai / viện binh | P1 | S |
+| H3 | Recall | ✅ mọi đội đang đi (quay đầu giữa đường, hoàn hành lực) + đội đóng / khai / viện binh | P1 | S |
 | H4 | Đóng quân ở ô trống | ❌ | P2 | M |
 | H5 | Open-field battle / chặn đường | ❌ (cố ý, PLAN "Không làm") | P2 | L / M |
 | H6 | March queues & capacity | ✅ 1–5 đội theo cảnh giới, kết trận 8 đội | P0 | — |

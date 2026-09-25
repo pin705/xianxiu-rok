@@ -1,6 +1,6 @@
 // Điểm trên bản đồ giới: trạng thái lúc now (mỏ còn bao nhiêu, yêu vương hồi chưa), phe giữ, điểm mùa khi giữ.
 // Dùng chung cho các tính năng của world/ (như base.ts, fight.ts).
-import { MAP_W, type Atlas, type Point, type PointKind } from '../atlas.ts'
+import { MAP_W, type Atlas, type Point, type PointKind, type Pos } from '../atlas.ts'
 import { type Side } from '../combat.ts'
 import { beastStr, mob, tierFor } from '../core/battle.ts'
 import { HOUR } from '../core/util.ts'
@@ -27,8 +27,18 @@ import {
   thoiAt,
   type Bonus,
 } from '../data.ts'
-import { allyOf, setSpot, sideName, type MapCtx, type Players, type Spot, type Task, type World } from './base.ts'
-import type { Buff, State } from '../core/types.ts'
+import {
+  allyOf,
+  setSpot,
+  sideKey,
+  sideName,
+  type MapCtx,
+  type Players,
+  type Spot,
+  type Task,
+  type World,
+} from './base.ts'
+import type { Buff, March, State } from '../core/types.ts'
 
 export const TASK_OF: Record<PointKind, Task> = {
   vein: 'take',
@@ -227,3 +237,47 @@ export function thoiBuffs(map: MapCtx, s: State): Buff[] {
     src: 'thoi',
   }))
 }
+
+// Vị trí (ô) của đội lúc t theo đường đi (đi: path; về: path ngược); không có đường thì null
+export function marchAt(m: March, t: number): Pos | null {
+  const path = m.path
+  if (!path?.length) return null
+  const home = m.returnAt > 0 && t >= m.arriveAt
+  const f = home
+    ? (t - m.arriveAt) / Math.max(1, m.returnAt - m.arriveAt)
+    : (t - m.startAt) / Math.max(1, m.arriveAt - m.startAt)
+  const pts = home ? [...path].reverse() : path
+  const seg = pts.slice(1).map((p, k) => Math.hypot(p.x - pts[k].x, p.y - pts[k].y))
+  let d = Math.min(1, Math.max(0, f)) * seg.reduce((a, b) => a + b, 0)
+  for (let k = 0; k < seg.length; k++) {
+    if (d <= seg[k] || k === seg.length - 1) {
+      const u = seg[k] ? Math.min(1, d / seg[k]) : 0
+      return {
+        x: Math.round(pts[k].x + (pts[k + 1].x - pts[k].x) * u),
+        y: Math.round(pts[k].y + (pts[k + 1].y - pts[k].y) * u),
+      }
+    }
+    d -= seg[k]
+  }
+  return { ...pts[0] }
+}
+
+// Cửa ải (Passes của RoK): trận nhãn phe khác đang giữ (không minh ước) thì không đi qua được — phải đánh chiếm trước. Điểm trận
+// nhãn i trùng cổng i của atlas. spots: [điểm, phe giữ] (client đọc từ ảnh chụp bản đồ, server từ w.spots)
+export function shutFrom(
+  spots: Iterable<[number, number | undefined]>,
+  gates: number,
+  side: number,
+  naps: readonly number[] = [],
+) {
+  const out = new Set<number>()
+  for (const [i, own] of spots) if (i < gates && own !== undefined && own !== side && !naps.includes(own)) out.add(i)
+  return out
+}
+export const shutGates = (w: World, a: Atlas, pid: number) =>
+  shutFrom(
+    Object.entries(w.spots).map(([k, sp]) => [Number(k), sp.own] as [number, number | undefined]),
+    a.gates.length,
+    sideKey(w, pid),
+    allyOf(w, pid)?.naps,
+  )

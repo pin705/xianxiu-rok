@@ -20,6 +20,8 @@ import { drillActions, type DrillAction } from './drill.ts'
 import { guestActions, type GuestAction } from './guest.ts'
 import { quizActions, type QuizAction } from './quiz.ts'
 import { sideActions, type SideAction } from './side.ts'
+import { nanActions, type NanAction } from './nan.ts'
+import { wallActions, type WallAction } from './wall.ts'
 import { eveActions, type EveAction } from './eve.ts'
 import { secluded, secludeActions, type SecludeAction } from './seclude.ts'
 import { buildingActions, type BuildingAction } from './buildings.ts'
@@ -57,6 +59,8 @@ export type Action =
   | GuestAction
   | QuizAction
   | SideAction
+  | NanAction
+  | WallAction
   | EveAction
   | SecludeAction
 
@@ -85,6 +89,8 @@ const ACTIONS: Actions<Action> = {
   ...guestActions,
   ...quizActions,
   ...sideActions,
+  ...nanActions,
+  ...wallActions,
   ...eveActions,
   ...secludeActions,
 }

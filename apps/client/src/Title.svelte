@@ -180,7 +180,7 @@
         <button type="button" class="dao row center" onclick={to('dao')} aria-label={L.dao.pick}>
           <Medal emblem={dao} tone={DAO_TONES[dao]} size={44} />
           <b>{L.dao.names[dao].name}</b>
-          <small class="t-tiny t-soft">· {L.dao.change}</small>
+          <small class="t-tiny t-soft">· {L.dao.swap}</small>
         </button>
         <h2 class="t-title">{L.naming.title}</h2>
         <p class="t-small t-lore">{L.naming.hint}</p>
@@ -355,7 +355,7 @@
     text-align: center;
     background: transparent;
     border: 0;
-    border-bottom: 2px solid var(--ink);
+    border-bottom: 2px solid var(--rim);
   }
   input:focus {
     outline: none;
@@ -417,7 +417,7 @@
   .pct {
     font-size: var(--fs-1, 12px);
     font-variant-numeric: tabular-nums;
-    color: var(--ink);
+    color: var(--text);
     opacity: 0.7;
     min-width: 3ch;
   }

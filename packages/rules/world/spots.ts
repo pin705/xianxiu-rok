@@ -5,7 +5,7 @@ import { fieldError, launch } from '../core/battle.ts'
 import { isId, int, isElder, oneOf, pickArmy } from '../core/parse.ts'
 import { apOf, spendAp } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
-import { type Army, type Buff, type March } from '../core/types.ts'
+import { type Army, type Buff, type March, type State } from '../core/types.ts'
 import { compact, noGain } from '../core/util.ts'
 import {
   AP_HUNT,
@@ -21,6 +21,8 @@ import {
 import {
   allyBuffs,
   allyOf,
+  farErr,
+  dropIncoming,
   officeBuffs,
   blessBuffs,
   titleBuffs,
@@ -29,7 +31,6 @@ import {
   sideKey,
   travel,
   withMarch,
-  marchAt,
   type Ctx,
   type MapCtx,
   type Players,
@@ -39,13 +40,13 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
-import { eveBuffs, hold, ruinWindow, TASK_OF, spotOf, thoiBuffs, veinBuffs } from './points.ts'
+import { eveBuffs, hold, marchAt, ruinWindow, TASK_OF, spotOf, thoiBuffs, veinBuffs } from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
 const rallyTask = (p: Point) => (TASK_OF[p.kind] === 'gather' ? null : (TASK_OF[p.kind] as 'take' | 'hit'))
 export type SpotAction =
   | { type: 'go'; i: number; task: Task; elder: ElderId; army: Army } // tới một điểm trên bản đồ giới
-  | { type: 'recall'; id: number } // gọi đội đang đóng quân / đang khai mỏ / đang viện binh về
+  | { type: 'recall'; id: number } // gọi đội về: đang đi (quay đầu giữa đường), đóng quân, khai mỏ, viện binh
   | { type: 'rally'; i: number; wait: 0 | 1 | 2; elder: ElderId; army: Army } // mở kết trận ở điểm i (chiếm / đánh yêu vương)
   | { type: 'rallyJoin'; id: number; elder: ElderId; army: Army } // góp đội vào kết trận
   | { type: 'huntChain'; id: number; i: number } // săn liên hoàn: đội săn đang về đi thẳng tới yêu thú giới khác
@@ -100,8 +101,8 @@ function chainAct({ w, pid, s, map }: Ctx, a: Extract<SpotAction, { type: 'huntC
   if ((spotOf(w, map, a.i, t).until ?? 0) > t) return no('cooldown')
   if (apOf(s, t) < AP_HUNT) return no('limit')
   const from = marchAt(m, t) ?? s.seat
-  const r = from && route(map.atlas, from, p, map.phase)
-  if (!r) return no('far')
+  const r = from && route(map.atlas, from, p, map.phase, map.shut)
+  if (!r) return no(from ? farErr(map, from, p) : 'far')
   const next: March = {
     ...m,
     army: compact(m.back),
@@ -126,8 +127,8 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
   if ((p.kind === 'gate' && p.lv > map.phase) || (p.kind === 'heaven' && map.phase < 3)) return no('locked') // trận nhãn mở theo pha mùa
   if (!ruinWindow(map.atlas, p, t).open) return no('locked') // di tích: chỉ lúc mở cửa
   if (!s.seat) return no('far')
-  const r = route(map.atlas, s.seat, p, map.phase)
-  if (!r) return no('far')
+  const r = route(map.atlas, s.seat, p, map.phase, map.shut)
+  if (!r) return no(farErr(map, s.seat, p))
   const sp = spotOf(w, map, a.i, t)
   if (a.task === 'hit' && (!BOSSES[p.lv] || (sp.until ?? 0) > t)) return no('cooldown')
   if (a.task === 'gather' && ((sp.until ?? 0) > t || !sp.left)) return no('empty')
@@ -161,9 +162,58 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
 }
 
 // Gọi về: đội đóng quân về nhà (còn ai của phe mình ở đó thì điểm vẫn giữ); đội đang khai mỏ mang về phần đã khai theo tỉ lệ thời gian
+// Đội đang đi trên bản đồ giới (chưa tới, không thuộc kết trận, không phải kiếp vân) — gọi về giữa đường được
+const outbound = (m: March, t: number) =>
+  !!m.path &&
+  ['pvp', 'spot', 'flag'].includes(m.target.kind) &&
+  m.arriveAt > t &&
+  !m.returnAt &&
+  !m.back &&
+  !m.stay &&
+  m.rally === undefined
+// Gọi về được lúc t: đang đi (quay đầu giữa đường), đang đóng quân / viện binh, đang khai mỏ
+export const recallable = (m: March, t: number) =>
+  outbound(m, t) || (!!m.stay && (m.target.kind === 'spot' || m.task === 'aid')) || (!!m.mine && m.mine.end > t)
+
+// Đường đã đi tới phần f (0..1) của lộ trình: các điểm dừng đã qua + chỗ đang đứng
+function walked(path: { x: number; y: number }[], f: number) {
+  const seg = path.slice(1).map((p, k) => Math.hypot(p.x - path[k].x, p.y - path[k].y))
+  let d = Math.min(1, Math.max(0, f)) * seg.reduce((a, b) => a + b, 0)
+  for (let k = 0; k < seg.length; k++) {
+    if (d <= seg[k]) {
+      const u = seg[k] ? d / seg[k] : 0
+      const at = { x: path[k].x + (path[k + 1].x - path[k].x) * u, y: path[k].y + (path[k + 1].y - path[k].y) * u }
+      return [...path.slice(0, k + 1), at]
+    }
+    d -= seg[k]
+  }
+  return path
+}
+// Gọi về giữa đường (Recall của RoK): quay đầu từ chỗ đang đứng, về mất bằng thời gian đã đi, đi săn thì hoàn hành lực; bên
+// bị nhắm (cướp tông môn / cướp khoáng) thôi thấy đội kéo tới
+function turnAround(ps: Players, w: World, pid: number, s: State, m: March, t: number): WorldResult {
+  const path = walked(m.path!, (t - m.startAt) / Math.max(1, m.arriveAt - m.startAt))
+  const back = {
+    ...m,
+    path,
+    arriveAt: t,
+    back: m.army,
+    hurt: m.hurt ?? {},
+    gain: noGain(),
+    returnAt: 2 * t - m.startAt,
+  }
+  const me = withMarch(m.task === 'hunt' ? spendAp(s, t, -AP_HUNT) : s, back)
+  const changed: Players = new Map([[pid, me]])
+  const foe = m.target.kind === 'pvp' ? m.target.i : m.prey?.pid
+  const d = foe === undefined ? undefined : ps.get(foe)
+  if (foe !== undefined && d) changed.set(foe, dropIncoming(d, pid, m.id))
+  return { ok: true, world: w, changed }
+}
+
 function recallAct({ ps, w, pid, s, map }: Ctx, mid: number): WorldResult {
   const t = s.time
   const m = s.marches.find(x => x.id === mid)
+  if (m && outbound(m, t)) return turnAround(ps, w, pid, s, m, t)
   if (!m || !(m.target.kind === 'spot' || m.task === 'aid') || !(m.stay || (m.mine && m.mine.end > t))) return no('bad')
   const i = m.target.i
   const home = () =>
@@ -207,8 +257,8 @@ function rallyAct(
   const task = rally?.task ?? (p && rallyTask(p))
   if (!p || !task) return no('bad')
   if (!ruinWindow(map.atlas, p, t).open) return no('locked')
-  const r = route(map.atlas, s.seat, p, map.phase)
-  if (!r) return no('far')
+  const r = route(map.atlas, s.seat, p, map.phase, map.shut)
+  if (!r) return no(farErr(map, s.seat, p))
   const ms = routeMs(s, r.len, a.army)
   if (task === 'hit' && (spotOf(w, map, i, t).until ?? 0) > t) return no('cooldown')
   const members = [...ps.values()].flatMap(x => x.marches.filter(m => rally && m.rally === rally.id)).length

@@ -193,7 +193,7 @@ try {
     await sleep(200)
   const a = await tab()
   await a.js(`localStorage.setItem('rok.lang', 'vi'); localStorage.setItem('rok.save', '{}'); location.reload()`) // save P1 cũ: phải được dọn
-  for (const sel of ['button.cover', '.skip button', 'form button[type=submit]']) {
+  for (const sel of ['button.cover', '.skip button', '.choose > .btn', 'form button[type=submit]']) {
     assert.ok(await a.until(`!!document.querySelector('${sel}')`), `màn mở đầu thiếu ${sel}`)
     await a.js(`document.querySelector('${sel}').click()`)
   }
@@ -443,6 +443,8 @@ try {
   await a.js(`document.querySelector('button.cover').click()`)
   assert.ok(await a.until(`!!document.querySelector('.skip button')`))
   await a.js(`document.querySelector('.skip button').click()`)
+  assert.ok(await a.until(`!!document.querySelector('.choose > .btn')`), 'thiếu màn chọn đạo thống')
+  await a.js(`document.querySelector('.choose > .btn').click()`)
   assert.ok(
     await a.until(`[...document.querySelectorAll('button')].some(b => b.innerText.includes('Đăng nhập'))`),
     'màn đặt tên không có lối đăng nhập',

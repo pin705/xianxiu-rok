@@ -1,7 +1,7 @@
 # Vẽ và ghép tranh vào game. Mỗi nhóm: vẽ (bỏ qua ảnh đã có trong .work/raw) rồi ghép vào apps/client/public/art + manifest.
 #   tools/art/.venv/bin/python tools/art/make.py <nhóm> [tên…] [--fit] [--dry]
 #   --fit: chỉ ghép lại từ ảnh thô đã có (không gọi API) · --dry: in prompt, không gọi API
-# Nhóm: buildings faces icons emblems figures masks props troops beasts skins scenery fields map far paper strokes
+# Nhóm: buildings faces icons emblems figures landmarks masks props troops beasts skins scenery fields map far paper strokes
 # Xong thì chạy `pack` (chia gói theo cảnh + dựng atlas) — game nạp theo gói.
 import json, os, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -102,6 +102,12 @@ def figures():  # tổ sư chín đạo thống: một bảng; model hay xếp 4
     c = X.trim(X.main_blob(X.depink(im.crop(box)), 0.015))  # lửa trên tay ~1,9 %, mẩu tay áo hình bên ~1,1 %
     X.save(f'fig:{P.FIGURES_DRAWN[i]}', X.fit_square(c, 720, 0.02, 0.75), 'fig')  # 3:4, ~360 px CSS trên màn 2x
 
+def landmarks():  # trấn phái chi bảo: bảng 3×3, khớp hộp LANDMARK_BOX (chân chạm đáy), 3 px/DU (HD 6)
+  w, h = P.LANDMARK_BOX
+  box = Image.new('RGBA', (w * 4, h * 4), (0, 0, 0, 255))  # bản code "đầy hộp": fit_prop đặt tranh vừa hộp, chân chạm đáy
+  for name, im in sheets({'L1': P.LANDMARKS}, 'scenery landmarks for a mountain sect scene', 'Each one stands upright on its own small stone base, seen from the front with a slight top-down angle. ', parts=True).items():
+    X.save(f'lm:{name}', X.fit_prop(im, box, 1, 0.75), 'scene', tex=True, hd=X.fit_prop(im, box, 1, 1.5))
+
 def masks():
   for name, im in sheets(P.MASK_SHEETS, 'UI glyph icons', P.MASK_NOTE, parts=True).items():
     a = np.asarray(X.fit_square(im, X.dom_side(f'mask:{name}'), 0.04)).copy()
@@ -156,30 +162,43 @@ def skins():
 def kit():
   """bộ giao diện sạch: 3 mẫu gốc (KIT_BASES) → mọi da trong KIT, đúng khung + thông số 9 mảnh của từng da (bản vẽ code)"""
   meta = json.load(open(os.path.join(X.WORK, 'skins', 'meta.json')))
-  pads = {b: X.padded(os.path.join(X.WORK, 'skins', f'{src}.png'), (255, 0, 255, 255), 'kit') for b, (src, _) in P.KIT_BASES.items()}
-  run([(f'kit-{b}', P.KIT_BASE.format(design=d), [pads[b][0]], pads[b][1], '1K') for b, (_, d) in P.KIT_BASES.items()])
+  pads = {b: X.padded(os.path.join(X.WORK, 'skins', f'{v[0]}.png'), (255, 0, 255, 255), 'kit') for b, v in P.KIT_BASES.items()}
+  def refs(b):
+    r = [pads[b][0]]
+    c = getattr(P, 'KIT_REFS', {}).get(b)
+    if c and os.path.exists(X.raw(c)): r.append(X.ref(X.raw(c)))
+    return r
+  run([(f'kit-{b}', (v[2] if len(v) > 2 else P.KIT_BASE).format(design=v[1]), refs(b), pads[b][1], '1K') for b, v in P.KIT_BASES.items()])
   bases = {}
-  for b, (src, _) in P.KIT_BASES.items():
+  for b, v in P.KIT_BASES.items():
+    src = v[0]
     if not os.path.exists(X.raw(f'kit-{b}')): continue
     k = X.raw(f'kit-{b}') + '.png'
     X.key_magenta(X.raw(f'kit-{b}'), k)
     img = X.fit_trace(k, pads[b][2], Image.open(os.path.join(X.WORK, 'skins', f'{src}.png')).convert('RGBA'), 1.0)
-    if b != 'plate': img = X.symmetric(img)  # tấm sơn mài giữ vệt sáng phía trên
+    if b not in ('plate', 'plaque'): img = X.symmetric(img)  # tấm sơn mài giữ vệt sáng phía trên
     bases[b] = (img, [v * meta[src]['S'] for v in meta[src]['slice']])
-  for n, (b, dark, light) in pick(P.KIT).items():
+  for n, entry in pick(P.KIT).items():
+    b, dark, light = entry[:3]
     if b not in bases: continue
     m = meta[n]
     ins = [v * m['S'] for v in m['slice']]  # ảnh 2x như bản code: px ảnh = px CSS × 2
+    wcss = m['slice']
+    if len(entry) > 3:  # mẫu có góc chạm: viền riêng (to hơn lát của bản code)
+      wcss = [entry[3]] * 4
+      ins = [entry[3] * m['S']] * 4
     if not any(ins): ins = [0, 0, 0, 0]  # ảnh nguyên tấm (đĩa, công tắc): co giãn cả tấm
     img, bins = bases[b]
+    bins = getattr(P, 'KIT_BINS', {}).get(b, bins)
     if n in ('scroll', 'strip'):  # khung bảng/HUD: nền giấy của phần tử nằm dưới cả dải viền → cắt lề trong suốt, viền sát mép
       bx = img.getchannel('A').point(lambda v: 255 if v > 200 else 0).getbbox()
       img = img.crop(bx)
       bins = [max(2, bins[0] - bx[1]), max(2, bins[1] - (bases[b][0].width - bx[2])),
               max(2, bins[2] - (bases[b][0].height - bx[3])), max(2, bins[3] - bx[0])]
-    img = X.tint(img, dark, light)  # đổi màu trên cả mẫu gốc (đủ viền lẫn lòng) rồi mới co giãn: lòng phẳng không bị kéo nhiễu
+    if dark and b == 'plaque': img = X.tint_grey(img, dark)  # nút: nhuộm mặt, giữ viền đồng
+    elif dark: img = X.tint(img, dark, light)  # (None, None): giữ màu vẽ sẵn — đổi màu trên cả mẫu gốc (đủ viền lẫn lòng) rồi mới co giãn: lòng phẳng không bị kéo nhiễu
     out = X.nine(img, bins, m['pw'], m['ph'], ins) if any(ins) else img.resize((m['pw'], m['ph']), Image.LANCZOS)
-    extra = {'slice': ins, 'width': m['slice'], 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
+    extra = {'slice': ins, 'width': wcss, 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
     X.save(f'skin:{n}', out, 'skin', extra=extra)
 
 def clouds():
@@ -275,7 +294,9 @@ def paper():
   rolled = np.roll(a, (N // 2, N // 2), (0, 1))  # mép của bản cuộn liền nhau khi lát
   d = np.minimum.outer(np.minimum(np.arange(N), N - 1 - np.arange(N)), np.minimum(np.arange(N), N - 1 - np.arange(N))) / (N // 2)
   wgt = np.clip(d * 2, 0, 1)[..., None]  # giữa lấy bản gốc (che đường nối giữa của bản cuộn), mép lấy bản cuộn
-  X.save('skin:paper', Image.fromarray((a * wgt + rolled * (1 - wgt)).astype(np.uint8)).convert('RGBA'), 'skin')
+  tex = Image.fromarray((a * wgt + rolled * (1 - wgt)).astype(np.uint8)).convert('RGBA')
+  # sơn mài: vân giấy nhuộm thành vân sơn lam sẫm, độ tương phản thấp (nền mọi bảng, trang)
+  X.save('skin:paper', X.tint(tex, '#121e21', '#1b2b2f'), 'skin')
 
 def strokes():
   run([('sheet-strokes', P.sheet(P.STROKES, 'ink brush marks'), [X.ref(ICONS)], '1:1', '2K')])
@@ -284,9 +305,25 @@ def strokes():
   X.key_magenta(X.raw('sheet-strokes'), k)
   for name, im in X.cut_sheet(k, P.STROKES, False).items():
     # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 320×28 (như bản code, 2x); vết mực: vuông
+    if name == 'stroke': im = X.tint(im, '#6f5d3a', '#b59d68')  # gạch dưới tiêu đề: đồng cổ (nét mực đen chìm trên nền sơn mài)
     X.save(f'skin:{name}', X.fit_square(im, 256, 0.01) if name == 'blot' else im.resize((320, 28), X.Image.LANCZOS), 'skin')
 
-GROUPS = {'pack': X.pack_all, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'masks': masks, 'props': props, 'troops': troops,
+def concept():
+  """concept toàn màn cho mỗi hướng (CONCEPT_STYLES) × mỗi ảnh chụp trong .work/concept/*-src.png → .work/raw/concept-<màn>-<hướng>"""
+  import glob
+  srcs = sorted(glob.glob(os.path.join(X.WORK, 'concept', '*-src.png')))
+  pick_s = [a for a in args[1:] if a in P.CONCEPT_STYLES] or list(P.CONCEPT_STYLES)
+  pick_m = [a for a in args[1:] if a not in P.CONCEPT_STYLES]
+  jobs = []
+  for src in srcs:
+    scr = os.path.basename(src)[:-8]
+    if pick_m and scr not in pick_m: continue
+    w, h = Image.open(src).size
+    for st in pick_s:
+      jobs.append((f'concept-{scr}-{st}', P.CONCEPT_BASE.format(style=P.CONCEPT_STYLES[st]), [X.ref(src, side=1600)], '9:16' if h > w else '16:9', '2K'))
+  run(jobs)
+
+GROUPS = {'pack': X.pack_all, 'concept': concept, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'landmarks': landmarks, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}
 
 if __name__ == '__main__':

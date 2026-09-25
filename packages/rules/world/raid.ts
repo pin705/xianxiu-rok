@@ -6,6 +6,7 @@ import { bump, evBump } from '../core/calendar.ts'
 import { int, isId, isElder, pickArmy } from '../core/parse.ts'
 import { deputyOf, elderLevel, lead, storage } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
+import { wallHit } from '../core/wall.ts'
 import { type Army, type March, type Report, type State } from '../core/types.ts'
 import { bag, minus, compact, noGain } from '../core/util.ts'
 import {
@@ -249,7 +250,7 @@ function attacker({ at, att, def, defPid, m, win, loot, delta, fights }: Bout, b
   return win ? evBump(bump({ ...a, stats: { ...a.stats, raided: (a.stats.raided ?? 0) + 1 } }, 'win'), 'raid') : a
 }
 
-// Bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên
+// Bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên và núi bốc linh hỏa
 function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout, party: Party): State {
   const dIds = UNITS.filter(u => def.troops[u] > 0)
   const dLeft = n1.slice(0, dIds.length)
@@ -276,7 +277,7 @@ function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout, pa
     gain: noGain(),
     fights: flip,
   })
-  return {
+  const out: State = {
     ...dd,
     pvp: {
       pts: Math.max(0, def.pvp.pts - delta),
@@ -291,6 +292,7 @@ function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout, pa
     shield: win ? Math.max(def.shield, at + SHIELD_TIME) : def.shield,
     marches: win ? dd.marches.map(x => (x.target.kind === 'trib' ? { ...x, foil: (x.foil ?? 0) + 1 } : x)) : dd.marches, // phá kiếp
   }
+  return win ? wallHit(out, at) : out
 }
 
 // Viện binh: chiến báo như bên thủ; thua thì bị đánh bật về nhà, thắng thì ở lại với phần còn lại

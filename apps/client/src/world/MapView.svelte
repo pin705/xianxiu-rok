@@ -14,6 +14,7 @@
     type Err,
     type Target,
   } from '@rok/rules'
+  import { recallable } from '@rok/rules/world'
   import { Icon, Portrait, type Emblem } from '@rok/art'
   import { Badge, Button, Card, Medal, Tag } from '../ui'
   import { EMBLEM, L, LOOK, clock, marchDoing, marchName } from '../lib'
@@ -150,7 +151,7 @@
   <ul class="marches stack">
     {#each game.marches as m (m.id)}
       {@const out = now < m.arriveAt}
-      {@const held = !!m.stay || !!(m.mine && m.mine.end > now)}
+      {@const back = onrecall && recallable(m, now)}
       <li>
         <Card
           tone="silk"
@@ -166,20 +167,21 @@
             <span class="grow stack" style:--gap="0"
               ><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft">{marchDoing(m, now)}</small></span
             >
-            {#if held && onrecall}
+            {#if !back || out}
+              <b class="t-num t-gold"
+                >{clock(
+                  (out ? m.arriveAt : m.mine && m.mine.end > now ? m.mine.end : m.returnAt || m.arriveAt) - now,
+                )}</b
+              >
+            {/if}
+            {#if back}
               <Button
                 size="sm"
                 variant="ghost"
                 onclick={e => {
                   e.stopPropagation()
-                  onrecall(m.id)
+                  onrecall?.(m.id)
                 }}>{L.world.recall}</Button
-              >
-            {:else}
-              <b class="t-num t-gold"
-                >{clock(
-                  (out ? m.arriveAt : m.mine && m.mine.end > now ? m.mine.end : m.returnAt || m.arriveAt) - now,
-                )}</b
               >
             {/if}
           </span>
@@ -240,17 +242,17 @@
     place-items: center;
     width: 20px;
     height: 20px;
-    color: var(--ink);
+    color: var(--text);
     background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .ok {
-    color: var(--ink);
+    color: var(--text);
     background-image: var(--img-disc-gold);
   }
   .label {
     font-size: var(--fs-2);
     font-weight: 800;
-    color: var(--ink);
+    color: var(--text);
     -webkit-text-stroke: 3px var(--paper);
     paint-order: stroke fill;
   }

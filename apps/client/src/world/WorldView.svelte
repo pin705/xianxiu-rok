@@ -8,6 +8,9 @@
     SEASON_DAYS,
     atlas,
     dayIn,
+    fires,
+    nanOpen,
+    shutFrom,
     phaseOf,
     route,
     type MapSnap,
@@ -37,6 +40,7 @@
   import { useGame } from '../game'
   import { social } from '../social.svelte'
   import Minimap from './Minimap.svelte'
+  import Holdings from './Holdings.svelte'
 
   let {
     info,
@@ -226,6 +230,9 @@
     }
   })
 
+  // Thôn Trang Gặp Nạn: thôn đang cháy đổi theo giờ — chỉ tính lại khi sang giờ mới
+  const hour = $derived(Math.floor(now / 3_600_000))
+  const burning = $derived(nanOpen(game, hour * 3_600_000) ? fires(atlas(info.map), hour * 3_600_000) : [])
   const rel = (pid: number): Rel => {
     if (pid === me) return 'me'
     if (allies.includes(pid)) return 'ally'
@@ -233,7 +240,13 @@
   }
   $effect(() => {
     if (scene && snap)
-      scene.setData(snap, rel, phase, now, game.seat ? { fog: fogOf(game), visited: game.visited ?? [] } : undefined)
+      scene.setData(
+        snap,
+        rel,
+        phase,
+        now,
+        game.seat ? { fog: fogOf(game), visited: game.visited ?? [], fires: burning } : undefined,
+      )
   })
 
   const honorReady = $derived.by(() => {
@@ -291,15 +304,32 @@
     const hit = a.points
       // yêu thú: "cấp" 1/2/3 là nhóm cấp 1–5 / 6–10 / 11–15
       .filter(p => p.kind === want.kind && (p.kind === 'wild' ? Math.ceil(p.lv / 5) : p.lv) === want.lv)
-      .filter(p => !dead.has(p.i) && route(a, from, p, phase))
+      .filter(p => !dead.has(p.i) && route(a, from, p, phase, shut))
       .sort((p, q) => d(p) - d(q))[0]
     miss = !hit
     if (!hit) return
-    cam = clamp({ x: (hit.x + 0.5) * T, y: (hit.y + 0.5) * T, z: Math.max(cam.z, 0.9) })
-    ping = { x: hit.x, y: hit.y, until: now + 4000 }
     finding = false
-    pickAt(hit.x, hit.y)
+    fly(hit.x, hit.y)
   }
+  // bay tới ô (x, y), nháy vòng son, mở bảng của vật ở đó (Tìm, Sơn Hà Xã Tắc Đồ)
+  function fly(x: number, y: number) {
+    steered = true
+    cam = clamp({ x: (x + 0.5) * T, y: (y + 0.5) * T, z: Math.max(cam.z, 0.9) })
+    ping = { x, y, until: now + 4000 }
+    pickAt(x, y)
+  }
+  let overview = $state(false) // Sơn Hà Xã Tắc Đồ
+  const side = $derived(snap?.seats.find(s => s.pid === me)?.aid ?? -(me ?? 0)) // phe của mình (như SpotView.side)
+  // cửa ải phe khác đang giữ (Tìm bỏ qua điểm bị chặn đường)
+  const shut = $derived(
+    snap
+      ? shutFrom(
+          snap.spots.map(x => [x.i, x.side] as [number, number | undefined]),
+          atlas(info.map).gates.length,
+          side,
+        )
+      : undefined,
+  )
 
   // Ghim tên: tối đa 60 tông môn gần tâm nhìn nhất, chỉ khi đủ phóng để đọc; dưới mê vụ của mình thì không lộ tên
   const pins = $derived.by(() => {
@@ -361,6 +391,19 @@
   view={viewTiles}
   {now}
   onjump={jumpTo}
+/>
+
+<Holdings
+  open={overview}
+  atlas={atlas(info.map)}
+  {snap}
+  {side}
+  {phase}
+  onclose={() => (overview = false)}
+  onfly={(x, y) => {
+    overview = false
+    fly(x, y)
+  }}
 />
 
 <div class="top stack" style:--gap="6px" bind:this={topCard}>
@@ -468,6 +511,7 @@
           <Button size="sm" variant="gold" icon="arrow" onclick={find}>{L.world.findGo}</Button>
         </div>
         {#if miss}<small class="t-tiny t-bad">{L.world.findNone}</small>{/if}
+        <Button size="sm" variant="quiet" icon="scroll" onclick={() => (overview = true)}>{L.world.overview}</Button>
         {#if game.pins?.length}
           <small class="t-tiny t-soft">{L.world.pins}</small>
           <div class="row wrap" style:--gap="4px">
@@ -573,7 +617,7 @@
     border-radius: 6px;
   }
   .mine {
-    color: var(--ink);
+    color: var(--ink); /* chữ mực trên nền vàng (màu gốc, không theo chữ ngà của giao diện tối) */
     background: color-mix(in srgb, var(--gold-l) 85%, transparent);
   }
   /* dấu của minh: cờ son + lời ghi, bấm được (chọn vật ở ô đó) */
@@ -603,7 +647,7 @@
     cursor: pointer;
   }
   .mark.pin {
-    color: var(--ink);
+    color: var(--text);
     background: color-mix(in srgb, var(--gold-l) 90%, transparent);
     border-color: var(--gold-d);
   }

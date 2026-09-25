@@ -529,43 +529,77 @@ export const vi = {
     potential: 'Tiềm năng',
     go: 'Theo đạo này',
     note: 'Về sau cải tu được ở Chủ điện, 7 ngày một lần.',
+    swap: 'Đổi',
+    uniTitle: 'Đệ tử đặc trưng',
+    uni: 'Đặc trưng',
+    speed: 'Tốc hành quân',
     prev: 'Đạo trước',
     next: 'Đạo sau',
     names: {
-      kiemTong: { name: 'Kiếm Tông', desc: 'Lấy kiếm nhập đạo, xuất quân như gió.', style: 'Tấn công · Viễn chinh' },
+      kiemTong: {
+        name: 'Kiếm Tông',
+        desc: 'Lấy kiếm nhập đạo, xuất quân như gió.',
+        style: 'Tấn công · Viễn chinh',
+        unit: 'Ngự Kiếm Sĩ',
+        unitDesc: 'Đạp phi kiếm mà đi, tới trước mọi đội.',
+      },
       phapTong: {
         name: 'Pháp Tông',
         desc: 'Thuật pháp tinh thâm, trưởng lão ngộ đạo nhanh.',
         style: 'Công pháp · Trưởng lão',
+        unit: 'Viêm Linh Pháp Sư',
+        unitDesc: 'Linh hỏa trong tay, đốt cháy hàng ngũ địch.',
       },
-      theTong: { name: 'Thể Tông', desc: 'Luyện thân như sắt, thương binh mau lành.', style: 'Bền bỉ · Hồi phục' },
-      danTong: { name: 'Đan Tông', desc: 'Lò đan không tắt, linh điền sung túc.', style: 'Kinh tế · Luyện đan' },
+      theTong: {
+        name: 'Thể Tông',
+        desc: 'Luyện thân như sắt, thương binh mau lành.',
+        style: 'Bền bỉ · Hồi phục',
+        unit: 'Kim Cương La Hán',
+        unitDesc: 'Mình đồng da sắt, chịu đòn thay cả đội.',
+      },
+      danTong: {
+        name: 'Đan Tông',
+        desc: 'Lò đan không tắt, linh điền sung túc.',
+        style: 'Kinh tế · Luyện đan',
+        unit: 'Dược Linh Sư',
+        unitDesc: 'Ngậm đan mà đánh, khí huyết dồi dào hơn người.',
+      },
       tranTong: {
         name: 'Trận Tông',
         desc: 'Trận pháp hộ sơn vững chãi, kho tàng đầy ắp.',
         style: 'Phòng thủ · Hợp người mới',
+        unit: 'Trấn Sơn Vệ',
+        unitDesc: 'Kết trận giữ cửa, giáp dày nhất thiên hạ.',
       },
       khiTong: {
         name: 'Luyện Khí Tông',
         desc: 'Búa rèn ngày đêm, pháp bảo ra lò nhanh.',
         style: 'Pháp bảo · Khai khoáng',
+        unit: 'Thần Binh Vệ',
+        unitDesc: 'Khoác pháp giáp tự rèn, đao kiếm khó vào.',
       },
       phuTong: {
         name: 'Phù Lục Tông',
         desc: 'Chu sa vẽ bùa, lôi kiếp cũng phải nể ba phần.',
         style: 'Độ kiếp · Công pháp',
+        unit: 'Phù Chú Sư',
+        unitDesc: 'Bùa hộ thân dán kín áo, tà thuật khó phạm.',
       },
       thuTong: {
         name: 'Ngự Thú Tông',
         desc: 'Kết khế cùng linh thú: đệ tử luyện nhanh, chạy xa.',
         style: 'Tuyển quân · Cơ động',
+        unit: 'Kỳ Lân Kỵ',
+        unitDesc: 'Cưỡi linh thú mà đi, thể tu cũng nhanh như gió.',
       },
       maTong: {
         name: 'Huyết Ma Tông',
         desc: 'Tà đạo lấy chiến dưỡng chiến, đánh đâu vơ đó.',
         style: 'Tà đạo · Chiến lợi phẩm',
+        unit: 'Huyết Sát Vệ',
+        unitDesc: 'Khát máu, càng đánh càng hăng.',
       },
-    } satisfies Record<DaoId, { name: string; desc: string; style: string }>,
+    } satisfies Record<DaoId, { name: string; desc: string; style: string; unit: string; unitDesc: string }>,
   },
   // Ma Triều Công Sơn (Shadow Legion): sự kiện giữ núi của tiên minh tối thứ Tư
   legion: {
@@ -709,6 +743,51 @@ export const vi = {
     open: 'Mở tổ đội',
     join: 'Vào đội',
     done: 'Hôm nay đã đi phó bản — mai quay lại.',
+  },
+  // Minh sự lịch: việc chung của minh đã hẹn giờ, bấm tham gia
+  plan: {
+    title: 'Minh sự lịch',
+    hint: 'Việc chung đã hẹn giờ của tiên minh. Bấm Tham gia để được nhắc 10 phút trước giờ.',
+    none: 'Chưa có việc nào được hẹn.',
+    in: (t: string) => `sau ${t}`,
+    past: 'Đang diễn ra / vừa qua',
+    by: (name: string) => `${name} hẹn`,
+    going: (n: number) => `${n} người tham gia`,
+    join: 'Tham gia',
+    leave: 'Rút',
+    cancel: 'Huỷ việc',
+    new: 'Hẹn việc mới',
+    at: 'Giờ (theo máy bạn)',
+    text: 'Việc gì? (vd. kết trận Linh mạch cấp 3)',
+    add: 'Hẹn giờ',
+    full: (n: number) => `Lịch đã đủ ${n} việc sắp tới — huỷ bớt để hẹn thêm.`,
+  },
+  // Thôn Trang Gặp Nạn: thôn bị tà tu đốt trên bản đồ giới, việc cứu nạn có hạn giờ
+  nan: {
+    title: 'Việc cứu nạn',
+    alarm: 'Thôn đang bị tà tu đốt phá!',
+    burning: (h: number) =>
+      `Tà tu đang đốt thôn, dân làng cầu cứu. Nhận một việc cứu nạn, làm xong trong ${h} giờ rồi báo công.`,
+    take: 'Nhận việc cứu nạn',
+    due: (t: string) => `còn ${t}`,
+    late: 'Quá hạn — tìm thôn khác đang cháy để nhận việc mới.',
+    done: 'Báo công',
+    today: (n: number, max: number) => `Hôm nay đã nhận ${n}/${max} việc`,
+    find: 'Tìm thôn trang đang bốc cháy trong vùng đã khai trên bản đồ giới để nhận việc cứu nạn.',
+    busy: 'Đang có việc cứu nạn dở — báo công hoặc để quá hạn rồi mới nhận việc mới.',
+  },
+  // Trận lực Hộ Sơn Đại Trận + linh hỏa thiêu sơn (độ bền tường, thành cháy của RoK)
+  wall: {
+    title: 'Trận lực',
+    burning: (t: string) => `Linh hỏa đang thiêu núi · còn ${t}`,
+    burningHint:
+      'Núi cháy thì trận lực tụt mỗi phút; về 0 là sơn môn thất thủ — tông môn bị đánh bật sang vùng hoang ngẫu nhiên.',
+    calm: 'Trận lực tự hồi khi núi không cháy. Bị cướp thua thì núi bốc linh hỏa.',
+    mend: 'Tu bổ trận cơ',
+    mendIn: (t: string) => `Tu bổ lại sau ${t}`,
+    douse: (n: number) => `Dập lửa (${n})`,
+    alarm: (p: number, t: string) => `Núi đang bốc linh hỏa! Trận lực ${p}% · còn ${t}`,
+    alarmHint: 'Trận lực về 0 là sơn môn thất thủ — dập lửa, tu bổ ngay.',
   },
   // Tranh Đoạt Linh Châu: chiến trường 5 ô theo hiệp
   ark: {
@@ -1081,6 +1160,17 @@ export const vi = {
     stay: 'Đang đóng quân',
     held: 'Đang giữ',
     free: 'Chưa ai giữ — đóng quân để chiếm',
+    // cửa ải (Passes): trận nhãn phe giữ chặn đường phe khác
+    passHint: 'Cửa ải: phe đang giữ trận nhãn chặn đường mọi phe khác (trừ minh ước) — muốn qua phải đánh chiếm.',
+    passShut: 'Phe khác đang giữ cửa ải này — đường qua đây bị chặn, chiếm lại mới đi được.',
+    // Sơn Hà Xã Tắc Đồ (Kingdom Overview): danh sách linh địa và phe giữ
+    overview: 'Sơn Hà Xã Tắc Đồ',
+    overviewHint: 'Mọi linh mạch, trận nhãn, Thiên Môn của giới và phe đang giữ. Bấm Tới để bay tới điểm đó.',
+    mineOnly: 'Chỉ minh mình',
+    nobody: 'Chưa ai giữ',
+    shut: 'Chưa mở (theo pha mùa)',
+    troopsAt: (n: number) => `${n} đội đóng`,
+    flyTo: 'Tới',
     left: 'Còn',
     refill: (t: string) => `Mỏ cạn, đầy lại sau ${t}`,
     hp: 'Máu',
@@ -1594,6 +1684,10 @@ export const vi = {
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
       ],
+      wallFall: (x: number, y: number): [string, string] => [
+        'Sơn môn thất thủ',
+        `Trận lực Hộ Sơn Đại Trận cạn giữa biển linh hỏa — tông môn bị đánh bật tới (${x},${y}). Lần sau hãy tu bổ trận cơ và dập lửa sớm.`,
+      ],
       party: (lv: number, waves: number, n: number): [string, string] => [
         `Man Hoang Cổ Tộc · độ khó ${lv}`,
         `Tổ đội ${n} người ${waves >= 5 ? 'đã quét sạch cả năm đợt hung thú' : waves ? `qua được ${waves}/5 đợt hung thú` : 'chưa qua được đợt nào'}. Quà cho mọi người trong đội ở dưới.`,
@@ -1792,6 +1886,8 @@ export const vi = {
     denied: 'Trình duyệt đang chặn thông báo của game — mở lại trong cài đặt trình duyệt',
     dm: (name: string) => `${name} truyền âm cho bạn`,
     arkSoon: 'Tranh Đoạt Linh Châu bắt đầu sau 10 phút — vào đặt lệnh cho đội!',
+    wallFall: 'Sơn môn thất thủ! Trận lực cạn giữa linh hỏa, tông môn bị đánh bật sang chỗ khác.',
+    plan: (text: string) => `Minh sự sau 10 phút: ${text}`,
     kinds: 'Nhận thông báo về:',
     kind: {
       done: 'Việc dài xong (xây, tuyển, nghiên cứu, đội về)',
@@ -1799,6 +1895,7 @@ export const vi = {
       dm: 'Truyền âm',
       trib: 'Kiếp vân giáng',
       ark: 'Trận tiên minh (Linh Châu)',
+      plan: 'Minh sự lịch (việc đã bấm tham gia)',
     } as Record<string, string>,
     done: {
       build: 'Công trình đã xây xong — tạp dịch đang rảnh',
@@ -2114,6 +2211,7 @@ export const vi = {
     cap: 'Quá trận dung của trưởng lão — bớt đệ tử hoặc chọn trưởng lão cấp cao hơn',
     frenzy: 'Sát khí chưa tan — vừa xuất quân cướp nên chưa bật được Hộ Sơn Phù',
     secluded: 'Đang bế quan — xuất quan rồi mới làm được việc này',
+    blocked: 'Cửa ải trên đường đang bị phe khác giữ — chiếm trận nhãn đó trước',
   } as Record<string, string>,
   net: {
     connecting: 'Đang kết nối…',
@@ -2284,6 +2382,7 @@ export const vi = {
       explore: 'ô mê vụ đã khai',
       sites: 'thôn trang / động phủ đã ghé',
       chain: 'yêu thú hạ bằng săn liên hoàn',
+      rescue: 'việc cứu nạn',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Thế lực đạt ${n}`,
@@ -2310,6 +2409,7 @@ export const vi = {
       explore: (n: string) => `Khai ${n} ô mê vụ`,
       sites: (n: string) => `Ghé ${n} thôn trang / động phủ`,
       chain: (n: string) => `Săn liên hoàn hạ ${n} yêu thú giới`,
+      rescue: (n: string) => `Cứu nạn ${n} thôn trang`,
     } satisfies Record<Metric, (n: string) => string>,
     // việc đo bằng phần tăng thêm (Nhật Khóa, Minh vụ): chỉ các chỉ số có câu khác với task (tổng tích luỹ)
     gain: {
@@ -2419,6 +2519,10 @@ export const vi = {
         name: 'Trung Nguyên Quỷ Tiết',
         desc: 'Rằm tháng Bảy, cửa âm mở: hạ yêu thú (săn liên hoàn càng nhiều), thắng trận, lập chiến công ra điểm — đủ mốc mở rương trấn quỷ.',
       },
+      thonTrang: {
+        name: 'Thôn Trang Gặp Nạn',
+        desc: 'Tà tu kéo tới đốt phá thôn trang phàm nhân. Tìm thôn đang bốc cháy trên bản đồ giới, nhận việc cứu nạn, làm xong trong hạn rồi báo công — mỗi việc ra Hộ Thôn Lệnh và Hành Lực Đan.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: 'Lịch 7 ngày',
     tokens: (n: string, name = 'Tông Môn Lệnh') => `${name}: ${n}`,
@@ -2428,6 +2532,7 @@ export const vi = {
       thucSon: 'Thục Sơn Lệnh',
       ngaMi: 'Nga Mi Lệnh',
       trungThu: 'Nguyệt Bính',
+      thonTrang: 'Hộ Thôn Lệnh',
     } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Đổi · ${price}`,
     left: (n: number, max: number) => `Còn ${n}/${max}`,
@@ -2506,6 +2611,10 @@ export const vi = {
       sonHa: {
         name: 'Sơn Hà Đồ',
         desc: 'Tấm địa đồ vẽ tay: tan ngay 12 ô mê vụ chưa khai gần tông môn nhất trên bản đồ giới.',
+      },
+      tucHoa: {
+        name: 'Tức Hỏa Phù',
+        desc: 'Dập ngay linh hỏa đang thiêu núi: trận lực Hộ Sơn Đại Trận thôi tụt. Chỉ dùng được khi núi đang cháy.',
       },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },

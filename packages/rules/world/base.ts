@@ -42,16 +42,20 @@ import { DAY, noGain } from '../core/util.ts'
 import { mail } from '../sect/inbox.ts'
 
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
-export type MapCtx = { atlas: Atlas; phase: number; day?: number } // day: ngày thứ mấy của mùa (Thiên Thời; sim không có)
+// day: ngày thứ mấy của mùa (Thiên Thời; sim không có) · shut: cửa ải chặn người đang làm (worldAct tính, points.ts shutGates)
+export type MapCtx = { atlas: Atlas; phase: number; day?: number; shut?: ReadonlySet<number> }
 // Đường đi cướp giữa hai chỗ ngồi; null: chưa có đường (cổng chưa mở)
 export function raidPath(att: State, def: State, map?: MapCtx, army?: Army): { path?: Pos[]; ms: number } | null {
   if (!map || !att.seat || !def.seat) return { ms: marchTime(att, { kind: 'pvp', i: 0 }) }
-  const r = route(map.atlas, att.seat, def.seat, map.phase)
+  const r = route(map.atlas, att.seat, def.seat, map.phase, map.shut)
   return r && { path: r.path, ms: routeMs(att, r.len, army) }
 }
+// Không có đường: bị cửa ải phe khác chặn ('blocked') hay chưa mở cổng ('far')
+export const farErr = (map: MapCtx, from: Pos, to: Pos): Err =>
+  map.shut?.size && route(map.atlas, from, to, map.phase) ? 'blocked' : 'far'
 // Thời gian đi hết len ô đường trên bản đồ giới (công pháp hành quân rút ngắn; có đội thì theo tốc hệ chậm nhất)
 export const routeMs = (s: State, len: number, army?: Army) =>
-  Math.round((len * TILE_TIME * cutOf(s, 'march')) / (army ? armySpeed(army) : 1))
+  Math.round((len * TILE_TIME * cutOf(s, 'march')) / (army ? armySpeed(army, s) : 1))
 
 export type Players = Map<number, State>
 
@@ -109,9 +113,12 @@ export type Alliance = {
   offices?: Partial<Record<OfficeId, number>> // chức vị đường chủ: ai giữ
   pot?: Pot // Tụ Bảo Minh Đỉnh tuần này
   party?: PartyRoom // Man Hoang Cổ Tộc: phòng tổ đội đang chờ (mỗi minh một phòng)
+  plans?: Plan[] // Minh sự lịch: việc chung đã hẹn giờ
 }
 // Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
 export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
+// Minh sự lịch: việc chung lúc at (người hẹn, lời nhắn, ai tham gia, đã nhắc trước giờ chưa)
+export type Plan = { id: number; by: number; at: number; text: string; go: number[]; warned?: boolean }
 // Tụ Bảo Minh Đỉnh: tuần, điểm cả minh, điểm từng người đã góp, số rương từng người đã mở
 export type Pot = { week: number; pts: number; by: Record<number, number>; opened: Record<number, number> }
 // Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
@@ -368,29 +375,6 @@ export const addHonor = (s: State, n: number): State =>
   n >= 1 ? { ...s, honor: (s.honor ?? 0) + Math.floor(n), honorAll: (s.honorAll ?? 0) + Math.floor(n) } : s // honorAll: ra Phi Thăng Tệ
 export const addKp = (s: State, n: number): State =>
   n >= 1 ? addHonor({ ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + Math.round(n) } }, n / HONOR_KP) : s
-// Vị trí (ô) của đội lúc t theo đường đi (đi: path; về: path ngược); không có đường thì null
-export function marchAt(m: March, t: number): Pos | null {
-  const path = m.path
-  if (!path?.length) return null
-  const home = m.returnAt > 0 && t >= m.arriveAt
-  const f = home
-    ? (t - m.arriveAt) / Math.max(1, m.returnAt - m.arriveAt)
-    : (t - m.startAt) / Math.max(1, m.arriveAt - m.startAt)
-  const pts = home ? [...path].reverse() : path
-  const seg = pts.slice(1).map((p, k) => Math.hypot(p.x - pts[k].x, p.y - pts[k].y))
-  let d = Math.min(1, Math.max(0, f)) * seg.reduce((a, b) => a + b, 0)
-  for (let k = 0; k < seg.length; k++) {
-    if (d <= seg[k] || k === seg.length - 1) {
-      const u = seg[k] ? Math.min(1, d / seg[k]) : 0
-      return {
-        x: Math.round(pts[k].x + (pts[k + 1].x - pts[k].x) * u),
-        y: Math.round(pts[k].y + (pts[k + 1].y - pts[k].y) * u),
-      }
-    }
-    d -= seg[k]
-  }
-  return { ...pts[0] }
-}
 export const withMarch = (s: State, m: March): State => ({ ...s, marches: s.marches.map(x => (x.id === m.id ? m : x)) })
 export const travel = (m: March) => m.arriveAt - m.startAt
 export const setSpot = (w: World, i: number, sp: Spot): World => ({ ...w, spots: { ...w.spots, [i]: sp } })

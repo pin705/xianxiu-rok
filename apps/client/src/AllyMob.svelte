@@ -155,7 +155,7 @@
     gap: 3px;
     padding: 8px;
     text-align: center;
-    background: var(--silk);
+    background: var(--paper2);
     border: 1.5px solid var(--paper3);
     border-radius: 12px;
   }

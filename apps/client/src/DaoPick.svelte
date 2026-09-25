@@ -58,7 +58,7 @@
         >{/if}
     </Card>
   </Section>
-  <Sheet {open} onclose={() => (open = false)} center title={L.dao.pick} sub={L.dao.pickHint}>
+  <Sheet {open} onclose={() => (open = false)} center title={L.dao.pick} lore={L.dao.pickHint}>
     {#if open}
       <DaoChoose
         value={game.dao?.id}

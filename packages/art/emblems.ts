@@ -688,6 +688,21 @@ export function medal(emblem: Emblem, tone: MedalTone): Asset {
   }
 }
 
+// Trấn phái chi bảo (cảnh núi, cạnh Chủ điện): tranh vẽ tay 'lm:<đạo>' phủ đúng hộp này (tools/art LANDMARK_BOX), chân giữa đáy.
+// Bản vẽ code: bệ đá, hình chạm của đạo trên đỉnh.
+export function daoMark(id: DaoEmblem): Asset {
+  return { x: -26, y: -64, w: 52, h: 64, draw: g => {
+    part(g, [[-15, 0], [15, 0], [12, -6], [-12, -6]], mix(C.ink3, C.paper, 0.35), 700)
+    part(g, [[-9, -6], [9, -6], [7, -30], [-7, -30]], mix(C.ink3, C.paper, 0.2), 702)
+    g.save()
+    g.translate(0, -46)
+    g.scale(0.9, 0.9)
+    DRAW[id](g)
+    g.restore()
+    grain(g, 0.2)
+  } }
+}
+
 // Hình chạm không đĩa (dùng làm ấn lớn, biểu tượng khoảnh khắc trên nền giấy)
 export function emblemArt(emblem: Emblem): Asset {
   return { x: -20, y: -20, w: 40, h: 40, draw: g => {

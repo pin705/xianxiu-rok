@@ -66,7 +66,7 @@
     else if (r !== 'on') fail('server')
   }
   // chọn loại thông báo đẩy: tắt / bật từng loại (server lọc trước khi gửi)
-  const TAGS = ['done', 'raid', 'dm', 'trib', 'ark'] as const
+  const TAGS = ['done', 'raid', 'dm', 'trib', 'ark', 'plan'] as const
   async function toggle(tag: string, on: boolean) {
     if (!info) return
     const off = on ? info.off.filter(t => t !== tag) : [...info.off, tag]
@@ -189,7 +189,7 @@
     width: 100%;
     padding: 8px 10px;
     font: inherit;
-    border: 1.5px solid var(--ink3);
+    border: 1.5px solid var(--rim);
     border-radius: var(--cut);
     background: var(--paper);
   }

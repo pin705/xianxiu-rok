@@ -219,7 +219,7 @@
     place-items: center;
     width: 36px;
     height: 36px;
-    color: var(--ink);
+    color: var(--text);
     background: var(--img-disc-paper) center / 100% 100% no-repeat;
   }
   .x:active {

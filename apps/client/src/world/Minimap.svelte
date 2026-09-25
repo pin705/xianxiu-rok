@@ -141,7 +141,7 @@
     width: 116px;
     height: 116px;
     overflow: hidden;
-    border: 2px solid var(--ink);
+    border: 2px solid var(--rim);
     border-radius: 6px;
     box-shadow: 0 4px 12px rgb(var(--shade) / 0.35);
     touch-action: none;
@@ -167,7 +167,7 @@
     width: 9px;
     height: 9px;
     background: var(--gold-l);
-    border-color: var(--ink);
+    border-color: var(--text);
   }
   .view {
     position: absolute;

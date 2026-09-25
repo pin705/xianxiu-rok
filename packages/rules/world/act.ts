@@ -35,6 +35,9 @@ import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
 import { partyActions, type PartyAction } from './party.ts'
+import { rescueActions, type RescueAction } from './rescue.ts'
+import { planActions, type PlanAction } from './plans.ts'
+import { shutGates } from './points.ts'
 
 export type WorldAction =
   | RaidAction
@@ -59,6 +62,8 @@ export type WorldAction =
   | PotAction
   | ArkAction
   | PartyAction
+  | RescueAction
+  | PlanAction
 
 const WORLD: WorldActions<WorldAction> = {
   ...raidActions,
@@ -83,6 +88,8 @@ const WORLD: WorldActions<WorldAction> = {
   ...potActions,
   ...arkActions,
   ...partyActions,
+  ...rescueActions,
+  ...planActions,
 }
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 
@@ -107,5 +114,6 @@ export function worldAct(
   if (!me) return no('gone')
   const s = advance(me, now)
   if (secluded(s)) return no('secluded') // Bế Quan Lệnh: đang bế quan thì không làm gì với giới
-  return (WORLD[a.type].run as WorldRun<WorldAction>)({ ps, w, pid, s, now, seed, map }, a)
+  const m = map && { ...map, shut: shutGates(w, map.atlas, pid) } // cửa ải: tính theo phe người đang làm
+  return (WORLD[a.type].run as WorldRun<WorldAction>)({ ps, w, pid, s, now, seed, map: m }, a)
 }

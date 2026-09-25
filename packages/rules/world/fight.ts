@@ -5,7 +5,7 @@ import { deputyOf, elderLevel, unitOf, isMarching, power } from '../core/stats.t
 import { type Army, type Err, type March, type State } from '../core/types.ts'
 import { CARRY, GUARD_STEP, PVP_FLOOR, PVP_HALL, REVENGE_TIME, TIER, UNIT_CARRY, UNITS, type ElderId } from '../data.ts'
 import { compact } from '../core/util.ts'
-import { allyOf, napBetween, raidPath, type MapCtx, type World } from './base.ts'
+import { allyOf, farErr, napBetween, raidPath, type MapCtx, type World } from './base.ts'
 
 // Trưởng lão giữ nhà chỉ tính khi đang ở tông môn
 export const guardOf = (s: State) =>
@@ -96,7 +96,7 @@ export function raidError(
   if (!def || attPid === defPid) return 'gone'
   if (w && allyOf(w, attPid)?.members[defPid] !== undefined) return 'friend' // không cướp đồng minh
   if (w && napBetween(w, attPid, defPid)) return 'friend' // minh ước
-  if (!raidPath(att, def, map)) return 'far'
+  if (!raidPath(att, def, map)) return map && att.seat && def.seat ? farErr(map, att.seat, def.seat) : 'far'
   if (att.levels.chuDien < PVP_HALL || def.levels.chuDien < PVP_HALL) return 'locked'
   if (def.shield > now) return 'shield'
   if (!revenge(att, defPid, now) && power(def) < PVP_FLOOR * power(att)) return 'weak' // báo thù thì bỏ giới hạn

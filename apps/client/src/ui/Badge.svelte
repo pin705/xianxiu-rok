@@ -34,7 +34,7 @@
     padding: 0;
   }
   .fresh {
-    color: var(--ink);
+    color: var(--text);
     border-image: var(--sk-badge-fresh);
   }
 </style>

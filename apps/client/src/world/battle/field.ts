@@ -1,7 +1,7 @@
 // Sân trận theo cảnh (rừng, lửa, băng, lôi kiếp, đồng, tông môn, tháp) và đội hình hai bên.
 import { Container, Sprite, Text, TilingSprite } from 'pixi.js'
 import { PIGMENT as C, artOf, battlefield, beast, cloud, mistTex, soldier, type Theme, type Troop } from '@rok/art'
-import type { Report } from '@rok/rules'
+import { DAO_UNITS, type DaoId, type Report } from '@rok/rules'
 import { hex, painted, sprite, texOf, fxTex } from '../stage'
 import type { Battle } from '../battle'
 import { ease, type Kind, type Squad } from './kit'
@@ -78,7 +78,17 @@ export function paint(b: Battle) {
 }
 
 // Dựng một đội: hình theo loại (người, yêu thú, mây sét), số quân, nhô lên từ mặt đất
-export function squad(b: Battle, side: number, type: Troop, n0: number, x: number, y: number, tier = 1): Squad {
+// dao: đạo thống của bên đó (chiến báo) — hệ đệ tử đặc trưng vẽ bằng dáng riêng của đạo ở mọi bậc
+export function squad(
+  b: Battle,
+  side: number,
+  type: Troop,
+  n0: number,
+  x: number,
+  y: number,
+  tier = 1,
+  dao?: DaoId,
+): Squad {
   const kind: Kind = side ? b.enemy : 'man'
   const max = kind === 'man' ? 9 : kind === 'beast' ? 3 : 4
   const per = Math.max(1, Math.ceil(n0 / max))
@@ -111,8 +121,10 @@ export function squad(b: Battle, side: number, type: Troop, n0: number, x: numbe
       // bậc 1–3 chung một dáng đệ tử
       // yêu thú vẽ tay: một dáng lông xám mỗi hệ (manifest 'beast:<hệ>'), tô màu loài bằng tint
       const inked = kind === 'beast' && !!artOf(`beast:${type}`)?.img
-      const p =
-        kind === 'man'
+      const uni = kind === 'man' && dao && DAO_UNITS[dao]?.type === type
+      const p = uni
+        ? painted(`sold:dao:${dao}`, () => soldier(type, false, 5))
+        : kind === 'man'
           ? painted(`sold:${type}:${side}:${Math.max(3, tier)}`, () => soldier(type, side === 1, tier))
           : painted(inked ? `beast:${type}` : `beast:${type}:${b.tint}`, () => beast(type, b.tint))
       s = sprite(p)

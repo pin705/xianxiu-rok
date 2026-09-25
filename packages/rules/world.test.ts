@@ -38,6 +38,7 @@ import {
   PVP_START,
   REVENGE_TIME,
   SHIELD_TIME,
+  FIRE_TIME,
   TRIB_CLOUD,
   TRIB_EXP,
   TERR_GATHER,
@@ -74,6 +75,7 @@ import {
   type State,
 } from './index.ts'
 import {
+  recallable,
   MAP_W,
   advanceAll,
   veinBuffs,
@@ -197,6 +199,7 @@ test('cướp: đội mạnh thắng, lấy 30 % phần vượt kho bảo hộ, 
   assert.equal(got, Math.floor((before - keep) * 0.3 * (1 + 0))) // thanhPhong không có bonus chiến lợi phẩm
   assert.equal(def.res.linhThach, before - got)
   assert.equal(def.shield, m.arriveAt + SHIELD_TIME)
+  assert.equal(def.wall?.fire, m.arriveAt + FIRE_TIME, 'thủ thua: núi bốc linh hỏa')
   assert.equal(def.reports.at(-1)!.def, true)
   assert.equal(def.reports.at(-1)!.win, false)
   assert.equal(att.reports.at(-1)!.foe, 'Thủ')
@@ -1962,4 +1965,67 @@ test('chợ: ký gửi trong biên giá, mua nhận hàng ngay, người bán nh
   const end = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, T0 + 15 * HOUR + MARKET_TTL + 3, 1, new Set())
   assert.equal(end.changed.get(1)!.mail.at(-1)!.k, 'unsold')
   assert.deepEqual(end.world.orders, {})
+})
+
+test('gọi về giữa đường: đội đang đi quay đầu từ chỗ đang đứng, về mất bằng thời gian đã đi, hoàn hành lực; không tới nơi', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 0 }
+  const p = a.points.find(x => x.kind === 'wild' && x.lv <= 3)!
+  const seat = { x: a.regions[p.region].cx, y: a.regions[p.region].cy }
+  const ps = world({ ...sect('Săn', 12, { kiem3: 800 }), seat })
+  const w = freshWorld()
+  const act = (raw: object, now: number) => {
+    const r = worldAct(ps, 1, raw as never, now, 5, map, w)
+    if (r.ok) for (const [k, v] of r.changed) ps.set(k, v)
+    return r.ok ? null : r.error
+  }
+  assert.equal(act({ type: 'go', i: p.i, task: 'hunt', elder: 'thanhPhong', army: { kiem3: 800 } }, T0), null)
+  const m = ps.get(1)!.marches[0]
+  assert.ok(recallable(m, T0 + 1))
+  const mid = T0 + Math.floor((m.arriveAt - T0) / 2)
+  assert.equal(act({ type: 'recall', id: m.id }, mid), null)
+  const back = ps.get(1)!.marches[0]
+  assert.deepEqual([back.arriveAt, back.returnAt], [mid, 2 * mid - T0], 'về mất bằng thời gian đã đi')
+  assert.deepEqual(back.back, m.army)
+  assert.deepEqual(back.path![0], seat)
+  assert.ok(
+    back.path!.length >= 2 && Math.hypot(back.path!.at(-1)!.x - p.x, back.path!.at(-1)!.y - p.y) > 0.5,
+    'dừng giữa đường',
+  )
+  assert.equal(apOf(ps.get(1)!, mid), apOf({ ...ps.get(1)!, ap: undefined }, mid), 'hoàn hành lực')
+  assert.ok(!recallable(back, mid + 1), 'đang về thì thôi')
+  const done = advanceAll(ps, w, m.arriveAt + 1, map)
+  assert.equal((done.changed.get(1) ?? ps.get(1)!).stats.hunted ?? 0, 0, 'không đánh')
+  assert.equal(act({ type: 'recall', id: m.id }, mid + 1000), 'bad')
+})
+
+test('cửa ải: trận nhãn phe khác đang giữ chặn đường (blocked); mình / minh ước giữ thì qua; đi trong vùng không cần cổng', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const home = a.regions.find(r => r.ring === 0)!
+  const p = a.points.find(x => x.kind === 'wild' && x.region !== home.i && x.lv <= 3)!
+  const near = a.points.find(x => x.kind === 'wild' && x.region === home.i && x.lv <= 3)!
+  const ps = world({ ...sect('Qua', 12, { kiem3: 800 }), seat: { x: home.cx, y: home.cy } })
+  const ally = (id: number, members: Record<number, 0 | 2>, naps: number[] = []) => ({
+    id,
+    name: `M${id}`,
+    tag: `M${id}`,
+    members,
+    notice: '',
+    at: T0,
+    helps: [],
+    naps,
+  })
+  const held = (own: number, allies = {}): World => ({
+    ...freshWorld(),
+    allies,
+    spots: Object.fromEntries(a.gates.map(g => [g.i, { own }])),
+  })
+  const go = (w: World, i = p.i) =>
+    err(worldAct(ps, 1, { type: 'go', i, task: 'hunt', elder: 'thanhPhong', army: { kiem3: 800 } }, T0, 5, map, w))
+  assert.equal(go(held(-2)), 'blocked', 'phe khác giữ mọi cửa ải')
+  assert.equal(go(held(-2), near.i), null, 'trong vùng mình: không qua cổng')
+  assert.equal(go(held(-1)), null, 'mình giữ')
+  assert.equal(go(held(7, { 1: ally(1, { 1: 2 }, [7]), 7: ally(7, { 2: 2 }, [1]) })), null, 'minh ước giữ')
+  assert.equal(go(held(7, { 1: ally(1, { 1: 2 }), 7: ally(7, { 2: 2 }) })), 'blocked', 'minh khác giữ')
 })

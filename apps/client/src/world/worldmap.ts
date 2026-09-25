@@ -172,7 +172,7 @@ export class WorldScene {
     rel: (pid: number) => Rel,
     phase: number,
     now: number,
-    ex?: { fog: Fog; visited: readonly number[] },
+    ex?: { fog: Fog; visited: readonly number[]; fires: readonly number[] },
   ) {
     this.marks.removeChildren().forEach(c => c.destroy())
     this.sized = []
@@ -216,6 +216,7 @@ export class WorldScene {
         this.sized.push([ring, ((r === 'me' ? 1.3 : 1) * MARK * 1.25) / 96, 0])
         this.marks.addChild(ring)
       }
+      if (s.fire && s.fire > now) add({ x: s.x + 0.7, y: s.y - 0.7 }, 'fire', 'red', 0.55) // linh hỏa thiêu núi
       if (s.cloud && s.cloud > now) {
         const c = new Sprite(texOf('wvortex', () => vortexTex(128, 7, 3, 1.6)))
         c.anchor.set(0.5)
@@ -228,18 +229,13 @@ export class WorldScene {
     }
     this.marches = snap.marches
     this.roadZ = 0 // vẽ lại đường theo độ phóng mới
-    // thôn trang / động phủ đã lộ (ghé rồi thì mờ)
+    // thôn trang / động phủ đã lộ (ghé rồi thì mờ); thôn đang bị tà tu đốt (Thôn Trang Gặp Nạn): ấn lửa đỏ, luôn rõ
     for (const st of ex ? sitesOf(this.atlas) : []) {
       const c = cellOf(st)
       if (!clear(ex!.fog, c.cx, c.cy, now)) continue
-      add(
-        st,
-        st.kind === 'village' ? 'wood' : 'chaos',
-        st.kind === 'village' ? 'gold' : 'realm',
-        0.6,
-        ex!.visited.includes(st.i) ? 0.35 : 1,
-        0.3,
-      )
+      if (ex!.fires.includes(st.i)) add(st, 'fire', 'red', 0.75, 1, 0.2)
+      else if (st.kind === 'village') add(st, 'wood', 'gold', 0.6, ex!.visited.includes(st.i) ? 0.35 : 1, 0.3)
+      else add(st, 'chaos', 'realm', 0.6, ex!.visited.includes(st.i) ? 0.35 : 1, 0.3)
     }
     this.explore = ex ? { fog: ex.fog, next: nextLand(ex.fog, now) } : null
     this.fogL.paint(ex?.fog ?? null, now)

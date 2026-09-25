@@ -55,6 +55,8 @@
     veinBuffs,
     weather,
     TASK_OF,
+    recallable,
+    shutFrom,
     type AllyInfo,
     type Atlas,
     type MapMarch,
@@ -71,6 +73,7 @@
   import type { Pick } from './world/worldmap'
   import { useGame } from './game'
   import { social } from './social.svelte'
+  import Rescue from './Rescue.svelte'
 
   let {
     info,
@@ -102,9 +105,22 @@
 
   const phase = $derived(phaseOf(dayIn(info.opened, now)))
   const regionName = (r: number) => `${L.world.regions[r] ?? r} · ${L.world.ring[atlas.regions[r].ring]}`
-  // đường đi từ tông môn mình; null: chưa có đường (cổng chưa mở)
-  const road = (to: { x: number; y: number }) => (game.seat ? route(atlas, game.seat, to, phase) : null)
-  const time = (len: number, a?: Army) => clock((len * TILE_TIME * cutOf(game, 'march')) / (a ? armySpeed(a) : 1))
+  // cửa ải: trận nhãn phe khác đang giữ (không minh ước) chặn đường
+  const shut = $derived(
+    snap
+      ? shutFrom(
+          snap.spots.map(s => [s.i, s.side] as [number, number | undefined]),
+          atlas.gates.length,
+          ally?.id ?? -(me ?? 0),
+          ally?.naps,
+        )
+      : undefined,
+  )
+  // đường đi từ tông môn mình; null: chưa có đường (cổng chưa mở, hay cửa ải bị chặn — farText nói rõ)
+  const road = (to: { x: number; y: number }) => (game.seat ? route(atlas, game.seat, to, phase, shut) : null)
+  const farText = (to: { x: number; y: number }) =>
+    game.seat && shut?.size && route(atlas, game.seat, to, phase) ? L.err.blocked : L.err.far
+  const time = (len: number, a?: Army) => clock((len * TILE_TIME * cutOf(game, 'march')) / (a ? armySpeed(a, game) : 1))
   const seat = $derived(pick?.kind === 'seat' ? snap?.seats.find(s => s.pid === pick.pid) : undefined)
   const point = $derived(pick?.kind === 'point' ? atlas.points[pick.i] : undefined)
   const spot = $derived(point ? snap?.spots.find(s => s.i === point.i) : undefined)
@@ -281,7 +297,7 @@
             >{/if}
         </span>
         {#if seat.pid !== me}
-          <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : L.err.far}</small>
+          <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : farText(seat)}</small>
         {/if}
         {#if !seat.npc && seat.pid !== me}<Button size="sm" variant="ghost" onclick={() => (social.profile = seat.pid)}
             >{L.profile.open}</Button
@@ -319,6 +335,11 @@
           <Tag icon={point.lv <= phase ? 'check' : 'lock'} tone={point.lv <= phase ? 'good' : 'plain'}
             >{point.lv <= phase ? L.world.phase[point.lv] : L.world.gateOpens(L.world.phase[point.lv])}</Tag
           >
+          {#if point.kind === 'gate'}<small
+              class="t-tiny"
+              class:t-bad={shut?.has(point.i)}
+              class:t-soft={!shut?.has(point.i)}>{shut?.has(point.i) ? L.world.passShut : L.world.passHint}</small
+            >{/if}
         {/if}
         {#if point.kind === 'ruin' || point.kind === 'altar'}
           <!-- di tích: chỉ chiếm được lúc mở; phe giữ khi đóng cửa nhận Công Huân theo phút -->
@@ -384,7 +405,7 @@
             </span>
           {/if}
         {/if}
-        <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : L.err.far}</small>
+        <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : farText(point)}</small>
       </div>
     </Card>
     {#if diggers.length && game.levels.chuDien >= PVP_HALL}
@@ -416,7 +437,7 @@
         <Card tone="silk">
           <div class="row">
             <span class="grow t-small">{marchDoing(mine, now)}</span>
-            {#if mine.stay || (mine.mine && mine.mine.end > now)}<Button
+            {#if recallable(mine, now)}<Button
                 size="sm"
                 variant="ghost"
                 disabled={busy}
@@ -480,10 +501,17 @@
   {:else if march}
     {@const end = march.path.at(-1)}
     {@const rr = end ? road(end) : null}
+    {@const own = march.pid === me ? game.marches.find(m => m.id === march.id) : undefined}
     <Card>
-      <p class="t-small">
-        {march.foe ?? spotName(march.spot)} · {marchState(march)}
-      </p>
+      <div class="row">
+        <p class="grow t-small">{march.foe ?? spotName(march.spot)} · {marchState(march)}</p>
+        {#if own && recallable(own, now)}<Button
+            size="sm"
+            variant="ghost"
+            disabled={busy}
+            onclick={() => send({ type: 'recall', id: own.id })}>{L.world.recall}</Button
+          >{/if}
+      </div>
     </Card>
     {#if digging(march) && game.levels.chuDien >= PVP_HALL && rr}
       {#if safeDig(march)}<p class="t-small t-soft mt-3">{L.world.robSafe}</p>{:else}{@render robPick(
@@ -493,6 +521,7 @@
     {/if}
   {:else if site}
     {@const gift = (site.kind === 'village' ? VILLAGE_GIFTS : CAVE_GIFTS)[site.ring]}
+    {#if site.kind === 'village'}<Rescue site={site.i} {atlas} {send} />{/if}
     <Card>
       <div class="stack" style:--gap="6px">
         <p class="t-small t-lore">{site.kind === 'village' ? L.world.explore.villageLore : L.world.explore.caveLore}</p>
@@ -685,7 +714,7 @@
     min-width: 0;
     padding: 6px 10px;
     font: inherit;
-    border: 1.5px solid var(--ink3);
+    border: 1.5px solid var(--rim);
     border-radius: var(--cut);
     background: var(--paper);
   }

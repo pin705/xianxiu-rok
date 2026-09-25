@@ -669,7 +669,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Mẹo: gửi ít quân vào rally để cả minh cùng nhận.
 - **Vì sao hay:** bản đồ có "sự sống"; một vòng lặp nhỏ khép kín: tìm → nhận việc → gom → gọi trùm.
 - **Tu tiên hoá:** **"Thôn Trang Gặp Nạn"**: làng phàm nhân bị tà tu đốt. Bản Rằm tháng Bảy là "Mộ Địa Âm Hồn": phá oán hồn, gọi quỷ vương.
-- **Game mình:** ❌ — bản đồ giới có điểm, hành quân và trinh sát (tới nơi).
+- **Game mình:** ✅ Thôn Trang Gặp Nạn — lễ `thonTrang` (kho đổi Hộ Thôn Lệnh), thôn cháy theo giờ (`fires`), việc cứu nạn có hạn (`rescue` / `rescueDone`), 15 việc/ngày. Chưa có bước gom đuốc gọi thổ phỉ.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### D10. Thief in the Night — đuổi đạo tặc
@@ -1260,7 +1260,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | D6 | Ceroli Crisis | Tổ Đội Bí Cảnh | ❌ | P2 | L |
 | D7 | Ceroli Assault | Vây Công Yêu Vương | 🟡 | P2 | S |
 | D8 | Ian's Ballads | Tứ Nhân Thám Bí | ❌ | P2 | L |
-| D9 | Strange Incidents / Ghoulish Graveyard | Thôn Trang Gặp Nạn / Mộ Địa Âm Hồn | ❌ | P1 | M |
+| D9 | Strange Incidents / Ghoulish Graveyard | Thôn Trang Gặp Nạn / Mộ Địa Âm Hồn | ✅ Thôn Trang Gặp Nạn (`world/rescue.ts`); chưa có gọi thổ phỉ, bản Mộ Địa | P1 | M |
 | D10 | Thief in the Night | Dạ Hành Đạo Tặc | ❌ | P2 | S–M |
 | D11 | Race Against Time | Trảm Yêu Tốc Chiến | ❌ | P2 | M |
 | D12 | Protect the Supplies | Áp Tiêu Hộ Hàng | ❌ | P2 | M–L |

@@ -36,7 +36,7 @@
     padding: 0;
     border: 1.5px solid var(--paper3);
     border-radius: 10px;
-    background: var(--silk);
+    background: var(--paper2);
     box-shadow: inset 0 0 0 2px color-mix(in srgb, white 40%, transparent);
     cursor: pointer;
     transition:
@@ -68,7 +68,7 @@
     position: absolute;
     right: 4px;
     bottom: 1px;
-    color: var(--ink);
+    color: var(--text);
     font-size: 13px;
     text-shadow:
       0 0 3px white,

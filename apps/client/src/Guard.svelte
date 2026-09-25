@@ -1,9 +1,21 @@
 <script lang="ts">
   // Hộ Sơn Đại Trận: khiên, trưởng lão trấn thủ, quân giữ nhà (mọi đệ tử đang ở tông môn), thành tích tranh đoạt.
-  import { ELDER_IDS, GUARD_STEP, count, elderLevel, might, isMarching } from '@rok/rules'
+  import {
+    ELDER_IDS,
+    GUARD_STEP,
+    MEND_COOL,
+    count,
+    elderLevel,
+    might,
+    isMarching,
+    burning,
+    mendReady,
+    wallHp,
+    wallMax,
+  } from '@rok/rules'
   import { defense, guardOf } from '@rok/rules/world'
   import { Icon, Portrait } from '@rok/art'
-  import { Card, Section, Stat } from './ui'
+  import { Button, Card, Meter, Section, Stat } from './ui'
   import { L, LOOK, clock, num } from './lib'
   import { useGame } from './game'
 
@@ -14,6 +26,11 @@
 
   const elders = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined))
   const on = $derived(guardOf(game))
+  // trận lực + linh hỏa thiêu sơn
+  const max = $derived(wallMax(game))
+  const hp = $derived(wallHp(game, now))
+  const fire = $derived(burning(game, now))
+  const ready = $derived(mendReady(game, now))
 </script>
 
 <Card>
@@ -23,6 +40,36 @@
       <b class="t-small">{game.shield > now ? L.pvp.shield(clock(game.shield - now)) : L.pvp.noShield}</b>
       <small class="t-tiny t-soft">{L.pvp.shieldHint}</small>
     </span>
+  </div>
+</Card>
+
+<Card>
+  <div class="stack" style:--gap="6px">
+    <p class="row between">
+      <b class="t-small">{L.wall.title}</b>
+      <span class="t-num t-small" class:t-bad={fire}>{num(Math.round(hp))}/{num(max)}</span>
+    </p>
+    <Meter value={hp / max} size="sm" tone={fire ? 'bad' : 'good'} label={L.wall.title} />
+    {#if fire}
+      <small class="t-small t-bad t-strong">{L.wall.burning(clock(game.wall!.fire - now))}</small>
+      <small class="t-tiny t-soft">{L.wall.burningHint}</small>
+    {:else}
+      <small class="t-tiny t-soft">{L.wall.calm}</small>
+    {/if}
+    <div class="row wrap" style:--gap="8px">
+      <Button size="sm" disabled={!ready || hp >= max} onclick={() => act({ type: 'mend' }, 'tap')}
+        >{ready ? L.wall.mend : L.wall.mendIn(clock((game.wall?.mend ?? 0) + MEND_COOL - now))}</Button
+      >
+      {#if fire}
+        <Button
+          size="sm"
+          variant="gold"
+          disabled={!game.items.tucHoa}
+          onclick={() => act({ type: 'use', item: 'tucHoa', n: 1 }, 'reward')}
+          >{L.wall.douse(game.items.tucHoa ?? 0)}</Button
+        >
+      {/if}
+    </div>
   </div>
 </Card>
 

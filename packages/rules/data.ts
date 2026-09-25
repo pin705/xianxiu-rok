@@ -135,6 +135,20 @@ export const DAOS = {
 } as const satisfies Record<string, Partial<Record<Bonus, number>>>
 export type DaoId = keyof typeof DAOS
 export const DAO_IDS = Object.keys(DAOS) as DaoId[]
+// Đệ tử đặc trưng (đơn vị riêng của mỗi nền văn minh RoK): mỗi đạo thống thay một hệ đệ tử bằng bản của mình ở mọi bậc —
+// tên, dáng riêng; chỉ số gốc nhân thêm atk/def/hp, speed nhân tốc hành quân của hệ đó trên bản đồ giới. Luận Kiếm Đài không tính.
+export type DaoUnit = { type: UnitType; atk?: number; def?: number; hp?: number; speed?: number }
+export const DAO_UNITS: Record<DaoId, DaoUnit> = {
+  kiemTong: { type: 'kiem', speed: 0.08, atk: 0.03 }, // Ngự Kiếm Sĩ
+  phapTong: { type: 'phap', atk: 0.06, hp: 0.02 }, // Viêm Linh Pháp Sư
+  theTong: { type: 'the', hp: 0.06, def: 0.04 }, // Kim Cương La Hán
+  danTong: { type: 'phap', hp: 0.08 }, // Dược Linh Sư
+  tranTong: { type: 'the', def: 0.1 }, // Trấn Sơn Vệ
+  khiTong: { type: 'kiem', def: 0.08, atk: 0.02 }, // Thần Binh Vệ
+  phuTong: { type: 'phap', def: 0.06, hp: 0.03 }, // Phù Chú Sư
+  thuTong: { type: 'the', speed: 0.12, atk: 0.03 }, // Kỳ Lân Kỵ
+  maTong: { type: 'kiem', atk: 0.06, hp: 0.03 }, // Huyết Sát Vệ
+}
 export const DEPUTY_HALL = 8
 export const DEPUTY_SKILL = 0.5
 // Trận dung (March Capacity của RoK): mỗi đội ra bản đồ giới (cướp, điểm giới, kết trận, viện binh, phá cờ) mang tối đa
@@ -459,6 +473,7 @@ export type BagDef =
   | { use: 'ap'; n: number } // Hành Lực Đan: cộng hành lực (được vượt AP_MAX)
   | { use: 'map'; n: number } // Sơn Hà Đồ: tan n ô mê vụ gần tông môn nhất
   | { use: 'ticket' } // Luận Kiếm Lệnh: dùng ở Luận Kiếm Đài (+1 lượt hôm nay), không dùng thẳng từ túi
+  | { use: 'douse' } // Tức Hỏa Phù: dập linh hỏa đang thiêu núi (trận lực thôi tụt)
 const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
 const speeds = <P extends string>(prefix: P, job?: SpeedJob) =>
@@ -501,6 +516,7 @@ const bag = {
   luanKiem: { use: 'ticket' }, // Luận Kiếm Lệnh: thêm một lượt Luận Kiếm Đài
   khuechTran8: { use: 'buff', key: 'cap', v: 0.1, hours: 8 }, // Khuếch Trận Kỳ: trận dung +10 %
   sonHa12: { use: 'map', n: 12 }, // Sơn Hà Đồ: tan 12 ô mê vụ gần nhất
+  tucHoa: { use: 'douse' }, // Tức Hỏa Phù: dập linh hỏa thiêu núi
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -529,6 +545,7 @@ export const BAG_FAMILIES = [
   'luanKiem',
   'khuechTran',
   'sonHa',
+  'tucHoa',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -942,6 +959,19 @@ export const SHIELD_TIME = 8 * 3_600_000
 export const NEWBIE_SHIELD = 72 * 3_600_000
 export const REVENGE_TIME = 24 * 3_600_000
 export const FRENZY_TIME = 30 * 60_000 // cơn sát khí: vừa xuất quân cướp thì chừng ấy chưa dùng được Hộ Sơn Phù (War Frenzy)
+// Trận lực Hộ Sơn Đại Trận + linh hỏa thiêu sơn (độ bền tường, thành cháy, bị buộc dời thành của RoK): trận lực tối đa WALL_HP ×
+// (1 + tầng Hộ Sơn Đại Trận). Thủ thua: mất WALL_HIT phần trận lực tối đa, núi bốc linh hỏa FIRE_TIME (thua tiếp thì cháy lại từ
+// đầu); đang cháy mất FIRE_DRAIN phần mỗi phút, hết cháy thì tự hồi WALL_REGEN phần mỗi giờ. Tu bổ trận cơ: miễn phí mỗi
+// MEND_COOL, hồi MEND_HP phần; Tức Hỏa Phù dập lửa ngay. Trận lực về 0 lúc đang cháy: sơn môn thất thủ — tông môn bị đánh bật
+// sang chỗ trống ngẫu nhiên ở vùng ngoài (như lúc lập), lửa tắt, trận lực còn WALL_FALL phần.
+export const WALL_HP = 500
+export const WALL_HIT = 0.15
+export const FIRE_TIME = 30 * 60_000
+export const FIRE_DRAIN = 0.01
+export const WALL_REGEN = 0.03
+export const MEND_COOL = 30 * 60_000
+export const MEND_HP = 0.1
+export const WALL_FALL = 0.5
 // Cướp khoáng (Attacked while gathering của RoK): đánh đội đang khai mỏ của tông môn khác — cùng điều kiện như cướp tông môn
 // (tầng, chênh lực chiến, đồng minh / minh ước) nhưng khiên không che đội ngoài bản đồ; khai trong lãnh thổ minh mình thì an toàn.
 // Thắng: lấy ROB_SHARE phần đội kia đã khai (không quá sức mang), đội kia về với phần còn lại, phần chưa khai trả về mỏ.
@@ -1067,6 +1097,7 @@ export const COIN_SHOP: { reward: Reward; price: number }[] = [
   { reward: { items: { huongHoa200: 1 } }, price: 25 },
   { reward: { items: { khuechTran8: 2 } }, price: 20 },
   { reward: { items: { chienY: 1, kimCuong: 1, hoThe: 1 } }, price: 30 },
+  { reward: { items: { tucHoa: 2 } }, price: 15 },
 ]
 export const HONOR_TIERS: { n: number; reward: Reward }[] = [
   { n: 50, reward: { items: { thoiQuang60: 2, thachNang5k: 1 } } },
@@ -1474,11 +1505,17 @@ export const MINE_RESPAWN = 2 * 3_600_000
 // (đội đầu đội hình Luận Kiếm Đài của từng người, đệ tử ảo — không mất quân) đánh PARTY_WAVES đợt hung thú mạnh dần, quân không
 // hồi (trừ vai Trị Liệu). Vai: Hộ Pháp (cả đội thủ, máu), Chủ Công (công, tối đa hai người tính), Trị Liệu (hồi một phần quân ngã
 // sau mỗi đợt, tối đa hai người tính). Quà theo độ khó và số đợt qua, cho mọi người trong đội qua thư.
+// Minh sự lịch (Alliance Schedule / RSVP của RoK): trưởng lão / minh chủ hẹn giờ việc chung (trước tối đa PLAN_AHEAD), tối đa
+// PLAN_MAX việc sắp tới, lời nhắn ≤ PLAN_TEXT chữ; người trong minh bấm Tham gia, PLAN_WARN trước giờ server nhắc người đã tham gia
+export const PLAN_MAX = 5
+export const PLAN_AHEAD = 7 * 86_400_000
+export const PLAN_TEXT = 60
+export const PLAN_WARN = 10 * 60_000
 export const PARTY_HALL = 8
 export const PARTY_MAX = 4
 export const PARTY_WAIT = 10 * 60_000
 export const PARTY_WAVES = 5
-export const PARTY_MIGHT = [2500, 6000, 12000, 22000, 36000] // lực chiến đợt đầu mỗi độ khó
+export const PARTY_MIGHT = [2500, 5000, 9000, 14000, 20000] // lực chiến đợt đầu mỗi độ khó
 export const PARTY_GROW = 1.25
 export const PARTY_ROLES = { hoPhap: { def: 0.15, hp: 0.1 }, chuCong: { atk: 0.12 }, triLieu: { heal: 0.2 } } as const
 export type PartyRole = keyof typeof PARTY_ROLES
@@ -1562,6 +1599,23 @@ export const CAVE_GIFTS: Reward[] = [
   { items: { thoiQuang180: 1, daiTuKhi: 1, nganDuyen: 1 } },
   { items: { thoiQuang480: 1, daiTuKhi: 2, kimDuyen: 1 } },
 ]
+// Thôn Trang Gặp Nạn (Strange Incidents của RoK): trong kỳ lễ thonTrang, mỗi giờ chừng 1/NAN_ODDS thôn trang bị tà tu đốt (ai
+// cũng thấy như nhau). Ghé thôn đang cháy trong vùng đã khai nhận một việc cứu nạn (theo thôn và giờ), làm xong trong NAN_TIME
+// thì báo công: NAN_GIFT + một lượt cứu nạn (chỉ số `rescue`, ra Hộ Thôn Lệnh). Mỗi lúc một việc, mỗi ngày tối đa NAN_DAY việc.
+export const NAN_ODDS = 3
+export const NAN_TIME = 2 * 3_600_000
+export const NAN_DAY = 15
+export const NAN_TASKS: { m: Metric; n: number }[] = [
+  { m: 'train', n: 60 },
+  { m: 'hunt', n: 2 },
+  { m: 'gather', n: 15_000 },
+  { m: 'heal', n: 30 },
+  { m: 'brew', n: 2 },
+  { m: 'speed', n: 60 },
+  { m: 'win', n: 3 },
+  { m: 'ally', n: 3 },
+]
+export const NAN_GIFT: Reward = { items: { hanhLuc50: 1 } }
 // Dời núi tân thủ (Beginner's Teleport): trước Chủ điện tầng NEWBIE_MOVE_HALL, lần dời đầu tiên được tới mọi ô trống vùng ngoài
 export const NEWBIE_MOVE_HALL = 8
 // Trận kỳ (Alliance Flag của RoK): trưởng lão / minh chủ cắm trong lãnh thổ minh mình, tốn FLAG_COST Minh khố; dựng xong sau
@@ -1788,6 +1842,7 @@ export const METRICS = [
   'explore', // ô mê vụ đã khai
   'sites', // thôn trang / động phủ đã ghé
   'chain', // yêu thú giới hạ bằng săn liên hoàn (không về núi giữa các trận)
+  'rescue', // việc cứu nạn Thôn Trang Gặp Nạn đã báo công
 ] as const
 export type Metric = (typeof METRICS)[number]
 // Khung giờ: newbie — ngày thứ from..to (0 = ngày lập tông môn) · week — các thứ trong tuần giờ VN (0 = thứ Hai … 6 = Chủ nhật)
@@ -2178,6 +2233,23 @@ const fests = {
       { items: { hoSon8: 1, kinhThu500: 2 } },
       { items: { thoiQuang180: 1, nganDuyen: 2 } },
       { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Thôn Trang Gặp Nạn (Strange Incidents của RoK): thôn trang bị tà tu đốt hiện trên bản đồ giới (NAN_*), cứu nạn ra Hộ Thôn
+  // Lệnh. Thứ Ba → thứ Năm, hai tuần một lần
+  thonTrang: {
+    window: { kind: 'cycle', every: 14, len: 3, offset: 5 },
+    hall: 6,
+    kind: 'shop',
+    stages: [{ rescue: 10 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 100, max: 1 },
+      { reward: { items: { hoSon8: 1 } }, price: 30, max: 2 },
+      { reward: { items: { sonHa12: 1 } }, price: 20, max: 2 },
+      { reward: { items: { tucHoa: 1 } }, price: 15, max: 2 },
+      { reward: { items: { khuechTran8: 1 } }, price: 20, max: 2 },
+      { reward: { items: { hanhLuc50: 1 } }, price: 10, max: 10 },
+      { reward: { items: { thoiQuang60: 1 } }, price: 5, max: 10 },
     ],
   },
   // Nga Mi: luyện đan, chữa thương, khai mỏ, giúp đồng minh

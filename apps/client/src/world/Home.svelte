@@ -228,7 +228,7 @@
     place-items: center;
     width: 20px;
     height: 20px;
-    color: var(--ink);
+    color: var(--text);
     background: var(--gold-l);
     border: 1px solid var(--gold-d);
     border-radius: 50%;

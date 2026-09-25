@@ -15,6 +15,7 @@ const TAB_OF = {
   ap: 'other',
   ticket: 'other',
   map: 'other',
+  douse: 'other',
 } as const satisfies Record<(typeof BAG)[BagId]['use'], BagTab>
 export const BAG_TABS: BagTab[] = ['speed', 'res', 'buff', 'other']
 export const tabOf = (id: BagId): BagTab => TAB_OF[BAG[id].use]
@@ -23,9 +24,9 @@ export function denom(id: BagId) {
   const d = BAG[id]
   if (d.use === 'speed') return L.bag.denom.min(d.min)
   if (d.use === 'buff' || d.use === 'shield' || d.use === 'builder') return L.bag.denom.hours(d.hours)
-  return d.use === 'key' || d.use === 'ticket' ? '' : L.bag.denom.n(d.n)
+  return d.use === 'key' || d.use === 'ticket' || d.use === 'douse' ? '' : L.bag.denom.n(d.n)
 }
-export const itemName = (id: BagId) => `${L.bag.family[bagFamily(id)].name} · ${denom(id)}`
+export const itemName = (id: BagId) => [L.bag.family[bagFamily(id)].name, denom(id)].filter(Boolean).join(' · ')
 
 // Phù rút ngắn được việc k (đang có trong túi), mệnh giá nhỏ trước — dùng phù nhỏ trước cho đỡ phí
 export const speedsFor = (s: State, k: JobKind) =>

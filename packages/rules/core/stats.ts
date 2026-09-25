@@ -63,6 +63,7 @@ import {
   TRADE_STEP,
   UNIT_BASE,
   UNIT_SPEED,
+  DAO_UNITS,
   UNITS,
   STAR_BONUS,
   VIP_LEVELS,
@@ -146,8 +147,17 @@ export const baseRate = (s: State, r: Res) =>
 export const rate = (s: State, r: Res) => Math.round(baseRate(s, r) * (1 + bonus(s, 'prod') + bonus(s, `prod.${r}`)))
 
 // Tốc của một đội trên bản đồ Giới: hệ chậm nhất có mặt (đội trống: 1)
-export const armySpeed = (a: Army) =>
-  Math.min(1.15, ...UNITS.filter(u => (a[u] ?? 0) > 0).map(u => UNIT_SPEED[unitOf(u).type]))
+// Tốc cả đội = hệ chậm nhất; hệ đệ tử đặc trưng của tông môn s (DAO_UNITS.speed) nhanh hơn. Đội rỗng: 1.15
+export function armySpeed(a: Army, s?: State) {
+  const d = daoUnit(s)
+  const v = UNITS.filter(u => (a[u] ?? 0) > 0).map(u => {
+    const t = unitOf(u).type
+    return UNIT_SPEED[t] * (d?.type === t ? 1 + (d.speed ?? 0) : 1)
+  })
+  return v.length ? Math.min(...v) : 1.15
+}
+// Đệ tử đặc trưng của tông môn (đạo thống đang theo), nếu có
+export const daoUnit = (s?: State) => (s?.dao ? DAO_UNITS[s.dao.id] : undefined)
 export const unitOf = (u: UnitId) => ({ type: u.slice(0, -1) as UnitType, tier: Number(u.slice(-1)) as Tier })
 export const HIGH_FIRST = [...UNITS].sort((a, b) => unitOf(b).tier - unitOf(a).tier) // bậc cao trước
 export const trainCost = (u: UnitId, n: number) => {

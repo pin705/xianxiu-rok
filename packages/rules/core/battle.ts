@@ -15,6 +15,7 @@ import {
   passive,
   unitOf,
   isMarching,
+  daoUnit,
 } from './stats.ts'
 import { type Army, type Err, type Gain, type March, type Report, type Snap, type State, type Target } from './types.ts'
 import { addBag, addItems, bag, compact, count, grow, mark, minus, nextSeed, noGain } from './util.ts'
@@ -160,21 +161,24 @@ export function sideOf(s: State, elder: ElderId | null, army: Army, deputy?: Eld
   const sk = elder ? ELDERS[elder].skill : undefined,
     power = elder ? b('skill') : 0
   const ds = elder && deputy ? ELDERS[deputy].skill : undefined
+  const uni = daoUnit(s)
   return {
     el: elder ? ELDERS[elder].el : undefined,
     skill: sk && power ? { ...sk, v: sk.v * (1 + power) } : sk,
     ...(ds && { skill2: { ...ds, v: ds.v * DEPUTY_SKILL * (1 + power) } }),
+    ...(s.dao && { dao: s.dao.id }), // chiến báo vẽ đệ tử đặc trưng
     troops: UNITS.filter(u => (army[u] ?? 0) > 0).map(u => {
       const { type, tier } = unitOf(u)
       const base = UNIT_BASE[type],
         k = TIER[tier].stat
+      const d = uni?.type === type ? uni : undefined // đệ tử đặc trưng: chỉ số gốc cao hơn (× 1 thì giữ nguyên từng số)
       return {
         type,
         tier,
         n: army[u]!,
-        atk: base.atk * k * m * (1 + b('atk') + b(`atk.${type}`)),
-        def: base.def * k * (1 + b('def')),
-        hp: base.hp * k * m * (1 + b('hp') + b(`hp.${type}`)),
+        atk: base.atk * k * m * (1 + b('atk') + b(`atk.${type}`)) * (1 + (d?.atk ?? 0)),
+        def: base.def * k * (1 + b('def')) * (1 + (d?.def ?? 0)),
+        hp: base.hp * k * m * (1 + b('hp') + b(`hp.${type}`)) * (1 + (d?.hp ?? 0)),
       }
     }),
   }
@@ -201,6 +205,7 @@ export const snap = (side: Side, elder?: ElderId, level = 1, deputy?: ElderId): 
   elder,
   ...(deputy && { deputy }),
   level,
+  ...(side.dao && { dao: side.dao }),
   troops: side.troops.map(t => ({ type: t.type, tier: t.tier, n: t.n })),
 })
 

@@ -90,7 +90,7 @@
   }
   .gold {
     --sk: var(--sk-btn-gold);
-    --fg: var(--ink);
+    --fg: var(--text);
     --shade: 0 1px 0 rgb(255 255 255 / 0.45);
   }
   .danger {
@@ -98,12 +98,12 @@
   }
   .ghost {
     --sk: var(--sk-btn-ghost);
-    --fg: var(--ink);
+    --fg: var(--text);
     --shade: none;
   }
   .btn:disabled {
     --sk: var(--sk-btn-off);
-    --fg: color-mix(in srgb, var(--ink2) 75%, transparent);
+    --fg: var(--text-soft);
     --shade: none;
   }
   /* nút vàng: thỉnh thoảng một vệt sáng lướt qua mặt kim (trong lòng nút, không tràn ra mép vẽ) */

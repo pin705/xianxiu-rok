@@ -75,7 +75,7 @@
     padding: 3px 10px 4px;
     font-size: var(--fs-2);
     font-style: normal;
-    color: var(--ink);
+    color: var(--text);
     text-shadow: none;
     border: 0 solid transparent;
     border-image: var(--sk-tag-gold);

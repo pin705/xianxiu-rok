@@ -43,12 +43,12 @@
     place-items: center;
     width: var(--s);
     height: var(--s);
-    color: var(--ink);
+    color: var(--text);
     background: var(--img-disc-silk) center / 100% 100% no-repeat;
     transition: transform var(--dur-1) var(--ease);
   }
   .paper {
-    color: var(--ink);
+    color: var(--text);
     background-image: var(--img-disc-paper);
   }
   .ib:active {

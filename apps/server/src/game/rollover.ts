@@ -20,6 +20,8 @@ import {
   arkOf,
   arkStep,
   partyStep,
+  wallStep,
+  planStep,
 } from '@rok/rules/world'
 import { npcState } from '@rok/rules/bot'
 import type { World } from './world.ts'
@@ -104,6 +106,24 @@ export function allyEvents(w: World, now: number) {
   warCheck(w, now)
   arkCheck(w, now)
   partyCheck(w, now)
+  wallCheck(w, now)
+  planCheck(w, now)
+}
+// Minh sự lịch: PLAN_WARN trước giờ nhắc người đã bấm tham gia (Web Push)
+function planCheck(w: World, now: number) {
+  const r = planStep(w.shared, now)
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, text] of r.remind)
+    if (!w.npc.has(pid)) w.env.push?.(pid, L => ({ title: L.push.title, body: L.push.plan(text), tag: 'plan' }))
+}
+// Sơn môn thất thủ: trận lực về 0 lúc núi cháy thì tông môn bị đánh bật sang chỗ trống ngẫu nhiên (tông môn NPC thì không)
+function wallCheck(w: World, now: number) {
+  for (const [pid, s] of wallStep(w.ps, atlas(w.seed), now, randomInt(1, 2 ** 31), w.npc)) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+    w.env.push?.(pid, L => ({ title: L.push.title, body: L.push.wallFall, tag: 'raid' }))
+  }
 }
 // Ma Triều Công Sơn: tới giờ thì giải các đợt (mỗi đợt một lần), đợt cuối xong thì quà qua thư
 function legionCheck(w: World, now: number) {

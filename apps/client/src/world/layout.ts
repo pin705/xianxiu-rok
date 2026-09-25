@@ -101,6 +101,10 @@ export const STAIRS: [[number, number][], number, number][] = [
   ],
 ]
 
+// Trấn phái chi bảo của đạo thống (home/slots.ts placeMark): chân tượng đài, cỡ. Mỏm trái Tụ Linh Trận: Chủ điện bậc 3+ rộng
+// 180 DU phủ kín mỏm trên cùng, đây là chỗ trống lớn nhất nhìn thấy ngay
+export const LANDMARK: [number, number, number] = [60, 620, 1.15]
+
 // Cây cảnh, đèn đá — xếp cùng lớp công trình theo y (gần thì vẽ sau): [loại, x, y chân, cỡ, seed]
 export const DECOR: ['blossom' | 'lantern' | 'bamboo', number, number, number, number][] = [
   ['blossom', 126, 309, 0.95, 3],

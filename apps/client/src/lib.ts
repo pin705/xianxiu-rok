@@ -8,7 +8,16 @@ import {
   type Look,
   type TabIcon,
 } from '@rok/art'
-import type { ElderId, Element, March, Report, State, UnitType } from '@rok/rules'
+import {
+  DAO_UNITS,
+  type DaoId,
+  type ElderId,
+  type Element,
+  type March,
+  type Report,
+  type State,
+  type UnitType,
+} from '@rok/rules'
 import type { Net } from './net'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
@@ -28,6 +37,15 @@ export function setLang(l: Locale) {
   write('rok.lang', l)
   location.reload()
 }
+
+// Đệ tử đặc trưng của đạo thống (DAO_UNITS): tên hệ theo tông môn s, và các chỉ số nhân thêm dạng chữ
+export const unitName = (t: UnitType, s?: Pick<State, 'dao'>) =>
+  s?.dao && DAO_UNITS[s.dao.id].type === t ? L.dao.names[s.dao.id].unit : L.units[t]
+export const uniFx = (id: DaoId) =>
+  (['atk', 'def', 'hp', 'speed'] as const).flatMap(k => {
+    const v = DAO_UNITS[id][k]
+    return v ? [`${k === 'speed' ? L.dao.speed : L.stat[k]} +${Math.round(v * 100)}%`] : []
+  })
 
 // Hình chạm trên huy hiệu vẽ tay (@rok/art): hệ đệ tử, ngũ hành, từng yêu thú / tông môn / bí cảnh theo thứ tự trong luật.
 // Ngũ hành tô đĩa bằng tông cùng tên hành: <Medal emblem={EMBLEM.element[el]} tone={el} />

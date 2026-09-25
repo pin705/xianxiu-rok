@@ -10,6 +10,7 @@ import {
   RAGE_HURT,
   RAGE_MAX,
   RAGE_TURN,
+  type DaoId,
   type Element,
   type Skill,
   type Tier,
@@ -22,7 +23,8 @@ import {
 
 export type Troop = { type: UnitType; tier: Tier; n: number; atk: number; def: number; hp: number }
 // el: ngũ hành của người dẫn / của địch · skill2: công pháp của phó trưởng lão (nổ cùng lượt, ngay sau chủ tướng)
-export type Side = { troops: Troop[]; skill?: Skill; skill2?: Skill; el?: Element }
+// dao: đạo thống của tông môn người chơi (chỉ để vẽ đệ tử đặc trưng — chỉ số đã tính sẵn trong troops)
+export type Side = { troops: Troop[]; skill?: Skill; skill2?: Skill; el?: Element; dao?: DaoId }
 // n: số còn lại của từng nhóm sau lượt · cast: bên nào thi triển công pháp lượt này · rage: chân nguyên hai bên sau lượt
 // (chiến báo cũ chưa có)
 export type Round = { n: [number[], number[]]; cast: [boolean, boolean]; rage?: [number, number] }

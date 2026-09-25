@@ -1,7 +1,7 @@
 // Cảnh núi tông môn trên WebGL. Hình tĩnh vẽ tay nướng thành texture một lần; mọi chuyển động
 // (sương trôi, thác chảy, hạc bay, khói, lửa, linh khí, đèn đêm) do GPU diễn mỗi khung hình.
 import { Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
-import { BUILDINGS, IDS, storage, type BuildingId, type State } from '@rok/rules'
+import { BUILDINGS, IDS, storage, type BuildingId, type DaoId, type State } from '@rok/rules'
 import { SLOT } from './layout'
 import { calm } from '../lib'
 import type { Pt } from '@rok/art'
@@ -11,7 +11,7 @@ import { type Anim, type Play, type Slot } from './home/kit'
 import { buildMountains, buildForeground } from './home/land'
 import { life } from './home/life'
 import { MOOD, buildSky, skyTex } from './home/sky'
-import { buildSlots, place } from './home/slots'
+import { buildSlots, place, placeMark } from './home/slots'
 import { buildStorm, buildWeather, strike } from './home/storm'
 
 export type Phase = 'dawn' | 'day' | 'dusk' | 'night'
@@ -56,6 +56,8 @@ export class Home {
   shakeA = 0
   private plays: Play[] = []
   lamps: Sprite[] = []
+  mark?: Sprite // trấn phái chi bảo của đạo thống đang theo
+  markId?: DaoId
   fair: Container[] = [] // mây lành, hạc: tan khi trời kiếp
   day: Container[] = [] // tia nắng, bướm: chỉ ban ngày, trời yên
   night: Container[] = [] // đom đóm: chỉ khi tối
@@ -108,6 +110,7 @@ export class Home {
     this.storm.n = v.storm
     const g = v.game
     for (const id of IDS) place(this, id, g)
+    placeMark(this, g)
     if (v.selected && v.selected !== this.picked && !this.still) poke(this, v.selected)
     this.picked = v.selected
     const sel = v.selected && this.slots.get(v.selected)

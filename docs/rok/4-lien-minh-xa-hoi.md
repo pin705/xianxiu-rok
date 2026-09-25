@@ -922,7 +922,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | J8 | Đố vui minh, Ascension, tiệc lễ | 🟡 Vấn Đạo Đài (đố vui cá nhân); chưa có đố vui minh | P2 | S–M |
 | J9 | Kết trận pháo đài hằng ngày (tạo quà minh) | ✅ yêu trại cấp 1 (hồi 8 giờ) → Minh lễ cả minh | **P0** | S–M |
 | J10 | MGE | ✅ Tông Môn Tranh Bá (6 giai đoạn) | P2 | S |
-| K1 | Lịch minh, đăng ký, phân vai officer | 🟡 minh ghi danh minh chiến / ma triều, chức vị đường chủ; chưa có lịch minh | P1 | S |
+| K1 | Lịch minh, đăng ký, phân vai officer | ✅ Minh sự lịch (`world/plans.ts`) + ghi danh minh chiến / ma triều, chức vị đường chủ | P1 | S |
 | K2 | Địa vị, danh hiệu, tag | 🟡 | P2 | S |
 
 **Gợi ý thứ tự làm (P0, rẻ trước):**

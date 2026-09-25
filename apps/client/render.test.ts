@@ -17,6 +17,7 @@ import {
   PVP_HALL,
   BOOK,
   DAO_IDS,
+  NAN_DAY,
   advance,
   dayOf,
   apply,
@@ -80,9 +81,11 @@ async function load(lang: 'vi' | 'en') {
     'PowerSheet',
     'Help',
     'ArkCard',
+    'Rescue',
     'Advisor',
     'Chat',
     'world/WorldView',
+    'world/Holdings',
     'world/MapTab',
     'TileSheet',
     'Events',
@@ -195,6 +198,7 @@ const clouded = run(
 const cloud: State = { ...clouded, marches: clouded.marches.map(m => ({ ...m, foil: 1 })) }
 const late: State = {
   ...mid,
+  dao: { id: 'maTong', at: 0 }, // đạo thống: đệ tử đặc trưng (Diễn võ trường, Môn hạ), trấn phái chi bảo
   levels: levels(15),
   trib: 2,
   marches: [],
@@ -550,6 +554,20 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       'bị cướp khoáng',
     )
     assert.ok(alarm.includes(L.pvp.robIncoming('Hắc Sơn')) && alarm.includes(L.world.recall), 'cảnh báo + gọi về')
+    // Linh hỏa thiêu sơn: cảnh báo ở HUD (dập lửa bằng Tức Hỏa Phù), thẻ trận lực ở Hộ Sơn Đại Trận
+    const burnt: State = {
+      ...victim,
+      items: { ...victim.items, tucHoa: 1 },
+      wall: { hp: 300, at: victim.time, fire: victim.time + 600_000 },
+    }
+    const hud = { now: victim.time, tab: 'tongMon', gain: null, onclaim: noop, onquest: noop, onbuilder: noop }
+    assert.ok(paint('Hud', { ...hud, game: burnt }, 'núi đang cháy').includes(L.wall.douse(1)), 'cảnh báo linh hỏa')
+    const guard = paint(
+      'Panel',
+      { game: burnt, now: victim.time, id: 'hoSonDaiTran', view: 'guard', act, onupgrade: noop, onclose: noop },
+      'trận lực lúc núi cháy',
+    )
+    assert.ok(guard.includes(L.wall.title) && guard.includes(L.wall.burningHint), 'thẻ trận lực')
     const quiet = paint(
       'Hud',
       {
@@ -698,6 +716,10 @@ test('sự kiện, túi đồ, tăng tốc, Hương Hỏa, bảng tài nguyên, 
       const events = paint('Events', { game: full, now, open: true, onclose: noop }, label)
       assert.ok(events.includes(L.fest.calendar), `trung tâm sự kiện phải có lịch 7 ngày (${label})`)
       paint('VipSheet', { game: full, now, open: true, onclose: noop }, label)
+      // Thôn Trang Gặp Nạn: việc cứu nạn đang làm (xong, chờ báo công) ở trung tâm sự kiện
+      const quest = { i: 3, m: 'train' as const, n: 60, from: full.stats.trained - 60, until: now + 3_600_000 }
+      const rescue = paint('Rescue', { game: { ...full, nan: { day: dayOf(now), n: 1, q: quest } }, now }, label)
+      assert.ok(rescue.includes(L.nan.done) && rescue.includes(L.nan.today(1, NAN_DAY)), `việc cứu nạn (${label})`)
       paint('ResSheet', { game: full, now, res: 'linhThach', onclose: noop, onfocus: noop }, label)
       const buffed: State = {
         ...full,
@@ -837,6 +859,11 @@ test('tiên minh, chat', async () => {
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       const war = paint('Alliance', { ...mine, start: 'war' }, `${label}, trong minh · chiến sự`)
       assert.ok(war.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')
+      assert.ok(war.includes(L.party.title), 'Man Hoang Cổ Tộc ở tab chiến sự')
+      // Minh sự lịch: việc đã hẹn (mình đang tham gia), ô hẹn việc mới cho trưởng lão
+      const plans = [{ id: 1, by: 1, at: s.time + 3_600_000, text: 'Kết trận yêu vương', go: [1] }]
+      const planned = paint('Alliance', { ...mine, ally: { ...info, plans }, start: 'war' }, `${label}, minh sự lịch`)
+      assert.ok(planned.includes('Kết trận yêu vương') && planned.includes(L.plan.leave), 'lịch minh + nút rút')
       const crew = paint('Alliance', { ...mine, start: 'people' }, `${label}, trong minh · thành viên`)
       if (s.time >= late.time)
         assert.ok(crew.includes(L.ally.idle(dayOf(s.time) - dayOf(late.time) + 8)), 'thành viên vắng lâu: ghi số ngày')
@@ -1002,6 +1029,13 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
     await load(lang)
     const world = paint('WorldView', { game, now, info, me: 1, snap, allies: [3], onpick: noop }, 'bản đồ giới')
     assert.ok(world.includes(L.world.minimap), 'có bản đồ nhỏ')
+    // Sơn Hà Xã Tắc Đồ: linh mạch người 1 đang giữ đứng trong danh sách, có nút bay tới
+    const holdings = paint(
+      'Holdings',
+      { game, now, open: true, atlas: a, snap, side: -1, phase: 1, onclose: noop, onfly: noop },
+      'Sơn Hà Xã Tắc Đồ',
+    )
+    assert.ok(holdings.includes(`(${vein.x},${vein.y})`) && holdings.includes(L.world.flyTo), 'danh sách linh địa')
     // Tu Bổ Thiên Môn: chương đang mở → nút góp tài nguyên trên thẻ mùa
     const mend = { ...snap, book: { ch: BOOK.findIndex(g => g.m === 'repair'), done: [], value: 0 } }
     const mending = paint(

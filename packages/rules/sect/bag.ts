@@ -8,6 +8,7 @@ import { type Buff, type Err, type JobKind, type State } from '../core/types.ts'
 import { BAG_IDS, HOUR } from '../core/util.ts'
 import { ELDER_MAX, BAG_USE_MAX, BAG, type ElderId, type BagId } from '../data.ts'
 import { elderLevel, spendAp } from '../core/stats.ts'
+import { burning, wallAt } from '../core/wall.ts'
 
 export type BagAction = { type: 'use'; item: BagId; n: number; job?: JobKind; elder?: ElderId }
 
@@ -23,6 +24,7 @@ export function useError(s: State, a: BagAction): Err | null {
   }
   if (d.use === 'shield' && (s.frenzy ?? 0) > s.time) return 'frenzy' // vừa đi cướp: chưa bật khiên được
   if (d.use === 'map' && !s.seat) return 'locked' // Sơn Hà Đồ: cần chỗ trên bản đồ giới
+  if (d.use === 'douse' && (a.n !== 1 || !burning(s, s.time))) return 'empty' // Tức Hỏa Phù: chỉ khi núi đang cháy
   if (d.use === 'exp') {
     if (!a.elder || s.elders[a.elder] === undefined) return 'locked'
     return elderLevel(s.elders[a.elder]!) >= ELDER_MAX ? 'max_level' : null
@@ -63,6 +65,7 @@ export const bagActions: Actions<BagAction> = {
       if (d.use === 'vip') return ok({ ...st, vip: { ...st.vip, pts: st.vip.pts + d.n * a.n } })
       if (d.use === 'ap') return ok(spendAp(st, s.time, -d.n * a.n)) // tiêu âm = cộng (giữ mốc hồi)
       if (d.use === 'map') return ok({ ...st, fog: revealNear(st, d.n * a.n, s.time) })
+      if (d.use === 'douse') return ok({ ...st, wall: { ...wallAt(st, s.time), fire: 0 } })
       return d.use === 'exp' ? ok(giveExp(st, a.elder!, d.n * a.n)) : no('bad')
     },
   },

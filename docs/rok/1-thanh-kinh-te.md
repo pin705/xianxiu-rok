@@ -840,13 +840,13 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 - **Cơ chế:** bị đánh thắng thì thành **cháy**, độ bền Tường (và Tháp) tụt mạnh. Ngừng bị đánh thì một lúc sau lửa tự tắt; muốn dừng ngay thì chủ động sửa / dập lửa bằng gem [2–3 nguồn: riseofkingdomsguides wall + attack, bluestacks]. Tốc độ tụt, giá dập, hồi độ bền [chưa xác minh]. Một nguồn nói kẻ tấn công "có nhiều thời gian cướp trước khi độ bền về 0" [1 nguồn].
 - **UI/UX:** thành bốc khói lửa trên bản đồ và trong cảnh thành; thanh độ bền; nút Dập lửa [chưa xác minh].
 - **Tu tiên hoá:** "Trận lực" Hộ Sơn Đại Trận; bị phá thì "linh hỏa thiêu sơn": núi bốc khói mực, trận lực tụt theo thời gian, nút "Tu bổ trận cơ" (miễn phí mỗi 30 phút) hoặc dùng "Tức Hỏa Phù".
-- **Game mình:** ❌
+- **Game mình:** ✅ Linh hỏa thiêu sơn — trận lực lười theo thời gian (`core/wall.ts`), Tu bổ trận cơ (`mend`), Tức Hỏa Phù (`use` douse), cảnh báo HUD, lửa trên bản đồ giới.
 - **Ưu tiên:** P1 (cho P3 có "thành" trên bản đồ) · **Công sức:** M.
 
 #### J5. Bị buộc dịch chuyển
 - **Cơ chế:** độ bền Tường về 0 thì thành bị ném sang một chỗ ngẫu nhiên [3 nguồn: riseofkingdomsguides wall + attack, heaven-guardian].
 - **Tu tiên hoá:** "Sơn môn thất thủ": tông môn bị đánh bật khỏi linh địa, phải "di sơn" sang vùng hoang ngẫu nhiên trong giới.
-- **Game mình:** ❌ (chỗ ngồi cố định).
+- **Game mình:** ✅ sơn môn thất thủ (`world/wall.ts`, server `wallCheck`): trận lực về 0 lúc cháy thì bị đánh bật sang chỗ trống vùng ngoài.
 - **Ưu tiên:** P2 · **Công sức:** M (cùng H11).
 
 #### J6. War Frenzy — Cuồng chiến
@@ -934,7 +934,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | A1b | Điều kiện phụ mỗi cấp CH (Tường N−1 + 1 nhà xoay vòng) | ❌ | P1 | S |
 | A1c | Thưởng mỗi cấp CH, "Era Breakthrough" | 🟡 qua nhiệm vụ chính tuyến | P1 | S |
 | A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới; 🟡 chưa có hình tầng 16–25 | P2 | S–M |
-| A3 | Văn minh (kiến trúc + buff) | 🟡 Đạo thống (buff); chưa có kiến trúc riêng | P2 | M |
+| A3 | Văn minh (kiến trúc + buff) | ✅ Chín đạo thống: 3 tiềm năng, đệ tử đặc trưng, trấn phái chi bảo trên núi, tổ sư + huy hiệu riêng, chọn lúc lập tông môn | P2 | M |
 | B0 | Bong bóng chạm thu tài nguyên | 🟡 tự cộng vào kho, chỉ có hiệu ứng | P1 | M |
 | B1–B4 | 4 bản mỗi công trình tài nguyên | 🟡 1 bản mỗi loại | P2 | M |
 | B4 | Tài nguyên mở muộn (đá CH 4, vàng CH 10) | ❌ 3 loại có từ đầu | P2 | L |
@@ -1008,8 +1008,8 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | J1 | Bảng buff thành | ✅ dải tăng ích (bảng từng nguồn, hạn) | P2 | S |
 | J2 | Bảo hộ tân thủ | ✅ 72 giờ | — | — |
 | J3 | Bị cướp theo sức mang | ✅ | — | — |
-| J4 | Thành cháy, độ bền tụt | ❌ | P1 | M |
-| J5 | Bị buộc dịch chuyển | ❌ | P2 | M |
+| J4 | Thành cháy, độ bền tụt | ✅ Linh hỏa thiêu sơn (`core/wall.ts`) | P1 | M |
+| J5 | Bị buộc dịch chuyển | ✅ sơn môn thất thủ (`world/wall.ts`) | P2 | M |
 | J6 | War Frenzy (khoá khiên/dịch chuyển sau khi đánh) | ✅ sát khí (cướp xong 30 phút không bật Hộ Sơn Phù) | P1 | S |
 | J7 | Cảnh báo đội địch đang tới | ✅ Tháp canh (thẻ son mọi tab + Web Push) | P1 | S |
 | K1 | Sửa bố cục thành | ❌ | P2 | L |

@@ -148,13 +148,19 @@ export const regionOf = (a: Atlas, p: Pos) => a.tiles[Math.round(p.y) * MAP_W + 
 export const dayIn = (openedAt: number, now: number) => Math.max(0, Math.floor((now - openedAt) / 86_400_000))
 export const phaseOf = (day: number) => PHASES.filter(d => day >= d).length - 1
 
-// Đường đi qua các cổng đang mở (Dijkstra trên cổng — ≤ 40 nút). Trong một vùng đi thẳng (vùng lồi).
-// Trả về các điểm dừng [đi, …cổng, tới] và độ dài (ô); null nếu chưa có đường (cổng chưa mở).
-export function route(a: Atlas, from: Pos, to: Pos, phase: number): { path: Pos[]; len: number } | null {
+// Đường đi qua các cổng đang mở (Dijkstra trên cổng — ≤ 40 nút). Trong một vùng đi thẳng (vùng lồi). shut: cổng bị chặn
+// (cửa ải phe khác giữ). Trả về các điểm dừng [đi, …cổng, tới] và độ dài (ô); null nếu chưa có đường (cổng chưa mở / bị chặn).
+export function route(
+  a: Atlas,
+  from: Pos,
+  to: Pos,
+  phase: number,
+  shut?: ReadonlySet<number>,
+): { path: Pos[]; len: number } | null {
   const ra = regionOf(a, from),
     rb = regionOf(a, to)
   if (ra === rb) return { path: [from, to], len: dist(from, to) }
-  const open = a.gates.filter(g => g.phase <= phase)
+  const open = a.gates.filter(g => g.phase <= phase && !shut?.has(g.i))
   const best = new Map<number, number>(),
     prev = new Map<number, number>()
   const q = open.filter(g => g.a === ra || g.b === ra)

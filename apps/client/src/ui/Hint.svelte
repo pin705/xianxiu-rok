@@ -13,7 +13,7 @@
     place-items: center;
     width: var(--s);
     height: var(--s);
-    color: var(--ink);
+    color: var(--text);
     background: var(--img-disc-gold) center / 100% 100% no-repeat;
     animation: nudge 1.6s var(--ease) infinite;
   }

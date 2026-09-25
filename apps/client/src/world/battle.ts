@@ -84,12 +84,12 @@ export class Battle {
     this.decal.removeChildren().forEach(c => c.destroy({ children: true }))
     this.units.removeChildren().forEach(c => c.destroy({ children: true }))
     this.down.clear()
-    this.squads = [f.a.troops, f.b.troops].map((troops, side) => {
+    this.squads = [f.a, f.b].map(({ troops, dao }, side) => {
       // quân ta chừa ~160 DU dưới chân cho tên trưởng lão + nút (màn thấp như 375×667 thì số quân khỏi đè chữ)
       const y = side ? this.h * 0.43 : Math.min(this.h * 0.8, this.h - 160)
       const n = troops.length
       const x0 = (this.w - 400) / 2 // đội hình nằm trong cột 400 DU ở giữa
-      return troops.map((t, k) => squad(this, side, t.type, t.n, x0 + (400 / (n + 1)) * (k + 1), y, t.tier))
+      return troops.map((t, k) => squad(this, side, t.type, t.n, x0 + (400 / (n + 1)) * (k + 1), y, t.tier, dao))
     })
     if (fi > 0) strikeAll(this)
   }

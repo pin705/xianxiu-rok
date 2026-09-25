@@ -22,6 +22,7 @@
   import { Badge, Bag, Button, Card, Meter, Sheet } from './ui'
   import { L, num, sfx } from './lib'
   import { useGame } from './game'
+  import Rescue from './Rescue.svelte'
 
   let { open, onclose }: { open: boolean; onclose: () => void } = $props()
   const g = useGame()
@@ -56,6 +57,7 @@
     dongChi: 'star',
     thatTich: 'heal',
     quyTiet: 'skull',
+    thonTrang: 'shield',
   }
   // lịch 7 ngày (sự kiện tương lai chưa mở vẫn hiện để người chơi chuẩn bị, như Event Calendar của RoK)
   const cal = $derived(
@@ -166,6 +168,7 @@
         <p class="row between">
           <b class="pts t-num t-gold">{L.fest.tokens(num(festTokens(s, cur)), L.fest.tokenName[cur])}</b>
         </p>
+        {#if cur === 'thonTrang'}<Rescue />{/if}
         {#if stage}
           <Card>
             <ul class="today">
@@ -296,7 +299,7 @@
     padding: 1px 8px 2px 5px;
     font-size: var(--fs-1);
     color: var(--text-soft);
-    background: var(--silk);
+    background: var(--paper2);
     border: 1px solid var(--paper3);
     border-radius: 999px;
   }
@@ -322,7 +325,7 @@
     padding: var(--sp-2) var(--sp-1);
     border: 1.5px solid var(--paper3);
     border-radius: 12px;
-    background: var(--silk);
+    background: var(--paper2);
     font-size: var(--fs-1);
     font-weight: 700;
     line-height: 1.15;
@@ -361,7 +364,7 @@
     padding: var(--sp-2);
     border: 1.5px solid var(--paper3);
     border-radius: 12px;
-    background: var(--silk);
+    background: var(--paper2);
     text-align: center;
   }
   .day.ready {

@@ -35,7 +35,7 @@ export type AccountOptions = {
 // Dịch vụ push của các trình duyệt (Chrome/Edge qua FCM, Firefox, Safari, Windows)
 const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com']
 // Loại thông báo đẩy (tag của Note) người chơi tắt được
-const PUSH_TAGS = ['done', 'raid', 'dm', 'trib', 'ark'] as const
+const PUSH_TAGS = ['done', 'raid', 'dm', 'trib', 'ark', 'plan'] as const
 
 const Email = z.string().max(254).transform(cleanEmail).pipe(z.email())
 const Pass = z.string().min(8).max(128)

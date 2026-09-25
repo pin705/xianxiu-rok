@@ -7,6 +7,7 @@
     TYPES,
     UNIT_BASE,
     batch,
+    daoUnit,
     tierOpen,
     trainCost,
     trainError,
@@ -20,8 +21,9 @@
     type UnitType,
   } from '@rok/rules'
   import { Bag, Button, Card, FirstTap, Medal, Section, Slider, Stat, Tag } from './ui'
+  import { paintedUrl, soldier } from '@rok/art'
   import JobRow from './JobRow.svelte'
-  import { EMBLEM, L, clock, num, sfx } from './lib'
+  import { EMBLEM, L, clock, num, sfx, unitName } from './lib'
   import { useGame } from './game'
 
   const g = useGame()
@@ -44,7 +46,9 @@
   let n = $state(0)
   const count = $derived(Math.min(n || most, cap))
   const err = $derived(trainError(game, u, count))
-  const stat = (k: 'atk' | 'def' | 'hp') => Math.round(UNIT_BASE[type][k] * TIER[tier].stat)
+  const uni = $derived(daoUnit(game)) // đệ tử đặc trưng của đạo thống: chỉ số gốc cao hơn
+  const stat = (k: 'atk' | 'def' | 'hp') =>
+    Math.round(UNIT_BASE[type][k] * TIER[tier].stat * (uni?.type === type ? 1 + (uni[k] ?? 0) : 1))
 
   // Nâng bậc: bậc thấp hơn bậc đang chọn một bậc, cùng hệ (đang chọn bậc 1 thì không có)
   const from = $derived(tier > 1 ? (`${type}${tier - 1}` as UnitId) : null)
@@ -69,7 +73,7 @@
 {#if game.train}
   {@const t = unitOf(game.train.unit)}
   <div class="mt-3">
-    <JobRow kind="train" label={L.train.doing(game.train.n, `${L.units[t.type]} ${L.tiers[t.tier]}`)} />
+    <JobRow kind="train" label={L.train.doing(game.train.n, `${unitName(t.type, game)} ${L.tiers[t.tier]}`)} />
   </div>
 {/if}
 
@@ -82,11 +86,19 @@
           type = t
           n = 0
         }}
-        label={L.units[t]}
+        label={unitName(t, game)}
       >
         <span class="stack center" style:--gap="3px">
-          <span class="row center"><Medal emblem={EMBLEM.unit[t]} tone={t} size={38} /></span>
-          <b class="t-small">{L.units[t]}</b>
+          <span class="row center"
+            >{#if uni?.type === t && game.dao}<img
+                src={paintedUrl(`sold:dao:${game.dao.id}`, () => soldier(t, false, 5), 44)}
+                width="44"
+                height="44"
+                alt=""
+              />{:else}<Medal emblem={EMBLEM.unit[t]} tone={t} size={38} />{/if}</span
+          >
+          <b class="t-small">{unitName(t, game)}</b>
+          {#if uni?.type === t}<Tag size="sm" tone="gold">{L.dao.uni}</Tag>{/if}
           <small class="t-tiny t-soft">{L.beats(t)}</small>
         </span>
       </Card>

@@ -218,7 +218,33 @@ RANK = {3: '', 4: ', with a gold sash and gold trim', 5: ', in white-and-gold ro
 def soldier_items(side):
   return [(f'sold:{t}:{side}:{r}', f'a tiny chibi {TROOP[t]} {SIDE[side]}{RANK[r] if side == 0 or r < 5 else ", with ornate dark red armor pieces"}, full body, facing right, no glow')
           for t in TROOP for r in (3, 4, 5)]
-TROOP_SHEETS = {'S0': soldier_items(0), 'S1': soldier_items(1)}
+# Đệ tử đặc trưng của chín đạo thống (rules DAO_UNITS): một dáng mỗi đạo, dùng cho mọi bậc của hệ đó, cả khi là quân địch (field.ts)
+DAO_TROOPS = {
+  'kiemTong': 'sword cultivator in a white robe with azure trim, standing on a flying sword, another sword held forward',
+  'phapTong': 'mage cultivator woman in a cinnabar-red robe, a small ball of fire above her raised palm',
+  'theTong': 'bald bare-chested monk with bronze skin, ochre trousers and big prayer beads, fists raised',
+  'danTong': 'alchemist cultivator in a jade-green robe holding up a small glowing golden gourd',
+  'tranTong': 'guard in dark robes with gold trim holding a big round bronze shield with a bagua pattern',
+  'khiTong': 'swordsman in grey-silver plate armor over a leather apron, holding a broad sword',
+  'phuTong': 'Taoist in a violet robe holding up a yellow paper talisman, a peachwood sword at the hip',
+  'thuTong': 'body cultivator in an indigo-blue robe riding a small white qilin',
+  'maTong': 'demonic warrior in black robes with crimson lining holding a crimson curved saber',
+}
+TROOP_SHEETS = {'S0': soldier_items(0), 'S1': soldier_items(1),
+                'S2': [(f'sold:dao:{k}', f'a tiny chibi {d}, full body, facing right, no glow') for k, d in DAO_TROOPS.items()]}
+# Trấn phái chi bảo (kiến trúc riêng mỗi đạo thống, cảnh núi cạnh Chủ điện): key lm:<đạo>, hộp LANDMARK_BOX (DU, chân giữa đáy)
+LANDMARK_BOX = (52, 64)  # khớp packages/art daoMark()
+LANDMARKS = [
+  ('kiemTong', 'a giant ancient sword thrust point-down into a mossy boulder'),
+  ('phapTong', 'a carved stone altar pillar with an eternal red flame burning in a bronze bowl on top'),
+  ('theTong', 'a big bronze temple bell hanging in a small dark wooden frame with a little tiled roof'),
+  ('danTong', 'a tall bronze three-tiered pill furnace with a gourd-shaped lid'),
+  ('tranTong', 'a tall stone obelisk carved with a bagua disc, on a stepped stone base'),
+  ('khiTong', 'a small stone forge furnace with a glowing orange mouth, an anvil in front and swords leaning on it'),
+  ('phuTong', 'a tall stone pillar wrapped with many yellow paper talismans'),
+  ('thuTong', 'a stone statue of a sitting qilin on a square pedestal'),
+  ('maTong', 'a black stone altar holding a small pool of crimson blood, two dark red banners on poles behind it'),
+]
 # Yêu thú: một dáng lông xám nhạt mỗi hệ, game tô màu loài bằng tint (field.ts) — nên vẽ sáng, gần như không màu.
 BEAST_SHEET = [('beast:kiem', 'a lean wolf with a bushy tail, walking to the right'), ('beast:phap', 'a slender fox with a fan-shaped tail, walking to the right'),
                ('beast:the', 'a heavy bear, walking to the right'), ('_1', 'a small rock'), ('_2', 'a tuft of grass'), ('_3', 'a small bush'),
@@ -328,23 +354,41 @@ KIT_BASES = {  # mẫu gốc → (da vẽ bằng code làm khuôn, mô tả)
   'pill': ('capsule', 'a flat rounded pill label in one even light grey, with a thin dark ink outline'),
   'disc': ('disc-paper', 'a flat round medallion in one even light grey, with a thin dark ink outline and a faint soft highlight on the upper left'),
 }
+# Sơn mài (27/9/2026): (mẫu gốc, màu phần tối = viền, màu phần sáng = lòng). Lòng lam sẫm, viền đồng cổ mảnh — không mảng vàng.
+# Trước đó là tông giấy ngà: người chơi thấy "vàng quá, giống giấy, rẻ tiền".
+RIM, FACE, FACE2, LINE, DEEP = '#9a8456', '#1b2c30', '#22363a', '#4f676b', '#0f1a1c'
+# Mẫu gốc có trang trí (sơn mài): góc đồng chạm khắc — thứ làm khung "ra game" thay vì hình chữ nhật trơn. Ảnh 2 = concept đã chọn.
+KIT_ORNATE = ('Image 1 is a placeholder UI element from our game on a magenta background. Image 2 is our approved UI concept (style reference). '
+  'Repaint image 1 as {design}. Premium studio mobile game UI piece in the style of image 2: crafted, with subtle bevel and depth. '
+  'The face is ONE flat even dark color with no texture patches, no stains and no pattern, so text can sit on it; the ornaments stay ONLY '
+  'at the corners / the two ends. Restrained metal: thin antique bronze, not bright yellow gold. No text, no icons. '
+  'Keep EXACTLY the same outer silhouette, size and proportions as image 1. Keep the solid flat pure magenta (#FF00FF) background around it.')
+KIT_BASES.update({
+  'ornate': ('card-plain', 'a dark teal lacquer panel with a thin engraved antique-bronze rim line and small ornate carved bronze '
+             'corner brackets with a cloud-scroll motif at each of the four corners', KIT_ORNATE),
+  'plaque': ('btn', 'a lacquered button plaque in one even medium grey, with a thin bronze rim and small carved bronze end caps on the '
+             'left and right ends, a soft highlight along the top edge', KIT_ORNATE),
+})
+# viền 9 mảnh riêng của mẫu gốc có góc chạm (px ảnh 2x trên mẫu đã khớp khung) — góc chạm to hơn lát của da vẽ bằng code
+KIT_BINS = {'ornate': [40, 40, 40, 40]}
+KIT_REFS = {'ornate': 'concept-home-lacquer', 'plaque': 'concept-home-lacquer'}  # ảnh .work/raw/<tên>.webp gửi kèm làm ảnh 2
 KIT = {  # da (ui/theme.ts) → (mẫu gốc, màu tối: viền / nền tối, màu sáng: lòng) — plate: màu chính, sáng tối tự suy
-  'card': ('paper', '#2b2622', '#f3ead6'), 'card-plain': ('paper', '#8a7d6b', '#f3ead6'), 'card-sel': ('paper', '#b3372a', '#f5ead6'),
-  'card-glow': ('paper', '#b8913a', '#f7eccc'), 'card-silk': ('paper', '#3f4d52', '#d9e1dd'), 'groove': ('paper', '#8b806f', '#e4d9c2'),
-  'field': ('paper', '#6b6256', '#fbf6ea'), 'toast': ('paper', '#2b2622', '#f3ead6'), 'toast-bad': ('paper', '#b3372a', '#f6ddd4'),
-  'slip': ('paper', '#4f6461', '#f3ead6'), 'slip-bad': ('paper', '#b3372a', '#f6ddd4'), 'btn-ghost': ('paper', '#2b2622', '#f3ead6'),
-  'btn': ('plate', '#2d4c7c', None), 'btn-gold': ('plate', '#c79d3b', None), 'btn-danger': ('plate', '#b3372a', None),
-  'btn-off': ('plate', '#ddd3c1', None),  # sáng: chữ nút khoá (mực nhạt) phải đọc được
-  # khung: HUD, thanh tab, cột trái (strip), bảng (scroll) — dải xanh ngọc phẳng viền mực; lòng không vẽ (nền giấy của trang)
-  'strip': ('paper', '#3f4d52', '#cddad6'), 'scroll': ('paper', '#3f4d52', '#b9cbc6'),
-  'switch': ('pill', '#6b6256', '#e4d9c2'), 'switch-on': ('pill', '#2f6b3d', '#8fcf96'),
-  'disc-paper': ('disc', '#5f5548', '#f3ead6'), 'disc-azure': ('disc', '#1f3a5f', '#8fb0d2'), 'disc-gold': ('disc', '#7a5a18', '#e0bb58'),
-  'disc-silk': ('disc', '#3f4d52', '#cddad6'),
-  'capsule': ('pill', '#5f5548', '#f3ead6'), 'plate': ('pill', '#5f5548', '#f3ead6'), 'tag': ('pill', '#6b6256', '#e9dec6'),
-  'tag-good': ('pill', '#3f7a4f', '#dfeadb'), 'tag-bad': ('pill', '#b3372a', '#f5dcd5'), 'tag-gold': ('pill', '#a98530', '#f3e4b8'),
-  'tag-dark': ('pill', '#c9a14a', '#3a3632'), 'tag-red': ('pill', '#7d2218', '#b3372a'), 'tag-silk': ('pill', '#3f4d52', '#d9e1dd'),
-  'badge': ('pill', '#7d2218', '#c0392b'), 'badge-fresh': ('pill', '#8a6a1f', '#d4ab45'), 'track': ('pill', '#3a332c', '#8b806f'),
-  'fill': ('pill', '#2f6f7a', '#6fc3cf'), 'fill-gold': ('pill', '#8a6a1f', '#e0bb58'), 'fill-good': ('pill', '#2f6b3d', '#7fbf7a'),
+  'card': ('ornate', None, None, 20), 'card-plain': ('paper', LINE, FACE), 'card-sel': ('paper', '#d8604c', FACE),
+  'card-glow': ('ornate', None, None, 20), 'card-silk': ('paper', LINE, FACE2), 'groove': ('paper', DEEP, '#132023'),
+  'field': ('paper', LINE, DEEP), 'toast': ('ornate', None, None, 18), 'toast-bad': ('paper', '#d8604c', '#2c1d1b'),
+  'slip': ('paper', LINE, FACE), 'slip-bad': ('paper', '#d8604c', '#2c1d1b'), 'btn-ghost': ('plaque', FACE, None),
+  'btn': ('plaque', '#2d6b64', None), 'btn-gold': ('plaque', '#a8352a', None), 'btn-danger': ('plaque', '#6e1f18', None),
+  'btn-off': ('plaque', '#2a3336', None),
+  # khung: HUD, thanh tab, cột trái (strip), bảng (scroll)
+  'strip': ('ornate', None, None, 18), 'scroll': ('ornate', None, None, 22),
+  'switch': ('pill', DEEP, '#2a3b3e'), 'switch-on': ('pill', '#2f6b3d', '#4f9a6a'),
+  'disc-paper': ('disc', RIM, FACE), 'disc-azure': ('disc', RIM, '#2c4d6e'), 'disc-gold': ('disc', '#6d5418', '#a8864a'),
+  'disc-silk': ('disc', LINE, FACE2),
+  'capsule': ('pill', LINE, FACE), 'plate': ('pill', RIM, FACE), 'tag': ('pill', LINE, FACE2),
+  'tag-good': ('pill', '#4f9a6a', '#1c3326'), 'tag-bad': ('pill', '#d8604c', '#331d1a'), 'tag-gold': ('pill', '#b8964f', '#2e2a1d'),
+  'tag-dark': ('pill', RIM, DEEP), 'tag-red': ('pill', '#6e1f18', '#a8352a'), 'tag-silk': ('pill', LINE, FACE2),
+  'badge': ('pill', '#6e1f18', '#c0392b'), 'badge-fresh': ('pill', '#6d5418', '#b8904a'), 'track': ('pill', DEEP, '#26383b'),
+  'fill': ('pill', '#2f6f7a', '#6fc3cf'), 'fill-gold': ('pill', '#7a5a18', '#c9a14a'), 'fill-good': ('pill', '#2f6b3d', '#7fbf7a'),
   'fill-bad': ('pill', '#7d2218', '#d45a45'), 'fill-azure': ('pill', '#2d4c7c', '#6f9fd8'),
 }
 
@@ -356,3 +400,22 @@ CLOUD_NOTE = ('Soft traditional ink-wash clouds: pale white and very light grey 
 CLOUD_SHEET = [(f'fog:*{i}', f'a wide soft bank of low mountain cloud, variant {i + 1}, wider than tall') for i in range(3)] + \
               [(f'cloud:*{i}', f'a small drifting sky cloud, variant {i + 1}, wider than tall') for i in range(3)] + \
               [(f'thunder:*{i}', f'a dark grey-violet storm cloud with a faint glow inside, variant {i + 1}, wider than tall') for i in range(3)]
+
+# ---------- concept giao diện (27/9/2026) ----------
+# Người dùng: giao diện "vẫn như web app, chưa ra chất RoK tu tiên, chưa như studio làm". Vẽ concept toàn màn trước khi làm
+# từng mảnh (như studio): ảnh 1 = ảnh chụp màn hiện tại (giữ bố cục, cảnh, chữ), vẽ lại toàn bộ lớp giao diện theo hướng đã chọn.
+CONCEPT_BASE = ('Image 1 is a screenshot of our mobile cultivation-sect strategy game (like Rise of Kingdoms, but Chinese xianxia). '
+  'Redesign ONLY the user interface layer as a premium, studio-made mobile game UI — the painted mountain scene and buildings stay. '
+  'Keep the same layout and the same elements in the same places (portrait, sect name, power, resources, quest card, side buttons, bottom tab bar, '
+  'building name plates, chat line); keep the Vietnamese text as it is. The UI must NOT look like a web app: no flat rounded rectangles, '
+  'no plain cards, no thin outlines. Instead: sculpted, layered game UI pieces with depth, bevels, carved ornamental corners, '
+  'crafted materials, soft inner shadows, a clear hierarchy (one big glowing primary action), round medallion buttons with ornate rims, '
+  'title plaques and ribbons, notification badges like red wax seals. Keep interiors clean and readable. {style}')
+CONCEPT_STYLES = {
+  'lacquer': 'Style: dark lacquered wood and deep teal enamel with engraved antique-gold trim, translucent dark HUD bars over the scene, '
+             'gold-ringed medallion buttons, a carved dark-wood bottom tab bar where the selected tab rises in a glowing jade socket, '
+             'warm gold highlights — rich and heroic like Rise of Kingdoms.',
+  'jade': 'Style: white jade and pale celadon porcelain with gold cloud-pattern filigree corners, silk ribbon banners for titles, '
+          'round jade disc buttons with gold rims, pale rice-paper panels inside carved jade frames — elegant, airy, immortal-realm xianxia '
+          'like premium Chinese cultivation games.',
+}

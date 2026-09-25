@@ -14,6 +14,7 @@ import {
   addKp,
   allyOf,
   dropIncoming,
+  farErr,
   napBetween,
   routeMs,
   setSpot,
@@ -69,8 +70,8 @@ function robAct({ ps, w, pid, s, now, seed, map }: Ctx, a: RobAction): WorldResu
   if (s.levels.chuDien < PVP_HALL || def.levels.chuDien < PVP_HALL) return no('locked')
   if (!revenge(s, a.pid, t) && power(def) < PVP_FLOOR * power(s)) return no('weak') // báo thù thì bỏ giới hạn
   if (s.marches.some(m => m.target.kind === 'spot' && m.target.i === i)) return no('busy')
-  const r = route(map.atlas, s.seat, p, map.phase)
-  if (!r) return no('far')
+  const r = route(map.atlas, s.seat, p, map.phase, map.shut)
+  if (!r) return no(farErr(map, s.seat, p))
   const e = fieldError(s, a.elder, a.army)
   if (e) return no(e)
   const army = compact(a.army)

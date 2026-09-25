@@ -46,7 +46,7 @@
     background: linear-gradient(
       90deg,
       var(--azurite) var(--p),
-      color-mix(in srgb, var(--ink) 18%, transparent) var(--p)
+      color-mix(in srgb, var(--ivory) 18%, transparent) var(--p)
     );
     border-radius: 5px;
   }

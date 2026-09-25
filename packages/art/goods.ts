@@ -15,6 +15,7 @@ export const GOOD_ICONS = [
   'luanKiem', // Luận Kiếm Lệnh: thêm lượt Luận Kiếm Đài
   'khuechTran', // Khuếch Trận Kỳ: trận dung
   'sonHa', // Sơn Hà Đồ: tan mê vụ
+  'tucHoa', // Tức Hỏa Phù: dập linh hỏa thiêu núi
   'nganDuyen', 'kimDuyen', // thiếp Chiêu Hiền Đài: bạc, vàng
 ] as const
 export type GoodIcon = (typeof GOOD_ICONS)[number]
@@ -223,6 +224,7 @@ const DRAW: Record<GoodIcon, (g: G) => void> = {
   luanKiem: g => talisman(g, mix(C.azuriteL, C.silk, 0.5), C.azuriteD, sword, 290),
   khuechTran: g => talisman(g, BUFF_PAPER, C.cinnabar, mountainWard, 300),
   sonHa: g => talisman(g, mix(C.azuriteL, C.silk, 0.3), C.malachiteD, openBook, 310),
+  tucHoa: g => talisman(g, mix(C.azuriteL, C.silk, 0.6), C.azuriteD, cloudRun, 320),
 }
 
 export function goodIcon(name: GoodIcon): Asset {

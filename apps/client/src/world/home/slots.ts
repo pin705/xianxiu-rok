@@ -7,6 +7,7 @@ import {
   blossom,
   building,
   cloud,
+  daoMark,
   disciple,
   flag,
   mix,
@@ -20,7 +21,7 @@ import {
   type Kind,
 } from '@rok/art'
 import { BUILDINGS, IDS, type BuildingId, type State } from '@rok/rules'
-import { DECOR, SLOT } from '../layout'
+import { DECOR, LANDMARK, SLOT } from '../layout'
 import { hex, ink, painted, sprite, fxTex } from '../stage'
 import type { Home } from '../home'
 import { FIRE, soft, type Slot } from './kit'
@@ -61,6 +62,26 @@ export function buildSlots(h: Home, glowT: Texture) {
       h.lamps.push(l)
     }
   }
+}
+
+// Trấn phái chi bảo (kiến trúc riêng của nền văn minh RoK): tượng đài của đạo thống đang theo, đứng cạnh Chủ điện; cải tu thì đổi
+export function placeMark(h: Home, g: State) {
+  const id = g.dao?.id
+  if (id === h.markId) return
+  h.markId = id
+  h.mark?.destroy()
+  h.mark = undefined
+  if (!id) return
+  const [x, y] = LANDMARK
+  const m = sprite(
+    painted(`lm:${id}`, () => daoMark(id)),
+    x,
+    y,
+  )
+  m.scale.set(m.scale.x * LANDMARK[2])
+  m.zIndex = y - 0.5
+  h.bLayer.addChild(m)
+  h.mark = m
 }
 
 export function place(h: Home, id: BuildingId, g: State) {

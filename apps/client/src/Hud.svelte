@@ -17,6 +17,10 @@
     dayOf,
     festReady,
     tavernFree,
+    burning,
+    mendReady,
+    wallHp,
+    wallMax,
     vipLevel,
     isWeekend,
     power,
@@ -344,6 +348,23 @@
           ><b>{L.seclude.on(clock(game.seclude.until - now))}</b><br /><small>{L.seclude.onHint}</small></span
         >
         <button class="shieldup" onclick={() => g.act({ type: 'unseclude' }, 'tap')}>{L.seclude.off}</button>
+      </div>
+    {/if}
+    <!-- Linh hỏa thiêu sơn (thành cháy của RoK): núi đang cháy, trận lực tụt — dập lửa / tu bổ ngay tại đây -->
+    {#if burning(game, now)}
+      <div class="alarm" role="alert">
+        <Icon name="shield" size={18} />
+        <span class="grow"
+          ><b>{L.wall.alarm(Math.round((wallHp(game, now) / wallMax(game)) * 100), clock(game.wall!.fire - now))}</b><br
+          /><small>{L.wall.alarmHint}</small></span
+        >
+        {#if game.items.tucHoa}
+          <button class="shieldup" onclick={() => g.act({ type: 'use', item: 'tucHoa', n: 1 }, 'reward')}
+            >{L.wall.douse(game.items.tucHoa)}</button
+          >
+        {:else if mendReady(game, now)}
+          <button class="shieldup" onclick={() => g.act({ type: 'mend' }, 'tap')}>{L.wall.mend}</button>
+        {/if}
       </div>
     {/if}
     <!-- Tháp canh (như RoK): đội địch đang kéo tới — thẻ son ở mọi tab, bật khiên ngay tại đây -->
@@ -688,7 +709,7 @@
     flex: none;
     padding: 4px 10px;
     font-weight: 800;
-    color: var(--ink);
+    color: var(--text);
     background: var(--gold-l);
     border: 0;
     border-radius: 8px;
@@ -717,8 +738,8 @@
     font-size: var(--fs-1);
     font-weight: 800;
     color: var(--gold-d);
-    background: color-mix(in srgb, var(--gold-l) 45%, transparent);
-    border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
+    background: color-mix(in srgb, var(--paper) 70%, transparent);
+    border: 1px solid color-mix(in srgb, var(--rim) 80%, transparent);
     border-radius: 999px;
     cursor: pointer;
   }
@@ -883,7 +904,7 @@
     place-items: center;
     width: 66px;
     height: 66px;
-    color: var(--ink);
+    color: var(--text);
     background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .builder:active {
@@ -898,7 +919,7 @@
     place-items: center;
     width: 52px;
     height: 52px;
-    color: var(--ink);
+    color: var(--text);
     pointer-events: auto;
     background: var(--img-disc-gold) center / 100% 100% no-repeat;
     border: 0;
@@ -922,7 +943,7 @@
     stroke-width: 3.5;
   }
   .rbg {
-    stroke: color-mix(in srgb, var(--ink) 12%, transparent);
+    stroke: color-mix(in srgb, var(--ivory) 15%, transparent);
   }
   .rfg {
     stroke: var(--spirit);
@@ -1007,7 +1028,7 @@
     place-items: center;
     width: 19px;
     height: 19px;
-    color: var(--ink);
+    color: var(--text);
     background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .tabs small {
@@ -1056,7 +1077,7 @@
     font-size: var(--fs-2);
     color: var(--text);
     pointer-events: auto;
-    background: color-mix(in srgb, var(--silk) 90%, transparent);
+    background: color-mix(in srgb, var(--paper2) 90%, transparent);
     border: 1px solid var(--paper3);
     border-radius: 999px;
     box-shadow: 0 1px 3px rgb(var(--shade) / 0.18);

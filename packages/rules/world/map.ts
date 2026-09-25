@@ -42,7 +42,8 @@ export type Seat = {
   shield: boolean
   cloud?: number
   aid?: number
-} // cloud: kiếp vân giáng lúc này · aid: tiên minh (lãnh thổ)
+  fire?: number
+} // cloud: kiếp vân giáng lúc này · aid: tiên minh (lãnh thổ) · fire: linh hỏa thiêu núi tới lúc này
 export type MapMarch = {
   pid: number
   id: number
@@ -102,6 +103,7 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
       npc: npc.has(pid),
       shield: s.shield > now,
       ...(cloud && { cloud }),
+      ...(s.wall && s.wall.fire > now && { fire: s.wall.fire }),
     })
     for (const m of s.marches)
       if (m.path)

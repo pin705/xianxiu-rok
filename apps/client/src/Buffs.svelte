@@ -124,7 +124,7 @@
     font-size: var(--fs-1);
     font-weight: 800;
     color: var(--text);
-    background: color-mix(in srgb, var(--silk) 88%, transparent);
+    background: color-mix(in srgb, var(--paper2) 88%, transparent);
     border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
     border-radius: 11px;
   }

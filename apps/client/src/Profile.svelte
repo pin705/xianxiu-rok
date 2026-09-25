@@ -3,6 +3,7 @@
   // Cảnh giới, lực chiến, tiên minh, chỗ ngồi (tới xem trên bản đồ), chiến tích; truyền âm, chặn.
   import type { Ack, GroupView, Profile } from '@rok/protocol'
   import { TITLES, TITLE_IDS, type TitleId } from '@rok/rules'
+  import { DAO_TONES } from '@rok/art'
   import type { WorldAction } from '@rok/rules/world'
   import type { Net } from './net'
   import { Button, Card, Medal, Sheet, Stat, Tag } from './ui'
@@ -50,7 +51,12 @@
 </script>
 
 <Sheet open={social.profile !== null} onclose={close} title={p?.name ?? '…'} sub={p ? L.realm(p.hall) : undefined}>
-  {#snippet art()}<Medal emblem="crest" tone={p?.pid === me ? 'gold' : 'pvp'} size={62} />{/snippet}
+  <!-- huy hiệu đạo thống của tông môn đó (chưa theo đạo: ấn tông môn chung) -->
+  {#snippet art()}<Medal
+      emblem={p?.dao ?? 'crest'}
+      tone={p?.dao ? DAO_TONES[p.dao] : p?.pid === me ? 'gold' : 'pvp'}
+      size={62}
+    />{/snippet}
   {#if p}
     <div class="stack">
       <Card tone="silk">
@@ -61,7 +67,7 @@
           <Tag tone={p.online ? 'good' : 'plain'}>{p.online ? L.ally.online : L.profile.offline}</Tag>
           {#if p.ascended}<Tag tone="gold" icon="star">{L.profile.ascended(p.ascended)}</Tag>{/if}
           {#each p.crowns ?? [] as n (n)}<Tag tone="gold" icon="rank">{L.profile.crown(n)}</Tag>{/each}
-          {#if p.dao}<Tag tone="plain">{L.dao.names[p.dao].name}</Tag>{/if}
+          {#if p.dao}<Tag tone="plain">{L.dao.names[p.dao].name} · {L.dao.names[p.dao].unit}</Tag>{/if}
           {#if p.lord}<Tag tone="gold" icon="flag">{L.lord.is}</Tag>{/if}
           {#if p.title}<Tag tone={TITLES[p.title].good ? 'good' : 'bad'}
               >{L.lord.names[p.title]} · {L.lord.fx(p.title)}</Tag

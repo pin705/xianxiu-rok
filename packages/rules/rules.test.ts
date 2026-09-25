@@ -33,6 +33,10 @@ import {
   power,
   questDone,
   sideOf,
+  snap,
+  armySpeed,
+  DAO_UNITS,
+  UNIT_SPEED,
   storage,
   storeNeed,
   WEEKLY,
@@ -451,6 +455,26 @@ test('đạo thống: chọn lần đầu miễn phí từ tầng 2, hai tăng �
   s = run({ ...s, time: s.time + DAO_COOL }, { type: 'dao', id: 'danTong' })
   assert.equal(bonus(s, 'atk.kiem'), atk0, 'đổi đạo: bỏ tăng ích cũ')
   assert.equal(bonus(s, 'prod') >= DAOS.danTong.prod, true)
+})
+
+test('đệ tử đặc trưng: hệ của đạo thống mạnh hơn ở mọi bậc, hệ khác giữ nguyên từng số; tốc hành quân riêng; chiến báo ghi đạo', () => {
+  const s = rich(2)
+  const army = { phap3: 10, kiem1: 5 }
+  const plain = sideOf(s, null, army)
+  const dan = sideOf({ ...s, dao: { id: 'danTong', at: 0 } }, null, army) // Đan Tông: tăng ích không đụng trận, Dược Linh Sư là pháp tu
+  const [pp, pk] = [plain.troops.find(t => t.type === 'phap')!, plain.troops.find(t => t.type === 'kiem')!]
+  const [dp, dk] = [dan.troops.find(t => t.type === 'phap')!, dan.troops.find(t => t.type === 'kiem')!]
+  assert.equal(dp.hp, pp.hp * (1 + DAO_UNITS.danTong.hp!))
+  assert.equal(dp.atk, pp.atk)
+  assert.deepEqual(dk, pk, 'hệ khác không đổi')
+  assert.equal(dan.dao, 'danTong')
+  assert.equal(snap(dan).dao, 'danTong')
+  assert.equal(snap(plain).dao, undefined)
+  const kiem = { ...s, dao: { id: 'kiemTong' as const, at: 0 } }
+  assert.equal(armySpeed({ kiem1: 1 }, kiem), UNIT_SPEED.kiem * (1 + DAO_UNITS.kiemTong.speed!))
+  assert.equal(armySpeed({ kiem1: 1, the1: 1 }, kiem), UNIT_SPEED.the, 'đội đi theo hệ chậm nhất')
+  assert.equal(armySpeed({ kiem1: 1 }), UNIT_SPEED.kiem)
+  assert.equal(armySpeed({}), 1.15)
 })
 
 test('trận dung: đội ra bản đồ giới mang tối đa theo cấp (và sao) chủ tướng; cắt đội giữ bậc cao trước', () => {

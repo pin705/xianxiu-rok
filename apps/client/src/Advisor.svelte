@@ -95,7 +95,7 @@
     align-items: flex-start;
     width: min(calc(100vw - 96px), calc(var(--col) - 96px));
     padding: 10px 12px;
-    background: color-mix(in srgb, var(--silk) 96%, transparent);
+    background: color-mix(in srgb, var(--paper2) 96%, transparent);
     border: 1.5px solid var(--gold);
     border-radius: 12px;
     box-shadow: 0 6px 18px rgb(var(--shade) / 0.3);

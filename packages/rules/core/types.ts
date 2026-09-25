@@ -72,6 +72,7 @@ export type Snap = {
   elder?: ElderId
   deputy?: ElderId
   level: number
+  dao?: DaoId // đạo thống (vẽ đệ tử đặc trưng; chiến báo cũ chưa có)
   troops: { type: UnitType; tier: Tier; n: number }[]
 }
 // Luận Võ Liên Hoàn (DRILL_* ở data.ts): ngày của phiên, đội ảo còn lại, sức giáo đầu trận đầu, số trận thắng, công pháp đã
@@ -103,6 +104,8 @@ export type Report = {
   dead: Army // phần Đan phòng không còn chỗ nằm
   gain: Gain
 }
+// Việc cứu nạn đang làm: ở thôn i, tăng chỉ số m thêm n (từ mức from lúc nhận) trước lúc until
+export type NanQuest = { i: number; m: Metric; n: number; from: number; until: number }
 // Bộ đếm tích luỹ (sự kiện đo tiến độ bằng hiệu hai lần đọc). Trường có dấu ? thêm sau: save cũ thiếu thì là 0.
 export type Stats = {
   trained: number
@@ -112,6 +115,7 @@ export type Stats = {
   lost: number
   hunted?: number // yêu thú hạ được
   chained?: number // yêu thú giới hạ bằng săn liên hoàn
+  rescued?: number // việc cứu nạn Thôn Trang Gặp Nạn đã báo công
   sped?: number // phút tăng tốc đã dùng
   raided?: number // lần cướp thắng
   gathered?: number // tài nguyên khai mỏ mang về
@@ -204,6 +208,7 @@ export type MailArgs = {
   eveTop: [rank: number, pts: number] // Khai Giới Trảm Tà: cổng mở, minh mình hạng rank giới vận, điểm
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
   party: [lv: number, waves: number, n: number] // Man Hoang Cổ Tộc: độ khó, số đợt qua, số người trong đội
+  wallFall: [x: number, y: number] // sơn môn thất thủ: trận lực về 0, tông môn bị đánh bật tới (x, y)
   league: [rank: number] // Cửu Thiên Luận Đạo Hội: minh mình hạng rank cả mùa
   camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
   ark: [win: 0 | 1, foe: string, mine: number, theirs: number] // Tranh Đoạt Linh Châu: thắng / thua minh foe, điểm hai bên
@@ -278,6 +283,8 @@ export type State = {
   bones?: number // Yêu Vương Tuần Sơn: yêu cốt đang có (đủ LOHAR_BONES triệu hồi)
   yb?: { kp: number; hunted: number; raided: number; gathered: number } // bộ đếm lúc đầu mùa (Tổng kết mùa tính phần tăng)
   partyDay?: number // Man Hoang Cổ Tộc: ngày (dayOf) đã vào tổ đội — mỗi ngày một lần
+  wall?: { hp: number; at: number; fire: number; mend?: number } // trận lực lúc at, linh hỏa cháy tới fire, lần tu bổ trận cơ gần nhất
+  nan?: { day: number; n: number; q?: NanQuest } // Thôn Trang Gặp Nạn: số việc đã nhận hôm nay (day), việc đang làm
   potOpened?: { week: number; n: number } // Tụ Bảo Minh Đỉnh: rương đã mở tuần này (mọi minh cộng lại — chống nhảy minh)
   crowns?: number[] // danh hiệu mùa: các mùa đứng đầu Công Huân cả giới (giữ qua luân hồi)
   honorAll?: number // Công Huân kiếm được cả đời (không về 0 khi hết mùa) — ra Phi Thăng Tệ
@@ -345,4 +352,5 @@ export type Err =
   | 'claimed' // phần thưởng đã nhận rồi
   | 'frenzy' // vừa đi cướp: chưa bật khiên được (cơn sát khí)
   | 'secluded' // đang bế quan: xuất quan mới làm được
+  | 'blocked' // cửa ải phe khác đang giữ chặn đường
 export type Result = { ok: true; state: State } | { ok: false; error: Err }

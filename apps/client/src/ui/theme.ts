@@ -99,9 +99,30 @@ const nine = async (name: string, draw: () => Skin, fill = true) => {
   return `${url} ${t * S} ${r * S} ${b * S} ${l * S}${fill ? ' fill' : ''} / ${t}px ${r}px ${b}px ${l}px / ${skin!.outset ?? 0}px ${skin!.repeat ?? 'stretch'}`
 }
 
+// Giao diện sơn mài (27/9/2026): bề mặt lam sẫm, chữ ngà, vàng chỉ là đường viền đồng cổ — không tô mảng vàng/giấy (người chơi
+// thấy rẻ). Ghi đè các màu gốc mà giao diện dùng làm bề mặt/chữ; tranh cảnh (Pixi) vẫn dùng PIGMENT gốc.
+const LACQUER = {
+  paper: '#172528', // bề mặt bảng, thẻ
+  paper2: '#1f3236', // bề mặt nổi (ô, thẻ con)
+  paper3: '#3a5156', // đường chia, viền mảnh
+  rim: '#9a8456', // viền đồng cổ
+  ivory: '#efe7d6', // chữ chính
+  ivory2: '#c3baa8',
+  ivory3: '#8e887c',
+  goldD: '#d8b974', // chữ vàng trên nền tối
+  // son, lục, lam làm chữ trên nền tối: sáng lên cho tương phản ≥ 4,5 (đo bằng tools/art/contrast.ts)
+  cinnabar: '#e57a66',
+  cinnabarL: '#ee9480',
+  malachite: '#6cc193',
+  malachiteD: '#86c79d',
+  azurite: '#8fb6dc',
+  azuriteD: '#8fb6dc',
+}
+
 export async function applyTheme() {
   const root = document.documentElement.style
   for (const [k, v] of Object.entries(PIGMENT)) root.setProperty(`--${kebab(k)}`, v)
+  for (const [k, v] of Object.entries(LACQUER)) root.setProperty(`--${kebab(k)}`, v)
   const P = PIGMENT
   const vars: Record<string, Promise<string>> = {
     '--paper-tex': img('paper', () => paper(256)),

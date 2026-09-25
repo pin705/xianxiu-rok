@@ -299,7 +299,7 @@ def fit_trace(painted_src, box, proc_im, k=1.5):
 PACKS = [  # (gói, key) — mục đầu tiên khớp thì lấy; không khớp: không gói, trình duyệt tự tải khi cần (icon, chân dung…)
   ('boot', r'^(skin|emblem):'),  # giao diện nào cũng dùng: da, hình chạm huy hiệu (huy hiệu nướng lên canvas ngay khi hiện)
   *[(f'bld{t}', rf'^bld:\w+:{t}:') for t in range(1, 6)],  # công trình theo bậc: cảnh núi chỉ đợi các bậc đang hiện (Home.svelte)
-  ('home', r'^(fog|cloud|peak|ledge|stair|far\d|pine|rock|bamboo|blossom|lantern|sun|moon|crane|bird|fly|pearl|walker|worker|disciple|flag|scaffold)(:|$)'),
+  ('home', r'^(fog|cloud|peak|ledge|stair|far\d|pine|rock|bamboo|blossom|lantern|sun|moon|crane|bird|fly|pearl|walker|worker|disciple|flag|scaffold|lm)(:|$)'),
   ('map', r'^(map|march)(:|$)'),
   ('world', r'^wtoken$'),
   ('battle', r'^(sold|beast|field|thunder):'),
@@ -409,4 +409,14 @@ def tint(img, dark, light=None):
     t = np.clip((L - lo) / max(1, hi - lo), 0, 1)[..., None]
     rgb = _rgb(dark) + (_rgb(light) - _rgb(dark)) * t
   a[..., :3] = rgb
+  return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
+
+def tint_grey(img, color):
+  """như tint (tấm một màu) nhưng chỉ đổi phần xám (mặt nút); phần có màu (viền, đầu bịt đồng) giữ nguyên"""
+  a = np.asarray(img).astype(np.float32)
+  mx, mn = a[..., :3].max(-1), a[..., :3].min(-1)
+  sat = (mx - mn) / np.maximum(mx, 1)
+  keep = np.clip((sat - 0.12) / 0.12, 0, 1)[..., None]   # 1 = có màu (đồng), 0 = xám (mặt)
+  t = np.asarray(tint(img, color)).astype(np.float32)
+  a[..., :3] = a[..., :3] * keep + t[..., :3] * (1 - keep)
   return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')

@@ -1,10 +1,10 @@
 <script lang="ts">
   // Màn chọn đạo thống (như màn chọn nền văn minh của RoK): tranh tổ sư lớn đứng trước ấn của đạo, tên + lối chơi, ba tiềm năng,
   // dải chín huy hiệu để chọn; vuốt ngang hay phím mũi tên để lướt. Dùng lúc lập tông môn (Title) và khi cải tu (DaoPick).
-  import { DAOS, DAO_IDS, type Bonus, type DaoId } from '@rok/rules'
-  import { DAO_TONES, emblemArt, paintedUrl } from '@rok/art'
+  import { DAOS, DAO_IDS, DAO_UNITS, type Bonus, type DaoId } from '@rok/rules'
+  import { DAO_TONES, emblemArt, paintedUrl, soldier } from '@rok/art'
   import { Button, Medal } from './ui'
-  import { L, sfx } from './lib'
+  import { L, sfx, uniFx } from './lib'
 
   let {
     value = $bindable(DAO_IDS[0]),
@@ -40,6 +40,8 @@
   const fx = $derived(Object.entries(DAOS[value]).map(([k, v]) => L.bonus(k as Bonus, v as number)))
   // tổ sư vẽ tay (fig:<đạo>); chưa có tranh thì hình chạm lớn
   const fig = (id: DaoId) => paintedUrl(`fig:${id}`, () => emblemArt(id), 360)
+  const uni = $derived(DAO_UNITS[value])
+  const uniSrc = $derived(paintedUrl(`sold:dao:${value}`, () => soldier(uni.type, false, 5), 48))
 
   function choose(id: DaoId) {
     if (id === value) return
@@ -79,14 +81,23 @@
 
   <div class="info stack center">
     <h3 class="name">{L.dao.names[value].name}</h3>
-    <span class="style">{L.dao.names[value].style}</span>
+    <span class="way">{L.dao.names[value].style}</span>
     <p class="desc t-small">{L.dao.names[value].desc}</p>
     <ul class="fx" aria-label={L.dao.potential}>
       {#each fx as f (f)}<li>{f}</li>{/each}
     </ul>
+    <!-- đệ tử đặc trưng (đơn vị riêng của nền văn minh RoK) -->
+    <div class="uni row" style:--gap="8px">
+      <img src={uniSrc} width="44" height="44" alt="" draggable="false" />
+      <span class="stack" style:--gap="1px">
+        <b class="t-small">{L.dao.uniTitle}: {L.dao.names[value].unit}</b>
+        <small class="t-tiny">{L.units[uni.type]} · {uniFx(value).join(' · ')}</small>
+        <small class="t-tiny soft">{L.dao.names[value].unitDesc}</small>
+      </span>
+    </div>
   </div>
 
-  <div class="strip" role="radiogroup" aria-label={L.dao.title} tabindex="0" onkeydown={key}>
+  <div class="flags" role="radiogroup" aria-label={L.dao.title} tabindex="0" onkeydown={key}>
     {#each DAO_IDS as id (id)}
       <button
         type="button"
@@ -97,7 +108,7 @@
         class:on={id === value}
         onclick={() => choose(id)}
       >
-        <Medal emblem={id} tone={DAO_TONES[id]} size={34} dim={id !== value} />
+        <Medal emblem={id} tone={DAO_TONES[id]} size={34} />
         {#if id === current}<i class="cur"></i>{/if}
       </button>
     {/each}
@@ -116,7 +127,7 @@
   .stage {
     position: relative;
     width: 100%;
-    height: min(46vh, 360px);
+    height: min(42vh, 340px);
     touch-action: pan-y;
     user-select: none;
     /* quầng màu của đạo sau lưng tổ sư */
@@ -192,7 +203,8 @@
   .compact .name {
     font-size: var(--fs-6);
   }
-  .style {
+  .way {
+    justify-self: center;
     padding: 2px 12px 3px;
     font-size: var(--fs-2);
     font-weight: 700;
@@ -223,14 +235,29 @@
     border-radius: 6px;
     background: color-mix(in srgb, var(--accent) 16%, transparent);
   }
-  .strip {
+  .uni {
+    margin-top: 4px;
+    padding: 4px 12px 4px 6px;
+    text-align: left;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .uni img {
+    flex: none;
+    object-fit: contain;
+  }
+  .soft {
+    font-style: italic;
+    opacity: 0.8;
+  }
+  .flags {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
     width: 100%;
     margin-top: var(--sp-1);
     outline-offset: 4px;
   }
-  .strip button {
+  .flags button {
     position: relative;
     display: grid;
     place-items: center;
@@ -240,10 +267,13 @@
     cursor: pointer;
     transition: transform var(--dur-2) var(--spring);
   }
-  .strip button.on {
+  .flags button:not(.on) {
+    opacity: 0.62;
+  }
+  .flags button.on {
     transform: scale(1.22);
   }
-  .strip button.on::after {
+  .flags button.on::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -261,7 +291,7 @@
     height: 8px;
     border-radius: 50%;
     background: var(--gold-l);
-    box-shadow: 0 0 0 1.5px var(--ink);
+    box-shadow: 0 0 0 1.5px var(--rim);
   }
   .note {
     opacity: 0.75;

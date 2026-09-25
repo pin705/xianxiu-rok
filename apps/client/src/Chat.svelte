@@ -325,7 +325,7 @@
     text-align: left;
     white-space: nowrap;
     /* nền giấy mờ thay viên mực đen: hoà vào tranh thủy mặc, không thành vệt tối đè ngang cảnh */
-    background: color-mix(in srgb, var(--silk) 78%, transparent);
+    background: color-mix(in srgb, var(--paper2) 78%, transparent);
     border: 1px solid color-mix(in srgb, var(--paper3) 80%, transparent);
     box-shadow: 0 1px 4px rgb(var(--shade) / 0.15);
     border-radius: 999px;
@@ -403,7 +403,7 @@
     min-width: 0;
     padding: 8px 10px;
     font: inherit;
-    border: 1.5px solid var(--ink3);
+    border: 1.5px solid var(--rim);
     border-radius: var(--cut);
     background: var(--paper);
   }

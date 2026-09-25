@@ -26,6 +26,7 @@ import { mail } from '../sect/inbox.ts'
 import {
   addHonor,
   allyOf,
+  farErr,
   flagGuards,
   guardMight,
   put,
@@ -108,8 +109,8 @@ export const flagActions: WorldActions<FlagAction> = {
       if (s.marches.some(m => m.target.kind === 'flag' && m.target.i === f.id)) return no('busy')
       const e = fieldError(s, a.elder, a.army)
       if (e) return no(e)
-      const r = route(map.atlas, s.seat, f, map.phase)
-      if (!r) return no('far')
+      const r = route(map.atlas, s.seat, f, map.phase, map.shut)
+      if (!r) return no(farErr(map, s.seat, f))
       const army = compact(a.army),
         t = s.time
       const m: March = {
@@ -140,8 +141,8 @@ export const flagActions: WorldActions<FlagAction> = {
       if (mine && (mine.id === f.aid || mine.naps?.includes(f.aid))) return no('bad')
       const e = fieldError(s, a.elder, a.army)
       if (e) return no(e)
-      const r = route(map.atlas, s.seat, f, map.phase)
-      if (!r) return no('far')
+      const r = route(map.atlas, s.seat, f, map.phase, map.shut)
+      if (!r) return no(farErr(map, s.seat, f))
       const army = compact(a.army),
         t = s.time
       const m: March = {

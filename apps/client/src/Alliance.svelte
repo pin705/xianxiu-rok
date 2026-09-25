@@ -51,6 +51,7 @@
   import AllyPot from './AllyPot.svelte'
   import ArkCard from './ArkCard.svelte'
   import AllyParty from './AllyParty.svelte'
+  import AllyPlans from './AllyPlans.svelte'
   import { social } from './social.svelte'
 
   type ATab = 'home' | 'people' | 'war' | 'chat'
@@ -458,6 +459,7 @@
     {/if}
 
     {#if atab === 'war'}
+      {#if me !== null}<AllyPlans {ally} {me} {go} />{/if}
       <Section title={L.world.marks}>
         {#if ally.marks?.length}
           <div class="row wrap">
@@ -605,7 +607,7 @@
     width: 100%;
     padding: 8px 10px;
     font: inherit;
-    border: 1.5px solid var(--ink3);
+    border: 1.5px solid var(--rim);
     border-radius: var(--cut);
     background: var(--paper);
   }
@@ -640,7 +642,7 @@
     padding: 10px 8px;
     font: inherit;
     color: inherit;
-    background: var(--silk);
+    background: var(--paper2);
     border: 1.5px solid var(--paper3);
     border-radius: 12px;
     cursor: pointer;

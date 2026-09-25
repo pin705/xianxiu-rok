@@ -714,7 +714,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.32 | Rút lui, điều khiển giữa trận | 🟡 tự rút sau 10 lượt, gọi về đội đóng quân | P1 | M |
 | 2.33 | Kết trận (sức chứa theo Castle, 4 mốc giờ) | ✅ 8 đội, 5/10/30 phút | P1 | S |
 | 2.34 | Đồn trú và tiếp viện | ✅ | P2 | S |
-| 2.35 | Công thành: độ bền tường, cháy, dời thành, khiên | 🟡 Hộ Sơn Đại Trận là bonus, khiên sau thua + Hộ Sơn Phù | P1 | M |
+| 2.35 | Công thành: độ bền tường, cháy, dời thành, khiên | ✅ trận lực + linh hỏa thiêu sơn + sơn môn thất thủ (dời chỗ); khiên sau thua + Hộ Sơn Phù | P1 | M |
 | 2.36 | Trinh sát | ✅ dò thám làm tròn | P2 | S |
 | 2.37 | Chiến báo chi tiết (tách nguồn sát thương, chia sẻ) | 🟡 phát lại, chi tiết trận, chia sẻ vào chat; chưa tách sát thương theo nguồn | P1 | S |
 | 2.38 | Điểm tiêu diệt (KP) | ✅ sát địch + bảng xếp hạng | P0 | S |

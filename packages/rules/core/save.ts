@@ -236,6 +236,20 @@ function valid(s: any): s is State {
     validFest(s)
   )
 }
+// Trận lực (linh hỏa thiêu sơn), việc cứu nạn (Thôn Trang Gặp Nạn)
+const validLate = (s: any) =>
+  (s.wall === undefined ||
+    (obj(s.wall) &&
+      [s.wall.hp, s.wall.at, s.wall.fire].every(num) &&
+      (s.wall.mend === undefined || num(s.wall.mend)))) &&
+  (s.nan === undefined ||
+    (obj(s.nan) &&
+      num(s.nan.day) &&
+      num(s.nan.n) &&
+      (s.nan.q === undefined ||
+        (obj(s.nan.q) &&
+          [s.nan.q.i, s.nan.q.n, s.nan.q.from, s.nan.q.until].every(num) &&
+          METRICS.includes(s.nan.q.m)))))
 const validFest = (s: any) =>
   obj(s.fest) &&
   Object.entries(s.fest).every(
@@ -280,6 +294,7 @@ const validFest = (s: any) =>
   (s.bones === undefined || num(s.bones)) &&
   (s.honorAll === undefined || num(s.honorAll)) &&
   (s.partyDay === undefined || num(s.partyDay)) &&
+  validLate(s) &&
   (s.potOpened === undefined || (obj(s.potOpened) && num(s.potOpened.week) && num(s.potOpened.n))) &&
   (s.crowns === undefined || (Array.isArray(s.crowns) && s.crowns.every(num))) &&
   (s.yb === undefined || (obj(s.yb) && num(s.yb.kp) && num(s.yb.hunted) && num(s.yb.raided) && num(s.yb.gathered))) &&

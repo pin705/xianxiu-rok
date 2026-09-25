@@ -33,7 +33,7 @@
   import Tavern from './Tavern.svelte'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Page, Section, Sheet, Tag } from './ui'
-  import { EMBLEM, L, LOOK, clock, num, type PanelTab } from './lib'
+  import { EMBLEM, L, LOOK, clock, num, unitName, type PanelTab } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
 
@@ -122,7 +122,7 @@
         {#each TYPES as type (type)}
           <span class="row" style:--gap="6px"
             ><Medal emblem={EMBLEM.unit[type]} tone={type} size={28} /><span class="stack" style:--gap="0"
-              ><b class="t-small">{L.units[type]}</b><small class="t-tiny t-soft">{L.beats(type)}</small></span
+              ><b class="t-small">{unitName(type, game)}</b><small class="t-tiny t-soft">{L.beats(type)}</small></span
             ></span
           >
           {#each tiers as t (t)}
@@ -324,7 +324,7 @@
 <style>
   /* phẩm trưởng lão: lam · tím · vàng */
   .rar2 {
-    color: #2f6aa8;
+    color: var(--azurite);
   }
   .rar3 {
     color: #7a47a6;
