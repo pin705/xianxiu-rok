@@ -64,7 +64,13 @@ async function image(
   const drawn = draw()
   const skin = 'cv' in drawn ? drawn : undefined
   const cv = skin ? skin.cv : (drawn as Canvas)
-  noteArt(`skin:${name}`, { kind: 'skin', w: skin?.w ?? cv.width / S, h: skin?.h ?? cv.height / S, px: S })
+  noteArt(`skin:${name}`, {
+    kind: 'skin',
+    w: skin?.w ?? cv.width / S,
+    h: skin?.h ?? cv.height / S,
+    px: S,
+    slice: skin?.slice,
+  })
   const blob = await encode(cv)
   const meta = skin && { w: skin.w, h: skin.h, slice: skin.slice, outset: skin.outset, repeat: skin.repeat }
   c?.put(

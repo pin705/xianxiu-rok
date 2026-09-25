@@ -870,6 +870,45 @@ test('Luận Kiếm Minh Chiến: ghi danh (trưởng lão, đủ người), gh�
   assert.equal(r.changed.has(7), false, 'minh không ghi danh không đụng tới')
 })
 
+test('săn liên hoàn: đội săn đang về đi thẳng tới con khác từ chỗ đang đứng; quân không hồi, chiến lợi phẩm cộng dồn, về núi theo đường mới', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 0 }
+  const p = a.points.find(x => x.kind === 'wild' && x.lv <= 3)!
+  const q = a.points.find(x => x.kind === 'wild' && x.region === p.region && x.i !== p.i && x.lv <= 3)!
+  const seat = { x: a.regions[p.region].cx, y: a.regions[p.region].cy }
+  const ps = world({ ...sect('Săn', 12, { kiem3: 900 }), seat })
+  let w = freshWorld()
+  const run = (x: object, at: number) => {
+    const r = worldAct(ps, 1, x as never, at, 5, map, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  const step = (at: number) => {
+    const r = advanceAll(ps, w, at, map)
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+  }
+  assert.equal(run({ type: 'go', i: p.i, task: 'hunt', elder: 'thanhPhong', army: { kiem3: 900 } }, T0), null)
+  const m0 = ps.get(1)!.marches[0]
+  assert.equal(run({ type: 'huntChain', id: m0.id, i: q.i }, T0 + 1), 'locked', 'chưa săn xong: chưa liên hoàn được')
+  step(m0.arriveAt)
+  const back = ps.get(1)!.marches[0]
+  const loot1 = back.gain!.res.linhThach ?? 0
+  const t1 = back.arriveAt + Math.round((back.returnAt - back.arriveAt) / 3)
+  assert.equal(run({ type: 'huntChain', id: back.id, i: q.i }, t1), null)
+  const m1 = ps.get(1)!.marches[0]
+  assert.deepEqual([m1.target.i, m1.chain, m1.returnAt], [q.i, true, 0])
+  assert.deepEqual(m1.army, back.back, 'quân còn lại đi tiếp, không hồi')
+  assert.equal(apOf(ps.get(1)!, t1) < apOf({ ...ps.get(1)!, ap: undefined }, t1), true, 'tốn hành lực')
+  step(m1.arriveAt)
+  const home = ps.get(1)!.marches[0]
+  assert.ok((home.gain!.res.linhThach ?? 0) > loot1, 'chiến lợi phẩm cộng dồn hai trận')
+  assert.deepEqual(home.path![0], seat, 'về núi theo đường mới từ chỗ yêu thú')
+  assert.ok(home.returnAt > m1.arriveAt)
+})
+
 test('yêu thú giới: săn một mình, thắng thì chiến lợi phẩm + kinh nghiệm theo đội về, con đó hồi sau 20 phút', () => {
   const a = atlas(777)
   const map = { atlas: a, phase: 0 }

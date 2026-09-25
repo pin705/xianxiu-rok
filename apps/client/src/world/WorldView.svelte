@@ -59,6 +59,25 @@
   let scene = $state.raw<WorldScene>()
   let layer = $state<HTMLDivElement>()
   let chronOpen = $state(false)
+  // thẻ mùa thu gọn (chỉ dòng mùa + Công Huân + nút): nhớ theo máy, bộ nhớ trình duyệt hỏng thì mặc định mở rộng
+  const SLIM = 'rok.worldCard'
+  let slim = $state(
+    (() => {
+      try {
+        return localStorage.getItem(SLIM) === '1'
+      } catch {
+        return false
+      }
+    })(),
+  )
+  function fold() {
+    slim = !slim
+    try {
+      localStorage.setItem(SLIM, slim ? '1' : '0')
+    } catch {
+      /* chế độ riêng tư: chỉ nhớ trong phiên */
+    }
+  }
   let bookOpen = $state(false)
   const day = $derived(dayIn(info.opened, now))
   const phase = $derived(phaseOf(day))
@@ -334,10 +353,10 @@
         {#if lordSeat}<button class="lord t-tiny" onclick={() => (social.profile = lordSeat.pid)}
             ><Icon name="flag" size={12} />{L.lord.now(lordSeat.name)}</button
           >{/if}
-        {#if snap?.bless && snap.bless.until > now}<small class="t-tiny t-gold"
+        {#if !slim && snap?.bless && snap.bless.until > now}<small class="t-tiny t-gold"
             >{L.lord.blessed(L.lord.blessKeys[snap.bless.key], clock(snap.bless.until - now))}</small
           >{/if}
-        {#if send && snap?.lord === me && snap?.bless?.day !== dayOf(now)}
+        {#if !slim && send && snap?.lord === me && snap?.bless?.day !== dayOf(now)}
           <!-- mình là Giới Chủ, hôm nay chưa ban phúc -->
           <span class="row wrap" style:--gap="4px">
             <small class="t-tiny">{L.lord.bless}:</small>
@@ -348,13 +367,24 @@
             {/each}
           </span>
         {/if}
-        <small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>
+        {#if !slim}<small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>{/if}
       </span>
       <Button size="sm" variant="ghost" onclick={() => (finding = !finding)}
         ><Icon name="globe" size={14} />{L.world.find}</Button
       >
-      <Button size="sm" variant="ghost" onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}
-        ><Icon name="flag" size={14} />{L.world.you}</Button
+      <Button
+        size="sm"
+        variant="ghost"
+        label={L.world.you}
+        onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}
+        ><Icon name="flag" size={14} /><span class="lbl">{L.world.you}</span></Button
+      >
+      <button
+        class="fold"
+        class:open={!slim}
+        aria-label={slim ? L.world.more : L.world.less}
+        aria-expanded={!slim}
+        onclick={fold}><Icon name="arrow" size={14} /></button
       >
     </div>
     {#if finding}
@@ -395,7 +425,7 @@
         {/if}
       </div>
     {/if}
-    {#if snap?.book}
+    {#if !slim && snap?.book}
       {@const b = snap.book}
       {@const g = BOOK[b.ch]}
       <!-- Thiên Đạo Biên Niên (Monument): chương đang mở của cả giới, chạm để xem mọi chương -->
@@ -421,7 +451,7 @@
         </ol>
       {/if}
     {/if}
-    {#if snap?.chron.length}
+    {#if !slim && snap?.chron.length}
       <button class="chron" onclick={() => (chronOpen = !chronOpen)} aria-expanded={chronOpen}>
         <small class="t-tiny"><b>{L.world.chron}:</b> {chronText(L, snap.chron.at(-1)!)}</small>
       </button>
@@ -550,6 +580,28 @@
     background: none;
     border: 0;
     cursor: pointer;
+  }
+  /* điện thoại hẹp: "Tông môn của bạn" chỉ còn icon (tên vẫn đọc được qua label) — chừa chỗ cho dòng mùa */
+  @media (max-width: 480px) {
+    .lbl {
+      display: none;
+    }
+  }
+  .fold {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: var(--text-soft);
+    background: none;
+    border: 0;
+    rotate: 90deg;
+    transition: rotate var(--dur-2) var(--ease);
+    cursor: pointer;
+  }
+  .fold.open {
+    rotate: -90deg;
   }
   .chron {
     display: block;

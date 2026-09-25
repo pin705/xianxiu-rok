@@ -309,6 +309,29 @@ export const garrison = (ps: Players, i: number): [number, March][] =>
 export const addHonor = (s: State, n: number): State => (n >= 1 ? { ...s, honor: (s.honor ?? 0) + Math.floor(n) } : s)
 export const addKp = (s: State, n: number): State =>
   n >= 1 ? addHonor({ ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + Math.round(n) } }, n / HONOR_KP) : s
+// Vị trí (ô) của đội lúc t theo đường đi (đi: path; về: path ngược); không có đường thì null
+export function marchAt(m: March, t: number): Pos | null {
+  const path = m.path
+  if (!path?.length) return null
+  const home = m.returnAt > 0 && t >= m.arriveAt
+  const f = home
+    ? (t - m.arriveAt) / Math.max(1, m.returnAt - m.arriveAt)
+    : (t - m.startAt) / Math.max(1, m.arriveAt - m.startAt)
+  const pts = home ? [...path].reverse() : path
+  const seg = pts.slice(1).map((p, k) => Math.hypot(p.x - pts[k].x, p.y - pts[k].y))
+  let d = Math.min(1, Math.max(0, f)) * seg.reduce((a, b) => a + b, 0)
+  for (let k = 0; k < seg.length; k++) {
+    if (d <= seg[k] || k === seg.length - 1) {
+      const u = seg[k] ? Math.min(1, d / seg[k]) : 0
+      return {
+        x: Math.round(pts[k].x + (pts[k + 1].x - pts[k].x) * u),
+        y: Math.round(pts[k].y + (pts[k + 1].y - pts[k].y) * u),
+      }
+    }
+    d -= seg[k]
+  }
+  return { ...pts[0] }
+}
 export const withMarch = (s: State, m: March): State => ({ ...s, marches: s.marches.map(x => (x.id === m.id ? m : x)) })
 export const travel = (m: March) => m.arriveAt - m.startAt
 export const setSpot = (w: World, i: number, sp: Spot): World => ({ ...w, spots: { ...w.spots, [i]: sp } })

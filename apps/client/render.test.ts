@@ -707,18 +707,17 @@ test('tiên minh, chat', async () => {
         },
         `${label}, chưa vào minh`,
       )
-      const inside = paint(
-        'Alliance',
-        { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }), onraid: noop },
-        `${label}, trong minh`,
-      )
-      assert.ok(inside.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')
+      const mine = { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }), onraid: noop }
+      const inside = paint('Alliance', mine, `${label}, trong minh`)
+      assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
+      const war = paint('Alliance', { ...mine, start: 'war' }, `${label}, trong minh · chiến sự`)
+      assert.ok(war.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')
+      const crew = paint('Alliance', { ...mine, start: 'people' }, `${label}, trong minh · thành viên`)
       if (s.time >= late.time)
         assert.ok(
-          inside.includes(L.ally.idle(dayOf(s.time) - dayOf(late.time) + 8)),
+          crew.includes(L.ally.idle(dayOf(s.time) - dayOf(late.time) + 8)),
           'thành viên vắng lâu: ghi số ngày',
         )
-      assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       for (const officer of [false, true]) {
         const who = officer ? 'trưởng lão' : 'thành viên'
         const sheet = { game: s, ally: info, officer, open: true, onclose: noop, send: async () => ({ ok: true }) }
@@ -968,4 +967,32 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
       'bản đồ giới có dấu của minh, vừa nhảy tới ô',
     )
   }
+})
+
+test('tranh vẽ tay trong manifest thay hình vẽ bằng code, gỡ ra thì về như cũ', async () => {
+  await load('vi')
+  const { setArt } = await vite.ssrLoadModule('@rok/art')
+  const [, s] = STATES[0]
+  const props = {
+    game: s,
+    now: s.time,
+    tab: 'tongMon',
+    gain: null,
+    onclaim: noop,
+    onquest: noop,
+    onbuilder: noop,
+    ontab: noop,
+    onsettings: noop,
+    ondaily: noop,
+  }
+  setArt({ 'face:master': { src: '/art/face-master.webp' } })
+  try {
+    assert.ok(
+      paint('Hud', props, 'có tranh chân dung').includes('/art/face-master.webp'),
+      'chân dung chưởng môn lấy từ manifest',
+    )
+  } finally {
+    setArt({})
+  }
+  assert.ok(!paint('Hud', props, 'không tranh').includes('/art/face-master.webp'))
 })

@@ -912,6 +912,8 @@ export const vi = {
     ruinHint:
       'Chỉ chiếm được lúc mở. Phe giữ lúc đóng cửa: điểm mùa theo giờ giữ, người đang đóng quân nhận Công Huân theo phút; rồi quân về.',
     minimap: 'Bản đồ nhỏ — chạm để tới',
+    less: 'Thu gọn thẻ mùa',
+    more: 'Mở rộng thẻ mùa',
     minimapHide: 'Thu bản đồ nhỏ',
     land: { water: 'Sông hồ', plain: 'Đồng bằng', forest: 'Rừng', hill: 'Đồi', mount: 'Núi' },
     weather: { clear: 'Trời quang', mist: 'Sương mù', rain: 'Mưa', snow: 'Tuyết' },
@@ -1013,6 +1015,7 @@ export const vi = {
     mailWait: (t: string) => `Thư kế tiếp sau ${t}`,
     mailSent: 'Đã gửi thư cho cả minh.',
     idle: (n: number) => `vắng ${n} ngày`,
+    tabs: { home: 'Tổng quan', people: 'Thành viên', war: 'Chiến sự', chat: 'Trò chuyện' },
     offices: {
       chapPhap: ['Chấp Pháp', 'công +5 %'],
       ngoaiSu: ['Ngoại Sự', 'hành quân +10 %'],

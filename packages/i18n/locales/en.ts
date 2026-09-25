@@ -926,6 +926,8 @@ export const en: Text = {
     ruinHint:
       'Can only be taken while open. Whoever holds it at closing: season points by hours held, and every garrisoned member earns honor per minute; then the troops return.',
     minimap: 'Minimap — tap to go there',
+    less: 'Collapse season card',
+    more: 'Expand season card',
     minimapHide: 'Hide minimap',
     land: { water: 'Waters', plain: 'Plains', forest: 'Forest', hill: 'Hills', mount: 'Mountains' },
     weather: { clear: 'Clear', mist: 'Mist', rain: 'Rain', snow: 'Snow' },
@@ -1026,6 +1028,7 @@ export const en: Text = {
     mailWait: (t: string) => `Next mail in ${t}`,
     mailSent: 'Mail sent to the whole alliance.',
     idle: (n: number) => `away ${n} days`,
+    tabs: { home: 'Overview', people: 'Members', war: 'War', chat: 'Chat' },
     offices: {
       chapPhap: ['Warlord', 'attack +5%'],
       ngoaiSu: ['Diplomat', 'march +10%'],

@@ -1,7 +1,7 @@
 // Một ứng dụng WebGL (PixiJS) cho cả game: cảnh núi, bản đồ… là các Container gắn vào stage.
 // Hình vẽ tay nướng một lần ra texture (bake), sau đó GPU chỉ việc ghép và diễn chuyển động.
 import { Application, Container, Sprite, Texture } from 'pixi.js'
-import { bake, beamTex, glowTex, paper, puffTex, rayTex, ringTex, sparkTex, type Asset } from '@rok/art'
+import { artOf, bake, beamTex, noteArt, glowTex, paper, puffTex, rayTex, ringTex, sparkTex, type Asset } from '@rok/art'
 
 export const DPR = Math.min(globalThis.devicePixelRatio || 1, 2)
 // Cảnh rộng 400 DU. Màn hẹp: cả bề ngang, tối đa bề rộng cột (--col: 480px điện thoại, 620px máy tính bảng).
@@ -103,8 +103,17 @@ export function painted<M>(key: string, make: () => Asset<M>, scale = texScale()
   const k = `${key}@${scale}`
   let p = cache.get(k) as Painted<M> | undefined
   if (!p) {
-    const b = bake(make(), scale)
-    p = { tex: Texture.from(b.canvas as HTMLCanvasElement), anchor: b.anchor, scale, meta: b.meta }
+    const a = make()
+    const img = artOf(key)?.img
+    if (img) {
+      // tranh vẽ tay khít hộp asset: neo theo asset, cỡ theo ảnh; meta (điểm chạm, chỗ treo biển…) vẫn lấy từ bản vẽ code
+      const meta = bake(a, 1 / 64).meta
+      p = { tex: Texture.from(img), anchor: [-a.x / a.w, -a.y / a.h], scale: img.naturalWidth / a.w, meta }
+    } else {
+      noteArt(key, { kind: 'tex', w: a.w, h: a.h, px: scale })
+      const b = bake(a, scale)
+      p = { tex: Texture.from(b.canvas as HTMLCanvasElement), anchor: b.anchor, scale, meta: b.meta }
+    }
     cache.set(k, p)
   }
   return p

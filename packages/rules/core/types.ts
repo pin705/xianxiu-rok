@@ -65,6 +65,7 @@ export type March = {
   report?: number
   pill?: PillId // kiếp vân: đan độ kiếp đã dùng lúc tụ
   foil?: number // kiếp vân: số lần bị cướp trúng trong lúc tụ (phá kiếp)
+  chain?: boolean // săn liên hoàn: đi thẳng từ giữa đường về tới yêu thú khác (hạ xong thì về núi theo đường mới)
 }
 export type Snap = {
   elder?: ElderId

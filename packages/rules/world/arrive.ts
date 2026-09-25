@@ -1,11 +1,11 @@
 // Đội tới một điểm trên bản đồ giới (một đội hoặc cả nhóm kết trận): khai mỏ, đánh yêu vương, chiếm điểm.
 // advance.ts gọi lúc hành quân tới nơi.
-import { tide } from '../atlas.ts'
+import { route, tide } from '../atlas.ts'
 import { fight, might } from '../combat.ts'
 import { beastExp, beastLoot, marchSide, marchSnap, pushReport, snap } from '../core/battle.ts'
 import { lead, unitOf } from '../core/stats.ts'
 import { HOUR, noGain } from '../core/util.ts'
-import type { Army, March } from '../core/types.ts'
+import type { Army, Gain, March } from '../core/types.ts'
 import {
   BOSSES,
   FIRST_TAKE,
@@ -30,6 +30,7 @@ import {
   addHonor,
   addKp,
   allyGifts,
+  routeMs,
   tribeBank,
   allyOf,
   garrison,
@@ -190,6 +191,17 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
   return { changed, world: allyGifts(ps, changed, dead, Object.keys(dmgs).map(Number), p.lv, at) }
 }
 
+// Gộp chiến lợi phẩm hai trận (săn liên hoàn)
+const mergeGain = (a: Gain, b: Gain): Gain => ({
+  res: Object.fromEntries(RESOURCES.map(r => [r, (a.res[r] ?? 0) + (b.res[r] ?? 0)])),
+  items: Object.fromEntries(
+    [...new Set([...Object.keys(a.items), ...Object.keys(b.items)])].map(k => [
+      k,
+      ((a.items as Record<string, number>)[k] ?? 0) + ((b.items as Record<string, number>)[k] ?? 0),
+    ]),
+  ),
+  exp: a.exp + b.exp,
+})
 // Săn yêu thú giới: một đội đánh cả con; thắng thì chiến lợi phẩm (gấp WILD_LOOT yêu thú vùng) + kinh nghiệm theo đội về nhà,
 // con đó hồi sau WILD_RESPAWN; thua thì đội mang quân còn lại về
 function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Arrived {
@@ -217,7 +229,18 @@ function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Ar
     gain,
     fights: [{ a: marchSnap(s, me, m), b: snap(foe, undefined, p.lv), rounds: f.rounds }],
   })
-  x = withMarch(x, { ...m, back: left, hurt, gain, report: x.nextId - 1, returnAt: at + travel(m) })
+  // săn liên hoàn: cộng dồn chiến lợi phẩm, thương vong của các trận trước; về núi theo đường mới từ chỗ yêu thú
+  const home = m.chain && s.seat ? route(map.atlas, s.seat, p, map.phase) : null
+  const startAt = home ? at - routeMs(s, home.len) : m.startAt
+  x = withMarch(x, {
+    ...m,
+    ...(home && { path: home.path, startAt }),
+    back: left,
+    hurt: addArmy(m.hurt, hurt),
+    gain: m.chain && m.gain ? mergeGain(m.gain, gain) : gain,
+    report: x.nextId - 1,
+    returnAt: at + (at - startAt),
+  })
   if (f.win) x = addHonor({ ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1 } }, HONOR_WILD * p.lv)
   return { changed: new Map([[pid, x]]), world: f.win ? setSpot(w, i, { until: at + WILD_RESPAWN }) : w }
 }

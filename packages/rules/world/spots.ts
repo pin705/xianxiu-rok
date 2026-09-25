@@ -29,6 +29,7 @@ import {
   sideKey,
   travel,
   withMarch,
+  marchAt,
   type Ctx,
   type MapCtx,
   type Players,
@@ -47,6 +48,7 @@ export type SpotAction =
   | { type: 'recall'; id: number } // gọi đội đang đóng quân / đang khai mỏ / đang viện binh về
   | { type: 'rally'; i: number; wait: 0 | 1 | 2; elder: ElderId; army: Army } // mở kết trận ở điểm i (chiếm / đánh yêu vương)
   | { type: 'rallyJoin'; id: number; elder: ElderId; army: Army } // góp đội vào kết trận
+  | { type: 'huntChain'; id: number; i: number } // săn liên hoàn: đội săn đang về đi thẳng tới yêu thú giới khác
 const TASKS: readonly Task[] = ['take', 'gather', 'hit', 'hunt']
 const spotIndex = int(0, Number.MAX_SAFE_INTEGER)
 
@@ -80,6 +82,40 @@ export const spotActions: WorldActions<SpotAction> = {
     },
     run: rallyAct,
   },
+  huntChain: {
+    pick: a => (isId(a.id) && spotIndex(a.i) ? { type: 'huntChain', id: a.id, i: a.i } : null),
+    run: chainAct,
+  },
+}
+
+// Săn liên hoàn (chain farming của RoK): đội vừa săn yêu thú giới, đang về, đi thẳng từ chỗ đang đứng tới con khác — quân còn lại
+// giữ nguyên (không hồi), chiến lợi phẩm và thương vong cộng dồn; tốn hành lực như một lần săn
+function chainAct({ w, pid, s, map }: Ctx, a: Extract<SpotAction, { type: 'huntChain' }>): WorldResult {
+  const t = s.time
+  const m = s.marches.find(x => x.id === a.id)
+  const p = map?.atlas.points[a.i]
+  if (!map || !p || p.kind !== 'wild') return no('bad')
+  if (!m || m.task !== 'hunt' || !(m.returnAt > t) || !m.back || !Object.values(m.back).some(n => (n ?? 0) > 0))
+    return no('locked')
+  if ((spotOf(w, map, a.i, t).until ?? 0) > t) return no('cooldown')
+  if (apOf(s, t) < AP_HUNT) return no('limit')
+  const from = marchAt(m, t) ?? s.seat
+  const r = from && route(map.atlas, from, p, map.phase)
+  if (!r) return no('far')
+  const next: March = {
+    ...m,
+    army: compact(m.back),
+    target: { kind: 'spot', i: a.i },
+    spot: p.kind,
+    startAt: t,
+    arriveAt: t + routeMs(s, r.len),
+    returnAt: 0,
+    path: r.path,
+    back: undefined,
+    report: undefined,
+    chain: true,
+  }
+  return { ok: true, world: w, changed: new Map([[pid, withMarch(spendAp(s, t, AP_HUNT), next)]]) }
 }
 
 function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type: 'go' }>): WorldResult {
