@@ -84,7 +84,7 @@ def icons():
 
 def emblems():
   for name, im in sheets(P.EMBLEM_SHEETS, 'emblem figures for round medallions', P.EMBLEM_NOTE).items():
-    X.save(f'emblem:{name}', X.fit_square(im, 160, 0.02), 'emblem', tex=True)  # medal() vẽ lên đĩa: cần nạp sẵn
+    X.save(f'emblem:{name}', X.fit_square(im, 128, 0.02), 'emblem', tex=True)  # medal() vẽ lên đĩa: nằm trong gói boot; 128 px đủ cho huy hiệu to nhất (logo 104 px CSS)
 
 def masks():
   for name, im in sheets(P.MASK_SHEETS, 'UI glyph icons', P.MASK_NOTE).items():
@@ -127,9 +127,10 @@ def skins():
     k = X.raw(f'skin-{n}') + '.png'
     X.key_magenta(X.raw(f'skin-{n}'), k)
     base = Image.open(os.path.join(X.WORK, 'skins', f'{n}.png')).convert('RGBA')
-    out = X.fit_trace(k, pads[n][2], base)  # alpha của bản code: đúng đường bao
+    # 2 px ảnh mỗi px CSS (bản code S=2 → k=1): da nằm trong gói boot (đợi trước khi hiện game), 3x nặng gấp đôi mà viền mực mềm không nét hơn
+    out = X.fit_trace(k, pads[n][2], base, 1.0)  # alpha của bản code: đúng đường bao
     m = meta[n]
-    px = m['S'] * 1.5  # px ảnh mỗi px CSS
+    px = m['S'] * 1.0  # px ảnh mỗi px CSS
     extra = {}
     if m.get('slice') and any(m['slice']):
       extra = {'slice': [round(v * px) for v in m['slice']], 'width': m['slice'], 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
@@ -205,9 +206,10 @@ def fields():
 def paper():
   run([('paper', P.PAPER, [], '1:1', '1K')])
   if not os.path.exists(X.raw('paper')): return
-  a = np.asarray(Image.open(X.raw('paper')).convert('RGB').resize((384, 384), Image.LANCZOS), np.float32)
-  rolled = np.roll(a, (192, 192), (0, 1))  # mép của bản cuộn liền nhau khi lát
-  d = np.minimum.outer(np.minimum(np.arange(384), 383 - np.arange(384)), np.minimum(np.arange(384), 383 - np.arange(384))) / 192
+  N = 256  # lát 128 px CSS (theme.css background-size) ở 2x
+  a = np.asarray(Image.open(X.raw('paper')).convert('RGB').resize((N, N), Image.LANCZOS), np.float32)
+  rolled = np.roll(a, (N // 2, N // 2), (0, 1))  # mép của bản cuộn liền nhau khi lát
+  d = np.minimum.outer(np.minimum(np.arange(N), N - 1 - np.arange(N)), np.minimum(np.arange(N), N - 1 - np.arange(N))) / (N // 2)
   wgt = np.clip(d * 2, 0, 1)[..., None]  # giữa lấy bản gốc (che đường nối giữa của bản cuộn), mép lấy bản cuộn
   X.save('skin:paper', Image.fromarray((a * wgt + rolled * (1 - wgt)).astype(np.uint8)).convert('RGBA'), 'skin')
 
@@ -217,8 +219,8 @@ def strokes():
   k = X.raw('sheet-strokes') + '.png'
   X.key_magenta(X.raw('sheet-strokes'), k)
   for name, im in X.cut_sheet(k, P.STROKES).items():
-    # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 480×42 (bản code 320×28 ở 2x); vết mực: vuông
-    X.save(f'skin:{name}', X.fit_square(im, 384, 0.01) if name == 'blot' else im.resize((480, 42), X.Image.LANCZOS), 'skin')
+    # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 320×28 (như bản code, 2x); vết mực: vuông
+    X.save(f'skin:{name}', X.fit_square(im, 256, 0.01) if name == 'blot' else im.resize((320, 28), X.Image.LANCZOS), 'skin')
 
 GROUPS = {'pack': X.pack_all, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}

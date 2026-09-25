@@ -2,6 +2,7 @@
 // LRU 9 mảnh — tổng GPU ≲ 50 MB), huy hiệu tông môn / điểm / cổng (mỗi loại một texture → ít draw call), đường và cờ hành quân
 // nội suy theo giờ server. Camera do WorldView điều khiển; cảnh chỉ vẽ theo camera được đưa vào.
 import { Container, Graphics, Sprite, Texture } from 'pixi.js'
+import { marchAt } from './path'
 import {
   MAP_W,
   atlas,
@@ -126,26 +127,6 @@ const ringTex = (color: string) =>
     return c
   })
 
-// Điểm trên đường theo quãng k (0..1), chia theo độ dài
-function along(path: Pos[], k: number): Pos {
-  const seg = path.slice(1).map((p, i) => Math.hypot(p.x - path[i].x, p.y - path[i].y))
-  let left = Math.max(0, Math.min(1, k)) * seg.reduce((a, b) => a + b, 0)
-  for (let i = 0; i < seg.length; i++) {
-    if (left <= seg[i] || i === seg.length - 1) {
-      const u = seg[i] ? Math.min(1, left / seg[i]) : 0
-      return { x: path[i].x + (path[i + 1].x - path[i].x) * u, y: path[i].y + (path[i + 1].y - path[i].y) * u }
-    }
-    left -= seg[i]
-  }
-  return path[0]
-}
-// Vị trí đội lúc now: đi (startAt → arriveAt), về theo đường ngược (arriveAt → returnAt); chưa hẹn giờ về thì ở đích
-export function marchAt(m: MapMarch, now: number): Pos {
-  if (now < m.arriveAt) return along(m.path, (now - m.startAt) / Math.max(1, m.arriveAt - m.startAt))
-  if (!m.returnAt) return m.path[m.path.length - 1]
-  return along(m.path, 1 - (now - m.arriveAt) / Math.max(1, m.returnAt - m.arriveAt))
-}
-
 export class WorldScene {
   readonly root = new Container()
   readonly atlas: Atlas
@@ -212,6 +193,8 @@ export class WorldScene {
       if (p.kind === 'gate') add(p, 'tower', p.lv <= phase ? 'jade' : 'ink', 0.7, p.lv <= phase ? 1 : 0.6, 0.3)
       else if (p.kind === 'vein') add(p, 'lotus', sp?.own ? 'jade' : 'realm', 0.8, 1, 0.22)
       else if (p.kind === 'mine') add(p, 'earth', 'gold', 0.7, sp?.until && sp.until > now ? 0.4 : 1, 0.34)
+      else if (p.kind === 'boss' && sp?.loharUntil)
+        add(p, 'dragon', 'red', 1.5) // Yêu Vương Tuần Sơn (người chơi triệu hồi): huy hiệu son, to hơn
       else if (p.kind === 'boss')
         add(p, 'dragon', 'beast', p.lv === 3 ? 1.3 : 1.05, sp?.until && sp.until > now ? 0.4 : 1)
       else if (p.kind === 'wild')

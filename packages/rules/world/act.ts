@@ -3,6 +3,7 @@
 import { no, type Pick } from '../core/action.ts'
 import { obj } from '../core/parse.ts'
 import { advance } from '../core/time.ts'
+import { secluded } from '../sect/seclude.ts'
 import { allianceActions, type AllianceAction } from './alliance.ts'
 import {
   freshWorld,
@@ -30,6 +31,7 @@ import { groupActions, type GroupAction } from './groups.ts'
 import { robActions, type RobAction } from './rob.ts'
 import { bookActions, type BookAction } from './book.ts'
 import { thoiActions, type ThoiAction } from './thoi.ts'
+import { loharActions, type LoharAction } from './lohar.ts'
 
 export type WorldAction =
   | RaidAction
@@ -50,6 +52,7 @@ export type WorldAction =
   | RobAction
   | BookAction
   | ThoiAction
+  | LoharAction
 
 const WORLD: WorldActions<WorldAction> = {
   ...raidActions,
@@ -70,6 +73,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...robActions,
   ...bookActions,
   ...thoiActions,
+  ...loharActions,
 }
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 
@@ -92,5 +96,7 @@ export function worldAct(
   if (!a) return no('bad')
   const me = ps.get(pid)
   if (!me) return no('gone')
-  return (WORLD[a.type].run as WorldRun<WorldAction>)({ ps, w, pid, s: advance(me, now), now, seed, map }, a)
+  const s = advance(me, now)
+  if (secluded(s)) return no('secluded') // Bế Quan Lệnh: đang bế quan thì không làm gì với giới
+  return (WORLD[a.type].run as WorldRun<WorldAction>)({ ps, w, pid, s, now, seed, map }, a)
 }

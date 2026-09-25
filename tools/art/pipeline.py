@@ -218,7 +218,8 @@ def fit_trace(painted_src, box, proc_im, k=1.5):
 # ít lượt tải, Pixi gộp được lượt vẽ. File lẻ vẫn giữ (ảnh HTML như panel:* dùng file lẻ; lần gói sau đọc lại từ đây).
 PACKS = [  # (gói, key) — mục đầu tiên khớp thì lấy; không khớp: không gói, trình duyệt tự tải khi cần (icon, chân dung…)
   ('boot', r'^(skin|emblem):'),  # giao diện nào cũng dùng: da, hình chạm huy hiệu (huy hiệu nướng lên canvas ngay khi hiện)
-  ('home', r'^(bld|peak|ledge|stair|far\d|pine|rock|bamboo|blossom|lantern|sun|moon|crane|bird|fly|pearl|walker|worker|disciple|flag|scaffold)(:|$)'),
+  *[(f'bld{t}', rf'^bld:\w+:{t}:') for t in range(1, 6)],  # công trình theo bậc: cảnh núi chỉ đợi các bậc đang hiện (Home.svelte)
+  ('home', r'^(peak|ledge|stair|far\d|pine|rock|bamboo|blossom|lantern|sun|moon|crane|bird|fly|pearl|walker|worker|disciple|flag|scaffold)(:|$)'),
   ('map', r'^(map|march)(:|$)'),
   ('world', r'^wtoken$'),
   ('battle', r'^(sold|beast|field):'),

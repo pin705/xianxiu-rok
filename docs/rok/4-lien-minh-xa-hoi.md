@@ -896,7 +896,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | H1 | Vua và Lost Temple | ✅ Giới Chủ (minh chủ giữ Thiên Môn) | P1 | M |
 | H2 | Title vương quốc buff/debuff | ✅ sắc phong 4 phúc / 4 hoạ, giữ 24 giờ | P1 | M |
 | H3 | Buff vương quốc, quà của vua | ✅ ban phúc cả giới mỗi ngày + Thiên Ân lễ | P2 | S |
-| H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | ❌ (Bế Quan Lệnh đáng làm) | P2 (P1 cho Bế Quan) | M |
+| H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | 🟡 Bế Quan Lệnh (`sect/seclude.ts`); chưa có kỹ năng vua / nhập cư | P2 (P1 cho Bế Quan) | M |
 | H5 | NAP, luật cộng đồng → minh ước | ✅ minh ước bất xâm phạm (đề nghị / nhận / huỷ) | P1 | S–M |
 | H6 | Di cư, bảng tuyển mộ | ⛔ di cư; bảng tuyển trong giới làm được | P2 | S |
 | H7 | Bảo vệ và dịch chuyển tân thủ | ✅ khiên 72 giờ, PvP từ tầng 6, sàn lực chiến 50% | — | — |

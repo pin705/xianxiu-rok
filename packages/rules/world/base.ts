@@ -123,6 +123,7 @@ export type Spot = {
   until?: number
   hp?: number
   dmg?: Record<number, number>
+  lohar?: { by: number; until: number } // Yêu Vương Tuần Sơn: ai triệu hồi, tới lúc nào
 }
 // Kết trận: người trong minh góp đội, mọi đội tới cùng lúc `at` rồi đánh như một bên — điểm i (chiếm / đánh yêu vương),
 // hay tông môn người chơi i (công sơn, foe: tên lúc mở)

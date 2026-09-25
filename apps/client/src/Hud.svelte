@@ -336,6 +336,16 @@
         </li>
       {/each}
     </ul>
+    <!-- Bế Quan Lệnh: đang bế quan — nói rõ vì sao không làm được gì, xuất quan ngay tại đây -->
+    {#if game.seclude && game.seclude.until > now}
+      <div class="alarm calm" role="status">
+        <Icon name="shield" size={18} />
+        <span class="grow"
+          ><b>{L.seclude.on(clock(game.seclude.until - now))}</b><br /><small>{L.seclude.onHint}</small></span
+        >
+        <button class="shieldup" onclick={() => g.act({ type: 'unseclude' }, 'tap')}>{L.seclude.off}</button>
+      </div>
+    {/if}
     <!-- Tháp canh (như RoK): đội địch đang kéo tới — thẻ son ở mọi tab, bật khiên ngay tại đây -->
     {#each incoming as x (`${x.pid}:${x.id}`)}
       {@const digger = game.marches.find(
@@ -655,6 +665,11 @@
     border: 1.5px solid var(--gold-l);
     border-radius: 10px;
     animation: alarm 1.2s var(--ease) infinite;
+  }
+  /* bế quan: dải lam lục yên tĩnh, không nhấp nháy như báo động */
+  .alarm.calm {
+    background: color-mix(in srgb, var(--jade, #3f7f6f) 85%, var(--ink));
+    animation: none;
   }
   .alarm small {
     opacity: 0.85;

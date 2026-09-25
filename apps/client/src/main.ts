@@ -1,6 +1,6 @@
 import { mount } from 'svelte'
 import App from './App.svelte'
-import { setArt, type ArtManifest } from '@rok/art'
+import { artPack, artPacks, setArt, type ArtManifest } from '@rok/art'
 import { LOCALE_IDS, loadText } from '@rok/i18n'
 import { DIR, L, LANG, isMusicOn } from './lib'
 import { startMusic } from './music'
@@ -14,39 +14,31 @@ document.title = L.game
 // Trình duyệt chỉ cho phát tiếng sau lần chạm đầu tiên
 addEventListener('pointerdown', () => isMusicOn() && startMusic(), { once: true })
 
-// Tranh vẽ tay thay hình vẽ bằng code: public/art/manifest.json (key → ảnh, xem @rok/art art.ts); thiếu file thì vẽ code như cũ.
-// ?art=0 tắt để chụp so sánh trước/sau. Chỉ giải mã sẵn texture cảnh (tex) — Pixi cần ảnh có ngay; ảnh HTML/CSS trình duyệt tự tải.
-// ponytail: mọi texture nạp một lượt lúc mở game — nhiều cảnh nặng thì chuyển sang nạp theo cảnh.
+// Tranh vẽ tay (public/art/manifest.json, xem @rok/art art.ts), nạp theo gói như bundle của engine: chỉ đợi gói 'boot'
+// (da giao diện, hình chạm huy hiệu) rồi hiện game; cảnh nào đợi gói của cảnh đó (mountScene), gói còn lại tải nền sau.
+// ?art=0 tắt tranh để chụp so sánh trước/sau.
 async function loadArt() {
   if (new URLSearchParams(location.search).get('art') === '0') return
   const base = new URL('./art/', location.href)
   const m: ArtManifest = await fetch(new URL('manifest.json', base))
     .then(r => (r.ok ? r.json() : {}))
     .catch(() => ({}))
-  await Promise.all(
-    Object.entries(m).map(([k, e]) => {
-      e.src = new URL(e.src, base).href
-      if (!e.tex) return
-      // chờ load chứ không chờ decode(): trang đang ở tab nền thì Chrome hoãn decode — game không bao giờ mount (trang trắng)
-      const img = new Image()
-      const ready = new Promise<void>(ok => {
-        img.onload = () => ok(void (e.img = img))
-        img.onerror = () => {
-          console.warn('art: không mở được', e.src)
-          delete m[k]
-          ok()
-        }
-      })
-      img.src = e.src
-      return ready
-    }),
-  )
+  for (const e of Object.values(m)) {
+    e.src = new URL(e.src, base).href
+    if (e.page) e.page = new URL(e.page, base).href
+  }
   setArt(m)
+  await artPack('boot')
 }
+// thứ tự tải nền: cảnh núi (vào game là thấy) trước, trận sau cùng
+const FIRST = ['home', 'bld1', 'bld2', 'bld3', 'map', 'bld4', 'bld5', 'world', 'battle']
 
 await loadArt()
 await applyTheme()
 mount(App, { target: document.getElementById('app')! })
+void (async () => {
+  for (const p of new Set([...FIRST, ...artPacks()])) await artPack(p) // lần lượt: không tranh băng thông với gói cảnh đang đợi
+})()
 
 // PWA: mở nhanh từ bộ nhớ sau lần tải đầu (chơi thì cần mạng: server là trọng tài). Bản dev không đăng ký để khỏi dính cache cũ.
 // Mỗi bản build một tên cache (sw.js đọc từ ?v=), bản mới kích hoạt thì xoá cache của bản cũ.

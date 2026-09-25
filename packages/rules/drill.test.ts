@@ -12,6 +12,7 @@ import {
   QUIZ_KEY,
   MAX_LEVEL,
   SIDE_GIFTS,
+  SECLUDE_COOL,
   STRATS,
   STRAT_HALL,
   apply,
@@ -21,6 +22,7 @@ import {
   guestGift,
   newGame,
   quizOf,
+  secluded,
   sideAt,
   sideGoal,
   sideReady,
@@ -29,6 +31,7 @@ import {
   type State,
 } from './index.ts'
 import { might } from './combat.ts'
+import { worldAct } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
 function sect(): State {
@@ -185,4 +188,28 @@ test('Tông vụ: 4 dòng, mỗi dòng một việc; nhận từng việc thì h
   // thắng trận / tuyển đệ tử: đọc bộ đếm tích luỹ
   s = { ...s, stats: { ...s.stats, won: 5, trained: 100 } }
   assert.equal(sideReady(s), 2)
+})
+
+test('Bế Quan Lệnh: không ai cướp được, tông môn chỉ nhận thư / xuất quan; phải gọi đội về; xuất quan trả khiên cũ, hồi 3 ngày', () => {
+  const s0 = { ...sect(), shield: 0 }
+  const t = s0.time
+  assert.deepEqual(run({ ...s0, frenzy: t + 60_000 }, { type: 'seclude', days: 3 }), { ok: false, error: 'frenzy' })
+  assert.deepEqual(run(s0, { type: 'seclude', days: 5 }), { ok: false, error: 'bad' }, 'chỉ 3 / 7 / 14 ngày')
+  const r = run(s0, { type: 'seclude', days: 3 })
+  assert.ok(r.ok)
+  const s = r.state
+  assert.ok(s.shield >= t + 3 * DAY && secluded(s), 'khiên tới hết hạn bế quan')
+  assert.deepEqual(
+    run(s, { type: 'upgrade', building: 'linhDien' }),
+    { ok: false, error: 'secluded' },
+    'không làm gì được',
+  )
+  assert.equal(run(s, { type: 'login' }).ok, true, 'điểm danh vẫn được')
+  const w = worldAct(new Map([[1, s]]), 1, { type: 'helpAll' }, t, 1)
+  assert.deepEqual(w, { ok: false, error: 'secluded' }, 'không làm gì với giới')
+  const out = run(s, { type: 'unseclude' })
+  assert.ok(out.ok && out.state.shield === 0 && !secluded(out.state), 'xuất quan: trả khiên cũ')
+  assert.deepEqual(run(out.state, { type: 'seclude', days: 3 }), { ok: false, error: 'cooldown' })
+  assert.ok(apply(out.state, { type: 'seclude', days: 7 }, t + SECLUDE_COOL + 1).ok, 'hết hồi thì bế quan lại được')
+  assert.ok(!secluded({ ...s, time: t + 3 * DAY + 1 }), 'hết hạn thì tự xuất quan')
 })

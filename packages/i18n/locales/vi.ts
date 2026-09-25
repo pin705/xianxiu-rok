@@ -33,6 +33,9 @@ import {
   ROB_SHARE,
   EVE_BUFF,
   EVE_CHEST_N,
+  LOHAR_BONES,
+  LOHAR_HP,
+  LOHAR_WILD,
   LEGION_WAVES,
   LEGION_HOUR,
   LEGION_GIFTS,
@@ -649,6 +652,14 @@ export const vi = {
     gifts: 'Mốc thắng',
     at: (n: number) => `${n} trận`,
     fightN: (n: number) => `Luận võ · trận ${n}`,
+  },
+  // Yêu Vương Tuần Sơn: yêu cốt từ yêu thú giới, triệu hồi yêu vương bản mạnh
+  lohar: {
+    name: 'Yêu Vương Tuần Sơn',
+    by: (who: string, t: string) => `Do ${who} triệu hồi · còn ${t}`,
+    bones: (n: number) => `Yêu cốt ${n}/${LOHAR_BONES}`,
+    summon: 'Triệu hồi Tuần Sơn',
+    hint: `Yêu thú giới cấp ${LOHAR_WILD}+ rơi yêu cốt. Đủ ${LOHAR_BONES} thì biến yêu vương này thành bản Tuần Sơn (máu ×${LOHAR_HP}, 2 giờ) — kết trận hạ được thì quà lớn chia theo sát thương, người triệu hồi thêm một phần.`,
   },
   // Thiên Thời: mỗi 4 ngày một thời ngũ hành, tăng ích chung + chỉ lệnh riêng
   thoi: {
@@ -1475,6 +1486,10 @@ export const vi = {
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
       ],
+      lohar: (share: number, summoner: 0 | 1): [string, string] => [
+        'Hạ Yêu Vương Tuần Sơn',
+        `Yêu vương tuần sơn đã ngã — bạn góp ${share} % sát thương.${summoner ? ' Người triệu hồi được thêm một phần quà.' : ''} Quà Tuần Sơn ở dưới.`,
+      ],
       eveTop: (rank: number, pts: number): [string, string] => [
         `Khai Giới Trảm Tà · minh hạng ${rank}`,
         `Cổng giới đã mở. Tiên minh đứng hạng ${rank} giới vận với ${pts.toLocaleString('vi')} tàn quyển — cả minh được sản lượng +${pct(EVE_BUFF)} trong 24 giờ.`,
@@ -1786,6 +1801,15 @@ export const vi = {
     credits: 'Font Alegreya, Ma Shan Zheng — giấy phép SIL OFL. Hình vẽ tay sinh bằng mã.',
     open: 'Cài đặt',
   },
+  // Bế Quan Lệnh: nghỉ dài ngày — không ai cướp được, tông môn cũng không làm gì được
+  seclude: {
+    title: 'Bế quan',
+    hint: 'Đi xa dài ngày? Bế quan thì không ai cướp được tông môn, nhưng cũng chỉ nhận thư được — xuất quan lúc nào cũng được, rồi 3 ngày sau mới bế quan lại. Cần gọi mọi đội về trước.',
+    go: (d: number) => `Bế quan ${d} ngày`,
+    on: (t: string) => `Đang bế quan · còn ${t}`,
+    onHint: 'Không ai cướp được tông môn. Xuất quan để làm việc lại.',
+    off: 'Xuất quan',
+  },
 
   away: {
     title: 'Xuất quan',
@@ -1938,6 +1962,7 @@ export const vi = {
     far: 'Chưa có đường tới đó — cổng giữa các vùng chưa mở',
     cap: 'Quá trận dung của trưởng lão — bớt đệ tử hoặc chọn trưởng lão cấp cao hơn',
     frenzy: 'Sát khí chưa tan — vừa xuất quân cướp nên chưa bật được Hộ Sơn Phù',
+    secluded: 'Đang bế quan — xuất quan rồi mới làm được việc này',
   } as Record<string, string>,
   net: {
     connecting: 'Đang kết nối…',

@@ -32,6 +32,7 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
    ```
    Chạy từng nhóm một, không chạy song song (các lệnh cùng ghi `manifest.json`). Ảnh thô nằm ở `tools/art/.work/raw/` (không commit). Muốn vẽ lại một món thì xoá ảnh thô của nó rồi chạy lại.
    Lệnh tắt: `npm run art -- <nhóm> …`, `npm run art:export -- --player art`, `npm run art:spec`.
+   Sau khi vẽ hay ghép bất cứ nhóm nào, chạy `make.py pack` để chia lại gói và dựng lại atlas (xem mục dưới).
 3. **Xem**: chạy game bình thường và mở thêm `?art=0` để so. Chạy `node tools/art/spec.ts` để cập nhật tiến độ.
 4. **Commit** `apps/client/public/art/` (ảnh + `manifest.json`), `tools/art/keys.json`, `docs/ART_SPEC.md`.
 
@@ -54,6 +55,21 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
 | `fields [cảnh…]` | `field:<cảnh>` | Bản `wild` vẽ đè từ bản vẽ code, các cảnh khác sửa từ bản `wild`; game phủ kín sân mọi cỡ màn. | bản vẽ code + `style.jpg` |
 | `paper`, `strokes` | `skin:paper`, `skin:stroke*`, `skin:blot` | Vân giấy lát liền; nét cọ cắt từ bảng. | `icons.jpg` |
 
+## Gói theo cảnh và atlas
+
+Game nạp tranh như bundle của Godot hay LayaAir. `make.py pack` gán mỗi mục manifest một `pack` theo bảng `PACKS` trong `pipeline.py`. Texture của mỗi gói được gom vào vài trang atlas 2048² (`atlas/<gói>-<n>.webp`, mỗi mục ghi `page` và `frame`); file lẻ vẫn giữ để ảnh HTML dùng và để lần gói sau đọc lại.
+
+| Gói | Có gì | Khi nào nạp |
+| --- | --- | --- |
+| `boot` | da giao diện, hình chạm huy hiệu | trước khi hiện game (giao diện nào cũng dùng) |
+| `home`, `bld1`…`bld5` | núi, đồ trang trí; công trình theo bậc | cảnh núi đợi `home` cộng các bậc đang có; màn tiêu đề đợi `home` và hiện vạch tiến độ |
+| `map`, `world`, `battle` | bản đồ vùng; token bản đồ giới; quân, yêu thú, sân trận | cảnh nào đợi gói đó (`mountScene({ art })`) |
+| (không gói) | icon, chân dung, icon thao tác, `panel:*` | trình duyệt tự tải khi hiện |
+
+Sau khi hiện game, các gói còn lại tải nền lần lượt (`main.ts`). Texture thuộc gói chưa về thì game tạm vẽ bằng code và gọi tải gói; lần vẽ sau khi gói về sẽ tự đổi sang tranh (`stage.ts` `painted`).
+
+Đo trên 4G giả lập (4 Mbps, trễ 150 ms, 390×844): bản nạp một lượt (trước 26/9) hiện game sau 12,5 giây, tải 4,8 MB trước khi hiện. Bản theo gói hiện game sau 5,9 giây, trong đó tranh chỉ khoảng 0,7 MB (còn lại là JS, CSS, font).
+
 ## Phong cách và công thức
 
 - **Hướng 6 — thủy mặc, model Nano Banana Pro** (`nbp`, khoảng 150đ/ảnh, 3 ảnh mẫu, ~3 ảnh/phút). Đoạn mô tả phong cách chung là `INK` trong `prompts.py`. Bản GPT-Image (nền trong suốt sẵn) đã bị loại vì ra chất AI bóng, chi tiết li ti, không khớp nền giấy.
@@ -74,7 +90,8 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
 | `apps/client/src/world/stage.ts` `painted` | texture Pixi: neo theo hộp bản vẽ code, cỡ theo ảnh (`tex: true` để bộ nạp tải sẵn) |
 | `packages/art/emblems.ts` `medal` | hình chạm `emblem:*` vẽ lên đĩa màu code |
 | `apps/client/src/world/battle/field.ts` | `field:<cảnh>` phủ kín sân, `beast:<hệ>` + tint |
-| `apps/client/src/main.ts` `loadArt` | đọc manifest, nạp sẵn các mục `tex` |
+| `apps/client/src/main.ts` `loadArt` | đọc manifest, đợi gói `boot`, sau khi hiện game thì tải nền các gói còn lại |
+| `packages/art/art.ts` `artPack` | nạp một gói (ảnh hoặc trang atlas), tiến độ cho màn tiêu đề (`onArtProgress`) |
 
 ## Thêm món mới
 

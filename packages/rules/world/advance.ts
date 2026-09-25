@@ -25,6 +25,7 @@ import { ruinClose } from './ruins.ts'
 import { storeStep } from './storehouse.ts'
 import { tribeStep } from './tribe.ts'
 import { eveStep } from './eve.ts'
+import { loharStep } from './lohar.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
@@ -146,6 +147,7 @@ const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
         (x: World) => ruinClose(view(), x, map, now),
         (x: World) => ({ changed: new Map(), world: storeStep(view(), x, map, now) }),
         (x: World) => eveStep(view(), x, map, now),
+        (x: World) => ({ changed: new Map(), world: loharStep(x, map, now) }),
       ]
     : []),
   x => tribeStep(view(), x, now),

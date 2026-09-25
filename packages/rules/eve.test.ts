@@ -6,6 +6,13 @@ import {
   EVE_CHEST_N,
   EVE_TOP,
   REPAIR_HONOR,
+  BOSSES,
+  LOHAR_BONES,
+  LOHAR_GIFT,
+  LOHAR_HP,
+  LOHAR_TIME,
+  LOHAR_WILD,
+  boneOf,
   THOI,
   THOI_DAYS,
   thoiAt,
@@ -22,6 +29,7 @@ import {
   eveBuffs,
   eveStep,
   freshWorld,
+  loharStep,
   mapOf,
   worldAct,
   worldBuffs,
@@ -149,4 +157,57 @@ test('Thiên Thời: 4 ngày một thời ngũ hành, tăng ích chung cả gi�
     want,
   )
   assert.equal(worldBuffs(ps, w, { atlas: a, phase: 1 }, T0).get(1), undefined, 'sim không có ngày mùa: không đổi gì')
+})
+
+test('Yêu Vương Tuần Sơn: yêu thú giới cấp cao rơi yêu cốt; đủ thì triệu hồi yêu vương bản mạnh; hạ được có quà thêm; hết giờ thì trở lại', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const r0 = a.regions.find(r => r.ring === 0)!
+  const boss = a.points.find(p => p.kind === 'boss' && p.region === r0.i)!
+  assert.deepEqual([boneOf(5), boneOf(LOHAR_WILD), boneOf(11)], [0, 1, 2])
+  const s0 = { ...sect('Triệu Yêu', { x: boss.x + 2, y: boss.y }), bones: LOHAR_BONES - 1 }
+  const ps: Players = new Map([[1, s0]])
+  let w = freshWorld()
+  const summon = () => worldAct(ps, 1, { type: 'summon', i: boss.i }, T0, 1, map, w)
+  assert.deepEqual(summon(), { ok: false, error: 'not_enough' })
+  ps.set(1, { ...s0, bones: LOHAR_BONES + 1 })
+  assert.deepEqual(
+    worldAct(ps, 1, { type: 'summon', i: a.points.find(p => p.kind === 'mine')!.i }, T0, 1, map, w),
+    { ok: false, error: 'bad' },
+    'chỉ yêu vương',
+  )
+  const r = summon()
+  assert.ok(r.ok)
+  ps.set(1, r.changed.get(1)!)
+  w = r.world
+  assert.equal(ps.get(1)!.bones, 1)
+  assert.equal(w.spots[boss.i].hp, BOSSES[boss.lv]!.str * LOHAR_HP, 'máu gấp đôi')
+  assert.deepEqual(summon(), { ok: false, error: 'busy' }, 'một lần một Tuần Sơn')
+  assert.equal(mapOf(ps, T0, new Set(), [], w).spots.find(x => x.i === boss.i)?.lohar, 'Triệu Yêu')
+
+  // hạ khi còn chút máu: quà thường + quà Tuần Sơn, người triệu hồi thêm phần
+  w = { ...w, spots: { ...w.spots, [boss.i]: { ...w.spots[boss.i], hp: 1 } } }
+  const go = worldAct(
+    ps,
+    1,
+    { type: 'go', i: boss.i, task: 'hit', elder: 'thanhPhong', army: { kiem3: 1000 } },
+    T0,
+    1,
+    map,
+    w,
+  )
+  assert.ok(go.ok)
+  for (const [k, v] of go.changed) ps.set(k, v)
+  const done = advanceAll(ps, go.world, ps.get(1)!.marches[0].arriveAt, map)
+  const mails = done.changed.get(1)!.mail.map(m => m.k)
+  assert.ok(mails.includes('boss') && mails.includes('lohar'), `thư: ${mails}`)
+  const lohar = done.changed.get(1)!.mail.find(m => m.k === 'lohar')!
+  assert.deepEqual(lohar.a, [100, 1])
+  assert.ok((lohar.gift?.items?.kimDuyen ?? 0) >= (LOHAR_GIFT.items?.kimDuyen ?? 0) + 1, 'người triệu hồi thêm phần')
+  assert.equal(done.world.spots[boss.i].lohar, undefined, 'hạ rồi: yêu vương hồi như thường')
+
+  // hết giờ chưa hạ: trở lại yêu vương thường, máu không quá bản thường
+  const late = loharStep(w, map, T0 + LOHAR_TIME)
+  assert.equal(late.spots[boss.i].lohar, undefined)
+  assert.ok((late.spots[boss.i].hp ?? 0) <= BOSSES[boss.lv]!.str)
 })

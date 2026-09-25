@@ -27,7 +27,7 @@ export function paint(b: Battle) {
   pap.position.set(-200, -200)
   pap.tileScale.set(0.5)
   // tranh vẽ tay theo cảnh (manifest 'field:<cảnh>') phủ kín sân mọi cỡ màn; không có thì vẽ bằng code đúng cỡ
-  const drawn = artOf(`field:${b.theme}`)
+  const drawn = artOf(`field:${b.theme}`)?.img
   const bg = drawn
     ? painted(`field:${b.theme}`, () => battlefield(400, 866, b.theme))
     : painted(
@@ -110,7 +110,7 @@ export function squad(b: Battle, side: number, type: Troop, n0: number, x: numbe
     } else {
       // bậc 1–3 chung một dáng đệ tử
       // yêu thú vẽ tay: một dáng lông xám mỗi hệ (manifest 'beast:<hệ>'), tô màu loài bằng tint
-      const inked = kind === 'beast' && artOf(`beast:${type}`)
+      const inked = kind === 'beast' && !!artOf(`beast:${type}`)?.img
       const p =
         kind === 'man'
           ? painted(`sold:${type}:${side}:${Math.max(3, tier)}`, () => soldier(type, side === 1, tier))

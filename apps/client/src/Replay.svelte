@@ -79,6 +79,7 @@
     if (!rep || !host) return
     const unmount = mountScene({
       host,
+      art: ['battle'],
       make: () => {
         const k = cssPerDU()
         const skills: [Skill | undefined, Skill | undefined] = [

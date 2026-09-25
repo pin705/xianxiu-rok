@@ -3,15 +3,15 @@
     "src": "scene/bamboo-0.85-8.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1295, 824, 93, 138]
+    "page": "atlas/home-1.webp",
+    "frame": [487, 2, 93, 138]
   },
   "bamboo:0.8:4": {
     "src": "scene/bamboo-0.8-4.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1688, 824, 87, 130]
+    "page": "atlas/home-1.webp",
+    "frame": [880, 2, 87, 130]
   },
   "beast:kiem": {
     "src": "battle/beast-kiem.webp",
@@ -38,1219 +38,1069 @@
     "src": "scene/bird-down.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [755, 978, 36, 24]
+    "page": "atlas/home-1.webp",
+    "frame": [1868, 2, 36, 24]
   },
   "bird:up": {
     "src": "scene/bird-up.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [793, 978, 36, 24]
+    "page": "atlas/home-1.webp",
+    "frame": [1906, 2, 36, 24]
   },
   "bld:chuDien:1": {
     "src": "bld/bld-chuDien-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1624, 2, 396, 276]
+    "tex": true
   },
   "bld:chuDien:1:0": {
     "src": "bld/bld-chuDien-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1624, 2, 396, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [962, 2, 396, 276]
   },
   "bld:chuDien:2": {
     "src": "bld/bld-chuDien-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1242, 528, 396, 336]
+    "tex": true
   },
   "bld:chuDien:2:0": {
     "src": "bld/bld-chuDien-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1242, 528, 396, 336]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [262, 2, 396, 336]
   },
   "bld:chuDien:3": {
     "src": "bld/bld-chuDien-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [2, 902, 588, 336]
+    "tex": true
   },
   "bld:chuDien:3:0": {
     "src": "bld/bld-chuDien-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [2, 902, 588, 336]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [262, 2, 588, 336]
   },
   "bld:chuDien:4": {
     "src": "bld/bld-chuDien-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [592, 902, 588, 336]
+    "tex": true
   },
   "bld:chuDien:4:0": {
     "src": "bld/bld-chuDien-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [592, 902, 588, 336]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [262, 2, 588, 336]
   },
   "bld:chuDien:5": {
     "src": "bld/bld-chuDien-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [2, 528, 588, 372]
+    "tex": true
   },
   "bld:chuDien:5:0": {
     "src": "bld/bld-chuDien-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [2, 528, 588, 372]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [262, 2, 588, 372]
   },
   "bld:danPhong:1": {
     "src": "bld/bld-danPhong-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 1608, 378, 234]
+    "tex": true
   },
   "bld:danPhong:1:0": {
     "src": "bld/bld-danPhong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 1608, 378, 234]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [822, 298, 378, 234]
   },
   "bld:danPhong:2": {
     "src": "bld/bld-danPhong-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [382, 1608, 378, 234]
+    "tex": true
   },
   "bld:danPhong:2:0": {
     "src": "bld/bld-danPhong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [382, 1608, 378, 234]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [822, 352, 378, 234]
   },
   "bld:danPhong:3": {
     "src": "bld/bld-danPhong-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [762, 1608, 378, 234]
+    "tex": true
   },
   "bld:danPhong:3:0": {
     "src": "bld/bld-danPhong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [762, 1608, 378, 234]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [822, 412, 378, 234]
   },
   "bld:danPhong:4": {
     "src": "bld/bld-danPhong-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1142, 1608, 378, 234]
+    "tex": true
   },
   "bld:danPhong:4:0": {
     "src": "bld/bld-danPhong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1142, 1608, 378, 234]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [822, 412, 378, 234]
   },
   "bld:danPhong:5": {
     "src": "bld/bld-danPhong-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [400, 848, 378, 270]
+    "tex": true
   },
   "bld:danPhong:5:0": {
     "src": "bld/bld-danPhong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [400, 848, 378, 270]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [822, 448, 378, 270]
   },
   "bld:dienVoTruong:1": {
     "src": "bld/bld-dienVoTruong-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 292, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:1:1": {
     "src": "bld/bld-dienVoTruong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 292, 420, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:1:2": {
     "src": "bld/bld-dienVoTruong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 292, 420, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:1:3": {
     "src": "bld/bld-dienVoTruong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 292, 420, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:1:4": {
     "src": "bld/bld-dienVoTruong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 292, 420, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:1:5": {
     "src": "bld/bld-dienVoTruong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 292, 420, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:1:6": {
     "src": "bld/bld-dienVoTruong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 292, 420, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:2": {
     "src": "bld/bld-dienVoTruong-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 292, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:2:1": {
     "src": "bld/bld-dienVoTruong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 292, 420, 276]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:2:2": {
     "src": "bld/bld-dienVoTruong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 292, 420, 276]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:2:3": {
     "src": "bld/bld-dienVoTruong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 292, 420, 276]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:2:4": {
     "src": "bld/bld-dienVoTruong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 292, 420, 276]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:2:5": {
     "src": "bld/bld-dienVoTruong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 292, 420, 276]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:2:6": {
     "src": "bld/bld-dienVoTruong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 292, 420, 276]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1360, 2, 420, 276]
   },
   "bld:dienVoTruong:3": {
     "src": "bld/bld-dienVoTruong-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 292, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:3:1": {
     "src": "bld/bld-dienVoTruong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 292, 420, 276]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:3:2": {
     "src": "bld/bld-dienVoTruong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 292, 420, 276]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:3:3": {
     "src": "bld/bld-dienVoTruong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 292, 420, 276]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:3:4": {
     "src": "bld/bld-dienVoTruong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 292, 420, 276]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:3:5": {
     "src": "bld/bld-dienVoTruong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 292, 420, 276]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:3:6": {
     "src": "bld/bld-dienVoTruong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 292, 420, 276]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:4": {
     "src": "bld/bld-dienVoTruong-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 292, 420, 276]
+    "tex": true
   },
   "bld:dienVoTruong:4:1": {
     "src": "bld/bld-dienVoTruong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 292, 420, 276]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:4:2": {
     "src": "bld/bld-dienVoTruong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 292, 420, 276]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:4:3": {
     "src": "bld/bld-dienVoTruong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 292, 420, 276]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:4:4": {
     "src": "bld/bld-dienVoTruong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 292, 420, 276]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:4:5": {
     "src": "bld/bld-dienVoTruong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 292, 420, 276]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:4:6": {
     "src": "bld/bld-dienVoTruong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 292, 420, 276]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1552, 2, 420, 276]
   },
   "bld:dienVoTruong:5": {
     "src": "bld/bld-dienVoTruong-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [496, 1240, 420, 312]
+    "tex": true
   },
   "bld:dienVoTruong:5:1": {
     "src": "bld/bld-dienVoTruong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [496, 1240, 420, 312]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1552, 2, 420, 312]
   },
   "bld:dienVoTruong:5:2": {
     "src": "bld/bld-dienVoTruong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [496, 1240, 420, 312]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1552, 2, 420, 312]
   },
   "bld:dienVoTruong:5:3": {
     "src": "bld/bld-dienVoTruong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [496, 1240, 420, 312]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1552, 2, 420, 312]
   },
   "bld:dienVoTruong:5:4": {
     "src": "bld/bld-dienVoTruong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [496, 1240, 420, 312]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1552, 2, 420, 312]
   },
   "bld:dienVoTruong:5:5": {
     "src": "bld/bld-dienVoTruong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [496, 1240, 420, 312]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1552, 2, 420, 312]
   },
   "bld:dienVoTruong:5:6": {
     "src": "bld/bld-dienVoTruong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [496, 1240, 420, 312]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1552, 2, 420, 312]
   },
   "bld:hoSonDaiTran:1": {
     "src": "bld/bld-hoSonDaiTran-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 570, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:1:0": {
     "src": "bld/bld-hoSonDaiTran-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 570, 420, 276]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [2, 298, 420, 276]
   },
   "bld:hoSonDaiTran:2": {
     "src": "bld/bld-hoSonDaiTran-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 570, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:2:0": {
     "src": "bld/bld-hoSonDaiTran-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [424, 570, 420, 276]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [2, 352, 420, 276]
   },
   "bld:hoSonDaiTran:3": {
     "src": "bld/bld-hoSonDaiTran-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 570, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:3:0": {
     "src": "bld/bld-hoSonDaiTran-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [846, 570, 420, 276]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [2, 412, 420, 276]
   },
   "bld:hoSonDaiTran:4": {
     "src": "bld/bld-hoSonDaiTran-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 570, 420, 276]
+    "tex": true
   },
   "bld:hoSonDaiTran:4:0": {
     "src": "bld/bld-hoSonDaiTran-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1268, 570, 420, 276]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [2, 412, 420, 276]
   },
   "bld:hoSonDaiTran:5": {
     "src": "bld/bld-hoSonDaiTran-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [918, 1240, 420, 312]
+    "tex": true
   },
   "bld:hoSonDaiTran:5:0": {
     "src": "bld/bld-hoSonDaiTran-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [918, 1240, 420, 312]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [2, 448, 420, 312]
   },
   "bld:khoangMach:1": {
     "src": "bld/bld-khoangMach-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1340, 1240, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:1:0": {
     "src": "bld/bld-khoangMach-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1340, 1240, 408, 294]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [2, 2, 408, 294]
   },
   "bld:khoangMach:2": {
     "src": "bld/bld-khoangMach-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [2, 1566, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:2:0": {
     "src": "bld/bld-khoangMach-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [2, 1566, 408, 294]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [660, 2, 408, 294]
   },
   "bld:khoangMach:3": {
     "src": "bld/bld-khoangMach-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [412, 1566, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:3:0": {
     "src": "bld/bld-khoangMach-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [412, 1566, 408, 294]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [852, 2, 408, 294]
   },
   "bld:khoangMach:4": {
     "src": "bld/bld-khoangMach-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [822, 1566, 408, 294]
+    "tex": true
   },
   "bld:khoangMach:4:0": {
     "src": "bld/bld-khoangMach-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [822, 1566, 408, 294]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [852, 2, 408, 294]
   },
   "bld:khoangMach:5": {
     "src": "bld/bld-khoangMach-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1182, 902, 408, 330]
+    "tex": true
   },
   "bld:khoangMach:5:0": {
     "src": "bld/bld-khoangMach-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1182, 902, 408, 330]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [852, 2, 408, 330]
   },
   "bld:linhDien:1": {
     "src": "bld/bld-linhDien-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [720, 2, 432, 216]
+    "tex": true
   },
   "bld:linhDien:1:0": {
     "src": "bld/bld-linhDien-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [720, 2, 432, 216]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1202, 298, 432, 216]
   },
   "bld:linhDien:2": {
     "src": "bld/bld-linhDien-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1154, 2, 432, 216]
+    "tex": true
   },
   "bld:linhDien:2:0": {
     "src": "bld/bld-linhDien-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1154, 2, 432, 216]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1202, 352, 432, 216]
   },
   "bld:linhDien:3": {
     "src": "bld/bld-linhDien-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1588, 2, 432, 216]
+    "tex": true
   },
   "bld:linhDien:3:0": {
     "src": "bld/bld-linhDien-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1588, 2, 432, 216]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1202, 412, 432, 216]
   },
   "bld:linhDien:4": {
     "src": "bld/bld-linhDien-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 230, 432, 216]
+    "tex": true
   },
   "bld:linhDien:4:0": {
     "src": "bld/bld-linhDien-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 230, 432, 216]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1202, 412, 432, 216]
   },
   "bld:linhDien:5": {
     "src": "bld/bld-linhDien-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [780, 848, 432, 252]
+    "tex": true
   },
   "bld:linhDien:5:0": {
     "src": "bld/bld-linhDien-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [780, 848, 432, 252]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1202, 448, 432, 252]
   },
   "bld:luyenKhiPhong:1": {
     "src": "bld/bld-luyenKhiPhong-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 1126, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:1:0": {
     "src": "bld/bld-luyenKhiPhong-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 1126, 396, 240]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [424, 298, 396, 240]
   },
   "bld:luyenKhiPhong:2": {
     "src": "bld/bld-luyenKhiPhong-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [400, 1126, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:2:0": {
     "src": "bld/bld-luyenKhiPhong-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [400, 1126, 396, 240]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [424, 352, 396, 240]
   },
   "bld:luyenKhiPhong:3": {
     "src": "bld/bld-luyenKhiPhong-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [798, 1126, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:3:0": {
     "src": "bld/bld-luyenKhiPhong-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [798, 1126, 396, 240]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [424, 412, 396, 240]
   },
   "bld:luyenKhiPhong:4": {
     "src": "bld/bld-luyenKhiPhong-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1196, 1126, 396, 240]
+    "tex": true
   },
   "bld:luyenKhiPhong:4:0": {
     "src": "bld/bld-luyenKhiPhong-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1196, 1126, 396, 240]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [424, 412, 396, 240]
   },
   "bld:luyenKhiPhong:5": {
     "src": "bld/bld-luyenKhiPhong-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 848, 396, 276]
+    "tex": true
   },
   "bld:luyenKhiPhong:5:0": {
     "src": "bld/bld-luyenKhiPhong-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 848, 396, 276]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [424, 448, 396, 276]
   },
   "bld:tangBaoCac:1": {
     "src": "bld/bld-tangBaoCac-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1232, 1566, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:1:0": {
     "src": "bld/bld-tangBaoCac-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1232, 1566, 288, 288]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [412, 2, 288, 288]
   },
   "bld:tangBaoCac:2": {
     "src": "bld/bld-tangBaoCac-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1522, 1566, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:2:0": {
     "src": "bld/bld-tangBaoCac-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1522, 1566, 288, 288]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1070, 2, 288, 288]
   },
   "bld:tangBaoCac:3": {
     "src": "bld/bld-tangBaoCac-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 2, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:3:0": {
     "src": "bld/bld-tangBaoCac-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 2, 288, 288]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1262, 2, 288, 288]
   },
   "bld:tangBaoCac:4": {
     "src": "bld/bld-tangBaoCac-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [292, 2, 288, 288]
+    "tex": true
   },
   "bld:tangBaoCac:4:0": {
     "src": "bld/bld-tangBaoCac-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [292, 2, 288, 288]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1262, 2, 288, 288]
   },
   "bld:tangBaoCac:5": {
     "src": "bld/bld-tangBaoCac-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1592, 902, 288, 324]
+    "tex": true
   },
   "bld:tangBaoCac:5:0": {
     "src": "bld/bld-tangBaoCac-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1592, 902, 288, 324]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1262, 2, 288, 324]
   },
   "bld:tangKinhCac:1": {
     "src": "bld/bld-tangKinhCac-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [582, 2, 258, 288]
+    "tex": true
   },
   "bld:tangKinhCac:1:0": {
     "src": "bld/bld-tangKinhCac-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [582, 2, 258, 288]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [702, 2, 258, 288]
   },
   "bld:tangKinhCac:2": {
     "src": "bld/bld-tangKinhCac-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [982, 528, 258, 348]
+    "tex": true
   },
   "bld:tangKinhCac:2:0": {
     "src": "bld/bld-tangKinhCac-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [982, 528, 258, 348]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [2, 2, 258, 348]
   },
   "bld:tangKinhCac:3": {
     "src": "bld/bld-tangKinhCac-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [796, 2, 258, 408]
+    "tex": true
   },
   "bld:tangKinhCac:3:0": {
     "src": "bld/bld-tangKinhCac-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [796, 2, 258, 408]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [2, 2, 258, 408]
   },
   "bld:tangKinhCac:4": {
     "src": "bld/bld-tangKinhCac-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1056, 2, 258, 408]
+    "tex": true
   },
   "bld:tangKinhCac:4:0": {
     "src": "bld/bld-tangKinhCac-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [1056, 2, 258, 408]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [2, 2, 258, 408]
   },
   "bld:tangKinhCac:5": {
     "src": "bld/bld-tangKinhCac-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [536, 2, 258, 444]
+    "tex": true
   },
   "bld:tangKinhCac:5:0": {
     "src": "bld/bld-tangKinhCac-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-0.webp",
-    "frame": [536, 2, 258, 444]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [2, 2, 258, 444]
   },
   "bld:tuLinhTran:1": {
     "src": "bld/bld-tuLinhTran-1.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 654, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:1:0": {
     "src": "bld/bld-tuLinhTran-1.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 654, 360, 168]
+    "pack": "bld1",
+    "page": "atlas/bld1-0.webp",
+    "frame": [1636, 298, 360, 168]
   },
   "bld:tuLinhTran:2": {
     "src": "bld/bld-tuLinhTran-2.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [364, 654, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:2:0": {
     "src": "bld/bld-tuLinhTran-2.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [364, 654, 360, 168]
+    "pack": "bld2",
+    "page": "atlas/bld2-0.webp",
+    "frame": [1636, 352, 360, 168]
   },
   "bld:tuLinhTran:3": {
     "src": "bld/bld-tuLinhTran-3.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [726, 654, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:3:0": {
     "src": "bld/bld-tuLinhTran-3.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [726, 654, 360, 168]
+    "pack": "bld3",
+    "page": "atlas/bld3-0.webp",
+    "frame": [1636, 412, 360, 168]
   },
   "bld:tuLinhTran:4": {
     "src": "bld/bld-tuLinhTran-4.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1088, 654, 360, 168]
+    "tex": true
   },
   "bld:tuLinhTran:4:0": {
     "src": "bld/bld-tuLinhTran-4.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1088, 654, 360, 168]
+    "pack": "bld4",
+    "page": "atlas/bld4-0.webp",
+    "frame": [1636, 412, 360, 168]
   },
   "bld:tuLinhTran:5": {
     "src": "bld/bld-tuLinhTran-5.webp",
-    "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1585, 230, 360, 204]
+    "tex": true
   },
   "bld:tuLinhTran:5:0": {
     "src": "bld/bld-tuLinhTran-5.webp",
     "tex": true,
-    "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1585, 230, 360, 204]
+    "pack": "bld5",
+    "page": "atlas/bld5-0.webp",
+    "frame": [1636, 448, 360, 204]
   },
   "blossom:0.8:7": {
     "src": "scene/blossom-0.8-7.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1777, 824, 144, 120]
+    "page": "atlas/home-1.webp",
+    "frame": [969, 2, 144, 120]
   },
   "blossom:0.95:3": {
     "src": "scene/blossom-0.95-3.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1122, 824, 171, 142]
+    "page": "atlas/home-1.webp",
+    "frame": [314, 2, 171, 142]
   },
   "blossom:0.9:13": {
     "src": "scene/blossom-0.9-13.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1390, 824, 162, 135]
+    "page": "atlas/home-1.webp",
+    "frame": [582, 2, 162, 135]
   },
   "blossom:1:11": {
     "src": "scene/blossom-1-11.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [628, 824, 180, 150]
+    "page": "atlas/home-0.webp",
+    "frame": [1810, 1783, 180, 150]
   },
   "crane:down": {
     "src": "scene/crane-down.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 978, 132, 78]
+    "page": "atlas/home-1.webp",
+    "frame": [1115, 2, 132, 78]
   },
   "crane:up": {
     "src": "scene/crane-up.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [136, 978, 132, 78]
+    "page": "atlas/home-1.webp",
+    "frame": [1249, 2, 132, 78]
   },
   "disciple": {
     "src": "scene/disciple.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [407, 978, 48, 45]
+    "page": "atlas/home-1.webp",
+    "frame": [1520, 2, 48, 45]
   },
   "emblem:anvil": {
     "src": "emblem/emblem-anvil.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [2, 2, 160, 160]
+    "frame": [2, 2, 128, 128]
   },
   "emblem:ape": {
     "src": "emblem/emblem-ape.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [164, 2, 160, 160]
+    "frame": [132, 2, 128, 128]
   },
   "emblem:bear": {
     "src": "emblem/emblem-bear.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [326, 2, 160, 160]
+    "frame": [262, 2, 128, 128]
   },
   "emblem:blood": {
     "src": "emblem/emblem-blood.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [488, 2, 160, 160]
+    "frame": [392, 2, 128, 128]
   },
   "emblem:chaos": {
     "src": "emblem/emblem-chaos.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [650, 2, 160, 160]
+    "frame": [522, 2, 128, 128]
   },
   "emblem:crest": {
     "src": "emblem/emblem-crest.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [812, 2, 160, 160]
+    "frame": [652, 2, 128, 128]
   },
   "emblem:demon": {
     "src": "emblem/emblem-demon.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [974, 2, 160, 160]
+    "frame": [782, 2, 128, 128]
   },
   "emblem:dragon": {
     "src": "emblem/emblem-dragon.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1136, 2, 160, 160]
+    "frame": [912, 2, 128, 128]
   },
   "emblem:eagle": {
     "src": "emblem/emblem-eagle.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1298, 2, 160, 160]
+    "frame": [1042, 2, 128, 128]
   },
   "emblem:earth": {
     "src": "emblem/emblem-earth.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1460, 2, 160, 160]
+    "frame": [1172, 2, 128, 128]
   },
   "emblem:fire": {
     "src": "emblem/emblem-fire.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1622, 2, 160, 160]
+    "frame": [1302, 2, 128, 128]
   },
   "emblem:fist": {
     "src": "emblem/emblem-fist.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1784, 2, 160, 160]
+    "frame": [1432, 2, 128, 128]
   },
   "emblem:fox": {
     "src": "emblem/emblem-fox.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [2, 164, 160, 160]
+    "frame": [1562, 2, 128, 128]
   },
   "emblem:ghost": {
     "src": "emblem/emblem-ghost.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [164, 164, 160, 160]
+    "frame": [1692, 2, 128, 128]
   },
   "emblem:hawk": {
     "src": "emblem/emblem-hawk.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [326, 164, 160, 160]
+    "frame": [1822, 2, 128, 128]
   },
   "emblem:ice": {
     "src": "emblem/emblem-ice.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [488, 164, 160, 160]
+    "frame": [2, 132, 128, 128]
   },
   "emblem:leopard": {
     "src": "emblem/emblem-leopard.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [650, 164, 160, 160]
+    "frame": [132, 132, 128, 128]
   },
   "emblem:lose": {
     "src": "emblem/emblem-lose.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [812, 164, 160, 160]
+    "frame": [262, 132, 128, 128]
   },
   "emblem:lotus": {
     "src": "emblem/emblem-lotus.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [974, 164, 160, 160]
+    "frame": [392, 132, 128, 128]
   },
   "emblem:metal": {
     "src": "emblem/emblem-metal.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1136, 164, 160, 160]
+    "frame": [522, 132, 128, 128]
   },
   "emblem:nineFox": {
     "src": "emblem/emblem-nineFox.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1298, 164, 160, 160]
+    "frame": [652, 132, 128, 128]
   },
   "emblem:orb": {
     "src": "emblem/emblem-orb.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1460, 164, 160, 160]
+    "frame": [782, 132, 128, 128]
   },
   "emblem:phoenix": {
     "src": "emblem/emblem-phoenix.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1622, 164, 160, 160]
+    "frame": [912, 132, 128, 128]
   },
   "emblem:poison": {
     "src": "emblem/emblem-poison.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1784, 164, 160, 160]
+    "frame": [1042, 132, 128, 128]
   },
   "emblem:rebirth": {
     "src": "emblem/emblem-rebirth.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [2, 326, 160, 160]
+    "frame": [1172, 132, 128, 128]
   },
   "emblem:rhino": {
     "src": "emblem/emblem-rhino.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [164, 326, 160, 160]
+    "frame": [1302, 132, 128, 128]
   },
   "emblem:snake": {
     "src": "emblem/emblem-snake.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [326, 326, 160, 160]
+    "frame": [1432, 132, 128, 128]
   },
   "emblem:sword": {
     "src": "emblem/emblem-sword.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [488, 326, 160, 160]
+    "frame": [1562, 132, 128, 128]
   },
   "emblem:thunder": {
     "src": "emblem/emblem-thunder.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [650, 326, 160, 160]
+    "frame": [1692, 132, 128, 128]
   },
   "emblem:thunderPool": {
     "src": "emblem/emblem-thunderPool.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [812, 326, 160, 160]
+    "frame": [1822, 132, 128, 128]
   },
   "emblem:tick": {
     "src": "emblem/emblem-tick.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [974, 326, 160, 160]
+    "frame": [2, 262, 128, 128]
   },
   "emblem:tiger": {
     "src": "emblem/emblem-tiger.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1136, 326, 160, 160]
+    "frame": [132, 262, 128, 128]
   },
   "emblem:tower": {
     "src": "emblem/emblem-tower.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1298, 326, 160, 160]
+    "frame": [262, 262, 128, 128]
   },
   "emblem:turtle": {
     "src": "emblem/emblem-turtle.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1460, 326, 160, 160]
+    "frame": [392, 262, 128, 128]
   },
   "emblem:water": {
     "src": "emblem/emblem-water.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1622, 326, 160, 160]
+    "frame": [522, 262, 128, 128]
   },
   "emblem:win": {
     "src": "emblem/emblem-win.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [1784, 326, 160, 160]
+    "frame": [652, 262, 128, 128]
   },
   "emblem:wind": {
     "src": "emblem/emblem-wind.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [2, 488, 160, 160]
+    "frame": [782, 262, 128, 128]
   },
   "emblem:windWolf": {
     "src": "emblem/emblem-windWolf.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [164, 488, 160, 160]
+    "frame": [912, 262, 128, 128]
   },
   "emblem:wolf": {
     "src": "emblem/emblem-wolf.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [326, 488, 160, 160]
+    "frame": [1042, 262, 128, 128]
   },
   "emblem:wood": {
     "src": "emblem/emblem-wood.webp",
     "tex": true,
     "pack": "boot",
     "page": "atlas/boot-0.webp",
-    "frame": [488, 488, 160, 160]
+    "frame": [1172, 262, 128, 128]
   },
   "face:bachVoNhai": {
     "src": "face/face-bachVoNhai.webp"
@@ -1340,22 +1190,22 @@
     "src": "scene/flag.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [357, 978, 48, 48]
+    "page": "atlas/home-1.webp",
+    "frame": [1470, 2, 48, 48]
   },
   "fly:open": {
     "src": "scene/fly-open.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [607, 978, 42, 36]
+    "page": "atlas/home-1.webp",
+    "frame": [1720, 2, 42, 36]
   },
   "fly:shut": {
     "src": "scene/fly-shut.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [651, 978, 42, 36]
+    "page": "atlas/home-1.webp",
+    "frame": [1764, 2, 42, 36]
   },
   "icon:boiNguyen": {
     "src": "icon/icon-boiNguyen.webp"
@@ -1496,78 +1346,78 @@
     "src": "scene/lantern-0.8.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [316, 978, 39, 68]
+    "page": "atlas/home-1.webp",
+    "frame": [1429, 2, 39, 68]
   },
   "lantern:0.9": {
     "src": "scene/lantern-0.9.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [270, 978, 44, 76]
+    "page": "atlas/home-1.webp",
+    "frame": [1383, 2, 44, 76]
   },
   "ledge:0": {
     "src": "scene/ledge-0.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1081, 1368, 618, 235]
+    "page": "atlas/home-0.webp",
+    "frame": [1081, 1102, 618, 235]
   },
   "ledge:1": {
     "src": "scene/ledge-1.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [436, 230, 532, 216]
+    "page": "atlas/home-0.webp",
+    "frame": [1070, 1342, 532, 216]
   },
   "ledge:2": {
     "src": "scene/ledge-2.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1064, 230, 519, 207]
+    "page": "atlas/home-0.webp",
+    "frame": [2, 1574, 519, 207]
   },
   "ledge:3": {
     "src": "scene/ledge-3.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [2, 1368, 1077, 238]
+    "page": "atlas/home-0.webp",
+    "frame": [2, 1102, 1077, 238]
   },
   "ledge:4": {
     "src": "scene/ledge-4.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 2, 716, 226]
+    "page": "atlas/home-0.webp",
+    "frame": [352, 1342, 716, 226]
   },
   "ledge:5": {
     "src": "scene/ledge-5.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1214, 848, 801, 246]
+    "page": "atlas/home-0.webp",
+    "frame": [2, 854, 801, 246]
   },
   "ledge:6": {
     "src": "scene/ledge-6.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1020, 448, 460, 185]
+    "page": "atlas/home-0.webp",
+    "frame": [2, 1783, 460, 185]
   },
   "ledge:7": {
     "src": "scene/ledge-7.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1482, 448, 532, 180]
+    "page": "atlas/home-0.webp",
+    "frame": [464, 1783, 532, 180]
   },
   "ledge:8": {
     "src": "scene/ledge-8.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 824, 624, 152]
+    "page": "atlas/home-0.webp",
+    "frame": [1184, 1783, 624, 152]
   },
   "lotus": {
     "src": "scene/lotus.webp"
@@ -1666,8 +1516,8 @@
     "src": "scene/moon.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1554, 824, 132, 132]
+    "page": "atlas/home-1.webp",
+    "frame": [746, 2, 132, 132]
   },
   "panel:chuDien:1": {
     "src": "bld/bld-chuDien-1.webp",
@@ -1880,85 +1730,85 @@
     "src": "scene/peak-l.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [842, 2, 472, 284]
+    "page": "atlas/home-0.webp",
+    "frame": [496, 528, 472, 284]
   },
   "peak:main": {
     "src": "scene/peak-main.webp",
     "tex": true,
     "pack": "home",
     "page": "atlas/home-0.webp",
-    "frame": [1316, 2, 632, 404]
+    "frame": [536, 2, 632, 404]
   },
   "peak:r": {
     "src": "scene/peak-r.webp",
     "tex": true,
     "pack": "home",
     "page": "atlas/home-0.webp",
-    "frame": [2, 1240, 492, 324]
+    "frame": [2, 528, 492, 324]
   },
   "pearl:1": {
     "src": "scene/pearl-1.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [831, 978, 22, 22]
+    "page": "atlas/home-1.webp",
+    "frame": [1944, 2, 22, 22]
   },
   "pearl:1.2": {
     "src": "scene/pearl-1.2.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [727, 978, 26, 26]
+    "page": "atlas/home-1.webp",
+    "frame": [1840, 2, 26, 26]
   },
   "pearl:1.5": {
     "src": "scene/pearl-1.5.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [695, 978, 30, 30]
+    "page": "atlas/home-1.webp",
+    "frame": [1808, 2, 30, 30]
   },
   "pine:14": {
     "src": "scene/pine-14.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [608, 448, 204, 186]
+    "page": "atlas/home-0.webp",
+    "frame": [1229, 1574, 204, 186]
   },
   "pine:2": {
     "src": "scene/pine-2.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [814, 448, 204, 186]
+    "page": "atlas/home-0.webp",
+    "frame": [1435, 1574, 204, 186]
   },
   "pine:5": {
     "src": "scene/pine-5.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1450, 654, 184, 168]
+    "page": "atlas/home-0.webp",
+    "frame": [998, 1783, 184, 168]
   },
   "pine:8": {
     "src": "scene/pine-8.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [810, 824, 164, 150]
+    "page": "atlas/home-1.webp",
+    "frame": [2, 2, 164, 150]
   },
   "pine:fg1": {
     "src": "scene/pine-fg1.webp",
     "tex": true,
     "pack": "home",
     "page": "atlas/home-0.webp",
-    "frame": [592, 528, 388, 354]
+    "frame": [1170, 2, 388, 354]
   },
   "pine:fg2": {
     "src": "scene/pine-fg2.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1316, 2, 306, 279]
+    "page": "atlas/home-0.webp",
+    "frame": [970, 528, 306, 279]
   },
   "pointer": {
     "src": "icon/pointer.webp"
@@ -1967,26 +1817,26 @@
     "src": "scene/rock-l.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1594, 1126, 366, 240]
+    "page": "atlas/home-0.webp",
+    "frame": [805, 854, 366, 240]
   },
   "rock:r": {
     "src": "scene/rock-r.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [300, 448, 306, 198]
+    "page": "atlas/home-0.webp",
+    "frame": [921, 1574, 306, 198]
   },
   "scaffold:120:72": {
     "src": "scene/scaffold-120-72.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp",
-    "frame": [1522, 1608, 348, 230]
+    "page": "atlas/home-0.webp",
+    "frame": [2, 1342, 348, 230]
   },
   "skin:badge": {
     "src": "skin/skin-badge.webp",
-    "slice": [30, 33, 30, 33],
+    "slice": [20, 22, 20, 22],
     "width": [10, 11, 10, 11],
     "outset": 0,
     "repeat": "stretch",
@@ -1994,7 +1844,7 @@
   },
   "skin:badge-fresh": {
     "src": "skin/skin-badge-fresh.webp",
-    "slice": [30, 33, 30, 33],
+    "slice": [20, 22, 20, 22],
     "width": [10, 11, 10, 11],
     "outset": 0,
     "repeat": "stretch",
@@ -2006,7 +1856,7 @@
   },
   "skin:btn": {
     "src": "skin/skin-btn.webp",
-    "slice": [54, 72, 66, 72],
+    "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
     "repeat": "stretch",
@@ -2014,7 +1864,7 @@
   },
   "skin:btn-danger": {
     "src": "skin/skin-btn-danger.webp",
-    "slice": [54, 72, 66, 72],
+    "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
     "repeat": "stretch",
@@ -2022,7 +1872,7 @@
   },
   "skin:btn-ghost": {
     "src": "skin/skin-btn-ghost.webp",
-    "slice": [54, 72, 66, 72],
+    "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
     "repeat": "stretch",
@@ -2030,7 +1880,7 @@
   },
   "skin:btn-gold": {
     "src": "skin/skin-btn-gold.webp",
-    "slice": [54, 72, 66, 72],
+    "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
     "repeat": "stretch",
@@ -2038,7 +1888,7 @@
   },
   "skin:btn-off": {
     "src": "skin/skin-btn-off.webp",
-    "slice": [54, 72, 66, 72],
+    "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
     "repeat": "stretch",
@@ -2046,7 +1896,7 @@
   },
   "skin:capsule": {
     "src": "skin/skin-capsule.webp",
-    "slice": [39, 45, 39, 45],
+    "slice": [26, 30, 26, 30],
     "width": [13, 15, 13, 15],
     "outset": 0,
     "repeat": "stretch",
@@ -2054,7 +1904,7 @@
   },
   "skin:card": {
     "src": "skin/skin-card.webp",
-    "slice": [42, 42, 42, 42],
+    "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
     "repeat": "stretch",
@@ -2062,7 +1912,7 @@
   },
   "skin:card-glow": {
     "src": "skin/skin-card-glow.webp",
-    "slice": [42, 42, 42, 42],
+    "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
     "repeat": "stretch",
@@ -2070,7 +1920,7 @@
   },
   "skin:card-plain": {
     "src": "skin/skin-card-plain.webp",
-    "slice": [42, 42, 42, 42],
+    "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
     "repeat": "stretch",
@@ -2078,7 +1928,7 @@
   },
   "skin:card-sel": {
     "src": "skin/skin-card-sel.webp",
-    "slice": [42, 42, 42, 42],
+    "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
     "repeat": "stretch",
@@ -2086,7 +1936,7 @@
   },
   "skin:card-silk": {
     "src": "skin/skin-card-silk.webp",
-    "slice": [42, 42, 42, 42],
+    "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
     "repeat": "stretch",
@@ -2110,7 +1960,7 @@
   },
   "skin:field": {
     "src": "skin/skin-field.webp",
-    "slice": [24, 30, 30, 30],
+    "slice": [16, 20, 20, 20],
     "width": [8, 10, 10, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2118,7 +1968,7 @@
   },
   "skin:fill": {
     "src": "skin/skin-fill.webp",
-    "slice": [15, 21, 15, 18],
+    "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
     "repeat": "stretch",
@@ -2126,7 +1976,7 @@
   },
   "skin:fill-azure": {
     "src": "skin/skin-fill-azure.webp",
-    "slice": [15, 21, 15, 18],
+    "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
     "repeat": "stretch",
@@ -2134,7 +1984,7 @@
   },
   "skin:fill-bad": {
     "src": "skin/skin-fill-bad.webp",
-    "slice": [15, 21, 15, 18],
+    "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
     "repeat": "stretch",
@@ -2142,7 +1992,7 @@
   },
   "skin:fill-gold": {
     "src": "skin/skin-fill-gold.webp",
-    "slice": [15, 21, 15, 18],
+    "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
     "repeat": "stretch",
@@ -2150,7 +2000,7 @@
   },
   "skin:fill-good": {
     "src": "skin/skin-fill-good.webp",
-    "slice": [15, 21, 15, 18],
+    "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
     "repeat": "stretch",
@@ -2158,7 +2008,7 @@
   },
   "skin:groove": {
     "src": "skin/skin-groove.webp",
-    "slice": [36, 36, 36, 36],
+    "slice": [24, 24, 24, 24],
     "width": [12, 12, 12, 12],
     "outset": 0,
     "repeat": "stretch",
@@ -2174,7 +2024,7 @@
   },
   "skin:plate": {
     "src": "skin/skin-plate.webp",
-    "slice": [36, 42, 36, 42],
+    "slice": [24, 28, 24, 28],
     "width": [12, 14, 12, 14],
     "outset": 0,
     "repeat": "stretch",
@@ -2182,7 +2032,7 @@
   },
   "skin:rod": {
     "src": "skin/skin-rod.webp",
-    "slice": [0, 66, 0, 66],
+    "slice": [0, 44, 0, 44],
     "width": [0, 22, 0, 22],
     "outset": 0,
     "repeat": "stretch",
@@ -2190,7 +2040,7 @@
   },
   "skin:scroll": {
     "src": "skin/skin-scroll.webp",
-    "slice": [72, 72, 72, 72],
+    "slice": [48, 48, 48, 48],
     "width": [24, 24, 24, 24],
     "outset": 0,
     "repeat": "round",
@@ -2198,7 +2048,7 @@
   },
   "skin:slip": {
     "src": "skin/skin-slip.webp",
-    "slice": [36, 66, 39, 66],
+    "slice": [24, 44, 26, 44],
     "width": [12, 22, 13, 22],
     "outset": 0,
     "repeat": "stretch",
@@ -2206,7 +2056,7 @@
   },
   "skin:slip-bad": {
     "src": "skin/skin-slip-bad.webp",
-    "slice": [36, 66, 39, 66],
+    "slice": [24, 44, 26, 44],
     "width": [12, 22, 13, 22],
     "outset": 0,
     "repeat": "stretch",
@@ -2214,7 +2064,7 @@
   },
   "skin:strip": {
     "src": "skin/skin-strip.webp",
-    "slice": [42, 42, 42, 42],
+    "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
     "repeat": "round",
@@ -2242,7 +2092,7 @@
   },
   "skin:tag": {
     "src": "skin/skin-tag.webp",
-    "slice": [27, 30, 27, 30],
+    "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2250,7 +2100,7 @@
   },
   "skin:tag-bad": {
     "src": "skin/skin-tag-bad.webp",
-    "slice": [27, 30, 27, 30],
+    "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2258,7 +2108,7 @@
   },
   "skin:tag-dark": {
     "src": "skin/skin-tag-dark.webp",
-    "slice": [27, 30, 27, 30],
+    "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2266,7 +2116,7 @@
   },
   "skin:tag-gold": {
     "src": "skin/skin-tag-gold.webp",
-    "slice": [27, 30, 27, 30],
+    "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2274,7 +2124,7 @@
   },
   "skin:tag-good": {
     "src": "skin/skin-tag-good.webp",
-    "slice": [27, 30, 27, 30],
+    "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2282,7 +2132,7 @@
   },
   "skin:tag-red": {
     "src": "skin/skin-tag-red.webp",
-    "slice": [27, 30, 27, 30],
+    "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2290,7 +2140,7 @@
   },
   "skin:tag-silk": {
     "src": "skin/skin-tag-silk.webp",
-    "slice": [27, 30, 27, 30],
+    "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
     "repeat": "stretch",
@@ -2298,7 +2148,7 @@
   },
   "skin:toast": {
     "src": "skin/skin-toast.webp",
-    "slice": [42, 102, 42, 102],
+    "slice": [28, 68, 28, 68],
     "width": [14, 34, 14, 34],
     "outset": 0,
     "repeat": "stretch",
@@ -2306,7 +2156,7 @@
   },
   "skin:toast-bad": {
     "src": "skin/skin-toast-bad.webp",
-    "slice": [42, 102, 42, 102],
+    "slice": [28, 68, 28, 68],
     "width": [14, 34, 14, 34],
     "outset": 0,
     "repeat": "stretch",
@@ -2314,7 +2164,7 @@
   },
   "skin:track": {
     "src": "skin/skin-track.webp",
-    "slice": [15, 18, 15, 18],
+    "slice": [10, 12, 10, 12],
     "width": [5, 6, 5, 6],
     "outset": 0,
     "repeat": "stretch",
@@ -2450,43 +2300,43 @@
     "src": "scene/stair-126,506.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [970, 230, 92, 208]
+    "page": "atlas/home-0.webp",
+    "frame": [1604, 1342, 92, 208]
   },
   "stair:150,606": {
     "src": "scene/stair-150,606.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [1947, 230, 98, 204]
+    "page": "atlas/home-0.webp",
+    "frame": [523, 1574, 98, 204]
   },
   "stair:200,404": {
     "src": "scene/stair-200,404.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [102, 448, 100, 200]
+    "page": "atlas/home-0.webp",
+    "frame": [723, 1574, 100, 200]
   },
   "stair:216,708": {
     "src": "scene/stair-216,708.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [2, 448, 98, 204]
+    "page": "atlas/home-0.webp",
+    "frame": [623, 1574, 98, 204]
   },
   "stair:276,508": {
     "src": "scene/stair-276,508.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [204, 448, 94, 200]
+    "page": "atlas/home-0.webp",
+    "frame": [825, 1574, 94, 200]
   },
   "sun": {
     "src": "scene/sun.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [976, 824, 144, 144]
+    "page": "atlas/home-1.webp",
+    "frame": [168, 2, 144, 144]
   },
   "tab:banDo": {
     "src": "icon/tab-banDo.webp"
@@ -2507,22 +2357,22 @@
     "src": "scene/walker-0.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [457, 978, 48, 45]
+    "page": "atlas/home-1.webp",
+    "frame": [1570, 2, 48, 45]
   },
   "walker:1": {
     "src": "scene/walker-1.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [507, 978, 48, 45]
+    "page": "atlas/home-1.webp",
+    "frame": [1620, 2, 48, 45]
   },
   "worker": {
     "src": "scene/worker.webp",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-2.webp",
-    "frame": [557, 978, 48, 45]
+    "page": "atlas/home-1.webp",
+    "frame": [1670, 2, 48, 45]
   },
   "wtoken": {
     "src": "scene/wtoken.webp",

@@ -1,8 +1,9 @@
 // Một ứng dụng WebGL (PixiJS) cho cả game: cảnh núi, bản đồ… là các Container gắn vào stage.
 // Hình vẽ tay nướng một lần ra texture (bake), sau đó GPU chỉ việc ghép và diễn chuyển động.
-import { Application, Container, Sprite, Texture } from 'pixi.js'
+import { Application, Container, Rectangle, Sprite, Texture, type TextureSource } from 'pixi.js'
 import {
   artOf,
+  artPack,
   bake,
   beamTex,
   dump,
@@ -67,10 +68,11 @@ export function mountScene<S extends Scene>(o: {
   tick: (s: S, app: Application) => void
   ready?: (s: S) => void
   host?: HTMLElement
+  art?: readonly string[] // gói tranh cảnh này cần (artPack): dựng cảnh khi đã về, như màn nạp của engine
 }): () => void {
   let dead = false
   let off = () => {}
-  void getApp().then(app => {
+  void Promise.all([getApp(), ...(o.art ?? []).map(artPack)]).then(([app]) => {
     if (dead) return
     const covered = o.host ? app.stage.children.filter(c => c.visible) : []
     const s = o.make(app)
@@ -108,28 +110,40 @@ export function mountScene<S extends Scene>(o: {
 
 // ---------- Texture ----------
 
-export type Painted<M = unknown> = { tex: Texture; anchor: readonly [number, number]; scale: number; meta: M }
+export type Painted<M = unknown> = {
+  tex: Texture
+  anchor: readonly [number, number]
+  scale: number
+  meta: M
+  art?: boolean
+}
 const cache = new Map<string, Painted<unknown>>()
 dump.painted = cache // ?art=0: tools/art/export.ts xuất các texture vẽ bằng code
+const pages = new Map<HTMLImageElement, TextureSource>() // mỗi trang atlas một nguồn GPU, texture từng hình là một khung trên trang
 
-// Nướng một asset vẽ tay (một lần mỗi key + độ phân giải)
+// Nướng một asset (một lần mỗi key + độ phân giải). Có tranh vẽ tay thì dùng tranh; tranh thuộc gói chưa tải xong thì vẽ bằng
+// code tạm và gọi tải gói — lần gọi sau khi gói về sẽ đổi sang tranh (bản tạm không giữ chỗ trong cache).
 export function painted<M>(key: string, make: () => Asset<M>, scale = texScale()): Painted<M> {
   const k = `${key}@${scale}`
+  const e = artOf(key)
   let p = cache.get(k) as Painted<M> | undefined
-  if (!p) {
-    const a = make()
-    const img = artOf(key)?.img
-    if (img) {
-      // tranh vẽ tay khít hộp asset: neo theo asset, cỡ theo ảnh; meta (điểm chạm, chỗ treo biển…) vẫn lấy từ bản vẽ code
-      const meta = bake(a, 1 / 64).meta
-      p = { tex: Texture.from(img), anchor: [-a.x / a.w, -a.y / a.h], scale: img.naturalWidth / a.w, meta }
-    } else {
-      noteArt(key, { kind: 'tex', w: a.w, h: a.h, px: scale })
-      const b = bake(a, scale)
-      p = { tex: Texture.from(b.canvas as HTMLCanvasElement), anchor: b.anchor, scale, meta: b.meta }
-    }
-    cache.set(k, p)
+  if (p && (p.art || !e?.img)) return p
+  if (e?.pack && !e.img) void artPack(e.pack)
+  const a = make()
+  if (e?.img) {
+    // tranh vẽ tay khít hộp asset: neo theo asset, cỡ theo ảnh; meta (điểm chạm, chỗ treo biển…) vẫn lấy từ bản vẽ code
+    const meta = bake(a, 1 / 64).meta
+    const [fx, fy, fw, fh] = e.frame ?? [0, 0, e.img.naturalWidth, e.img.naturalHeight]
+    let source = pages.get(e.img)
+    if (!source) pages.set(e.img, (source = Texture.from(e.img).source))
+    const tex = new Texture({ source, frame: new Rectangle(fx, fy, fw, fh) })
+    p = { tex, anchor: [-a.x / a.w, -a.y / a.h], scale: fw / a.w, meta, art: true }
+  } else {
+    noteArt(key, { kind: 'tex', w: a.w, h: a.h, px: scale })
+    const b = bake(a, scale)
+    p = { tex: Texture.from(b.canvas as HTMLCanvasElement), anchor: b.anchor, scale, meta: b.meta }
   }
+  cache.set(k, p)
   return p
 }
 

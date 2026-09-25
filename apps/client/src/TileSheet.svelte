@@ -23,6 +23,8 @@
     FLAG_HP,
     PVP_HALL,
     BOSSES,
+    LOHAR_BONES,
+    LOHAR_HP,
     apOf,
     armySpeed,
     count,
@@ -359,12 +361,28 @@
           >
         {/if}
         {#if point.kind === 'boss'}
-          {@const hp = spot?.hp ?? BOSSES[point.lv]?.str ?? 0}
+          {@const roaming = !!spot?.lohar && (spot.loharUntil ?? 0) > now}
+          {@const full = (BOSSES[point.lv]?.str ?? 0) * (roaming ? LOHAR_HP : 1)}
           <small class="t-small"
             >{dead
               ? L.world.respawn(clock(spot!.until! - now))
-              : `${L.world.hp}: ${num(hp)}/${num(BOSSES[point.lv]?.str ?? 0)}`}</small
+              : `${L.world.hp}: ${num(spot?.hp ?? full)}/${num(full)}`}</small
           >
+          <!-- Yêu Vương Tuần Sơn: bản mạnh do người chơi triệu hồi bằng yêu cốt, quà lớn khi hạ -->
+          {#if roaming}<small class="t-small t-bad"
+              ><b>{L.lohar.name}</b> · {L.lohar.by(spot?.lohar ?? '', clock((spot?.loharUntil ?? now) - now))}</small
+            >{:else if !dead}
+            <span class="row wrap" style:--gap="6px">
+              <small class="t-tiny" title={L.lohar.hint}>{L.lohar.bones(game.bones ?? 0)}</small>
+              {#if (game.bones ?? 0) >= LOHAR_BONES}<Button
+                  size="sm"
+                  variant="danger"
+                  disabled={busy}
+                  onclick={async () => (await send({ type: 'summon', i: point.i })).ok && sfx('reward')}
+                  >{L.lohar.summon}</Button
+                >{/if}
+            </span>
+          {/if}
         {/if}
         <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : L.err.far}</small>
       </div>

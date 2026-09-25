@@ -544,6 +544,20 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       'bị cướp khoáng',
     )
     assert.ok(alarm.includes(L.pvp.robIncoming('Hắc Sơn')) && alarm.includes(L.world.recall), 'cảnh báo + gọi về')
+    const quiet = paint(
+      'Hud',
+      {
+        game: { ...digging, seclude: { until: victim.time + 86_400_000, shield: 0 } },
+        now: victim.time,
+        tab: 'tongMon',
+        gain: null,
+        onclaim: noop,
+        onquest: noop,
+        onbuilder: noop,
+      },
+      'đang bế quan',
+    )
+    assert.ok(quiet.includes(L.seclude.off), 'bế quan: nút xuất quan ở HUD')
     paint('Replay', { report: rep, onclose: noop, onrevenge: noop, now: rep.at + 1000 }, 'bị cướp')
     // Thông Thiên Tháp: đánh một tầng ở cuối game → chiến báo loại tháp phát lại được, bản đồ có nút tháp
     const climbed = run(
@@ -628,7 +642,7 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
         },
         label,
       )
-      assert.ok(settings.includes(L.settings.calm), 'công tắc giảm chuyển động')
+      assert.ok(settings.includes(L.settings.calm) && settings.includes(L.seclude.title), 'giảm chuyển động, bế quan')
       assert.ok(
         L.guide.items.every(([q]) => settings.includes(q)),
         'Cài đặt phải có đủ mục Cẩm nang',

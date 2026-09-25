@@ -88,7 +88,7 @@
   )
 </script>
 
-<View make={() => new MapScene()} height={MAP_H} start={1} zoomable bind:scene={scene as never}>
+<View make={() => new MapScene()} art={['map']} height={MAP_H} start={1} zoomable bind:scene={scene as never}>
   {#snippet hits(k)}
     {#each nodes as n (n.name + n.t.kind)}
       <button

@@ -2,7 +2,7 @@
   // Màn núi tông môn: cảnh WebGL (home.ts) + lớp cuộn gốc của trình duyệt (quán tính cuộn như app thật)
   // + nút chạm vô hình trên từng công trình (bàn phím, trình đọc màn hình) + lớp HTML biển tên, đồng hồ.
   // Lớp HTML dịch theo camera trong cùng khung hình với WebGL nên không lệch nhau.
-  import { Icon, Portrait, building, type Kind } from '@rok/art'
+  import { Icon, Portrait, building, tierOf, type Kind } from '@rok/art'
   import {
     BUILDINGS,
     GUEST_HALL,
@@ -121,6 +121,7 @@
 
 <View
   make={() => new Home({ still })}
+  art={['home', ...new Set(IDS.map(id => `bld${tierOf(Math.max(1, game.levels[id]))}`))]}
   height={HOME.h}
   {hidden}
   start={still ? 0 : 0.3}

@@ -4,7 +4,7 @@ import { route, tide } from '../atlas.ts'
 import { fight, might } from '../combat.ts'
 import { beastExp, beastLoot, marchSide, marchSnap, pushReport, snap } from '../core/battle.ts'
 import { lead, unitOf } from '../core/stats.ts'
-import { HOUR, noGain } from '../core/util.ts'
+import { HOUR, addItems, noGain } from '../core/util.ts'
 import type { Army, Gain, March } from '../core/types.ts'
 import {
   BOSSES,
@@ -23,6 +23,9 @@ import {
   UNITS,
   WILD_LOOT,
   WILD_RESPAWN,
+  LOHAR_GIFT,
+  LOHAR_SUMMONER,
+  boneOf,
   eveFrags,
   type Reward,
 } from '../data.ts'
@@ -186,6 +189,21 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
         ...(n === 0 && boss.reward.elder && st.elders[boss.reward.elder] === undefined && { elder: boss.reward.elder }),
       }
       changed.set(who, mail(st, { at, k: 'boss', a: [p.lv, n + 1, Math.round(share * 100)], gift }))
+      // Yêu Vương Tuần Sơn: quà thêm theo sát thương (từ 5 % có ít nhất một món), người triệu hồi thêm một phần
+      if (!sp.lohar || sp.lohar.until <= at) return
+      const extra = Object.entries(LOHAR_GIFT.items ?? {}).map(([k2, v]) => [
+        k2,
+        Math.floor(v! * share) || +(share >= 0.05),
+      ])
+      const lohar =
+        who === sp.lohar.by
+          ? addItems(Object.fromEntries(extra), LOHAR_SUMMONER.items ?? {})
+          : Object.fromEntries(extra)
+      const s3 = changed.get(who)!
+      changed.set(
+        who,
+        mail(s3, { at, k: 'lohar', a: [Math.round(share * 100), who === sp.lohar.by ? 1 : 0], gift: { items: lohar } }),
+      )
     })
   let dead = tribeBank({ ...setSpot(w, i, { until: at + boss.respawn }), bosses: (w.bosses ?? 0) + 1 }, at, p.lv, dmgs)
   for (const [id2, d] of Object.entries(dmgs))
@@ -245,9 +263,10 @@ function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Ar
   })
   if (f.win) x = addHonor({ ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1 } }, HONOR_WILD * p.lv)
   if (!f.win) return { changed: new Map([[pid, x]]), world: w }
-  // Khai Giới Trảm Tà: pha Khai giới rơi tàn quyển, cộng giới vận cho minh
+  // Khai Giới Trảm Tà: pha Khai giới rơi tàn quyển, cộng giới vận cho minh · Yêu Vương Tuần Sơn: cấp cao rơi yêu cốt
   const n = map.phase === 0 ? eveFrags(p.lv) : 0
   if (n) x = { ...x, frag: (x.frag ?? 0) + n }
+  if (boneOf(p.lv)) x = { ...x, bones: (x.bones ?? 0) + boneOf(p.lv) }
   return { changed: new Map([[pid, x]]), world: eveAdd(setSpot(w, i, { until: at + WILD_RESPAWN }), pid, n) }
 }
 

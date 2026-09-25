@@ -65,6 +65,8 @@ export type SpotView = {
   left?: number
   hp?: number
   until?: number
+  lohar?: string // Yêu Vương Tuần Sơn: tên người triệu hồi
+  loharUntil?: number
 }
 // lord: Giới Chủ · book: Thiên Đạo Biên Niên (chương đang mở và tiến độ)
 export type MapSnap = {
@@ -119,7 +121,9 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
   for (const [k, sp] of Object.entries(w.spots)) {
     const i = Number(k)
     const own = sp.own === undefined ? undefined : sideName(w, ps, sp.own)
-    spots.push({ i, own, side: sp.own, n: garrison(ps, i).length, left: sp.left, hp: sp.hp, until: sp.until })
+    const lohar =
+      sp.lohar && sp.lohar.until > now ? { lohar: ps.get(sp.lohar.by)?.name ?? '?', loharUntil: sp.lohar.until } : {}
+    spots.push({ i, own, side: sp.own, n: garrison(ps, i).length, left: sp.left, hp: sp.hp, until: sp.until, ...lohar })
   }
   const allies = Object.values(w.allies).map(al => ({ id: al.id, tag: al.tag }))
   const flags = Object.values(w.flags ?? {})

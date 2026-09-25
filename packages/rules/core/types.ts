@@ -201,6 +201,7 @@ export type MailArgs = {
   tribeTop: [rank: number, pts: number] // Phá Yêu Trại: minh mình hạng rank, điểm minh
   firstTake: [kind: string, lv: number] // tiên minh chiếm lần đầu một điểm (loại, cấp) trong mùa
   eveTop: [rank: number, pts: number] // Khai Giới Trảm Tà: cổng mở, minh mình hạng rank giới vận, điểm
+  lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
 }
 export type MailKind = keyof MailArgs
 // Thư mới (chưa có id): a bắt buộc, đúng kiểu theo khoá
@@ -258,6 +259,9 @@ export type State = {
   side?: number[] // Tông vụ: số việc đã nhận của từng dòng (SIDE_LINES)
   frag?: number // Khai Giới Trảm Tà: tàn quyển đang có (đủ EVE_CHEST_N đổi rương)
   thoi?: { n: number; pick: number } // Thiên Thời: chỉ lệnh đã chọn cho thời thứ n của mùa
+  bones?: number // Yêu Vương Tuần Sơn: yêu cốt đang có (đủ LOHAR_BONES triệu hồi)
+  seclude?: { until: number; shield: number } // Bế Quan Lệnh: bế quan tới until (shield: khiên trước khi bế quan, xuất quan thì trả)
+  secludeAt?: number // xuất quan rồi: tới lúc này mới bế quan lại
   quiz?: { day: number; n: number; right: number; last?: boolean } // Vấn Đạo Đài hôm nay: đã trả lời n câu, đúng right, câu vừa rồi đúng không
   ascended: number[] // các mùa đã phi thăng (danh hiệu)
   fest: Partial<Record<FestId, Fest>> // trung tâm sự kiện
@@ -318,4 +322,5 @@ export type Err =
   | 'limit'
   | 'claimed' // phần thưởng đã nhận rồi
   | 'frenzy' // vừa đi cướp: chưa bật khiên được (cơn sát khí)
+  | 'secluded' // đang bế quan: xuất quan mới làm được
 export type Result = { ok: true; state: State } | { ok: false; error: Err }

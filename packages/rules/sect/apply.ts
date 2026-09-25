@@ -4,6 +4,7 @@ import { no, type Actions, type Pick, type Run } from '../core/action.ts'
 import { obj } from '../core/parse.ts'
 import { advance } from '../core/time.ts'
 import { type Result, type State } from '../core/types.ts'
+import { SECLUDE_OK } from '../data.ts'
 import { alchemyActions, type AlchemyAction } from './alchemy.ts'
 import { armyActions, type ArmyAction } from './army.ts'
 import { bagActions, type BagAction } from './bag.ts'
@@ -20,6 +21,7 @@ import { guestActions, type GuestAction } from './guest.ts'
 import { quizActions, type QuizAction } from './quiz.ts'
 import { sideActions, type SideAction } from './side.ts'
 import { eveActions, type EveAction } from './eve.ts'
+import { secluded, secludeActions, type SecludeAction } from './seclude.ts'
 import { buildingActions, type BuildingAction } from './buildings.ts'
 import { elderActions, type ElderAction } from './elders.ts'
 import { expeditionActions, type ExpeditionAction } from './expedition.ts'
@@ -56,6 +58,7 @@ export type Action =
   | QuizAction
   | SideAction
   | EveAction
+  | SecludeAction
 
 const ACTIONS: Actions<Action> = {
   ...buildingActions,
@@ -83,6 +86,7 @@ const ACTIONS: Actions<Action> = {
   ...quizActions,
   ...sideActions,
   ...eveActions,
+  ...secludeActions,
 }
 
 export const ACTION_TYPES = Object.keys(ACTIONS) as Action['type'][]
@@ -97,5 +101,7 @@ export function parseAction(raw: unknown): Action | null {
 export function apply(s: State, raw: Action, now: number): Result {
   const a = parseAction(raw)
   if (!a) return no('bad')
-  return (ACTIONS[a.type].run as Run<Action>)(advance(s, now), a)
+  const st = advance(s, now)
+  if (secluded(st) && !SECLUDE_OK.includes(a.type)) return no('secluded') // Bế Quan Lệnh
+  return (ACTIONS[a.type].run as Run<Action>)(st, a)
 }

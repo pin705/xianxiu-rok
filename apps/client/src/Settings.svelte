@@ -1,7 +1,8 @@
 <script lang="ts">
   // Cài đặt: âm thanh, ngôn ngữ, hướng dẫn, tài khoản, thông tin. Tiến độ nằm trên server (không còn xuất/nhập save).
   import { Icon } from '@rok/art'
-  import { Card, Section, Sheet, Toggle } from './ui'
+  import { Button, Card, Section, Sheet, Toggle } from './ui'
+  import { SECLUDE_DAYS } from '@rok/rules'
   import { LOCALES, LOCALE_IDS, type Locale } from '@rok/i18n'
   import { L, LANG, calm, isMusicOn, setCalm, setLang, setMusicOn } from './lib'
   import { startMusic, stopMusic } from './music'
@@ -54,6 +55,20 @@
       setCalm(on)
     }}><Icon name="power" size={20} />{L.settings.calm}</Toggle
   >
+  <!-- Bế Quan Lệnh: nghỉ dài ngày, không ai cướp được (đang bế quan thì nút xuất quan ở HUD) -->
+  <Section title={L.seclude.title}>
+    <p class="t-small t-soft">{L.seclude.hint}</p>
+    <div class="row wrap" style:--gap="6px">
+      {#each SECLUDE_DAYS as d (d)}
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={!!game.seclude && game.seclude.until > now}
+          onclick={() => g.act({ type: 'seclude', days: d }, 'reward')}>{L.seclude.go(d)}</Button
+        >
+      {/each}
+    </div>
+  </Section>
   <!-- tên mỗi ngôn ngữ viết bằng chính ngôn ngữ đó: người đọc không hiểu ngôn ngữ đang hiện vẫn tìm được tiếng mình -->
   <label class="lang row">
     <Icon name="globe" size={20} />

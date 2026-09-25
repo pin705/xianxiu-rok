@@ -2,6 +2,7 @@
   // Màn tiêu đề. 'first': tiêu đề → lời dẫn → đặt tên (server lập tông môn). 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
   // wait: đã xong màn tiêu đề nhưng server chưa gửi state (mạng chậm) — hiện dòng "đang kết nối".
   import { onMount } from 'svelte'
+  import { artPack, onArtProgress } from '@rok/art'
   import { Button, Medal } from './ui'
   import { L, sfx, suggestNames } from './lib'
 
@@ -30,10 +31,17 @@
   let error = $state('')
   let sending = $state(false)
 
+  // tiến độ tải tranh (gói theo cảnh, @rok/art artPack): vạch mảnh dưới dòng "chạm để vào"
+  let loaded = $state(1)
+  onMount(() => onArtProgress((done, total) => (loaded = total ? done / total : 1)))
   onMount(() => {
     if (mode !== 'splash') return
-    const t = setTimeout(ondone, 1600)
-    return () => clearTimeout(t)
+    // người cũ: vào khi đủ 1.6 giây và tranh cảnh núi đã về — như màn nạp của engine (chạm thì vào ngay, cảnh tự đợi tranh)
+    let live = true
+    void Promise.all([new Promise(r => setTimeout(r, 1600)), artPack('home')]).then(() => live && ondone())
+    return () => {
+      live = false
+    }
   })
 
   function tapTitle() {
@@ -90,6 +98,7 @@
       <span class="name">{L.game}</span>
       <span class="tag">{L.tagline}</span>
       <span class="tap">{wait ? L.net.connecting : L.tapToStart}</span>
+      {#if loaded < 1}<span class="load" aria-hidden="true"><i style:width="{loaded * 100}%"></i></span>{/if}
     </button>
   {:else if step === 'intro'}
     <button class="cover dim" onclick={tapIntro}>
@@ -328,5 +337,20 @@
       opacity: 0;
       transform: scale(2.3) rotate(-14deg);
     }
+  }
+  .load {
+    display: block;
+    width: min(40%, 180px);
+    height: 2px;
+    margin-top: var(--sp-2, 8px);
+    background: color-mix(in srgb, var(--ink) 15%, transparent);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .load i {
+    display: block;
+    height: 100%;
+    background: var(--ink);
+    transition: width 0.3s;
   }
 </style>

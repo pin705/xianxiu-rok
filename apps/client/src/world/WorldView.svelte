@@ -207,6 +207,7 @@
   onMount(() => {
     addEventListener('keydown', keys)
     const unmount = mountScene({
+      art: ['world'],
       make: () => new WorldScene(info.map),
       ready: s => (scene = s),
       tick: s => {

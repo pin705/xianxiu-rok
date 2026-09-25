@@ -9,14 +9,69 @@ export type ArtEntry = {
   outset?: number // phần tràn ra ngoài hộp (px CSS)
   repeat?: 'stretch' | 'round'
   fill?: boolean // lòng skin có vẽ (mặc định có)
-  tex?: boolean // texture cảnh (Pixi): bộ nạp giải mã sẵn trước khi vào game; còn lại (icon, chân dung, da) trình duyệt tự tải khi cần
-  img?: HTMLImageElement // ảnh đã giải mã sẵn (bộ nạp của client) — texture Pixi cần ảnh có ngay, không chờ
+  tex?: boolean // texture (Pixi hoặc vẽ lên canvas): phải có ảnh trong tay trước khi dùng (img)
+  pack?: string // gói theo cảnh (tools/art pipeline.PACKS) — nạp cùng nhau qua artPack; không có: trình duyệt tự tải khi cần
+  page?: string // trang atlas chứa ảnh này; frame = [x, y, rộng, cao] trên trang (px ảnh)
+  frame?: readonly [number, number, number, number]
+  img?: HTMLImageElement // ảnh đã tải (trang atlas nếu có)
 }
 export type ArtManifest = Record<string, ArtEntry>
 
 let art: ArtManifest = {}
 export const setArt = (m: ArtManifest) => void (art = m)
 export const artOf = (key: string): ArtEntry | undefined => art[key]
+
+// Nạp theo gói như bundle của Godot/LayaAir: game chỉ đợi gói 'boot' (da, hình chạm huy hiệu) rồi hiện; cảnh nào đợi gói
+// của cảnh đó (mountScene), gói còn lại tải nền. Texture một gói nằm chung vài trang atlas → ít lượt tải, Pixi gộp lượt vẽ.
+// Chờ onload chứ không chờ decode(): tab nền thì Chrome hoãn decode — game không bao giờ mount (trang trắng).
+const images = new Map<string, Promise<HTMLImageElement | undefined>>()
+const packs = new Map<string, Promise<void>>()
+const tally = { done: 0, total: 0 }
+const listeners = new Set<(done: number, total: number) => void>()
+function image(src: string) {
+  let p = images.get(src)
+  if (!p) {
+    tally.total++
+    p = new Promise(ok => {
+      const img = new Image()
+      const end = (v?: HTMLImageElement) => {
+        tally.done++
+        for (const f of listeners) f(tally.done, tally.total)
+        ok(v)
+      }
+      img.onload = () => end(img)
+      img.onerror = () => {
+        console.warn('art: không mở được', src)
+        end()
+      }
+      img.src = src
+    })
+    images.set(src, p)
+  }
+  return p
+}
+export function artPack(name: string): Promise<void> {
+  let p = packs.get(name)
+  if (!p) {
+    const list = Object.entries(art).filter(([, e]) => e.pack === name)
+    p = Promise.all(
+      list.map(async ([k, e]) => {
+        const img = await image(e.page ?? e.src)
+        if (img) e.img = img
+        else delete art[k] // không mở được: vẽ bằng code
+      }),
+    ).then(() => {})
+    packs.set(name, p)
+  }
+  return p
+}
+export const artPacks = () => [...new Set(Object.values(art).flatMap(e => (e.pack ? [e.pack] : [])))]
+// tiến độ tải tranh (màn tiêu đề): ảnh đã về / tổng số ảnh đã xếp hàng
+export function onArtProgress(f: (done: number, total: number) => void) {
+  listeners.add(f)
+  f(tally.done, tally.total)
+  return () => void listeners.delete(f)
+}
 
 // Bản dev: ghi lại mọi key được nướng cùng cỡ yêu cầu — danh sách asset cần vẽ cho hoạ sĩ (docs/ART_SPEC.md)
 type Seen = { kind: 'dom' | 'tex' | 'skin'; w: number; h: number; px: number; slice?: readonly number[] }

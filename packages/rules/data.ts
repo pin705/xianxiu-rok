@@ -1294,6 +1294,11 @@ export const SIDE_GIFTS: Record<SideLine, Reward[]> = {
 }
 // Quà gắn email (tài khoản không mất khi đổi máy): một lần, server gửi qua thư ngay khi gắn
 export const LINK_GIFT: Reward = { items: { kimDuyen: 1, thoiQuang60: 2, hoSon8: 1 } }
+// Bế Quan Lệnh (Vacation Permit của RoK): bế quan SECLUDE_DAYS ngày — không ai cướp được, nhưng chỉ làm được SECLUDE_OK; xuất quan
+// xong SECLUDE_COOL mới bế quan lại
+export const SECLUDE_DAYS = [3, 7, 14]
+export const SECLUDE_COOL = 3 * 86_400_000
+export const SECLUDE_OK: readonly string[] = ['unseclude', 'login', 'seen', 'mail']
 // Minh lễ (Alliance Gifts): người trong minh hạ yêu vương → cả minh nhận quà qua thư, minh được GIFT_PTS điểm quà theo cấp
 // yêu vương; điểm quà nâng cấp quà (ALLY_GIFT_LV: điểm để lên cấp 1..5), cấp càng cao quà càng hậu.
 export const GIFT_PTS: Partial<Record<number, number>> = { 1: 50, 2: 150, 3: 400 }
@@ -1370,6 +1375,16 @@ export const MINE_RATE = [3_000, 5_000, 5_000]
 export const MINE_RESPAWN = 2 * 3_600_000
 // Yêu vương: kho máu chung (tính bằng số đệ tử bậc 1), mỗi đội đánh một "lát" SLICE = str / slices — đội nhỏ đánh một mình thì thua,
 // cả minh kết trận thì hạ được (Lanchester). Chết thì thưởng chia theo sát thương, hồi sau respawn.
+// Yêu Vương Tuần Sơn (Lohar's Trial của RoK): yêu thú giới cấp LOHAR_WILD+ rơi yêu cốt (cấp 11+ rơi 2); đủ LOHAR_BONES thì triệu
+// hồi một yêu vương đang sống thành bản Tuần Sơn — máu ×LOHAR_HP, tồn tại LOHAR_TIME. Hạ được: ngoài quà thường còn LOHAR_GIFT chia
+// theo sát thương (ai góp từ 5 % được ít nhất một món), người triệu hồi thêm LOHAR_SUMMONER. Hết giờ chưa hạ: trở lại yêu vương thường.
+export const LOHAR_WILD = 6
+export const LOHAR_BONES = 10
+export const LOHAR_HP = 2
+export const LOHAR_TIME = 2 * 3_600_000
+export const LOHAR_GIFT: Reward = { items: { kimDuyen: 2, thoiQuang480: 2 } }
+export const LOHAR_SUMMONER: Reward = { items: { kimDuyen: 1 } }
+export const boneOf = (lv: number) => (lv >= 11 ? 2 : lv >= LOHAR_WILD ? 1 : 0)
 export const BOSSES: Partial<
   Record<number, { str: number; tier: Tier; slices: number; respawn: number; reward: Reward }>
 > = {

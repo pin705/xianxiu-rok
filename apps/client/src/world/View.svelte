@@ -22,6 +22,7 @@
     hits,
     pins,
     zoomable = false,
+    art,
   }: {
     make: () => Scene
     height: number // chiều cao cảnh (DU)
@@ -31,6 +32,7 @@
     scene?: Scene
     hits?: Snippet<[number]>
     pins?: Snippet<[number]>
+    art?: readonly string[] // gói tranh cảnh cần (artPack): cảnh dựng khi đã về
     zoomable?: boolean // Ctrl + con lăn / chụm touchpad / phím +−: thu nhỏ tới 55% (không phóng quá 100% — texture nướng ở 100%)
   } = $props()
 
@@ -70,6 +72,7 @@
     )
     const unmount = mountScene({
       make,
+      art,
       ready: s => (scene = s),
       tick: (s, app) => {
         if (!s.root.visible) return

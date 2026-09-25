@@ -33,6 +33,9 @@ import {
   ROB_SHARE,
   EVE_BUFF,
   EVE_CHEST_N,
+  LOHAR_BONES,
+  LOHAR_HP,
+  LOHAR_WILD,
   LEGION_WAVES,
   LEGION_HOUR,
   LEGION_GIFTS,
@@ -670,6 +673,13 @@ export const en: Text = {
     gifts: 'Win milestones',
     at: (n: number) => `${n} wins`,
     fightN: (n: number) => `Arms Training · fight ${n}`,
+  },
+  lohar: {
+    name: 'Roaming Demon King',
+    by: (who: string, t: string) => `Summoned by ${who} · ${t} left`,
+    bones: (n: number) => `Demon bones ${n}/${LOHAR_BONES}`,
+    summon: 'Summon the roaming king',
+    hint: `World beasts of level ${LOHAR_WILD}+ drop demon bones. With ${LOHAR_BONES}, turn this demon king into its roaming form (×${LOHAR_HP} health, 2 hours) — rally to slay it for a big reward split by damage, plus an extra share for the summoner.`,
   },
   thoi: {
     names: { kim: 'Metal tide', thuy: 'Water tide', moc: 'Wood tide', hoa: 'Fire tide', tho: 'Earth tide' } as Record<
@@ -1483,6 +1493,10 @@ export const en: Text = {
         `First capture · ${({ vein: 'Spirit vein', gate: 'Array eye', heaven: 'Heaven Gate' } as Record<string, string>)[kind] ?? kind} level ${lv}`,
         'Your alliance is the first this season to hold this point. A reward for every member is below.',
       ],
+      lohar: (share: number, summoner: 0 | 1): [string, string] => [
+        'Roaming Demon King slain',
+        `The roaming demon king has fallen — you dealt ${share}% of the damage.${summoner ? ' As the summoner you get an extra share.' : ''} Your reward is below.`,
+      ],
       eveTop: (rank: number, pts: number): [string, string] => [
         `Eve of the Crusade · alliance rank ${rank}`,
         `The realm gates are open. Your alliance placed ${rank} with ${pts.toLocaleString('en')} scroll fragments — every member gets +${pct(EVE_BUFF)} production for 24 hours.`,
@@ -1799,6 +1813,14 @@ export const en: Text = {
     credits: 'Fonts: Alegreya, Ma Shan Zheng — SIL Open Font License. Hand-painted art is generated in code.',
     open: 'Settings',
   },
+  seclude: {
+    title: 'Seclusion',
+    hint: 'Away for days? In seclusion nobody can raid your sect, but you can only read mail — leave any time, then wait 3 days to enter again. Recall all armies first.',
+    go: (d: number) => `Seclude ${d} days`,
+    on: (t: string) => `In seclusion · ${t} left`,
+    onHint: 'Nobody can raid your sect. Leave seclusion to act again.',
+    off: 'Leave seclusion',
+  },
 
   away: {
     title: 'Out of Seclusion',
@@ -1949,6 +1971,7 @@ export const en: Text = {
     far: 'No road there yet — the gates between regions are still closed',
     cap: "Over the elder's march capacity — send fewer disciples or a higher-level elder",
     frenzy: 'War frenzy — you just sent a raid, so the Mountain Ward cannot be raised yet',
+    secluded: 'In seclusion — leave seclusion first to do this',
   } as Record<string, string>,
   net: {
     connecting: 'Connecting…',
