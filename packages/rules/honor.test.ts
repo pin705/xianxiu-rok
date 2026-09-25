@@ -37,12 +37,13 @@ test('Công Huân: chiến công cộng Công Huân; mốc nhận lần lượt;
   ])
   const end = endSeason(ps, freshWorld(), { atlas: atlas(7), phase: 3 }, T0 + 3_600_000, 1, new Set([4]))
   const [a, b, c] = [1, 2, 3].map(p => end.changed.get(p)!)
-  assert.deepEqual(a.mail.at(-2)!.a, [1, 900])
-  assert.equal(a.mail.at(-2)!.k, 'honorTop')
-  assert.deepEqual(b.mail.at(-2)!.a, [2, 500])
-  assert.notEqual(c.mail.at(-2)?.k, 'honorTop', 'không điểm: không xếp hạng')
+  // thứ tự thư: hạng Công Huân (nếu có) → kết mùa → tổng kết mùa
+  assert.deepEqual(a.mail.at(-3)!.a, [1, 900])
+  assert.equal(a.mail.at(-3)!.k, 'honorTop')
+  assert.deepEqual(b.mail.at(-3)!.a, [2, 500])
+  assert.notEqual(c.mail.at(-3)?.k, 'honorTop', 'không điểm: không xếp hạng')
   for (const x of [a, b, c]) {
-    assert.equal(x.mail.at(-1)!.k, 'season')
+    assert.deepEqual([x.mail.at(-2)!.k, x.mail.at(-1)!.k], ['season', 'yearbook'])
     assert.deepEqual([x.honor, x.honorGot], [0, 0], 'mùa mới về 0')
   }
 })
