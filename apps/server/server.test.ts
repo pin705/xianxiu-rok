@@ -779,6 +779,15 @@ test(
       'mật khẩu quá ngắn',
     )
     assert.equal((await json(await api(n, '/account/link', { email, pass: 'mat-khau-1' }, A.token))).ok, true)
+    const inbox = await n.db.client`select body from inbox where world_id = ${w} and kind = 'mail'`
+    assert.ok(
+      inbox.some(
+        r =>
+          (r.body as { pid?: number; mail?: { k: string } }).pid === A.pid &&
+          (r.body as { mail?: { k: string } }).mail?.k === 'linked',
+      ),
+      'gắn email lần đầu: thư quà vào hộp lệnh của giới',
+    )
     assert.equal(
       (await json(await api(n, '/account/link', { email: 'x@y.zz', pass: 'mat-khau-1' }, A.token))).error,
       'linked',

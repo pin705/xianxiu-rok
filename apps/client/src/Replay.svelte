@@ -164,12 +164,18 @@
     }
     return [sum(0), sum(1)] as const
   })
-  const TONE: Partial<Record<Report['kind'], MedalTone>> = { trib: 'thunder', arena: 'pvp', legion: 'thunder' }
+  const TONE: Partial<Record<Report['kind'], MedalTone>> = {
+    trib: 'thunder',
+    arena: 'pvp',
+    legion: 'thunder',
+    drill: 'tower',
+  }
   const tone = $derived<MedalTone>(report ? (TONE[report.kind] ?? (report.kind as MedalTone)) : 'pvp')
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
   const foeEmblem: Emblem = $derived.by(() => {
     if (!report || report.kind === 'trib') return 'thunder'
     if (report.kind === 'legion') return 'ghost'
+    if (report.kind === 'drill') return 'fist'
     if (report.kind === 'pvp' || report.kind === 'arena') return 'crest'
     if (report.kind === 'spot') return EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus'
     return EMBLEM[report.kind][report.i]

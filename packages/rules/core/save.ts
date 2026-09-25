@@ -13,6 +13,7 @@ import {
   ACHS,
   DAILY,
   DAOS,
+  DRILL_MODS,
   ELDERS,
   EVENT_GOALS,
   FESTS,
@@ -272,6 +273,19 @@ const validFest = (s: any) =>
   (s.towerDay === undefined || num(s.towerDay)) &&
   (s.honor === undefined || num(s.honor)) &&
   (s.honorGot === undefined || num(s.honorGot)) &&
+  (s.guestAt === undefined || num(s.guestAt)) &&
+  (s.guests === undefined || num(s.guests)) &&
+  (s.drill === undefined ||
+    (obj(s.drill) &&
+      num(s.drill.day) &&
+      Object.hasOwn(ELDERS, s.drill.elder) &&
+      obj(s.drill.army) &&
+      num(s.drill.base) &&
+      num(s.drill.wins) &&
+      num(s.drill.got) &&
+      [s.drill.mods, s.drill.offer ?? []].every(
+        (l: unknown) => Array.isArray(l) && l.every(m => Object.hasOwn(DRILL_MODS, m)),
+      ))) &&
   (s.dao === undefined || (obj(s.dao) && Object.hasOwn(DAOS, s.dao.id) && num(s.dao.at))) &&
   (s.fog === undefined ||
     (obj(s.fog) && Array.isArray(s.fog.rows) && s.fog.rows.every(num) && Array.isArray(s.fog.fly))) &&

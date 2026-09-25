@@ -20,6 +20,7 @@ import { dropIncoming, raid } from './raid.ts'
 import { spotArrive } from './arrive.ts'
 import { razeArrive } from './flags.ts'
 import { ruinClose } from './ruins.ts'
+import { storeStep } from './storehouse.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
@@ -123,7 +124,7 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
   if (map) {
     const r = ruinClose(view(), w, map, now)
     for (const [k, v] of r.changed) changed.set(k, v)
-    w = r.world
+    w = storeStep(view(), r.world, map, now) // kho minh: lãnh thổ sinh Minh khố theo giờ
   }
   return { changed, world: w }
 }

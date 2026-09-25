@@ -57,6 +57,7 @@ import {
   type Bonus,
   type BagFamily,
   type FestId,
+  type DrillMod,
   type DaoId,
   type Metric,
   type AchId,
@@ -570,6 +571,38 @@ export const en: Text = {
       `Today: ${buys} purchases left · you can list ${cap} more spirit stones' worth`,
     slots: (n: number, of: number) => `Active listings ${n}/${of}`,
     expires: (t: string) => `${t} left`,
+  },
+  guest: 'A wandering cultivator visits — tap for a gift',
+  drill: {
+    title: 'Arms Training',
+    short: 'One session a day: a single army fights ever-stronger drill masters; you choose techniques for them.',
+    lore: 'The drill masters of the Training Grounds fight you back to back. The army is a copy — no real losses — but it does not heal between fights. Every few wins you must give the drill master a technique: pick the one that hurts you least.',
+    open: 'Start training',
+    locked: (n: number) => `Unlocks at Main Hall level ${n}`,
+    startHint:
+      'Pick an elder and disciples at home. The drill master scales with your army when the session starts; one session a day.',
+    start: 'Begin session',
+    wins: (n: number) => `${n} wins so far`,
+    army: (n: string) => `${n} disciples left`,
+    modsNow: 'Drill master has:',
+    foe: (n: string) => `Next drill master: might ${n}`,
+    fight: 'Next fight',
+    every: (n: number) => `Every ${n} wins you pick a technique for the drill master.`,
+    pick: 'Pick a technique for the drill master',
+    pickHint: 'The drill master keeps it for the rest of the session — pick the one that hurts your army least.',
+    mods: {
+      cuong: ['Frenzy', 'Attack +15%'],
+      giap: ['Golden Armor', 'Defense +15%'],
+      the: ['Dragon Body', 'Health +20%'],
+      dong: ['Numbers', 'Troops +15%'],
+      khac: ['Counter', "Main type becomes the counter of your army's main type"],
+    } as Record<DrillMod, [string, string]>,
+    won: (n: number) => `Won fight ${n}`,
+    lost: (n: number) => `Lost fight ${n} — session over`,
+    over: (n: number) => `Session over for today: ${n} wins. Come back tomorrow.`,
+    gifts: 'Win milestones',
+    at: (n: number) => `${n} wins`,
+    fightN: (n: number) => `Arms Training · fight ${n}`,
   },
   honor: {
     title: 'Honor',
@@ -1187,7 +1220,8 @@ export const en: Text = {
       'Earned by donating to the Great Formation and helping allies; spend it at the Merit Pavilion. Kept if you change alliance.',
     fund: 'Alliance Treasury',
     fundHint:
-      'Shared funds that grow with every donation. Hall masters (R4) and the leader use them to stock the Merit Pavilion.',
+      'Shared funds that grow with every donation and with territory (each tile yields funds every hour). Hall masters (R4) and the leader use them to plant banners and stock the Merit Pavilion.',
+    terrFund: (tiles: string, perHour: string) => `${tiles} territory tiles · +${perHour}/h`,
     tech: 'Great Guardian Formation',
     techLore:
       'Every sect lends a share of its spirit power and the formation guards the whole alliance — its boons reach every member. The formation the leader marks counts double.',
@@ -1311,6 +1345,10 @@ export const en: Text = {
         `Tonight your sect held ${waves}/${LEGION_WAVES} waves of the shadow tide and earned ${pts} points.${pts >= LEGION_GIFTS[0].pts ? ' Your reward is below.' : ` Rewards start at ${LEGION_GIFTS[0].pts} points — next week, bring allied reinforcements home.`}`,
       ],
       allyMail: (who: string, tag: string, text: string): [string, string] => [`[${tag}] alliance mail · ${who}`, text],
+      linked: (): [string, string] => [
+        'Account linked',
+        'Your sect is now tied to your email — it stays safe across devices and reinstalls. A small thank-you gift is below.',
+      ],
       honorTop: (rank: number, n: number): [string, string] => [
         `Season honor · rank ${rank}`,
         `You earned ${n.toLocaleString('en')} honor last season, rank ${rank} in the realm. Your reward is below.`,
@@ -1419,7 +1457,7 @@ export const en: Text = {
   },
   account: {
     guest:
-      'Guest account: your sect lives in this browser. Link an email to play from other devices and keep your sect if the browser clears its data.',
+      'Guest account: your sect lives in this browser. Link an email to play from other devices and keep your sect if the browser clears its data — the first link comes with a gift (gold summon, speedups, peace shield).',
     linked: (email: string) => `Linked to ${email}`,
     email: 'Email',
     pass: 'Password (8+ characters)',
@@ -2007,9 +2045,24 @@ export const en: Text = {
         name: 'Endless Battle',
         desc: 'A weekend of war: battles won, raids won and tower floors all score points.',
       },
+      conLon: {
+        name: 'Kunlun Week',
+        desc: 'The Kunlun sect opens its vault: building, studying techniques and using speedups earn Kunlun Tokens. Trade for gold summons, a second builder, tomes and build / study speedups.',
+      },
+      thucSon: {
+        name: 'Shushan Week',
+        desc: 'The sword immortals of Shushan descend: recruiting, winning battles, hunting beasts and kill points earn Shushan Tokens. Trade for battle charms, training speedups and tomes.',
+      },
+      ngaMi: {
+        name: 'Emei Week',
+        desc: 'Emei opens its infirmary: brewing pills, healing, gathering and helping allies earn Emei Tokens. Trade for peace shields, healing speedups and resource packs.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: '7-day calendar',
-    tokens: (n: string) => `Sect Tokens: ${n}`,
+    tokens: (n: string, name = 'Sect Tokens') => `${name}: ${n}`,
+    tokenName: { conLon: 'Kunlun Tokens', thucSon: 'Shushan Tokens', ngaMi: 'Emei Tokens' } as Partial<
+      Record<FestId, string>
+    >,
     buy: (price: string) => `Exchange · ${price}`,
     left: (n: number, max: number) => `${n}/${max} left`,
     soldOut: 'Sold out',

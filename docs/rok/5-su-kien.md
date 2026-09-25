@@ -577,7 +577,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Vì sao hay:** bài toán "chọn kỹ năng cho địch" như roguelite ngược; thử nghiệm đội hình; ai cũng có mốc.
 - **Tu tiên hoá:** **"Luận Võ Liên Hoàn"**: một đội (1 trưởng lão + đệ tử) đấu liên tiếp giáo đầu Diễn võ trường. Mỗi 3 thắng chọn 1
   "công pháp" cho giáo đầu. Không chữa thương giữa phiên.
-- **Game mình:** ❌. Trận tất định theo seed rất hợp (server giải, client phát lại). Thông Thiên Tháp là họ hàng gần.
+- **Game mình:** ✅ (25/09) Luận Võ Liên Hoàn ở Diễn võ trường: đội ảo, quân không hồi, mỗi 3 thắng chọn công pháp cho giáo đầu, mốc quà (`sect/drill.ts`).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### D3. Karuak Ceremony — thang 50 cửa, gọi minh trợ giúp
@@ -1246,14 +1246,14 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | C15 | Holy Conqueror | Linh Địa Chinh Phạt | ❌ | P2 | M |
 | C16 | King of the Tribes | Phá Yêu Trại | ❌ | P1 | M |
 | C17 | Strategic Reserve | Tích Cốc Phòng Cơ | ❌ | P1 | M |
-| C18 | Sự kiện quốc gia / The Pioneer | Danh Môn Tuần Lễ | ❌ | P1 | S |
+| C18 | Sự kiện quốc gia / The Pioneer | Danh Môn Tuần Lễ | ✅ Côn Lôn / Thục Sơn / Nga Mi (25/09) | P1 | S |
 | C19 | Complete Plan | Nhật Khóa Tu Hành | 🟡 | P2 | S |
 | C20 | Artisan's Forge | Khai Lò Luyện Khí | 🟡 | P2 | S |
 | C21 | Lucky Stall + Lucky Spin | Cát Tường Hạ Giá | ❌ | P2 | S–M |
 | C22 | War and Peace | Hoá Kiến Vi Binh | ❌ | P2 | S |
 | C23 | Cornucopia / Ghost Parade / Lotus War | Liên Trảm Bất Hồi | ❌ | P1 | S–M |
 | D1 | Lohar's Trial | Yêu Tướng Thử Luyện | 🟡 yêu vương | P1 | M |
-| D2 | Arms Training | Luận Võ Liên Hoàn | ❌ | P1 | M |
+| D2 | Arms Training | Luận Võ Liên Hoàn | ✅ (25/09) mỗi ngày một phiên, công pháp cho giáo đầu mỗi 3 thắng | P1 | M |
 | D3 | Karuak Ceremony | Thí Luyện Yêu Hoàng | 🟡 tháp + yêu vương | P1 | M |
 | D4 | Trial of Kau Karuak | (gắn mùa) | ❌ | P2 | M |
 | D5 | Golden Kingdom | Hoàng Kim Mê Cảnh | 🟡 bí cảnh | P2 | L |

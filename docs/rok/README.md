@@ -97,12 +97,17 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Honor + Crusader achievements + season personal rewards | Công Huân: điểm cá nhân trong mùa — hạ đệ tử địch (chiến công / 100, cả khi thủ), săn yêu thú giới (2 × cấp), đánh yêu vương (sát thương / 200), khai mỏ (1 / 1.000 tài nguyên), phá trận kỳ (1 / 1.000 độ bền), giữ núi một đợt ma triều (10). Chinh Chiến Công Tích: 6 mốc (50 → 6.000) nhận lần lượt ngay trong mùa. Hết mùa top 10 nhận quà thư theo hạng (1 · 2–3 · 4–10), rồi về 0. Chip "Công Huân N" trên thẻ mùa bản đồ Giới (chấm son khi có mốc nhận) mở bảng: điểm, mốc, bảng xếp hạng giới | ✅ `HONOR_*` (data.ts), `sect/honor.ts`, `world/season.ts`, `Honor.svelte` |
 | Ancient Ruins + Altars of Darkness | Cổ Di Tích (mở 1 giờ mỗi 39 giờ) và Huyết Tế Đàn (2 giờ mỗi 84 giờ): 6 điểm ở các vùng giữa, mỗi điểm lệch giờ riêng (chu kỳ lẻ giờ nên giờ mở trôi dần). Chỉ xuất quân / chiếm được lúc mở; phe giữ lúc đóng cửa chốt điểm mùa theo giờ giữ (120 / 180 mỗi giờ) và mỗi người đang đóng quân nhận Công Huân 2 / 4 mỗi phút đã giữ, rồi quân về, điểm trống. Trên bản đồ: huy hiệu hồn / huyết nhịp sáng khi mở, mờ khi đóng; bảng điểm có đồng hồ "Đang mở · còn …" / "Mở sau …". Điểm mới đặt sau cùng (điểm, thôn trang của giới đang chạy không xê dịch) | ✅ `world/ruins.ts`, `ruinWindow` (points.ts), `atlas.ts` |
 | Inactive leader takeover | Thẻ thành viên ghi "vắng N ngày" (đỏ khi ≥ 7); minh chủ không vào game 7 ngày thì đường chủ (R4) có nút "Nhận minh chủ", người cũ xuống R4 — minh không chết theo minh chủ bỏ game | ✅ `allyClaim` (`world/guild.ts`), `Member.seen` |
+| Garrison banners | Đóng quân giữ trận kỳ: người trong minh gửi đội tới cờ đã dựng (tối đa 3 đội mỗi cờ), đứng lại tới khi gọi về; lực chiến quân giữ chặn bớt sức phá của mỗi đội địch (chỉ phần vượt mới trừ độ bền); cờ đổ hay bị nhổ thì quân giữ tự về. Bản đồ và bảng cờ ghi "Quân giữ: n đội · lực chiến" (cả cho bên định phá) | ✅ `flagGuard` (`world/flags.ts`) |
+| Alliance Storehouse (thu từ lãnh thổ) | Kho minh: mỗi ô lãnh thổ tiên minh sinh 0,1 Minh khố mỗi giờ (chốt theo giờ tròn) — minh ~500 ô ≈ 1.200/ngày, ngang cung phụng cả minh; mở rộng lãnh thổ thì thêm quỹ cắm cờ / nhập hàng. Trang Tiên minh ghi "N ô lãnh thổ · +X/giờ" dưới Minh khố | ✅ `world/storehouse.ts` |
+| National events (Rome / Germany…) | Danh Môn Tuần Lễ: ba đại phái thay nhau mỗi tuần (thứ Sáu → thứ Hai, chu kỳ 21 ngày), mỗi phái một loại lệnh bài và kho đổi riêng — Côn Lôn (xây, lĩnh ngộ, tăng tốc → Kim Duyên, Tạp Dịch Lệnh, kinh thư, phù xây / ngộ đạo), Thục Sơn (tuyển quân, thắng trận, săn yêu, chiến công → phù chiến, phù tuyển quân), Nga Mi (luyện đan, chữa thương, khai mỏ, giúp đồng minh → Hộ Sơn Phù, phù chữa, nang). Lệnh bài không đủ đổi hết — phải chọn | ✅ `FESTS.conLon/thucSon/ngaMi` (kiểu 'shop') |
+| Arms Training | Luận Võ Liên Hoàn (ở Diễn võ trường, từ tầng 6): mỗi ngày một phiên — một đội ảo (không mất quân thật) đấu liên tiếp giáo đầu; trận đầu giáo đầu bằng 12 % lực chiến đội, mỗi trận thắng mạnh thêm 6 %, quân không hồi giữa các trận. Cứ 3 trận thắng tự chọn 1 trong 3 công pháp cho giáo đầu (Cuồng Chiến công +15 % · Kim Giáp thủ +15 % · Long Thể sinh lực +20 % · Đông Đảo quân +15 % · Khắc Chế đổi hệ khắc đội mình) — roguelite ngược. Mốc 3 / 6 / 9 / 12 / 15 trận thắng nhận quà ngay (trung vị ~10 trận); mỗi trận có chiến báo xem lại | ✅ `sect/drill.ts`, `Drill.svelte` |
+| Account-link reward | Quà gắn email: lần gắn đầu (tài khoản khách → email) nhận thư quà Kim Duyên Phù + 2 Thời Quang Phù 1 giờ + Hộ Sơn Phù 8 giờ; lời mời gắn email trong Cài đặt nhắc có quà. Server đẩy lệnh thư vào hộp lệnh của giới (áp đúng một lần như thư admin) | ✅ `/account/link`, `LINK_GIFT` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
 
-Nhịp sau các thay đổi (`npm run sim`, 25/09): bot giỏi Chủ điện 15 ngày 8,8 (24/09: 9,3), tầng 20 ngày 15,9, tầng 25 ngày
-27,3 (24/09: 30,3) — nhanh hơn chủ yếu do Tạp Dịch Lệnh, Tĩnh tọa ngộ đạo, đạo thống; người chơi thường (`45 3 --casual`)
-tầng 15 ngày 13,3, tầng 20 ngày 24,3, tầng 25 ngày 40,3 — vẫn trong mùa 49 ngày. Quà mới tiếp theo nên cân lại (bot giỏi đang
-tới đỉnh sớm ~3 ngày so với 24/09).
+Nhịp sau các thay đổi (`npm run sim`, 25/09 tối): bot giỏi Chủ điện 15 ngày 8,5, tầng 25 ngày 27,5; người chơi thường
+(`45 3 --casual`) tầng 15 ngày 13,3, tầng 20 ngày 23,3 — vẫn trong mùa 49 ngày. Danh Môn Tuần Lễ (bot đổi hàng trong kho) nhanh
+thêm chút; tranh đoạt còn 19,2 % sản lượng bị cướp (cổng ≤ 25 %). Công Huân, kết trận công sơn, di tích, kho minh không có
+trong sim một người.
 
 Tranh đoạt (`30 4 --pvp 20`): kinh tế giàu hơn làm phần bị cướp lên 37 % sản lượng (cổng CI ≤ 25 %) → kho bảo hộ 30 % → 45 %
 sức chứa (`PROTECT`), tài nguyên trong lễ vật Hương Hỏa thành nang (nằm trong túi, không bị cướp), bot chỉ mở nang khi kho còn
@@ -117,7 +122,7 @@ dưới phần bảo hộ: còn 23 %.
 4. (Tạp dịch thứ 2 thuê có hạn: đã xong — Tạp Dịch Lệnh.)
 
 **Đợt C — tương tác người chơi** (đã xong: Hộ Minh Đại Trận, cống hiến + Cống Hiến Các, Minh lễ từ yêu vương, thưởng người giúp, dấu bản đồ, chia sẻ toạ độ, hồ sơ, truyền âm, Minh vụ đường)
-1. (Đợt C đã xong phần chính, cả lãnh thổ tiên minh + trận kỳ + dời tông môn.) Còn: đóng quân giữ trận kỳ, kho minh, 5 bậc chức.
+1. (Đợt C đã xong phần chính, cả lãnh thổ tiên minh + trận kỳ + dời tông môn.) (Đã xong cả: giữ trận kỳ, 5 bậc chức, thư minh, truất minh chủ vắng mặt, kho minh thu từ lãnh thổ.) Còn: điểm tài nguyên riêng của minh (khai an toàn).
 
 **Đợt D — chiến đấu & trưởng lão** (đã xong: phó trưởng lão, chân nguyên, trận dung)
 1. Vật phẩm mở rộng trận dung (Khuếch Trận Kỳ), thiên phú trận dung.

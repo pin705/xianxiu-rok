@@ -7,6 +7,7 @@
     GUARD_STEP,
     HO_PHAP,
     MARKET_HALL,
+    DRILL_HALL,
     MAX_LEVEL,
     PHA_CANH,
     PHA_KIEP,
@@ -144,6 +145,26 @@
 
     {#if tab === 'train'}
       <Train />
+      <!-- Luận Võ Liên Hoàn: mỗi ngày một phiên đấu liên tiếp giáo đầu (từ tầng DRILL_HALL) -->
+      <Card tone="silk">
+        <div class="row">
+          <Icon name="swords" size={26} />
+          <span class="grow stack" style:--gap="2px"
+            ><b>{L.drill.title}</b><small class="t-tiny t-soft"
+              >{game.levels.chuDien >= DRILL_HALL ? L.drill.short : L.drill.locked(DRILL_HALL)}</small
+            ></span
+          >
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={game.levels.chuDien < DRILL_HALL}
+            onclick={() => {
+              onclose()
+              social.drill = true
+            }}>{L.drill.open}</Button
+          >
+        </div>
+      </Card>
     {:else if tab === 'alchemy'}
       <Alchemy />
     {:else if tab === 'library'}

@@ -7,6 +7,8 @@ import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { z } from 'zod'
 import type { Database } from '../db/index.ts'
 import * as accounts from '../db/accounts.ts'
+import { addInbox } from '../db/store.ts'
+import { LINK_GIFT } from '@rok/rules'
 import {
   CODE_TTL,
   COOKIE,
@@ -135,6 +137,9 @@ function profileRoutes(app: App, o: AccountOptions, auth: Auth) {
         if (e instanceof accounts.EmailTaken) return reply.code(409).send({ error: 'email_taken' })
         throw e
       }
+      // quà gắn email: lần gắn đầu (gắn lại bị chặn ở trên), chủ giới áp qua hộp lệnh như thư admin
+      if (s.pid && s.world)
+        await addInbox(o.db, s.world, 'mail', { pid: s.pid, mail: { k: 'linked', a: [], gift: LINK_GIFT } })
       return { ok: true }
     },
   )

@@ -2,10 +2,22 @@
   // Màn núi tông môn: cảnh WebGL (home.ts) + lớp cuộn gốc của trình duyệt (quán tính cuộn như app thật)
   // + nút chạm vô hình trên từng công trình (bàn phím, trình đọc màn hình) + lớp HTML biển tên, đồng hồ.
   // Lớp HTML dịch theo camera trong cùng khung hình với WebGL nên không lệch nhau.
-  import { building, type Kind } from '@rok/art'
-  import { BUILDINGS, IDS, TRIBS, count, storage, type BuildingId, type State } from '@rok/rules'
-  import { Bubble, Hint, Plate, Pointer, Tag } from '../ui'
-  import { L, clock, progress } from '../lib'
+  import { Icon, Portrait, building, type Kind } from '@rok/art'
+  import {
+    BUILDINGS,
+    GUEST_HALL,
+    IDS,
+    TRIBS,
+    count,
+    guestAt,
+    guestGift,
+    storage,
+    type BuildingId,
+    type State,
+  } from '@rok/rules'
+  import { Bubble, Hint, Plate, Pointer, Tag, fly } from '../ui'
+  import { L, LOOK, clock, progress } from '../lib'
+  import { useGame } from '../game'
   import { Home, type Phase } from './home'
   import { HOME, SLOT } from './layout'
   import View from './View.svelte'
@@ -36,6 +48,13 @@
   } = $props()
 
   let scene = $state.raw<Home>()
+  // Vân Du Khách: tới giờ thì một tán tu đứng chờ ở mỏm đá trái Tụ Linh Trận, chạm nhận quà (bay vào Bảo khố)
+  const g = useGame()
+  const guest = $derived(!still && game.levels.chuDien >= GUEST_HALL && now >= guestAt(game))
+  function meet(e: MouseEvent) {
+    const gift = guestGift(game)
+    if (g.act({ type: 'guest' }, 'reward')) fly(e.currentTarget as Element, gift.items ?? {})
+  }
 
   const hour = $derived(new Date(now).getHours())
   // bình minh 5–7 giờ, ngày 7–17, hoàng hôn 17–19, còn lại đêm
@@ -109,6 +128,12 @@
   bind:scene={scene as never}
 >
   {#snippet hits(k)}
+    {#if guest}
+      <button class="guest" style="left:{44 * k}px;top:{560 * k}px" aria-label={L.guest} onclick={meet}
+        ><Portrait look={LOOK.vanHac} size={Math.round(44 * k)} /><span class="gift" aria-hidden="true">🎁</span
+        ></button
+      >
+    {/if}
     {#if !still}
       {#each IDS as id (id)}
         {@const [x, y, w] = SLOT[id]}
@@ -181,6 +206,36 @@
 </View>
 
 <style>
+  /* khách vân du: chân dung trong vòng giấy, nhún nhẹ, hộp quà nhỏ góc trên */
+  .guest {
+    position: absolute;
+    padding: 2px;
+    background: var(--paper);
+    border: 2px solid var(--gold-d);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgb(var(--gold-glow) / 0.45);
+    translate: -50% -50%;
+    animation: bob 1.8s ease-in-out infinite;
+    cursor: pointer;
+  }
+  .gift {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    color: var(--ink);
+    background: var(--gold-l);
+    border: 1px solid var(--gold-d);
+    border-radius: 50%;
+  }
+  @keyframes bob {
+    50% {
+      transform: translateY(-5px);
+    }
+  }
   .up {
     translate: -50% -100% !important;
   }

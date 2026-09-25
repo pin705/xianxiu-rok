@@ -71,6 +71,7 @@ export type AllyInfo = Alliance & {
   war: { signed: boolean; pts: number; last: WarResult[] }
   // Ma Triều Công Sơn của tuần `week` (client so với tuần hiện tại): minh đã ghi danh chưa, số đợt đã đánh, điểm minh, điểm mình
   legion: { week: number; signed: boolean; done: number; pts: number; mine: number }
+  terr?: number // ô lãnh thổ (server tính lúc trả lời, cần bản đồ)
 }
 export const allyRows = (w: World, ps: Players, me = 0): AllyRow[] =>
   Object.values(w.allies)

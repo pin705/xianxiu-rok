@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   ALLY_IDLE,
+  TERR_FUND,
   dayOf,
   ASCEND,
   ASCEND_HALL,
@@ -73,6 +74,8 @@ import {
 import {
   MAP_W,
   advanceAll,
+  storeStep,
+  territoryTiles,
   advanceWorld,
   aidAt,
   allyOf,
@@ -1310,6 +1313,23 @@ test('giữ trận kỳ: người trong minh đóng quân ở cờ, lực chiế
   assert.equal(w.flags![7], undefined, 'mạnh hơn quân giữ: phá dần tới đổ')
   const g = ps.get(1)!.marches[0]
   assert.ok(!g.stay && g.returnAt > 0, 'cờ đổ: quân giữ về')
+})
+
+test('kho minh: lãnh thổ sinh Minh khố theo giờ tròn (lần đầu chỉ đặt mốc)', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const r0 = a.regions.find(r => r.ring === 0)!
+  const ps = world({ ...sect('A', 10), seat: { x: r0.cx, y: r0.cy } })
+  const al = { id: 1, name: 'M', tag: 'T', members: { 1: 2 as const }, notice: '', at: T0, helps: [], fund: 100 }
+  let w: World = { ...freshWorld(), allies: { 1: al } }
+  const tiles = territoryTiles(ps, w, map, T0).get(1)!
+  assert.ok(tiles > 0, 'tông môn trong minh có lãnh thổ')
+  w = storeStep(ps, w, map, T0)
+  assert.deepEqual([w.allies[1].fund, w.allies[1].fundAt], [100, T0], 'lần đầu: đặt mốc')
+  assert.equal(storeStep(ps, w, map, T0 + HOUR - 1), w, 'chưa đủ giờ: không đổi')
+  w = storeStep(ps, w, map, T0 + 2 * HOUR + 5)
+  assert.equal(w.allies[1].fund, 100 + Math.floor(tiles * TERR_FUND * 2))
+  assert.equal(w.allies[1].fundAt, T0 + 2 * HOUR, 'giữ phần lẻ sang giờ sau')
 })
 
 test('khám phá: mê vụ riêng mỗi người (quanh tông môn đã khai), linh điểu tan sương ô kề vùng đã khai, ghé thôn trang / động phủ một lần', () => {

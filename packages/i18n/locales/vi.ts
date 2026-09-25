@@ -57,6 +57,7 @@ import {
   type Bonus,
   type BagFamily,
   type FestId,
+  type DrillMod,
   type DaoId,
   type Metric,
   type AchId,
@@ -558,6 +559,37 @@ export const vi = {
     left: (buys: number, cap: string) => `Hôm nay: còn ${buys} lần mua · treo bán thêm được ${cap} linh thạch`,
     slots: (n: number, of: number) => `Lệnh đang treo ${n}/${of}`,
     expires: (t: string) => `còn ${t}`,
+  },
+  guest: 'Vân du khách ghé núi — chạm nhận quà',
+  drill: {
+    title: 'Luận Võ Liên Hoàn',
+    short: 'Mỗi ngày một phiên: một đội đấu liên tiếp giáo đầu mạnh dần, chọn công pháp cho giáo đầu.',
+    lore: 'Giáo đầu Diễn võ trường ra đấu liên hoàn. Đội ảo — không mất quân thật — nhưng quân không hồi giữa các trận. Cứ vài trận thắng, bạn phải chọn một công pháp cho giáo đầu: chọn cái ít hại đội mình nhất.',
+    open: 'Vào luận võ',
+    locked: (n: number) => `Mở khi Chủ điện tầng ${n}`,
+    startHint: 'Chọn trưởng lão và đệ tử đang ở nhà. Giáo đầu theo sức đội bạn lúc vào phiên; mỗi ngày một phiên.',
+    start: 'Bắt đầu phiên',
+    wins: (n: number) => `Đã thắng ${n} trận`,
+    army: (n: string) => `Đội còn ${n} đệ tử`,
+    modsNow: 'Giáo đầu đã có:',
+    foe: (n: string) => `Giáo đầu trận kế: lực chiến ${n}`,
+    fight: 'Đánh trận kế',
+    every: (n: number) => `Cứ ${n} trận thắng chọn một công pháp cho giáo đầu.`,
+    pick: 'Chọn công pháp cho giáo đầu',
+    pickHint: 'Giáo đầu sẽ giữ công pháp này tới hết phiên — chọn cái ít hại đội bạn nhất.',
+    mods: {
+      cuong: ['Cuồng Chiến', 'Công +15 %'],
+      giap: ['Kim Giáp', 'Thủ +15 %'],
+      the: ['Long Thể', 'Sinh lực +20 %'],
+      dong: ['Đông Đảo', 'Quân số +15 %'],
+      khac: ['Khắc Chế', 'Hệ chính của giáo đầu thành hệ khắc hệ chính đội bạn'],
+    } as Record<DrillMod, [string, string]>,
+    won: (n: number) => `Thắng trận ${n}`,
+    lost: (n: number) => `Thua trận ${n} — hết phiên`,
+    over: (n: number) => `Hết phiên hôm nay: thắng ${n} trận. Mai quay lại luận võ tiếp.`,
+    gifts: 'Mốc thắng',
+    at: (n: number) => `${n} trận`,
+    fightN: (n: number) => `Luận võ · trận ${n}`,
   },
   honor: {
     title: 'Công Huân',
@@ -1183,7 +1215,8 @@ export const vi = {
     creditHint: 'Được khi cung phụng Đại Trận và giúp đồng minh; đổi hàng ở Cống Hiến Các. Giữ cả khi đổi minh.',
     fund: 'Minh khố',
     fundHint:
-      'Quỹ chung, lớn dần theo mỗi lượt cung phụng. Đường chủ (R4) và minh chủ dùng để nhập hàng cho Cống Hiến Các.',
+      'Quỹ chung, lớn dần theo mỗi lượt cung phụng và theo lãnh thổ (mỗi ô sinh Minh khố mỗi giờ). Đường chủ (R4) và minh chủ dùng để cắm trận kỳ, nhập hàng cho Cống Hiến Các.',
+    terrFund: (tiles: string, perHour: string) => `${tiles} ô lãnh thổ · +${perHour}/giờ`,
     tech: 'Hộ Minh Đại Trận',
     techLore:
       'Mỗi tông môn góp một phần linh lực, đại trận hộ cả minh — tăng ích tới mọi người trong minh. Trận minh chủ điểm góp được gấp đôi.',
@@ -1308,6 +1341,10 @@ export const vi = {
         `Đêm nay tông môn giữ được ${waves}/${LEGION_WAVES} đợt ma triều, được ${pts} điểm.${pts >= LEGION_GIFTS[0].pts ? ' Quà theo điểm ở dưới.' : ` Đạt ${LEGION_GIFTS[0].pts} điểm mới có quà — tuần sau kéo viện binh đồng minh về giữ nhà.`}`,
       ],
       allyMail: (who: string, tag: string, text: string): [string, string] => [`Thư minh [${tag}] · ${who}`, text],
+      linked: (): [string, string] => [
+        'Quà gắn tài khoản',
+        'Tông môn đã gắn email — đổi máy, cài lại vẫn giữ nguyên. Chút quà cảm tạ ở dưới.',
+      ],
       honorTop: (rank: number, n: number): [string, string] => [
         `Công Huân mùa · hạng ${rank}`,
         `Mùa vừa qua đạo hữu tích ${n.toLocaleString('vi')} Công Huân, đứng hạng ${rank} cả giới. Quà ở dưới.`,
@@ -1412,7 +1449,7 @@ export const vi = {
   },
   account: {
     guest:
-      'Tài khoản khách: tông môn gắn với trình duyệt này. Gắn email để vào từ máy khác và không mất tông môn khi trình duyệt xoá dữ liệu.',
+      'Tài khoản khách: tông môn gắn với trình duyệt này. Gắn email để vào từ máy khác và không mất tông môn khi trình duyệt xoá dữ liệu — lần gắn đầu có quà (Kim Duyên Phù, phù tăng tốc, Hộ Sơn Phù).',
     linked: (email: string) => `Đã gắn với ${email}`,
     email: 'Email',
     pass: 'Mật khẩu (ít nhất 8 ký tự)',
@@ -2008,9 +2045,24 @@ export const vi = {
         name: 'Liên Trảm Bất Hồi',
         desc: 'Cuối tuần chinh chiến: thắng trận, cướp thắng, leo tháp — trận nào cũng có điểm.',
       },
+      conLon: {
+        name: 'Côn Lôn Tuần Lễ',
+        desc: 'Đại phái Côn Lôn mở kho: xây công trình, lĩnh ngộ công pháp, dùng phù tăng tốc đều ra Côn Lôn Lệnh. Đổi lấy Kim Duyên, Tạp Dịch Lệnh, kinh thư, phù xây / ngộ đạo.',
+      },
+      thucSon: {
+        name: 'Thục Sơn Tuần Lễ',
+        desc: 'Kiếm tiên Thục Sơn hạ sơn: tuyển đệ tử, thắng trận, săn yêu, lập chiến công ra Thục Sơn Lệnh. Đổi phù chiến, phù tuyển quân, kinh thư.',
+      },
+      ngaMi: {
+        name: 'Nga Mi Tuần Lễ',
+        desc: 'Nga Mi mở y quán: luyện đan, chữa thương, khai mỏ, giúp đồng minh ra Nga Mi Lệnh. Đổi Hộ Sơn Phù, phù chữa thương, nang tài nguyên.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: 'Lịch 7 ngày',
-    tokens: (n: string) => `Tông Môn Lệnh: ${n}`,
+    tokens: (n: string, name = 'Tông Môn Lệnh') => `${name}: ${n}`,
+    tokenName: { conLon: 'Côn Lôn Lệnh', thucSon: 'Thục Sơn Lệnh', ngaMi: 'Nga Mi Lệnh' } as Partial<
+      Record<FestId, string>
+    >,
     buy: (price: string) => `Đổi · ${price}`,
     left: (n: number, max: number) => `Còn ${n}/${max}`,
     soldOut: 'Đã đổi hết',

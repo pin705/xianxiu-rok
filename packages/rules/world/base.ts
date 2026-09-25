@@ -96,6 +96,7 @@ export type Alliance = {
   naps?: number[] // minh ước bất xâm phạm (NAP) với các minh này
   napIn?: number[] // lời đề nghị minh ước đang chờ minh mình trả lời
   mailAt?: number // lúc gửi thư minh gần nhất
+  fundAt?: number // kho minh: lãnh thổ đã sinh Minh khố tới lúc này
 }
 // Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
 // tuần và số thứ tự nên client tự vẽ được), điểm từng người đã góp

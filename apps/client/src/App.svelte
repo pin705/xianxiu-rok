@@ -28,6 +28,7 @@
   import Arena from './Arena.svelte'
   import Market from './Market.svelte'
   import Honor from './Honor.svelte'
+  import Drill from './Drill.svelte'
   import Advisor from './Advisor.svelte'
   import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
@@ -417,8 +418,7 @@
 
   // Đi cướp: luật giới (server kiểm cả hai bên) nên không đoán trước — chờ server
   async function raid(a: WorldAction) {
-    const r = await waiting(n => n.send(a))
-    if (!r?.ok) return
+    if (!(await waiting(n => n.send(a)))?.ok) return
     sfx('march')
     rivalsOpen = false
   }
@@ -542,6 +542,7 @@
     <Arena api={net ?? null} send={sendWorld} {me} onreplay={r => (replay = r)} />
     <Market api={net ?? null} send={sendWorld} />
     <Honor api={net ?? null} />
+    <Drill onfight={() => fightNow({ type: 'drillFight' })} onreplay={r => (replay = r)} />
     {#if tab === 'tongMon' && !selected && !storm}<Advisor
         game={shown}
         ontab={t => (tab = t)}

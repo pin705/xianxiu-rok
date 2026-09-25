@@ -5,6 +5,7 @@ import {
   type Bonus,
   type BuildingId,
   type DailyId,
+  type DrillMod,
   type ElderId,
   type GearId,
   type ItemId,
@@ -70,10 +71,23 @@ export type Snap = {
   level: number
   troops: { type: UnitType; tier: Tier; n: number }[]
 }
+// Luận Võ Liên Hoàn (DRILL_* ở data.ts): ngày của phiên, đội ảo còn lại, sức giáo đầu trận đầu, số trận thắng, công pháp đã
+// chọn cho giáo đầu, ba lựa chọn đang chờ (sau mỗi DRILL_EVERY thắng), thua chưa, số mốc quà đã nhận
+export type Drill = {
+  day: number
+  elder: ElderId
+  army: Army
+  base: number
+  wins: number
+  mods: DrillMod[]
+  offer?: DrillMod[]
+  over?: boolean
+  got: number
+}
 export type Report = {
   id: number
   at: number
-  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena' | 'legion' // legion: đợt i Ma triều
+  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena' | 'legion' | 'drill' // legion: đợt i Ma triều · drill: trận i Luận Võ
   i: number
   spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
@@ -180,6 +194,7 @@ export type MailArgs = {
   supply: [who: string] // đồng minh who gửi tài nguyên qua Vận Linh Trận (ở phần quà)
   allyMail: [who: string, tag: string, text: string] // thư minh: R4 / minh chủ who của minh tag gửi cả minh
   honorTop: [rank: number, n: number] // hết mùa: hạng Công Huân cá nhân, điểm
+  linked: [] // quà gắn email (một lần)
 }
 export type MailKind = keyof MailArgs
 // Thư mới (chưa có id): a bắt buộc, đúng kiểu theo khoá
@@ -257,6 +272,9 @@ export type State = {
   towerDay?: number // ngày (dayOf) đã nhận rương Tĩnh tọa ngộ đạo
   honor?: number // Công Huân trong mùa (hết mùa về 0)
   honorGot?: number // số mốc Chinh Chiến Công Tích đã nhận trong mùa
+  drill?: Drill // Luận Võ Liên Hoàn hôm nay
+  guestAt?: number // Vân Du Khách kế tiếp ghé núi lúc này (chưa có: born + GUEST_EVERY)
+  guests?: number // số lần đã nhận quà khách (xoay vòng GUEST_GIFTS)
   fog?: Fog // mê vụ đã khai (chưa có: chỉ quanh tông môn)
   visited?: number[] // thôn trang / động phủ đã ghé (chỉ số trong sitesOf)
   born?: number // lúc lập tông môn (ms) — sự kiện tân thủ tính theo giờ từ đây (lập lúc 23h vẫn đủ 24 giờ ngày đầu)

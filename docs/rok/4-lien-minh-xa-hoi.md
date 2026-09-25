@@ -873,9 +873,9 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | B4 | Điểm cá nhân/quỹ minh và cửa hàng minh | ✅ cống hiến + Minh khố + Cống Hiến Các | **P0** | M |
 | B5 | Kỹ năng liên minh (buff có thời hạn) | ❌ | P2 | M |
 | C1 | Pháo đài trung tâm/phụ | ❌ | P1 | L |
-| C2 | Cờ, tiền đồn, khiên cờ, tháp tên | 🟡 trận kỳ (cắm, nới lãnh thổ, bị phá, tự hồi); chưa đóng quân giữ cờ | P1 | L |
+| C2 | Cờ, tiền đồn, khiên cờ, tháp tên | ✅ trận kỳ (cắm, nới lãnh thổ, bị phá, tự hồi) + đóng quân giữ cờ (25/09) | P1 | L |
 | C3 | Trung tâm tài nguyên minh (thu an toàn) | 🟡 mỏ chung, ai cũng tranh được | P2 | M |
-| C4 | Điểm tài nguyên minh và kho minh | ❌ (linh mạch chỉ buff %) | P1 | M |
+| C4 | Điểm tài nguyên minh và kho minh | 🟡 kho minh: lãnh thổ sinh Minh khố theo giờ (25/09); chưa có điểm tài nguyên riêng của minh | P1 | M |
 | C5 | Buff lãnh thổ và dịch chuyển vào lãnh thổ | ✅ lãnh thổ tiên minh (khai mỏ +25 %), dời tông môn vào lãnh thổ, dời núi tân thủ | P1 | M |
 | C6 | Thánh địa, đèo, thưởng chiếm lần đầu | ✅ linh mạch/trận nhãn/Thiên Môn; thiếu thưởng lần đầu, buff đa dạng | P1 | S–M |
 | D1 | Kết trận và tab Chiến tranh | ✅ điểm, yêu vương và tông môn (kết trận công sơn, 25/09); danh sách kết trận + nút góp đội ở trang Tiên minh | P1 | M |

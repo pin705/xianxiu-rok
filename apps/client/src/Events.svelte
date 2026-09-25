@@ -48,6 +48,9 @@
     lienTram: 'shield',
     dongTam: 'people',
     tranhPhong: 'swords',
+    conLon: 'hammer',
+    thucSon: 'swords',
+    ngaMi: 'cauldron',
   }
   // lịch 7 ngày (sự kiện tương lai chưa mở vẫn hiện để người chơi chuẩn bị, như Event Calendar của RoK)
   const cal = $derived(
@@ -155,7 +158,9 @@
           {/each}
         </ul>
       {:else if def.kind === 'shop'}
-        <p class="row between"><b class="pts t-num t-gold">{L.fest.tokens(num(festTokens(s, cur)))}</b></p>
+        <p class="row between">
+          <b class="pts t-num t-gold">{L.fest.tokens(num(festTokens(s, cur)), L.fest.tokenName[cur])}</b>
+        </p>
         {#if stage}
           <Card>
             <ul class="today">

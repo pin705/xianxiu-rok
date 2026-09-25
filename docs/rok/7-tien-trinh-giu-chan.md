@@ -973,7 +973,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | A10 Vào liên minh sớm → nhiệm vụ "Bái nhập tiên minh" | ✅ lễ nhập minh (quà lần đầu) | P1 | S |
 | A3 Counselor → Thanh Phong dẫn đường (+ trận mở màn: M) | 🟡 có nhiệm vụ + mũi tên | P1 | S / M |
 | A9 Thợ thứ hai → tạp dịch thứ hai (thuê 2 ngày; vĩnh viễn bằng Công đức) | 🟡 1 hàng, P4 định bán | P1 | S / M |
-| C12 Mã quà + quà liên kết email | ❌ (thư admin thay tạm) | P1 | S |
+| C12 Mã quà + quà liên kết email | 🟡 quà gắn email ✅ (25/09); mã quà: thư admin thay tạm | P1 | S |
 | C14 Thông báo đẩy thêm loại + chọn loại | 🟡 3 loại | P1 | S |
 | D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | 🟡 đang làm `tranhBa` | P1 | S |
 | D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | ❌ | P1 | S / M |

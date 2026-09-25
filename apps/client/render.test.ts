@@ -68,6 +68,7 @@ async function load(lang: 'vi' | 'en') {
     'Market',
     'Supply',
     'Honor',
+    'Drill',
     'Advisor',
     'Chat',
     'world/WorldView',
@@ -753,6 +754,30 @@ test('tiên minh, chat', async () => {
       const hon = paint('Honor', { game: { ...s, honor: 420, honorGot: 1 }, api }, `${label}, Công Huân`)
       assert.ok(hon.includes(L.honor.mine('420')) && hon.includes(L.honor.claim), 'điểm của mình + mốc nhận được')
       social.honor = false
+      social.drill = true
+      paint('Drill', { game: s, onfight: async () => null, onreplay: noop }, `${label}, Luận Võ chưa vào phiên`)
+      if (s.levels.chuDien >= 6) {
+        const drill = {
+          day: dayOf(s.time),
+          elder: 'thanhPhong' as const,
+          army: { kiem3: 300 },
+          base: 5000,
+          wins: 3,
+          mods: ['giap' as const],
+          offer: ['cuong' as const, 'the' as const, 'khac' as const],
+          got: 1,
+        }
+        const dr = paint(
+          'Drill',
+          { game: { ...s, drill }, onfight: async () => null, onreplay: noop },
+          `${label}, Luận Võ chọn công pháp`,
+        )
+        assert.ok(
+          dr.includes(L.drill.wins(3)) && dr.includes(L.drill.mods.khac[0]),
+          'đang phiên: số thắng + 3 lựa chọn',
+        )
+      }
+      social.drill = false
       const sup = paint(
         'Supply',
         {
@@ -912,6 +937,30 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
       'trận kỳ minh khác',
     )
     assert.ok(enemy.includes(L.world.terr.flag('HMT')) && enemy.includes(L.world.terr.hp(40)), 'cờ địch: hiệu + độ bền')
+    const own = paint(
+      'TileSheet',
+      {
+        game,
+        now,
+        info,
+        atlas: a,
+        me: 1,
+        snap: {
+          ...flagged,
+          flags: [{ id: 8, aid: 1, x: 22, y: 22, done: now - 1, guard: [2, 5400] as [number, number] }],
+        },
+        ally,
+        onclose: noop,
+        onraid: noop,
+        pick: { kind: 'tile', x: 22, y: 22 },
+        send: async () => ({ ok: true }),
+      },
+      'trận kỳ minh mình có quân giữ',
+    )
+    assert.ok(
+      own.includes(L.world.terr.guards(2, (5400).toLocaleString(lang))) && own.includes(L.world.terr.guard),
+      'cờ minh mình: quân giữ + nút đóng quân',
+    )
     paint(
       'WorldView',
       { game, now, info, me: 1, snap, allies: [3], marks: ally.marks, goto: { x: 3, y: 4 }, onpick: noop },

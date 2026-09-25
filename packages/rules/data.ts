@@ -943,6 +943,31 @@ const HONOR_TOP: Reward[] = [
 ]
 export const honorPrize = (rank: number) => HONOR_TOP[rank === 0 ? 0 : rank < 3 ? 1 : 2] // rank tính từ 0
 
+// ---------- Luận Võ Liên Hoàn (Arms Training của RoK) ----------
+// Mỗi ngày một phiên từ Chủ điện DRILL_HALL: một đội (trưởng lão + đệ tử đang ở nhà — đội ảo, không mất quân thật) đấu liên tiếp
+// giáo đầu Diễn võ trường. Trận đầu giáo đầu bằng DRILL_BASE lực chiến đội lúc vào phiên, mỗi trận thắng mạnh thêm DRILL_GROW;
+// quân không hồi giữa các trận. Cứ DRILL_EVERY trận thắng tự chọn 1 trong 3 công pháp cho giáo đầu (DRILL_MODS, cộng dồn) —
+// chọn cái ít hại đội mình nhất. Mốc thắng DRILL_GIFTS nhận quà ngay; thua là hết phiên hôm nay.
+export const DRILL_HALL = 6
+export const DRILL_BASE = 0.12
+export const DRILL_GROW = 1.06
+export const DRILL_EVERY = 3
+export const DRILL_MODS = {
+  cuong: { atk: 0.15 }, // Cuồng Chiến: công +15 %
+  giap: { def: 0.15 }, // Kim Giáp: thủ +15 %
+  the: { hp: 0.2 }, // Long Thể: sinh lực +20 %
+  dong: { n: 0.15 }, // Đông Đảo: quân số +15 %
+  khac: {}, // Khắc Chế: hệ chính của giáo đầu thành hệ khắc hệ chính đội mình
+} satisfies Record<string, Partial<Record<'atk' | 'def' | 'hp' | 'n', number>>>
+export type DrillMod = keyof typeof DRILL_MODS
+export const DRILL_GIFTS: { n: number; reward: Reward }[] = [
+  { n: 3, reward: { items: { thoiQuang15: 2, kinhThu500: 1 } } },
+  { n: 6, reward: { items: { thoiQuang60: 1, kinhThu2k: 1 } } },
+  { n: 9, reward: { items: { thoiQuang60: 2, nganDuyen: 1 } } },
+  { n: 12, reward: { items: { thoiQuang180: 1, kinhThu8k: 1 } } },
+  { n: 15, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+]
+
 // ---------- Thương nhân vân du (Mysterious Merchant của RoK) ----------
 // Mỗi MERCHANT_EVERY một lượt hàng mới: MERCHANT_SLOTS món rút từ MERCHANT_POOL (tất định theo tông môn và lượt), giá bằng
 // một loại tài nguyên = price × tầng Chủ điện, mỗi món mua một lần. Ở Tàng Bảo Các (Thương hội) từ tầng MERCHANT_HALL.
@@ -1138,6 +1163,22 @@ export const ALLY_MARKS = 5 // dấu trên bản đồ giới đặt cho cả mi
 export const ALLY_MAIL_COOL = 3_600_000 // thư minh (R4 / minh chủ gửi tới hộp thư cả minh): mỗi minh một thư mỗi giờ
 export const ALLY_MAIL_LEN = 300
 export const ALLY_IDLE = 7 // minh chủ không vào game chừng này ngày: đường chủ (R4) nhận minh chủ được
+// Vân Du Khách (Visitors của RoK): mỗi GUEST_EVERY một tán tu ghé núi mang quà nhỏ (xoay vòng GUEST_GIFTS), chạm để nhận;
+// không dồn — tới giờ thì khách đứng chờ tới khi nhận
+export const GUEST_HALL = 2
+export const GUEST_EVERY = 3 * 3_600_000
+export const GUEST_GIFTS: Reward[] = [
+  { items: { thoiQuang15: 1 } },
+  { items: { thachNang1k: 2 } },
+  { items: { kinhThu500: 1 } },
+  { items: { thaoNang1k: 2 } },
+  { items: { loBan15: 1, luyenBinh15: 1 } },
+  { items: { khoangNang1k: 2 } },
+  { items: { thoiQuang60: 1 } },
+  { items: { nganDuyen: 1 } },
+]
+// Quà gắn email (tài khoản không mất khi đổi máy): một lần, server gửi qua thư ngay khi gắn
+export const LINK_GIFT: Reward = { items: { kimDuyen: 1, thoiQuang60: 2, hoSon8: 1 } }
 // Minh lễ (Alliance Gifts): người trong minh hạ yêu vương → cả minh nhận quà qua thư, minh được GIFT_PTS điểm quà theo cấp
 // yêu vương; điểm quà nâng cấp quà (ALLY_GIFT_LV: điểm để lên cấp 1..5), cấp càng cao quà càng hậu.
 export const GIFT_PTS: Partial<Record<number, number>> = { 1: 50, 2: 150, 3: 400 }
@@ -1231,6 +1272,7 @@ export const BOSSES: Partial<
 export const TERR_SEAT = 3
 export const TERR_POINT = 5
 export const TERR_GATHER = 0.25
+export const TERR_FUND = 0.1 // kho minh: mỗi ô lãnh thổ sinh chừng này Minh khố mỗi giờ (chốt mỗi giờ)
 export const MOVE_COOL = 24 * 3_600_000
 // Mê vụ (Fog of War của RoK): mỗi tông môn một bản đồ sương riêng, ô sương FOG_CELL × FOG_CELL ô bản đồ; lúc đầu đã khai
 // FOG_HOME ô sương quanh tông môn. Linh điểu (Scout): 1 + 1 mỗi CRANE_PER tầng Chủ điện (tối đa CRANE_MAX), thả vào ô sương
@@ -1758,6 +1800,55 @@ const fests = {
       { items: { kinhThu2k: 1, thoiQuang15: 1 } },
       { items: { kinhThu2k: 2, nganDuyen: 1 } },
       { items: { kinhThu8k: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Danh Môn Tuần Lễ (các sự kiện quốc gia Rome / Germany… của RoK): ba đại phái thay nhau mỗi tuần (thứ Sáu → thứ Hai), mỗi
+  // phái một loại lệnh bài kiếm từ việc riêng và một kho đổi riêng. Côn Lôn: xây, lĩnh ngộ, tăng tốc
+  conLon: {
+    window: { kind: 'cycle', every: 21, len: 4, offset: 1 },
+    hall: 5,
+    kind: 'shop',
+    stages: [{ build: 6, tech: 8, speed: 0.05 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 80, max: 1 },
+      { reward: { items: { tapDich48: 1 } }, price: 60, max: 1 },
+      { reward: { items: { kinhThu8k: 1 } }, price: 40, max: 2 },
+      { reward: { items: { loBan480: 1 } }, price: 30, max: 3 },
+      { reward: { items: { ngoDao480: 1 } }, price: 30, max: 3 },
+      { reward: { items: { tuLinh24: 1 } }, price: 25, max: 2 },
+      { reward: { items: { thoiQuang60: 1 } }, price: 8, max: 10 },
+    ],
+  },
+  // Thục Sơn: tuyển đệ tử, thắng trận, săn yêu, chiến công
+  thucSon: {
+    window: { kind: 'cycle', every: 21, len: 4, offset: 8 },
+    hall: 5,
+    kind: 'shop',
+    stages: [{ train: 0.02, win: 2, hunt: 1, kp: 0.001 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 80, max: 1 },
+      { reward: { items: { luyenBinh480: 1 } }, price: 30, max: 3 },
+      { reward: { items: { chienY: 1 } }, price: 20, max: 3 },
+      { reward: { items: { kimCuong: 1 } }, price: 20, max: 3 },
+      { reward: { items: { hoThe: 1 } }, price: 20, max: 3 },
+      { reward: { items: { thanHanh: 1 } }, price: 15, max: 3 },
+      { reward: { items: { kinhThu2k: 1 } }, price: 12, max: 5 },
+    ],
+  },
+  // Nga Mi: luyện đan, chữa thương, khai mỏ, giúp đồng minh
+  ngaMi: {
+    window: { kind: 'cycle', every: 21, len: 4, offset: 15 },
+    hall: 5,
+    kind: 'shop',
+    stages: [{ brew: 4, heal: 0.02, gather: 0.0005, ally: 1 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 80, max: 1 },
+      { reward: { items: { hoSon24: 1 } }, price: 35, max: 2 },
+      { reward: { items: { dieuThu480: 1 } }, price: 25, max: 3 },
+      { reward: { items: { thachNang20k: 1 } }, price: 15, max: 3 },
+      { reward: { items: { thaoNang20k: 1 } }, price: 15, max: 3 },
+      { reward: { items: { khoangNang20k: 1 } }, price: 15, max: 3 },
+      { reward: { items: { nganDuyen: 1 } }, price: 12, max: 3 },
     ],
   },
 } satisfies Record<string, FestDef>

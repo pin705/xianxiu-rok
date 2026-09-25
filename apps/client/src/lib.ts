@@ -184,6 +184,7 @@ export function reportName(r: Report) {
   if (r.kind === 'pvp' || r.kind === 'arena') return r.foe ?? L.pvp.kind
   if (r.kind === 'spot') return spotName(r.spot)
   if (r.kind === 'legion') return L.legion.wave(r.i + 1)
+  if (r.kind === 'drill') return L.drill.fightN(r.i + 1)
   return L.target({ kind: r.kind, i: r.i })
 }
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE

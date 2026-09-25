@@ -13,6 +13,7 @@
     MOB_GOALS,
     MOB_MIN,
     RESOURCES,
+    TERR_FUND,
     dayOf,
     jobOf,
     weekOf,
@@ -215,7 +216,10 @@
           ></span
         >
         <span title={L.guild.fundHint}
-          ><small class="t-tiny t-soft">{L.guild.fund}</small><b class="t-num">{num(ally.fund ?? 0)}</b></span
+          ><small class="t-tiny t-soft">{L.guild.fund}</small><b class="t-num">{num(ally.fund ?? 0)}</b
+          >{#if ally.terr}<small class="t-tiny t-good"
+              >{L.guild.terrFund(num(ally.terr), num(ally.terr * TERR_FUND))}</small
+            >{/if}</span
         >
         <span title={L.guild.giftHint}
           ><small class="t-tiny t-soft">{L.guild.gift}</small><b>{L.guild.giftLv(gift)}</b><Meter

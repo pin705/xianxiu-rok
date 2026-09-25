@@ -15,7 +15,8 @@ export const THEME: Record<Report['kind'], Theme> = {
   pvp: 'sect',
   spot: 'wild',
   arena: 'tower', // Luận Kiếm Đài: sân đá như Thông Thiên Tháp
-  legion: 'storm', // Ma triều công sơn: trời tối như lôi kiếp
+  legion: 'storm',
+  drill: 'tower', // Ma triều công sơn: trời tối như lôi kiếp
 }
 export const REALM: Theme[] = ['forest', 'fire', 'ice', 'storm', 'storm'] // Lôi Trì, Hỗn Độn: trời tối như lôi kiếp
 export const REALM_TINT = [C.malachite, C.cinnabarL, C.azuriteL]
