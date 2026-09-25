@@ -16,6 +16,8 @@ import {
   warAt,
   warOf,
   warResolve,
+  arkAt,
+  arkOf,
   arkStep,
 } from '@rok/rules/world'
 import { npcState } from '@rok/rules/bot'
@@ -113,6 +115,15 @@ function legionCheck(w: World, now: number) {
 }
 // Tranh Đoạt Linh Châu: tối Chủ nhật dựng trận, giải từng hiệp tới hạn, hết trận thì quà — mỗi nhịp xem có gì tới hạn
 function arkCheck(w: World, now: number) {
+  // 10 phút trước giờ: nhắc (Web Push) người của các minh đã ghi danh — một lần mỗi tuần
+  const ark = arkOf(w.shared),
+    wk = weekOf(now)
+  if (now >= arkAt(wk) - 10 * 60_000 && now < arkAt(wk) && (ark.warned ?? -1) < wk && ark.signed.length) {
+    w.share({ ...w.shared, ark: { ...ark, warned: wk } })
+    for (const id of ark.signed)
+      for (const pid of Object.keys(w.shared.allies[id]?.members ?? {}).map(Number))
+        if (!w.npc.has(pid)) w.env.push?.(pid, L => ({ title: L.push.title, body: L.push.arkSoon, tag: 'ark' }))
+  }
   const r = arkStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
   if (r.world === w.shared) return
   w.share(r.world)

@@ -203,6 +203,7 @@ export type MailArgs = {
   firstTake: [kind: string, lv: number] // tiên minh chiếm lần đầu một điểm (loại, cấp) trong mùa
   eveTop: [rank: number, pts: number] // Khai Giới Trảm Tà: cổng mở, minh mình hạng rank giới vận, điểm
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
+  camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
   ark: [win: 0 | 1, foe: string, mine: number, theirs: number] // Tranh Đoạt Linh Châu: thắng / thua minh foe, điểm hai bên
   // Tổng kết mùa (Yearbook): mùa, tầng Chủ điện, Công Huân (hạng, 0: ngoài bảng), chiến công, yêu thú hạ, cướp thắng, khai mỏ
   yearbook: [

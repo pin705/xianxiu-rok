@@ -701,7 +701,9 @@ test(
     const w1 = await c.welcome
     assert.equal(w1.world.season, 1)
     const board = await c.ask({ k: 'season' })
-    assert.deepEqual(board, { rows: [], me: null, fame: [] })
+    const { camps, camp, ...rest } = board as { camps: [number, number]; camp: 0 | 1 }
+    assert.deepEqual(rest, { rows: [], me: null, fame: [] })
+    assert.deepEqual([camps, [0, 1].includes(camp)], [[0, 0], true], 'Chính Tà: điểm hai phái, phái của mình')
     const bye = new Promise<string>(ok => c.s.once('bye', m => ok(m.reason)))
     await api(n, '/dev/warp', { min: SEASON_DAYS * 24 * 60 + 5 }, A.token)
     assert.equal(await bye, 'season')

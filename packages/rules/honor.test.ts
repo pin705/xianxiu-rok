@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { COIN_PER, COIN_SHOP, HONOR_KP, HONOR_TIERS, apply, coins, newGame, type State } from './index.ts'
-import { addHonor, addKp, atlas, endSeason, freshWorld, type Players } from './world.ts'
+import { addHonor, addKp, atlas, campOf, campPts, endSeason, freshWorld, type Players } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
 const sect = (name: string, honor = 0): State => ({ ...newGame(T0, name), honor })
@@ -80,4 +80,26 @@ test('Tổng kết mùa: hết mùa ai cũng nhận thư tổng kết phần tă
   const yb = x.mail.find(m => m.k === 'yearbook')!
   assert.deepEqual(yb.a, [2, s.levels.chuDien, 900, 1, 4000, 30, 2, 50_000])
   assert.deepEqual(x.yb, { kp: 5000, hunted: 40, raided: 3, gathered: 70_000 }, 'mốc cho mùa sau')
+})
+
+test('Chính Tà Phân Tranh: phái theo chẵn lẻ mã phe, điểm mùa cộng theo phái, hết mùa người phái thắng có quà', () => {
+  assert.deepEqual([campOf(2), campOf(3), campOf(-4), campOf(-5)], [0, 1, 0, 1])
+  assert.deepEqual(
+    campPts([
+      { side: 2, name: 'A', pts: 100 },
+      { side: 3, name: 'B', pts: 40 },
+      { side: -5, name: 'C', pts: 30 },
+    ]),
+    [100, 70],
+  )
+  // người 2 (phái Chính, mã chẵn) giữ linh mạch có điểm mùa; người 3 (phái Tà) không
+  const ps: Players = new Map([
+    [2, sect('Chính')],
+    [3, sect('Tà')],
+  ])
+  const w = { ...freshWorld(), pts: { [-2]: 500 } }
+  const end = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, T0, 1, new Set())
+  const kinds = (p: number) => end.changed.get(p)!.mail.map(m => m.k)
+  assert.ok(kinds(2).includes('camp'), 'phái thắng có thư quà')
+  assert.ok(!kinds(3).includes('camp'))
 })

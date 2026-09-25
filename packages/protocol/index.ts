@@ -108,7 +108,13 @@ export type HonorView = { top: { pid: number; name: string; n: number }[]; me: {
 export type ArenaView = { foes: ArenaFoe[]; board: { pid: number; name: string; pts: number }[]; rank: number | null }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
 export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
-export type Season = { rows: { name: string; pts: number }[]; me: { rank: number; pts: number } | null; fame: Fame[] }
+export type Season = {
+  rows: { name: string; pts: number }[]
+  me: { rank: number; pts: number } | null
+  fame: Fame[]
+  camps?: [number, number] // Chính Tà Phân Tranh: điểm mùa Chính phái, Tà phái
+  camp?: 0 | 1 // phái của mình
+}
 // Chat: kênh giới (từ tầng 3), kênh tiên minh, truyền âm 1-1 với người chơi pid ('p<pid>'). Chữ đã lọc ở server.
 export type Channel = 'world' | 'ally' | `p${number}` | `g${number}` // g<id>: nhóm chat tự tạo
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }

@@ -132,6 +132,11 @@ export function seasonPts(w: World, map: MapCtx, now: number): Record<number, nu
   return pts
 }
 export type SeasonRow = { side: number; name: string; pts: number } // side > 0: tiên minh; < 0: người đi một mình
+// Chính Tà Phân Tranh: phái của một phe (tiên minh theo mã minh, người đi một mình theo mã người) — 0 Chính phái, 1 Tà phái.
+// ponytail: chia theo chẵn lẻ (đều về số phe, không cân lực chiến); cân theo lực chiến lúc lập minh nếu hai phái lệch nhiều
+export const campOf = (side: number) => (((side % 2) + 2) % 2) as 0 | 1
+export const campPts = (rows: SeasonRow[]): [number, number] =>
+  rows.reduce<[number, number]>((t, r) => (campOf(r.side) ? [t[0], t[1] + r.pts] : [t[0] + r.pts, t[1]]), [0, 0])
 export function seasonBoard(w: World, ps: Players, map: MapCtx, now: number): SeasonRow[] {
   return Object.entries(seasonPts(w, map, now))
     .map(([k, pts]) => ({ side: Number(k), name: sideName(w, ps, Number(k)) ?? '', pts: Math.floor(pts) }))

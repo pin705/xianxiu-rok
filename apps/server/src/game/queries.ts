@@ -19,6 +19,8 @@ import {
   supplyRoom,
   territoryTiles,
   arkRow,
+  campOf,
+  campPts,
 } from '@rok/rules/world'
 import type { Answer, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
@@ -100,6 +102,8 @@ export const answersOf = (w: World): Answers => ({
       rows: rows.slice(0, SEASON_ROWS).map(({ name, pts }) => ({ name, pts })),
       me: k < 0 ? null : { rank: k + 1, pts: rows[k].pts },
       fame: w.fame,
+      camps: campPts(rows), // Chính Tà Phân Tranh: điểm mùa hai phái, phái của mình
+      camp: campOf(side),
     }
   },
   map: sock => {

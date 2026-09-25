@@ -27,6 +27,7 @@ async function loadArt() {
   // bản HD khi màn cần hơn 3,4 px ảnh mỗi DU (desktop Retina: cảnh ~2,85 px CSS/DU × 2) — điện thoại vẫn tải bản thường
   const hd = cssPerDU() * DPR > 3.4
   for (const e of Object.values(m)) {
+    if (e.tex && !e.pack) e.pack = 'misc' // mục mới chưa chạy `make.py pack`: vẫn tải (file lẻ)
     if (hd && e.hd) Object.assign(e, e.hd.src ? { src: e.hd.src, page: undefined, frame: undefined } : e.hd)
     e.src = new URL(e.src, base).href
     if (e.page) e.page = new URL(e.page, base).href

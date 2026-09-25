@@ -22,11 +22,22 @@ def fname(key): return key.replace(':', '-').replace('#', '').replace('*', 'v')
 
 # ---------- nền, cắt, viền ----------
 def key_magenta(src, dst=None):
-  """Nền #FF00FF phẳng → trong suốt. Ước alpha theo độ hồng rồi tách màu thật F = (C - (1-a)·M) / a (nét mực loang không ám hồng)."""
+  """Nền phẳng → trong suốt, tách màu thật F = (C - (1-a)·B) / a (nét mực loang không ám màu nền).
+  Nền #FF00FF: alpha theo độ hồng. Model đôi khi tô nền khác (tím nhạt, hồng đậm…): lấy màu nền từ mép ảnh, alpha theo khoảng cách màu."""
   c = np.asarray(Image.open(src).convert('RGB')).astype(np.float32) / 255
-  pink = np.minimum(c[..., 0], c[..., 2]) - c[..., 1]
-  a = 1 - np.clip((pink - 0.18) / (0.62 - 0.18), 0, 1)
-  F = np.clip((c - (1 - a)[..., None] * np.array([1.0, 0.0, 1.0])) / np.maximum(a, 0.05)[..., None], 0, 1)
+  h, w = c.shape[:2]
+  m = max(4, int(min(h, w) * 0.015))
+  edge = np.concatenate([c[:m].reshape(-1, 3), c[-m:].reshape(-1, 3), c[:, :m].reshape(-1, 3), c[:, -m:].reshape(-1, 3)])
+  B = np.median(edge, 0)
+  if (np.abs(edge - np.array([1.0, 0.0, 1.0])).sum(1) < 0.25).mean() >= 0.3:  # đủ nhiều mép hồng thuần (mây/đế có thể chạm mép)
+    pink = np.minimum(c[..., 0], c[..., 2]) - c[..., 1]
+    a = 1 - np.clip((pink - 0.18) / (0.62 - 0.18), 0, 1)
+    B = np.array([1.0, 0.0, 1.0])
+  else:
+    print(f'  {os.path.basename(src)}: nền không phải hồng thuần {np.round(B * 255).astype(int).tolist()} — tách theo màu mép ảnh')
+    d = np.sqrt(((c - B) ** 2).sum(-1))
+    a = np.clip((d - 0.07) / (0.28 - 0.07), 0, 1)
+  F = np.clip((c - (1 - a)[..., None] * B) / np.maximum(a, 0.05)[..., None], 0, 1)
   a[a < 0.04] = 0
   im = Image.fromarray((np.dstack([F, a]) * 255).astype(np.uint8), 'RGBA')
   if dst: im.save(dst)
@@ -171,7 +182,9 @@ def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP', hd=None):
   os.makedirs(os.path.join(ART, sub), exist_ok=True)
   im.save(os.path.join(ART, sub, name), fmt, **({'quality': Q, 'method': 6} if fmt == 'WEBP' else {}))
   for k in (key, *aliases):
-    manifest()[k] = {'src': f'{sub}/{name}', **({'tex': True} if tex else {}), **(extra or {})}
+    # giữ tên gói (theo key, không đổi); bỏ khung atlas cũ — game tải file lẻ (đúng ảnh mới) tới khi chạy lại `pack`
+    keep = {'pack': manifest()[k]['pack']} if 'pack' in manifest().get(k, {}) else {}
+    manifest()[k] = {'src': f'{sub}/{name}', **({'tex': True} if tex else {}), **keep, **(extra or {})}
   if hd is not None:  # bản HD: nguồn cho atlas HD (pack_all), không nằm trong public
     os.makedirs(os.path.join(WORK, 'hd', sub), exist_ok=True)
     hd.save(os.path.join(WORK, 'hd', sub, name), fmt, **({'quality': Q, 'method': 6} if fmt == 'WEBP' else {}))

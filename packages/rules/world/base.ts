@@ -234,7 +234,7 @@ export type ArkFight = {
   orb: { at: number; by?: number; back?: number; n: number } | null
   log: ArkLog[]
 }
-export type Ark = { on: number; done: number; signed: number[]; live: ArkFight[]; last: WarResult[] }
+export type Ark = { on: number; done: number; signed: number[]; live: ArkFight[]; last: WarResult[]; warned?: number } // warned: tuần đã nhắc
 // Một tước: ai giữ, phong lúc nào, tới lúc nào
 export type Title = { pid: number; at: number; until: number }
 export const freshWorld = (): World => ({

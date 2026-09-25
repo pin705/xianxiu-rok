@@ -20,7 +20,7 @@ export const PIGMENT = {
   cinnabarL: '#d9604a',
   gold: '#c9a14a', // 泥金
   goldL: '#ecd08a',
-  goldD: '#8a672a',
+  goldD: '#735624', // chữ vàng trên nhãn vàng nhạt: tương phản ≥ 5 (tools/art/contrast.ts)
   gamboge: '#e3b64c', // 藤黄
   indigo: '#34465e', // 花青
   lacquer: '#231713', // 漆

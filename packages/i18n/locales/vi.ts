@@ -698,6 +698,12 @@ export const vi = {
     summon: 'Triệu hồi Tuần Sơn',
     hint: `Yêu thú giới cấp ${LOHAR_WILD}+ rơi yêu cốt. Đủ ${LOHAR_BONES} thì biến yêu vương này thành bản Tuần Sơn (máu ×${LOHAR_HP}, 2 giờ) — kết trận hạ được thì quà lớn chia theo sát thương, người triệu hồi thêm một phần.`,
   },
+  // Chính Tà Phân Tranh: mọi phe chia hai phái
+  camp: {
+    names: ['Chính phái', 'Tà phái'],
+    hint: (mine: string) =>
+      `Mọi tiên minh và tông môn lẻ chia hai phái; điểm mùa cộng theo phái — hết mùa người phái thắng nhận quà. Bạn thuộc ${mine}.`,
+  },
   // Thiên Thời: mỗi 4 ngày một thời ngũ hành, tăng ích chung + chỉ lệnh riêng
   thoi: {
     names: { kim: 'Kim thời', thuy: 'Thủy thời', moc: 'Mộc thời', hoa: 'Hỏa thời', tho: 'Thổ thời' } as Record<
@@ -1528,6 +1534,10 @@ export const vi = {
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
       ],
+      camp: (camp: 0 | 1, pts: number, other: number): [string, string] => [
+        `${camp ? 'Tà phái' : 'Chính phái'} thắng mùa`,
+        `Chính Tà Phân Tranh khép lại: ${camp ? 'Tà phái' : 'Chính phái'} của bạn ${pts.toLocaleString('vi')} điểm mùa, phái kia ${other.toLocaleString('vi')}. Quà phái thắng ở dưới.`,
+      ],
       ark: (win: 0 | 1, foe: string, mine: number, theirs: number): [string, string] => [
         win ? `Linh Châu · thắng [${foe}]` : `Linh Châu · thua [${foe}]`,
         `Tranh Đoạt Linh Châu kết thúc: tiên minh ${mine.toLocaleString('vi')} điểm, [${foe}] ${theirs.toLocaleString('vi')} điểm. ${win ? 'Quà thắng trận cho mọi người trong minh ở dưới.' : 'Quà tham chiến ở dưới — tuần sau đòi lại.'}`,
@@ -1713,6 +1723,7 @@ export const vi = {
     toggle: 'Thông báo',
     denied: 'Trình duyệt đang chặn thông báo của game — mở lại trong cài đặt trình duyệt',
     dm: (name: string) => `${name} truyền âm cho bạn`,
+    arkSoon: 'Tranh Đoạt Linh Châu bắt đầu sau 10 phút — vào đặt lệnh cho đội!',
     done: {
       build: 'Công trình đã xây xong — tạp dịch đang rảnh',
       train: 'Đệ tử mới đã nhập môn',

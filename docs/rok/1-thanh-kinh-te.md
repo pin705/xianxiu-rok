@@ -989,7 +989,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H14 | Tượng tướng, Starlight | 🟡 tín vật trưởng lão (thu nhận, nâng sao); chưa có vạn năng | P2 | L |
 | H15 | Nguyên liệu, bản vẽ | ❌ chủ đích (file 2) | P2 | L |
 | H16 | Vật phẩm nâng nhà đặc biệt (sách, tên, Blueprint) | ❌ | P2 | S |
-| H17 | Vật phẩm điểm VIP | ❌ | P1 | S |
+| H17 | Vật phẩm điểm VIP | ✅ Hương Hỏa Lệnh | P1 | S |
 | H18 | Hồi AP | ❌ (không có AP) | — | — |
 | H19 | Thuê thợ 2 ngày | ✅ Tạp Dịch Lệnh 48 giờ | P1 | S |
 | H20 | Bản đồ xoá sương | ❌ (file 3) | P2 | — |

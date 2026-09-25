@@ -48,6 +48,15 @@
   />
   {#if board === 'season' && sea}
     <p class="t-small t-soft mt-2">{L.rank.seasonHint}</p>
+    {#if sea.camps}
+      <!-- Chính Tà Phân Tranh: điểm mùa hai phái, phái mình tô đậm -->
+      <p class="row between t-small mt-2">
+        {#each [0, 1] as const as c (c)}
+          <b class:t-gold={sea.camp === c}>{L.camp.names[c]} · {num(sea.camps[c])}</b>
+        {/each}
+      </p>
+      <small class="t-tiny t-soft">{L.camp.hint(L.camp.names[sea.camp ?? 0])}</small>
+    {/if}
     {#if sea.me}<p class="t-small t-gold t-strong mt-2">
         {L.rank.me}: #{sea.me.rank} · {L.rank.pts(num(sea.me.pts))}
       </p>{/if}

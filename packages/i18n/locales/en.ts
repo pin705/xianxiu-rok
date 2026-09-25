@@ -716,6 +716,11 @@ export const en: Text = {
     summon: 'Summon the roaming king',
     hint: `World beasts of level ${LOHAR_WILD}+ drop demon bones. With ${LOHAR_BONES}, turn this demon king into its roaming form (×${LOHAR_HP} health, 2 hours) — rally to slay it for a big reward split by damage, plus an extra share for the summoner.`,
   },
+  camp: {
+    names: ['Light', 'Darkness'],
+    hint: (mine: string) =>
+      `Every alliance and solo sect belongs to one of two camps; season points add up per camp — the winning camp gets a reward at season end. You are with ${mine}.`,
+  },
   thoi: {
     names: { kim: 'Metal tide', thuy: 'Water tide', moc: 'Wood tide', hoa: 'Fire tide', tho: 'Earth tide' } as Record<
       Element,
@@ -1533,6 +1538,10 @@ export const en: Text = {
         `First capture · ${({ vein: 'Spirit vein', gate: 'Array eye', heaven: 'Heaven Gate' } as Record<string, string>)[kind] ?? kind} level ${lv}`,
         'Your alliance is the first this season to hold this point. A reward for every member is below.',
       ],
+      camp: (camp: 0 | 1, pts: number, other: number): [string, string] => [
+        `${camp ? 'Darkness' : 'Light'} wins the season`,
+        `Light versus Darkness is over: your ${camp ? 'Darkness' : 'Light'} camp scored ${pts.toLocaleString('en')} season points, the other ${other.toLocaleString('en')}. The winning camp's reward is below.`,
+      ],
       ark: (win: 0 | 1, foe: string, mine: number, theirs: number): [string, string] => [
         win ? `Spirit Orb · won vs [${foe}]` : `Spirit Orb · lost vs [${foe}]`,
         `The Spirit Orb battle is over: your alliance ${mine.toLocaleString('en')} points, [${foe}] ${theirs.toLocaleString('en')}. ${win ? 'A victory reward for every member is below.' : 'A reward for taking part is below — take it back next week.'}`,
@@ -1724,6 +1733,7 @@ export const en: Text = {
     toggle: 'Notifications',
     denied: 'Your browser is blocking notifications for this game — allow them in the browser settings',
     dm: (name: string) => `${name} sent you a message`,
+    arkSoon: 'The Spirit Orb battle starts in 10 minutes — come set your orders!',
     done: {
       build: 'Construction finished — your builders are free',
       train: 'New disciples have joined',

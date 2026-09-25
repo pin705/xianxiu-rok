@@ -156,6 +156,11 @@ def kit():
     ins = [v * m['S'] for v in m['slice']]  # ảnh 2x như bản code: px ảnh = px CSS × 2
     if not any(ins): ins = [0, 0, 0, 0]  # ảnh nguyên tấm (đĩa, công tắc): co giãn cả tấm
     img, bins = bases[b]
+    if n in ('scroll', 'strip'):  # khung bảng/HUD: nền giấy của phần tử nằm dưới cả dải viền → cắt lề trong suốt, viền sát mép
+      bx = img.getchannel('A').point(lambda v: 255 if v > 200 else 0).getbbox()
+      img = img.crop(bx)
+      bins = [max(2, bins[0] - bx[1]), max(2, bins[1] - (bases[b][0].width - bx[2])),
+              max(2, bins[2] - (bases[b][0].height - bx[3])), max(2, bins[3] - bx[0])]
     img = X.tint(img, dark, light)  # đổi màu trên cả mẫu gốc (đủ viền lẫn lòng) rồi mới co giãn: lòng phẳng không bị kéo nhiễu
     out = X.nine(img, bins, m['pw'], m['ph'], ins) if any(ins) else img.resize((m['pw'], m['ph']), Image.LANCZOS)
     extra = {'slice': ins, 'width': m['slice'], 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
@@ -272,3 +277,4 @@ if __name__ == '__main__':
   if not args or args[0] not in GROUPS: sys.exit(f'dùng: make.py <nhóm> [tên…] [--fit] [--dry]\nnhóm: {" ".join(GROUPS)}')
   GROUPS[args[0]]()
   X.write_manifest()
+  if args[0] != 'pack': print('→ nhớ chạy `make.py pack` để dựng lại atlas (tới lúc đó game tải file lẻ)')
