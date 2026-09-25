@@ -6,6 +6,7 @@ import { dayOf } from '../core/calendar.ts'
 import { cleanText, int, isId, oneOf } from '../core/parse.ts'
 import type { State } from '../core/types.ts'
 import {
+  OFFICE_IDS,
   ALLY_IDLE,
   ALLY_MAIL_COOL,
   ALLY_MAIL_LEN,
@@ -21,6 +22,7 @@ import {
   DONATE_STAR,
   RESOURCES,
   type AllyTechId,
+  type OfficeId,
   type ItemId,
   type Res,
 } from '../data.ts'
@@ -54,6 +56,7 @@ export type GuildAction =
   | { type: 'allyUnmark'; x: number; y: number }
   | { type: 'allyMail'; text: string } // thư tới hộp thư mọi người trong minh
   | { type: 'allyClaim' } // đường chủ nhận minh chủ khi minh chủ vắng ALLY_IDLE ngày
+  | { type: 'allyOffice'; pid: number; office: OfficeId } // minh chủ phong / bãi chức vị cho người R4
   | { type: 'napAsk'; id: number }
   | { type: 'napOk'; id: number }
   | { type: 'napNo'; id: number }
@@ -179,6 +182,24 @@ export const guildActions: WorldActions<GuildAction> = {
         if (st) changed.set(p, mail(st, { at: now, k: 'allyMail', a: [s.name, al.tag, a.text] }))
       }
       return { ok: true, changed, world: put(w, { ...al, mailAt: now }) }
+    },
+  },
+  // Chức vị: minh chủ phong cho người R4 (mỗi chức một người, mỗi người một chức); phong lại đúng người đang giữ thì bãi chức
+  allyOffice: {
+    pick: a =>
+      isId(a.pid) && oneOf(OFFICE_IDS)(a.office) ? { type: 'allyOffice', pid: a.pid, office: a.office } : null,
+    run: ({ w, pid }, a) => {
+      const al = allyOf(w, pid)
+      if (!al || al.members[pid] !== 2 || al.members[a.pid] !== 1) return no('locked')
+      const off = al.offices?.[a.office] === a.pid
+      const rest = Object.fromEntries(
+        Object.entries(al.offices ?? {}).filter(([o, p]) => o !== a.office && p !== a.pid),
+      )
+      return {
+        ok: true,
+        changed: new Map(),
+        world: put(w, { ...al, offices: off ? rest : { ...rest, [a.office]: a.pid } }),
+      }
     },
   },
   // Truất minh chủ vắng mặt: minh chủ không vào game ALLY_IDLE ngày thì đường chủ (R4) nhận minh chủ, người cũ xuống R4

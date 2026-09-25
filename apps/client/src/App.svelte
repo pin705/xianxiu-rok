@@ -526,6 +526,7 @@
             inline
             onmap={goMap}
             onreplay={r => (replay = r)}
+            send={sendWorld}
           />{/snippet}
       </Alliance>
     {/if}
@@ -537,6 +538,7 @@
         onmap={goMap}
         onreplay={r => (replay = r)}
         narrow={tab === 'tongMon'}
+        send={sendWorld}
       />{/if}
     <Profile api={net ?? null} {me} onmap={goMap} send={sendWorld} onranks={() => (ranksOpen = true)} />
     <Arena api={net ?? null} send={sendWorld} {me} onreplay={r => (replay = r)} />

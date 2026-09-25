@@ -195,6 +195,8 @@ export type MailArgs = {
   allyMail: [who: string, tag: string, text: string] // thư minh: R4 / minh chủ who của minh tag gửi cả minh
   honorTop: [rank: number, n: number] // hết mùa: hạng Công Huân cá nhân, điểm
   linked: [] // quà gắn email (một lần)
+  tribeTop: [rank: number, pts: number] // Phá Yêu Trại: minh mình hạng rank, điểm minh
+  firstTake: [kind: string, lv: number] // tiên minh chiếm lần đầu một điểm (loại, cấp) trong mùa
 }
 export type MailKind = keyof MailArgs
 // Thư mới (chưa có id): a bắt buộc, đúng kiểu theo khoá

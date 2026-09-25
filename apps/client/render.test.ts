@@ -671,6 +671,7 @@ test('tiên minh, chat', async () => {
     marks: [{ x: 40, y: 52, text: 'Tập trung', by: 1, at: late.time }],
     mob: { week: 0, pts: 700, next: 9, board: [8, 1, 2, 3, 4, 5, 6, 7], by: { 1: 40 } },
     war: { signed: true, pts: 1016, last: [{ a: 1, b: 2, an: 'TVM', bn: 'TK', wa: 3, wb: 2 }] },
+    tribe: { week: 0, pts: 0, rank: 0 },
     applicants: [{ pid: 9, name: 'Tân Tông', hall: 7, power: 900 }],
     closed: true,
   }

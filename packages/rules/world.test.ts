@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   ALLY_IDLE,
+  GROUPS_PER,
+  TRIBE_PTS,
   TERR_FUND,
   dayOf,
   ASCEND,
@@ -74,6 +76,12 @@ import {
 import {
   MAP_W,
   advanceAll,
+  groupsOf,
+  officeBuffs,
+  tribeBank,
+  tribeEnd,
+  tribeStart,
+  tribeStep,
   storeStep,
   territoryTiles,
   advanceWorld,
@@ -485,6 +493,18 @@ test('bậc R1–R5: người mới R1; đường chủ (R4) chỉ xếp R1–R3
   const mark = (p: number) => act(p, { type: 'allyMark', x: 10, y: 10, text: 'Tụ' })
   assert.equal(mark(2), 'locked', 'R1 chưa đặt dấu')
   assert.equal(act(1, { type: 'allyRole', pid: 2, role: 1 }), null, 'minh chủ phong R4')
+  // chức vị: chỉ minh chủ phong, chỉ cho R4; mỗi người một chức; phong lại là bãi
+  assert.equal(act(1, { type: 'allyOffice', pid: 3, office: 'chapPhap' }), 'locked', 'chưa là R4')
+  assert.equal(act(1, { type: 'allyOffice', pid: 2, office: 'chapPhap' }), null)
+  assert.deepEqual(
+    officeBuffs(allyOf(w, 1), 2).map(b => [b.key, b.v, b.src]),
+    [['atk', 0.05, 'office']],
+  )
+  assert.equal(act(1, { type: 'allyOffice', pid: 2, office: 'ngoaiSu' }), null)
+  assert.deepEqual(allyOf(w, 1)!.offices, { ngoaiSu: 2 }, 'mỗi người một chức')
+  assert.equal(act(1, { type: 'allyOffice', pid: 2, office: 'ngoaiSu' }), null)
+  assert.deepEqual(allyOf(w, 1)!.offices, {}, 'phong lại: bãi chức')
+  assert.equal(act(1, { type: 'allyOffice', pid: 2, office: 'tongQuan' }), null)
   assert.equal(act(2, { type: 'allyRole', pid: 3, role: 0 }), null, 'R4 thăng người dưới lên R3')
   assert.equal(mark(3), null, 'R3 đặt dấu được')
   assert.equal(act(2, { type: 'allyRole', pid: 3, role: 1 }), 'locked', 'R4 không phong R4')
@@ -1330,6 +1350,65 @@ test('kho minh: lãnh thổ sinh Minh khố theo giờ tròn (lần đầu chỉ
   w = storeStep(ps, w, map, T0 + 2 * HOUR + 5)
   assert.equal(w.allies[1].fund, 100 + Math.floor(tiles * TERR_FUND * 2))
   assert.equal(w.allies[1].fundAt, T0 + 2 * HOUR, 'giữ phần lẻ sang giờ sau')
+})
+
+test('nhóm chat tự tạo: lập, thêm người (người trong nhóm thêm được, bị chặn thì không), giới hạn, rời, giải tán', () => {
+  const ps = world(sect('A', 5), sect('B', 5), sect('C', 5))
+  let w = freshWorld()
+  const act = (pid: number, a: object) => {
+    const r = worldAct(ps, pid, a as never, T0, 1, undefined, w)
+    if (!r.ok) return r.error
+    w = r.world
+    return null
+  }
+  assert.equal(parseWorldAction({ type: 'groupNew', name: 'x' }), null, 'tên quá ngắn')
+  assert.equal(act(1, { type: 'groupNew', name: 'Họp đêm' }), null)
+  const g = Object.values(w.groups!)[0]
+  assert.deepEqual([g.name, g.owner, g.members], ['Họp đêm', 1, [1]])
+  assert.equal(act(3, { type: 'groupAdd', id: g.id, pid: 2 }), 'locked', 'ngoài nhóm không thêm được')
+  assert.equal(act(1, { type: 'groupAdd', id: g.id, pid: 2 }), null)
+  assert.equal(act(2, { type: 'groupAdd', id: g.id, pid: 1 }), 'claimed')
+  ps.set(3, { ...ps.get(3)!, blocks: [2] })
+  assert.equal(act(2, { type: 'groupAdd', id: g.id, pid: 3 }), 'friend', 'người kia đã chặn mình')
+  assert.deepEqual(
+    groupsOf(w, 2).map(x => x.id),
+    [g.id],
+  )
+  for (let k = 0; k < GROUPS_PER - 1; k++) act(1, { type: 'groupNew', name: `Nhóm ${k}` })
+  assert.equal(act(1, { type: 'groupNew', name: 'Thêm nữa' }), 'limit', 'mỗi người tối đa GROUPS_PER nhóm')
+  assert.equal(act(1, { type: 'groupLeave', id: g.id }), null)
+  assert.equal(w.groups![g.id].owner, 2, 'người lập rời: người vào sớm nhất giữ nhóm')
+  assert.equal(act(2, { type: 'groupLeave', id: g.id }), null)
+  assert.equal(w.groups![g.id], undefined, 'nhóm trống: giải tán')
+})
+
+test('Phá Yêu Trại: yêu vương đổ trong khung thứ Ba – thứ Tư ra điểm minh theo sát thương; hết khung top minh nhận quà', () => {
+  const ps = world(sect('A', 10), sect('B', 10), sect('C', 10))
+  const mk = (id: number, members: Record<number, 0 | 2>) => ({
+    id,
+    name: `M${id}`,
+    tag: `T${id}`,
+    members,
+    notice: '',
+    at: T0,
+    helps: [],
+  })
+  let w: World = { ...freshWorld(), allies: { 1: mk(1, { 1: 2 }), 2: mk(2, { 2: 2, 3: 0 }) } }
+  const wk = weekOf(T0) + 1
+  assert.equal(tribeBank(w, tribeStart(wk) - 1, 2, { 1: 100 }), w, 'ngoài khung: không tính')
+  w = tribeBank(w, tribeStart(wk) + HOUR, 2, { 1: 300, 2: 100 })
+  w = tribeBank(w, tribeStart(wk) + 2 * HOUR, 1, { 3: 50 })
+  assert.deepEqual(w.tribe!.pts, { 1: TRIBE_PTS[2] * 0.75, 2: TRIBE_PTS[2] * 0.25 + TRIBE_PTS[1] })
+  assert.equal(tribeStep(ps, w, tribeEnd(wk) - 1).world, w, 'chưa hết khung')
+  const r = tribeStep(ps, w, tribeEnd(wk) + 5)
+  assert.ok(r.world.tribe!.done)
+  assert.deepEqual(r.changed.get(1)!.mail.at(-1)!.a, [1, Math.round(TRIBE_PTS[2] * 0.75)], 'minh 1 hạng nhất')
+  assert.deepEqual(
+    [r.changed.get(2)!.mail.at(-1)!.a![0], r.changed.get(3)!.mail.at(-1)!.a![0]],
+    [2, 2],
+    'cả minh 2 nhận hạng nhì',
+  )
+  assert.equal(tribeStep(ps, r.world, tribeEnd(wk) + 10).changed.size, 0, 'mỗi tuần một lần')
 })
 
 test('khám phá: mê vụ riêng mỗi người (quanh tông môn đã khai), linh điểu tan sương ô kề vùng đã khai, ghé thôn trang / động phủ một lần', () => {

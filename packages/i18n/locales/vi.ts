@@ -58,6 +58,7 @@ import {
   type BagFamily,
   type FestId,
   type DrillMod,
+  type OfficeId,
   type DaoId,
   type Metric,
   type AchId,
@@ -561,6 +562,13 @@ export const vi = {
     expires: (t: string) => `còn ${t}`,
   },
   guest: 'Vân du khách ghé núi — chạm nhận quà',
+  tribe: {
+    title: 'Phá Yêu Trại',
+    hint: 'Thứ Ba – thứ Tư: hạ yêu vương, yêu trại (kết trận cùng minh) ra điểm minh chia theo sát thương. Hết khung, top 3 minh — mọi người trong minh — nhận quà qua thư.',
+    on: (t: string) => `Đang diễn ra · còn ${t}`,
+    soon: (t: string) => `Mở sau ${t}`,
+    pts: (n: string, rank: number) => `Điểm minh: ${n}${rank ? ` · hạng ${rank}` : ''}`,
+  },
   drill: {
     title: 'Luận Võ Liên Hoàn',
     short: 'Mỗi ngày một phiên: một đội đấu liên tiếp giáo đầu mạnh dần, chọn công pháp cho giáo đầu.',
@@ -886,6 +894,8 @@ export const vi = {
     rallyAt: (by: string, what: string, t: string) => `${by} mở kết trận · ${what} · xuất phát sau ${t}`,
     rallyHint: 'Mở bản đồ Giới, chạm vào điểm để góp đội — mọi đội tới cùng lúc và đánh như một.',
     siege: (name: string) => `công sơn ${name}`,
+    veinBuff: (fx: string) => `Phe giữ: ${fx} cho cả minh`,
+    firstTake: 'Chưa ai chiếm trong mùa này — minh chiếm đầu tiên nhận quà',
     ruinOpen: (t: string) => `Đang mở · còn ${t}`,
     ruinOpens: (t: string) => `Mở sau ${t}`,
     ruinHint:
@@ -992,6 +1002,13 @@ export const vi = {
     mailWait: (t: string) => `Thư kế tiếp sau ${t}`,
     mailSent: 'Đã gửi thư cho cả minh.',
     idle: (n: number) => `vắng ${n} ngày`,
+    offices: {
+      chapPhap: ['Chấp Pháp', 'công +5 %'],
+      ngoaiSu: ['Ngoại Sự', 'hành quân +10 %'],
+      tongQuan: ['Tổng Quản', 'sản lượng +5 %'],
+      congTuong: ['Công Tượng', 'xây nhanh 5 %'],
+    } as Record<OfficeId, [string, string]>,
+    officeSet: (name: string, fx: string) => `Phong ${name} (${fx})`,
     claim: 'Nhận minh chủ (vắng lâu)',
     demote: 'Giáng bậc',
     lead: 'Nhường minh chủ',
@@ -1347,6 +1364,14 @@ export const vi = {
         `Đêm nay tông môn giữ được ${waves}/${LEGION_WAVES} đợt ma triều, được ${pts} điểm.${pts >= LEGION_GIFTS[0].pts ? ' Quà theo điểm ở dưới.' : ` Đạt ${LEGION_GIFTS[0].pts} điểm mới có quà — tuần sau kéo viện binh đồng minh về giữ nhà.`}`,
       ],
       allyMail: (who: string, tag: string, text: string): [string, string] => [`Thư minh [${tag}] · ${who}`, text],
+      firstTake: (kind: string, lv: number): [string, string] => [
+        `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
+        'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
+      ],
+      tribeTop: (rank: number, pts: number): [string, string] => [
+        `Phá Yêu Trại · minh hạng ${rank}`,
+        `Tiên minh đứng hạng ${rank} tuần này với ${pts.toLocaleString('vi')} điểm phá yêu trại. Quà cho mọi người trong minh ở dưới.`,
+      ],
       linked: (): [string, string] => [
         'Quà gắn tài khoản',
         'Tông môn đã gắn email — đổi máy, cài lại vẫn giữ nguyên. Chút quà cảm tạ ở dưới.',
@@ -1898,6 +1923,7 @@ export const vi = {
       vein: 'Linh mạch phe mình giữ',
       tide: 'Linh triều vùng mình',
       ally: 'Hộ Minh Đại Trận',
+      office: 'Chức vị trong tiên minh',
       title: 'Sắc phong của Giới Chủ',
       bless: 'Phúc của Giới Chủ',
     },

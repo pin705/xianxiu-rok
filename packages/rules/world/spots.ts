@@ -14,13 +14,14 @@ import {
   RALLY_MAX,
   RALLY_WAIT,
   TIDE_PROD,
-  VEIN_BUFF,
   VEIN_CAP,
+  type Bonus,
   type ElderId,
 } from '../data.ts'
 import {
   allyBuffs,
   allyOf,
+  officeBuffs,
   blessBuffs,
   titleBuffs,
   garrison,
@@ -37,7 +38,7 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
-import { hold, ruinWindow, TASK_OF, spotOf } from './points.ts'
+import { hold, ruinWindow, TASK_OF, spotOf, veinBuffs } from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
 const rallyTask = (p: Point) => (TASK_OF[p.kind] === 'gather' ? null : (TASK_OF[p.kind] as 'take' | 'hit'))
@@ -205,23 +206,37 @@ function rallyAct(
 
 // Buff của bản đồ giới cho mỗi tông môn: linh mạch phe mình đang giữ (cả minh), linh triều ở vùng mình. Trả về state cần đổi.
 export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Players {
-  const veins = new Map<number, number>()
+  // linh mạch: tổng từng loại tăng ích theo phe (mỗi loại tối đa VEIN_CAP)
+  const veins = new Map<number, Map<Bonus, number>>()
   for (const [k, sp] of Object.entries(w.spots)) {
     const p = map.atlas.points[Number(k)]
-    if (p?.kind === 'vein' && sp.own !== undefined) veins.set(sp.own, (veins.get(sp.own) ?? 0) + VEIN_BUFF[p.lv - 1])
+    if (p?.kind !== 'vein' || sp.own === undefined) continue
+    const m = veins.get(sp.own) ?? new Map<Bonus, number>()
+    for (const b of veinBuffs(p)) m.set(b.key, (m.get(b.key) ?? 0) + b.v)
+    veins.set(sp.own, m)
   }
   const t = tide(map.atlas, at)
   const changed: Players = new Map()
   const mapped = (b: Buff) =>
-    b.src === 'vein' || b.src === 'ally' || b.src === 'title' || b.src === 'bless' || b.src.startsWith('tide')
+    b.src === 'vein' ||
+    b.src === 'ally' ||
+    b.src === 'office' ||
+    b.src === 'title' ||
+    b.src === 'bless' ||
+    b.src.startsWith('tide')
   for (const [pid, s] of ps) {
-    const v = Math.min(VEIN_CAP, veins.get(sideKey(w, pid)) ?? 0)
     const want: Buff[] = [
-      ...(v ? [{ key: 'prod' as const, v, until: 0, src: 'vein' }] : []),
+      ...[...(veins.get(sideKey(w, pid)) ?? [])].map(([key, v]) => ({
+        key,
+        v: Math.round(Math.min(VEIN_CAP, v) * 1000) / 1000,
+        until: 0,
+        src: 'vein',
+      })),
       ...(s.seat && t.active && regionOf(map.atlas, s.seat) === t.region
         ? [{ key: 'prod' as const, v: TIDE_PROD, until: t.end, src: `tide${t.cycle}` }]
         : []),
       ...allyBuffs(allyOf(w, pid)), // Hộ Minh Đại Trận
+      ...officeBuffs(allyOf(w, pid), pid), // chức vị đường chủ
       ...titleBuffs(w, pid, at), // sắc phong của Giới Chủ
       ...blessBuffs(w, at), // Giới Chủ ban phúc cả giới
     ]

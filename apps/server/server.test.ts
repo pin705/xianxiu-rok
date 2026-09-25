@@ -565,6 +565,19 @@ test(
     )
     assert.deepEqual(await dm(cb, A.pid, 'chào'), { ok: false, err: 'locked' }, 'dưới tầng 3 chưa truyền âm được')
     assert.deepEqual(await dm(ca, A.pid, 'tự nhắn'), { ok: false, err: 'locked' })
+    // nhóm chat tự tạo: A lập nhóm, thêm B; tin ở kênh g<id> tới B, người ngoài nhóm không vào được
+    assert.ok((await ca.act({ type: 'groupNew', name: 'Họp đêm' })).ok)
+    const [grp] = await ca.ask({ k: 'groups' })
+    assert.ok((await ca.act({ type: 'groupAdd', id: grp.id, pid: B.pid })).ok)
+    assert.deepEqual(
+      (await cb.ask({ k: 'groups' })).map(x => [x.name, x.members.length]),
+      [['Họp đêm', 2]],
+    )
+    await sleep(3100) // A vừa hết lượt nhắn
+    assert.ok((await say(ca, `g${grp.id}` as 'world', 'Tối nay 8h')).ok)
+    await until(() => heard.some(h => h.ch === `g${grp.id}`), 1500)
+    assert.equal(heard.find(h => h.ch === `g${grp.id}`)?.text, 'Tối nay 8h')
+    assert.equal((await cb.ask({ k: 'chat', ch: `g${grp.id}` })).length, 1)
     const prof = await cb.ask({ k: 'profile', pid: A.pid })
     assert.deepEqual([prof?.name, prof?.hall, prof?.ally?.tag, prof?.online], [state.name, 10, 'TVM', true])
     assert.ok(prof?.supply && prof.supply.get > 0, 'cùng minh: hồ sơ có Vận Linh Trận')

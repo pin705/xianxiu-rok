@@ -104,7 +104,12 @@
   })
   const shown = $derived(ch ? (logs[ch] ?? []).filter(m => !game.blocks.includes(m.pid)) : [])
   const last = $derived(
-    [...(logs.world ?? []), ...(ally ? (logs.ally ?? []) : []), ...dms.map(d => d.last), ...groups.flatMap(x => x.last ?? [])]
+    [
+      ...(logs.world ?? []),
+      ...(ally ? (logs.ally ?? []) : []),
+      ...dms.map(d => d.last),
+      ...groups.flatMap(x => x.last ?? []),
+    ]
       .filter(m => !game.blocks.includes(m.pid))
       .sort((a, b) => a.at - b.at)
       .at(-1),
@@ -157,7 +162,9 @@
                 class="new"
                 aria-hidden="true"
               ></span>{/if}
-            <span class="t-small t-soft">{x.last ? `${x.last.name}: ${x.last.text}` : L.chat.members(x.members.length)}</span>
+            <span class="t-small t-soft"
+              >{x.last ? `${x.last.name}: ${x.last.text}` : L.chat.members(x.members.length)}</span
+            >
           </button>
         </li>
       {/each}
@@ -175,8 +182,16 @@
     </ul>
     {#if act2}
       <form class="row mt-2" onsubmit={newGroup}>
-        <input class="grow" bind:value={groupName} maxlength="20" placeholder={L.chat.groupName} aria-label={L.chat.groupName} />
-        <Button size="sm" type="submit" icon="people" disabled={[...groupName.trim()].length < 2}>{L.chat.groupNew}</Button>
+        <input
+          class="grow"
+          bind:value={groupName}
+          maxlength="20"
+          placeholder={L.chat.groupName}
+          aria-label={L.chat.groupName}
+        />
+        <Button size="sm" type="submit" icon="people" disabled={[...groupName.trim()].length < 2}
+          >{L.chat.groupNew}</Button
+        >
       </form>
       <small class="t-tiny t-soft">{L.chat.groupHint}</small>
     {/if}
@@ -188,7 +203,8 @@
       <!-- nhóm: người trong nhóm (thêm người từ hồ sơ của họ), rời nhóm -->
       <div class="row wrap" style:--gap="4px">
         <small class="grow t-tiny t-soft">{group.members.map(x => x.name).join(' · ')}</small>
-        {#if act2}<Button size="sm" variant="quiet" onclick={() => group && leaveGroup(group.id)}>{L.chat.groupLeave}</Button
+        {#if act2}<Button size="sm" variant="quiet" onclick={() => group && leaveGroup(group.id)}
+            >{L.chat.groupLeave}</Button
           >{/if}
       </div>
     {/if}

@@ -37,7 +37,8 @@
     void api?.ask({ k: 'groups' }).then(r => (groups = r ?? []))
   })
   async function addTo(id: number, pid: number) {
-    if (send && (await send({ type: 'groupAdd', id, pid })).ok) groups = groups.map(x => (x.id === id ? { ...x, members: [...x.members, { pid, name: p?.name ?? '' }] } : x))
+    if (send && (await send({ type: 'groupAdd', id, pid })).ok)
+      groups = groups.map(x => (x.id === id ? { ...x, members: [...x.members, { pid, name: p?.name ?? '' }] } : x))
   }
   const close = () => (social.profile = null)
   const reload = () => social.profile !== null && api?.ask({ k: 'profile', pid: social.profile }).then(r => (p = r))
@@ -123,7 +124,9 @@
       {#if p.pid !== me && send && groups.some(x => !x.members.some(m => m.pid === p?.pid))}
         <div class="row wrap" style:--gap="4px">
           {#each groups.filter(x => !x.members.some(m => m.pid === p?.pid)) as x (x.id)}
-            <Button size="sm" variant="ghost" icon="people" onclick={() => p && addTo(x.id, p.pid)}>{L.chat.groupAdd(x.name)}</Button>
+            <Button size="sm" variant="ghost" icon="people" onclick={() => p && addTo(x.id, p.pid)}
+              >{L.chat.groupAdd(x.name)}</Button
+            >
           {/each}
         </div>
       {/if}

@@ -72,6 +72,7 @@ export type AllyInfo = Alliance & {
   // Ma Triều Công Sơn của tuần `week` (client so với tuần hiện tại): minh đã ghi danh chưa, số đợt đã đánh, điểm minh, điểm mình
   legion: { week: number; signed: boolean; done: number; pts: number; mine: number }
   terr?: number // ô lãnh thổ (server tính lúc trả lời, cần bản đồ)
+  tribe: { week: number; pts: number; rank: number } // Phá Yêu Trại tuần `week`: điểm minh, hạng (0: chưa có điểm)
 }
 export const allyRows = (w: World, ps: Players, me = 0): AllyRow[] =>
   Object.values(w.allies)
@@ -90,6 +91,16 @@ export const allyRows = (w: World, ps: Players, me = 0): AllyRow[] =>
       }, 0),
     }))
     .sort((a, b) => b.power - a.power || a.id - b.id)
+// Phá Yêu Trại của minh: điểm, hạng trong giới
+function tribeRow(w: World, aid: number) {
+  const pts = w.tribe?.pts ?? {}
+  const mine = pts[aid] ?? 0
+  return {
+    week: w.tribe?.week ?? -1,
+    pts: Math.round(mine),
+    rank: mine ? 1 + Object.values(pts).filter(v => v > mine).length : 0,
+  }
+}
 export function allyInfo(w: World, ps: Players, pid: number, online: (pid: number) => boolean): AllyInfo | null {
   const al = allyOf(w, pid)
   if (!al) return null
@@ -118,6 +129,7 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
       pts: w.war?.pts[al.id] ?? PVP_START,
       last: w.war?.last ?? [],
     },
+    tribe: tribeRow(w, al.id),
     legion: {
       week: w.legion?.week ?? -1,
       signed: !!w.legion?.signed.includes(al.id),

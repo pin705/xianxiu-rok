@@ -20,6 +20,7 @@
     vein: ['linhThach', L.buffs.src.vein],
     tide: ['bolt', L.buffs.src.tide],
     ally: ['flag', L.buffs.src.ally],
+    office: ['rank', L.buffs.src.office],
     title: ['rank', L.buffs.src.title],
     bless: ['star', L.buffs.src.bless],
   }

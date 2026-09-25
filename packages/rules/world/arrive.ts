@@ -8,6 +8,7 @@ import { HOUR, noGain } from '../core/util.ts'
 import type { Army, March } from '../core/types.ts'
 import {
   BOSSES,
+  FIRST_TAKE,
   GARRISON_MAX,
   HONOR_BOSS,
   HONOR_GATHER,
@@ -29,6 +30,7 @@ import {
   addHonor,
   addKp,
   allyGifts,
+  tribeBank,
   allyOf,
   garrison,
   setSpot,
@@ -62,7 +64,23 @@ export function spotArrive(ps: Players, w: World, map: MapCtx, group: Party, at:
       : hitBoss(ps, w, map, group, sp, at)
   if (m.task === 'hunt') return (sp.until ?? 0) > at ? back() : hunt(w, map, group[0], at) // người khác vừa hạ: về
   if (!ruinWindow(map.atlas, map.atlas.points[m.target.i], at).open) return back() // di tích đã đóng cửa: về
-  return take(ps, w, map, group, sp, at) ?? back()
+  const r = take(ps, w, map, group, sp, at)
+  return r ? firstTake(ps, r, map, m.target.i, at) : back()
+}
+
+// Chiếm lần đầu trong mùa: điểm (linh mạch / trận nhãn / Thiên Môn) lần đầu có tiên minh giữ thì cả minh nhận quà qua thư
+function firstTake(ps: Players, r: Arrived, map: MapCtx, i: number, at: number): Arrived {
+  const own = r.world.spots[i]?.own
+  const p = map.atlas.points[i]
+  const gift = FIRST_TAKE[p.kind as keyof typeof FIRST_TAKE]?.[p.lv - 1]
+  const al = own && own > 0 ? r.world.allies[own] : undefined
+  if (!al || !gift?.items || r.world.firsts?.includes(i)) return r
+  const changed = new Map(r.changed)
+  for (const pid of Object.keys(al.members).map(Number)) {
+    const s = changed.get(pid) ?? ps.get(pid)
+    if (s) changed.set(pid, mail(s, { at, k: 'firstTake', a: [p.kind, p.lv], gift }))
+  }
+  return { changed, world: { ...r.world, firsts: [...(r.world.firsts ?? []), i] } }
 }
 
 // Bên đánh: một đội, hoặc cả nhóm kết trận gộp làm một (công pháp của đội mở trận)
@@ -166,7 +184,7 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
       }
       changed.set(who, mail(st, { at, k: 'boss', a: [p.lv, n + 1, Math.round(share * 100)], gift }))
     })
-  let dead = { ...setSpot(w, i, { until: at + boss.respawn }), bosses: (w.bosses ?? 0) + 1 }
+  let dead = tribeBank({ ...setSpot(w, i, { until: at + boss.respawn }), bosses: (w.bosses ?? 0) + 1 }, at, p.lv, dmgs)
   for (const [id2, d] of Object.entries(dmgs))
     dead = bank(dead, sideKey(w, Number(id2)), ((SEASON_BOSS[p.lv] ?? 0) * d) / sum)
   return { changed, world: allyGifts(ps, changed, dead, Object.keys(dmgs).map(Number), p.lv, at) }

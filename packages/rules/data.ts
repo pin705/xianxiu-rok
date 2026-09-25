@@ -904,6 +904,17 @@ export const LEGION_TOP: Reward[] = [
   { items: { kimDuyen: 1, daiTuKhi: 1 } },
   { items: { nganDuyen: 2, tuKhi: 3 } },
 ]
+// Phá Yêu Trại (King of the Tribes của RoK): thứ Ba – thứ Tư (TRIBE_DAY, TRIBE_LEN ngày) hạ yêu vương / yêu trại được điểm cho
+// tiên minh — TRIBE_PTS theo cấp, chia theo sát thương từng người góp. Hết khung: top TRIBE_TOP.length minh, mọi người trong
+// minh nhận thư quà theo hạng
+export const TRIBE_DAY = 1
+export const TRIBE_LEN = 2
+export const TRIBE_PTS = [0, 20, 60, 150]
+export const TRIBE_TOP: Reward[] = [
+  { items: { kimDuyen: 1, thoiQuang180: 2, kinhThu8k: 1 } },
+  { items: { nganDuyen: 2, thoiQuang180: 1, kinhThu2k: 2 } },
+  { items: { nganDuyen: 1, thoiQuang60: 2, kinhThu2k: 1 } },
+]
 
 // ---------- Công Huân (Honor của KvK) ----------
 // Điểm cá nhân trong mùa: hạ đệ tử địch (chiến công / HONOR_KP, cả khi thủ), săn yêu thú giới (HONOR_WILD × cấp), đánh yêu
@@ -1163,6 +1174,16 @@ export const ALLY_MARKS = 5 // dấu trên bản đồ giới đặt cho cả mi
 export const ALLY_MAIL_COOL = 3_600_000 // thư minh (R4 / minh chủ gửi tới hộp thư cả minh): mỗi minh một thư mỗi giờ
 export const ALLY_MAIL_LEN = 300
 export const ALLY_IDLE = 7 // minh chủ không vào game chừng này ngày: đường chủ (R4) nhận minh chủ được
+// Chức vị đường chủ (officer titles của RoK): minh chủ phong cho người R4, mỗi chức một người, mỗi người một chức; tăng ích cho
+// chính người giữ (hết R4 thì mất hiệu lực)
+export const OFFICES = {
+  chapPhap: { key: 'atk', v: 0.05 }, // Chấp Pháp (Warlord): công +5 %
+  ngoaiSu: { key: 'march', v: 0.1 }, // Ngoại Sự (Diplomat): hành quân +10 %
+  tongQuan: { key: 'prod', v: 0.05 }, // Tổng Quản (Steward): sản lượng +5 %
+  congTuong: { key: 'build', v: 0.05 }, // Công Tượng (Butler): xây nhanh 5 %
+} satisfies Record<string, { key: Bonus; v: number }>
+export type OfficeId = keyof typeof OFFICES
+export const OFFICE_IDS = Object.keys(OFFICES) as OfficeId[]
 export const GROUP_MAX = 20 // nhóm chat tự tạo: tối đa người mỗi nhóm
 export const GROUPS_PER = 5 // mỗi người ở tối đa chừng này nhóm
 // Vân Du Khách (Visitors của RoK): mỗi GUEST_EVERY một tán tu ghé núi mang quà nhỏ (xoay vòng GUEST_GIFTS), chạm để nhận;
@@ -1236,6 +1257,21 @@ export const MOB_REWARDS: Reward[] = [
 export const GARRISON_MAX = 6
 export const VEIN_BUFF = [0.03, 0.05, 0.08] // theo cấp điểm 1..3 (vòng ngoài, giữa, tâm)
 export const VEIN_CAP = 0.3
+// Chiếm lần đầu trong mùa (first-capture của Lost Kingdom): linh mạch / trận nhãn / Thiên Môn lần đầu có tiên minh giữ thì mọi người
+// trong minh nhận quà qua thư (mỗi điểm một lần mỗi mùa), theo cấp điểm 1..3
+export const FIRST_TAKE: Partial<Record<'vein' | 'gate' | 'heaven', Reward[]>> = {
+  vein: [
+    { items: { thoiQuang15: 2, thachNang5k: 1 } },
+    { items: { thoiQuang60: 1, kinhThu2k: 1 } },
+    { items: { thoiQuang180: 1, kinhThu8k: 1 } },
+  ],
+  gate: [
+    { items: { thoiQuang60: 1, nganDuyen: 1 } },
+    { items: { thoiQuang60: 2, kinhThu2k: 1 } },
+    { items: { thoiQuang180: 1, kimDuyen: 1 } },
+  ],
+  heaven: [{}, {}, { items: { kimDuyen: 2, thoiQuang480: 1 } }],
+}
 // Mỏ: trữ MINE_STOCK, khai MINE_RATE mỗi giờ (một loại tài nguyên theo mỏ), cạn thì hồi đầy sau MINE_RESPAWN
 export const MINE_STOCK = [20_000, 40_000, 40_000]
 export const MINE_RATE = [3_000, 5_000, 5_000]

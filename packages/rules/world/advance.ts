@@ -21,6 +21,7 @@ import { spotArrive } from './arrive.ts'
 import { razeArrive } from './flags.ts'
 import { ruinClose } from './ruins.ts'
 import { storeStep } from './storehouse.ts'
+import { tribeStep } from './tribe.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
@@ -126,6 +127,9 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     for (const [k, v] of r.changed) changed.set(k, v)
     w = storeStep(view(), r.world, map, now) // kho minh: lãnh thổ sinh Minh khố theo giờ
   }
+  const tb = tribeStep(view(), w, now) // Phá Yêu Trại hết khung: quà top minh
+  for (const [k, v] of tb.changed) changed.set(k, v)
+  w = tb.world
   return { changed, world: w }
 }
 // Chỉ trận cướp, không bản đồ (sim, test P2)

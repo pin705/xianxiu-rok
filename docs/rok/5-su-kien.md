@@ -1244,7 +1244,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | C13 | Clarion Call | Trảm Yêu Lệnh | 🟡 Săn Yêu Lệnh | P1 | S |
 | C14 | War Forever | Chinh Chiến Bất Hưu | 🟡 | P2 | S |
 | C15 | Holy Conqueror | Linh Địa Chinh Phạt | ❌ | P2 | M |
-| C16 | King of the Tribes | Phá Yêu Trại | ❌ | P1 | M |
+| C16 | King of the Tribes | Phá Yêu Trại | ✅ (25/09) thứ Ba – thứ Tư, điểm minh theo sát thương, top 3 minh | P1 | M |
 | C17 | Strategic Reserve | Tích Cốc Phòng Cơ | ❌ | P1 | M |
 | C18 | Sự kiện quốc gia / The Pioneer | Danh Môn Tuần Lễ | ✅ Côn Lôn / Thục Sơn / Nga Mi (25/09) | P1 | S |
 | C19 | Complete Plan | Nhật Khóa Tu Hành | 🟡 | P2 | S |

@@ -48,6 +48,7 @@
     regionOf,
     route,
     ruinWindow,
+    veinBuffs,
     weather,
     TASK_OF,
     type AllyInfo,
@@ -278,6 +279,16 @@
         {/if}
         {#if task === 'take'}<small class="t-small"
             >{spot?.own ? `${L.world.held}: ${spot.own} · ${spot.n ?? 0}` : L.world.free}</small
+          >{/if}
+        {#if point.kind === 'vein'}<small class="t-small t-good"
+            >{L.world.veinBuff(
+              veinBuffs(point)
+                .map(b => L.bonus(b.key, b.v))
+                .join(' · '),
+            )}</small
+          >{/if}
+        {#if (point.kind === 'vein' || point.kind === 'gate' || point.kind === 'heaven') && !snap?.firsts?.includes(point.i)}<small
+            class="t-tiny t-gold">{L.world.firstTake}</small
           >{/if}
         {#if point.kind === 'mine'}
           <small class="t-small"

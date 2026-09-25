@@ -9,6 +9,7 @@
     ALLY_IDLE,
     ALLY_MAIL_COOL,
     ALLY_MAIL_LEN,
+    OFFICE_IDS,
     DONATE_MAX,
     MOB_GOALS,
     MOB_MIN,
@@ -23,6 +24,8 @@
   import {
     warAt,
     legionAt,
+    tribeStart,
+    tribeEnd,
     boardOf,
     donateLeft,
     mobOf,
@@ -117,6 +120,16 @@
     ally ? ally.helps.filter(h => h.pid !== me && me !== null && !h.by.includes(me) && h.by.length < maxHelps) : [],
   )
   const nameOf = (pid: number) => ally?.people.find(p => p.pid === pid)?.name ?? '?'
+  // Phá Yêu Trại: đang trong khung (còn bao lâu) hay chờ khung kế tiếp
+  const tribeWin = $derived.by(() => {
+    const wk = weekOf(g.now),
+      s0 = tribeStart(wk),
+      e0 = tribeEnd(wk)
+    return g.now >= s0 && g.now < e0
+      ? { on: true, t: e0 - g.now }
+      : { on: false, t: (g.now < s0 ? s0 : tribeStart(wk + 1)) - g.now }
+  })
+  const officeOf = (pid: number) => OFFICE_IDS.find(o => ally?.offices?.[o] === pid)
   const away = (p: { seen: number }) => (p.seen < 0 ? 0 : dayOf(g.now) - p.seen) // số ngày chưa vào game
   // kết trận đánh gì: tông môn (công sơn), yêu vương, hay điểm để chiếm
   const rallyWhat = (r: AllyInfo['rallies'][number]) => {
@@ -357,7 +370,8 @@
                       · <span class:t-bad={away(p) >= ALLY_IDLE}>{L.ally.idle(away(p))}</span>{/if}</small
                   ></span
                 >
-                <Tag size="sm" tone={p.role >= 1 ? 'gold' : 'plain'}>{L.ally.role(p.role)}</Tag>
+                <Tag size="sm" tone={p.role >= 1 ? 'gold' : 'plain'}>{L.ally.role(p.role)}</Tag
+                >{#if officeOf(p.pid)}<Tag size="sm" tone="good">{L.ally.offices[officeOf(p.pid)!][0]}</Tag>{/if}
               </span>
             </Card>
             {#if pick === p.pid}
@@ -384,6 +398,15 @@
                     variant="ghost"
                     onclick={() => go({ type: 'allyRole', pid: p.pid, role: 2 })}>{L.ally.lead}</Button
                   >{/if}
+                <!-- chức vị: minh chủ phong cho đường chủ (R4) — phong lại đúng người đang giữ là bãi chức -->
+                {#if myRole === 2 && p.role === 1}
+                  {#each OFFICE_IDS as o (o)}<Button
+                      size="sm"
+                      variant={officeOf(p.pid) === o ? 'gold' : 'quiet'}
+                      onclick={() => go({ type: 'allyOffice', pid: p.pid, office: o })}
+                      >{L.ally.officeSet(L.ally.offices[o][0], L.ally.offices[o][1])}</Button
+                    >{/each}
+                {/if}
                 <!-- minh chủ vắng lâu: đường chủ nhận thay -->
                 {#if myRole === 1 && p.role === 2 && away(p) >= ALLY_IDLE}<Button
                     size="sm"
@@ -493,6 +516,19 @@
           </div>
         {/if}
       {/if}
+    </Section>
+
+    <!-- Phá Yêu Trại: khung thứ Ba – thứ Tư, điểm minh + hạng -->
+    <Section title={L.tribe.title}>
+      <p class="t-tiny t-soft">{L.tribe.hint}</p>
+      <div class="row wrap">
+        <Tag tone={tribeWin.on ? 'good' : 'plain'} icon="clock"
+          >{tribeWin.on ? L.tribe.on(L.ago(tribeWin.t)) : L.tribe.soon(L.ago(tribeWin.t))}</Tag
+        >
+        {#if ally.tribe?.week === weekOf(g.now) && ally.tribe.pts}<small class="t-small t-gold"
+            >{L.tribe.pts(num(ally.tribe.pts), ally.tribe.rank)}</small
+          >{/if}
+      </div>
     </Section>
 
     {#if ally.rallies.length}

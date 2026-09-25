@@ -73,6 +73,7 @@ export type MapSnap = {
   bless?: { key: BlessKey; until: number; day: number } // phúc Giới Chủ ban cả giới
   allies?: { id: number; tag: string }[] // tiên minh có lãnh thổ (hiệu để ghi trên bản đồ)
   flags?: (Flag & { guard?: [n: number, might: number] })[] // trận kỳ (đang dựng: done > lúc xem); guard: đội giữ, lực chiến
+  firsts?: number[] // điểm đã có minh chiếm lần đầu trong mùa
 }
 
 export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[], w: World = freshWorld()): MapSnap {
@@ -120,7 +121,7 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
       const g = flagGuards(ps, f.id)
       return g.length ? { ...f, guard: [g.length, guardMight(g)] as [number, number] } : f
     })
-  return { seats, marches, chron, spots, allies, flags }
+  return { seats, marches, chron, spots, allies, flags, firsts: w.firsts ?? [] }
 }
 
 // Mốc lãnh thổ từ ảnh chụp (client tô bản đồ): cùng luật với claimsOf phía server

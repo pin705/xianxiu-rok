@@ -4,7 +4,7 @@ import { might } from '../combat.ts'
 import { type Pick } from '../core/action.ts'
 import { marchSide, marchTime } from '../core/battle.ts'
 import { cutOf } from '../core/stats.ts'
-import { dayOf } from '../core/calendar.ts'
+import { dayOf, weekOf } from '../core/calendar.ts'
 import { type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
 import {
   ALLY_WELCOME,
@@ -16,10 +16,16 @@ import {
   ALLY_TECH_PTS,
   ALLY_TECHS,
   ELO_K,
+  OFFICE_IDS,
+  OFFICES,
   GIFT_PTS,
   HELP_CREDIT,
   HELP_CREDIT_DAY,
   HONOR_KP,
+  DAY_OFFSET,
+  TRIBE_DAY,
+  TRIBE_LEN,
+  TRIBE_PTS,
   BLESSINGS,
   TITLE_IDS,
   TITLES,
@@ -28,9 +34,10 @@ import {
   type BlessKey,
   type Bonus,
   type ItemId,
+  type OfficeId,
   type PillId,
 } from '../data.ts'
-import { noGain } from '../core/util.ts'
+import { DAY, noGain } from '../core/util.ts'
 import { mail } from '../sect/inbox.ts'
 
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
@@ -97,6 +104,7 @@ export type Alliance = {
   napIn?: number[] // lời đề nghị minh ước đang chờ minh mình trả lời
   mailAt?: number // lúc gửi thư minh gần nhất
   fundAt?: number // kho minh: lãnh thổ đã sinh Minh khố tới lúc này
+  offices?: Partial<Record<OfficeId, number>> // chức vị đường chủ: ai giữ
 }
 // Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
 // tuần và số thứ tự nên client tự vẽ được), điểm từng người đã góp
@@ -128,6 +136,26 @@ export type Rally = {
 export type Good = 'linhThao' | 'linhKhoang' | PillId
 export type Order = { id: number; pid: number; good: Good; n: number; price: number; at: number }
 export type Trades = { day: number; buys: number; sold: number }
+// Phá Yêu Trại: tuần, điểm từng minh, đã phát quà chưa
+export type Tribe = { week: number; pts: Record<number, number>; done?: boolean }
+// Khung Phá Yêu Trại của tuần wk (thứ Ba 0h → thứ Năm 0h giờ VN)
+export const tribeStart = (wk: number) => (wk * 7 + 4 + TRIBE_DAY) * DAY - DAY_OFFSET
+export const tribeEnd = (wk: number) => tribeStart(wk) + TRIBE_LEN * DAY
+export const tribeOf = (w: World, t: number): Tribe =>
+  w.tribe?.week === weekOf(t) ? w.tribe : { week: weekOf(t), pts: {} }
+// Yêu vương cấp lv vừa đổ lúc at (trong khung): điểm TRIBE_PTS[lv] chia theo sát thương cho minh của từng người
+export function tribeBank(w: World, at: number, lv: number, dmgs: Record<number, number>): World {
+  const wk = weekOf(at)
+  if (at < tribeStart(wk) || at >= tribeEnd(wk)) return w
+  const sum = Object.values(dmgs).reduce((a, b) => a + b, 0) || 1
+  const tr = tribeOf(w, at)
+  const pts = { ...tr.pts }
+  for (const [p, d] of Object.entries(dmgs)) {
+    const al = allyOf(w, Number(p))
+    if (al) pts[al.id] = (pts[al.id] ?? 0) + ((TRIBE_PTS[lv] ?? 0) * d) / sum
+  }
+  return { ...w, tribe: { ...tr, pts } }
+}
 // Nhóm chat tự tạo: tên, người giữ nhóm, người trong nhóm (theo thứ tự vào)
 export type Group = { id: number; name: string; owner: number; members: number[] }
 // Vận Linh Trận trong ngày của một người: đã gửi (trước hao tổn), đã nhận (sau hao tổn)
@@ -154,6 +182,8 @@ export type World = {
   legion?: Legion // Ma Triều Công Sơn tuần này
   sup?: Record<number, Supply> // Vận Linh Trận hôm nay của từng người
   groups?: Record<number, Group> // nhóm chat tự tạo
+  tribe?: Tribe // Phá Yêu Trại tuần này
+  firsts?: number[] // điểm đã có tiên minh chiếm lần đầu trong mùa (quà chiếm lần đầu)
   nextGroup?: number
 }
 // Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
@@ -292,6 +322,16 @@ const techSum = (al: Alliance, key: string) =>
 export const helpsOf = (al: Alliance) => ALLY_HELPS + techSum(al, 'helps')
 export const seatsOf = (al: Alliance) => ALLY_MAX + techSum(al, 'seats')
 // Tăng ích tông môn từ các trận (worldBuffs gắn vào state từng người trong minh, nguồn 'ally')
+// Chức vị đường chủ của pid (còn là R4 mới có hiệu lực): tăng ích nguồn 'office'
+export const officeBuffs = (al: Alliance | undefined, pid: number): Buff[] =>
+  al && al.members[pid] === 1
+    ? OFFICE_IDS.filter(o => al.offices?.[o] === pid).map(o => ({
+        key: OFFICES[o].key,
+        v: OFFICES[o].v,
+        until: 0,
+        src: 'office',
+      }))
+    : []
 export const allyBuffs = (al: Alliance | undefined): Buff[] =>
   al
     ? ALLY_TECH_IDS.flatMap(id => {

@@ -865,7 +865,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | A3 | Gia nhập tự do/duyệt, mời, passlist/blocklist | ✅ cửa minh vào tự do / duyệt đơn, mời từ hồ sơ; thiếu passlist/blocklist | P1 | S–M |
 | A4 | Sĩ số tối đa tăng dần | 🟡 cố định 30 | P2 | S |
 | A5 | Cấp bậc R1–R5 và quyền | ✅ R1 Ngoại môn … R4 Đường chủ, R5 Minh chủ (25/09); dấu bản đồ từ R3 | P1 | S |
-| A6 | Chức vị officer có buff | ❌ | P2 | S |
+| A6 | Chức vị officer có buff | ✅ 4 chức cho R4 (25/09) | P2 | S |
 | A7 | Rời/đá/tự chuyển giao/giải tán | ✅ minh chủ vắng 7 ngày: đường chủ nhận thay (25/09); thẻ thành viên ghi số ngày vắng | P1 | S |
 | B1 | Giúp đỡ (Alliance Help) | ✅ 10 lần/việc, người giúp được cống hiến, đĩa giúp nổi ở mọi tab | P1 | S |
 | B2 | Quà liên minh, rương chung, quà từ gói nạp | ✅ Minh lễ (hạ yêu vương → cả minh nhận quà, cấp quà 1–5); không có gói nạp | **P0** | M |
@@ -884,7 +884,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | D4 | Mệnh lệnh minh, cửa hàng chiến công | ❌ | P2 | M |
 | E1 | Chat vương quốc | ✅ kênh giới, lọc từ, báo cáo; thiếu dịch | P1 | M |
 | E2 | Chat minh và thông báo | ✅ thiếu ghim, tin hệ thống, @nhắc | P1 | S |
-| E3 | Chat riêng và nhóm tự tạo | 🟡 truyền âm 1-1 (Web Push khi offline); chưa có nhóm tự tạo | **P0** | M |
+| E3 | Chat riêng và nhóm tự tạo | ✅ truyền âm 1-1 (Web Push khi offline) + nhóm chat tự tạo tới 20 người (25/09) | **P0** | M |
 | E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; threads trong giới thì 🟡 được | P2 | M |
 | E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | 🟡 chia sẻ toạ độ + chiến báo vào chat (nút tới / xem trận); chưa sửa / thu hồi tin | **P0** | M |
 | E6 | Thư người chơi/thư minh/báo cáo do thám | ✅ thư minh (R4/R5 → hộp thư cả minh, 25/09); truyền âm thay thư 1-1; dò thám trong bảng Tranh đoạt | P1 | M |

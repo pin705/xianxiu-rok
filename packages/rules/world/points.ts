@@ -22,6 +22,8 @@ import {
   TERR_POINT,
   TERR_SEAT,
   TYPES,
+  VEIN_BUFF,
+  type Bonus,
 } from '../data.ts'
 import { allyOf, setSpot, sideName, type MapCtx, type Players, type Spot, type Task, type World } from './base.ts'
 
@@ -84,6 +86,22 @@ export function ruinWindow(a: Atlas, p: Point, t: number): { open: boolean; star
   return t < start + len
     ? { open: true, start, end: start + len }
     : { open: false, start: start + every, end: start + every + len }
+}
+// Tăng ích linh mạch cho phe giữ (Sanctum / Altar / Shrine của RoK): cấp 1 một trong sản lượng · xây · tuyển · chữa; cấp 2 một
+// trong công · thủ · sinh lực · hành quân; cấp 3 (tâm) sản lượng + công — theo số thứ tự điểm, độ lớn VEIN_BUFF theo cấp
+const VEIN_KEYS: Bonus[][] = [
+  ['prod', 'build', 'train', 'heal'],
+  ['atk', 'def', 'hp', 'march'],
+]
+export function veinBuffs(p: Point): { key: Bonus; v: number }[] {
+  const v = VEIN_BUFF[p.lv - 1] ?? 0
+  if (p.lv >= 3)
+    return [
+      { key: 'prod', v },
+      { key: 'atk', v },
+    ]
+  const keys = VEIN_KEYS[p.lv - 1]
+  return [{ key: keys[p.i % keys.length], v }]
 }
 // Điểm mùa mỗi giờ giữ một điểm: linh mạch (theo cấp), trận nhãn, Thiên Môn, di tích; mỏ và yêu vương không tính
 const SEASON_RATE: Partial<Record<PointKind, number>> = {
