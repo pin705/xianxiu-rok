@@ -1318,7 +1318,7 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C3 + G4 Tụ khí: dùng nhiều viên, "Dùng vừa đủ", xem trước kết quả | 🟡 | P1 | S |
 | C4 Xin tương trợ ngay từ bảng công trình / bong bóng | 🟡 | P1 | S |
 | C12 Màn xuất quân: thời gian đi / về, nút "Mang hệ khắc" | ✅ | P1 | S |
-| C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | 🟡 | P1 | S |
+| C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | ✅ `verdict.ts` (chưa chia sẻ vào chat minh) | P1 | S |
 | C32 + G2 "Nhận tất cả" (thư có quà, nhiệm vụ ngày, mốc sự kiện) | ✅ | P1 | S |
 | C36 + G11 Chế độ nhẹ / tiết kiệm pin, giảm chuyển động trong game | 🟡 | P1 | S |
 | D4 Màn "Mở khoá" khi Chủ điện lên tầng (huy hiệu bấm là tới) | ✅ `Unlocks.svelte` | P1 | S |

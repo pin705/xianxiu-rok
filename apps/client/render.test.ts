@@ -74,6 +74,7 @@ async function load(lang: 'vi' | 'en') {
     'Quiz',
     'Unlocks',
     'GiftStrip',
+    'PowerSheet',
     'Advisor',
     'Chat',
     'world/WorldView',
@@ -833,6 +834,12 @@ test('tiên minh, chat', async () => {
       social.gift = { thoiQuang60: 2, kinhThu500: 1 }
       assert.ok(paint('GiftStrip', {}, `${label}, Tạ lễ`).includes(L.gift.title), 'dải vật phẩm vừa nhận')
       social.gift = null
+      const pw = paint(
+        'PowerSheet',
+        { open: true, game: s, onclose: noop, onfocus: noop, ontab: noop },
+        `${label}, bảng Thế lực`,
+      )
+      assert.ok(pw.includes(L.powerSheet.parts.troops) && pw.includes(L.powerSheet.go), 'thế lực theo nguồn')
       const sup = paint(
         'Supply',
         {

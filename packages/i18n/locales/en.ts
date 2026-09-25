@@ -152,6 +152,11 @@ export const en: Text = {
   level: (n: number) => `Level ${n}`,
   lv: (n: number) => `Lv ${n}`,
   power: 'Power',
+  powerSheet: {
+    sub: 'Power adds up five sources — tap Raise to go improve one',
+    parts: { build: 'Buildings', troops: 'Disciples', tech: 'Research', gear: 'Artifacts', elders: 'Elders' },
+    go: 'Raise',
+  },
   full: 'Full',
   sound: { on: 'Mute', off: 'Unmute' },
   res,

@@ -150,6 +150,12 @@ export const vi = {
   level: (n: number) => `Tầng ${n}`,
   lv: (n: number) => `Cấp ${n}`,
   power: 'Thế lực',
+  // bảng Thế lực: chia theo nguồn, mỗi nguồn một nút tăng
+  powerSheet: {
+    sub: 'Thế lực là tổng của năm nguồn — chạm Tăng để tới chỗ nâng',
+    parts: { build: 'Công trình', troops: 'Đệ tử', tech: 'Công pháp', gear: 'Pháp bảo', elders: 'Trưởng lão' },
+    go: 'Tăng',
+  },
   full: 'Đầy',
   sound: { on: 'Tắt âm thanh', off: 'Bật âm thanh' },
   res,

@@ -1,1 +1,1331 @@
-{}
+{
+  "bamboo:0.85:8": {
+    "src": "scene/bamboo-0.85-8.webp",
+    "tex": true
+  },
+  "bamboo:0.8:4": {
+    "src": "scene/bamboo-0.8-4.webp",
+    "tex": true
+  },
+  "bld:chuDien:1": {
+    "src": "bld/bld-chuDien-1.webp",
+    "tex": true
+  },
+  "bld:chuDien:1:0": {
+    "src": "bld/bld-chuDien-1.webp",
+    "tex": true
+  },
+  "bld:chuDien:2": {
+    "src": "bld/bld-chuDien-2.webp",
+    "tex": true
+  },
+  "bld:chuDien:2:0": {
+    "src": "bld/bld-chuDien-2.webp",
+    "tex": true
+  },
+  "bld:chuDien:3": {
+    "src": "bld/bld-chuDien-3.webp",
+    "tex": true
+  },
+  "bld:chuDien:3:0": {
+    "src": "bld/bld-chuDien-3.webp",
+    "tex": true
+  },
+  "bld:chuDien:4": {
+    "src": "bld/bld-chuDien-4.webp",
+    "tex": true
+  },
+  "bld:chuDien:4:0": {
+    "src": "bld/bld-chuDien-4.webp",
+    "tex": true
+  },
+  "bld:chuDien:5": {
+    "src": "bld/bld-chuDien-5.webp",
+    "tex": true
+  },
+  "bld:chuDien:5:0": {
+    "src": "bld/bld-chuDien-5.webp",
+    "tex": true
+  },
+  "bld:danPhong:1": {
+    "src": "bld/bld-danPhong-1.webp",
+    "tex": true
+  },
+  "bld:danPhong:1:0": {
+    "src": "bld/bld-danPhong-1.webp",
+    "tex": true
+  },
+  "bld:danPhong:2": {
+    "src": "bld/bld-danPhong-2.webp",
+    "tex": true
+  },
+  "bld:danPhong:2:0": {
+    "src": "bld/bld-danPhong-2.webp",
+    "tex": true
+  },
+  "bld:danPhong:3": {
+    "src": "bld/bld-danPhong-3.webp",
+    "tex": true
+  },
+  "bld:danPhong:3:0": {
+    "src": "bld/bld-danPhong-3.webp",
+    "tex": true
+  },
+  "bld:danPhong:4": {
+    "src": "bld/bld-danPhong-4.webp",
+    "tex": true
+  },
+  "bld:danPhong:4:0": {
+    "src": "bld/bld-danPhong-4.webp",
+    "tex": true
+  },
+  "bld:danPhong:5": {
+    "src": "bld/bld-danPhong-5.webp",
+    "tex": true
+  },
+  "bld:danPhong:5:0": {
+    "src": "bld/bld-danPhong-5.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:1": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:1:1": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:1:2": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:1:3": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:1:4": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:1:5": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:1:6": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:2": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:2:1": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:2:2": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:2:3": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:2:4": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:2:5": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:2:6": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:3": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:3:1": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:3:2": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:3:3": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:3:4": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:3:5": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:3:6": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:4": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:4:1": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:4:2": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:4:3": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:4:4": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:4:5": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:4:6": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:5": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:5:1": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:5:2": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:5:3": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:5:4": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:5:5": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "bld:dienVoTruong:5:6": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:1": {
+    "src": "bld/bld-hoSonDaiTran-1.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:1:0": {
+    "src": "bld/bld-hoSonDaiTran-1.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:2": {
+    "src": "bld/bld-hoSonDaiTran-2.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:2:0": {
+    "src": "bld/bld-hoSonDaiTran-2.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:3": {
+    "src": "bld/bld-hoSonDaiTran-3.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:3:0": {
+    "src": "bld/bld-hoSonDaiTran-3.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:4": {
+    "src": "bld/bld-hoSonDaiTran-4.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:4:0": {
+    "src": "bld/bld-hoSonDaiTran-4.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:5": {
+    "src": "bld/bld-hoSonDaiTran-5.webp",
+    "tex": true
+  },
+  "bld:hoSonDaiTran:5:0": {
+    "src": "bld/bld-hoSonDaiTran-5.webp",
+    "tex": true
+  },
+  "bld:khoangMach:1": {
+    "src": "bld/bld-khoangMach-1.webp",
+    "tex": true
+  },
+  "bld:khoangMach:1:0": {
+    "src": "bld/bld-khoangMach-1.webp",
+    "tex": true
+  },
+  "bld:khoangMach:2": {
+    "src": "bld/bld-khoangMach-2.webp",
+    "tex": true
+  },
+  "bld:khoangMach:2:0": {
+    "src": "bld/bld-khoangMach-2.webp",
+    "tex": true
+  },
+  "bld:khoangMach:3": {
+    "src": "bld/bld-khoangMach-3.webp",
+    "tex": true
+  },
+  "bld:khoangMach:3:0": {
+    "src": "bld/bld-khoangMach-3.webp",
+    "tex": true
+  },
+  "bld:khoangMach:4": {
+    "src": "bld/bld-khoangMach-4.webp",
+    "tex": true
+  },
+  "bld:khoangMach:4:0": {
+    "src": "bld/bld-khoangMach-4.webp",
+    "tex": true
+  },
+  "bld:khoangMach:5": {
+    "src": "bld/bld-khoangMach-5.webp",
+    "tex": true
+  },
+  "bld:khoangMach:5:0": {
+    "src": "bld/bld-khoangMach-5.webp",
+    "tex": true
+  },
+  "bld:linhDien:1": {
+    "src": "bld/bld-linhDien-1.webp",
+    "tex": true
+  },
+  "bld:linhDien:1:0": {
+    "src": "bld/bld-linhDien-1.webp",
+    "tex": true
+  },
+  "bld:linhDien:2": {
+    "src": "bld/bld-linhDien-2.webp",
+    "tex": true
+  },
+  "bld:linhDien:2:0": {
+    "src": "bld/bld-linhDien-2.webp",
+    "tex": true
+  },
+  "bld:linhDien:3": {
+    "src": "bld/bld-linhDien-3.webp",
+    "tex": true
+  },
+  "bld:linhDien:3:0": {
+    "src": "bld/bld-linhDien-3.webp",
+    "tex": true
+  },
+  "bld:linhDien:4": {
+    "src": "bld/bld-linhDien-4.webp",
+    "tex": true
+  },
+  "bld:linhDien:4:0": {
+    "src": "bld/bld-linhDien-4.webp",
+    "tex": true
+  },
+  "bld:linhDien:5": {
+    "src": "bld/bld-linhDien-5.webp",
+    "tex": true
+  },
+  "bld:linhDien:5:0": {
+    "src": "bld/bld-linhDien-5.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:1": {
+    "src": "bld/bld-luyenKhiPhong-1.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:1:0": {
+    "src": "bld/bld-luyenKhiPhong-1.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:2": {
+    "src": "bld/bld-luyenKhiPhong-2.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:2:0": {
+    "src": "bld/bld-luyenKhiPhong-2.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:3": {
+    "src": "bld/bld-luyenKhiPhong-3.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:3:0": {
+    "src": "bld/bld-luyenKhiPhong-3.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:4": {
+    "src": "bld/bld-luyenKhiPhong-4.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:4:0": {
+    "src": "bld/bld-luyenKhiPhong-4.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:5": {
+    "src": "bld/bld-luyenKhiPhong-5.webp",
+    "tex": true
+  },
+  "bld:luyenKhiPhong:5:0": {
+    "src": "bld/bld-luyenKhiPhong-5.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:1": {
+    "src": "bld/bld-tangBaoCac-1.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:1:0": {
+    "src": "bld/bld-tangBaoCac-1.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:2": {
+    "src": "bld/bld-tangBaoCac-2.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:2:0": {
+    "src": "bld/bld-tangBaoCac-2.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:3": {
+    "src": "bld/bld-tangBaoCac-3.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:3:0": {
+    "src": "bld/bld-tangBaoCac-3.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:4": {
+    "src": "bld/bld-tangBaoCac-4.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:4:0": {
+    "src": "bld/bld-tangBaoCac-4.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:5": {
+    "src": "bld/bld-tangBaoCac-5.webp",
+    "tex": true
+  },
+  "bld:tangBaoCac:5:0": {
+    "src": "bld/bld-tangBaoCac-5.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:1": {
+    "src": "bld/bld-tangKinhCac-1.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:1:0": {
+    "src": "bld/bld-tangKinhCac-1.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:2": {
+    "src": "bld/bld-tangKinhCac-2.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:2:0": {
+    "src": "bld/bld-tangKinhCac-2.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:3": {
+    "src": "bld/bld-tangKinhCac-3.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:3:0": {
+    "src": "bld/bld-tangKinhCac-3.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:4": {
+    "src": "bld/bld-tangKinhCac-4.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:4:0": {
+    "src": "bld/bld-tangKinhCac-4.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:5": {
+    "src": "bld/bld-tangKinhCac-5.webp",
+    "tex": true
+  },
+  "bld:tangKinhCac:5:0": {
+    "src": "bld/bld-tangKinhCac-5.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:1": {
+    "src": "bld/bld-tuLinhTran-1.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:1:0": {
+    "src": "bld/bld-tuLinhTran-1.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:2": {
+    "src": "bld/bld-tuLinhTran-2.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:2:0": {
+    "src": "bld/bld-tuLinhTran-2.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:3": {
+    "src": "bld/bld-tuLinhTran-3.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:3:0": {
+    "src": "bld/bld-tuLinhTran-3.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:4": {
+    "src": "bld/bld-tuLinhTran-4.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:4:0": {
+    "src": "bld/bld-tuLinhTran-4.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:5": {
+    "src": "bld/bld-tuLinhTran-5.webp",
+    "tex": true
+  },
+  "bld:tuLinhTran:5:0": {
+    "src": "bld/bld-tuLinhTran-5.webp",
+    "tex": true
+  },
+  "blossom:0.8:7": {
+    "src": "scene/blossom-0.8-7.webp",
+    "tex": true
+  },
+  "blossom:0.95:3": {
+    "src": "scene/blossom-0.95-3.webp",
+    "tex": true
+  },
+  "blossom:0.9:13": {
+    "src": "scene/blossom-0.9-13.webp",
+    "tex": true
+  },
+  "blossom:1:11": {
+    "src": "scene/blossom-1-11.webp",
+    "tex": true
+  },
+  "face:bachVoNhai": {
+    "src": "face/face-bachVoNhai.webp"
+  },
+  "face:diepCoThanh": {
+    "src": "face/face-diepCoThanh.webp"
+  },
+  "face:hanBang": {
+    "src": "face/face-hanBang.webp"
+  },
+  "face:hoacThienCuong": {
+    "src": "face/face-hoacThienCuong.webp"
+  },
+  "face:huyenMinh": {
+    "src": "face/face-huyenMinh.webp"
+  },
+  "face:loiChan": {
+    "src": "face/face-loiChan.webp"
+  },
+  "face:macSau": {
+    "src": "face/face-macSau.webp"
+  },
+  "face:master": {
+    "src": "face/face-master.webp"
+  },
+  "face:nhuYen": {
+    "src": "face/face-nhuYen.webp"
+  },
+  "face:thachKien": {
+    "src": "face/face-thachKien.webp"
+  },
+  "face:thanhPhong": {
+    "src": "face/face-thanhPhong.webp"
+  },
+  "face:toMiNuong": {
+    "src": "face/face-toMiNuong.webp"
+  },
+  "face:vanHac": {
+    "src": "face/face-vanHac.webp"
+  },
+  "icon:boiNguyen": {
+    "src": "icon/icon-boiNguyen.webp"
+  },
+  "icon:bolt": {
+    "src": "icon/icon-bolt.webp"
+  },
+  "icon:cauldron": {
+    "src": "icon/icon-cauldron.webp"
+  },
+  "icon:chienY": {
+    "src": "icon/icon-chienY.webp"
+  },
+  "icon:daiTuKhi": {
+    "src": "icon/icon-daiTuKhi.webp"
+  },
+  "icon:dieuThu": {
+    "src": "icon/icon-dieuThu.webp"
+  },
+  "icon:doKiep": {
+    "src": "icon/icon-doKiep.webp"
+  },
+  "icon:flag": {
+    "src": "icon/icon-flag.webp"
+  },
+  "icon:heal": {
+    "src": "icon/icon-heal.webp"
+  },
+  "icon:hoSon": {
+    "src": "icon/icon-hoSon.webp"
+  },
+  "icon:hoTam": {
+    "src": "icon/icon-hoTam.webp"
+  },
+  "icon:hoThe": {
+    "src": "icon/icon-hoThe.webp"
+  },
+  "icon:hoiXuan": {
+    "src": "icon/icon-hoiXuan.webp"
+  },
+  "icon:huyenVu": {
+    "src": "icon/icon-huyenVu.webp"
+  },
+  "icon:khoangNang": {
+    "src": "icon/icon-khoangNang.webp"
+  },
+  "icon:kimCang": {
+    "src": "icon/icon-kimCang.webp"
+  },
+  "icon:kimCuong": {
+    "src": "icon/icon-kimCuong.webp"
+  },
+  "icon:kimDuyen": {
+    "src": "icon/icon-kimDuyen.webp"
+  },
+  "icon:kinhThu": {
+    "src": "icon/icon-kinhThu.webp"
+  },
+  "icon:linhKhoang": {
+    "src": "icon/icon-linhKhoang.webp"
+  },
+  "icon:linhThach": {
+    "src": "icon/icon-linhThach.webp"
+  },
+  "icon:linhThao": {
+    "src": "icon/icon-linhThao.webp"
+  },
+  "icon:loBan": {
+    "src": "icon/icon-loBan.webp"
+  },
+  "icon:luyenBinh": {
+    "src": "icon/icon-luyenBinh.webp"
+  },
+  "icon:nganDuyen": {
+    "src": "icon/icon-nganDuyen.webp"
+  },
+  "icon:ngoDao": {
+    "src": "icon/icon-ngoDao.webp"
+  },
+  "icon:ngocGian": {
+    "src": "icon/icon-ngocGian.webp"
+  },
+  "icon:ngungThan": {
+    "src": "icon/icon-ngungThan.webp"
+  },
+  "icon:phaCanh": {
+    "src": "icon/icon-phaCanh.webp"
+  },
+  "icon:scroll": {
+    "src": "icon/icon-scroll.webp"
+  },
+  "icon:shield": {
+    "src": "icon/icon-shield.webp"
+  },
+  "icon:star": {
+    "src": "icon/icon-star.webp"
+  },
+  "icon:taiTuy": {
+    "src": "icon/icon-taiTuy.webp"
+  },
+  "icon:tapDich": {
+    "src": "icon/icon-tapDich.webp"
+  },
+  "icon:thachNang": {
+    "src": "icon/icon-thachNang.webp"
+  },
+  "icon:thanHanh": {
+    "src": "icon/icon-thanHanh.webp"
+  },
+  "icon:thanhSuong": {
+    "src": "icon/icon-thanhSuong.webp"
+  },
+  "icon:thaoNang": {
+    "src": "icon/icon-thaoNang.webp"
+  },
+  "icon:thienLoi": {
+    "src": "icon/icon-thienLoi.webp"
+  },
+  "icon:thoiQuang": {
+    "src": "icon/icon-thoiQuang.webp"
+  },
+  "icon:tiLoi": {
+    "src": "icon/icon-tiLoi.webp"
+  },
+  "icon:tuBao": {
+    "src": "icon/icon-tuBao.webp"
+  },
+  "icon:tuKhi": {
+    "src": "icon/icon-tuKhi.webp"
+  },
+  "icon:tuLinh": {
+    "src": "icon/icon-tuLinh.webp"
+  },
+  "icon:xichViem": {
+    "src": "icon/icon-xichViem.webp"
+  },
+  "lantern:0.8": {
+    "src": "scene/lantern-0.8.webp",
+    "tex": true
+  },
+  "lantern:0.9": {
+    "src": "scene/lantern-0.9.webp",
+    "tex": true
+  },
+  "ledge:0": {
+    "src": "scene/ledge-0.webp",
+    "tex": true
+  },
+  "ledge:1": {
+    "src": "scene/ledge-1.webp",
+    "tex": true
+  },
+  "ledge:2": {
+    "src": "scene/ledge-2.webp",
+    "tex": true
+  },
+  "ledge:3": {
+    "src": "scene/ledge-3.webp",
+    "tex": true
+  },
+  "ledge:4": {
+    "src": "scene/ledge-4.webp",
+    "tex": true
+  },
+  "ledge:5": {
+    "src": "scene/ledge-5.webp",
+    "tex": true
+  },
+  "ledge:6": {
+    "src": "scene/ledge-6.webp",
+    "tex": true
+  },
+  "ledge:7": {
+    "src": "scene/ledge-7.webp",
+    "tex": true
+  },
+  "ledge:8": {
+    "src": "scene/ledge-8.webp",
+    "tex": true
+  },
+  "panel:chuDien:1": {
+    "src": "bld/bld-chuDien-1.webp",
+    "tex": true
+  },
+  "panel:chuDien:2": {
+    "src": "bld/bld-chuDien-2.webp",
+    "tex": true
+  },
+  "panel:chuDien:3": {
+    "src": "bld/bld-chuDien-3.webp",
+    "tex": true
+  },
+  "panel:chuDien:4": {
+    "src": "bld/bld-chuDien-4.webp",
+    "tex": true
+  },
+  "panel:chuDien:5": {
+    "src": "bld/bld-chuDien-5.webp",
+    "tex": true
+  },
+  "panel:danPhong:1": {
+    "src": "bld/bld-danPhong-1.webp",
+    "tex": true
+  },
+  "panel:danPhong:2": {
+    "src": "bld/bld-danPhong-2.webp",
+    "tex": true
+  },
+  "panel:danPhong:3": {
+    "src": "bld/bld-danPhong-3.webp",
+    "tex": true
+  },
+  "panel:danPhong:4": {
+    "src": "bld/bld-danPhong-4.webp",
+    "tex": true
+  },
+  "panel:danPhong:5": {
+    "src": "bld/bld-danPhong-5.webp",
+    "tex": true
+  },
+  "panel:dienVoTruong:1": {
+    "src": "bld/bld-dienVoTruong-1.webp",
+    "tex": true
+  },
+  "panel:dienVoTruong:2": {
+    "src": "bld/bld-dienVoTruong-2.webp",
+    "tex": true
+  },
+  "panel:dienVoTruong:3": {
+    "src": "bld/bld-dienVoTruong-3.webp",
+    "tex": true
+  },
+  "panel:dienVoTruong:4": {
+    "src": "bld/bld-dienVoTruong-4.webp",
+    "tex": true
+  },
+  "panel:dienVoTruong:5": {
+    "src": "bld/bld-dienVoTruong-5.webp",
+    "tex": true
+  },
+  "panel:hoSonDaiTran:1": {
+    "src": "bld/bld-hoSonDaiTran-1.webp",
+    "tex": true
+  },
+  "panel:hoSonDaiTran:2": {
+    "src": "bld/bld-hoSonDaiTran-2.webp",
+    "tex": true
+  },
+  "panel:hoSonDaiTran:3": {
+    "src": "bld/bld-hoSonDaiTran-3.webp",
+    "tex": true
+  },
+  "panel:hoSonDaiTran:4": {
+    "src": "bld/bld-hoSonDaiTran-4.webp",
+    "tex": true
+  },
+  "panel:hoSonDaiTran:5": {
+    "src": "bld/bld-hoSonDaiTran-5.webp",
+    "tex": true
+  },
+  "panel:khoangMach:1": {
+    "src": "bld/bld-khoangMach-1.webp",
+    "tex": true
+  },
+  "panel:khoangMach:2": {
+    "src": "bld/bld-khoangMach-2.webp",
+    "tex": true
+  },
+  "panel:khoangMach:3": {
+    "src": "bld/bld-khoangMach-3.webp",
+    "tex": true
+  },
+  "panel:khoangMach:4": {
+    "src": "bld/bld-khoangMach-4.webp",
+    "tex": true
+  },
+  "panel:khoangMach:5": {
+    "src": "bld/bld-khoangMach-5.webp",
+    "tex": true
+  },
+  "panel:linhDien:1": {
+    "src": "bld/bld-linhDien-1.webp",
+    "tex": true
+  },
+  "panel:linhDien:2": {
+    "src": "bld/bld-linhDien-2.webp",
+    "tex": true
+  },
+  "panel:linhDien:3": {
+    "src": "bld/bld-linhDien-3.webp",
+    "tex": true
+  },
+  "panel:linhDien:4": {
+    "src": "bld/bld-linhDien-4.webp",
+    "tex": true
+  },
+  "panel:linhDien:5": {
+    "src": "bld/bld-linhDien-5.webp",
+    "tex": true
+  },
+  "panel:luyenKhiPhong:1": {
+    "src": "bld/bld-luyenKhiPhong-1.webp",
+    "tex": true
+  },
+  "panel:luyenKhiPhong:2": {
+    "src": "bld/bld-luyenKhiPhong-2.webp",
+    "tex": true
+  },
+  "panel:luyenKhiPhong:3": {
+    "src": "bld/bld-luyenKhiPhong-3.webp",
+    "tex": true
+  },
+  "panel:luyenKhiPhong:4": {
+    "src": "bld/bld-luyenKhiPhong-4.webp",
+    "tex": true
+  },
+  "panel:luyenKhiPhong:5": {
+    "src": "bld/bld-luyenKhiPhong-5.webp",
+    "tex": true
+  },
+  "panel:tangBaoCac:1": {
+    "src": "bld/bld-tangBaoCac-1.webp",
+    "tex": true
+  },
+  "panel:tangBaoCac:2": {
+    "src": "bld/bld-tangBaoCac-2.webp",
+    "tex": true
+  },
+  "panel:tangBaoCac:3": {
+    "src": "bld/bld-tangBaoCac-3.webp",
+    "tex": true
+  },
+  "panel:tangBaoCac:4": {
+    "src": "bld/bld-tangBaoCac-4.webp",
+    "tex": true
+  },
+  "panel:tangBaoCac:5": {
+    "src": "bld/bld-tangBaoCac-5.webp",
+    "tex": true
+  },
+  "panel:tangKinhCac:1": {
+    "src": "bld/bld-tangKinhCac-1.webp",
+    "tex": true
+  },
+  "panel:tangKinhCac:2": {
+    "src": "bld/bld-tangKinhCac-2.webp",
+    "tex": true
+  },
+  "panel:tangKinhCac:3": {
+    "src": "bld/bld-tangKinhCac-3.webp",
+    "tex": true
+  },
+  "panel:tangKinhCac:4": {
+    "src": "bld/bld-tangKinhCac-4.webp",
+    "tex": true
+  },
+  "panel:tangKinhCac:5": {
+    "src": "bld/bld-tangKinhCac-5.webp",
+    "tex": true
+  },
+  "panel:tuLinhTran:1": {
+    "src": "bld/bld-tuLinhTran-1.webp",
+    "tex": true
+  },
+  "panel:tuLinhTran:2": {
+    "src": "bld/bld-tuLinhTran-2.webp",
+    "tex": true
+  },
+  "panel:tuLinhTran:3": {
+    "src": "bld/bld-tuLinhTran-3.webp",
+    "tex": true
+  },
+  "panel:tuLinhTran:4": {
+    "src": "bld/bld-tuLinhTran-4.webp",
+    "tex": true
+  },
+  "panel:tuLinhTran:5": {
+    "src": "bld/bld-tuLinhTran-5.webp",
+    "tex": true
+  },
+  "peak:cliff": {
+    "src": "scene/peak-cliff.webp",
+    "tex": true
+  },
+  "peak:l": {
+    "src": "scene/peak-l.webp",
+    "tex": true
+  },
+  "peak:main": {
+    "src": "scene/peak-main.webp",
+    "tex": true
+  },
+  "peak:r": {
+    "src": "scene/peak-r.webp",
+    "tex": true
+  },
+  "pine:14": {
+    "src": "scene/pine-14.webp",
+    "tex": true
+  },
+  "pine:2": {
+    "src": "scene/pine-2.webp",
+    "tex": true
+  },
+  "pine:5": {
+    "src": "scene/pine-5.webp",
+    "tex": true
+  },
+  "pine:8": {
+    "src": "scene/pine-8.webp",
+    "tex": true
+  },
+  "pine:fg1": {
+    "src": "scene/pine-fg1.webp",
+    "tex": true
+  },
+  "pine:fg2": {
+    "src": "scene/pine-fg2.webp",
+    "tex": true
+  },
+  "pointer": {
+    "src": "icon/pointer.webp"
+  },
+  "rock:l": {
+    "src": "scene/rock-l.webp",
+    "tex": true
+  },
+  "rock:r": {
+    "src": "scene/rock-r.webp",
+    "tex": true
+  },
+  "skin:badge": {
+    "src": "skin/skin-badge.webp",
+    "slice": [30, 33, 30, 33],
+    "width": [10, 11, 10, 11],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:badge-fresh": {
+    "src": "skin/skin-badge-fresh.webp",
+    "slice": [30, 33, 30, 33],
+    "width": [10, 11, 10, 11],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:btn": {
+    "src": "skin/skin-btn.webp",
+    "slice": [54, 72, 66, 72],
+    "width": [18, 24, 22, 24],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:btn-danger": {
+    "src": "skin/skin-btn-danger.webp",
+    "slice": [54, 72, 66, 72],
+    "width": [18, 24, 22, 24],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:btn-ghost": {
+    "src": "skin/skin-btn-ghost.webp",
+    "slice": [54, 72, 66, 72],
+    "width": [18, 24, 22, 24],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:btn-gold": {
+    "src": "skin/skin-btn-gold.webp",
+    "slice": [54, 72, 66, 72],
+    "width": [18, 24, 22, 24],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:btn-off": {
+    "src": "skin/skin-btn-off.webp",
+    "slice": [54, 72, 66, 72],
+    "width": [18, 24, 22, 24],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:capsule": {
+    "src": "skin/skin-capsule.webp",
+    "slice": [39, 45, 39, 45],
+    "width": [13, 15, 13, 15],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:card": {
+    "src": "skin/skin-card.webp",
+    "slice": [42, 42, 42, 42],
+    "width": [14, 14, 14, 14],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:card-glow": {
+    "src": "skin/skin-card-glow.webp",
+    "slice": [42, 42, 42, 42],
+    "width": [14, 14, 14, 14],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:card-plain": {
+    "src": "skin/skin-card-plain.webp",
+    "slice": [42, 42, 42, 42],
+    "width": [14, 14, 14, 14],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:card-sel": {
+    "src": "skin/skin-card-sel.webp",
+    "slice": [42, 42, 42, 42],
+    "width": [14, 14, 14, 14],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:card-silk": {
+    "src": "skin/skin-card-silk.webp",
+    "slice": [42, 42, 42, 42],
+    "width": [14, 14, 14, 14],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:disc-azure": {
+    "src": "skin/skin-disc-azure.webp",
+    "slice": [0, 0, 0, 0],
+    "width": [0, 0, 0, 0],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:disc-gold": {
+    "src": "skin/skin-disc-gold.webp",
+    "slice": [0, 0, 0, 0],
+    "width": [0, 0, 0, 0],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:disc-paper": {
+    "src": "skin/skin-disc-paper.webp",
+    "slice": [0, 0, 0, 0],
+    "width": [0, 0, 0, 0],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:disc-silk": {
+    "src": "skin/skin-disc-silk.webp",
+    "slice": [0, 0, 0, 0],
+    "width": [0, 0, 0, 0],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:field": {
+    "src": "skin/skin-field.webp",
+    "slice": [24, 30, 30, 30],
+    "width": [8, 10, 10, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:fill": {
+    "src": "skin/skin-fill.webp",
+    "slice": [15, 21, 15, 18],
+    "width": [5, 7, 5, 6],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:fill-azure": {
+    "src": "skin/skin-fill-azure.webp",
+    "slice": [15, 21, 15, 18],
+    "width": [5, 7, 5, 6],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:fill-bad": {
+    "src": "skin/skin-fill-bad.webp",
+    "slice": [15, 21, 15, 18],
+    "width": [5, 7, 5, 6],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:fill-gold": {
+    "src": "skin/skin-fill-gold.webp",
+    "slice": [15, 21, 15, 18],
+    "width": [5, 7, 5, 6],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:fill-good": {
+    "src": "skin/skin-fill-good.webp",
+    "slice": [15, 21, 15, 18],
+    "width": [5, 7, 5, 6],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:groove": {
+    "src": "skin/skin-groove.webp",
+    "slice": [36, 36, 36, 36],
+    "width": [12, 12, 12, 12],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:knob": {
+    "src": "skin/skin-knob.webp",
+    "slice": [0, 0, 0, 0],
+    "width": [0, 0, 0, 0],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:plate": {
+    "src": "skin/skin-plate.webp",
+    "slice": [36, 42, 36, 42],
+    "width": [12, 14, 12, 14],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:rod": {
+    "src": "skin/skin-rod.webp",
+    "slice": [0, 66, 0, 66],
+    "width": [0, 22, 0, 22],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:scroll": {
+    "src": "skin/skin-scroll.webp",
+    "slice": [72, 72, 72, 72],
+    "width": [24, 24, 24, 24],
+    "outset": 0,
+    "repeat": "round"
+  },
+  "skin:slip": {
+    "src": "skin/skin-slip.webp",
+    "slice": [36, 66, 39, 66],
+    "width": [12, 22, 13, 22],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:slip-bad": {
+    "src": "skin/skin-slip-bad.webp",
+    "slice": [36, 66, 39, 66],
+    "width": [12, 22, 13, 22],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:strip": {
+    "src": "skin/skin-strip.webp",
+    "slice": [42, 42, 42, 42],
+    "width": [14, 14, 14, 14],
+    "outset": 0,
+    "repeat": "round"
+  },
+  "skin:switch": {
+    "src": "skin/skin-switch.webp",
+    "slice": [0, 0, 0, 0],
+    "width": [0, 0, 0, 0],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:switch-on": {
+    "src": "skin/skin-switch-on.webp",
+    "slice": [0, 0, 0, 0],
+    "width": [0, 0, 0, 0],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:tag": {
+    "src": "skin/skin-tag.webp",
+    "slice": [27, 30, 27, 30],
+    "width": [9, 10, 9, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:tag-bad": {
+    "src": "skin/skin-tag-bad.webp",
+    "slice": [27, 30, 27, 30],
+    "width": [9, 10, 9, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:tag-dark": {
+    "src": "skin/skin-tag-dark.webp",
+    "slice": [27, 30, 27, 30],
+    "width": [9, 10, 9, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:tag-gold": {
+    "src": "skin/skin-tag-gold.webp",
+    "slice": [27, 30, 27, 30],
+    "width": [9, 10, 9, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:tag-good": {
+    "src": "skin/skin-tag-good.webp",
+    "slice": [27, 30, 27, 30],
+    "width": [9, 10, 9, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:tag-red": {
+    "src": "skin/skin-tag-red.webp",
+    "slice": [27, 30, 27, 30],
+    "width": [9, 10, 9, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:tag-silk": {
+    "src": "skin/skin-tag-silk.webp",
+    "slice": [27, 30, 27, 30],
+    "width": [9, 10, 9, 10],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:toast": {
+    "src": "skin/skin-toast.webp",
+    "slice": [42, 102, 42, 102],
+    "width": [14, 34, 14, 34],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:toast-bad": {
+    "src": "skin/skin-toast-bad.webp",
+    "slice": [42, 102, 42, 102],
+    "width": [14, 34, 14, 34],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "skin:track": {
+    "src": "skin/skin-track.webp",
+    "slice": [15, 18, 15, 18],
+    "width": [5, 6, 5, 6],
+    "outset": 0,
+    "repeat": "stretch"
+  },
+  "stair:126,506": {
+    "src": "scene/stair-126,506.webp",
+    "tex": true
+  },
+  "stair:150,606": {
+    "src": "scene/stair-150,606.webp",
+    "tex": true
+  },
+  "stair:200,404": {
+    "src": "scene/stair-200,404.webp",
+    "tex": true
+  },
+  "stair:216,708": {
+    "src": "scene/stair-216,708.webp",
+    "tex": true
+  },
+  "stair:276,508": {
+    "src": "scene/stair-276,508.webp",
+    "tex": true
+  },
+  "tab:banDo": {
+    "src": "icon/tab-banDo.webp"
+  },
+  "tab:baoKho": {
+    "src": "icon/tab-baoKho.webp"
+  },
+  "tab:monHa": {
+    "src": "icon/tab-monHa.webp"
+  },
+  "tab:tienMinh": {
+    "src": "icon/tab-tienMinh.webp"
+  },
+  "tab:tongMon": {
+    "src": "icon/tab-tongMon.webp"
+  }
+}

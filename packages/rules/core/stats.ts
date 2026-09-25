@@ -190,15 +190,20 @@ export const away = (s: State) =>
     troops(() => 0),
   )
 export const totalTroops = (s: State) => count(s.troops) + count(s.wounded) + count(away(s))
-export function power(s: State) {
+// Thế lực theo nguồn (bảng Thế lực ở HUD); power cộng đúng thứ tự này nên số không đổi
+export function powerParts(s: State) {
   const out = away(s)
-  return (
-    IDS.reduce((sum, id) => sum + (BUILDINGS[id].power * s.levels[id] * (s.levels[id] + 1)) / 2, 0) +
-    UNITS.reduce((sum, u) => sum + TIER[unitOf(u).tier].power * (s.troops[u] + out[u]), 0) +
-    techSum(s) * 30 +
-    gearSum(s) * 25 +
-    ELDER_IDS.reduce((sum, e) => sum + (s.elders[e] === undefined ? 0 : elderLevel(s.elders[e]) * 50), 0)
-  )
+  return {
+    build: IDS.reduce((sum, id) => sum + (BUILDINGS[id].power * s.levels[id] * (s.levels[id] + 1)) / 2, 0),
+    troops: UNITS.reduce((sum, u) => sum + TIER[unitOf(u).tier].power * (s.troops[u] + out[u]), 0),
+    tech: techSum(s) * 30,
+    gear: gearSum(s) * 25,
+    elders: ELDER_IDS.reduce((sum, e) => sum + (s.elders[e] === undefined ? 0 : elderLevel(s.elders[e]) * 50), 0),
+  }
+}
+export function power(s: State) {
+  const p = powerParts(s)
+  return p.build + p.troops + p.tech + p.gear + p.elders
 }
 
 // Thương hội: phần giữ lại khi đổi tài nguyên (0..1)

@@ -32,6 +32,7 @@
     type State,
   } from '@rok/rules'
   import Buffs from './Buffs.svelte'
+  import PowerSheet from './PowerSheet.svelte'
   import ResSheet from './ResSheet.svelte'
   import VipSheet from './VipSheet.svelte'
   import { useGame } from './game'
@@ -100,6 +101,7 @@
   )
   let resOpen = $state<ResId | null>(null)
   let vipOpen = $state(false)
+  let powOpen = $state(false) // bảng Thế lực
   // đội địch đang kéo tới (chưa tới nơi) và Hộ Sơn Phù nhỏ nhất đang có để bật khiên ngay
   const g = useGame()
   // đội địch đang kéo tới; các đội tới cùng lúc là một kết trận — một thẻ, đếm số đội
@@ -299,10 +301,10 @@
           >{L.vip.short(vipLevel(game))}{#if game.vip && game.vip.chest !== dayOf(now)}<Badge dot />{/if}</button
         >
       </div>
-      <span class="pow" title={L.power}
+      <button class="pow" title={L.power} onclick={() => (powOpen = true)}
         ><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(
           Math.round(powerT.current),
-        )}{#if powUp}{#key powUp.t}<span class="float up" aria-hidden="true">+{num(powUp.n)}</span>{/key}{/if}</span
+        )}{#if powUp}{#key powUp.t}<span class="float up" aria-hidden="true">+{num(powUp.n)}</span>{/key}{/if}</button
       >
       <IconButton icon="mail" label="{L.mail.title}{letters ? ` (${letters})` : ''}" size={34} onclick={onmail}
         ><Badge n={letters} /></IconButton
@@ -511,6 +513,7 @@
 </div>
 <ResSheet res={resOpen} onclose={() => (resOpen = null)} {onfocus} />
 <VipSheet open={vipOpen} onclose={() => (vipOpen = false)} />
+<PowerSheet open={powOpen} {game} onclose={() => (powOpen = false)} {onfocus} {ontab} />
 
 <style>
   .hud {
