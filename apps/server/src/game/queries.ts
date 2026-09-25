@@ -21,7 +21,7 @@ import {
 } from '@rok/rules/world'
 import type { Answer, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
-import { channel, dmsOf, sharedIn } from './talk.ts'
+import { channel, dmsOf, groupViews, sharedIn } from './talk.ts'
 import type { Sock, World } from './world.ts'
 
 const SEASON_ROWS = 20 // bảng điểm mùa gửi client: top này
@@ -54,6 +54,7 @@ export const answersOf = (w: World): Answers => ({
     return p && { ...p, crown, boon: crown ? boonLeft(w.shared, now) : 0, invite, supply }
   },
   dms: sock => dmsOf(w, sock.data.pid),
+  groups: sock => groupViews(w, sock.data.pid),
   arena: sock => {
     const now = w.now()
     w.tick(now)

@@ -1,7 +1,7 @@
 <script lang="ts">
   // Hồ sơ chưởng môn (như Governor Profile của RoK): chạm chân dung mình, tên ở chat, người trong minh, tông môn trên bản đồ.
   // Cảnh giới, lực chiến, tiên minh, chỗ ngồi (tới xem trên bản đồ), chiến tích; truyền âm, chặn.
-  import type { Ack, Profile } from '@rok/protocol'
+  import type { Ack, GroupView, Profile } from '@rok/protocol'
   import { TITLES, TITLE_IDS, type TitleId } from '@rok/rules'
   import type { WorldAction } from '@rok/rules/world'
   import type { Net } from './net'
@@ -28,11 +28,17 @@
   const game = $derived(g.game)
 
   let p = $state.raw<Profile | null>(null)
+  let groups = $state.raw<GroupView[]>([]) // nhóm chat của mình: thêm người này vào
   $effect(() => {
     const pid = social.profile
     p = null
-    if (pid !== null) void api?.ask({ k: 'profile', pid }).then(r => social.profile === pid && (p = r))
+    if (pid === null) return
+    void api?.ask({ k: 'profile', pid }).then(r => social.profile === pid && (p = r))
+    void api?.ask({ k: 'groups' }).then(r => (groups = r ?? []))
   })
+  async function addTo(id: number, pid: number) {
+    if (send && (await send({ type: 'groupAdd', id, pid })).ok) groups = groups.map(x => (x.id === id ? { ...x, members: [...x.members, { pid, name: p?.name ?? '' }] } : x))
+  }
   const close = () => (social.profile = null)
   const reload = () => social.profile !== null && api?.ask({ k: 'profile', pid: social.profile }).then(r => (p = r))
   async function crown(title: TitleId) {
@@ -114,6 +120,13 @@
           >
         {/if}
       </div>
+      {#if p.pid !== me && send && groups.some(x => !x.members.some(m => m.pid === p?.pid))}
+        <div class="row wrap" style:--gap="4px">
+          {#each groups.filter(x => !x.members.some(m => m.pid === p?.pid)) as x (x.id)}
+            <Button size="sm" variant="ghost" icon="people" onclick={() => p && addTo(x.id, p.pid)}>{L.chat.groupAdd(x.name)}</Button>
+          {/each}
+        </div>
+      {/if}
       {#if p.supply && send}<Supply to={p.pid} name={p.name} room={p.supply} {send} onsent={reload} />{/if}
       {#if p.crown && send}
         <!-- Giới Chủ sắc phong: phúc cho đồng minh, hoạ cho kẻ thù (mỗi người một tước, giữ 24 giờ) -->

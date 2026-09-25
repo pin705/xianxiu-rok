@@ -48,7 +48,7 @@
   } = $props()
 
   let scene = $state.raw<Home>()
-  // Vân Du Khách: tới giờ thì một tán tu đứng chờ ở mỏm đá trái Tụ Linh Trận, chạm nhận quà (bay vào Bảo khố)
+  // Vân Du Khách: tới giờ thì một tán tu đứng chờ ở mỏm đá trái Tàng Kinh Các, chạm nhận quà (bay vào Bảo khố)
   const g = useGame()
   const guest = $derived(!still && game.levels.chuDien >= GUEST_HALL && now >= guestAt(game))
   function meet(e: MouseEvent) {
@@ -129,8 +129,9 @@
 >
   {#snippet hits(k)}
     {#if guest}
-      <button class="guest" style="left:{44 * k}px;top:{560 * k}px" aria-label={L.guest} onclick={meet}
-        ><Portrait look={LOOK.vanHac} size={Math.round(44 * k)} /><span class="gift" aria-hidden="true">🎁</span
+      <button class="guest" style="left:{36 * k}px;top:{350 * k}px" aria-label={L.guest} onclick={meet}
+        ><Portrait look={LOOK.vanHac} size={Math.round(44 * k)} /><span class="gift" aria-hidden="true"
+          ><Icon name="star" size={14} /></span
         ></button
       >
     {/if}

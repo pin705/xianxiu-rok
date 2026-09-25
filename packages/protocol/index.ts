@@ -88,7 +88,16 @@ export type Query =
   | { k: 'dms' }
   | { k: 'arena' }
   | { k: 'honor' }
+  | { k: 'groups' }
   | { k: 'shared'; pid: number; id: number }
+// Nhóm chat của mình: tên, người trong nhóm (tên theo state hiện tại), tin cuối
+export type GroupView = {
+  id: number
+  name: string
+  owner: number
+  members: { pid: number; name: string }[]
+  last?: ChatMsg
+}
 // Công Huân mùa này: top (người có điểm), hạng của mình (null: chưa có điểm)
 export type HonorView = { top: { pid: number; name: string; n: number }[]; me: { rank: number; n: number } | null }
 // Luận Kiếm Đài: đối thủ gợi ý, bảng tuần (top), hạng của mình (null: chưa có trận tuần này)
@@ -97,7 +106,7 @@ export type ArenaView = { foes: ArenaFoe[]; board: { pid: number; name: string; 
 export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
 export type Season = { rows: { name: string; pts: number }[]; me: { rank: number; pts: number } | null; fame: Fame[] }
 // Chat: kênh giới (từ tầng 3), kênh tiên minh, truyền âm 1-1 với người chơi pid ('p<pid>'). Chữ đã lọc ở server.
-export type Channel = 'world' | 'ally' | `p${number}`
+export type Channel = 'world' | 'ally' | `p${number}` | `g${number}` // g<id>: nhóm chat tự tạo
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
 export type { AllyInfo, AllyRow, MapSnap, Rival }
@@ -119,6 +128,7 @@ export type Answer = {
   dms: Dm[]
   arena: ArenaView
   honor: HonorView
+  groups: GroupView[]
   shared: Report | null // chiến báo người khác chia sẻ vào kênh mình nghe được
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>

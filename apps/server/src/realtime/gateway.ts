@@ -25,6 +25,7 @@ const Handshake = z.object({
 const Chan = z.union([
   z.enum(['world', 'ally']),
   z.templateLiteral(['p', z.number().int().positive()]),
+  z.templateLiteral(['g', z.number().int().positive()]),
 ]) satisfies z.ZodType<Channel>
 const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('reports'), before: z.number().int().nonnegative().optional() }),
@@ -39,6 +40,7 @@ const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('dms') }),
   z.object({ k: z.literal('arena') }),
   z.object({ k: z.literal('honor') }),
+  z.object({ k: z.literal('groups') }),
   z.object({ k: z.literal('shared'), pid: z.number().int().positive(), id: z.number().int().positive() }),
 ]) satisfies z.ZodType<Q>
 const Say = z.object({ ch: Chan, text: z.string().max(400) }) // độ dài thật (200 ký tự) world.say kiểm sau khi chuẩn hoá

@@ -1,8 +1,8 @@
 // Chat trong giới: kênh giới (từ Chủ điện CHAT_HALL), kênh tiên minh, truyền âm 1-1 — ai được nói, ai nghe, báo cáo tin.
 // Luật của tin (tần suất, lặp, lọc từ, cấm chat) ở chat.ts; tin ghi DB cùng commit như mọi thay đổi khác.
 import { CHAT_HALL } from '@rok/rules'
-import { allyOf } from '@rok/rules/world'
-import type { Channel, Dm, SayErr } from '@rok/protocol'
+import { allyOf, groupsOf } from '@rok/rules/world'
+import type { Channel, Dm, GroupView, SayErr } from '@rok/protocol'
 import * as store from '../db/store.ts'
 import { dmNote } from './notify.ts'
 import type { Sock, World } from './world.ts'
@@ -13,12 +13,17 @@ export async function loadChat(w: World) {
   w.chat.load(rows, m)
 }
 
-// Khoá phòng của kênh với người này ('w' cả giới, 'a<id>' tiên minh, 'd<a>-<b>' truyền âm, a < b); null: chưa được vào.
+// Khoá phòng của kênh với người này ('w' cả giới, 'a<id>' tiên minh, 'd<a>-<b>' truyền âm, a < b, 'g<id>' nhóm tự tạo); null:
+// chưa được vào.
 // Truyền âm với người chơi thật trong giới; gửi (send) thì phải từ tầng CHAT_HALL và người kia chưa chặn mình.
 export function channel(w: World, pid: number, ch: Channel, send = false) {
   const s = w.ps.get(pid)
   if (!s) return null
   if (ch === 'world') return s.levels.chuDien >= CHAT_HALL ? 'w' : null
+  if (ch[0] === 'g') {
+    const g = w.shared.groups?.[Number(ch.slice(1))]
+    return g?.members.includes(pid) && (!send || s.levels.chuDien >= CHAT_HALL) ? `g${g.id}` : null
+  }
   if (ch !== 'ally') {
     const to = Number(ch.slice(1))
     const them = w.ps.get(to)
@@ -37,6 +42,8 @@ function listeners(w: World, room: string) {
       .slice(1)
       .split('-')
       .flatMap(p => w.slots.get(Number(p)) ?? [])
+  if (room[0] === 'g')
+    return (w.shared.groups?.[Number(room.slice(1))]?.members ?? []).flatMap(p => w.slots.get(p) ?? [])
   const al = w.shared.allies[Number(room.slice(1))]
   return al ? Object.keys(al.members).flatMap(p => w.slots.get(Number(p)) ?? []) : []
 }
@@ -47,6 +54,15 @@ const chOf = (room: string, ch: Channel, pid: number): Channel => {
   return `p${a === pid ? b : a}`
 }
 // Các cuộc truyền âm gần đây của pid (tên theo state hiện tại)
+// Nhóm chat của pid: người trong nhóm, tin cuối
+export const groupViews = (w: World, pid: number): GroupView[] =>
+  groupsOf(w.shared, pid).map(g => ({
+    id: g.id,
+    name: g.name,
+    owner: g.owner,
+    members: g.members.map(p => ({ pid: p, name: w.ps.get(p)?.name ?? '?' })),
+    last: w.chat.history(`g${g.id}`).at(-1),
+  }))
 export const dmsOf = (w: World, pid: number): Dm[] =>
   w.chat.dms(pid).map(d => ({ pid: d.other, name: w.ps.get(d.other)?.name ?? d.last.name, last: d.last }))
 

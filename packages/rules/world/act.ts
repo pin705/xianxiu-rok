@@ -26,6 +26,7 @@ import { flagActions, type FlagAction } from './flags.ts'
 import { exploreActions, type ExploreAction } from './explore.ts'
 import { legionActions, type LegionAction } from './legion.ts'
 import { supplyActions, type SupplyAction } from './supply.ts'
+import { groupActions, type GroupAction } from './groups.ts'
 
 export type WorldAction =
   | RaidAction
@@ -42,6 +43,7 @@ export type WorldAction =
   | ExploreAction
   | LegionAction
   | SupplyAction
+  | GroupAction
 
 const WORLD: WorldActions<WorldAction> = {
   ...raidActions,
@@ -58,6 +60,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...exploreActions,
   ...legionActions,
   ...supplyActions,
+  ...groupActions,
 }
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 

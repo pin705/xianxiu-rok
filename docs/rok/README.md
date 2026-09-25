@@ -102,6 +102,7 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | National events (Rome / Germany…) | Danh Môn Tuần Lễ: ba đại phái thay nhau mỗi tuần (thứ Sáu → thứ Hai, chu kỳ 21 ngày), mỗi phái một loại lệnh bài và kho đổi riêng — Côn Lôn (xây, lĩnh ngộ, tăng tốc → Kim Duyên, Tạp Dịch Lệnh, kinh thư, phù xây / ngộ đạo), Thục Sơn (tuyển quân, thắng trận, săn yêu, chiến công → phù chiến, phù tuyển quân), Nga Mi (luyện đan, chữa thương, khai mỏ, giúp đồng minh → Hộ Sơn Phù, phù chữa, nang). Lệnh bài không đủ đổi hết — phải chọn | ✅ `FESTS.conLon/thucSon/ngaMi` (kiểu 'shop') |
 | Arms Training | Luận Võ Liên Hoàn (ở Diễn võ trường, từ tầng 6): mỗi ngày một phiên — một đội ảo (không mất quân thật) đấu liên tiếp giáo đầu; trận đầu giáo đầu bằng 12 % lực chiến đội, mỗi trận thắng mạnh thêm 6 %, quân không hồi giữa các trận. Cứ 3 trận thắng tự chọn 1 trong 3 công pháp cho giáo đầu (Cuồng Chiến công +15 % · Kim Giáp thủ +15 % · Long Thể sinh lực +20 % · Đông Đảo quân +15 % · Khắc Chế đổi hệ khắc đội mình) — roguelite ngược. Mốc 3 / 6 / 9 / 12 / 15 trận thắng nhận quà ngay (trung vị ~10 trận); mỗi trận có chiến báo xem lại | ✅ `sect/drill.ts`, `Drill.svelte` |
 | Account-link reward | Quà gắn email: lần gắn đầu (tài khoản khách → email) nhận thư quà Kim Duyên Phù + 2 Thời Quang Phù 1 giờ + Hộ Sơn Phù 8 giờ; lời mời gắn email trong Cài đặt nhắc có quà. Server đẩy lệnh thư vào hộp lệnh của giới (áp đúng một lần như thư admin) | ✅ `/account/link`, `LINK_GIFT` |
+| Visitors (khách ghé cảnh thành) | Vân Du Khách: mỗi 3 giờ một tán tu ghé mỏm núi cạnh Tàng Kinh Các (chân dung vòng vàng, nhún nhẹ), chạm nhận quà nhỏ xoay vòng 8 món (phù tăng tốc, nang tài nguyên, kinh thư, Ngân Duyên) bay vào Bảo khố; không dồn — tới giờ thì khách đứng chờ | ✅ `sect/guest.ts`, `Home.svelte` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
 
 Nhịp sau các thay đổi (`npm run sim`, 25/09 tối): bot giỏi Chủ điện 15 ngày 8,5, tầng 25 ngày 27,5; người chơi thường
@@ -141,5 +142,5 @@ dưới phần bảo hộ: còn 23 %.
 5. Luật mùa thay đổi: Linh Triều Mùa, Chính – Tà (Cổ Di Tích mở theo lịch: đã xong).
 
 **Đợt G — UI/UX** (file 8)
-- (Đã có: dải chat ở núi + bản đồ, chat trong trang Tiên minh, bản đồ nhỏ.) Còn: khách ghé cảnh núi có chức năng (B5),
-  mức zoom định sẵn / lớp tình hình trên bản đồ Giới.
+- (Đã có: dải chat ở núi + bản đồ, chat trong trang Tiên minh, bản đồ nhỏ, Vân Du Khách.) Còn: mức zoom định sẵn / lớp tình
+  hình trên bản đồ Giới.

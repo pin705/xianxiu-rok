@@ -128,6 +128,8 @@ export type Rally = {
 export type Good = 'linhThao' | 'linhKhoang' | PillId
 export type Order = { id: number; pid: number; good: Good; n: number; price: number; at: number }
 export type Trades = { day: number; buys: number; sold: number }
+// Nhóm chat tự tạo: tên, người giữ nhóm, người trong nhóm (theo thứ tự vào)
+export type Group = { id: number; name: string; owner: number; members: number[] }
 // Vận Linh Trận trong ngày của một người: đã gửi (trước hao tổn), đã nhận (sau hao tổn)
 export type Supply = { day: number; sent: number; got: number }
 // pts: điểm mùa đã chốt theo phe (sideKey) — phần đang giữ tính thêm ở seasonPts
@@ -151,6 +153,8 @@ export type World = {
   nextFlag?: number
   legion?: Legion // Ma Triều Công Sơn tuần này
   sup?: Record<number, Supply> // Vận Linh Trận hôm nay của từng người
+  groups?: Record<number, Group> // nhóm chat tự tạo
+  nextGroup?: number
 }
 // Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
 export type Legion = {

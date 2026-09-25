@@ -1,6 +1,19 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { DAY, DRILL_EVERY, DRILL_GIFTS, apply, drillFoe, expAt, newGame, type State } from './index.ts'
+import {
+  DAY,
+  DRILL_EVERY,
+  DRILL_GIFTS,
+  GUEST_EVERY,
+  GUEST_GIFTS,
+  apply,
+  drillFoe,
+  expAt,
+  guestAt,
+  guestGift,
+  newGame,
+  type State,
+} from './index.ts'
 import { might } from './combat.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -62,4 +75,16 @@ test('Luận Võ Liên Hoàn: đội ảo đấu liên tiếp giáo đầu mạn
     run({ ...s, time: s.time + DAY }, { type: 'drillStart', elder: 'thanhPhong', army: { kiem3: 1000 } }).ok,
     'ngày mới: phiên mới',
   )
+})
+
+test('Vân Du Khách: tới giờ thì ghé, chạm nhận quà xoay vòng; không dồn; hẹn lần sau', () => {
+  const s0 = sect()
+  const at = guestAt(s0)
+  assert.equal(at, (s0.born ?? 0) + GUEST_EVERY, 'lần đầu: một chu kỳ sau khi lập tông môn')
+  assert.deepEqual(apply(s0, { type: 'guest' }, at - 1), { ok: false, error: 'cooldown' })
+  const r = apply(s0, { type: 'guest' }, at + 10 * GUEST_EVERY)
+  assert.ok(r.ok)
+  assert.equal(r.state.items.thoiQuang15, (s0.items.thoiQuang15 ?? 0) + 1, 'quà đầu trong vòng')
+  assert.equal(guestAt(r.state), at + 10 * GUEST_EVERY + GUEST_EVERY, 'không dồn: hẹn một chu kỳ sau lúc nhận')
+  assert.deepEqual(guestGift(r.state), GUEST_GIFTS[1], 'quà kế tiếp xoay vòng')
 })

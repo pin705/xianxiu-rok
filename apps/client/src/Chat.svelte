@@ -2,8 +2,9 @@
   // Dải chat (chỉ ở tab Bản đồ và Tiên minh): một dòng tin mới nhất, chạm để mở kênh giới / tiên minh / truyền âm.
   // Chữ đã lọc ở server; người mình chặn thì ẩn ở đây (danh sách chặn nằm trong state của mình).
   // Toạ độ "(x,y)" trong tin (chia sẻ từ bản đồ giới) thành nút nhảy tới ô đó, như link toạ độ xanh của RoK.
-  // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo. Truyền âm: danh sách cuộc gần đây → từng cuộc.
-  import type { Channel, ChatMsg, Dm } from '@rok/protocol'
+  // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo. Truyền âm: nhóm chat tự tạo + cuộc gần đây → từng cuộc.
+  import type { Ack, Channel, ChatMsg, Dm, GroupView } from '@rok/protocol'
+  import type { WorldAction } from '@rok/rules/world'
   import type { Report } from '@rok/rules'
   import { MAP_W } from '@rok/rules/world'
   import type { Net } from './net'
@@ -24,6 +25,7 @@
     onmap,
     onreplay,
     narrow = false,
+    send: act2,
   }: {
     me: number | null
     ally?: boolean
@@ -33,6 +35,7 @@
     onmap?: (x: number, y: number) => void // nhảy tới ô trên bản đồ giới
     onreplay?: (r: Report) => void // xem trận người khác chia sẻ ("#r<id>" trong tin)
     narrow?: boolean // dải chat ở núi: chừa chỗ nút tạp dịch bên phải
+    send?: (a: WorldAction) => Promise<Ack> // nhóm chat: lập, rời
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -40,39 +43,58 @@
 
   const tabs = $derived<Tab[]>(ally ? ['world', 'ally', 'dm'] : ['world', 'dm'])
   let tab = $state<Tab>('world')
-  let peer = $state<{ pid: number; name: string } | null>(null) // cuộc truyền âm đang xem
-  const ch = $derived<Channel | null>(tab !== 'dm' ? tab : peer && `p${peer.pid}`)
+  let peer = $state<{ ch: Channel; name: string } | null>(null) // cuộc truyền âm / nhóm đang xem
+  const ch = $derived<Channel | null>(tab !== 'dm' ? tab : (peer?.ch ?? null))
   let open = $state(false)
   let text = $state('')
   let logs = $state<Record<string, ChatMsg[]>>({})
   let dms = $state<Dm[]>([]) // các cuộc truyền âm, mới nhất trước
-  let unread = $state<number[]>([]) // người có truyền âm chưa đọc
+  let groups = $state<GroupView[]>([]) // nhóm chat tự tạo của mình
+  let unread = $state<string[]>([]) // kênh truyền âm / nhóm có tin chưa đọc
+  let groupName = $state('')
+  const loadGroups = () => api?.ask({ k: 'groups' }).then(list => list && (groups = list))
+  const group = $derived(peer?.ch[0] === 'g' ? groups.find(x => `g${x.id}` === peer?.ch) : undefined)
   let pick = $state<ChatMsg | null>(null)
   const put = (c: string, list: ChatMsg[]) => (logs = { ...logs, [c]: list.slice(-50) })
-  const viewing = (pid: number) => (open || inline) && tab === 'dm' && peer?.pid === pid
+  const viewing = (c: string) => (open || inline) && tab === 'dm' && peer?.ch === c
   $effect(() => {
     if (!api) return
     for (const c of ally ? (['world', 'ally'] as const) : (['world'] as const))
       void api.ask({ k: 'chat', ch: c }).then(list => list && put(c, list))
     void api.ask({ k: 'dms' }).then(list => list && (dms = list))
+    void loadGroups()
     return api.onChat((c, ms) => {
       put(c, [...(logs[c] ?? []), ...ms])
-      if (c[0] !== 'p') return
-      const pid = Number(c.slice(1)),
-        last = ms.at(-1)!
-      const name = last.pid === pid ? last.name : (dms.find(d => d.pid === pid)?.name ?? peer?.name ?? '?')
-      dms = [{ pid, name, last }, ...dms.filter(d => d.pid !== pid)]
-      if (last.pid !== me && !viewing(pid)) unread = [...new Set([...unread, pid])]
+      if (c[0] !== 'p' && c[0] !== 'g') return
+      const last = ms.at(-1)!
+      if (c[0] === 'p') {
+        const pid = Number(c.slice(1))
+        const name = last.pid === pid ? last.name : (dms.find(d => d.pid === pid)?.name ?? peer?.name ?? '?')
+        dms = [{ pid, name, last }, ...dms.filter(d => d.pid !== pid)]
+      } else if (groups.some(x => `g${x.id}` === c)) groups = groups.map(x => (`g${x.id}` === c ? { ...x, last } : x))
+      else void loadGroups() // vừa được thêm vào nhóm mới
+      if (last.pid !== me && !viewing(c)) unread = [...new Set([...unread, c])]
     })
   })
-  function openDm(p: { pid: number; name: string }) {
+  function openPeer(p: { ch: Channel; name: string }) {
     tab = 'dm'
-    peer = { pid: p.pid, name: p.name }
+    peer = p
     open = true
     pick = null
-    unread = unread.filter(x => x !== p.pid)
-    const c = `p${p.pid}` as const
-    if (!logs[c]) void api?.ask({ k: 'chat', ch: c }).then(list => list && put(c, list))
+    unread = unread.filter(x => x !== p.ch)
+    if (!logs[p.ch]) void api?.ask({ k: 'chat', ch: p.ch }).then(list => list && put(p.ch, list))
+  }
+  const openDm = (p: { pid: number; name: string }) => openPeer({ ch: `p${p.pid}`, name: p.name })
+  async function newGroup(e: SubmitEvent) {
+    e.preventDefault()
+    if (!act2 || !(await act2({ type: 'groupNew', name: groupName })).ok) return
+    groupName = ''
+    void loadGroups()
+  }
+  async function leaveGroup(id: number) {
+    if (!act2 || !(await act2({ type: 'groupLeave', id })).ok) return
+    peer = null
+    void loadGroups()
   }
   // Hồ sơ (hay chỗ khác) bấm Truyền âm: chat đang hiện mở cuộc đó
   $effect(() => {
@@ -82,7 +104,7 @@
   })
   const shown = $derived(ch ? (logs[ch] ?? []).filter(m => !game.blocks.includes(m.pid)) : [])
   const last = $derived(
-    [...(logs.world ?? []), ...(ally ? (logs.ally ?? []) : []), ...dms.map(d => d.last)]
+    [...(logs.world ?? []), ...(ally ? (logs.ally ?? []) : []), ...dms.map(d => d.last), ...groups.flatMap(x => x.last ?? [])]
       .filter(m => !game.blocks.includes(m.pid))
       .sort((a, b) => a.at - b.at)
       .at(-1),
@@ -122,25 +144,54 @@
       tab = t
       peer = null
       pick = null
+      if (t === 'dm') void loadGroups()
     }}
   />
   {#if tab === 'dm' && !peer}
     <ul class="log stack" style:--gap="4px">
+      <!-- nhóm chat tự tạo trước, rồi các cuộc truyền âm -->
+      {#each groups as x (x.id)}
+        <li>
+          <button class="msg" onclick={() => openPeer({ ch: `g${x.id}`, name: x.name })}>
+            <b class="t-small"><Icon name="people" size={12} /> {x.name}</b>{#if unread.includes(`g${x.id}`)}<span
+                class="new"
+                aria-hidden="true"
+              ></span>{/if}
+            <span class="t-small t-soft">{x.last ? `${x.last.name}: ${x.last.text}` : L.chat.members(x.members.length)}</span>
+          </button>
+        </li>
+      {/each}
       {#each dms.filter(d => !game.blocks.includes(d.pid)) as d (d.pid)}
         <li>
           <button class="msg" onclick={() => openDm(d)}>
-            <b class="t-small">{d.name}</b>{#if unread.includes(d.pid)}<span class="new" aria-hidden="true"></span>{/if}
+            <b class="t-small">{d.name}</b>{#if unread.includes(`p${d.pid}`)}<span class="new" aria-hidden="true"
+              ></span>{/if}
             <span class="t-small t-soft">{d.last.text}</span>
             <small class="t-tiny t-faint">{ago(d.last.at)}</small>
           </button>
         </li>
       {/each}
-      {#if !dms.length}<li class="t-small t-soft">{L.chat.dmNone}</li>{/if}
+      {#if !dms.length && !groups.length}<li class="t-small t-soft">{L.chat.dmNone}</li>{/if}
     </ul>
+    {#if act2}
+      <form class="row mt-2" onsubmit={newGroup}>
+        <input class="grow" bind:value={groupName} maxlength="20" placeholder={L.chat.groupName} aria-label={L.chat.groupName} />
+        <Button size="sm" type="submit" icon="people" disabled={[...groupName.trim()].length < 2}>{L.chat.groupNew}</Button>
+      </form>
+      <small class="t-tiny t-soft">{L.chat.groupHint}</small>
+    {/if}
   {:else}
     {#if peer}<button class="back" onclick={() => (peer = null)}
         ><Icon name="back" size={14} />{L.chat.back} · <b>{peer.name}</b></button
       >{/if}
+    {#if group}
+      <!-- nhóm: người trong nhóm (thêm người từ hồ sơ của họ), rời nhóm -->
+      <div class="row wrap" style:--gap="4px">
+        <small class="grow t-tiny t-soft">{group.members.map(x => x.name).join(' · ')}</small>
+        {#if act2}<Button size="sm" variant="quiet" onclick={() => group && leaveGroup(group.id)}>{L.chat.groupLeave}</Button
+          >{/if}
+      </div>
+    {/if}
     {#if tab === 'world' && game.levels.chuDien < 3}<p class="t-small t-soft mt-2">{L.chat.locked}</p>{/if}
     <ol class="log stack" style:--gap="4px">
       {#each shown as m (m.id)}

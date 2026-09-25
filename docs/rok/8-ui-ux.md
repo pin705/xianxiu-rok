@@ -435,7 +435,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - **Thương nhân vân du** ghé Tàng Bảo Các vài giờ (khi chợ Giới có client).
   - **Hạc đưa thư** đậu trên Chủ điện khi có thư có quà.
   - Trưởng lão đứng luyện công trước Diễn võ trường, thỉnh thoảng nói một câu. Bong bóng nhỏ, không che công trình.
-- **Game mình:** ❌. Có hạc bay, đệ tử lên xuống bậc đá, nhưng chỉ để trang trí, không gắn chức năng. `world/market.ts` có luật chợ nhưng client chưa có giao diện.
+- **Game mình:** ✅ (25/09) Vân Du Khách: mỗi 3 giờ một tán tu ghé núi, chạm nhận quà nhỏ xoay vòng (`sect/guest.ts`).
 - **Ưu tiên:** P2 · **Công sức:** M
 
 ### C. Luồng chính và từng màn hình

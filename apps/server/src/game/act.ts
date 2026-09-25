@@ -10,12 +10,11 @@ import type { Slot, Sock, World } from './world.ts'
 
 export const newSeed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước mọi thao tác: client không đoán trước được trận
 // Chữ người chơi tự đặt mà cả giới thấy: lọc từ tục trước khi vào luật (chat lọc riêng bằng mask)
-const publicText = (a: WorldAction) =>
-  a.type === 'allyFound'
-    ? [a.name, a.tag]
-    : a.type === 'allyNotice' || a.type === 'allyMark' || a.type === 'allyMail'
-      ? [a.text]
-      : []
+function publicText(a: WorldAction) {
+  if (a.type === 'allyFound') return [a.name, a.tag]
+  if (a.type === 'groupNew') return [a.name]
+  return a.type === 'allyNotice' || a.type === 'allyMark' || a.type === 'allyMail' ? [a.text] : []
+}
 
 export function intent(w: World, sock: Sock, a: Action | WorldAction, ack: (r: Ack) => void) {
   const slot = w.slots.get(sock.data.pid)

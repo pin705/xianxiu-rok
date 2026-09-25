@@ -1163,6 +1163,8 @@ export const ALLY_MARKS = 5 // dấu trên bản đồ giới đặt cho cả mi
 export const ALLY_MAIL_COOL = 3_600_000 // thư minh (R4 / minh chủ gửi tới hộp thư cả minh): mỗi minh một thư mỗi giờ
 export const ALLY_MAIL_LEN = 300
 export const ALLY_IDLE = 7 // minh chủ không vào game chừng này ngày: đường chủ (R4) nhận minh chủ được
+export const GROUP_MAX = 20 // nhóm chat tự tạo: tối đa người mỗi nhóm
+export const GROUPS_PER = 5 // mỗi người ở tối đa chừng này nhóm
 // Vân Du Khách (Visitors của RoK): mỗi GUEST_EVERY một tán tu ghé núi mang quà nhỏ (xoay vòng GUEST_GIFTS), chạm để nhận;
 // không dồn — tới giờ thì khách đứng chờ tới khi nhận
 export const GUEST_HALL = 2
