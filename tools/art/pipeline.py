@@ -17,7 +17,7 @@ KEYS = json.load(open(os.path.join(HERE, 'keys.json')))
 RATIOS = {'1:1': 1, '3:2': 1.5, '4:3': 4 / 3, '16:9': 16 / 9, '2:3': 2 / 3, '3:4': 3 / 4, '9:16': 9 / 16}
 
 def raw(name): return os.path.join(WORK, 'raw', f'{name}.webp')
-def fname(key): return key.replace(':', '-').replace('#', '')
+def fname(key): return key.replace(':', '-').replace('#', '').replace('*', 'v')
 
 # ---------- nền, cắt, viền ----------
 def key_magenta(src, dst=None):

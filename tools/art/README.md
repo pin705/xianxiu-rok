@@ -48,7 +48,9 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
 | `props [P1…P3]` | thông, đá, trúc, hoa, đèn, hạc, chim, bướm, người, cờ, giàn giáo, `march`, `wtoken` | Bảng 3×3, đặt theo chân khớp khung bao bản vẽ code (`PROP_KEYS`). | `icons.jpg` |
 | `troops [S0 S1]` | `sold:<hệ>:<phe>:<bậc 3–5>` | Bảng 3×3 theo phe (0 ta, 1 địch). | `icons.jpg` |
 | `beasts` | `beast:<hệ>` → mọi `beast:<hệ>:<màu>` | Một dáng lông xám mỗi hệ; game tô màu loài bằng tint (`world/battle/field.ts`). | `icons.jpg` |
-| `skins [tên…]` | `skin:<tên>` (`ui/theme.ts`) | Thiết kế lại trong đúng đường bao bản vẽ code, giữ thông số 9 mảnh; làm dịu lòng da (`calm`). | bản vẽ code + `icons.jpg` |
+| `kit [tên…]` | `skin:<tên>` (thẻ, nút, nhãn, thanh) | **Cách đang dùng.** Vẽ 3 mẫu gốc sạch (`KIT_BASES`: giấy, sơn mài, nhãn), rồi suy ra mọi da trong `KIT`: co giãn 9 mảnh đúng thông số từng da (`nine`), đổi màu theo độ sáng (`tint`). Không hoa văn, không loang, nên giao diện yên và tranh nổi. | bản vẽ code |
+| `skins [tên…]` | `skin:<tên>` | Cách cũ: thiết kế riêng từng da. Chỉ còn dùng cho khung bảng (`scroll`), `strip`, `rod`, đĩa, công tắc. Đừng dùng lại cho thẻ, nút, nhãn: mỗi món một hoa văn là giao diện rối và lòe loẹt, hoa văn ở góc 9 mảnh còn đè chữ nút nhỏ. | bản vẽ code + `icons.jpg` |
+| `clouds` | `fog:*0…2`, `cloud:*…`, `thunder:*…` | Mây cho key động (`fog:<rộng>:<hạt>`): game chọn 1 trong 3 biến thể theo key (`stage.ts` `artFor`). | `icons.jpg` |
 | `scenery [key…]` | `peak:*`, `ledge:*`, `stair:*` | Vẽ đè giữ nguyên hình, lấy alpha bản vẽ code (công trình đứng khớp trên bậc đá). | bản vẽ code + `style.jpg` |
 | `far` | `far1`, `far2` | Như `scenery`, cắt 3 khúc chồng nhau rồi ghép mờ dần. | bản vẽ code + `style.jpg` |
 | `map` | `map`, `map:home` | Bản đồ vùng vẽ đè; tông môn trên bản đồ dùng lại tranh Chủ điện. | bản vẽ code + `style.jpg` |
@@ -89,7 +91,7 @@ Trước màn tiêu đề, phần còn lại chủ yếu là JS (~1,1 MB, phần
 - **Nền hồng rồi tách**: model này không ra nền trong suốt, nên mọi prompt đều yêu cầu nền `#FF00FF` phẳng. `pipeline.key_magenta` ước alpha theo độ hồng rồi tách màu thật (F = (C − (1−a)·M) / a), nét mực loang không bị ám hồng.
 - **Ảnh mẫu (`anchors/`)**: `style.jpg` (công trình) cho công trình và vẽ đè; `icons.jpg` (4 icon sạch) cho mọi bảng 3×3 và da; `face.jpg` cho chân dung. Không dùng `style.jpg` cho bảng icon: model vẽ lẫn đá và mái nhà vào khoảng trống.
 - **Vẽ đè giữ hình** (núi, da, bản đồ, sân trận): gửi bản vẽ code đệm tới tỉ lệ model nhận; lấy alpha của bản vẽ code làm alpha cuối, nên đường bao và phần mờ dần khớp tuyệt đối. Cảnh dùng nền giấy chứ không dùng nền hồng, vì nền hồng lọt vào phần mờ thành vệt hồng.
-- **Da 9 mảnh**: hoa văn chỉ ở góc và hai đầu (phần giữa bị kéo giãn). `calm` giữ 35% độ lệch màu ở lòng. Món nào vẫn loang thì thêm `FLAT` vào thiết kế.
+- **Giao diện phải yên**: trang trí chỉ ở khung bảng lớn, còn thẻ, nút, nhãn phẳng một màu với viền mực mảnh (nhóm `kit`). Tranh (công trình, icon, chân dung) mới là thứ nổi. Bài học 26/9: bộ 43 da mỗi món một hoa văn và loang màu nhìn lung tung, lòe loẹt; hoa văn trong vùng góc 9 mảnh đè chữ ở nút nhỏ.
 - **Chữ giả**: model hay viết chữ Hán vô nghĩa lên biển hiệu; mọi prompt có "no writing / no text".
 - **Mây bậc 5 chạm mép ảnh**: `feather` làm mờ 4% sát mép trước khi cắt sát.
 

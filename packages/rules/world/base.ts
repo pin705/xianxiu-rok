@@ -318,7 +318,8 @@ export const garrison = (ps: Players, i: number): [number, March][] =>
     s.marches.filter(m => m.stay && m.target.kind === 'spot' && m.target.i === i).map(m => [pid, m] as [number, March]),
   )
 // Công Huân trong mùa (HONOR_* ở data.ts) và chiến công (cộng Công Huân theo HONOR_KP)
-export const addHonor = (s: State, n: number): State => (n >= 1 ? { ...s, honor: (s.honor ?? 0) + Math.floor(n) } : s)
+export const addHonor = (s: State, n: number): State =>
+  n >= 1 ? { ...s, honor: (s.honor ?? 0) + Math.floor(n), honorAll: (s.honorAll ?? 0) + Math.floor(n) } : s // honorAll: ra Phi Thăng Tệ
 export const addKp = (s: State, n: number): State =>
   n >= 1 ? addHonor({ ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + Math.round(n) } }, n / HONOR_KP) : s
 // Vị trí (ô) của đội lúc t theo đường đi (đi: path; về: path ngược); không có đường thì null

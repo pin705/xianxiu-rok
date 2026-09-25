@@ -979,6 +979,18 @@ export const SEASON_RUIN = 120
 export const SEASON_ALTAR = 180
 export const HONOR_RUIN = 2
 export const HONOR_ALTAR = 4
+// Phi Thăng Tệ (Conquest Coins của RoK): mỗi COIN_PER Công Huân kiếm được (cả đời, không mất khi hết mùa) thành một đồng — tiêu ở
+// Thiên Môn Thương Điếm, chưa tiêu thì mang sang mùa sau
+export const COIN_PER = 20
+export const COIN_SHOP: { reward: Reward; price: number }[] = [
+  { reward: { items: { kimDuyen: 1 } }, price: 60 },
+  { reward: { items: { hoSon24: 1 } }, price: 35 },
+  { reward: { items: { tuLinh24: 1 } }, price: 40 },
+  { reward: { items: { thoiQuang480: 1 } }, price: 30 },
+  { reward: { items: { kinhThu8k: 1 } }, price: 25 },
+  { reward: { items: { daiTuKhi: 1 } }, price: 20 },
+  { reward: { items: { chienY: 1, kimCuong: 1, hoThe: 1 } }, price: 30 },
+]
 export const HONOR_TIERS: { n: number; reward: Reward }[] = [
   { n: 50, reward: { items: { thoiQuang60: 2, thachNang5k: 1 } } },
   { n: 150, reward: { items: { thoiQuang180: 1, hoiXuan: 1 } } },

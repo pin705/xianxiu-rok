@@ -1,7 +1,7 @@
 <script lang="ts">
   // Công Huân mùa (Honor của KvK — luật ở rules: HONOR_* trong data.ts, sect/honor.ts, world/season.ts): điểm của mình, các
   // mốc Chinh Chiến Công Tích (nhận lần lượt), bảng Công Huân của giới (chạm tên: hồ sơ). Mở từ thẻ mùa trên bản đồ Giới.
-  import { HONOR_TIERS } from '@rok/rules'
+  import { COIN_PER, COIN_SHOP, HONOR_TIERS, coins } from '@rok/rules'
   import type { HonorView } from '@rok/protocol'
   import type { Net } from './net'
   import { Bag, Button, Card, Meter, Section, Sheet } from './ui'
@@ -72,6 +72,28 @@
         </li>
       {/each}
     </ol>
+  </Section>
+  <!-- Thiên Môn Thương Điếm: Phi Thăng Tệ từ Công Huân cả đời, chưa tiêu thì mang sang mùa sau -->
+  <Section title={L.honor.shop}>
+    {#snippet aside()}<b class="t-num t-gold">{L.honor.coins(num(coins(game)))}</b>{/snippet}
+    <p class="t-tiny t-soft">{L.honor.shopHint(COIN_PER)}</p>
+    <ul class="stack rows" style:--gap="6px">
+      {#each COIN_SHOP as it, i (i)}
+        <li>
+          <Card>
+            <div class="row">
+              <span class="grow"><Bag items={it.reward.items} size="sm" named /></span>
+              <Button
+                size="sm"
+                variant="gold"
+                disabled={coins(game) < it.price}
+                onclick={() => g.act({ type: 'coinBuy', i }, 'reward')}>{L.honor.buy(num(it.price))}</Button
+              >
+            </div>
+          </Card>
+        </li>
+      {/each}
+    </ul>
   </Section>
 </Sheet>
 

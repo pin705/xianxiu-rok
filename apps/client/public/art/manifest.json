@@ -3,50 +3,50 @@
     "src": "scene/bamboo-0.85-8.webp?v=64117c1dfc",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [487, 2, 93, 138]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1295, 408, 93, 138]
   },
   "bamboo:0.8:4": {
     "src": "scene/bamboo-0.8-4.webp?v=e855c13d60",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [880, 2, 87, 130]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1688, 408, 87, 130]
   },
   "beast:kiem": {
     "src": "battle/beast-kiem.webp?v=7179f6cf4f",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [1206, 2, 180, 96]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1030, 1303, 180, 96]
   },
   "beast:phap": {
     "src": "battle/beast-phap.webp?v=d4752e556a",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [1388, 2, 180, 96]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1212, 1303, 180, 96]
   },
   "beast:the": {
     "src": "battle/beast-the.webp?v=3c79d5848a",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [1570, 2, 180, 96]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1394, 1303, 180, 96]
   },
   "bird:down": {
     "src": "scene/bird-down.webp?v=d0d2ce1f08",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1868, 2, 36, 24]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [755, 562, 36, 24]
   },
   "bird:up": {
     "src": "scene/bird-up.webp?v=68c3e4387a",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1906, 2, 36, 24]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [793, 562, 36, 24]
   },
   "bld:chuDien:1": {
     "src": "bld/bld-chuDien-1.webp?v=f42de0fbfa",
@@ -777,50 +777,71 @@
     "src": "scene/blossom-0.8-7.webp?v=1dcae3ece9",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [969, 2, 144, 120]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1777, 408, 144, 120]
   },
   "blossom:0.95:3": {
     "src": "scene/blossom-0.95-3.webp?v=2cdd166385",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [314, 2, 171, 142]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1122, 408, 171, 142]
   },
   "blossom:0.9:13": {
     "src": "scene/blossom-0.9-13.webp?v=f8047e9344",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [582, 2, 162, 135]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1390, 408, 162, 135]
   },
   "blossom:1:11": {
     "src": "scene/blossom-1-11.webp?v=b9f4821a21",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [1810, 1783, 180, 150]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [628, 408, 180, 150]
+  },
+  "cloud:*0": {
+    "src": "scene/cloud-v0.webp?v=fb372e27ea",
+    "tex": true,
+    "pack": "home",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [1278, 528, 512, 256]
+  },
+  "cloud:*1": {
+    "src": "scene/cloud-v1.webp?v=e5fa0f01b6",
+    "tex": true,
+    "pack": "home",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [2, 854, 512, 256]
+  },
+  "cloud:*2": {
+    "src": "scene/cloud-v2.webp?v=80061793f1",
+    "tex": true,
+    "pack": "home",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [516, 854, 512, 256]
   },
   "crane:down": {
     "src": "scene/crane-down.webp?v=d7521c62ae",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1115, 2, 132, 78]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [2, 562, 132, 78]
   },
   "crane:up": {
     "src": "scene/crane-up.webp?v=fa51a0f6e2",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1249, 2, 132, 78]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [136, 562, 132, 78]
   },
   "disciple": {
     "src": "scene/disciple.webp?v=58eda62eb4",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1520, 2, 48, 45]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [407, 562, 48, 45]
   },
   "emblem:anvil": {
     "src": "emblem/emblem-anvil.webp?v=2a9d9dc955",
@@ -1176,36 +1197,57 @@
     "src": "battle/field-storm.webp?v=ddf37198ac",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
+    "page": "atlas/battle-1.webp?v=6832c3befa",
     "frame": [2, 2, 600, 1299]
   },
   "field:wild": {
     "src": "battle/field-wild.webp?v=b00a6dde38",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
+    "page": "atlas/battle-1.webp?v=6832c3befa",
     "frame": [604, 2, 600, 1299]
   },
   "flag": {
     "src": "scene/flag.webp?v=a81d1eadce",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1470, 2, 48, 48]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [357, 562, 48, 48]
   },
   "fly:open": {
     "src": "scene/fly-open.webp?v=93ef3d9f2a",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1720, 2, 42, 36]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [607, 562, 42, 36]
   },
   "fly:shut": {
     "src": "scene/fly-shut.webp?v=373eda5443",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1764, 2, 42, 36]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [651, 562, 42, 36]
+  },
+  "fog:*0": {
+    "src": "scene/fog-v0.webp?v=78dcdfe138",
+    "tex": true,
+    "pack": "home",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [1030, 854, 512, 256]
+  },
+  "fog:*1": {
+    "src": "scene/fog-v1.webp?v=e7c388aba5",
+    "tex": true,
+    "pack": "home",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [2, 1112, 512, 256]
+  },
+  "fog:*2": {
+    "src": "scene/fog-v2.webp?v=24968b0658",
+    "tex": true,
+    "pack": "home",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [516, 1112, 512, 256]
   },
   "icon:boiNguyen": {
     "src": "icon/icon-boiNguyen.webp?v=b55f6f5bd4"
@@ -1346,78 +1388,78 @@
     "src": "scene/lantern-0.8.webp?v=ecf2069a14",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1429, 2, 39, 68]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [316, 562, 39, 68]
   },
   "lantern:0.9": {
     "src": "scene/lantern-0.9.webp?v=473f7ade80",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1383, 2, 44, 76]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [270, 562, 44, 76]
   },
   "ledge:0": {
     "src": "scene/ledge-0.webp?v=0352739a14",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [1081, 1102, 618, 235]
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [2, 1612, 618, 235]
   },
   "ledge:1": {
     "src": "scene/ledge-1.webp?v=b8f1be6018",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [1070, 1342, 532, 216]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [2, 2, 532, 216]
   },
   "ledge:2": {
     "src": "scene/ledge-2.webp?v=a6a57721ad",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [2, 1574, 519, 207]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [630, 2, 519, 207]
   },
   "ledge:3": {
     "src": "scene/ledge-3.webp?v=ca7e0867a7",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [2, 1102, 1077, 238]
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [370, 1370, 1077, 238]
   },
   "ledge:4": {
     "src": "scene/ledge-4.webp?v=4321836427",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [352, 1342, 716, 226]
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [972, 1612, 716, 226]
   },
   "ledge:5": {
     "src": "scene/ledge-5.webp?v=f60ffdddf7",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [2, 854, 801, 246]
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [1030, 1112, 801, 246]
   },
   "ledge:6": {
     "src": "scene/ledge-6.webp?v=cfea3d2778",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [2, 1783, 460, 185]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [414, 220, 460, 185]
   },
   "ledge:7": {
     "src": "scene/ledge-7.webp?v=8057d2565c",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [464, 1783, 532, 180]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [876, 220, 532, 180]
   },
   "ledge:8": {
     "src": "scene/ledge-8.webp?v=1bdfba9685",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [1184, 1783, 624, 152]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [2, 408, 624, 152]
   },
   "lotus": {
     "src": "scene/lotus.webp?v=759f551f6d"
@@ -1516,8 +1558,8 @@
     "src": "scene/moon.webp?v=90464c0dfd",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [746, 2, 132, 132]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1554, 408, 132, 132]
   },
   "panel:chuDien:1": {
     "src": "bld/bld-chuDien-1.webp?v=f42de0fbfa",
@@ -1723,91 +1765,91 @@
     "src": "scene/peak-cliff.webp?v=99377a21bf",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
     "frame": [2, 2, 532, 524]
   },
   "peak:l": {
     "src": "scene/peak-l.webp?v=cc262b31e5",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
     "frame": [496, 528, 472, 284]
   },
   "peak:main": {
     "src": "scene/peak-main.webp?v=e63fe4b616",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
     "frame": [536, 2, 632, 404]
   },
   "peak:r": {
     "src": "scene/peak-r.webp?v=ef2b80a056",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
     "frame": [2, 528, 492, 324]
   },
   "pearl:1": {
     "src": "scene/pearl-1.webp?v=147fcff77f",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1944, 2, 22, 22]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [831, 562, 22, 22]
   },
   "pearl:1.2": {
     "src": "scene/pearl-1.2.webp?v=00d50bc9a6",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1840, 2, 26, 26]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [727, 562, 26, 26]
   },
   "pearl:1.5": {
     "src": "scene/pearl-1.5.webp?v=a68f0925b0",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1808, 2, 30, 30]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [695, 562, 30, 30]
   },
   "pine:14": {
     "src": "scene/pine-14.webp?v=bc5a215c00",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [1229, 1574, 204, 186]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [2, 220, 204, 186]
   },
   "pine:2": {
     "src": "scene/pine-2.webp?v=0501919dc1",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [1435, 1574, 204, 186]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [208, 220, 204, 186]
   },
   "pine:5": {
     "src": "scene/pine-5.webp?v=6b12f7ae5a",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [998, 1783, 184, 168]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1410, 220, 184, 168]
   },
   "pine:8": {
     "src": "scene/pine-8.webp?v=0052feef96",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [2, 2, 164, 150]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [810, 408, 164, 150]
   },
   "pine:fg1": {
     "src": "scene/pine-fg1.webp?v=a32b63a291",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
     "frame": [1170, 2, 388, 354]
   },
   "pine:fg2": {
     "src": "scene/pine-fg2.webp?v=05a7a52773",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
+    "page": "atlas/home-0.webp?v=b36f721eb2",
     "frame": [970, 528, 306, 279]
   },
   "pointer": {
@@ -1817,36 +1859,38 @@
     "src": "scene/rock-l.webp?v=2d3811f4f9",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [805, 854, 366, 240]
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [2, 1370, 366, 240]
   },
   "rock:r": {
     "src": "scene/rock-r.webp?v=0d768ae4d8",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [921, 1574, 306, 198]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1549, 2, 306, 198]
   },
   "scaffold:120:72": {
     "src": "scene/scaffold-120-72.webp?v=a7eb6bf2a7",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [2, 1342, 348, 230]
+    "page": "atlas/home-0.webp?v=b36f721eb2",
+    "frame": [622, 1612, 348, 230]
   },
   "skin:badge": {
     "src": "skin/skin-badge.webp?v=1513e66417",
     "slice": [20, 22, 20, 22],
     "width": [10, 11, 10, 11],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:badge-fresh": {
     "src": "skin/skin-badge-fresh.webp?v=609978f0a7",
     "slice": [20, 22, 20, 22],
     "width": [10, 11, 10, 11],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:blot": {
     "src": "skin/skin-blot.webp?v=533bbb086e",
@@ -1857,77 +1901,88 @@
     "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:btn-danger": {
     "src": "skin/skin-btn-danger.webp?v=5913083e87",
     "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:btn-ghost": {
     "src": "skin/skin-btn-ghost.webp?v=05fb992bdb",
     "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:btn-gold": {
     "src": "skin/skin-btn-gold.webp?v=852a65a669",
     "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:btn-off": {
     "src": "skin/skin-btn-off.webp?v=522f861919",
     "slice": [36, 48, 44, 48],
     "width": [18, 24, 22, 24],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:capsule": {
     "src": "skin/skin-capsule.webp?v=bc08390914",
     "slice": [26, 30, 26, 30],
     "width": [13, 15, 13, 15],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:card": {
     "src": "skin/skin-card.webp?v=1a2f4fe912",
     "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:card-glow": {
     "src": "skin/skin-card-glow.webp?v=55050e3976",
     "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:card-plain": {
     "src": "skin/skin-card-plain.webp?v=1d4a3a958a",
     "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:card-sel": {
     "src": "skin/skin-card-sel.webp?v=814d1694a4",
     "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:card-silk": {
     "src": "skin/skin-card-silk.webp?v=8b540ae9f7",
     "slice": [28, 28, 28, 28],
     "width": [14, 14, 14, 14],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:disc-azure": {
     "src": "skin/skin-disc-azure.webp?v=0e9ec427b1",
@@ -1950,49 +2005,56 @@
     "slice": [16, 20, 20, 20],
     "width": [8, 10, 10, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:fill": {
     "src": "skin/skin-fill.webp?v=74c9f6d838",
     "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:fill-azure": {
     "src": "skin/skin-fill-azure.webp?v=baca8dbba4",
     "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:fill-bad": {
     "src": "skin/skin-fill-bad.webp?v=00cb25a88f",
     "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:fill-gold": {
     "src": "skin/skin-fill-gold.webp?v=b103a86833",
     "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:fill-good": {
     "src": "skin/skin-fill-good.webp?v=bd0c448a05",
     "slice": [10, 14, 10, 12],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:groove": {
     "src": "skin/skin-groove.webp?v=c0ec843ef2",
     "slice": [24, 24, 24, 24],
     "width": [12, 12, 12, 12],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:knob": {
     "src": "skin/skin-knob.webp?v=2e11792566",
@@ -2007,7 +2069,8 @@
     "slice": [24, 28, 24, 28],
     "width": [12, 14, 12, 14],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:rod": {
     "src": "skin/skin-rod.webp?v=b0566356d2",
@@ -2030,14 +2093,16 @@
     "slice": [24, 44, 26, 44],
     "width": [12, 22, 13, 22],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:slip-bad": {
     "src": "skin/skin-slip-bad.webp?v=80e222e54b",
     "slice": [24, 44, 26, 44],
     "width": [12, 22, 13, 22],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:strip": {
     "src": "skin/skin-strip.webp?v=177631e21e",
@@ -2072,238 +2137,248 @@
     "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:tag-bad": {
     "src": "skin/skin-tag-bad.webp?v=9d66330ce7",
     "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:tag-dark": {
     "src": "skin/skin-tag-dark.webp?v=09d1716de0",
     "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:tag-gold": {
     "src": "skin/skin-tag-gold.webp?v=769c0a6d3d",
     "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:tag-good": {
     "src": "skin/skin-tag-good.webp?v=b2c67840f6",
     "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:tag-red": {
     "src": "skin/skin-tag-red.webp?v=995f08470d",
     "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:tag-silk": {
     "src": "skin/skin-tag-silk.webp?v=f65a5a04ab",
     "slice": [18, 20, 18, 20],
     "width": [9, 10, 9, 10],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:toast": {
     "src": "skin/skin-toast.webp?v=683d7a2f56",
     "slice": [28, 68, 28, 68],
     "width": [14, 34, 14, 34],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:toast-bad": {
     "src": "skin/skin-toast-bad.webp?v=c223776514",
     "slice": [28, 68, 28, 68],
     "width": [14, 34, 14, 34],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "skin:track": {
     "src": "skin/skin-track.webp?v=757f42396e",
     "slice": [10, 12, 10, 12],
     "width": [5, 6, 5, 6],
     "outset": 0,
-    "repeat": "stretch"
+    "repeat": "stretch",
+    "pack": "boot"
   },
   "sold:kiem:0:3": {
     "src": "battle/sold-kiem-0-3.webp?v=ca7d33a5b3",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [1752, 2, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1576, 1303, 72, 78]
   },
   "sold:kiem:0:4": {
     "src": "battle/sold-kiem-0-4.webp?v=38c85fa251",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [1826, 2, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1650, 1303, 72, 78]
   },
   "sold:kiem:0:5": {
     "src": "battle/sold-kiem-0-5.webp?v=f0b5adbc81",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [1900, 2, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1724, 1303, 72, 78]
   },
   "sold:kiem:1:3": {
     "src": "battle/sold-kiem-1-3.webp?v=a6705cb32d",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [1974, 2, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1798, 1303, 72, 78]
   },
   "sold:kiem:1:4": {
     "src": "battle/sold-kiem-1-4.webp?v=eabbb1e848",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [2, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1872, 1303, 72, 78]
   },
   "sold:kiem:1:5": {
     "src": "battle/sold-kiem-1-5.webp?v=3cc24d9cc7",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [76, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1946, 1303, 72, 78]
   },
   "sold:phap:0:3": {
     "src": "battle/sold-phap-0-3.webp?v=1c4b95184c",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [150, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [2, 1561, 72, 78]
   },
   "sold:phap:0:4": {
     "src": "battle/sold-phap-0-4.webp?v=c14916a537",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [224, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [76, 1561, 72, 78]
   },
   "sold:phap:0:5": {
     "src": "battle/sold-phap-0-5.webp?v=89ea493d46",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [298, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [150, 1561, 72, 78]
   },
   "sold:phap:1:3": {
     "src": "battle/sold-phap-1-3.webp?v=d917c2024d",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [372, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [224, 1561, 72, 78]
   },
   "sold:phap:1:4": {
     "src": "battle/sold-phap-1-4.webp?v=93a2ed9ef6",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [446, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [298, 1561, 72, 78]
   },
   "sold:phap:1:5": {
     "src": "battle/sold-phap-1-5.webp?v=40e37670e0",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [520, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [372, 1561, 72, 78]
   },
   "sold:the:0:3": {
     "src": "battle/sold-the-0-3.webp?v=ed91da8592",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [594, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [446, 1561, 72, 78]
   },
   "sold:the:0:4": {
     "src": "battle/sold-the-0-4.webp?v=521589a718",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [668, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [520, 1561, 72, 78]
   },
   "sold:the:0:5": {
     "src": "battle/sold-the-0-5.webp?v=5e45ccfc97",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [742, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [594, 1561, 72, 78]
   },
   "sold:the:1:3": {
     "src": "battle/sold-the-1-3.webp?v=c104f06d94",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [816, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [668, 1561, 72, 78]
   },
   "sold:the:1:4": {
     "src": "battle/sold-the-1-4.webp?v=1de5cf79f2",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [890, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [742, 1561, 72, 78]
   },
   "sold:the:1:5": {
     "src": "battle/sold-the-1-5.webp?v=1e94596bc6",
     "tex": true,
     "pack": "battle",
-    "page": "atlas/battle-1.webp?v=6800c04de7",
-    "frame": [964, 1303, 72, 78]
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [816, 1561, 72, 78]
   },
   "stair:126,506": {
     "src": "scene/stair-126,506.webp?v=a77e1e472a",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [1604, 1342, 92, 208]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [536, 2, 92, 208]
   },
   "stair:150,606": {
     "src": "scene/stair-150,606.webp?v=270f13ecb3",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [523, 1574, 98, 204]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1151, 2, 98, 204]
   },
   "stair:200,404": {
     "src": "scene/stair-200,404.webp?v=db4fedd49d",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [723, 1574, 100, 200]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1351, 2, 100, 200]
   },
   "stair:216,708": {
     "src": "scene/stair-216,708.webp?v=be6ab1dedb",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [623, 1574, 98, 204]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1251, 2, 98, 204]
   },
   "stair:276,508": {
     "src": "scene/stair-276,508.webp?v=63898216ca",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-0.webp?v=59737d8b44",
-    "frame": [825, 1574, 94, 200]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [1453, 2, 94, 200]
   },
   "sun": {
     "src": "scene/sun.webp?v=1fe83d8a76",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [168, 2, 144, 144]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [976, 408, 144, 144]
   },
   "tab:banDo": {
     "src": "icon/tab-banDo.webp?v=d7e22f3ddc"
@@ -2320,26 +2395,47 @@
   "tab:tongMon": {
     "src": "icon/tab-tongMon.webp?v=dd631d3220"
   },
+  "thunder:*0": {
+    "src": "scene/thunder-v0.webp?v=4f5cb23dec",
+    "tex": true,
+    "pack": "battle",
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [1206, 2, 512, 256]
+  },
+  "thunder:*1": {
+    "src": "scene/thunder-v1.webp?v=266f9b7217",
+    "tex": true,
+    "pack": "battle",
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [2, 1303, 512, 256]
+  },
+  "thunder:*2": {
+    "src": "scene/thunder-v2.webp?v=d1cb7e18db",
+    "tex": true,
+    "pack": "battle",
+    "page": "atlas/battle-1.webp?v=6832c3befa",
+    "frame": [516, 1303, 512, 256]
+  },
   "walker:0": {
     "src": "scene/walker-0.webp?v=ac04512d53",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1570, 2, 48, 45]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [457, 562, 48, 45]
   },
   "walker:1": {
     "src": "scene/walker-1.webp?v=2aeef6f704",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1620, 2, 48, 45]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [507, 562, 48, 45]
   },
   "worker": {
     "src": "scene/worker.webp?v=667934d4fc",
     "tex": true,
     "pack": "home",
-    "page": "atlas/home-1.webp?v=4cc748b223",
-    "frame": [1670, 2, 48, 45]
+    "page": "atlas/home-1.webp?v=f35c24ba8b",
+    "frame": [557, 562, 48, 45]
   },
   "wtoken": {
     "src": "scene/wtoken.webp?v=d9d962e955",

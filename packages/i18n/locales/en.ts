@@ -700,6 +700,11 @@ export const en: Text = {
     won: (tags: string, t: string) => `Top realm fortune: ${tags} · production +${pct(EVE_BUFF)} for ${t}`,
   },
   honor: {
+    shop: 'Heaven Gate Shop',
+    coins: (n: string) => `Ascension Coins: ${n}`,
+    shopHint: (per: number) =>
+      `Every ${per} Honor you earn becomes an Ascension Coin — Honor resets each season, unspent coins carry over.`,
+    buy: (n: string) => `Buy · ${n}`,
     title: 'Honor',
     lore: 'Your personal score this season: defeat enemy disciples (defending counts too), hunt world beasts, strike beast kings, gather mines, raze banners, hold your sect against the shadow tide. Resets each season.',
     mine: (n: string) => `Your honor: ${n}`,

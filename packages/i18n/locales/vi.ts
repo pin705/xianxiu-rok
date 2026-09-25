@@ -682,6 +682,11 @@ export const vi = {
     won: (tags: string, t: string) => `Giới vận đứng đầu: ${tags} · sản lượng +${pct(EVE_BUFF)} còn ${t}`,
   },
   honor: {
+    shop: 'Thiên Môn Thương Điếm',
+    coins: (n: string) => `Phi Thăng Tệ: ${n}`,
+    shopHint: (per: number) =>
+      `Mỗi ${per} Công Huân kiếm được thành một Phi Thăng Tệ — Công Huân về 0 khi hết mùa, Phi Thăng Tệ chưa tiêu thì giữ sang mùa sau.`,
+    buy: (n: string) => `Đổi · ${n}`,
     title: 'Công Huân',
     lore: 'Điểm cá nhân trong mùa: hạ đệ tử địch (cả khi giữ nhà), săn yêu thú giới, đánh yêu vương, khai mỏ, phá trận kỳ, giữ núi trước ma triều. Hết mùa về 0.',
     mine: (n: string) => `Công Huân của bạn: ${n}`,

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { HONOR_KP, HONOR_TIERS, apply, newGame, type State } from './index.ts'
-import { addKp, atlas, endSeason, freshWorld, type Players } from './world.ts'
+import { COIN_PER, COIN_SHOP, HONOR_KP, HONOR_TIERS, apply, coins, newGame, type State } from './index.ts'
+import { addHonor, addKp, atlas, endSeason, freshWorld, type Players } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
 const sect = (name: string, honor = 0): State => ({ ...newGame(T0, name), honor })
@@ -45,4 +45,24 @@ test('Công Huân: chiến công cộng Công Huân; mốc nhận lần lượt;
     assert.equal(x.mail.at(-1)!.k, 'season')
     assert.deepEqual([x.honor, x.honorGot], [0, 0], 'mùa mới về 0')
   }
+})
+
+test('Phi Thăng Tệ: mỗi COIN_PER Công Huân kiếm được thành một đồng, đổi ở Thiên Môn Thương Điếm; hết mùa Công Huân về 0 mà tiền còn', () => {
+  let s = addHonor(sect('Phi Thăng'), COIN_PER * 5 + 7)
+  assert.equal(coins(s), 5, 'phần lẻ chưa thành đồng')
+  const cheap = COIN_SHOP.findIndex(x => x.price <= 5)
+  assert.deepEqual(apply(s, { type: 'coinBuy', i: COIN_SHOP.length }, T0), { ok: false, error: 'bad' })
+  const dear = COIN_SHOP.findIndex(x => x.price > 5)
+  assert.deepEqual(apply(s, { type: 'coinBuy', i: dear }, T0), { ok: false, error: 'not_enough' })
+  s = addHonor(s, COIN_PER * 100)
+  const r = apply(s, { type: 'coinBuy', i: 0 }, T0)
+  assert.ok(r.ok && coins(r.state) === coins(s) - COIN_SHOP[0].price, 'trừ đúng giá')
+  assert.ok((r.state.items.kimDuyen ?? 0) > (s.items.kimDuyen ?? 0))
+  // hết mùa: Công Huân về 0, Công Huân cả đời (và Phi Thăng Tệ) còn nguyên
+  const ps: Players = new Map([[1, r.state]])
+  const end = endSeason(ps, freshWorld(), atlas(7), T0, 1)
+  const after = end.changed.get(1) ?? r.state
+  assert.equal(after.honor ?? 0, 0)
+  assert.equal(coins(after), coins(r.state), 'tiền mang sang mùa sau')
+  assert.ok(cheap === -1 || cheap >= 0)
 })

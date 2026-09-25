@@ -261,6 +261,8 @@ export type State = {
   frag?: number // Khai Giới Trảm Tà: tàn quyển đang có (đủ EVE_CHEST_N đổi rương)
   thoi?: { n: number; pick: number } // Thiên Thời: chỉ lệnh đã chọn cho thời thứ n của mùa
   bones?: number // Yêu Vương Tuần Sơn: yêu cốt đang có (đủ LOHAR_BONES triệu hồi)
+  honorAll?: number // Công Huân kiếm được cả đời (không về 0 khi hết mùa) — ra Phi Thăng Tệ
+  coinSpent?: number // Phi Thăng Tệ đã tiêu ở Thiên Môn Thương Điếm
   seclude?: { until: number; shield: number } // Bế Quan Lệnh: bế quan tới until (shield: khiên trước khi bế quan, xuất quan thì trả)
   secludeAt?: number // xuất quan rồi: tới lúc này mới bế quan lại
   quiz?: { day: number; n: number; right: number; last?: boolean } // Vấn Đạo Đài hôm nay: đã trả lời n câu, đúng right, câu vừa rồi đúng không
