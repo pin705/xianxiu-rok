@@ -938,6 +938,32 @@ export const WAR_MIN = 3
 export const WAR_MAX = 20
 export const WAR_WIN: Reward = { items: { thoiQuang60: 2, kimDuyen: 1, kinhThu2k: 1 } }
 export const WAR_LOSE: Reward = { items: { thoiQuang60: 1, nganDuyen: 1 } }
+// Tranh Đoạt Linh Châu (Ark of Osiris giản lược — doc 6 mục 3.2 bước 2): 20h Chủ nhật giờ VN (ARK_DAY: 0 = thứ Hai), các tiên minh đã
+// ghi danh ghép cặp theo điểm minh chiến; mỗi chiến binh một đội (đội đầu đội hình Luận Kiếm Đài, đệ tử ảo — không mất gì). Chiến
+// trường 5 ô: 0 Linh Đài minh A · 1 Tiểu Trận Bắc · 2 Trung Điện · 3 Tiểu Trận Nam · 4 Linh Đài minh B. ARK_ROUNDS hiệp, mỗi hiệp
+// ARK_ROUND: đội đi một ô về ô muốn tới, ô có hai bên thì đánh (bên giữ ô +ARK_HOLD_DEF thủ), bên thua về Linh Đài nghỉ một hiệp.
+// Chiếm lần đầu / giữ mỗi hiệp ra điểm; hết hiệp ARK_ORB_AT Linh Châu hiện ở Trung Điện — mang về Tiểu Trận mình giữ (chưa nạp lần nào)
+// thì nạp: +ARK_CHARGE (lần sau ×1,5), Châu về Trung Điện sau một hiệp. Hết hiệp cuối: minh nhiều điểm thắng.
+export const ARK_DAY = 6
+export const ARK_HOUR = 20
+export const ARK_ROUND = 10 * 60_000
+export const ARK_ROUNDS = 6
+export const ARK_ORB_AT = 2
+export const ARK_MIN = 3
+export const ARK_MAX = 15
+export const ARK_HOLD_DEF = 0.1
+export const ARK_ADJ = [
+  [1, 3],
+  [0, 2, 4],
+  [1, 3],
+  [0, 2, 4],
+  [1, 3],
+]
+export const ARK_TAKE = [0, 100, 200, 100, 0]
+export const ARK_HOLD = [0, 20, 40, 20, 0]
+export const ARK_CHARGE = 400
+export const ARK_WIN: Reward = { items: { thoiQuang180: 1, kimDuyen: 1, kinhThu2k: 2 } }
+export const ARK_LOSE: Reward = { items: { thoiQuang60: 2, nganDuyen: 1 } }
 // Ma Triều Công Sơn (Shadow Legion của RoK): tiên minh ghi danh cả tuần; thứ Tư (LEGION_DAY) từ LEGION_HOUR giờ VN,
 // LEGION_WAVES đợt cách nhau LEGION_GAP đánh vào tông môn từng người trong minh. Sức mỗi đợt = LEGION_POW[k] × lực phòng thủ
 // của chính người đó (viện binh đồng minh không làm địch mạnh thêm — kéo viện binh về giữ nhà là cách qua đợt khó). Giữ được

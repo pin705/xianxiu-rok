@@ -675,6 +675,30 @@ export const en: Text = {
     at: (n: number) => `${n} wins`,
     fightN: (n: number) => `Arms Training · fight ${n}`,
   },
+  ark: {
+    title: 'Spirit Orb Battle',
+    hint: 'Sunday 20:00: alliance vs alliance on a 5-node battlefield, 6 rounds × 10 minutes. Each warrior fields one team (the first Arena lineup team, no troops lost). Take the outposts and the Central Hall for points; escort the Spirit Orb to an outpost you hold for a big score.',
+    sign: 'Sign up for the Orb battle',
+    unsign: 'Withdraw',
+    signed: 'Signed up — battle on Sunday 20:00',
+    nodes: ['Base', 'North Outpost', 'Central Hall', 'South Outpost', 'Base'],
+    round: (r: number, of: number, t: string) => `Round ${r}/${of} · next in ${t}`,
+    ended: 'All rounds done — tallying',
+    me: (at: string, to: string) => `Your team: at ${at} → heading to ${to}`,
+    resting: 'Your team is wounded and rests one round at base',
+    go: 'Go here',
+    goAll: 'Whole alliance here',
+    orb: 'Spirit Orb',
+    carrying: 'carrying the Spirit Orb',
+    log: {
+      take: (who: string, node: string, pts: number) => `${who} took ${node}${pts ? ` (+${pts})` : ''}`,
+      win: (who: string, node: string) => `${who} won the fight at ${node}`,
+      orb: () => 'The Spirit Orb appeared at the Central Hall',
+      charge: (who: string, node: string, pts: number) => `${who} charged the Orb at ${node} (+${pts})`,
+      drop: (who: string, node: string) => `${who} dropped the Orb at ${node}`,
+    },
+    last: (a: string, b: string, pa: number, pb: number) => `[${a}] ${pa} – ${pb} [${b}]`,
+  },
   pot: {
     title: 'Alliance Treasure Cauldron',
     hint: (min: number) =>
@@ -1507,6 +1531,10 @@ export const en: Text = {
       firstTake: (kind: string, lv: number): [string, string] => [
         `First capture · ${({ vein: 'Spirit vein', gate: 'Array eye', heaven: 'Heaven Gate' } as Record<string, string>)[kind] ?? kind} level ${lv}`,
         'Your alliance is the first this season to hold this point. A reward for every member is below.',
+      ],
+      ark: (win: 0 | 1, foe: string, mine: number, theirs: number): [string, string] => [
+        win ? `Spirit Orb · won vs [${foe}]` : `Spirit Orb · lost vs [${foe}]`,
+        `The Spirit Orb battle is over: your alliance ${mine.toLocaleString('en')} points, [${foe}] ${theirs.toLocaleString('en')}. ${win ? 'A victory reward for every member is below.' : 'A reward for taking part is below — take it back next week.'}`,
       ],
       yearbook: (
         season: number,

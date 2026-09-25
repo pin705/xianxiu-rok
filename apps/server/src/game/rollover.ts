@@ -16,6 +16,7 @@ import {
   warAt,
   warOf,
   warResolve,
+  arkStep,
 } from '@rok/rules/world'
 import { npcState } from '@rok/rules/bot'
 import type { World } from './world.ts'
@@ -98,10 +99,21 @@ export function bookCheck(w: World, now: number) {
 export function allyEvents(w: World, now: number) {
   legionCheck(w, now)
   warCheck(w, now)
+  arkCheck(w, now)
 }
 // Ma Triều Công Sơn: tới giờ thì giải các đợt (mỗi đợt một lần), đợt cuối xong thì quà qua thư
 function legionCheck(w: World, now: number) {
   const r = legionStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Tranh Đoạt Linh Châu: tối Chủ nhật dựng trận, giải từng hiệp tới hạn, hết trận thì quà — mỗi nhịp xem có gì tới hạn
+function arkCheck(w: World, now: number) {
+  const r = arkStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
   if (r.world === w.shared) return
   w.share(r.world)
   for (const [pid, s] of r.changed) {

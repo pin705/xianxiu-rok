@@ -67,7 +67,7 @@ def depink(im):
   a[pink, 3] = 0
   return Image.fromarray(a.astype(np.uint8), 'RGBA')
 
-def cut_sheet(path, items):
+def cut_sheet(path, items, parts=True):
   """bảng 3×3 đã tách nền → {tên ô: ảnh}; ô tên '_…' là ô đệm, bỏ"""
   im = Image.open(path).convert('RGBA')
   cw, ch = im.width / 3, im.height / 3
@@ -75,7 +75,12 @@ def cut_sheet(path, items):
   for i, (name, _) in enumerate(items):
     if name.startswith('_'): continue
     c = im.crop((round((i % 3) * cw), round((i // 3) * ch), round((i % 3 + 1) * cw), round((i // 3 + 1) * ch)))
-    out[name] = trim(main_blob(depink(c)))
+    c = main_blob(depink(c), 0.04 if parts else 1.01)  # parts=False: chỉ khối lớn nhất (đồ vật một khối — bỏ mảnh lạc của ô bên)
+    if not parts:  # gọn quầng mờ quanh đồ vật: icon nhỏ cần mép rõ
+      a = np.asarray(c).copy()
+      a[..., 3] = (np.clip((a[..., 3].astype(np.float32) / 255 - 0.3) / 0.7, 0, 1) * 255).astype(np.uint8)
+      c = Image.fromarray(a, 'RGBA')
+    out[name] = trim(c)
   return out
 
 def calm(im, ins, k=0.35):
@@ -308,3 +313,47 @@ def raw_k(painted_src, box, proc_im):
   """độ phân giải thật của ảnh vẽ đè so với bản code (px ảnh gốc / px bản code 2x) — bản HD không phóng quá mức này"""
   x0, _, x1, _ = box
   return Image.open(painted_src).width * (x1 - x0) / proc_im.width
+
+# ---------- bộ giao diện: co giãn 9 mảnh + đổi màu (make.py kit) ----------
+def symmetric(img):
+  """viền đều 4 cạnh: nửa dưới = nửa trên lật, nửa phải = nửa trái lật (nét tay thường đậm hơn ở cạnh dưới → như bóng đổ nặng)"""
+  a = np.asarray(img).copy()
+  h, w = a.shape[:2]
+  a[h - h // 2:] = a[:h // 2][::-1]
+  a[:, w - w // 2:] = a[:, :w // 2][:, ::-1]
+  return Image.fromarray(a, 'RGBA')
+
+def nine(img, bins, W, H, ins):
+  """co giãn ảnh 9 mảnh (viền bins = trên, phải, dưới, trái px) sang khung W×H với viền ins — góc giữ hình, cạnh và lòng giãn"""
+  bt, br, bb, bl = bins
+  t, r, b, l = ins
+  bw, bh = img.size
+  out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+  xs = [(0, bl, 0, l), (bl, bw - br, l, W - r), (bw - br, bw, W - r, W)]
+  ys = [(0, bt, 0, t), (bt, bh - bb, t, H - b), (bh - bb, bh, H - b, H)]
+  for sx0, sx1, dx0, dx1 in xs:
+    for sy0, sy1, dy0, dy1 in ys:
+      if sx1 > sx0 and sy1 > sy0 and dx1 > dx0 and dy1 > dy0:
+        out.paste(img.crop((sx0, sy0, sx1, sy1)).resize((dx1 - dx0, dy1 - dy0), Image.LANCZOS), (dx0, dy0))
+  return out
+
+def _rgb(h): return np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)], np.float32)
+
+def tint(img, dark, light=None):
+  """đổi màu theo độ sáng (giữ nét cọ, bỏ mọi màu cũ): tối → `dark`, sáng → `light`.
+  light None (tấm sơn mài): `dark` là màu chính; lấy trung vị làm màu chính, không kéo giãn tương phản (kéo thì nhiễu li ti thành lốm đốm)"""
+  a = np.asarray(img).astype(np.float32)
+  L = a[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)
+  vis = a[..., 3] > 128
+  if light is None:
+    med = np.median(L[vis]) if vis.any() else 128
+    t = np.clip(0.5 + (L - med) / 140, 0, 1)[..., None]
+    c = _rgb(dark)
+    d, m, w = c * 0.45, c, c + (255 - c) * 0.45
+    rgb = np.where(t < 0.5, d + (m - d) * (t * 2), m + (w - m) * ((t - 0.5) * 2))
+  else:
+    lo, hi = (np.percentile(L[vis], [3, 97]) if vis.any() else (0, 255))
+    t = np.clip((L - lo) / max(1, hi - lo), 0, 1)[..., None]
+    rgb = _rgb(dark) + (_rgb(light) - _rgb(dark)) * t
+  a[..., :3] = rgb
+  return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')

@@ -27,8 +27,6 @@ import {
   TRIBE_LEN,
   TRIBE_PTS,
   BLESSINGS,
-  EVE_BUFF,
-  thoiAt,
   TITLE_IDS,
   TITLES,
   type TitleId,
@@ -195,6 +193,7 @@ export type World = {
   eve?: Record<number, number> // Khai Giới Trảm Tà: giới vận từng tiên minh trong pha Khai giới
   eveWin?: { ids: number[]; until: number } // minh đứng đầu giới vận lúc cổng mở: tăng ích tới until
   repair?: number // Tu Bổ Thiên Môn: tài nguyên cả giới đã góp
+  ark?: Ark // Tranh Đoạt Linh Châu tuần này (on: tuần đã dựng trận)
 }
 // Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
 export type Legion = {
@@ -210,6 +209,32 @@ export type Flag = { id: number; aid: number; x: number; y: number; done: number
 // Minh chiến: tuần đã giải gần nhất, các minh ghi danh tuần này, điểm minh chiến (Elo) từng minh, kết quả lần giải gần nhất
 export type WarResult = { a: number; b: number; an: string; bn: string; wa: number; wb: number }
 export type War = { done: number; signed: number[]; pts: Record<number, number>; last: WarResult[] }
+// Tranh Đoạt Linh Châu (world/ark.ts): đội = người chơi, phe, ô đứng, ô muốn tới, quân còn theo nhóm ([]: đủ), nghỉ tới hết hiệp rest
+export type ArkUnit = { pid: number; side: 0 | 1; at: number; to: number; n: number[]; rest?: number }
+export type ArkLog = [
+  round: number,
+  k: 'take' | 'win' | 'orb' | 'charge' | 'drop',
+  side: 0 | 1,
+  node: number,
+  pts?: number,
+]
+// Một trận: hai minh (mã, hiệu), hiệp đã giải, đội, phe giữ từng ô, điểm, ô đã chiếm lần đầu / đã nạp Châu của mỗi bên, Linh Châu
+// (ô đang nằm, người mang, hiệp về lại Trung Điện, số lần đã nạp), nhật ký
+export type ArkFight = {
+  a: number
+  b: number
+  an: string
+  bn: string
+  round: number
+  units: ArkUnit[]
+  own: (0 | 1 | null)[]
+  pts: [number, number]
+  taken: [number[], number[]]
+  charged: [number[], number[]]
+  orb: { at: number; by?: number; back?: number; n: number } | null
+  log: ArkLog[]
+}
+export type Ark = { on: number; done: number; signed: number[]; live: ArkFight[]; last: WarResult[] }
 // Một tước: ai giữ, phong lúc nào, tới lúc nào
 export type Title = { pid: number; at: number; until: number }
 export const freshWorld = (): World => ({
@@ -251,6 +276,11 @@ export function allyTouched(prev: World, next: World): number[] {
       (prev.rallies !== next.rallies && rallies(prev, al.id) !== rallies(next, al.id))
     )
       for (const pid of Object.keys(al.members)) out.add(Number(pid))
+  // Tranh Đoạt Linh Châu: ghi danh / hiệp mới / kết quả → người của các minh dự trận
+  if (prev.ark !== next.ark)
+    for (const x of [prev.ark, next.ark])
+      for (const id of [...(x?.signed ?? []), ...(x?.live ?? []).flatMap(f => [f.a, f.b])])
+        for (const pid of Object.keys(next.allies[id]?.members ?? {})) out.add(Number(pid))
   return [...out]
 }
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
@@ -418,30 +448,6 @@ export const blessBuffs = (w: World, at: number): Buff[] =>
   w.bless && w.bless.until > at
     ? [{ key: w.bless.key as Bonus, v: BLESSINGS[w.bless.key], until: w.bless.until, src: 'bless' }]
     : []
-// Khai Giới Trảm Tà: tàn quyển cộng giới vận cho tiên minh của pid; minh đứng đầu lúc cổng mở được tăng ích sản lượng (nguồn 'eve')
-export const eveAdd = (w: World, pid: number, n: number): World => {
-  const al = allyOf(w, pid)
-  return al && n > 0 ? { ...w, eve: { ...w.eve, [al.id]: (w.eve?.[al.id] ?? 0) + n } } : w
-}
-export const eveBuffs = (w: World, pid: number, at: number): Buff[] => {
-  const id = allyOf(w, pid)?.id
-  return w.eveWin && w.eveWin.until > at && id !== undefined && w.eveWin.ids.includes(id)
-    ? [{ key: 'prod', v: EVE_BUFF, until: w.eveWin.until, src: 'eve' }]
-    : []
-}
-// Thiên Thời: tăng ích chung của thời đang chạy + chỉ lệnh tông môn đã chọn cho thời này (nguồn 'thoi'; sang thời mới thì
-// worldBuffs thay cả bộ)
-export function thoiBuffs(map: MapCtx, s: State): Buff[] {
-  if (map.day === undefined) return []
-  const t = thoiAt(map.day)
-  const pick = s.thoi?.n === t.n ? t.picks[s.thoi.pick] : undefined
-  return [...Object.entries(t.fx), ...Object.entries(pick ?? {})].map(([key, v]) => ({
-    key: key as Bonus,
-    v,
-    until: 0,
-    src: 'thoi',
-  }))
-}
 // Tăng ích (hay hoạ) từ tước Giới Chủ phong cho pid, còn hạn lúc at (worldBuffs gắn vào state, nguồn 'title')
 export const titleBuffs = (w: World, pid: number, at: number): Buff[] =>
   TITLE_IDS.flatMap(id => {

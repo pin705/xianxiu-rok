@@ -77,6 +77,7 @@ async function load(lang: 'vi' | 'en') {
     'GiftStrip',
     'PowerSheet',
     'Help',
+    'ArkCard',
     'Advisor',
     'Chat',
     'world/WorldView',
@@ -785,6 +786,43 @@ test('tiên minh, chat', async () => {
       const mine = { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }), onraid: noop }
       const inside = paint('Alliance', mine, `${label}, trong minh`)
       assert.ok(inside.includes(L.pot.title), 'Tụ Bảo Minh Đỉnh ở tab nhà')
+      // Tranh Đoạt Linh Châu: trước trận (ghi danh) và đang trận (sơ đồ, điểm, lệnh, nhật ký)
+      const go = async () => true
+      const signUp = paint(
+        'ArkCard',
+        { row: { signed: false, live: null, last: [] }, me: 1, aid: 1, officer: true, go },
+        `${label}, Linh Châu`,
+      )
+      assert.ok(signUp.includes(L.ark.sign), 'nút ghi danh')
+      const live = {
+        a: 1,
+        b: 2,
+        an: 'VK',
+        bn: 'HS',
+        round: 3,
+        units: [
+          { pid: 1, side: 0 as const, at: 2, to: 2, n: [] },
+          { pid: 7, side: 1 as const, at: 4, to: 2, n: [], rest: 4 },
+        ],
+        own: [0, 0, 0, 1, 1] as (0 | 1 | null)[],
+        pts: [320, 140] as [number, number],
+        taken: [[1, 2], [3]] as [number[], number[]],
+        charged: [[], []] as [number[], number[]],
+        orb: { at: 2, by: 1, n: 0 },
+        log: [
+          [2, 'orb', 0, 2],
+          [3, 'take', 0, 2, 200],
+        ] as never,
+      }
+      const during = paint(
+        'ArkCard',
+        { row: { signed: true, live, last: [] }, me: 1, aid: 1, officer: true, go },
+        `${label}, Linh Châu đang trận`,
+      )
+      assert.ok(
+        during.includes('[VK] 320') && during.includes(L.ark.carrying) && during.includes(L.ark.log.orb()),
+        'đang trận',
+      )
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       const war = paint('Alliance', { ...mine, start: 'war' }, `${label}, trong minh · chiến sự`)
       assert.ok(war.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')

@@ -654,6 +654,31 @@ export const vi = {
     at: (n: number) => `${n} trận`,
     fightN: (n: number) => `Luận võ · trận ${n}`,
   },
+  // Tranh Đoạt Linh Châu: chiến trường 5 ô theo hiệp
+  ark: {
+    title: 'Tranh Đoạt Linh Châu',
+    hint: 'Tối Chủ nhật 20h: tiên minh đấu tiên minh trên chiến trường 5 ô, 6 hiệp × 10 phút. Mỗi chiến binh một đội (đội đầu đội hình Luận Kiếm Đài, không mất quân). Chiếm Tiểu Trận, Trung Điện ra điểm; hộ tống Linh Châu về Tiểu Trận mình giữ để nạp điểm lớn.',
+    sign: 'Ghi danh trận Linh Châu',
+    unsign: 'Rút ghi danh',
+    signed: 'Đã ghi danh — trận 20h Chủ nhật',
+    nodes: ['Linh Đài', 'Tiểu Trận Bắc', 'Trung Điện', 'Tiểu Trận Nam', 'Linh Đài'],
+    round: (r: number, of: number, t: string) => `Hiệp ${r}/${of} · hiệp sau ${t}`,
+    ended: 'Đã hết hiệp — đang tính kết quả',
+    me: (at: string, to: string) => `Đội của bạn: ở ${at} → tới ${to}`,
+    resting: 'Đội của bạn trọng thương, nghỉ một hiệp ở Linh Đài',
+    go: 'Tới đây',
+    goAll: 'Cả minh tới đây',
+    orb: 'Linh Châu',
+    carrying: 'đang mang Linh Châu',
+    log: {
+      take: (who: string, node: string, pts: number) => `${who} chiếm ${node}${pts ? ` (+${pts})` : ''}`,
+      win: (who: string, node: string) => `${who} thắng trận ở ${node}`,
+      orb: () => 'Linh Châu hiện ở Trung Điện',
+      charge: (who: string, node: string, pts: number) => `${who} nạp Linh Châu ở ${node} (+${pts})`,
+      drop: (who: string, node: string) => `${who} làm rơi Linh Châu ở ${node}`,
+    },
+    last: (a: string, b: string, pa: number, pb: number) => `[${a}] ${pa} – ${pb} [${b}]`,
+  },
   // Tụ Bảo Minh Đỉnh: góp tài nguyên vào đỉnh hương của minh, đỉnh đầy thì ai góp đủ mở rương
   pot: {
     title: 'Tụ Bảo Minh Đỉnh',
@@ -1501,6 +1526,10 @@ export const vi = {
       firstTake: (kind: string, lv: number): [string, string] => [
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
+      ],
+      ark: (win: 0 | 1, foe: string, mine: number, theirs: number): [string, string] => [
+        win ? `Linh Châu · thắng [${foe}]` : `Linh Châu · thua [${foe}]`,
+        `Tranh Đoạt Linh Châu kết thúc: tiên minh ${mine.toLocaleString('vi')} điểm, [${foe}] ${theirs.toLocaleString('vi')} điểm. ${win ? 'Quà thắng trận cho mọi người trong minh ở dưới.' : 'Quà tham chiến ở dưới — tuần sau đòi lại.'}`,
       ],
       yearbook: (
         season: number,

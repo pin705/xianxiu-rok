@@ -7,6 +7,7 @@ import type { Action, Err, March, Report, State } from '@rok/rules'
 import type {
   AllyInfo,
   AllyRow,
+  ArkRow,
   ArenaFoe,
   Good,
   MapSnap,
@@ -123,7 +124,7 @@ export type Answer = {
   rivals: Rival[]
   map: MapSnap
   allies: AllyRow[]
-  ally: AllyInfo | null
+  ally: (AllyInfo & { ark?: ArkRow }) | null // ark: Tranh Đoạt Linh Châu của minh mình
   chat: ChatMsg[]
   season: Season
   market: Market | null // chợ tắt

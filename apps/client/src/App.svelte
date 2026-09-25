@@ -51,7 +51,7 @@
   import { createNet, type Net, type Status } from './net'
   import { provideGame } from './game'
   import { setMood } from './music'
-  import type { AllyInfo, AllyRow, WorldAction } from '@rok/rules/world'
+  import type { AllyInfo, AllyRow, ArkRow, WorldAction } from '@rok/rules/world'
   import {
     DESK,
     L,
@@ -93,7 +93,7 @@
   let rivalsOpen = $state(false)
   let rivalsFocus = $state<number | null>(null)
   let info = $state<WorldInfo | null>(null) // giới đang ở: seed bản đồ, lúc mở (pha mùa)
-  let ally = $state.raw<AllyInfo | null>(null) // tiên minh của mình
+  let ally = $state.raw<(AllyInfo & { ark?: ArkRow }) | null>(null) // tiên minh của mình
   let allyRows = $state.raw<AllyRow[] | null>(null) // các minh trong giới (khi chưa vào minh)
   let ranksOpen = $state(false)
   let me = $state<number | null>(null) // mã tông môn của mình (tô đậm trên bảng xếp hạng)

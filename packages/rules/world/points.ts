@@ -23,9 +23,12 @@ import {
   TERR_SEAT,
   TYPES,
   VEIN_BUFF,
+  EVE_BUFF,
+  thoiAt,
   type Bonus,
 } from '../data.ts'
 import { allyOf, setSpot, sideName, type MapCtx, type Players, type Spot, type Task, type World } from './base.ts'
+import type { Buff, State } from '../core/types.ts'
 
 export const TASK_OF: Record<PointKind, Task> = {
   vein: 'take',
@@ -193,4 +196,29 @@ export function territoryGrid(claims: Claim[]): Int32Array {
       }
   for (let i = 0; i < own.length; i++) if (split[i]) own[i] = 0
   return own
+}
+
+// Khai Giới Trảm Tà: tàn quyển cộng giới vận cho tiên minh của pid; minh đứng đầu lúc cổng mở được tăng ích sản lượng (nguồn 'eve')
+export const eveAdd = (w: World, pid: number, n: number): World => {
+  const al = allyOf(w, pid)
+  return al && n > 0 ? { ...w, eve: { ...w.eve, [al.id]: (w.eve?.[al.id] ?? 0) + n } } : w
+}
+export const eveBuffs = (w: World, pid: number, at: number): Buff[] => {
+  const id = allyOf(w, pid)?.id
+  return w.eveWin && w.eveWin.until > at && id !== undefined && w.eveWin.ids.includes(id)
+    ? [{ key: 'prod', v: EVE_BUFF, until: w.eveWin.until, src: 'eve' }]
+    : []
+}
+// Thiên Thời: tăng ích chung của thời đang chạy + chỉ lệnh tông môn đã chọn cho thời này (nguồn 'thoi'; sang thời mới thì
+// worldBuffs thay cả bộ)
+export function thoiBuffs(map: MapCtx, s: State): Buff[] {
+  if (map.day === undefined) return []
+  const t = thoiAt(map.day)
+  const pick = s.thoi?.n === t.n ? t.picks[s.thoi.pick] : undefined
+  return [...Object.entries(t.fx), ...Object.entries(pick ?? {})].map(([key, v]) => ({
+    key: key as Bonus,
+    v,
+    until: 0,
+    src: 'thoi',
+  }))
 }

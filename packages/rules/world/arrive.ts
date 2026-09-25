@@ -34,7 +34,6 @@ import {
   addHonor,
   addKp,
   allyGifts,
-  eveAdd,
   routeMs,
   tribeBank,
   allyOf,
@@ -51,7 +50,7 @@ import {
   type World,
 } from './base.ts'
 import { addArmy, carryOf, combine, split, flipRounds } from './fight.ts'
-import { bank, claimsOf, hold, ownerAt, ruinWindow, spotOf, bossSlice, wildSide } from './points.ts'
+import { bank, claimsOf, eveAdd, hold, ownerAt, ruinWindow, spotOf, bossSlice, wildSide } from './points.ts'
 
 type Arrived = { changed: Players; world: World }
 

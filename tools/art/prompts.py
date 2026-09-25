@@ -92,7 +92,8 @@ def sheet(items, what='game item icons', extra=''):
           'Each one is a single object with a bold readable silhouette, seen from the front, centered in its own cell, all about the same size, '
           f'with wide empty gaps between them and nothing crossing into another cell. {NO_TEXT} No grid lines. {MAGENTA}')
 
-TALI = 'a vertical pale-yellow paper talisman with a red ink border and a red ink emblem of '
+# lá phù: dải giấy hẹp, hơi nghiêng, treo dây đỏ — không vẽ thành thẻ chữ nhật đứng (thu nhỏ trông như icon còn nền vuông)
+TALI = 'a narrow pale-yellow paper talisman slip, slightly tilted and curled, hanging from a short red cord with a tassel, with a red ink rune of '
 # tên ô → key manifest: 'tab:…' giữ nguyên, 'pointer' giữ nguyên, '_…' bỏ, còn lại thành 'icon:<tên>'
 ICON_SHEETS = {
   'A': [('linhThach', 'a faceted pale-blue spirit crystal'), ('linhThao', 'a spirit herb sprig with green leaves and a small golden flower'),
@@ -294,13 +295,20 @@ KIT_BASES = {  # mẫu gốc → (da vẽ bằng code làm khuôn, mô tả)
   'paper': ('card-plain', 'a clean sheet of warm ivory paper with a thin, even, dark ink brush border line along the edge'),
   'plate': ('btn', 'a flat lacquered plate in one even medium grey, with a thin darker rim line and a faint soft highlight along the top edge'),
   'pill': ('capsule', 'a flat rounded pill label in one even light grey, with a thin dark ink outline'),
+  'disc': ('disc-paper', 'a flat round medallion in one even light grey, with a thin dark ink outline and a faint soft highlight on the upper left'),
 }
 KIT = {  # da (ui/theme.ts) → (mẫu gốc, màu tối: viền / nền tối, màu sáng: lòng) — plate: màu chính, sáng tối tự suy
   'card': ('paper', '#2b2622', '#f3ead6'), 'card-plain': ('paper', '#8a7d6b', '#f3ead6'), 'card-sel': ('paper', '#b3372a', '#f5ead6'),
   'card-glow': ('paper', '#b8913a', '#f7eccc'), 'card-silk': ('paper', '#3f4d52', '#d9e1dd'), 'groove': ('paper', '#8b806f', '#e4d9c2'),
   'field': ('paper', '#6b6256', '#fbf6ea'), 'toast': ('paper', '#2b2622', '#f3ead6'), 'toast-bad': ('paper', '#b3372a', '#f6ddd4'),
   'slip': ('paper', '#4f6461', '#f3ead6'), 'slip-bad': ('paper', '#b3372a', '#f6ddd4'), 'btn-ghost': ('paper', '#2b2622', '#f3ead6'),
-  'btn': ('plate', '#2d4c7c', None), 'btn-gold': ('plate', '#c79d3b', None), 'btn-danger': ('plate', '#b3372a', None), 'btn-off': ('plate', '#b3aa9a', None),
+  'btn': ('plate', '#2d4c7c', None), 'btn-gold': ('plate', '#c79d3b', None), 'btn-danger': ('plate', '#b3372a', None),
+  'btn-off': ('plate', '#ddd3c1', None),  # sáng: chữ nút khoá (mực nhạt) phải đọc được
+  # khung: HUD, thanh tab, cột trái (strip), bảng (scroll) — dải xanh ngọc phẳng viền mực; lòng không vẽ (nền giấy của trang)
+  'strip': ('paper', '#3f4d52', '#cddad6'), 'scroll': ('paper', '#3f4d52', '#b9cbc6'),
+  'switch': ('pill', '#6b6256', '#e4d9c2'), 'switch-on': ('pill', '#2f6b3d', '#8fcf96'),
+  'disc-paper': ('disc', '#5f5548', '#f3ead6'), 'disc-azure': ('disc', '#1f3a5f', '#8fb0d2'), 'disc-gold': ('disc', '#7a5a18', '#e0bb58'),
+  'disc-silk': ('disc', '#3f4d52', '#cddad6'),
   'capsule': ('pill', '#5f5548', '#f3ead6'), 'plate': ('pill', '#5f5548', '#f3ead6'), 'tag': ('pill', '#6b6256', '#e9dec6'),
   'tag-good': ('pill', '#3f7a4f', '#dfeadb'), 'tag-bad': ('pill', '#b3372a', '#f5dcd5'), 'tag-gold': ('pill', '#a98530', '#f3e4b8'),
   'tag-dark': ('pill', '#c9a14a', '#3a3632'), 'tag-red': ('pill', '#7d2218', '#b3372a'), 'tag-silk': ('pill', '#3f4d52', '#d9e1dd'),

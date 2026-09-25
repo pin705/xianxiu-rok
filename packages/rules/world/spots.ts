@@ -23,8 +23,6 @@ import {
   allyOf,
   officeBuffs,
   blessBuffs,
-  eveBuffs,
-  thoiBuffs,
   titleBuffs,
   garrison,
   setSpot,
@@ -41,7 +39,7 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
-import { hold, ruinWindow, TASK_OF, spotOf, veinBuffs } from './points.ts'
+import { eveBuffs, hold, ruinWindow, TASK_OF, spotOf, thoiBuffs, veinBuffs } from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
 const rallyTask = (p: Point) => (TASK_OF[p.kind] === 'gather' ? null : (TASK_OF[p.kind] as 'take' | 'hit'))

@@ -34,6 +34,7 @@
     helpsOf,
     seatsOf,
     type AllyInfo,
+    type ArkRow,
     type AllyRow,
     type Role,
     type WorldAction,
@@ -48,6 +49,7 @@
   import AllyShop from './AllyShop.svelte'
   import AllyMob from './AllyMob.svelte'
   import AllyPot from './AllyPot.svelte'
+  import ArkCard from './ArkCard.svelte'
   import { social } from './social.svelte'
 
   type ATab = 'home' | 'people' | 'war' | 'chat'
@@ -63,7 +65,7 @@
     start = 'home',
   }: {
     me: number | null
-    ally: AllyInfo | null
+    ally: (AllyInfo & { ark?: ArkRow }) | null
     rows: AllyRow[] | null // danh sách minh (khi chưa vào minh nào)
     send: (a: WorldAction) => Promise<Ack>
     chat?: Snippet
@@ -495,6 +497,8 @@
           </ul>
         {/if}
       </Section>
+
+      {#if me !== null}<ArkCard row={ally.ark} {me} aid={ally.id} officer={myRole >= 1} {go} />{/if}
 
       <Section title={L.legion.title}>
         <p class="t-small t-soft">{L.legion.lore}</p>

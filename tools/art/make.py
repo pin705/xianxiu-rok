@@ -67,14 +67,14 @@ def faces():
       X.save(f'face:{fid}', X.fit_square(im, max(288, X.dom_side(f'face:{fid}')), 0), 'face')
 
 # ---------- các bảng 3×3 ----------
-def sheets(tables, what, extra=''):
+def sheets(tables, what, extra='', parts=False):
   run([(f'sheet-{sid}', P.sheet(items, what, extra), [X.ref(ICONS)], '1:1', '2K') for sid, items in pick(tables).items()])
   cells = {}
   for sid, items in pick(tables).items():
     if os.path.exists(X.raw(f'sheet-{sid}')):
       k = X.raw(f'sheet-{sid}') + '.png'
       X.key_magenta(X.raw(f'sheet-{sid}'), k)
-      cells.update(X.cut_sheet(k, items))
+      cells.update(X.cut_sheet(k, items, parts))
   return cells
 
 def icons():
@@ -83,11 +83,11 @@ def icons():
     X.save(key, X.fit_square(im, X.dom_side(key, 144)), 'icon')
 
 def emblems():
-  for name, im in sheets(P.EMBLEM_SHEETS, 'emblem figures for round medallions', P.EMBLEM_NOTE).items():
+  for name, im in sheets(P.EMBLEM_SHEETS, 'emblem figures for round medallions', P.EMBLEM_NOTE, parts=True).items():
     X.save(f'emblem:{name}', X.fit_square(im, 128, 0.02), 'emblem', tex=True)  # medal() vẽ lên đĩa: nằm trong gói boot; 128 px đủ cho huy hiệu to nhất (logo 104 px CSS)
 
 def masks():
-  for name, im in sheets(P.MASK_SHEETS, 'UI glyph icons', P.MASK_NOTE).items():
+  for name, im in sheets(P.MASK_SHEETS, 'UI glyph icons', P.MASK_NOTE, parts=True).items():
     a = np.asarray(X.fit_square(im, X.dom_side(f'mask:{name}'), 0.04)).copy()
     a[..., :3] = 0  # game chỉ dùng alpha, tô bằng màu chữ
     X.save(f'mask:{name}', Image.fromarray(a, 'RGBA'), 'icon', fmt='PNG')
@@ -113,7 +113,7 @@ def beasts():
   k = X.raw('sheet-beasts') + '.png'
   X.key_magenta(X.raw('sheet-beasts'), k)
   ref_im, _ = X.proc('beast:the:#a8784a')  # ba hệ cùng một hộp
-  for key, im in X.cut_sheet(k, P.BEAST_SHEET).items():
+  for key, im in X.cut_sheet(k, P.BEAST_SHEET, False).items():
     X.save(key, X.fit_prop(im, ref_im, 1.0), 'battle', tex=True, hd=X.fit_prop(im, ref_im, 1.0, k=3))
 
 # ---------- da giao diện ----------
@@ -148,11 +148,13 @@ def kit():
     k = X.raw(f'kit-{b}') + '.png'
     X.key_magenta(X.raw(f'kit-{b}'), k)
     img = X.fit_trace(k, pads[b][2], Image.open(os.path.join(X.WORK, 'skins', f'{src}.png')).convert('RGBA'), 1.0)
+    if b != 'plate': img = X.symmetric(img)  # tấm sơn mài giữ vệt sáng phía trên
     bases[b] = (img, [v * meta[src]['S'] for v in meta[src]['slice']])
   for n, (b, dark, light) in pick(P.KIT).items():
     if b not in bases: continue
     m = meta[n]
     ins = [v * m['S'] for v in m['slice']]  # ảnh 2x như bản code: px ảnh = px CSS × 2
+    if not any(ins): ins = [0, 0, 0, 0]  # ảnh nguyên tấm (đĩa, công tắc): co giãn cả tấm
     out = X.tint(X.nine(*bases[b], m['pw'], m['ph'], ins), dark, light)
     extra = {'slice': ins, 'width': m['slice'], 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
     X.save(f'skin:{n}', out, 'skin', extra=extra)
@@ -257,7 +259,7 @@ def strokes():
   if not os.path.exists(X.raw('sheet-strokes')): return
   k = X.raw('sheet-strokes') + '.png'
   X.key_magenta(X.raw('sheet-strokes'), k)
-  for name, im in X.cut_sheet(k, P.STROKES).items():
+  for name, im in X.cut_sheet(k, P.STROKES, False).items():
     # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 320×28 (như bản code, 2x); vết mực: vuông
     X.save(f'skin:{name}', X.fit_square(im, 256, 0.01) if name == 'blot' else im.resize((320, 28), X.Image.LANCZOS), 'skin')
 

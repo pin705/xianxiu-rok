@@ -18,6 +18,7 @@ import {
   sideKey,
   supplyRoom,
   territoryTiles,
+  arkRow,
 } from '@rok/rules/world'
 import type { Answer, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
@@ -82,7 +83,13 @@ export const answersOf = (w: World): Answers => ({
   ally: sock => {
     const info = allyInfo(w.shared, w.ps, sock.data.pid, p => !!w.slots.get(p)?.conns.size)
     const now = w.now()
-    return info && { ...info, terr: territoryTiles(w.ps, w.shared, w.map(now), now).get(info.id) ?? 0 }
+    return (
+      info && {
+        ...info,
+        terr: territoryTiles(w.ps, w.shared, w.map(now), now).get(info.id) ?? 0,
+        ark: arkRow(w.shared, info.id),
+      }
+    )
   },
   market: (sock, q) => (w.info.market ? marketOf(w.ps, w.shared, sock.data.pid, w.now(), q.good) : null),
   season: sock => {
