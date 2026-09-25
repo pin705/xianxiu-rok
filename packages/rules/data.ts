@@ -916,6 +916,17 @@ export const HONOR_BOSS = 200
 export const HONOR_GATHER = 1000
 export const HONOR_RAZE = 1000
 export const HONOR_LEGION = 10
+// Cổ Di Tích mở RUIN_OPEN mỗi RUIN_EVERY, Huyết Tế Đàn ALTAR_OPEN mỗi ALTAR_EVERY (chu kỳ lẻ giờ: giờ mở trôi dần, múi giờ nào
+// cũng tới lượt). Chỉ chiếm được lúc mở; phe giữ lúc đóng cửa: điểm mùa theo giờ đã giữ + mỗi người đang đóng quân HONOR_RUIN /
+// HONOR_ALTAR Công Huân mỗi phút đã giữ; rồi quân về, điểm trống.
+export const RUIN_EVERY = 39 * 3_600_000
+export const RUIN_OPEN = 3_600_000
+export const ALTAR_EVERY = 84 * 3_600_000
+export const ALTAR_OPEN = 2 * 3_600_000
+export const SEASON_RUIN = 120
+export const SEASON_ALTAR = 180
+export const HONOR_RUIN = 2
+export const HONOR_ALTAR = 4
 export const HONOR_TIERS: { n: number; reward: Reward }[] = [
   { n: 50, reward: { items: { thoiQuang60: 2, thachNang5k: 1 } } },
   { n: 150, reward: { items: { thoiQuang180: 1, hoiXuan: 1 } } },

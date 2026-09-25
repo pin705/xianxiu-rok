@@ -37,7 +37,7 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
-import { hold, TASK_OF, spotOf } from './points.ts'
+import { hold, ruinWindow, TASK_OF, spotOf } from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
 const rallyTask = (p: Point) => (TASK_OF[p.kind] === 'gather' ? null : (TASK_OF[p.kind] as 'take' | 'hit'))
@@ -87,6 +87,7 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
   if (!map || !p) return no('gone')
   if (TASK_OF[p.kind] !== a.task) return no('bad')
   if ((p.kind === 'gate' && p.lv > map.phase) || (p.kind === 'heaven' && map.phase < 3)) return no('locked') // trận nhãn mở theo pha mùa
+  if (!ruinWindow(map.atlas, p, t).open) return no('locked') // di tích: chỉ lúc mở cửa
   if (!s.seat) return no('far')
   const r = route(map.atlas, s.seat, p, map.phase)
   if (!r) return no('far')
@@ -168,6 +169,7 @@ function rallyAct(
   const p = map.atlas.points[i]
   const task = rally?.task ?? (p && rallyTask(p))
   if (!p || !task) return no('bad')
+  if (!ruinWindow(map.atlas, p, t).open) return no('locked')
   const r = route(map.atlas, s.seat, p, map.phase)
   if (!r) return no('far')
   const ms = routeMs(s, r.len)

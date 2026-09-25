@@ -43,7 +43,7 @@ import {
   type World,
 } from './base.ts'
 import { addArmy, carryOf, combine, split, flipRounds } from './fight.ts'
-import { bank, claimsOf, hold, ownerAt, spotOf, bossSlice, wildSide } from './points.ts'
+import { bank, claimsOf, hold, ownerAt, ruinWindow, spotOf, bossSlice, wildSide } from './points.ts'
 
 type Arrived = { changed: Players; world: World }
 
@@ -231,6 +231,7 @@ function take(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at: nu
     p = map.atlas.points[i]
   const me = sideKey(w, pid)
   if (sp.own && sp.own > 0 && sp.own !== me && allyOf(w, pid)?.naps?.includes(sp.own)) return null // minh ước: về
+  if (!ruinWindow(map.atlas, p, at).open) return null // di tích đã đóng cửa: về
   const { side: mine, offs: aOffs, leadSnap: lead0 } = attackers(group)
   const changed: Players = new Map()
   const gar = garrison(ps, i)

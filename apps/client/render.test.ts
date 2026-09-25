@@ -802,6 +802,8 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
     { kind: 'point', i: boss.i },
     { kind: 'point', i: a.points.find(p => p.kind === 'gate')!.i },
     { kind: 'point', i: a.points.find(p => p.kind === 'heaven')!.i },
+    { kind: 'point', i: a.points.find(p => p.kind === 'ruin')!.i }, // Cổ Di Tích (mở / đóng theo giờ)
+    { kind: 'point', i: a.points.find(p => p.kind === 'altar')!.i },
     { kind: 'tile', x: 3, y: 4 },
     { kind: 'site', i: 0 }, // thôn trang / động phủ
     { kind: 'tile', x: 140, y: 140 }, // mê vụ chưa tan (xa tông môn)

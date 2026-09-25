@@ -8,11 +8,13 @@ import {
   regionOf,
   sitesOf,
   snapClaims,
+  ruinWindow,
   territoryGrid,
   tide,
   type Atlas,
   type MapMarch,
   type MapSnap,
+  type Point,
   type Pos,
 } from '@rok/rules/world'
 import {
@@ -156,6 +158,7 @@ export class WorldScene {
   private terr = new Graphics() // lãnh thổ tiên minh: nền màu nhạt + viền
   private terrData: { snap: MapSnap; mine?: number; next: number } | null = null // vẽ lại khi trận kỳ dựng xong
   private flagMarks: [Sprite, number][] = [] // trận kỳ, lúc dựng xong (đang dựng: mờ)
+  private ruinMarks: [Sprite, Point][] = [] // di tích: đang mở thì nhịp sáng, đóng thì mờ
   private fogL = new FogLayer() // mê vụ: trên cùng (che huy hiệu, đường và cờ hành quân bên dưới)
   private explore: { fog: Fog; next: number } | null = null
   private marks = new Container() // huy hiệu: điểm, cổng, tông môn
@@ -214,6 +217,8 @@ export class WorldScene {
       else if (p.kind === 'wild')
         // yêu thú giới: hình theo cấp (như yêu thú bản đồ vùng), nhỏ, chỉ hiện khi phóng đủ; vừa bị hạ thì mờ
         add(p, BEAST_EMBLEMS[p.lv - 1] ?? 'wolf', 'beast', 0.55, sp?.until && sp.until > now ? 0.25 : 1, 0.45)
+      else if (p.kind === 'ruin' || p.kind === 'altar')
+        this.ruinMarks.push([add(p, p.kind === 'ruin' ? 'ghost' : 'blood', p.kind === 'ruin' ? 'realm' : 'red', 1), p])
       else add(p, 'rebirth', 'gold', 1.5)
     }
     for (const s of snap.seats) {
@@ -257,6 +262,7 @@ export class WorldScene {
     this.fogL.paint(ex?.fog ?? null, now)
     const mine = snap.seats.find(s => rel(s.pid) === 'me')?.aid
     this.flagMarks = []
+    this.ruinMarks = []
     for (const f of snap.flags ?? []) {
       const s = new Sprite(flagTex(terrColor(f.aid, mine)))
       s.anchor.set(0.35, 0.9)
@@ -326,6 +332,8 @@ export class WorldScene {
     this.drawTokens(cam.z, now, lod)
     // trận kỳ vừa dựng xong: lãnh thổ nới ra (không chờ ảnh chụp mới)
     for (const [s, done] of this.flagMarks) s.alpha = done > now ? 0.65 : 1
+    for (const [s, p] of this.ruinMarks)
+      s.alpha = ruinWindow(this.atlas, p, now).open ? 0.8 + 0.2 * Math.sin(now / 250) : 0.5
     // linh điểu vừa tới nơi: mê vụ tan (không chờ ảnh chụp mới)
     const ex = this.explore
     if (ex && now >= ex.next) {

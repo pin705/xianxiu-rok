@@ -17,12 +17,13 @@ export const SEASON_DAYS = 49
 export type Ring = 0 | 1 | 2 // ngoài · giữa · tâm
 export type Region = { i: number; cx: number; cy: number; ring: Ring }
 export type Gate = { i: number; a: number; b: number; x: number; y: number; phase: number }
-export type PointKind = 'vein' | 'mine' | 'boss' | 'gate' | 'heaven' | 'wild'
+export type PointKind = 'vein' | 'mine' | 'boss' | 'gate' | 'heaven' | 'wild' | 'ruin' | 'altar'
 export type Point = { i: number; kind: PointKind; region: number; x: number; y: number; lv: number }
 export type Atlas = { seed: number; regions: Region[]; gates: Gate[]; points: Point[]; tiles: Uint8Array }
 export type Pos = { x: number; y: number }
 
 export const WILD_PER = 6 // yêu thú giới mỗi vùng ngoài / giữa
+const RUINS: PointKind[] = ['ruin', 'altar', 'ruin', 'ruin', 'altar', 'ruin'] // theo thứ tự các vùng giữa
 // số điểm mỗi vùng theo vòng [ngoài, giữa, tâm]
 const PER: Record<'vein' | 'mine' | 'boss', [number, number, number]> = {
   vein: [2, 3, 1],
@@ -122,6 +123,22 @@ export function atlas(seed: number): Atlas {
       place('wild', r)
       if (points.length > n) points[n].lv = r.ring ? 7 + Math.floor(rand() * 9) : 1 + Math.floor(rand() * 8)
     }
+  // Cổ Di Tích / Huyết Tế Đàn (Ancient Ruins / Altars of Darkness của RoK): điểm mở theo lịch ở 6 vùng giữa. Đặt sau cùng (chỗ
+  // và số thứ tự điểm cũ không đổi), tránh thôn trang / động phủ (sitesOf bỏ qua hai loại này nên các chỗ đó cũng không đổi).
+  const sites = sitesOf({ seed, regions, gates, points, tiles })
+  regions
+    .filter(r => r.ring === 1)
+    .slice(0, RUINS.length)
+    .forEach((r, k) => {
+      for (let tries = 0; tries < 200; tries++) {
+        const x = Math.round(r.cx + (rand() * 2 - 1) * CELL * 0.5),
+          y = Math.round(r.cy + (rand() * 2 - 1) * CELL * 0.5)
+        if (!inside(x, y, r.i, 2) || points.some(p => dist(p, { x, y }) < 5) || sites.some(s => dist(s, { x, y }) < 3))
+          continue
+        add(RUINS[k], r.i, x, y, 2)
+        return
+      }
+    })
   const a = { seed, regions, gates, points, tiles }
   cache.set(seed, a)
   return a
@@ -204,7 +221,8 @@ export function sitesOf(a: Atlas): Site[] {
           y: Math.round(r.cy + (rand() * 2 - 1) * CELL * 0.45),
         }
         if (p.x < 1 || p.y < 1 || p.x >= MAP_W - 1 || p.y >= MAP_W - 1 || regionOf(a, p) !== r.i) continue
-        if (a.points.some(t => dist(t, p) < 3) || out.some(t => dist(t, p) < 3)) continue
+        if (a.points.some(t => t.kind !== 'ruin' && t.kind !== 'altar' && dist(t, p) < 3) || out.some(t => dist(t, p) < 3))
+          continue
         out.push({ i: out.length, kind: k < v ? 'village' : 'cave', ...p, ring: r.ring })
         break
       }

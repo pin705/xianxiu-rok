@@ -39,10 +39,16 @@ export const EMBLEM = {
   realm: REALM_EMBLEMS,
   tower: ['tower'] as const, // một tháp (i = 0) — mảng để tra theo report.kind[i] như các loại khác
   // điểm trên bản đồ giới theo loại
-  spot: { vein: 'lotus', mine: 'earth', boss: 'dragon', gate: 'tower', heaven: 'rebirth', wild: 'wolf' } as Record<
-    string,
-    Emblem
-  >,
+  spot: {
+    vein: 'lotus',
+    mine: 'earth',
+    boss: 'dragon',
+    gate: 'tower',
+    heaven: 'rebirth',
+    wild: 'wolf',
+    ruin: 'ghost',
+    altar: 'blood',
+  } as Record<string, Emblem>,
 }
 
 export const LOOK: Record<ElderId, Look> = {

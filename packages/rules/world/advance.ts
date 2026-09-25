@@ -19,6 +19,7 @@ import { unsold } from './market.ts'
 import { dropIncoming, raid } from './raid.ts'
 import { spotArrive } from './arrive.ts'
 import { razeArrive } from './flags.ts'
+import { ruinClose } from './ruins.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
@@ -117,6 +118,12 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     for (const [k, v] of r.atts) changed.set(k, v)
     changed.set(m.target.i, calm(r.def))
     for (const [k, v] of r.helpers) changed.set(k, v)
+  }
+  // Cổ Di Tích / Huyết Tế Đàn hết giờ mở: chốt, trả quân
+  if (map) {
+    const r = ruinClose(view(), w, map, now)
+    for (const [k, v] of r.changed) changed.set(k, v)
+    w = r.world
   }
   return { changed, world: w }
 }

@@ -9,8 +9,14 @@ import {
   BOSSES,
   MAIN_SHARE,
   MINE_STOCK,
+  ALTAR_EVERY,
+  ALTAR_OPEN,
+  RUIN_EVERY,
+  RUIN_OPEN,
+  SEASON_ALTAR,
   SEASON_GATE,
   SEASON_HEAVEN,
+  SEASON_RUIN,
   SEASON_VEIN,
   FLAG_R,
   TERR_POINT,
@@ -26,6 +32,8 @@ export const TASK_OF: Record<PointKind, Task> = {
   mine: 'gather',
   boss: 'hit',
   wild: 'hunt',
+  ruin: 'take',
+  altar: 'take',
 }
 
 // Trạng thái điểm lúc now (mỏ cạn / yêu vương chết đã tới giờ hồi thì như mới)
@@ -66,8 +74,24 @@ export function bossSlice(a: Atlas, i: number): Side | null {
   )
 }
 
-// Điểm mùa mỗi giờ giữ một điểm: linh mạch (theo cấp), trận nhãn, Thiên Môn; mỏ và yêu vương không tính
-const SEASON_RATE: Partial<Record<PointKind, number>> = { gate: SEASON_GATE, heaven: SEASON_HEAVEN }
+// Cổ Di Tích / Huyết Tế Đàn: cửa sổ mở chứa lúc t (open), hay cửa sổ kế tiếp; mỗi điểm lệch giờ riêng theo seed + số thứ tự.
+// Điểm khác: luôn mở.
+export function ruinWindow(a: Atlas, p: Point, t: number): { open: boolean; start: number; end: number } {
+  if (p.kind !== 'ruin' && p.kind !== 'altar') return { open: true, start: -Infinity, end: Infinity }
+  const [every, len] = p.kind === 'altar' ? [ALTAR_EVERY, ALTAR_OPEN] : [RUIN_EVERY, RUIN_OPEN]
+  const off = ((a.seed * 7919 + p.i * 104_729) >>> 0) % every
+  const start = Math.floor((t - off) / every) * every + off
+  return t < start + len
+    ? { open: true, start, end: start + len }
+    : { open: false, start: start + every, end: start + every + len }
+}
+// Điểm mùa mỗi giờ giữ một điểm: linh mạch (theo cấp), trận nhãn, Thiên Môn, di tích; mỏ và yêu vương không tính
+const SEASON_RATE: Partial<Record<PointKind, number>> = {
+  gate: SEASON_GATE,
+  heaven: SEASON_HEAVEN,
+  ruin: SEASON_RUIN,
+  altar: SEASON_ALTAR,
+}
 export const seasonRate = (p: Point) => (p.kind === 'vein' ? (SEASON_VEIN[p.lv - 1] ?? 0) : (SEASON_RATE[p.kind] ?? 0))
 export const bank = (w: World, side: number, pts: number): World =>
   pts > 0 ? { ...w, pts: { ...w.pts, [side]: (w.pts[side] ?? 0) + pts } } : w

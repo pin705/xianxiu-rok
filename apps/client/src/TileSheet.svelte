@@ -46,7 +46,9 @@
     raidChance,
     regionOf,
     route,
+    ruinWindow,
     weather,
+    TASK_OF,
     type AllyInfo,
     type Atlas,
     type MapSnap,
@@ -92,7 +94,6 @@
   const busy = $derived(g.busy)
 
   const phase = $derived(phaseOf(dayIn(info.opened, now)))
-  const TASK = { vein: 'take', gate: 'take', heaven: 'take', mine: 'gather', boss: 'hit', wild: 'hunt' } as const
   const regionName = (r: number) => `${L.world.regions[r] ?? r} · ${L.world.ring[atlas.regions[r].ring]}`
   // đường đi từ tông môn mình; null: chưa có đường (cổng chưa mở)
   const road = (to: { x: number; y: number }) => (game.seat ? route(atlas, game.seat, to, phase) : null)
@@ -247,7 +248,8 @@
     {/if}
   {:else if point}
     {@const r = road(point)}
-    {@const task = TASK[point.kind]}
+    {@const task = TASK_OF[point.kind]}
+    {@const win = ruinWindow(atlas, point, now)}
     {@const dead = !!spot?.until && spot.until > now}
     <Card>
       <div class="stack" style:--gap="4px">
@@ -255,6 +257,13 @@
           <Tag icon={point.lv <= phase ? 'check' : 'lock'} tone={point.lv <= phase ? 'good' : 'plain'}
             >{point.lv <= phase ? L.world.phase[point.lv] : L.world.gateOpens(L.world.phase[point.lv])}</Tag
           >
+        {/if}
+        {#if point.kind === 'ruin' || point.kind === 'altar'}
+          <!-- di tích: chỉ chiếm được lúc mở; phe giữ khi đóng cửa nhận Công Huân theo phút -->
+          <Tag icon={win.open ? 'clock' : 'lock'} tone={win.open ? 'good' : 'plain'}
+            >{win.open ? L.world.ruinOpen(clock(win.end - now)) : L.world.ruinOpens(clock(win.start - now))}</Tag
+          >
+          <small class="t-tiny t-soft">{L.world.ruinHint}</small>
         {/if}
         {#if task === 'take'}<small class="t-small"
             >{spot?.own ? `${L.world.held}: ${spot.own} · ${spot.n ?? 0}` : L.world.free}</small
@@ -302,7 +311,7 @@
           </div>
         </Card>
       </div>
-    {:else if r && !dead && (point.kind !== 'heaven' || phase >= 3)}
+    {:else if r && !dead && win.open && (point.kind !== 'heaven' || phase >= 3)}
       {@const slice = task === 'hit' ? bossSlice(atlas, point.i) : task === 'hunt' ? wildSide(atlas, point.i) : null}
       {#if ally && task !== 'gather' && task !== 'hunt'}
         <Section title={L.world.rally}>
