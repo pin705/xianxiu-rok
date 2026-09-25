@@ -2248,12 +2248,27 @@ export const en: Text = {
         name: 'Emei Week',
         desc: 'Emei opens its infirmary: brewing pills, healing, gathering and helping allies earn Emei Tokens. Trade for peace shields, healing speedups and resource packs.',
       },
+      trungThu: {
+        name: 'Mid-Autumn Moon Festival',
+        desc: 'Full moon of the eighth month: win battles, hunt beasts (chains count double), gather, heal and help allies to earn Mooncakes. Trade them for golden invitations, production boosts, speedups and scrolls.',
+      },
+      tanXuan: {
+        name: 'Spring Festival',
+        desc: 'Lunar New Year: for seven days from the first day, open one red envelope each day you visit — each one fuller than the last.',
+      },
+      dongChi: {
+        name: 'Winter Solstice Night',
+        desc: 'Winter solstice: win battles, hunt beasts (chains score more), heal and help allies for points — open the snow-night chests at each milestone.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: '7-day calendar',
     tokens: (n: string, name = 'Sect Tokens') => `${name}: ${n}`,
-    tokenName: { conLon: 'Kunlun Tokens', thucSon: 'Shushan Tokens', ngaMi: 'Emei Tokens' } as Partial<
-      Record<FestId, string>
-    >,
+    tokenName: {
+      trungThu: 'Mooncakes',
+      conLon: 'Kunlun Tokens',
+      thucSon: 'Shushan Tokens',
+      ngaMi: 'Emei Tokens',
+    } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Exchange · ${price}`,
     left: (n: number, max: number) => `${n}/${max} left`,
     soldOut: 'Sold out',

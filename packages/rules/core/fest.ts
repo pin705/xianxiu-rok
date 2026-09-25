@@ -61,6 +61,10 @@ export function festWindow(s: State, d: FestDef, t: number): { key: number; stag
     if (!w.days.includes(wd)) return null
     return { key: weekOf(t), stage: w.days.indexOf(wd), endAt: at(day - wd + Math.max(...w.days) + 1) }
   }
+  if (w.kind === 'dates') {
+    const from = w.from.find(f => f <= day && day < f + w.len)
+    return from === undefined ? null : { key: from, stage: day - from, endAt: at(from + w.len) }
+  }
   const k = day - w.offset
   const i = ((k % w.every) + w.every) % w.every
   return i < w.len ? { key: Math.floor(k / w.every), stage: i, endAt: at(day - i + w.len) } : null

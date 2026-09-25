@@ -281,3 +281,39 @@ PAPER = ('A seamless tileable texture of warm ivory handmade rice paper with sub
 STROKES = [('stroke', 'one long horizontal black ink brush stroke, dry-brush ends'), ('stroke-gold', 'one long horizontal gold paint brush stroke, dry-brush ends'),
            ('stroke-red', 'one long horizontal cinnabar-red brush stroke, dry-brush ends'), ('blot', 'one round black ink blot splash with soft bleeding edges'),
            ('_1', 'a small ink dot'), ('_2', 'a small ink dot'), ('_3', 'a small ink dot'), ('_4', 'a small ink dot'), ('_5', 'a small ink dot')]
+
+# ---------- bộ giao diện sạch (26/9/2026) ----------
+# Bản trước thiết kế riêng 43 da, món nào cũng hoa văn + loang màu → rối, lòe loẹt, hoa văn ở góc 9 mảnh đè chữ nút nhỏ.
+# Nay chỉ vẽ 3 mẫu gốc sạch rồi suy ra mọi da: co giãn 9 mảnh đúng thông số từng da + đổi màu theo độ sáng (pipeline.nine, tint).
+# Trang trí chỉ để ở khung bảng (scroll) và vài món riêng (đĩa, công tắc) — giao diện phải "yên" thì tranh mới nổi.
+KIT_BASE = ('Image 1 is a placeholder UI element from our game on a magenta background. Repaint it as {design}, hand-painted with a light '
+            'ink-brush touch on the outline only. ONE flat even color inside, NO ornaments, NO corner motifs, NO clouds, NO flowers, NO stains, '
+            'NO watercolor blooms, NO texture patches — quiet and clean. Keep EXACTLY the same outer silhouette, size and proportions as image 1. '
+            'Keep the solid flat pure magenta (#FF00FF) background around it.')
+KIT_BASES = {  # mẫu gốc → (da vẽ bằng code làm khuôn, mô tả)
+  'paper': ('card-plain', 'a clean sheet of warm ivory paper with a thin, even, dark ink brush border line along the edge'),
+  'plate': ('btn', 'a flat lacquered plate in one even medium grey, with a thin darker rim line and a faint soft highlight along the top edge'),
+  'pill': ('capsule', 'a flat rounded pill label in one even light grey, with a thin dark ink outline'),
+}
+KIT = {  # da (ui/theme.ts) → (mẫu gốc, màu tối: viền / nền tối, màu sáng: lòng) — plate: màu chính, sáng tối tự suy
+  'card': ('paper', '#2b2622', '#f3ead6'), 'card-plain': ('paper', '#8a7d6b', '#f3ead6'), 'card-sel': ('paper', '#b3372a', '#f5ead6'),
+  'card-glow': ('paper', '#b8913a', '#f7eccc'), 'card-silk': ('paper', '#3f4d52', '#d9e1dd'), 'groove': ('paper', '#8b806f', '#e4d9c2'),
+  'field': ('paper', '#6b6256', '#fbf6ea'), 'toast': ('paper', '#2b2622', '#f3ead6'), 'toast-bad': ('paper', '#b3372a', '#f6ddd4'),
+  'slip': ('paper', '#4f6461', '#f3ead6'), 'slip-bad': ('paper', '#b3372a', '#f6ddd4'), 'btn-ghost': ('paper', '#2b2622', '#f3ead6'),
+  'btn': ('plate', '#2d4c7c', None), 'btn-gold': ('plate', '#c79d3b', None), 'btn-danger': ('plate', '#b3372a', None), 'btn-off': ('plate', '#b3aa9a', None),
+  'capsule': ('pill', '#5f5548', '#f3ead6'), 'plate': ('pill', '#5f5548', '#f3ead6'), 'tag': ('pill', '#6b6256', '#e9dec6'),
+  'tag-good': ('pill', '#3f7a4f', '#dfeadb'), 'tag-bad': ('pill', '#b3372a', '#f5dcd5'), 'tag-gold': ('pill', '#a98530', '#f3e4b8'),
+  'tag-dark': ('pill', '#c9a14a', '#3a3632'), 'tag-red': ('pill', '#7d2218', '#b3372a'), 'tag-silk': ('pill', '#3f4d52', '#d9e1dd'),
+  'badge': ('pill', '#7d2218', '#c0392b'), 'badge-fresh': ('pill', '#8a6a1f', '#d4ab45'), 'track': ('pill', '#3a332c', '#8b806f'),
+  'fill': ('pill', '#2f6f7a', '#6fc3cf'), 'fill-gold': ('pill', '#8a6a1f', '#e0bb58'), 'fill-good': ('pill', '#2f6b3d', '#7fbf7a'),
+  'fill-bad': ('pill', '#7d2218', '#d45a45'), 'fill-azure': ('pill', '#2d4c7c', '#6f9fd8'),
+}
+
+# ---------- mây (key động: fog:<rộng>:<hạt>, cloud:…, thunder:…) ----------
+# Mây vẽ bằng code (viền xoắn ốc đậm, kiểu hoạt hình) lệch hẳn nền thủy mặc — nhất là tài khoản mới, ô khoá phủ đầy mây.
+# Game chọn 1 trong 3 biến thể theo key (stage.ts artFor: 'fog:*0'…'fog:*2') cho các đám cạnh nhau khỏi giống hệt.
+CLOUD_NOTE = ('Soft traditional ink-wash clouds: pale white and very light grey washes with soft bleeding edges and only a faint, broken ink contour, '
+              'a flat soft base, NO spiral curls, NO thick outlines, NO cartoon style. ')
+CLOUD_SHEET = [(f'fog:*{i}', f'a wide soft bank of low mountain cloud, variant {i + 1}, wider than tall') for i in range(3)] + \
+              [(f'cloud:*{i}', f'a small drifting sky cloud, variant {i + 1}, wider than tall') for i in range(3)] + \
+              [(f'thunder:*{i}', f'a dark grey-violet storm cloud with a faint glow inside, variant {i + 1}, wider than tall') for i in range(3)]

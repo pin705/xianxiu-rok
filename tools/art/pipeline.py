@@ -232,10 +232,10 @@ def fit_trace(painted_src, box, proc_im, k=1.5):
 PACKS = [  # (gói, key) — mục đầu tiên khớp thì lấy; không khớp: không gói, trình duyệt tự tải khi cần (icon, chân dung…)
   ('boot', r'^(skin|emblem):'),  # giao diện nào cũng dùng: da, hình chạm huy hiệu (huy hiệu nướng lên canvas ngay khi hiện)
   *[(f'bld{t}', rf'^bld:\w+:{t}:') for t in range(1, 6)],  # công trình theo bậc: cảnh núi chỉ đợi các bậc đang hiện (Home.svelte)
-  ('home', r'^(peak|ledge|stair|far\d|pine|rock|bamboo|blossom|lantern|sun|moon|crane|bird|fly|pearl|walker|worker|disciple|flag|scaffold)(:|$)'),
+  ('home', r'^(fog|cloud|peak|ledge|stair|far\d|pine|rock|bamboo|blossom|lantern|sun|moon|crane|bird|fly|pearl|walker|worker|disciple|flag|scaffold)(:|$)'),
   ('map', r'^(map|march)(:|$)'),
   ('world', r'^wtoken$'),
-  ('battle', r'^(sold|beast|field):'),
+  ('battle', r'^(sold|beast|field|thunder):'),
 ]
 PAGE, PAD = 2048, 2
 
@@ -270,3 +270,41 @@ def pack_all():
       pg.crop((0, 0, PAGE, min(PAGE, used))).save(os.path.join(ART, 'atlas', f'{name}-{i}.webp'), 'WEBP', quality=Q, method=6)
     big = len(ims) - len(fits)
     print(f'gói {name}: {len(fits)} ảnh → {len(pages)} trang atlas' + (f', {big} ảnh lớn giữ file lẻ' if big else ''))
+
+# ---------- bộ giao diện: co giãn 9 mảnh + đổi màu ----------
+def nine(img, bins, W, H, ins):
+  """co giãn ảnh 9 mảnh (viền bins = trên, phải, dưới, trái px) sang khung W×H với viền ins — góc giữ hình, cạnh và lòng giãn"""
+  bt, br, bb, bl = bins
+  t, r, b, l = ins
+  bw, bh = img.size
+  out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+  xs = [(0, bl, 0, l), (bl, bw - br, l, W - r), (bw - br, bw, W - r, W)]
+  ys = [(0, bt, 0, t), (bt, bh - bb, t, H - b), (bh - bb, bh, H - b, H)]
+  for sx0, sx1, dx0, dx1 in xs:
+    for sy0, sy1, dy0, dy1 in ys:
+      if sx1 > sx0 and sy1 > sy0 and dx1 > dx0 and dy1 > dy0:
+        out.paste(img.crop((sx0, sy0, sx1, sy1)).resize((dx1 - dx0, dy1 - dy0), Image.LANCZOS), (dx0, dy0))
+  return out
+
+def _rgb(h): return np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)], np.float32)
+
+def tint(img, dark, light=None):
+  """đổi màu theo độ sáng (giữ nét cọ, bỏ mọi màu cũ): tối → `dark`, sáng → `light`.
+  light None (tấm sơn mài): `dark` là màu chính, tối/sáng tự suy (viền đậm hơn, vệt sáng nhạt hơn)"""
+  a = np.asarray(img).astype(np.float32)
+  L = a[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)
+  vis = a[..., 3] > 128
+  if light is None:  # tấm phẳng một màu: lấy trung vị làm màu chính, không kéo giãn tương phản (kéo thì nhiễu li ti thành lốm đốm)
+    med = np.median(L[vis]) if vis.any() else 128
+    t = np.clip(0.5 + (L - med) / 140, 0, 1)[..., None]
+  else:
+    lo, hi = (np.percentile(L[vis], [3, 97]) if vis.any() else (0, 255))
+    t = np.clip((L - lo) / max(1, hi - lo), 0, 1)[..., None]
+  if light is None:
+    c = _rgb(dark)
+    d, m, w = c * 0.45, c, c + (255 - c) * 0.45
+    rgb = np.where(t < 0.5, d + (m - d) * (t * 2), m + (w - m) * ((t - 0.5) * 2))
+  else:
+    rgb = _rgb(dark) + (_rgb(light) - _rgb(dark)) * t
+  a[..., :3] = rgb
+  return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')

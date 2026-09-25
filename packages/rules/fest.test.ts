@@ -181,3 +181,43 @@ test('Hương Hỏa: chuỗi ngày vào game 40 → 200 điểm, lỡ một ngà
   s = run(advance(s, near), { type: 'finish', job: 'build' })
   assert.equal(s.queue.length, 0)
 })
+
+test('lễ theo lịch (Trung Thu): mở 5 ngày quanh rằm mỗi năm, mỗi năm một lần mở mới; làm việc ra Nguyệt Bính', () => {
+  const at = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 5) // 12h trưa giờ VN
+  const s = { ...newGame(at(2026, 9, 1)), levels: { ...newGame(at(2026, 9, 1)).levels, chuDien: 5 } }
+  assert.equal(festOpen(advance(s, at(2026, 9, 22)), 'trungThu', at(2026, 9, 22)), false, 'trước lễ')
+  assert.equal(festOpen(advance(s, at(2026, 9, 25)), 'trungThu', at(2026, 9, 25)), true, 'đúng rằm tháng Tám 2026')
+  assert.equal(festOpen(advance(s, at(2026, 9, 28)), 'trungThu', at(2026, 9, 28)), false, 'hết lễ')
+  assert.equal(festOpen(advance(s, at(2027, 9, 15)), 'trungThu', at(2027, 9, 15)), true, 'năm sau theo lịch âm')
+  // thắng trận ra Nguyệt Bính (điểm của khung)
+  let x = advance(s, at(2026, 9, 24))
+  x = { ...x, stats: { ...x.stats, won: x.stats.won + 5 } }
+  assert.equal(
+    festTokens(advance(x, at(2026, 9, 24) + 1000), 'trungThu'),
+    5 * (FESTS.trungThu.kind === 'shop' ? (FESTS.trungThu.stages[0].win ?? 0) : 0),
+  )
+})
+
+test('Tân Xuân Khai Sơn (lì xì 7 ngày từ mùng Một) và Đông Chí Tuyết Dạ (21–25/12) mở đúng ngày theo lịch', () => {
+  const at = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 5)
+  const s0 = newGame(at(2026, 12, 1))
+  const s = { ...s0, levels: { ...s0.levels, chuDien: 5 } }
+  const open = (id: 'tanXuan' | 'dongChi', t: number) => festOpen(advance(s, t), id, t)
+  assert.deepEqual(
+    [open('dongChi', at(2026, 12, 20)), open('dongChi', at(2026, 12, 23)), open('dongChi', at(2026, 12, 26))],
+    [false, true, false],
+  )
+  assert.deepEqual(
+    [
+      open('tanXuan', at(2027, 2, 5)),
+      open('tanXuan', at(2027, 2, 6)),
+      open('tanXuan', at(2027, 2, 12)),
+      open('tanXuan', at(2027, 2, 13)),
+    ],
+    [false, true, true, false],
+  )
+  // mùng Một vào núi: mở bao lì xì đầu
+  const t = at(2027, 2, 6)
+  const x = run(run(advance(s, t), { type: 'login' }, t), { type: 'fest', id: 'tanXuan', i: 0 }, t)
+  assert.equal(x.items.nganDuyen ?? 0, (s.items.nganDuyen ?? 0) + 1)
+})

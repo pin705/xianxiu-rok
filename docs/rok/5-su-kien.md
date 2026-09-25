@@ -539,7 +539,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   Có mốc + top 100.
 - **Vì sao hay:** tạo cảm giác "chuỗi combo" liều lĩnh bằng một luật rất nhỏ.
 - **Tu tiên hoá:** **"Liên Trảm Bất Hồi"**: một đội săn yêu liên tiếp trên bản đồ không về núi.
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** S–M (cần đếm chuỗi trận theo đội xuất quân).
+- **Game mình:** ✅ fest `lienTram` (cuối tuần B): điểm cho thắng trận, cướp, leo tháp, và cao nhất cho mỗi yêu thú giới hạ bằng săn liên hoàn (chỉ số `chain`, đội không về núi giữa các trận). Chưa tính "chuỗi dài nhất một chuyến" · **Ưu tiên:** P1 · **Công sức:** S–M.
 
 ### D. PvE đặc biệt (boss, phó bản sự kiện)
 
@@ -1251,7 +1251,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | C20 | Artisan's Forge | Khai Lò Luyện Khí | 🟡 | P2 | S |
 | C21 | Lucky Stall + Lucky Spin | Cát Tường Hạ Giá | ❌ | P2 | S–M |
 | C22 | War and Peace | Hoá Kiến Vi Binh | ❌ | P2 | S |
-| C23 | Cornucopia / Ghost Parade / Lotus War | Liên Trảm Bất Hồi | ❌ | P1 | S–M |
+| C23 | Cornucopia / Ghost Parade / Lotus War | Liên Trảm Bất Hồi | ✅ fest `lienTram` (điểm cao cho săn liên hoàn — chỉ số `chain`) | P1 | S–M |
 | D1 | Lohar's Trial | Yêu Tướng Thử Luyện | 🟡 yêu vương | P1 | M |
 | D2 | Arms Training | Luận Võ Liên Hoàn | ✅ (25/09) mỗi ngày một phiên, công pháp cho giáo đầu mỗi 3 thắng | P1 | M |
 | D3 | Karuak Ceremony | Thí Luyện Yêu Hoàng | 🟡 tháp + yêu vương | P1 | M |
@@ -1286,8 +1286,8 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | G1 | Mysterious Merchant | Vân Du Thương Nhân | 🟡 thương hội, chợ | P1 | S–M |
 | G2 | Đăng nhập / Sign-in Spoils | Điểm Danh Bảy Ngày | 🟡 Thất Nhật Lễ (chỉ tân thủ) | P1 | S |
 | G3 | Peerless Scholar | Vấn Đạo Đài | ❌ | P2 | M |
-| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | ❌ | **P1** | M |
-| H1 | Tết Âm lịch | Tân Xuân Khai Sơn | ❌ | P1 | S (sau H0) |
+| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | 🟡 khung `dates` + kho đổi (Trung Thu); chưa có 25 cấp / lì xì | **P1** | M |
+| H1 | Tết Âm lịch | Tân Xuân Khai Sơn | ✅ lì xì 7 ngày (fest `tanXuan`) | P1 | S (sau H0) |
 | H2 | Valentine's | (thay bằng Thất Tịch) | ❌ | P2 | — |
 | H3 | Spring's Return / Spring Symphony | Xuân Hồi Vạn Vật | ❌ | P2 | S |
 | H4 | Easter | Linh Thú Noãn (EN) | ❌ | P2 | S |
@@ -1298,7 +1298,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | H9 | Anniversary (Yearbook, Sign-in, Reunion…) | Khánh Điển Khai Tông | ❌ | P1 / P2 | S / M |
 | H10 | Halloween | Trung Nguyên Quỷ Tiết | ❌ | P1 | S |
 | H11 | Thanksgiving | Bách Vị Tiên Yến | ❌ | P2 | S–M |
-| H12 | Christmas (+ Treasure Hunt) | Đông Chí Tuyết Dạ + Tàng Bảo Đồ | ❌ | P1 / P2 | M / S |
+| H12 | Christmas (+ Treasure Hunt) | Đông Chí Tuyết Dạ + Tàng Bảo Đồ | 🟡 Đông Chí Tuyết Dạ (fest `dongChi`), chưa có Tàng Bảo Đồ | P1 / P2 | M / S |
 | H13 | New Year Fireworks | Nguyên Tiêu Hoa Đăng | ❌ | P2 | S |
 | H14 | Crossover | Hợp tác truyện tu tiên | ❌ | P2 | — |
 

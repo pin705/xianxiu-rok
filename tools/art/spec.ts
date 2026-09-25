@@ -17,6 +17,7 @@ function painted(k: string) {
   if (p === 'medal' || p === 'wmark') return `emblem:${a}` in done
   if (p === 'beast') return `beast:${a}` in done
   if (p === 'field') return `field:${a}` in done
+  if (`${p}:*0` in done) return true // họ key động (mây): vài tranh chung
   return false
 }
 

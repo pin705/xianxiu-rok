@@ -323,14 +323,24 @@ try {
   await new Promise(ok => other.once('welcome', ok))
   const t2 = (await api('/dev/state', thief.token)) as { state: any }
   const home = (await a.js(truth)).seat // giới vừa mở: cổng chưa mở, kẻ cướp phải cùng vùng
-  await api('/dev/state', thief.token, {
-    // 500 đệ tử bậc 3: vừa trận dung của trưởng lão cấp 1, vẫn thắng chắc 200 thể tu bậc 1
-    state: { ...tenTo(t2.state, { kiem3: 500 }), seat: { x: home.x + 1, y: home.y } },
-  })
   const victimPid = (await a.js(`fetch('/api/me').then(r => r.json()).then(d => d.pid)`)) as number
-  const raid = await other
-    .timeout(10_000)
-    .emitWithAck('act', { type: 'raid', pid: victimPid, elder: 'thanhPhong', army: { kiem3: 500 } })
+  // đặt kẻ cướp ở ô kề nạn nhân — nạn nhân sát ranh giới vùng thì ô kề có thể thuộc vùng khác (cổng đóng: "far"), thử ô kề khác
+  let raid: { ok: boolean; err?: string } = { ok: false }
+  for (const [dx, dy] of [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ]) {
+    await api('/dev/state', thief.token, {
+      // 500 đệ tử bậc 3: vừa trận dung của trưởng lão cấp 1, vẫn thắng chắc 200 thể tu bậc 1
+      state: { ...tenTo(t2.state, { kiem3: 500 }), seat: { x: home.x + dx, y: home.y + dy } },
+    })
+    raid = await other
+      .timeout(10_000)
+      .emitWithAck('act', { type: 'raid', pid: victimPid, elder: 'thanhPhong', army: { kiem3: 500 } })
+    if (raid.ok || raid.err !== 'far') break
+  }
   assert.ok(raid.ok, `người chơi thứ hai không xuất quân được: ${JSON.stringify(raid)}`)
   await api('/dev/warp', thief.token, { min: 12 })
   assert.ok(
@@ -456,6 +466,9 @@ try {
   await a.js(act)
   assert.ok(await a.until(`${truth}.then(s => !!s.train)`), `trước khi sập: không chiêu mộ được — ${await seen()}`)
   await a.js(closeAll)
+  // truth đọc state trong bộ nhớ server; thao tác chỉ được ack sau khi commit gộp (COMMIT_MS + giao dịch) ghi xong —
+  // chờ qua cửa sổ đó để giết server sau khi đã ack (giết giữa chừng thì mất là đúng: client chưa được ack)
+  await sleep(500)
   const before = await a.js(truth)
   expectDrops = true
   game!.kill('SIGKILL')

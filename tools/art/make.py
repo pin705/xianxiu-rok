@@ -137,6 +137,36 @@ def skins():
       if n not in ('scroll', 'strip'): out = X.calm(out, extra['slice'])  # hai da này không vẽ lòng
     X.save(f'skin:{n}', out, 'skin', extra=extra)
 
+def kit():
+  """bộ giao diện sạch: 3 mẫu gốc (KIT_BASES) → mọi da trong KIT, đúng khung + thông số 9 mảnh của từng da (bản vẽ code)"""
+  meta = json.load(open(os.path.join(X.WORK, 'skins', 'meta.json')))
+  pads = {b: X.padded(os.path.join(X.WORK, 'skins', f'{src}.png'), (255, 0, 255, 255), 'kit') for b, (src, _) in P.KIT_BASES.items()}
+  run([(f'kit-{b}', P.KIT_BASE.format(design=d), [pads[b][0]], pads[b][1], '1K') for b, (_, d) in P.KIT_BASES.items()])
+  bases = {}
+  for b, (src, _) in P.KIT_BASES.items():
+    if not os.path.exists(X.raw(f'kit-{b}')): continue
+    k = X.raw(f'kit-{b}') + '.png'
+    X.key_magenta(X.raw(f'kit-{b}'), k)
+    img = X.fit_trace(k, pads[b][2], Image.open(os.path.join(X.WORK, 'skins', f'{src}.png')).convert('RGBA'), 1.0)
+    bases[b] = (img, [v * meta[src]['S'] for v in meta[src]['slice']])
+  for n, (b, dark, light) in pick(P.KIT).items():
+    if b not in bases: continue
+    m = meta[n]
+    ins = [v * m['S'] for v in m['slice']]  # ảnh 2x như bản code: px ảnh = px CSS × 2
+    out = X.tint(X.nine(*bases[b], m['pw'], m['ph'], ins), dark, light)
+    extra = {'slice': ins, 'width': m['slice'], 'outset': m.get('outset') or 0, 'repeat': m.get('repeat') or 'stretch'}
+    X.save(f'skin:{n}', out, 'skin', extra=extra)
+
+def clouds():
+  """mây: bảng 3×3 → 'fog:*0'…, 'cloud:*0'…, 'thunder:*0'… — khung 2:1, đáy mây ở 88% chiều cao (như neo của cloud() vẽ bằng code)"""
+  for key, im in sheets({'C1': P.CLOUD_SHEET}, 'cloud shapes', P.CLOUD_NOTE).items():
+    W, H = 512, 256
+    s = min(W * 0.92 / im.width, H * 0.84 / im.height)
+    a = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS)
+    out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    out.alpha_composite(a, ((W - a.width) // 2, round(H * 0.88) - a.height))
+    X.save(key, out, 'scene', tex=True)
+
 # ---------- vẽ đè giữ hình ----------
 def trace(keys, k=1.5, sub='scene'):
   metas = json.load(open(os.path.join(X.WORK, 'proc', 'meta.json')))
@@ -222,7 +252,7 @@ def strokes():
     # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 320×28 (như bản code, 2x); vết mực: vuông
     X.save(f'skin:{name}', X.fit_square(im, 256, 0.01) if name == 'blot' else im.resize((320, 28), X.Image.LANCZOS), 'skin')
 
-GROUPS = {'pack': X.pack_all, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'masks': masks, 'props': props, 'troops': troops,
+GROUPS = {'pack': X.pack_all, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}
 
 if __name__ == '__main__':

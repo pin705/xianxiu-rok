@@ -2248,12 +2248,27 @@ export const vi = {
         name: 'Nga Mi Tuần Lễ',
         desc: 'Nga Mi mở y quán: luyện đan, chữa thương, khai mỏ, giúp đồng minh ra Nga Mi Lệnh. Đổi Hộ Sơn Phù, phù chữa thương, nang tài nguyên.',
       },
+      trungThu: {
+        name: 'Trung Thu Vọng Nguyệt',
+        desc: 'Rằm tháng Tám: thắng trận, săn yêu thú (săn liên hoàn càng nhiều), khai mỏ, chữa thương, giúp đồng minh ra Nguyệt Bính. Đổi Kim Duyên Phù, Tụ Linh Phù, phù tăng tốc, kinh thư.',
+      },
+      tanXuan: {
+        name: 'Tân Xuân Khai Sơn',
+        desc: 'Tết Nguyên Đán: bảy ngày từ mùng Một, mỗi ngày vào núi mở một bao lì xì — bao sau dày hơn bao trước.',
+      },
+      dongChi: {
+        name: 'Đông Chí Tuyết Dạ',
+        desc: 'Tiết Đông Chí: thắng trận, săn yêu thú (săn liên hoàn càng nhiều), chữa thương, giúp đồng minh ra điểm — đủ mốc mở rương tuyết dạ.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: 'Lịch 7 ngày',
     tokens: (n: string, name = 'Tông Môn Lệnh') => `${name}: ${n}`,
-    tokenName: { conLon: 'Côn Lôn Lệnh', thucSon: 'Thục Sơn Lệnh', ngaMi: 'Nga Mi Lệnh' } as Partial<
-      Record<FestId, string>
-    >,
+    tokenName: {
+      conLon: 'Côn Lôn Lệnh',
+      thucSon: 'Thục Sơn Lệnh',
+      ngaMi: 'Nga Mi Lệnh',
+      trungThu: 'Nguyệt Bính',
+    } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Đổi · ${price}`,
     left: (n: number, max: number) => `Còn ${n}/${max}`,
     soldOut: 'Đã đổi hết',

@@ -119,13 +119,22 @@ export type Painted<M = unknown> = {
 }
 const cache = new Map<string, Painted<unknown>>()
 dump.painted = cache // ?art=0: tools/art/export.ts xuất các texture vẽ bằng code
-const pages = new Map<HTMLImageElement, TextureSource>() // mỗi trang atlas một nguồn GPU, texture từng hình là một khung trên trang
+const pages = new Map<HTMLImageElement, TextureSource>()
+// Key động (mây: fog:<rộng>:<hạt>…) không khai được từng cái: manifest có vài tranh chung 'fog:*0'…, chọn theo key cho khỏi giống hệt
+function artFor(key: string) {
+  const e = artOf(key)
+  if (e) return e
+  const fam = key.slice(0, key.indexOf(':'))
+  let h = 0
+  for (const c of key) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  return artOf(`${fam}:*${h % 3}`)
+} // mỗi trang atlas một nguồn GPU, texture từng hình là một khung trên trang
 
 // Nướng một asset (một lần mỗi key + độ phân giải). Có tranh vẽ tay thì dùng tranh; tranh thuộc gói chưa tải xong thì vẽ bằng
 // code tạm và gọi tải gói — lần gọi sau khi gói về sẽ đổi sang tranh (bản tạm không giữ chỗ trong cache).
 export function painted<M>(key: string, make: () => Asset<M>, scale = texScale()): Painted<M> {
   const k = `${key}@${scale}`
-  const e = artOf(key)
+  const e = artFor(key)
   let p = cache.get(k) as Painted<M> | undefined
   if (p && (p.art || !e?.img)) return p
   if (e?.pack && !e.img) void artPack(e.pack)

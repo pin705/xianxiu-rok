@@ -1674,11 +1674,14 @@ export type FestWindow =
   | { kind: 'newbie'; from: number; to: number }
   | { kind: 'week'; days: number[] }
   | { kind: 'cycle'; every: number; len: number; offset: number }
+  | { kind: 'dates'; from: number[]; len: number } // lễ theo lịch: mở len ngày từ mỗi ngày trong from (ngày giờ VN, xem vnDay)
 // login — mỗi ngày đăng nhập mở thêm một quà · tasks — mỗi việc một quà · points — làm việc ra điểm, đủ mốc nhận quà;
 // stages: điểm mỗi việc theo từng ngày của khung (như Mightiest Governor: hôm xây, hôm nghiên cứu, hôm tuyển…), một phần tử = cả khung
 // activity — mỗi việc xong cộng pts điểm hoạt lực, đủ mốc mở rương (như Daily Objectives của RoK)
 // shop — làm việc ra lệnh bài (như points), đổi lấy quà trong kho, mỗi món tối đa max lần (như Hero Returns của RoK)
 // panel: 'daily' — hiện ở bảng Nhiệm vụ ngày thay vì trung tâm sự kiện
+// Ngày giờ VN của ngày dương y-m-d (số ngày kể từ 1/1/1970, như dayOf) — cho lễ theo lịch âm đổi ngày mỗi năm
+export const vnDay = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d) / 86_400_000
 export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
   | { kind: 'login'; rewards: Reward[] }
   | { kind: 'tasks'; abs?: boolean; tasks: { m: Metric; n: number; reward: Reward }[] } // abs: so chỉ số tuyệt đối (đạt tầng n…)
@@ -1980,6 +1983,50 @@ const fests = {
       { reward: { items: { hoThe: 1 } }, price: 20, max: 3 },
       { reward: { items: { thanHanh: 1 } }, price: 15, max: 3 },
       { reward: { items: { kinhThu2k: 1 } }, price: 12, max: 5 },
+    ],
+  },
+  // Trung Thu Vọng Nguyệt (khuôn lễ hội — Tết Trung Thu, rằm tháng Tám âm lịch): 5 ngày quanh rằm; làm việc ra Nguyệt Bính, đổi quà
+  // trong kho lễ. Mốc rằm từng năm ghi tay (lịch âm): 25/9/2026, 15/9/2027, 3/10/2028
+  trungThu: {
+    window: { kind: 'dates', from: [vnDay(2026, 9, 23), vnDay(2027, 9, 13), vnDay(2028, 10, 1)], len: 5 },
+    hall: 3,
+    kind: 'shop',
+    stages: [{ win: 3, hunt: 4, chain: 6, gather: 0.001, heal: 0.05, ally: 2 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 120, max: 1 },
+      { reward: { items: { tuLinh24: 1 } }, price: 60, max: 2 },
+      { reward: { items: { thoiQuang180: 1 } }, price: 40, max: 3 },
+      { reward: { items: { kinhThu2k: 1 } }, price: 25, max: 5 },
+      { reward: { items: { nganDuyen: 1 } }, price: 20, max: 5 },
+      { reward: { items: { thachNang5k: 1 } }, price: 10, max: 5 },
+    ],
+  },
+  // Tân Xuân Khai Sơn (Tết Nguyên Đán): 7 ngày từ mùng Một — mỗi ngày vào núi mở một bao lì xì, bao sau dày hơn bao trước.
+  // Mùng Một từng năm ghi tay (lịch âm): 6/2/2027, 26/1/2028, 13/2/2029
+  tanXuan: {
+    window: { kind: 'dates', from: [vnDay(2027, 2, 6), vnDay(2028, 1, 26), vnDay(2029, 2, 13)], len: 7 },
+    kind: 'login',
+    rewards: [
+      { items: { thoiQuang60: 1, nganDuyen: 1 } },
+      { items: { thoiQuang60: 2, thachNang5k: 1 } },
+      { items: { kinhThu2k: 1, nganDuyen: 1 } },
+      { items: { thoiQuang180: 1, tuLinh8: 1 } },
+      { items: { kinhThu2k: 2, nganDuyen: 2 } },
+      { items: { thoiQuang180: 2, tuLinh24: 1 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1, kinhThu8k: 1 } },
+    ],
+  },
+  // Đông Chí Tuyết Dạ: 21–25/12 hằng năm (tiết Đông Chí) — thắng trận, săn yêu, chữa thương, giúp đồng minh ra điểm, đủ mốc mở rương
+  dongChi: {
+    window: { kind: 'dates', from: [vnDay(2026, 12, 21), vnDay(2027, 12, 21), vnDay(2028, 12, 21)], len: 5 },
+    hall: 3,
+    kind: 'points',
+    stages: [{ win: 5, hunt: 6, chain: 8, heal: 0.1, ally: 3 }],
+    goals: [60, 200, 450],
+    rewards: [
+      { items: { thoiQuang60: 2, kinhThu500: 2 } },
+      { items: { thoiQuang180: 1, nganDuyen: 2 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
     ],
   },
   // Nga Mi: luyện đan, chữa thương, khai mỏ, giúp đồng minh
