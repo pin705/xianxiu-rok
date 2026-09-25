@@ -48,43 +48,86 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Alliance Markers, Share Coordinates | Dấu của minh trên bản đồ giới (5 dấu, trưởng lão/minh chủ đặt, cả minh thấy, bấm tới); chạm chỗ nào cũng "Gửi kênh minh / giới"; toạ độ "(x,y)" trong chat thành nút "Tới" — bản đồ giới bay tới, vòng son nháy | ✅ `allyMark`, `TileSheet`, `Chat`, `WorldView` |
 | Governor Profile | Hồ sơ chưởng môn: cảnh giới, lực chiến, minh, chiến tích, xem tông môn trên bản đồ, truyền âm, chặn — chạm tên ở chat, người trong minh, tông môn trên bản đồ | ✅ `profileOf`, `Profile.svelte` |
 | Private Chat | Truyền âm 1-1: thẻ "Truyền âm" trong chat (danh sách cuộc gần đây, chấm đỏ chưa đọc), từ tầng 3, người bị chặn không nhắn được; offline thì Web Push | ✅ kênh `p<pid>`, `talk.ts` |
-| Alliance Mobilization | Minh vụ đường: bảng 8 việc chung mỗi tuần (tất định theo mã minh + tuần), nhận 1 việc/lúc, 10 lượt/ngày, hạn 4 giờ, việc mới thế chỗ; 5 mốc quà cho ai góp ≥ 20 điểm | ✅ `world/mob.ts`, `AllyMob.svelte` |
+| Alliance Mobilization | Minh vụ đường: bảng 8 việc chung mỗi tuần (tất định theo mã minh + tuần), nhận 1 việc/lúc, 10 lượt/ngày, hạn 4 giờ, việc mới thế chỗ; 5 mốc quà cho ai góp ≥ 20 điểm; hết tuần 3 minh điểm cao nhất giới nhận thêm quà hạng | ✅ `world/mob.ts`, `AllyMob.svelte`, `mobTop` (rollover.ts) |
+| Sunset Canyon (arena) | Luận Kiếm Đài: đội hình thủ (tối đa số đội xuất quân, trưởng lão + hệ đệ tử ảo bậc 3, chỉ tính sức trưởng lão), trận xa luân, 5 lượt/ngày, Elo cả hai bên, nhật ký thủ/công, rương ngày theo bậc Đồng/Bạc/Vàng/Ngọc, bảng tuần + thư quà top 10, tuần mới nén điểm; xem lại trận | ✅ `sect/arena.ts`, `world/arena.ts`, `Arena.svelte`, nút kiếm trên HUD |
+| Barbarian Forts | Yêu trại: yêu vương cấp 1 ở mỗi vùng ngoài (12K máu, 3 lát, hồi 8 giờ) — minh mới kết trận được ngay từ pha đầu; hạ là cả minh nhận Minh lễ | ✅ `atlas.ts` (đặt sau cùng, điểm cũ giữ chỗ), `BOSSES[1]` |
+| Share reports | Chia sẻ chiến báo vào chat (nút ở mỗi chiến báo; kênh minh nếu có minh); tin mang "#r<id>" thành nút "Xem trận" cho người nghe được | ✅ truy vấn `shared`, `Chat.svelte` |
+| Alliance Help (hand icon) | Đĩa "giúp đỡ" nổi trên nút tạp dịch ở mọi tab khi đồng minh đang nhờ (đếm số việc), một chạm giúp tất cả; việc vừa giao tự nhờ giúp khi đang trong minh | ✅ `Hud.svelte`, `newHelps` |
+| King + Kingdom Titles | Giới Chủ: minh chủ tiên minh giữ Thiên Môn (chưa ai giữ: minh đứng đầu điểm mùa), hiện trên bản đồ giới; sắc phong 4 phúc (Chiến Thần, Hộ Quốc Công, Thần Công, Bách Thảo Tiên) / 4 hoạ (Phản Đồ, Khất Cái, Giải Đãi, Si Nhân) từ hồ sơ người chơi, mỗi người một tước, giữ 24 giờ, phong lại chờ 10 phút, người nhận có thư | ✅ `world/lord.ts`, `titleBuffs`, `Profile.svelte` |
+| Monument | Thiên Đạo Biên Niên: 12 chương mục tiêu chung của cả giới (15 tông môn tầng 5 · 10 tông môn tầng 8 · 3 minh ≥ 5 người · khai 1.500 ô mê vụ · 6 trận nhãn có chủ · 20 linh mạch có chủ · 10 trận kỳ · 10 tông môn tầng 15 · hạ 15 yêu vương · 200.000 chiến công · 5 tông môn tầng 20 · Thiên Môn có chủ; 25/09: từ 6 lên 12 — giới đang giữa mùa sẽ lệch chương), hạn theo ngày mùa; xong: mọi tông môn nhận quà thư + biên niên; hụt: sang chương sau. Hiện trên thẻ đầu bản đồ giới | ✅ `world/book.ts`, `bookCheck` (rollover.ts), `WorldView.svelte` |
+| Claim All, Map Search | "Nhận tất cả" ở thư, trung tâm sự kiện, thành tựu; nút "Tìm" trên bản đồ giới (mỏ / linh mạch / yêu vương theo cấp, gần nhất còn sống và có đường) bay tới và mở bảng điểm đó | ✅ `Reports`, `Events`, `Achievements`, `WorldView` |
+| Thêm sự kiện xã hội | Đồng Tâm Hiệp Lực (cung phụng + giúp đỡ tiên minh), Luận Kiếm Tranh Phong (trận / thắng ở Luận Kiếm Đài) — xoay vòng 14 ngày như các sự kiện khác (tổng 14 sự kiện) | ✅ `FESTS.dongTam`, `FESTS.tranhPhong` |
+| Kill Points | Chiến công: thế lực đệ tử bên kia hạ được trong trận cướp và trận tranh điểm (cả bên đánh lẫn bên thủ, chia theo thế lực đội), bảng xếp hạng "Chiến công", hiện trên hồ sơ; chạm một dòng xếp hạng mở hồ sơ | ✅ `raid.ts`, cột `players.kills` (migration 0005), `Ranks.svelte` |
+| Upgrade Troops | Nâng bậc đệ tử ở Diễn võ trường: đệ tử bậc dưới đang ở nhà lên bậc đang chọn, trả phần chênh chi phí, thời gian là phần chênh (≥ 30 % tuyển mới), dùng lượt tuyển | ✅ `promote` (sect/army.ts), `Train.svelte` |
+| Mysterious Merchant | Thương nhân vân du ở Thương hội (Tàng Bảo Các tầng 4): 6 món mỗi 8 giờ (tất định theo tông môn + lượt), giá bằng một loại tài nguyên theo tầng Chủ điện, mỗi món mua một lần — chỗ tiêu tài nguyên dư | ✅ `sect/merchant.ts`, `Merchant.svelte` |
+| Bookmarks, chat on home | Ghi nhớ chỗ trên bản đồ giới (★, tối đa 20, lưu trong state nên máy nào cũng thấy; hiện trên bản đồ và trong bảng Tìm); dải chat ở cả màn núi (chừa chỗ nút tạp dịch) | ✅ `sect/pins.ts`, `TileSheet`, `WorldView`, `Chat` |
+| March presets | Trận đồ: 3 ô lưu trưởng lão + đệ tử trong bảng chọn đội (mọi nơi xuất quân), chạm để dùng lại (tự cắt theo số đang có) | ✅ `preset` (sect/pins.ts), `Army.svelte` |
+| Advisor | Trưởng lão dẫn đường: tính năng vừa mở (sự kiện, Chiêu Hiền Đài, Nhật Khóa, bản đồ, Tiên minh, Luận Kiếm Đài, Thương nhân) thì Mộc Thanh Phong giới thiệu một câu + nút "Đi tới", mỗi mẹo một lần; thông báo mở khoá thêm Tranh đoạt, Luận Kiếm Đài, lập Tiên minh, chat giới | ✅ `Advisor.svelte`, `notices.unlocked` |
+| Alliance vs Alliance (Ark bước 1) | Luận Kiếm Minh Chiến: minh ghi danh trong tuần (trưởng lão/minh chủ, ≥ 3 người tầng 6), 20h thứ Bảy server ghép cặp theo điểm minh chiến (Elo), người thứ k đấu người thứ k bằng đội hình Luận Kiếm Đài; thư quà thắng/thua cho cả minh, chiến báo xem lại cho từng người, biên niên giới | ✅ `world/war.ts`, `warCheck` (rollover.ts), mục trong trang Tiên minh |
+| Barbarians (world map) | Yêu thú giới: 6 con mỗi vùng ngoài / giữa (cấp 1–8 / 7–15, đặt sau cùng nên điểm cũ giữ chỗ), săn một mình trên bản đồ giới, thắng thì chiến lợi phẩm gấp đôi yêu thú vùng + kinh nghiệm theo đội về, con đó hồi sau 20 phút; hiện trên bản đồ khi phóng đủ, có trong bảng Tìm (nhóm cấp 1–5 / 6–10 / 11–15); mỗi lần săn tốn 10 hành lực (AP: tối đa 100, hồi 1 mỗi 3 phút) | ✅ `atlas.ts` (kind `wild`), `hunt` (arrive.ts), `TileSheet`, `worldmap.ts` |
+| Arena currency + shop | Kiếm Ý: mỗi trận Luận Kiếm Đài (thắng 20, thua 8) + rương ngày theo bậc; Luận Kiếm Thương Điếm (thẻ thứ 5): kinh thư, phù, thiếp Chiêu Hiền, Chiến Ý Phù — mỗi món có hạn mỗi tuần | ✅ `arenaBuy` (sect/arena.ts), `Arena.svelte` |
+| Detailed reports | "Chi tiết trận" trong bảng kết quả xem lại: mỗi bên, từng loại đệ tử vào trận → còn lại (mất bao nhiêu), công pháp thi triển mấy lần, gộp mọi đợt/cặp đấu | ✅ `Replay.svelte` |
+| Diplomacy (NAP) | Minh ước: trưởng lão/minh chủ đề nghị, minh kia nhận/từ chối, một bên huỷ là huỷ cả hai; đang minh ước thì không cướp nhau, không đánh điểm bên kia giữ (đội đang tới thì quay về) | ✅ `nap*` (guild.ts), `napBetween`, mục trong trang Tiên minh |
+| King's Buff + Gifts | Giới Chủ ban phúc cả giới mỗi ngày một lần (xây / tuyển / sản lượng +5% hoặc hành quân +8% trong 8 giờ, hiện trên thẻ bản đồ giới) và ban Thiên Ân lễ (3 phần mỗi tuần, từ hồ sơ người nhận) | ✅ `bless`, `boon` (lord.ts), `blessBuffs` |
+| Alliance recruitment | Cửa minh: vào tự do hoặc duyệt đơn (trưởng lão/minh chủ nhận/từ chối), mời người chưa có minh từ hồ sơ (được mời thì vào thẳng), danh sách minh ghi "Xin vào / Đã gửi đơn / Nhận lời mời"; vào minh thì đơn ở minh khác bị bỏ | ✅ `allyOpen/allyAccept/allyInvite` (alliance.ts), `Alliance.svelte`, `Profile.svelte` |
+| UX nhỏ (file 8) | Chấm số trên tab Tiên minh (việc đồng minh nhờ giúp + đơn xin vào / đề nghị minh ước chờ duyệt); nút "Theo hệ khắc" trong bảng chọn đội (mục tiêu PvE, yêu thú giới, yêu vương); bảng công trình ghi "Xong lúc hh:mm" và Chủ điện ghi tầng sau mở ra gì | ✅ `Hud`, `Army`, `Panel` |
+| Primary / Secondary Commander | Phó trưởng lão: từ Chủ điện tầng 8, mỗi trưởng lão ghép một phó (chọn ngay dưới chủ tướng trong bảng xuất quân, nhớ theo từng người). Phó đi cùng đội và bận theo; tâm pháp đã mở của phó cộng vào đội, công pháp của phó nổ ngay sau chủ tướng (nửa sức, `DEPUTY_SKILL`); thiên phú / pháp bảo / sao / ngũ hành chỉ của chủ tướng. Áp dụng mọi trận: xuất chinh, bí cảnh, tháp, độ kiếp, cướp, giữ nhà, điểm giới, kết trận; chiến báo và phát lại hiện cả hai. Bot ghép người mạnh nhì làm phó (sim: tầng 15 ngày 9,3 · 20 ngày 19,3 · 25 ngày 30,3; cướp 19,7 %) | ✅ `combat.ts` `skill2`, `sideOf(…, deputy)`, `sect/elders.ts` `pair`, `Army.svelte` |
+| Beginner's Teleport | Dời núi tân thủ: trước Chủ điện tầng 8, lần dời đầu tiên tới được mọi ô trống vùng ngoài (không cần tiên minh) — chạm ô trống trên bản đồ giới | ✅ `world/territory.ts` `newbieMove` |
+| Alliance Territory + Territorial Teleport | Lãnh thổ tiên minh: mỗi ô thuộc minh có mốc gần nhất — tông môn người trong minh (3 ô) và linh mạch / cổng / Thiên Môn minh giữ (5 ô); hai minh cùng gần là đất tranh chấp. Tô màu + viền trên bản đồ giới (minh mình ngọc bích); chạm ô ghi "Lãnh thổ minh mình / [hiệu] / Đất vô chủ". Khai mỏ trong lãnh thổ minh mình +25 %; dời tông môn vào ô trống trong lãnh thổ (vùng ngoài, mọi đội ở nhà, 24 giờ một lần) — đội địch đang kéo tới chỗ cũ quay về tay không. Trận kỳ (Alliance Flag): trưởng lão / minh chủ cắm ở ô trống trong lãnh thổ minh mình, tốn 1.000 Minh khố, dựng 1 giờ (cờ mờ) rồi nới lãnh thổ 4 ô quanh cờ; mỗi minh 2 + 1 mỗi 5 người (tối đa 10); nhổ lại được. Phá cờ minh khác (không minh ước, từ tầng Tranh đoạt): xuất quân tới cờ, lực chiến đội trừ độ bền 30.000 (không giao tranh), hết thì cờ đổ; thư cho người đánh + minh chủ bên kia; 12 giờ không bị đánh thì cờ liền lại | ✅ `world/points.ts` `claimsOf/ownerAt/territoryGrid`, `world/territory.ts` `move`, `world/flags.ts`, client `world/territory.ts` |
+| Rage (nộ) | Chân nguyên: mỗi lượt +350, mất máu tụ thêm 600 × phần máu mất (so với lúc vào trận); đầy 1.000 thì trưởng lão (và phó) thi triển ngay lượt đó. Không mất máu: đúng lượt 3, 6, 9 như trước; bị đánh đau thì ra chiêu sớm hơn (lật thế). Phát lại trận có thanh chân nguyên vàng dưới tên hai bên | ✅ `combat.ts` `RAGE_*`, `Replay.svelte` |
+| Arena revenge | Phục thù ở Luận Kiếm Đài: người vừa thắng mình lúc mình giữ đài (trong ngày) — nút "Phục thù" trong nhật ký, mỗi ngày một lần, không tốn lượt, thắng thêm 15 Kiếm Ý | ✅ `world/arena.ts` `canRevenge`, `Arena.svelte` |
+| Expedition daily chest | Tĩnh tọa ngộ đạo: mỗi ngày một rương theo tầng Thông Thiên Tháp đã qua (nang, kinh thư, phù tăng tốc; mỗi 5 tầng thêm một phần) — trong bảng Thông Thiên Tháp | ✅ `data.ts` `towerChest`, `sect/expedition.ts` |
+| Civilizations | Đạo thống: Kiếm Tông (công Kiếm tu +5 %, hành quân −5 %) · Pháp Tông (công Pháp tu +5 %, sức công pháp +5 %) · Thể Tông (máu Thể tu +5 %, chữa thương −10 %) · Đan Tông (luyện đan −10 %, sản lượng +3 %) · Trận Tông (thủ +5 %, xây −3 %). Chọn ở Chủ điện từ tầng 2 (trưởng lão dẫn đường nhắc), lần đầu miễn phí, cải tu sau 7 ngày; hồ sơ hiện đạo thống; Luận Kiếm Đài không tính (đấu công bằng). Bot theo Trận Tông (sim tầng 15 ngày 8,8) | ✅ `data.ts` `DAOS`, `sect/elders.ts` `dao`, `DaoPick.svelte` |
+| First alliance reward | Lễ nhập minh: lần đầu lập / vào một tiên minh (tự vào, được duyệt, được mời) nhận quà qua thư, một lần mỗi tông môn | ✅ `world/alliance.ts` `welcome` |
+| March Capacity | Trận dung: mỗi đội ra bản đồ giới (cướp, điểm giới, kết trận, viện binh, phá cờ) mang tối đa 500 + 80 mỗi cấp chủ tướng trên 1 (+10 % mỗi sao) — trưởng lão cấp 40 dẫn ~3.600. Xuất chinh ở núi và độ kiếp không giới hạn (nội dung PvE giữ nguyên nhịp). Màn chọn đội ghi "x / trần", "Tất cả" và mặc định cắt vừa trận dung (bậc cao trước), quá thì báo và khoá nút. Bot cướp / giữ mạch cũng cắt đội; sim tranh đoạt còn 18,7 % | ✅ `stats.ts` `capOf`, `battle.ts` `fieldError/capArmy`, `Army.svelte` `field` |
+| Shadow Legion Invasion | Ma Triều Công Sơn: trưởng lão / minh chủ ghi danh cả tuần; tối thứ Tư 20h, 5 đợt cách 5 phút đánh vào núi từng người trong minh — sức theo lực phòng thủ của chính người đó (0,5× → 1,35×), viện binh đồng minh đóng ở nhà cùng thủ (không làm địch mạnh thêm). Giữ được đợt k thì k điểm cho mình và minh; quân ngã chỉ bị thương. Hết đợt cuối: quà theo điểm (mốc 3/6/10/15), ba minh điểm cao nhất thêm quà. Chiến báo kiểu mới `legion` (phát lại được), thẻ trong trang Tiên minh, băng nhắc trên HUD 15 phút trước | ✅ `world/legion.ts`, `rollover.ts` `allyEvents`, `Alliance.svelte`, `Hud.svelte` |
+| Second builder (thuê có hạn) | Tạp Dịch Lệnh 48 giờ: thêm một hàng xây (xây song song hai công trình), dùng thêm thì kéo dài, việc dở vẫn xong khi hết hạn; hiện trong dải tăng ích, chấm son trên nút tạp dịch khi tạp dịch thứ hai rảnh. Có ở Tông Lệnh Bảo Khố (40 lệnh bài, 1 lần). Sim: tầng 15 ngày 9,3 · 20 ngày 17,5 · 25 ngày 28,5; cướp 23,5 % (thử thêm một lệnh ở Thất Nhật Lễ thì cướp vọt 26 % — bỏ) | ✅ `sect/buildings.ts` `queueSize`, `sect/bag.ts` |
+| Lord of War · Uncovering Clouds | Binh Thế Tranh Hùng (thứ Bảy – CN tuần A: chiến công khi cướp / giữ nhà / tranh điểm → rương phù chiến); Khai Vụ Tứ Phương (7 ngày đầu: mốc ô mê vụ đã khai, thôn trang / động phủ đã ghé). Chỉ số sự kiện mới `kp`, `explore`, `sites` | ✅ `data.ts` FESTS |
+| Hero Returns (cửa hàng đổi token sự kiện) | Tông Lệnh Bảo Khố: 8 ngày đầu, xây / tuyển / săn yêu / nghiên cứu / thắng trận ra Tông Môn Lệnh; đổi 2 Kim thiếp, Tụ Linh Phù 24g, Hộ Sơn Phù 24g, kinh thư, phù tăng tốc, nang, Ngân thiếp — mỗi món có hạn mức, lệnh bài không đủ đổi hết. Kiểu sự kiện mới `shop` trong trung tâm sự kiện (dùng lại được cho lễ hội) | ✅ `core/fest.ts` `festTokens/festBought/festGot`, `Events.svelte` |
+| Fog of War + Scouts + Tribal Villages + Mysterious Caves | Khám phá: mỗi tông môn một bản đồ mê vụ riêng (ô sương 5 × 5 ô, lúc đầu khai quanh tông môn), phủ mây che mọi thứ bên dưới (huy hiệu, tên, đường hành quân; chạm không chọn được). Linh điểu (1 + 1 mỗi 8 tầng Chủ điện, tối đa 3) thả vào ô sương kề vùng đã khai, bay 1 phút mỗi ô sương, tới nơi tan 3 × 3 ô sương rồi về. 225 thôn trang / động phủ cổ tu rải theo seed; lộ ra thì ghé một lần nhận quà theo vòng (nang, kinh thư / phù tăng tốc, đan, thiếp) | ✅ `core/fog.ts`, `atlas.ts` `sitesOf`, `world/explore.ts`, client `world/fog.ts` |
+| Governor Profile từ chân dung | Chạm chân dung mình mở hồ sơ chưởng môn (lực chiến, sát địch, tranh đoạt, tháp, trưởng lão, luân hồi, thành tựu) + nút Xếp hạng | ✅ `Hud`, `Profile` |
+| (Không có ở RoK — chợ giữa người chơi của game mình) | Phường thị: chợ ký gửi của cả giới — thẻ Mua (lọc theo hàng, xếp rẻ so với giá gốc, chạm tên người bán xem hồ sơ), Treo bán (hàng, số lượng, giá 80–125 % giá gốc, thấy tiền về sau thuế, báo vượt hạn mức), Lệnh của tôi (hạn, gỡ); vào từ Thương hội ở Tàng Bảo Các (Chủ điện tầng 10). Luật + server có từ P3, nay có giao diện | ✅ `Market.svelte`, `world/market.ts` |
+| Dải tăng ích (A5 + F4) | Chip dưới cụm nút HUD: khiên hộ sơn, phù, đan, linh mạch, trận tiên minh, sắc phong/phúc Giới Chủ — icon + giờ còn lại đọc được trên điện thoại (nhiều thì "+N"); chạm mở bảng từng nguồn, hiệu quả, hạn, và phù tăng ích / hộ sơn trong túi dùng ngay | ✅ `Buffs` |
+| Trading Post (Resource Assistance) | Vận Linh Trận: từ Chủ điện tầng 10, trong hồ sơ người cùng minh kéo từng loại tài nguyên gửi đi — hao tổn 35 % (Tàng Bảo Các tầng 1) → 8 % (tầng 25) đốt đi, người nhận nhận qua thư; mỗi ngày gửi tối đa 2× sức chứa kho mình, mỗi người nhận tối đa 1× sức chứa kho họ (chống dồn của qua acc phụ; `MARKET=off` tắt cùng chợ). Sửa kèm: nút "Mời vào minh" trong hồ sơ trước chỉ hiện cho Giới Chủ | ✅ `world/supply.ts`, `Supply.svelte` |
+| Rally on cities | Kết trận công sơn: người trong minh mở kết trận nhắm một tông môn (chờ 5/10/30 phút) ngay trong bảng Tranh đoạt; đồng minh góp đội từ nút "Góp đội" ở danh sách kết trận trang Tiên minh (mở bảng tông môn đó, chọn sẵn góp đội); tối đa 8 đội tới cùng lúc đánh như một bên (công pháp của đội mở) — núi mạnh quá trận dung một đội thì phải kết trận. Chiến lợi phẩm chia theo sức mang còn lại, chiến công theo lực chiến góp; bên thủ thấy một thẻ "X kết trận n đội kéo tới!", báo thù được mọi người trong trận. Server giờ báo cả minh khi kết trận mở / giải (trước chỉ khi bản ghi minh đổi — cả kết trận điểm cũng không tự hiện) | ✅ `world/raid.ts` (`raidRally`, `raidJoin`), `Rivals.svelte` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
 
-Nhịp sau các thay đổi (`npm run sim`, 24/09): bot giỏi Chủ điện 15 ngày 9,3 (trước đợt này 11,3), tầng 20 ngày 17,9, tầng 25
-ngày 30,5 (trước 34,5); người chơi thường (`45 3 --casual`) tầng 15 ngày 14,3 (trước 17,5), tầng 20 ngày 26,5, tầng 25 ngày
-40,8 — vẫn trong mùa 49 ngày. Quà tân thủ, Nhật Khóa và sự kiện giúp người chơi thường nhiều hơn bot giỏi.
+Nhịp sau các thay đổi (`npm run sim`, 25/09): bot giỏi Chủ điện 15 ngày 8,8 (24/09: 9,3), tầng 20 ngày 15,9, tầng 25 ngày
+27,3 (24/09: 30,3) — nhanh hơn chủ yếu do Tạp Dịch Lệnh, Tĩnh tọa ngộ đạo, đạo thống; người chơi thường (`45 3 --casual`)
+tầng 15 ngày 13,3, tầng 20 ngày 24,3, tầng 25 ngày 40,3 — vẫn trong mùa 49 ngày. Quà mới tiếp theo nên cân lại (bot giỏi đang
+tới đỉnh sớm ~3 ngày so với 24/09).
+
+Tranh đoạt (`30 4 --pvp 20`): kinh tế giàu hơn làm phần bị cướp lên 37 % sản lượng (cổng CI ≤ 25 %) → kho bảo hộ 30 % → 45 %
+sức chứa (`PROTECT`), tài nguyên trong lễ vật Hương Hỏa thành nang (nằm trong túi, không bị cướp), bot chỉ mở nang khi kho còn
+dưới phần bảo hộ: còn 23 %.
 
 ## Lộ trình (theo 8 file nghiên cứu, P0 trước, rẻ trước)
 
 **Đợt B — giữ chân & kinh tế** (đã xong: Chiêu Hiền Đài, Nhật Khóa, Thành tựu, Tháp canh + sát khí)
 1. Nhiệm vụ phụ (nhắc công pháp, công trình tài nguyên).
-2. Tiền tệ tích luỹ + cửa hàng: Thương nhân vân du, cửa hàng Hương Hỏa, cửa hàng tháp/bí cảnh.
-3. Kho bảo hộ theo tầng.
-4. Tạp dịch thứ 2 (mở bằng Hương Hỏa hoặc thuê có hạn) — có trần, qua sim (bộ nhớ: bot 11→9 ngày, thường 19→14).
+2. Tiền tệ tích luỹ + cửa hàng: cửa hàng Hương Hỏa, cửa hàng tháp/bí cảnh.
+3. Kho bảo hộ theo tầng (hiện: 45 % sức chứa, phẳng).
+4. (Tạp dịch thứ 2 thuê có hạn: đã xong — Tạp Dịch Lệnh.)
 
 **Đợt C — tương tác người chơi** (đã xong: Hộ Minh Đại Trận, cống hiến + Cống Hiến Các, Minh lễ từ yêu vương, thưởng người giúp, dấu bản đồ, chia sẻ toạ độ, hồ sơ, truyền âm, Minh vụ đường)
-1. Chia sẻ chiến báo vào chat (người khác xem được trận).
-2. Yêu trại hằng ngày để kết trận (thêm nguồn Minh lễ).
-3. Giới Chủ + sắc phong buff/debuff, minh ước (NAP).
-4. Minh vụ: hạng giải giữa các minh (Đồng → Chí Tôn) như RoK.
+1. (Đợt C đã xong phần chính, cả lãnh thổ tiên minh + trận kỳ + dời tông môn.) Còn: đóng quân giữ trận kỳ, kho minh, 5 bậc chức.
 
-**Đợt D — chiến đấu & trưởng lão**
-1. Trưởng lão phó (cặp chính/phó) và công pháp theo nộ; trần quân mỗi đội; điểm tiêu diệt + bảng chiến công; chiến báo tách nguồn sát thương.
+**Đợt D — chiến đấu & trưởng lão** (đã xong: phó trưởng lão, chân nguyên, trận dung)
+1. Vật phẩm mở rộng trận dung (Khuếch Trận Kỳ), thiên phú trận dung.
 2. Phẩm cấp, sao, hồn ấn nâng công pháp; thiên phú sâu hơn; pháp bảo theo bộ.
-3. Nâng bậc đệ tử; tốc độ và sức mang theo hệ.
+3. Tốc độ và sức mang theo hệ.
 
-**Đợt E — bản đồ & PvE** (file 3)
-- Điểm hành động + săn yêu thú trên bản đồ giới, sương mù + thám tử + hang động, sự kiện yêu vương theo đợt (Lohar),
+**Đợt E — bản đồ & PvE** (file 3) (đã xong: mê vụ + linh điểu + thôn trang / động phủ)
+- Sự kiện yêu vương theo đợt (Lohar), vật phẩm hồi hành lực, Sơn Hà Đồ (Kingdom Map: tan mê vụ ngẫu nhiên),
   tổ đội PvE (Ceroli), biên niên giới kiểu Monument.
 
 **Đợt F — mùa giải & đấu trường** (file 6, mục 3 có thiết kế chi tiết)
-1. Luận Kiếm Đài (Sunset Canyon bất đồng bộ): đội thủ đặt sẵn, 5 lượt/ngày, mùa 7 ngày, không mất quân.
-2. Thiên Đạo Biên Niên: mùa 49 ngày chia 9 chương mục tiêu chung, hạn chót trùng lịch mở cổng.
+1. Luận Kiếm Đài: "Luận Kiếm Lệnh" từ nhiệm vụ ngày (bản chính + Kiếm Ý + Thương Điếm + phục thù đã xong).
+2. Thiên Đạo Biên Niên: mở khoá theo chương thay vì theo ngày cứng (đã lên 12 chương).
 3. Thưởng cá nhân của mùa: điểm công huân, thành tựu mùa, thưởng hạng cá nhân.
-4. Tranh Đoạt Linh Châu (Ark of Osiris giản lược): chiến trường 11 ô, 8 hiệp, lệnh đứng — minh đấu minh có lịch.
+4. Tranh Đoạt Linh Châu (Ark of Osiris giản lược): chiến trường ô + hiệp + lệnh đứng (bước 1 — Luận Kiếm Minh Chiến — đã xong).
 5. Luật mùa thay đổi: Linh Triều Mùa, Chính – Tà, Cổ Di Tích mở theo lịch.
 
 **Đợt G — UI/UX** (file 8)
-- Hồ sơ chưởng môn, "Nhận tất cả", lịch sự kiện 7 ngày, dải chat mọi tab, đĩa Tương trợ, trận đồ (preset), tìm mục tiêu +
-  bản đồ nhỏ + ghi nhớ vị trí trên bản đồ Giới, trưởng lão dẫn đường nói chuyện ở các mốc đầu.
+- Bản đồ nhỏ trên bản đồ Giới.
+  (Đã có: dải chat ở núi + bản đồ, chat trong trang Tiên minh.)

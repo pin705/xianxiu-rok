@@ -1,12 +1,13 @@
 <script lang="ts">
-  // Xếp hạng trong giới: lực chiến, cảnh giới, tháp, tranh đoạt, sự kiện tuần (server tính, cache 30 giây, mình tô đậm)
-  // và điểm mùa theo phe + bảng phong thần các mùa trước (actor của giới tính lúc hỏi).
+  // Xếp hạng trong giới: lực chiến, cảnh giới, chiến công, tranh đoạt, tháp, sự kiện tuần (server tính, cache 30 giây, mình
+  // tô đậm; chạm một dòng: hồ sơ) và điểm mùa theo phe + bảng phong thần các mùa trước (actor của giới tính lúc hỏi).
   import type { Season } from '@rok/protocol'
   import type { Ranks } from './net'
   import { Card, Sheet, Tabs } from './ui'
   import { L, num } from './lib'
+  import { social } from './social.svelte'
 
-  const BOARDS = ['power', 'hall', 'tower', 'pvp', 'week'] as const
+  const BOARDS = ['power', 'hall', 'kills', 'pvp', 'tower', 'week'] as const
   type Board = (typeof BOARDS)[number]
 
   let {
@@ -81,7 +82,7 @@
     <ol class="stack mt-2" style:--gap="4px">
       {#each data.rows as r (r.pid)}
         <li>
-          <Card tone={r.pid === me ? 'glow' : 'paper'}>
+          <Card tone={r.pid === me ? 'glow' : 'paper'} onclick={() => (social.profile = r.pid)} label={r.name}>
             <span class="row">
               <b class="t-num rank" class:top={r.rank <= 3}>{r.rank}</b>
               <span class="grow t-strong t-ellipsis">{r.name}</span>

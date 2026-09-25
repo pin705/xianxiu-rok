@@ -67,6 +67,7 @@ export function batch(w: World, ids: number[], seen: Set<number>, world: boolean
         pvp: s.pvp.pts,
         weekNo: s.ev.week,
         weekPts: s.ev.pts,
+        kills: s.stats.kp ?? 0,
         ...(seen.has(id) && slot.seen ? { seen: slot.seen } : {}),
       }
     })

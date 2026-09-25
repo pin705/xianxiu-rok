@@ -1,7 +1,7 @@
 // Trung tâm sự kiện: nhận quà (ngày đăng nhập, mục tiêu, mốc điểm) của sự kiện đang mở.
 import { no, ok, type Actions } from '../core/action.ts'
 import { grant } from '../core/battle.ts'
-import { FEST_IDS, festDone, festOpen, festRewards } from '../core/fest.ts'
+import { FEST_IDS, festDone, festGot, festOpen, festRewards } from '../core/fest.ts'
 import { int, oneOf } from '../core/parse.ts'
 import { type Err, type State } from '../core/types.ts'
 import { NHAT_KHOA_DAY, type FestId } from '../data.ts'
@@ -11,7 +11,7 @@ export type FestAction = { type: 'fest'; id: FestId; i: number }
 export function festError(s: State, id: FestId, i: number): Err | null {
   if (!festOpen(s, id, s.time)) return 'locked'
   if (!festRewards(id)[i]) return 'bad'
-  if (s.fest[id]!.got.includes(i)) return 'claimed'
+  if (festGot(s, id, i)) return 'claimed'
   return festDone(s, id, i) ? null : 'not_done'
 }
 

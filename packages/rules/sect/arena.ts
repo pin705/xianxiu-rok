@@ -4,7 +4,7 @@ import { fight, rng, type Fight, type Side } from '../combat.ts'
 import { no, type Actions } from '../core/action.ts'
 import { grant, sideOf } from '../core/battle.ts'
 import { dayOf, weekOf } from '../core/calendar.ts'
-import { isElder, obj, oneOf } from '../core/parse.ts'
+import { int, isElder, obj, oneOf } from '../core/parse.ts'
 import { elderLevel, marchSlots } from '../core/stats.ts'
 import type { Arena, ArenaTeam, State } from '../core/types.ts'
 import { ELDER_IDS } from '../core/util.ts'
@@ -16,6 +16,8 @@ import {
   ARENA_TIER,
   ARENA_TRIES,
   ELDERS,
+  KY_CHEST,
+  KY_SHOP,
   PVP_HALL,
   PVP_START,
   TYPES,
@@ -46,7 +48,14 @@ export function lineupOf(s: State): ArenaTeam[] {
     .map(e => ({ elder: e, type: ELDERS[e].type }))
 }
 // Một đội trên đài: đệ tử ảo bậc ARENA_TIER, chỉ tính sức của trưởng lão (bỏ công pháp tông môn, phù, Hương Hỏa, luân hồi)
-const bare = (s: State): State => ({ ...s, tech: {}, rebirths: 0, buffs: [], vip: { ...s.vip, pts: 0 } })
+const bare = (s: State): State => ({
+  ...s,
+  tech: {},
+  rebirths: 0,
+  buffs: [],
+  vip: { ...s.vip, pts: 0 },
+  dao: undefined,
+})
 export const arenaN = (s: State, e: ElderId) => ARENA_BASE + ARENA_STEP * elderLevel(s.elders[e])
 export const arenaSide = (s: State, t: ArenaTeam): Side =>
   sideOf(bare(s), t.elder, { [`${t.type}${ARENA_TIER}`]: arenaN(s, t.elder) })
@@ -77,7 +86,8 @@ export function duel(att: Side[], def: Side[], seed: number): { win: boolean; bo
   return { win: left[0] > left[1], bouts }
 }
 
-export type ArenaAction = { type: 'arenaSet'; lineup: ArenaTeam[] } | { type: 'arenaChest' }
+export type ArenaAction =
+  { type: 'arenaSet'; lineup: ArenaTeam[] } | { type: 'arenaChest' } | { type: 'arenaBuy'; i: number }
 
 const isType = oneOf(TYPES)
 export const arenaActions: Actions<ArenaAction> = {
@@ -103,8 +113,37 @@ export const arenaActions: Actions<ArenaAction> = {
       if (s.levels.chuDien < PVP_HALL) return no('locked')
       const a = arenaOf(s, s.time)
       if (a.chest === a.day) return no('claimed')
-      return { ok: true, state: grant({ ...s, arena: { ...a, chest: a.day } }, ARENA_CHEST[arenaBand(a.pts)]) }
+      const band = arenaBand(a.pts)
+      return {
+        ok: true,
+        state: grant({ ...s, arena: { ...a, chest: a.day, ky: (a.ky ?? 0) + KY_CHEST[band] } }, ARENA_CHEST[band]),
+      }
+    },
+  },
+  // Luận Kiếm Thương Điếm: đổi Kiếm Ý lấy vật phẩm, mỗi món có hạn mỗi tuần
+  arenaBuy: {
+    pick: a => (int(0, KY_SHOP.length - 1)(a.i) ? { type: 'arenaBuy', i: a.i } : null),
+    run: (s, a) => {
+      if (s.levels.chuDien < PVP_HALL) return no('locked')
+      const ar = arenaOf(s, s.time)
+      const g = KY_SHOP[a.i]
+      const n = kyBought(s, s.time)
+      if (n[a.i] >= g.week) return no('limit')
+      if ((ar.ky ?? 0) < g.price) return no('not_enough')
+      const buys = { week: ar.week, n: n.map((x, k) => (k === a.i ? x + 1 : x)) }
+      return {
+        ok: true,
+        state: {
+          ...s,
+          items: { ...s.items, [g.item]: (s.items[g.item] ?? 0) + g.n },
+          arena: { ...ar, ky: ar.ky! - g.price, buys },
+        },
+      }
     },
   },
 }
-
+// Số đã mua mỗi món của Thương Điếm trong tuần của lúc t
+export const kyBought = (s: State, t: number) => {
+  const b = s.arena?.buys
+  return b && b.week === weekOf(t) ? b.n : KY_SHOP.map(() => 0)
+}

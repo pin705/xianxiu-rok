@@ -7,25 +7,19 @@
 //   inbox.ts lệnh admin · lease.ts gia hạn, rào, đóng, lô ghi · committer.ts ghi DB · alarm.ts hẹn giờ · mapwatch.ts bản đồ
 import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
+import { NPC_EVERY, advance, dayOf, migrate, weekOf, type Action, type Report, type State } from '@rok/rules'
 import {
-  NPC_EVERY,
-  advance,
-  dayOf,
-  migrate,
-  weekOf,
-  type Action,
-  type Incoming,
-  type Report,
-  type State,
-} from '@rok/rules'
-import {
+  bookView,
+  lordOf,
   SEASON_DAYS,
   advanceAll,
+  allyTouched,
   worldBuffs,
   atlas,
   dayIn,
   freshWorld,
   mapOf,
+  memberKey,
   nextRaid,
   phaseOf,
   spawn,
@@ -65,7 +59,7 @@ import { MapWatch } from './mapwatch.ts'
 import { incomingNote, remindNote, reportNote } from './notify.ts'
 import { npcTurn } from './npc.ts'
 import { answersOf } from './queries.ts'
-import { rollWeek, seasonEnd } from './rollover.ts'
+import { allyEvents, bookCheck, rollWeek, seasonEnd } from './rollover.ts'
 import { report, say } from './talk.ts'
 import { milestones } from './track.ts'
 
@@ -251,7 +245,10 @@ export class World {
   }
   // Ảnh chụp bản đồ giới cho client (chỗ ngồi, hành quân trên bản đồ, biên niên, điểm)
   snapshot(now: number) {
-    return mapOf(this.ps, now, this.npc, this.chron, this.shared)
+    const [w, map] = [this.shared, this.map(now)]
+    const lord = lordOf(w, this.ps, map, now)
+    const book = bookView(w, this.ps, map, now, this.npc)
+    return { ...mapOf(this.ps, now, this.npc, this.chron, w), lord, book, bless: w.bless }
   }
   // Luật giới cho một người (mầm mới mỗi lần, trừ khi truyền seed)
   play(pid: number, a: WorldAction, now: number, seed = newSeed()): WorldResult {
@@ -282,8 +279,9 @@ export class World {
     this.shared = next
     this.persist.worldDirty = true
     this.buffAt = 0 // linh mạch / người trong minh có thể đã đổi
+    // điểm đổi phe / ai vào, rời minh: bản đồ (cả lãnh thổ) đổi
+    if (prev.spots !== next.spots || memberKey(prev) !== memberKey(next)) this.maps.changed()
     if (prev.spots !== next.spots) {
-      this.maps.changed()
       const a = atlas(this.seed)
       for (const [k, sp] of Object.entries(next.spots)) {
         const p = a.points[Number(k)]
@@ -291,10 +289,7 @@ export class World {
           this.record({ at: this.now(), k: 'boss', a: [p.lv] })
       }
     }
-    const touched = new Set<number>()
-    for (const al of [...Object.values(prev.allies), ...Object.values(next.allies)])
-      if (prev.allies[al.id] !== next.allies[al.id]) for (const pid of Object.keys(al.members)) touched.add(Number(pid))
-    for (const pid of touched)
+    for (const pid of allyTouched(prev, next))
       for (const c of this.slots.get(pid)?.conns ?? []) this.persist.deliver(() => c.emit('ally'), true)
     this.persist.schedule()
   }
@@ -316,7 +311,12 @@ export class World {
     for (const r of rep)
       this.persist.pending.reports.push({ pid: slot.id, id: r.id, at: r.at, kind: r.kind, win: r.win, body: r })
     this.track(slot.id, prev, stored, rep)
-    if (!slot.conns.size) this.notify(slot, rep, (stored.incoming ?? []).filter(x => !prev.incoming?.includes(x)))
+    if (!slot.conns.size)
+      this.notify(
+        slot,
+        rep,
+        (stored.incoming ?? []).filter(x => !prev.incoming?.includes(x)),
+      )
     const push: Push = rep.length ? { v, p, rep } : { v, p }
     const others = [...slot.conns].filter(c => c !== origin?.sock)
     this.persist.deliver(() => {
@@ -336,7 +336,7 @@ export class World {
   }
 
   // Offline mà có đội kéo tới / bị cướp / kiếp vân vừa giáng: báo qua Web Push
-  private notify(slot: Slot, rep: Report[], warn: Incoming[]) {
+  private notify(slot: Slot, rep: Report[], warn: NonNullable<State['incoming']>) {
     if (!this.env.push || this.npc.has(slot.id)) return
     for (const x of warn) this.env.push(slot.id, incomingNote(x.foe))
     for (const r of rep) {
@@ -380,6 +380,8 @@ export class World {
   private worldStep(now: number) {
     if (dayIn(this.opened, now) >= SEASON_DAYS) seasonEnd(this, now)
     if (weekOf(now) > this.week) rollWeek(this, now)
+    bookCheck(this, now)
+    allyEvents(this, now)
     try {
       const map = this.map(now)
       const r = advanceAll(this.ps, this.shared, now, map)

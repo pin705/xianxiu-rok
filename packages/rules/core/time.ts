@@ -33,7 +33,7 @@ function arrive(s: State, id: number): State {
   // Mục tiêu đã bị hạ trước khi tới: quay về tay không
   if ((s.cool[coolKey(m.target)] ?? 0) > m.arriveAt)
     return { ...s, marches: [...others, { ...m, back: m.army, hurt: {}, gain: noGain() }] }
-  const r = battle({ ...s, marches: others }, m.target, m.elder, m.army, m.seed, m.arriveAt)
+  const r = battle({ ...s, marches: others }, m.target, m.elder, m.army, m.seed, m.arriveAt, m.deputy)
   const done = { ...m, back: r.back, hurt: r.hurt, gain: r.gain, report: r.report }
   return { ...r.state, marches: [...r.state.marches, done].sort((a, b) => a.id - b.id) }
 }

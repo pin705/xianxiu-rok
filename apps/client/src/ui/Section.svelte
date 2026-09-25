@@ -19,8 +19,10 @@
     gap: var(--sp-2);
     margin-top: var(--sp-4);
   }
+  /* phần phụ nhiều nút mà không vừa một hàng với tiêu đề (điện thoại hẹp): xuống dòng, không tràn */
   header {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--sp-2);
@@ -38,6 +40,8 @@
   }
   .aside {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     align-items: center;
     gap: var(--sp-2);
     font-size: var(--fs-2);

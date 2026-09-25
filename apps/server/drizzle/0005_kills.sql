@@ -1,0 +1,1 @@
+ALTER TABLE "players" ADD COLUMN "kills" integer DEFAULT 0 NOT NULL;

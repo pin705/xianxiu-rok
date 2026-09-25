@@ -2,8 +2,21 @@
 // LRU 9 mảnh — tổng GPU ≲ 50 MB), huy hiệu tông môn / điểm / cổng (mỗi loại một texture → ít draw call), đường và cờ hành quân
 // nội suy theo giờ server. Camera do WorldView điều khiển; cảnh chỉ vẽ theo camera được đưa vào.
 import { Container, Graphics, Sprite, Texture } from 'pixi.js'
-import { MAP_W, atlas, regionOf, tide, type Atlas, type MapMarch, type MapSnap, type Pos } from '@rok/rules/world'
 import {
+  MAP_W,
+  atlas,
+  regionOf,
+  sitesOf,
+  snapClaims,
+  territoryGrid,
+  tide,
+  type Atlas,
+  type MapMarch,
+  type MapSnap,
+  type Pos,
+} from '@rok/rules/world'
+import {
+  BEAST_EMBLEMS,
   SECT_EMBLEMS,
   WORLD_TILE,
   bake,
@@ -16,6 +29,9 @@ import {
 } from '@rok/art'
 import type { BakeJob } from './bake.worker'
 import { DPR, painted, texOf } from './stage'
+import { flagTex, paintTerritory, terrColor } from './territory'
+import { FogLayer, nextLand } from './fog'
+import { cellOf, clear, type Fog } from '@rok/rules'
 
 const T = WORLD_TILE
 export const WORLD_DU = MAP_W * T
@@ -32,6 +48,7 @@ const TONE: Record<Rel, MedalTone> = { me: 'gold', ally: 'jade', npc: 'ink', oth
 export type Pick =
   | { kind: 'seat'; pid: number }
   | { kind: 'point'; i: number }
+  | { kind: 'site'; i: number } // thôn trang / động phủ (sitesOf)
   | { kind: 'march'; pid: number; id: number }
   | { kind: 'tile'; x: number; y: number }
 
@@ -136,6 +153,11 @@ export class WorldScene {
   private bakery = new Bakery()
   private roads = new Graphics()
   private glow = new Graphics()
+  private terr = new Graphics() // lãnh thổ tiên minh: nền màu nhạt + viền
+  private terrData: { snap: MapSnap; mine?: number; next: number } | null = null // vẽ lại khi trận kỳ dựng xong
+  private flagMarks: [Sprite, number][] = [] // trận kỳ, lúc dựng xong (đang dựng: mờ)
+  private fogL = new FogLayer() // mê vụ: trên cùng (che huy hiệu, đường và cờ hành quân bên dưới)
+  private explore: { fog: Fog; next: number } | null = null
   private marks = new Container() // huy hiệu: điểm, cổng, tông môn
   // sprite, cỡ gốc (DU ở z = 1, chia z mỗi khung để giữ cỡ trên màn), độ phóng tối thiểu để hiện (mức chi tiết)
   private sized: [Container, number, number][] = []
@@ -149,7 +171,7 @@ export class WorldScene {
 
   constructor(seed: number) {
     this.atlas = atlas(seed)
-    this.root.addChild(this.land, this.glow, this.roads, this.marks, this.tokens)
+    this.root.addChild(this.land, this.terr, this.glow, this.roads, this.marks, this.tokens, this.fogL.sprite)
     this.ready = this.bakery.bake({ seed, x0: 0, y0: 0, n: MAP_W, px: OVERVIEW_PX, fine: false }).then(b => {
       if (!b || this.dead) return
       this.overviewTex = Texture.from(b)
@@ -160,7 +182,14 @@ export class WorldScene {
   }
 
   // Dữ liệu đổi (ảnh chụp mới, pha mùa, quan hệ): dựng lại huy hiệu. rel: quan hệ của từng tông môn với mình.
-  setData(snap: MapSnap, rel: (pid: number) => Rel, phase: number, now: number) {
+  // ex: mê vụ + thôn trang / động phủ đã ghé của mình (chưa vào giới: không có — cả giới hiện rõ)
+  setData(
+    snap: MapSnap,
+    rel: (pid: number) => Rel,
+    phase: number,
+    now: number,
+    ex?: { fog: Fog; visited: readonly number[] },
+  ) {
     this.marks.removeChildren().forEach(c => c.destroy())
     this.sized = []
     this.clouds = []
@@ -182,18 +211,16 @@ export class WorldScene {
       else if (p.kind === 'mine') add(p, 'earth', 'gold', 0.7, sp?.until && sp.until > now ? 0.4 : 1, 0.34)
       else if (p.kind === 'boss')
         add(p, 'dragon', 'beast', p.lv === 3 ? 1.3 : 1.05, sp?.until && sp.until > now ? 0.4 : 1)
+      else if (p.kind === 'wild')
+        // yêu thú giới: hình theo cấp (như yêu thú bản đồ vùng), nhỏ, chỉ hiện khi phóng đủ; vừa bị hạ thì mờ
+        add(p, BEAST_EMBLEMS[p.lv - 1] ?? 'wolf', 'beast', 0.55, sp?.until && sp.until > now ? 0.25 : 1, 0.45)
       else add(p, 'rebirth', 'gold', 1.5)
     }
     for (const s of snap.seats) {
       const r = rel(s.pid)
       const faction = SECT_EMBLEMS[regionOf(this.atlas, s) % SECT_EMBLEMS.length]
       // khác nhau cả hình chạm lẫn màu (không chỉ màu): mình huy hiệu lớn, NPC hình tông môn phái, người khác huy hiệu son
-      const m = add(
-        s,
-        r === 'npc' ? faction : 'crest',
-        TONE[r],
-        r === 'me' ? 1.3 : 1,
-      )
+      const m = add(s, r === 'npc' ? faction : 'crest', TONE[r], r === 'me' ? 1.3 : 1)
       if (s.shield) {
         const ring = new Sprite(ringTex('#8cc09d'))
         ring.anchor.set(0.5)
@@ -213,6 +240,42 @@ export class WorldScene {
     }
     this.marches = snap.marches
     this.roadZ = 0 // vẽ lại đường theo độ phóng mới
+    // thôn trang / động phủ đã lộ (ghé rồi thì mờ)
+    for (const st of ex ? sitesOf(this.atlas) : []) {
+      const c = cellOf(st)
+      if (!clear(ex!.fog, c.cx, c.cy, now)) continue
+      add(
+        st,
+        st.kind === 'village' ? 'wood' : 'chaos',
+        st.kind === 'village' ? 'gold' : 'realm',
+        0.6,
+        ex!.visited.includes(st.i) ? 0.35 : 1,
+        0.3,
+      )
+    }
+    this.explore = ex ? { fog: ex.fog, next: nextLand(ex.fog, now) } : null
+    this.fogL.paint(ex?.fog ?? null, now)
+    const mine = snap.seats.find(s => rel(s.pid) === 'me')?.aid
+    this.flagMarks = []
+    for (const f of snap.flags ?? []) {
+      const s = new Sprite(flagTex(terrColor(f.aid, mine)))
+      s.anchor.set(0.35, 0.9)
+      s.position.set((f.x + 0.5) * T, (f.y + 0.5) * T)
+      this.sized.push([s, (MARK * 1.2) / 64, 0.2])
+      this.flagMarks.push([s, f.done])
+      this.marks.addChild(s)
+    }
+    this.terrData = {
+      snap,
+      mine,
+      next: Math.min(Infinity, ...(snap.flags ?? []).map(f => f.done).filter(d => d > now)),
+    }
+    this.drawTerritory(snap, now, mine)
+  }
+
+  // Lãnh thổ tiên minh (như RoK), cùng luật với server: tô trong territory.ts
+  private drawTerritory(snap: MapSnap, now: number, mine?: number) {
+    paintTerritory(this.terr.clear(), territoryGrid(snapClaims(snap, this.atlas, now)), mine)
   }
 
   // Chọn vật dưới điểm (DU): cờ hành quân → tông môn → điểm → ô trống
@@ -228,12 +291,16 @@ export class WorldScene {
         },
         [null, Infinity],
       )[0]
+    // dưới mê vụ không chọn được gì (chỉ ô trống: thả linh điểu)
+    const seen = (p: Pos) => !this.explore || clear(this.explore.fog, cellOf(p).cx, cellOf(p).cy, now)
     const m = nearest(this.marches, x2 => marchAt(x2, now), 0.8)
-    if (m) return { kind: 'march', pid: m.pid, id: m.id }
-    const s = nearest(seats, x2 => x2)
+    if (m && seen(marchAt(m, now))) return { kind: 'march', pid: m.pid, id: m.id }
+    const s = nearest(seats.filter(seen), x2 => x2)
     if (s) return { kind: 'seat', pid: s.pid }
-    const p = nearest(this.atlas.points, x2 => x2, 1.2)
+    const p = nearest(this.atlas.points.filter(seen), x2 => x2, 1.2)
     if (p) return { kind: 'point', i: p.i }
+    const st = this.explore ? nearest(sitesOf(this.atlas).filter(seen), x2 => x2) : null
+    if (st) return { kind: 'site', i: st.i }
     return {
       kind: 'tile',
       x: Math.max(0, Math.min(MAP_W - 1, Math.floor(x / T))),
@@ -257,6 +324,19 @@ export class WorldScene {
     }
     if (Math.abs(this.roadZ - cam.z) / cam.z > 0.15) this.drawRoads(cam.z)
     this.drawTokens(cam.z, now, lod)
+    // trận kỳ vừa dựng xong: lãnh thổ nới ra (không chờ ảnh chụp mới)
+    for (const [s, done] of this.flagMarks) s.alpha = done > now ? 0.65 : 1
+    // linh điểu vừa tới nơi: mê vụ tan (không chờ ảnh chụp mới)
+    const ex = this.explore
+    if (ex && now >= ex.next) {
+      ex.next = nextLand(ex.fog, now)
+      this.fogL.paint(ex.fog, now)
+    }
+    const td = this.terrData
+    if (td && now >= td.next) {
+      td.next = Math.min(Infinity, ...(td.snap.flags ?? []).map(f => f.done).filter(d => d > now))
+      this.drawTerritory(td.snap, now, td.mine)
+    }
     this.drawTide(now)
     if (cam.z >= FINE_Z) this.fine(cam, sx, sy)
   }
@@ -343,6 +423,7 @@ export class WorldScene {
     this.bakery.destroy()
     for (const p of this.pieces.values()) p.tex.destroy(true)
     this.overviewTex?.destroy(true)
+    this.fogL.destroy()
     this.root.destroy({ children: true })
   }
 }

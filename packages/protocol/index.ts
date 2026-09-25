@@ -11,8 +11,9 @@ import type {
   Good,
   MapSnap,
   OrderView,
-  Profile,
+  Profile as BaseProfile,
   Rival,
+  SupplyRoom,
   Trades,
   WorldAction,
 } from '@rok/rules/world'
@@ -72,7 +73,8 @@ export type Snap = { v: number; state: View }
 // reports: chiến báo cũ hơn `before` · rivals: đối thủ để cướp (kẻ thù trước) · map: ảnh chụp bản đồ giới, kèm theo dõi
 // 60 giây (server đẩy `w` khi bản đồ đổi; hỏi lại để gia hạn) · allies: danh sách tiên minh · ally: minh của mình
 // season: điểm mùa · market: lệnh bán trên chợ (một loại hàng nếu có good) + lệnh của mình · profile: hồ sơ một người
-// · dms: các cuộc truyền âm gần đây của mình · arena: Luận Kiếm Đài. Trả lời: Answer[k].
+// · dms: các cuộc truyền âm gần đây của mình · arena: Luận Kiếm Đài · shared: chiến báo chia sẻ trong chat (mã "#r<id>"
+// trong tin của chính người đó, ở kênh mình nghe được). Trả lời: Answer[k].
 export type Query =
   | { k: 'reports'; before?: number }
   | { k: 'rivals'; pid?: number }
@@ -85,6 +87,7 @@ export type Query =
   | { k: 'profile'; pid: number }
   | { k: 'dms' }
   | { k: 'arena' }
+  | { k: 'shared'; pid: number; id: number }
 // Luận Kiếm Đài: đối thủ gợi ý, bảng tuần (top), hạng của mình (null: chưa có trận tuần này)
 export type ArenaView = { foes: ArenaFoe[]; board: { pid: number; name: string; pts: number }[]; rank: number | null }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
@@ -94,7 +97,9 @@ export type Season = { rows: { name: string; pts: number }[]; me: { rank: number
 export type Channel = 'world' | 'ally' | `p${number}`
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
-export type { AllyInfo, AllyRow, MapSnap, Profile, Rival }
+export type { AllyInfo, AllyRow, MapSnap, Rival }
+// Hồ sơ như người xem thấy; supply: cùng minh — Vận Linh Trận còn gửi được bao nhiêu (null: không gửi được / chợ tắt)
+export type Profile = BaseProfile & { supply?: SupplyRoom | null }
 // Một cuộc truyền âm gần đây: người bên kia, tin cuối
 export type Dm = { pid: number; name: string; last: ChatMsg }
 // Trả lời từng truy vấn. Server trả null khi không trả lời được (truy vấn sai, lỗi) — client coi như không có.
@@ -110,6 +115,7 @@ export type Answer = {
   profile: Profile | null // người không còn trong giới
   dms: Dm[]
   arena: ArenaView
+  shared: Report | null // chiến báo người khác chia sẻ vào kênh mình nghe được
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }

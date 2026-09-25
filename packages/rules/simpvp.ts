@@ -2,7 +2,7 @@
 //   npm run sim -- 30 4 --pvp 20
 // Cổng (plan M5): trung vị tầng ≥ 15 sau 30 ngày; đồ bị cướp ≤ 25 % sản lượng; người không đi cướp (giữ được khiên) không bị cướp
 // thành công > 3 lần/ngày. Ai vừa đi cướp thì tự bỏ khiên (đúng luật), bị đánh lại nhiều là chuyện họ chọn — không tính.
-import { RESOURCES, SHIELD_TIME, SURE_WIN, TRIBS, advance, dayOf, newGame, rate, type State } from './index.ts'
+import { RESOURCES, SHIELD_TIME, SURE_WIN, TRIBS, advance, capArmy, dayOf, newGame, rate, type State } from './index.ts'
 import { advanceWorld, raidChance, rivals, worldAct, type Players } from './world.ts'
 import { firstIdle, homeArmy, turn } from './bot.ts'
 
@@ -50,7 +50,7 @@ let prev = 0
 // Đi cướp nếu có đội đang ở nhà và một đối thủ chắc thắng theo dò thám (sắp độ kiếp: giữ quân ở nhà)
 function tryRaid(pid: number, s: State, t: number) {
   const e = firstIdle(s)
-  const army = homeArmy(s)
+  const army = e ? capArmy(s, e, homeArmy(s)) : {} // một đội: vừa trận dung
   if (!e || !Object.keys(army).length || TRIBS[s.trib]?.hall === s.levels.chuDien) return
   const r = rivals(ps, pid, t, rand).find(r => raidChance(s, e, army, r.scout.side) >= SURE_WIN)
   if (!r) return

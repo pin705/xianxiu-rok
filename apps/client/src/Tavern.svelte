@@ -61,7 +61,8 @@
       <b>{L.tavern.got}</b>
       <Bag res={last.got.res} items={last.got.items} size="sm" named />
       {#each tokens as [e, n] (e)}
-        <span class="row"><Portrait look={LOOK[e]} size={28} /><span>{L.tavern.tokens(L.elders[e].name, n)}</span></span>
+        <span class="row"><Portrait look={LOOK[e]} size={28} /><span>{L.tavern.tokens(L.elders[e].name, n)}</span></span
+        >
       {/each}
     </div>
   </Card>

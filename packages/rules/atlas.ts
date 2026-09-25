@@ -17,11 +17,12 @@ export const SEASON_DAYS = 49
 export type Ring = 0 | 1 | 2 // ngoài · giữa · tâm
 export type Region = { i: number; cx: number; cy: number; ring: Ring }
 export type Gate = { i: number; a: number; b: number; x: number; y: number; phase: number }
-export type PointKind = 'vein' | 'mine' | 'boss' | 'gate' | 'heaven'
+export type PointKind = 'vein' | 'mine' | 'boss' | 'gate' | 'heaven' | 'wild'
 export type Point = { i: number; kind: PointKind; region: number; x: number; y: number; lv: number }
 export type Atlas = { seed: number; regions: Region[]; gates: Gate[]; points: Point[]; tiles: Uint8Array }
 export type Pos = { x: number; y: number }
 
+export const WILD_PER = 6 // yêu thú giới mỗi vùng ngoài / giữa
 // số điểm mỗi vùng theo vòng [ngoài, giữa, tâm]
 const PER: Record<'vein' | 'mine' | 'boss', [number, number, number]> = {
   vein: [2, 3, 1],
@@ -98,18 +99,29 @@ export function atlas(seed: number): Atlas {
     return x >= pad && y >= pad && x < MAP_W - pad && y < MAP_W - pad
   }
   // thử tối đa 200 chỗ quanh tâm vùng: lọt hẳn trong vùng, không sát tâm, không sát điểm khác
-  const place = (kind: keyof typeof PER, r: Region) => {
+  const place = (kind: keyof typeof PER | 'wild', r: Region) => {
     for (let tries = 0; tries < 200; tries++) {
       const x = Math.round(r.cx + (rand() * 2 - 1) * CELL * 0.6),
         y = Math.round(r.cy + (rand() * 2 - 1) * CELL * 0.6)
       if (!inside(x, y, r.i, 2) || dist({ x, y }, { x: r.cx, y: r.cy }) < (r.ring === 2 ? 5 : 2)) continue
-      if (points.some(p => dist(p, { x, y }) < 5)) continue
+      if (points.some(p => dist(p, { x, y }) < (kind === 'wild' ? 3 : 5))) continue // yêu thú đứng dày hơn
       add(kind, r.i, x, y, r.ring + 1)
       return
     }
   }
   for (const r of regions)
     for (const kind of ['boss', 'vein', 'mine'] as const) for (let k = 0; k < PER[kind][r.ring]; k++) place(kind, r)
+  // yêu trại (Barbarian Fort của RoK): yêu vương cấp 1 ở mỗi vùng ngoài — minh mới kết trận được ngay từ pha đầu (cổng còn
+  // đóng). Đặt sau cùng để chỗ và số thứ tự các điểm có từ trước không đổi.
+  for (const r of regions) if (r.ring === 0) place('boss', r)
+  // yêu thú giới (Barbarians của RoK): WILD_PER con mỗi vùng ngoài / giữa, cấp theo vòng (ngoài 1–8, giữa 7–15) — săn một mình,
+  // hạ xong hồi sau WILD_RESPAWN. Đặt sau cùng nên chỗ và số thứ tự các điểm trước không đổi.
+  for (const r of regions)
+    for (let k = 0; r.ring < 2 && k < WILD_PER; k++) {
+      const n = points.length
+      place('wild', r)
+      if (points.length > n) points[n].lv = r.ring ? 7 + Math.floor(rand() * 9) : 1 + Math.floor(rand() * 8)
+    }
   const a = { seed, regions, gates, points, tiles }
   cache.set(seed, a)
   return a
@@ -171,6 +183,34 @@ export function spawn(a: Atlas, taken: Pos[], rand: () => number): Pos | null {
       return p
     }
   return null
+}
+
+// Thôn trang / động phủ cổ tu (Tribal Village / Mysterious Cave của RoK): rải theo seed trong từng vùng, lộ ra khi tan mê vụ.
+// Tất định (client tự suy ra); cách điểm và nhau từ 3 ô. ring: vòng của vùng (quà theo vòng)
+export type Site = { i: number; kind: 'village' | 'cave'; x: number; y: number; ring: Ring }
+const SITES: Record<Ring, [villages: number, caves: number]> = { 0: [6, 3], 1: [5, 3], 2: [2, 1] }
+const siteCache = new Map<number, Site[]>()
+export function sitesOf(a: Atlas): Site[] {
+  const hit = siteCache.get(a.seed)
+  if (hit) return hit
+  const rand = rng((a.seed * 31 + 777) >>> 0)
+  const out: Site[] = []
+  for (const r of a.regions) {
+    const [v, c] = SITES[r.ring]
+    for (let k = 0; k < v + c; k++)
+      for (let tries = 0; tries < 200; tries++) {
+        const p = {
+          x: Math.round(r.cx + (rand() * 2 - 1) * CELL * 0.45),
+          y: Math.round(r.cy + (rand() * 2 - 1) * CELL * 0.45),
+        }
+        if (p.x < 1 || p.y < 1 || p.x >= MAP_W - 1 || p.y >= MAP_W - 1 || regionOf(a, p) !== r.i) continue
+        if (a.points.some(t => dist(t, p) < 3) || out.some(t => dist(t, p) < 3)) continue
+        out.push({ i: out.length, kind: k < v ? 'village' : 'cave', ...p, ring: r.ring })
+        break
+      }
+  }
+  siteCache.set(a.seed, out)
+  return out
 }
 
 // Thời tiết theo vùng, đổi mỗi 3 giờ

@@ -1,7 +1,22 @@
 // Việc vừa xong giữa hai state (xong theo giờ, nhờ Tụ Khí Đan, hay server đẩy xuống): App mừng và báo từng việc.
 import { mailText } from '@rok/i18n'
-import { BUILDINGS, IDS, MAP_HALL, REALMS, SECTS, TECH_IDS, TOWER, jobOf, type Report, type State } from '@rok/rules'
-import { L, TABS, defended, reportName } from './lib'
+import {
+  ALLY_HALL,
+  BUILDINGS,
+  CHAT_HALL,
+  IDS,
+  MAP_HALL,
+  PVP_HALL,
+  REALMS,
+  SECTS,
+  TAVERN_HALL,
+  TECH_IDS,
+  TOWER,
+  jobOf,
+  type Report,
+  type State,
+} from '@rok/rules'
+import { L, TABS, defended, read, reportName, write } from './lib'
 
 export type Note = { text: string; report?: Report; bad?: boolean }
 
@@ -14,6 +29,10 @@ export function unlocked(n: number): Note[] {
     ...SECTS.flatMap((d, i) => (d.hall === n ? [L.sects[i].name] : [])),
     ...REALMS.flatMap((d, i) => (d.hall === n ? [L.realms[i].name] : [])),
     ...(n === TOWER.hall ? [L.tower.name] : []),
+    ...(n === TAVERN_HALL ? [L.tavern.title] : []),
+    ...(n === CHAT_HALL ? [`${L.chat.world} (chat)`] : []),
+    ...(n === PVP_HALL ? [L.pvp.title, L.arena.title] : []),
+    ...(n === ALLY_HALL ? [L.ally.found] : []),
   ]
   return opened.length ? [{ text: L.unlocked([...new Set(opened)].join(', ')) }] : []
 }
@@ -42,4 +61,18 @@ export const longJob = (prev: State, next: State) =>
   (['build', 'train', 'study', 'forge'] as const).some(k => {
     const j = jobOf(next, k)
     return !!j && j !== jobOf(prev, k) && j.finishAt - next.time >= 30 * 60_000
+  })
+// Hỏi bật thông báo đúng lúc: vừa giao việc dài mà trình duyệt chưa được hỏi — mỗi máy một lần (true: hỏi ngay, đã ghi nhớ).
+// Quyền chỉ xin được khi người chơi bấm, nên App hỏi bằng toast có nút "Bật" chứ không bật hộp thoại của trình duyệt ngay.
+export function pushTime(prev: State, next: State) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'default' || read('rok.push')) return false
+  if (!longJob(prev, next)) return false
+  write('rok.push', '1')
+  return true
+}
+// Việc vừa giao mà đồng minh giúp rút ngắn được (mọi việc hẹn giờ trừ luyện đan): tự nhờ giúp như bấm bàn tay của RoK
+export const newHelps = (prev: State, next: State) =>
+  (['build', 'train', 'heal', 'study', 'forge'] as const).filter(k => {
+    const j = jobOf(next, k)
+    return !!j && j.startAt !== jobOf(prev, k)?.startAt
   })

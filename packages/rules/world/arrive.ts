@@ -2,9 +2,10 @@
 // advance.ts gọi lúc hành quân tới nơi.
 import { tide } from '../atlas.ts'
 import { fight, might } from '../combat.ts'
-import { pushReport, sideOf, snap } from '../core/battle.ts'
-import { elderLevel, lead } from '../core/stats.ts'
-import { HOUR, compact, noGain } from '../core/util.ts'
+import { beastExp, beastLoot, marchSide, marchSnap, pushReport, snap } from '../core/battle.ts'
+import { lead, unitOf } from '../core/stats.ts'
+import { HOUR, noGain } from '../core/util.ts'
+import type { Army, March, State } from '../core/types.ts'
 import {
   BOSSES,
   GARRISON_MAX,
@@ -13,12 +14,17 @@ import {
   RESOURCES,
   SEASON_BOSS,
   TIDE_MINE,
+  TERR_GATHER,
   TIER,
+  UNITS,
+  WILD_LOOT,
+  WILD_RESPAWN,
   type Reward,
 } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
 import {
   allyGifts,
+  allyOf,
   garrison,
   setSpot,
   sideKey,
@@ -32,7 +38,7 @@ import {
   type World,
 } from './base.ts'
 import { addArmy, carryOf, combine, split, flipRounds } from './fight.ts'
-import { bank, hold, spotOf, bossSlice } from './points.ts'
+import { bank, claimsOf, hold, ownerAt, spotOf, bossSlice, wildSide } from './points.ts'
 
 type Arrived = { changed: Players; world: World }
 
@@ -44,29 +50,32 @@ export function spotArrive(ps: Players, w: World, map: MapCtx, group: Party, at:
     changed: new Map(group.map(([p2, s2, m2]) => [p2, turnBack(s2, m2, at)])),
     world: w,
   })
-  if (m.task === 'gather') return !sp.left || (sp.until ?? 0) > at ? back() : gather(w, map, group[0], sp, at)
+  if (m.task === 'gather') return !sp.left || (sp.until ?? 0) > at ? back() : gather(ps, w, map, group[0], sp, at)
   if (m.task === 'hit')
     return !BOSSES[map.atlas.points[m.target.i].lv] || (sp.until ?? 0) > at
       ? back()
       : hitBoss(ps, w, map, group, sp, at)
+  if (m.task === 'hunt') return (sp.until ?? 0) > at ? back() : hunt(w, map, group[0], at) // người khác vừa hạ: về
   return take(ps, w, map, group, sp, at) ?? back()
 }
 
 // Bên đánh: một đội, hoặc cả nhóm kết trận gộp làm một (công pháp của đội mở trận)
 function attackers(group: Party) {
   const [, att, m] = group[0]
-  const parts = group.map(([, s2, m2]) => sideOf(s2, m2.elder, compact(m2.army)))
+  const parts = group.map(([, s2, m2]) => marchSide(s2, m2))
   const { side, at: offs } = combine(parts)
-  return { parts, side, offs, leadSnap: snap(side, m.elder, elderLevel(att.elders[m.elder])) }
+  return { parts, side, offs, leadSnap: marchSnap(att, side, m) }
 }
 
-// Khai mỏ: mang về theo sức mang (linh triều ở vùng này khai nhanh hơn); mỏ cạn thì hồi đầy sau MINE_RESPAWN
-function gather(w: World, map: MapCtx, [pid, att, m]: Party[number], sp: Spot, at: number): Arrived {
+// Khai mỏ: mang về theo sức mang (linh triều ở vùng này, lãnh thổ minh mình: khai nhanh hơn); mỏ cạn thì hồi đầy sau MINE_RESPAWN
+function gather(ps: Players, w: World, map: MapCtx, [pid, att, m]: Party[number], sp: Spot, at: number): Arrived {
   const i = m.target.i,
     p = map.atlas.points[i]
   const amount = Math.min(carryOf(m.army), sp.left!)
   const t = tide(map.atlas, at)
-  const rate = MINE_RATE[p.lv - 1] * (t.active && t.region === p.region ? 1 + TIDE_MINE : 1)
+  const mine = allyOf(w, pid)?.id
+  const terr = mine !== undefined && ownerAt(claimsOf(ps, w, map.atlas, at), p.x, p.y) === mine ? 1 + TERR_GATHER : 1
+  const rate = MINE_RATE[p.lv - 1] * (t.active && t.region === p.region ? 1 + TIDE_MINE : 1) * terr
   const end = at + Math.round((amount / rate) * HOUR)
   const res = RESOURCES[i % RESOURCES.length]
   const changed: Players = new Map()
@@ -151,10 +160,65 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
       }
       changed.set(who, mail(st, { at, k: 'boss', a: [p.lv, n + 1, Math.round(share * 100)], gift }))
     })
-  let dead = setSpot(w, i, { until: at + boss.respawn })
+  let dead = { ...setSpot(w, i, { until: at + boss.respawn }), bosses: (w.bosses ?? 0) + 1 }
   for (const [id2, d] of Object.entries(dmgs))
     dead = bank(dead, sideKey(w, Number(id2)), ((SEASON_BOSS[p.lv] ?? 0) * d) / sum)
   return { changed, world: allyGifts(ps, changed, dead, Object.keys(dmgs).map(Number), p.lv, at) }
+}
+
+// Săn yêu thú giới: một đội đánh cả con; thắng thì chiến lợi phẩm (gấp WILD_LOOT yêu thú vùng) + kinh nghiệm theo đội về nhà,
+// con đó hồi sau WILD_RESPAWN; thua thì đội mang quân còn lại về
+function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Arrived {
+  const i = m.target.i,
+    p = map.atlas.points[i]
+  const foe = wildSide(map.atlas, i)!
+  const me = marchSide(s, m)
+  const f = fight(me, foe, m.seed)
+  const { left, hurt } = split(m, f.rounds.at(-1)?.n[0] ?? me.troops.map(t => t.n), 0)
+  const exp = Math.round(beastExp(p.lv) * (1 + lead(s, m.elder, 'exp')) * (f.win ? 1 : 0))
+  const res = f.win
+    ? Object.fromEntries(
+        RESOURCES.map(r => [r, Math.round(beastLoot(p.lv) * WILD_LOOT * (1 + lead(s, m.elder, 'loot')))]),
+      )
+    : {}
+  const gain = { ...noGain(), res, exp }
+  let x = pushReport(s, {
+    at,
+    kind: 'spot',
+    i,
+    spot: p.kind,
+    win: f.win,
+    hurt,
+    dead: {},
+    gain,
+    fights: [{ a: marchSnap(s, me, m), b: snap(foe, undefined, p.lv), rounds: f.rounds }],
+  })
+  x = withMarch(x, { ...m, back: left, hurt, gain, report: x.nextId - 1, returnAt: at + travel(m) })
+  if (f.win) x = { ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1 } }
+  return { changed: new Map([[pid, x]]), world: f.win ? setSpot(w, i, { until: at + WILD_RESPAWN }) : w }
+}
+
+// Thế lực của một đội (đệ tử × thế lực mỗi bậc) và cộng chiến công
+const pow = (a: Army) => UNITS.reduce((n, u) => n + (a[u] ?? 0) * TIER[unitOf(u).tier].power, 0)
+const addKp = (s: State, n: number): State =>
+  n >= 1 ? { ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + Math.round(n) } } : s
+
+// Chiến công trận tranh điểm: mỗi bên được thế lực đệ tử bên kia hạ, chia theo thế lực đội mình mang tới
+function takeKp(
+  changed: Players,
+  group: Party,
+  foes: [number, March][],
+  n0: number[],
+  n1: number[],
+  aOffs: number[],
+  offs: number[],
+) {
+  const killedDef = foes.reduce((n, [, x], j) => n + pow(split(x, n1, offs[j]).hurt), 0)
+  const killedAtt = group.reduce((n, [, , m2], j) => n + pow(split(m2, n0, aOffs[j]).hurt), 0)
+  const aPow = group.reduce((n, [, , m2]) => n + pow(m2.army), 0) || 1,
+    dPow = foes.reduce((n, [, x]) => n + pow(x.army), 0) || 1
+  for (const [p2, , m2] of group) changed.set(p2, addKp(changed.get(p2)!, (killedDef * pow(m2.army)) / aPow))
+  for (const [id2, x] of foes) changed.set(id2, addKp(changed.get(id2)!, (killedAtt * pow(x.army)) / dPow))
 }
 
 // Chiếm điểm: trống hoặc của phe mình → đóng quân (tới khi đầy; đầy rồi thì null: quay về); của phe khác → đánh cả quân đang đóng
@@ -163,6 +227,7 @@ function take(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at: nu
   const i = m.target.i,
     p = map.atlas.points[i]
   const me = sideKey(w, pid)
+  if (sp.own && sp.own > 0 && sp.own !== me && allyOf(w, pid)?.naps?.includes(sp.own)) return null // minh ước: về
   const { side: mine, offs: aOffs, leadSnap: lead0 } = attackers(group)
   const changed: Players = new Map()
   const gar = garrison(ps, i)
@@ -189,12 +254,12 @@ function take(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at: nu
     station(group)
     return { changed, world: sp.own === me ? w : hold(w, map, i, { own: me, since: at }, at) }
   }
-  const { side: def, at: offs } = combine(foes.map(([id2, x]) => sideOf(ps.get(id2)!, x.elder, compact(x.army))))
+  const { side: def, at: offs } = combine(foes.map(([id2, x]) => marchSide(ps.get(id2)!, x)))
   const f = fight(mine, def, m.seed)
   const last = f.rounds.at(-1)
   const n0 = last?.n[0] ?? mine.troops.map(t => t.n),
     n1 = last?.n[1] ?? def.troops.map(t => t.n)
-  const dSnap = snap(def, foes[0][1].elder, elderLevel(ps.get(foes[0][0])!.elders[foes[0][1].elder]))
+  const dSnap = marchSnap(ps.get(foes[0][0])!, def, foes[0][1])
   group.forEach(([p2, s2, m2], j) => {
     const a = split(m2, n0, aOffs[j])
     changed.set(
@@ -255,5 +320,6 @@ function take(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at: nu
     )
     changed.set(id2, ds)
   })
+  takeKp(changed, group, foes, n0, n1, aOffs, offs)
   return { changed, world: f.win ? hold(w, map, i, { own: me, since: at }, at) : w }
 }

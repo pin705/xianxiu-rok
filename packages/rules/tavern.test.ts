@@ -36,11 +36,14 @@ test('Chiêu Hiền Đài: lượt miễn phí mở ngay, sau đó chờ đủ g
   s = run({ ...s, items: addItems(s.items, { nganDuyen: 3 }) }, { type: 'draw', kind: 'silver', n: 3 })
   assert.equal(s.items.nganDuyen, 0)
   // client: mầm 0 — trừ thiếp, không tự bịa quà
-  const c = run({ ...s, seed: 0, items: addItems(s.items, { nganDuyen: 1 }), tavern: { ...s.tavern, last: null } }, {
-    type: 'draw',
-    kind: 'silver',
-    n: 1,
-  })
+  const c = run(
+    { ...s, seed: 0, items: addItems(s.items, { nganDuyen: 1 }), tavern: { ...s.tavern, last: null } },
+    {
+      type: 'draw',
+      kind: 'silver',
+      n: 1,
+    },
+  )
   assert.equal(c.items.nganDuyen, 0)
   assert.equal(c.tavern.last, null)
   // chưa đủ tầng thì khoá

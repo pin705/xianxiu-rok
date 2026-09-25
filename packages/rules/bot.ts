@@ -5,6 +5,7 @@ import {
   BAG,
   BAG_IDS,
   BEASTS,
+  DEPUTY_HALL,
   ELDER_IDS,
   ELDER_MAX,
   FEST_IDS,
@@ -24,14 +25,17 @@ import {
   UNITS,
   apply,
   batch,
+  capArmy,
   cost,
   count,
+  deputyOf,
   elderLevel,
   enemyOf,
   fight,
   gearOf,
   sideOf,
   storage,
+  PROTECT,
   talentPoints,
   talentUsed,
   tierOpen,
@@ -100,6 +104,8 @@ export function perks(start: State): State {
   }
   tryDo({ type: 'login' })
   tryDo({ type: 'vipChest' })
+  tryDo({ type: 'towerChest' })
+  if (!s.dao) tryDo({ type: 'dao', id: 'tranTong' }) // đạo thống: Trận Tông (xây nhanh, thủ chắc)
   // Chiêu Hiền Đài: mở hết thiếp (miễn phí + trong túi), thu nhận khi đủ tín vật, nâng sao người mạnh nhất
   for (const kind of ['silver', 'gold'] as const) while (tryDo({ type: 'draw', kind, n: 1 }));
   for (const e of ELDER_IDS) tryDo({ type: 'recruit', elder: e })
@@ -107,12 +113,16 @@ export function perks(start: State): State {
   for (const job of ['build', 'study', 'train', 'heal', 'forge'] as const) tryDo({ type: 'finish', job })
   for (const id of FEST_IDS) festRewards(id).forEach((_, i) => tryDo({ type: 'fest', id, i }))
   for (const id of ACH_IDS) while (tryDo({ type: 'ach', id }));
+  // nang tài nguyên: để trong túi (không bị cướp), chỉ mở khi kho còn dưới phần được bảo hộ — như người chơi khéo
   for (const id of BAG_IDS) {
     const d = BAG[id]
-    if (d.use === 'res' && s.items[id]) tryDo({ type: 'use', item: id, n: s.items[id]! })
+    if (d.use !== 'res') continue
+    while (s.items[id] && s.res[d.res] + d.n <= PROTECT * storage(s) && tryDo({ type: 'use', item: id, n: 1 }));
   }
   if (!s.buffs.some(b => b.src === 'phu.prod'))
     (['tuLinh24', 'tuLinh8'] as const).some(id => s.items[id] && tryDo({ type: 'use', item: id, n: 1 }))
+  // Tạp Dịch Lệnh: thuê ngay khi chưa có tạp dịch thứ hai
+  if (s.items.tapDich48 && (s.builder2 ?? 0) <= s.time) tryDo({ type: 'use', item: 'tapDich48', n: 1 })
   const top = idleElders(s).find(e => elderLevel(s.elders[e]) < ELDER_MAX)
   for (const id of ['kinhThu8k', 'kinhThu2k', 'kinhThu500'] as const)
     if (top && s.items[id]) tryDo({ type: 'use', item: id, n: s.items[id]!, elder: top })
@@ -154,7 +164,7 @@ export function turn(start: State, o: BotOpts = {}): State {
       ? winChance(st, e, army, t, pill) >= SURE_WIN
       : t === 'trib'
         ? true
-        : fight(sideOf(st, e, army), enemyOf(st, t), st.seed).win
+        : fight(sideOf(st, e, army, deputyOf(st, e)), enemyOf(st, t), st.seed).win
   const sumType = (t: string) =>
     UNITS.filter(u => unitOf(u).type === t).reduce((sum, u) => sum + s.troops[u] * unitOf(u).tier, 0)
 
@@ -204,6 +214,17 @@ export function turn(start: State, o: BotOpts = {}): State {
       const g = owned[i]
       if (g && gearOf(s, e) !== g && tryDo({ type: 'equip', gear: g, elder: e })) acted = true
     })
+    // phó trưởng lão (từ DEPUTY_HALL): người mạnh nhì làm phó cho người mạnh nhất (xếp trên mọi trưởng lão, kể cả đang đi)
+    const [main, second] = ELDER_IDS.filter(e => s.elders[e] !== undefined).sort(
+      (a, b) => (s.elders[b] ?? 0) - (s.elders[a] ?? 0),
+    )
+    if (
+      second &&
+      s.levels.chuDien >= DEPUTY_HALL &&
+      s.pairs?.[main] !== second &&
+      tryDo({ type: 'pair', elder: main, deputy: second })
+    )
+      acted = true
     // thiên phú: công trước, rồi thể, rồi đạo
     for (const e of idleElders(s))
       while (talentUsed(s, e) < talentPoints(s, e)) {
@@ -319,8 +340,11 @@ export function turn(start: State, o: BotOpts = {}): State {
 // ---------- Phân đà NPC của giới (server gọi: mỗi NPC_EVERY một lượt) ----------
 
 // Lúc lập: đội thủ vừa phải, không khiên tân thủ (là mục tiêu cho người chơi ngay từ đầu)
+// Trưởng lão cầm đầu mỗi phân đà: một trong sáu vị đầu, theo tên (phân đà khác nhau thì đội hình khác nhau, cả ở Luận Kiếm Đài)
+const npcLead = (name: string) => ELDER_IDS[[...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 6]
 export function npcState(now: number, name: string, seat: { x: number; y: number }): State {
   const s = newGame(now, name)
+  const lead = npcLead(name)
   return {
     ...s,
     name,
@@ -328,8 +352,8 @@ export function npcState(now: number, name: string, seat: { x: number; y: number
     levels: levelsAt(NPC_HALL),
     trib: TRIBS.filter(t => t.hall < NPC_HALL).length,
     shield: 0,
-    guard: 'thanhPhong',
-    elders: { thanhPhong: expAt(NPC_ELDER) },
+    guard: lead,
+    elders: { [lead]: expAt(NPC_ELDER) },
     troops: { ...s.troops, kiem2: NPC_TROOPS, phap2: NPC_TROOPS, the2: NPC_TROOPS },
     res: { linhThach: NPC_RES, linhThao: NPC_RES, linhKhoang: NPC_RES },
   }
@@ -344,7 +368,8 @@ export function npcHold(s: State, a: Atlas, w: World): WorldAction | null {
   const vein = a.points.find(p => p.kind === 'vein' && p.region === region && w.spots[p.i]?.own === undefined)
   const e = firstIdle(s)
   if (!vein || !e) return null
-  const army = Object.fromEntries(UNITS.filter(u => s.troops[u] >= 2).map(u => [u, Math.floor(s.troops[u] / 2)]))
+  const half = Object.fromEntries(UNITS.filter(u => s.troops[u] >= 2).map(u => [u, Math.floor(s.troops[u] / 2)]))
+  const army = capArmy(s, e, half) // vừa trận dung
   return Object.keys(army).length ? { type: 'go', i: vein.i, task: 'take', elder: e, army } : null
 }
 
@@ -353,7 +378,7 @@ export function npcRevenge(s: State, ps: Players, now: number): WorldAction | nu
   const foe = [...s.foes].reverse().find(f => f.at + REVENGE_TIME > now)
   const target = foe && ps.get(foe.pid)
   const e = firstIdle(s)
-  const army = homeArmy(s)
+  const army = e ? capArmy(s, e, homeArmy(s)) : {}
   if (!foe || !target || !e || !count(army) || raidChance(s, e, army, scout(target).side) < SURE_WIN) return null
   return { type: 'raid', pid: foe.pid, elder: e, army }
 }

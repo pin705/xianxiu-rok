@@ -5,19 +5,22 @@
     FESTS,
     FEST_IDS,
     advance,
+    festBought,
     festCalendar,
     festDone,
     festEnds,
+    festGot,
     festOpen,
     festPoints,
     festRewards,
+    festTokens,
     festValue,
     type FestId,
     type Metric,
   } from '@rok/rules'
   import { Icon, type IconName } from '@rok/art'
   import { Badge, Bag, Button, Card, Meter, Sheet } from './ui'
-  import { L, num } from './lib'
+  import { L, num, sfx } from './lib'
   import { useGame } from './game'
 
   let { open, onclose }: { open: boolean; onclose: () => void } = $props()
@@ -31,6 +34,9 @@
     nhatKhoa: 'scroll',
     thatNhat: 'star',
     tanThu: 'flag',
+    tongLenh: 'kimDuyen',
+    khaiVu: 'globe',
+    binhThe: 'skull',
     tranhBa: 'swords',
     sanYeu: 'bolt',
     thoMoc: 'hammer',
@@ -40,6 +46,8 @@
     tangKinh: 'scroll',
     tramYeu: 'skull',
     lienTram: 'shield',
+    dongTam: 'people',
+    tranhPhong: 'swords',
   }
   // lịch 7 ngày (sự kiện tương lai chưa mở vẫn hiện để người chơi chuẩn bị, như Event Calendar của RoK)
   const cal = $derived(
@@ -48,16 +56,33 @@
   const weekday = (day: number) => L.fest.weekday[(((day - 4) % 7) + 7) % 7]
   // sự kiện của bảng khác (Nhật Khóa ở bảng Nhiệm vụ ngày) không lặp lại ở đây
   const list = $derived(FEST_IDS.filter(id => !FESTS[id].panel && festOpen(s, id, now)))
-  const waiting = (id: FestId) => festRewards(id).filter((_, i) => festDone(s, id, i) && !got(id, i)).length
-  const got = (id: FestId, i: number) => !!s.fest[id]?.got.includes(i)
+  // kho đổi: một chấm khi có món đổi được (không đếm từng món, không "nhận tất cả")
+  const shop = (id: FestId) => FESTS[id].kind === 'shop'
+  const waiting = (id: FestId) => {
+    const n = festRewards(id).filter((_, i) => festDone(s, id, i) && !got(id, i)).length
+    return shop(id) ? Math.min(1, n) : n
+  }
+  const got = (id: FestId, i: number) => festGot(s, id, i)
   let pick = $state<FestId | null>(null)
   const cur = $derived(pick && list.includes(pick) ? pick : (list[0] ?? null))
   const def = $derived(cur ? FESTS[cur] : null)
   const stage = $derived(
-    cur && def?.kind === 'points' ? def.stages[Math.min(s.fest[cur]?.stage ?? 0, def.stages.length - 1)] : null,
+    cur && (def?.kind === 'points' || def?.kind === 'shop')
+      ? def.stages[Math.min(s.fest[cur]?.stage ?? 0, def.stages.length - 1)]
+      : null,
   )
   const pts = $derived(cur ? festPoints(s, cur) : 0)
   const claim = (i: number) => cur && act({ type: 'fest', id: cur, i }, 'reward')
+  // Nhận tất cả: mọi quà đã đủ điều kiện ở mọi sự kiện đang mở trong bảng này
+  const ready = $derived(list.filter(id => !shop(id)).reduce((n, id) => n + waiting(id), 0))
+  function claimAll() {
+    let any = false
+    for (const id of list.filter(x => !shop(x)))
+      festRewards(id).forEach((_, i) => {
+        if (festDone(s, id, i) && !got(id, i)) any = !!act({ type: 'fest', id, i }) || any
+      })
+    if (any) sfx('reward')
+  }
 </script>
 
 <Sheet {open} {onclose} title={L.fest.title}>
@@ -74,6 +99,8 @@
         </button>
       {/each}
     </div>
+
+    {#if ready > 1}<Button variant="gold" wide onclick={claimAll}>{L.mail.claimAll(ready)}</Button>{/if}
 
     {#if cur && def}
       {@const f = s.fest[cur]!}
@@ -122,6 +149,36 @@
                         >{L.fest.claim}</Button
                       >{/if}
                   </div>
+                </div>
+              </Card>
+            </li>
+          {/each}
+        </ul>
+      {:else if def.kind === 'shop'}
+        <p class="row between"><b class="pts t-num t-gold">{L.fest.tokens(num(festTokens(s, cur)))}</b></p>
+        {#if stage}
+          <Card>
+            <ul class="today">
+              {#each Object.entries(stage) as [m, v] (m)}
+                <li class="t-small">{L.fest.per(v ?? 0, L.fest.unit[m as Metric])}</li>
+              {/each}
+            </ul>
+          </Card>
+        {/if}
+        <ul class="stack rows">
+          {#each def.shop as it, i (i)}
+            {@const left = it.max - festBought(s, cur, i)}
+            <li>
+              <Card tone={left && festDone(s, cur, i) ? 'glow' : undefined}>
+                <div class="row between">
+                  <span class="stack" style:--gap="2px"
+                    ><Bag res={it.reward.res} items={it.reward.items} size="sm" /><small class="t-tiny t-soft"
+                      >{left ? L.fest.left(left, it.max) : L.fest.soldOut}</small
+                    ></span
+                  >
+                  <Button size="sm" disabled={!left || !festDone(s, cur, i)} onclick={() => claim(i)}
+                    >{L.fest.buy(num(it.price))}</Button
+                  >
                 </div>
               </Card>
             </li>

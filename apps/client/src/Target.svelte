@@ -22,6 +22,8 @@
     tierFor,
     towerReward,
     towerType,
+    towerChest,
+    dayOf,
     winChance,
     type Army,
     type ElderId,
@@ -31,7 +33,7 @@
   } from '@rok/rules'
   import { Portrait } from '@rok/art'
   import ArmyPick from './Army.svelte'
-  import { Bag, Card, Medal, Section, Sheet, Tag } from './ui'
+  import { Bag, Button, Card, Medal, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num } from './lib'
   import { useGame } from './game'
 
@@ -169,6 +171,23 @@
       {/if}
     </Section>
 
+    {#if target.kind === 'tower' && game.tower > 0}
+      <!-- Tĩnh tọa ngộ đạo: rương ngày theo tầng đã qua -->
+      {@const chest = towerChest(game.tower)}
+      <Section title={L.tower.chest}>
+        <div class="row between">
+          <Bag items={chest.items} size="sm" />
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={game.towerDay === dayOf(now)}
+            onclick={() => g.act({ type: 'towerChest' }, 'reward')}
+            >{game.towerDay === dayOf(now) ? L.tower.chestDone : L.tower.chestOpen}</Button
+          >
+        </div>
+        <small class="t-tiny t-soft">{L.tower.chestHint}</small>
+      </Section>
+    {/if}
     <div class="mt-3">
       {#if err === 'locked'}
         <Tag icon="lock" tone="bad">{need}</Tag>
@@ -190,6 +209,7 @@
           disabled={full || busy}
           onsubmit={(e, a) => onmarch(target!, e, a)}
           {onrecruit}
+          counter={info ? counter(info.type) : undefined}
         />
       {/if}
     </div>

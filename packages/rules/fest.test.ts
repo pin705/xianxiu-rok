@@ -14,6 +14,8 @@ import {
   festPoints,
   festProgress,
   festReady,
+  festTokens,
+  festBought,
   metric,
   migrate,
   newGame,
@@ -129,6 +131,27 @@ test('sự kiện tân thủ tính theo giờ từ lúc lập tông môn (lập 
   assert.equal(festOpen(advance(s, t), 'tanThu', t), true)
   assert.equal(advance(s, t).fest.tanThu!.stage, 0) // vẫn là ngày đầu
   assert.equal(festOpen(advance(s, late + 7 * DAY + 1), 'tanThu', late + 7 * DAY + 1), false)
+})
+
+test('Tông Lệnh Bảo Khố: làm việc ra lệnh bài, đổi quà (trừ lệnh bài), mỗi món tối đa max lần, một chấm đỏ', () => {
+  let s = newGame(MON)
+  const d = FESTS.tongLenh
+  assert.ok(d.kind === 'shop')
+  assert.equal(festTokens(s, 'tongLenh'), 0)
+  assert.equal(festError(s, 'tongLenh', 0), 'not_done')
+  // nghiên cứu, xây: mỗi tầng ra lệnh bài theo stages
+  s = { ...s, tech: { tuLinh: 5 }, levels: { ...s.levels, tuLinhTran: 3 } }
+  const earned = 5 * d.stages[0].tech! + 3 * d.stages[0].build!
+  assert.equal(festTokens(s, 'tongLenh'), earned)
+  assert.equal(festReady(s, s.time) >= 1, true)
+  const ng = d.shop.findIndex(x => x.reward.items?.nganDuyen) // Ngân thiếp: 10 lệnh bài, tối đa 3
+  s = run(s, { type: 'fest', id: 'tongLenh', i: ng })
+  assert.equal(s.items.nganDuyen, 1)
+  assert.equal(festTokens(s, 'tongLenh'), earned - d.shop[ng].price)
+  s = run(run(s, { type: 'fest', id: 'tongLenh', i: ng }), { type: 'fest', id: 'tongLenh', i: ng })
+  assert.equal(festBought(s, 'tongLenh', ng), 3)
+  assert.equal(festError(s, 'tongLenh', ng), 'claimed', 'hết hạn mức')
+  assert.equal(festError(s, 'tongLenh', 0), 'not_done', 'không đủ lệnh bài')
 })
 
 test('quà trưởng lão đã có thì đổi thành kinh nghiệm, không mất', () => {

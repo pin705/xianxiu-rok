@@ -6,6 +6,7 @@
     DO_KIEP,
     GUARD_STEP,
     HO_PHAP,
+    MARKET_HALL,
     MAX_LEVEL,
     PHA_CANH,
     PHA_KIEP,
@@ -46,8 +47,12 @@
   import Library from './Library.svelte'
   import Train from './Train.svelte'
   import Trade from './Trade.svelte'
-  import { L, clock, num, type PanelTab } from './lib'
+  import { unlocked } from './notices'
+  import Merchant from './Merchant.svelte'
+  import DaoPick from './DaoPick.svelte'
+  import { L, LANG, clock, num, type PanelTab } from './lib'
   import { useGame } from './game'
+  import { social } from './social.svelte'
 
   let {
     id,
@@ -145,6 +150,27 @@
       <Library />
     {:else if tab === 'trade'}
       <Trade />
+      <Merchant />
+      <!-- Phường thị: chợ ký gửi giữa các tông môn (từ tầng MARKET_HALL) -->
+      <Card tone="silk">
+        <div class="row">
+          <Icon name="people" size={26} />
+          <span class="grow stack" style:--gap="2px"
+            ><b>{L.market.title}</b><small class="t-tiny t-soft"
+              >{game.levels.chuDien >= MARKET_HALL ? L.market.lore : L.market.locked(MARKET_HALL)}</small
+            ></span
+          >
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={game.levels.chuDien < MARKET_HALL}
+            onclick={() => {
+              onclose() // desktop: hai ngăn kéo chồng nhau thì Phường thị nằm dưới bảng công trình
+              social.market = true
+            }}>{L.market.open}</Button
+          >
+        </div>
+      </Card>
     {:else if tab === 'forge'}
       <Forge />
     {:else if tab === 'guard'}
@@ -286,8 +312,18 @@
           >
             {lv ? L.panel.upgrade : L.panel.build}
           </Button>
+          <!-- xong lúc mấy giờ (giờ máy); Chủ điện: lên tầng sau mở ra gì -->
+          <p class="center t-tiny t-soft mt-2">
+            {L.panel.doneAt(
+              new Date(now + buildTime(game, id, next)).toLocaleTimeString(LANG, {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            )}{#if id === 'chuDien' && unlocked(next).length}<br />{unlocked(next)[0].text}{/if}
+          </p>
         </div>
       {/if}
+      {#if id === 'chuDien'}<DaoPick />{/if}
       {#if id === 'chuDien' && hall >= REBIRTH_HALL}
         <!-- Luân hồi -->
         <Section title={L.rebirth.title}>

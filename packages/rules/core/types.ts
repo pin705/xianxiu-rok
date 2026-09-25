@@ -20,6 +20,7 @@ import {
   type FestId,
   type Metric,
   type AchId,
+  type DaoId,
 } from '../data.ts'
 
 export type Troops = Record<UnitId, number>
@@ -36,11 +37,13 @@ export type Talent = [atk: number, hp: number, skill: number]
 // until: lúc hết (due() gỡ đúng giờ, nên sản lượng trước/sau tính đúng); 0 = giữ tới khi server gỡ. src: nguồn, mỗi nguồn một buff
 export type Buff = { key: Bonus; v: number; until: number; src: string }
 // pvp: i = mã người chơi bị cướp · spot: i = chỉ số điểm trên bản đồ giới (atlas.points) · trib: kiếp vân, i = lần độ kiếp
-export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp' | 'spot' | 'trib'; i: number }
+// flag: trận kỳ của minh khác (i: mã trận kỳ) — đội tới phá
+export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp' | 'spot' | 'trib' | 'flag'; i: number }
 export type Gain = { res: Partial<Bag>; items: Items; elder?: ElderId; exp: number }
 export type March = {
   id: number
   elder: ElderId
+  deputy?: ElderId // phó trưởng lão đi cùng (ghép lúc xuất quân nếu đang rảnh)
   army: Army
   target: Target
   seed: number
@@ -49,7 +52,7 @@ export type March = {
   returnAt: number // 0: chưa hẹn (đi cướp: server giải trận lúc tới nơi rồi mới biết giờ về)
   foe?: string // đi cướp: tên tông môn bên kia (để hiện)
   path?: { x: number; y: number }[] // đi trên bản đồ giới: các điểm dừng (đi, …cổng, tới) — theo ô
-  task?: 'take' | 'gather' | 'hit' | 'aid' // điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương; aid: viện binh nhà đồng minh
+  task?: 'take' | 'gather' | 'hit' | 'hunt' | 'aid' // điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương · săn yêu thú; aid: viện binh nhà đồng minh
   rally?: number // thuộc kết trận này (mọi đội cùng tới lúc hẹn, đánh như một bên)
   spot?: string // loại điểm (để hiện tên): vein, mine, boss, gate, heaven
   stay?: boolean // đang đóng quân ở điểm (chỉ về khi bị đánh bật hoặc gọi về)
@@ -61,11 +64,16 @@ export type March = {
   pill?: PillId // kiếp vân: đan độ kiếp đã dùng lúc tụ
   foil?: number // kiếp vân: số lần bị cướp trúng trong lúc tụ (phá kiếp)
 }
-export type Snap = { elder?: ElderId; level: number; troops: { type: UnitType; tier: Tier; n: number }[] }
+export type Snap = {
+  elder?: ElderId
+  deputy?: ElderId
+  level: number
+  troops: { type: UnitType; tier: Tier; n: number }[]
+}
 export type Report = {
   id: number
   at: number
-  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena'
+  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena' | 'legion' // legion: đợt i Ma triều
   i: number
   spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
@@ -91,6 +99,9 @@ export type Stats = {
   gathered?: number // tài nguyên khai mỏ mang về
   drawn?: number // lần mở thiếp Chiêu Hiền Đài
   allied?: number // lượt cung phụng Đại Trận + lượt giúp đỡ đồng minh
+  duels?: number // trận Luận Kiếm Đài đã đánh (bên đánh)
+  duelWins?: number
+  kp?: number // chiến công (Kill Points của RoK): thế lực đệ tử địch hạ được trong trận giữa các tông môn
 }
 // Một sự kiện của trung tâm sự kiện: lượt đang mở (key), giai đoạn, chỉ số lúc bắt đầu giai đoạn, điểm đã dồn từ giai đoạn
 // trước, quà đã nhận, số ngày đăng nhập trong lượt (và ngày đếm gần nhất)
@@ -133,9 +144,14 @@ export type Arena = {
   left: number
   chest: number
   log: ArenaLog[]
+  ky?: number // Kiếm Ý: tiền của Luận Kiếm Thương Điếm
+  revenge?: number // ngày (dayOf) đã phục thù
+  buys?: { week: number; n: number[] } // đã mua mỗi món của Thương Điếm trong tuần
 }
 export type MobTask = { m: Metric; n: number; pts: number; base: number; until: number }
 export type Mob = { week: number; task: MobTask | null; day: number; took: number; got: number[] }
+// Mê vụ: hàng rows[cy] bit cx = ô sương đã khai; fly: linh điểu đang bay — các ô sương tan lúc at, điểu về lúc back
+export type Fog = { rows: number[]; fly: { cells: number[]; at: number; back: number }[] }
 // Đội đang kéo tới: mã hành quân và người chơi bên kia (để gỡ đúng lúc trận giải), tên tông môn, lúc tới nơi
 export type Incoming = { id: number; pid: number; foe: string; at: number }
 // Thư: chữ dựng ở client theo khoá k và tham số a (@rok/i18n mailText), quà nhận đúng một lần.
@@ -148,9 +164,20 @@ export type MailArgs = {
   boss: [lv: number, rank: number, pct: number]
   allyGift: [lv: number, gift: number] // Minh lễ: người trong minh hạ yêu vương cấp lv, quà cấp gift
   arenaTop: [rank: number] // hạng tuần Luận Kiếm Đài
+  titled: [title: string, lord: string] // được Giới Chủ sắc phong
+  boon: [lord: string] // Giới Chủ ban Thiên Ân lễ
+  mobTop: [rank: number] // hạng Minh vụ của minh mình khi hết tuần
+  book: [ch: number] // chương Thiên Đạo Biên Niên cả giới vừa hoàn thành
+  war: [win: 0 | 1, foe: string] // Luận Kiếm Minh Chiến: minh mình thắng / thua minh foe (hiệu)
   season: [season: number, rank: number, up: 0 | 1]
   sold: [good: string, n: number, net: number]
   unsold: [good: string, n: number]
+  razed: [tag: string, left: number, x: number, y: number] // đội mình đánh trận kỳ minh tag: còn left % (0: đổ)
+  flagHit: [who: string, left: number, x: number, y: number] // trận kỳ minh mình bị who đánh: còn left %
+  legion: [pts: number, waves: number] // Ma Triều Công Sơn xong: điểm của mình, số đợt giữ được
+  legionTop: [rank: number] // minh mình đứng hạng rank Ma Triều Công Sơn
+  allyWelcome: [name: string] // lễ nhập minh lần đầu
+  supply: [who: string] // đồng minh who gửi tài nguyên qua Vận Linh Trận (ở phần quà)
 }
 export type MailKind = keyof MailArgs
 // Thư mới (chưa có id): a bắt buộc, đúng kiểu theo khoá
@@ -215,7 +242,19 @@ export type State = {
   contrib?: Contrib // cống hiến tiên minh (chưa từng góp / giúp: chưa có)
   mob?: Mob // Minh vụ đường (chưa từng nhận việc: chưa có)
   arena?: Arena // Luận Kiếm Đài (chưa từng vào: chưa có)
+  merchant?: { slot: number; bought: number[] } // Thương nhân vân du: lượt hàng đã mua món nào
+  pins?: { x: number; y: number; text: string }[] // chỗ đã ghi nhớ trên bản đồ giới (Bookmarks của RoK)
+  presets?: ({ elder: ElderId; army: Army } | null)[] // trận đồ đã lưu (3 ô)
+  pairs?: Partial<Record<ElderId, ElderId>> // phó trưởng lão ghép với từng chủ tướng
+  ap?: { n: number; at: number } // hành lực: còn n lúc at (hồi dần tới AP_MAX)
   frenzy?: number // cơn sát khí: vừa đi cướp, tới lúc này chưa dùng được Hộ Sơn Phù (như War Frenzy)
+  moved?: number // lần dời tông môn gần nhất (vào lãnh thổ tiên minh)
+  builder2?: number // tạp dịch thứ hai thuê tới lúc này (Tạp Dịch Lệnh)
+  joined?: number // lần đầu vào một tiên minh (đã nhận lễ nhập minh)
+  dao?: { id: DaoId; at: number } // đạo thống đang theo, chọn lúc at
+  towerDay?: number // ngày (dayOf) đã nhận rương Tĩnh tọa ngộ đạo
+  fog?: Fog // mê vụ đã khai (chưa có: chỉ quanh tông môn)
+  visited?: number[] // thôn trang / động phủ đã ghé (chỉ số trong sitesOf)
   born?: number // lúc lập tông môn (ms) — sự kiện tân thủ tính theo giờ từ đây (lập lúc 23h vẫn đủ 24 giờ ngày đầu)
 }
 
@@ -238,6 +277,7 @@ export type Err =
   | 'weak'
   | 'gone'
   | 'far'
+  | 'cap' // vượt trận dung của trưởng lão dẫn đội
   | 'friend'
   | 'taken'
   | 'full'

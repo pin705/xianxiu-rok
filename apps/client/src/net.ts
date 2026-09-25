@@ -356,14 +356,15 @@ export function createNet(h: Handlers, lang: string) {
       void send(a, true)
       return display
     },
-    // Thao tác có trận (bí cảnh, tháp, độ kiếp) hoặc không đảo lại được (luân hồi): chờ server
-    async send(a: Action | WorldAction): Promise<Ack> {
+    // Thao tác có trận (bí cảnh, tháp, độ kiếp) hoặc không đảo lại được (luân hồi): chờ server.
+    // quiet: việc tự làm thay người chơi (tự nhờ giúp) — lỗi thì thôi, không báo
+    async send(a: Action | WorldAction, quiet = false): Promise<Ack> {
       if (status !== 'online') {
-        h.error('offline')
+        if (!quiet) h.error('offline')
         return { ok: false, err: 'unavailable' }
       }
       const r = await send(a, false)
-      if (!r.ok) h.error(r.err)
+      if (!r.ok && !quiet) h.error(r.err)
       return r
     },
     ask,

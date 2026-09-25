@@ -8,11 +8,18 @@ import type { Battle } from '../battle'
 import { QUAKE, SWORD, ease, ringT, streakT } from './kit'
 import { flash, impact, punch } from './strikes'
 
-// Công pháp của trưởng lão bên `side`
-// Công pháp của trưởng lão bên side: mỗi loại một hiệu ứng (thêm loại công pháp ở rules thì thêm một dòng — thiếu là lỗi biên dịch)
+// Công pháp của trưởng lão bên side: mỗi loại một hiệu ứng (thêm loại công pháp ở rules thì thêm một dòng — thiếu là lỗi biên dịch).
+// Có phó trưởng lão thì công pháp của phó nổ ngay sau
 export function cast(b: Battle, side: number, dur: number) {
-  const sk = b.skills[side]
+  const sk = b.skills[side],
+    dep = b.deputies[side]
   if (sk) CASTS[sk.kind](b, side, dur)
+  if (dep)
+    b.add(
+      dur * 0.3,
+      () => {},
+      () => CASTS[dep.kind](b, side, dur * 0.7),
+    )
 }
 const CASTS: Record<Skill['kind'], (b: Battle, side: number, dur: number) => void> = {
   // Mưa kiếm: phi kiếm cắm xuống từng đội địch, vệt nét khô kéo sau chuôi

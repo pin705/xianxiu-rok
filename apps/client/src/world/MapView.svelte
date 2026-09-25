@@ -131,7 +131,15 @@
 
 <div class="top row">
   {#if toggle}{@render toggle()}{/if}
-  <span class="grow"><Tag icon="flag">{L.map.slots(game.marches.length, marchSlots(game))}</Tag></span>
+  <!-- điện thoại hẹp: chỉ "0/2" (đủ chỗ cho nút gạt + hai nút), chữ đủ đọc bằng trình đọc màn hình -->
+  <span class="grow slots" title={L.map.slots(game.marches.length, marchSlots(game))}
+    ><Tag icon="flag"
+      ><span class="long">{L.map.slots(game.marches.length, marchSlots(game))}</span><span
+        class="short"
+        aria-hidden="true">{game.marches.length}/{marchSlots(game)}</span
+      ></Tag
+    ></span
+  >
   {#if game.levels.chuDien >= PVP_HALL}<Button size="sm" icon="swords" onclick={onrivals}>{L.pvp.find}</Button>{/if}
   <span class="rep"
     ><Button size="sm" icon="scroll" onclick={onreports}>{L.report.title}</Button><Badge n={unread} /></span
@@ -149,7 +157,7 @@
           onclick={() =>
             m.target.kind === 'pvp'
               ? onrivals()
-              : m.target.kind === 'spot' || m.target.kind === 'trib'
+              : m.target.kind === 'spot' || m.target.kind === 'trib' || m.target.kind === 'flag'
                 ? undefined
                 : onpick(m.target)}
         >
@@ -216,7 +224,7 @@
     right: -12px;
     min-width: 20px;
     padding: 0 5px 1px;
-    font-size: 11px;
+    font-size: var(--fs-1);
     font-weight: 800;
     line-height: 17px;
     text-align: center;
@@ -283,6 +291,21 @@
   }
   .rep {
     position: relative;
+  }
+  .slots .short {
+    display: none;
+  }
+  @media (max-width: 480px) {
+    .slots .long {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .slots .short {
+      display: inline;
+    }
   }
   .marches {
     position: fixed;

@@ -3,12 +3,18 @@
 // rollFest chạy trong advance() trước mỗi việc hẹn giờ (như rollDay) nên việc xong trước giờ mở không lọt vào sự kiện mới.
 import { dayOf, weekOf } from './calendar.ts'
 import { elderLevel, power } from './stats.ts'
+import { fogOf } from './fog.ts'
 import { type Fest, type State } from './types.ts'
 import { DAY, ELDER_IDS, GEAR_IDS, IDS, TECH_IDS } from './util.ts'
 import { DAY_OFFSET, FESTS, type FestDef, type FestId, type Metric } from '../data.ts'
 
 export const FEST_IDS = Object.keys(FESTS) as FestId[]
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
+const bits = (n: number) => {
+  let k = 0
+  for (let x = n >>> 0; x; x &= x - 1) k++
+  return k
+}
 
 // Chỉ số tích luỹ của một tông môn
 const METRIC: Record<Metric, (s: State) => number> = {
@@ -30,6 +36,11 @@ const METRIC: Record<Metric, (s: State) => number> = {
   raid: s => s.stats.raided ?? 0,
   gather: s => s.stats.gathered ?? 0,
   ally: s => s.stats.allied ?? 0,
+  duel: s => s.stats.duels ?? 0,
+  duelWin: s => s.stats.duelWins ?? 0,
+  kp: s => s.stats.kp ?? 0,
+  explore: s => sum(fogOf(s).rows.map(bits)),
+  sites: s => s.visited?.length ?? 0,
 }
 export const metric = (s: State, m: Metric) => METRIC[m](s)
 
@@ -56,12 +67,14 @@ export function festWindow(s: State, d: FestDef, t: number): { key: number; stag
 
 const used = (d: FestDef): Metric[] => {
   if (d.kind === 'tasks' || d.kind === 'activity') return [...new Set(d.tasks.map(x => x.m))]
-  return d.kind === 'points' ? [...new Set(d.stages.flatMap(st => Object.keys(st) as Metric[]))] : []
+  return d.kind === 'points' || d.kind === 'shop'
+    ? [...new Set(d.stages.flatMap(st => Object.keys(st) as Metric[]))]
+    : []
 }
 const snap = (s: State, d: FestDef) => Object.fromEntries(used(d).map(m => [m, metric(s, m)])) as Fest['base']
 // Điểm giai đoạn đang chạy (chưa dồn vào bank)
 function stagePts(s: State, d: FestDef, f: Fest) {
-  if (d.kind !== 'points') return 0
+  if (d.kind !== 'points' && d.kind !== 'shop') return 0
   const w = d.stages[Math.min(f.stage, d.stages.length - 1)]
   return sum(
     (Object.keys(w) as Metric[]).map(m => Math.floor((w[m] ?? 0) * Math.max(0, metric(s, m) - (f.base[m] ?? 0)))),
@@ -105,7 +118,10 @@ export function festCalendar(s: State, t: number, n = 7): { day: number; ids: Fe
     const day = dayOf(t) + k
     const noon = day * DAY - DAY_OFFSET + DAY / 2
     const at = k ? noon : t // hôm nay: đúng lúc này (sự kiện tân thủ tính theo giờ)
-    return { day, ids: FEST_IDS.filter(id => s.levels.chuDien >= (FESTS[id].hall ?? 1) && festWindow(s, FESTS[id], at)) }
+    return {
+      day,
+      ids: FEST_IDS.filter(id => s.levels.chuDien >= (FESTS[id].hall ?? 1) && festWindow(s, FESTS[id], at)),
+    }
   })
 }
 // Lúc sự kiện đang mở kết thúc (ms); 0 = không mở
@@ -133,22 +149,37 @@ export const festValue = (s: State, id: FestId, m: Metric) => {
   return d.kind === 'tasks' && d.abs ? metric(s, m) : festProgress(s, id, m)
 }
 
-// Phần quà i nhận được chưa (chưa tính đã nhận)
+// Kho đổi: số lần đã đổi món i, lệnh bài còn lại (kiếm được − đã tiêu)
+export const festBought = (s: State, id: FestId, i: number) => s.fest[id]?.got.filter(x => x === i).length ?? 0
+export function festTokens(s: State, id: FestId) {
+  const d = FESTS[id]
+  if (d.kind !== 'shop') return 0
+  return festPoints(s, id) - sum((s.fest[id]?.got ?? []).map(i => d.shop[i]?.price ?? 0))
+}
+// Phần quà i nhận được chưa (chưa tính đã nhận). Kho đổi: đủ lệnh bài và chưa hết hạn mức
 export function festDone(s: State, id: FestId, i: number) {
   const d = FESTS[id]
   const f = s.fest[id]
   if (!f) return false
   if (d.kind === 'login') return i < Math.min(f.days, d.rewards.length)
   if (d.kind === 'tasks') return !!d.tasks[i] && festValue(s, id, d.tasks[i].m) >= d.tasks[i].n
+  if (d.kind === 'shop') return !!d.shop[i] && festTokens(s, id) >= d.shop[i].price
   return i < d.goals.length && festPoints(s, id) >= d.goals[i] // tích điểm, hoạt lực
+}
+// Đã nhận hết (kho đổi: đổi đủ max lần)
+export function festGot(s: State, id: FestId, i: number) {
+  const d = FESTS[id]
+  return d.kind === 'shop' ? festBought(s, id, i) >= (d.shop[i]?.max ?? 0) : !!s.fest[id]?.got.includes(i)
 }
 export const festRewards = (id: FestId) => {
   const d = FESTS[id]
+  if (d.kind === 'shop') return d.shop.map(x => x.reward)
   return d.kind === 'tasks' ? d.tasks.map(x => x.reward) : d.rewards
 }
 // Số quà đang chờ nhận ở mọi sự kiện đang mở của một bảng — chấm đỏ trên nút Sự kiện (bảng mặc định) hay Nhiệm vụ ngày
+// (kho đổi tính một chấm khi có món đổi được)
 export const festReady = (s: State, t: number, panel?: 'daily') =>
-  FEST_IDS.filter(id => FESTS[id].panel === panel && festOpen(s, id, t)).reduce(
-    (n, id) => n + festRewards(id).filter((_, i) => festDone(s, id, i) && !s.fest[id]!.got.includes(i)).length,
-    0,
-  )
+  FEST_IDS.filter(id => FESTS[id].panel === panel && festOpen(s, id, t)).reduce((n, id) => {
+    const k = festRewards(id).filter((_, i) => festDone(s, id, i) && !festGot(s, id, i)).length
+    return n + (FESTS[id].kind === 'shop' ? Math.min(1, k) : k)
+  }, 0)

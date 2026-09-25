@@ -25,6 +25,9 @@
   import MapTab from './world/MapTab.svelte'
   import Alliance from './Alliance.svelte'
   import Profile from './Profile.svelte'
+  import Arena from './Arena.svelte'
+  import Market from './Market.svelte'
+  import Advisor from './Advisor.svelte'
   import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
   import Ranks from './Ranks.svelte'
@@ -39,7 +42,7 @@
   import Vault from './Vault.svelte'
   import AwaySummary from './AwaySummary.svelte'
   import { summarize, type Away } from './away'
-  import { changes, longJob, unlocked } from './notices'
+  import { changes, newHelps, pushTime, unlocked } from './notices'
   import { createNet, type Net, type Status } from './net'
   import { provideGame } from './game'
   import { setMood } from './music'
@@ -53,10 +56,8 @@
     forgetP1,
     isMuted,
     keyBlocked,
-    read,
     setMuted,
     sfx,
-    write,
     type Sfx,
     type Tab,
     type PanelTab,
@@ -131,15 +132,11 @@
     setTimeout(() => (toasts = toasts.filter(t => t.id !== id)), btn ? 6000 : 2600)
   }
 
-  // Hỏi bật thông báo đúng lúc: vừa giao một việc dài (≥ 30 phút) mà trình duyệt chưa được hỏi — mỗi máy một lần.
-  // Quyền chỉ xin được khi người chơi bấm, nên hỏi bằng toast có nút "Bật" chứ không bật hộp thoại của trình duyệt ngay.
+  // Hỏi bật thông báo đúng lúc (notices.pushTime): toast có nút "Bật"
   let pushKey: string | null = null
   function askPush(prev: State, next: State) {
-    if (!pushKey || typeof Notification === 'undefined' || Notification.permission !== 'default' || read('rok.push'))
-      return
-    if (!longJob(prev, next)) return
-    write('rok.push', '1')
     const key = pushKey
+    if (!key || !pushTime(prev, next)) return
     toast(L.push.ask, {
       act: [
         L.push.on,
@@ -176,6 +173,9 @@
           if (why === 'first' && seen) away = summarize(seen, next)
           if (prev && screen === 'game' && why !== 'first' && !quiet) notice(prev, next, why !== 'mine')
           if (prev && why === 'mine') askPush(prev, next)
+          // trong tiên minh: việc vừa giao tự nhờ đồng minh giúp
+          if (prev && why === 'mine' && ally)
+            for (const job of newHelps(prev, next)) void n.send({ type: 'helpAsk', job }, true)
           game = next
         },
         status: s => (status = s),
@@ -415,8 +415,8 @@
   }
 
   // Đi cướp: luật giới (server kiểm cả hai bên) nên không đoán trước — chờ server
-  async function raid(pid: number, elder: ElderId, army: Army) {
-    const r = await waiting(n => n.send({ type: 'raid', pid, elder, army }))
+  async function raid(a: WorldAction) {
+    const r = await waiting(n => n.send(a))
     if (!r?.ok) return
     sfx('march')
     rivalsOpen = false
@@ -508,12 +508,45 @@
     {:else if tab === 'baoKho'}
       <Vault onfocus={focus} />
     {:else if tab === 'tienMinh'}
-      <Alliance {me} {ally} rows={allyRows} send={sendWorld} onmap={goMap}>
-        {#snippet chat()}<Chat {me} ally api={net ?? null} toast={t => toast(t)} inline onmap={goMap} />{/snippet}
+      <Alliance
+        {me}
+        {ally}
+        rows={allyRows}
+        send={sendWorld}
+        onmap={goMap}
+        onraid={pid => openRivals(pid)}
+        list={() => net?.ask({ k: 'allies' }) ?? Promise.resolve(null)}
+      >
+        {#snippet chat()}<Chat
+            {me}
+            ally
+            api={net ?? null}
+            toast={t => toast(t)}
+            inline
+            onmap={goMap}
+            onreplay={r => (replay = r)}
+          />{/snippet}
       </Alliance>
     {/if}
-    {#if tab === 'banDo'}<Chat {me} ally={!!ally} api={net ?? null} toast={t => toast(t)} onmap={goMap} />{/if}
-    <Profile api={net ?? null} {me} onmap={goMap} />
+    {#if tab === 'banDo' || tab === 'tongMon'}<Chat
+        {me}
+        ally={!!ally}
+        api={net ?? null}
+        toast={t => toast(t)}
+        onmap={goMap}
+        onreplay={r => (replay = r)}
+        narrow={tab === 'tongMon'}
+      />{/if}
+    <Profile api={net ?? null} {me} onmap={goMap} send={sendWorld} onranks={() => (ranksOpen = true)} />
+    <Arena api={net ?? null} send={sendWorld} {me} onreplay={r => (replay = r)} />
+    <Market api={net ?? null} send={sendWorld} />
+    {#if tab === 'tongMon' && !selected && !storm}<Advisor
+        game={shown}
+        ontab={t => (tab = t)}
+        onfests={() => (festsOpen = true)}
+        ondaily={() => (dailyOpen = true)}
+        onfocus={focus}
+      />{/if}
     <Hud
       game={shown}
       {now}
@@ -530,6 +563,9 @@
       onranks={() => (ranksOpen = true)}
       onmail={openReports}
       onfocus={focus}
+      {ally}
+      {me}
+      onhelp={() => sendWorld({ type: 'helpAll' })}
     />
     <Daily open={dailyOpen} onclose={() => (dailyOpen = false)} />
     <Events open={festsOpen} onclose={() => (festsOpen = false)} />
@@ -548,7 +584,15 @@
       onmarch={march}
       onrecruit={() => focus('dienVoTruong', 'train')}
     />
-    <Reports open={reportsOpen} onclose={() => (reportsOpen = false)} onopen={r => (replay = r)} />
+    <Reports
+      open={reportsOpen}
+      onclose={() => (reportsOpen = false)}
+      onopen={r => (replay = r)}
+      share={t =>
+        net
+          ?.say(ally ? 'ally' : 'world', t)
+          .then(r => toast(r.ok ? L.world.shared : (L.chat.err[r.err] ?? L.chat.err.bad)))}
+    />
     <Replay
       report={replay}
       onclose={() => (replay = null)}
@@ -567,6 +611,7 @@
         rivalsOpen = false
         rivalsFocus = null
       }}
+      {ally}
       onraid={raid}
       onrecruit={() => {
         rivalsOpen = false

@@ -17,8 +17,15 @@ import { guildActions, type GuildAction } from './guild.ts'
 import { marketActions, type MarketAction } from './market.ts'
 import { mobActions, type MobAction } from './mob.ts'
 import { arenaActions, type ArenaFight } from './arena.ts'
+import { lordActions, type LordAction } from './lord.ts'
+import { warActions, type WarAction } from './war.ts'
 import { raidActions, type RaidAction } from './raid.ts'
 import { spotActions, type SpotAction } from './spots.ts'
+import { territoryActions, type TerritoryAction } from './territory.ts'
+import { flagActions, type FlagAction } from './flags.ts'
+import { exploreActions, type ExploreAction } from './explore.ts'
+import { legionActions, type LegionAction } from './legion.ts'
+import { supplyActions, type SupplyAction } from './supply.ts'
 
 export type WorldAction =
   | RaidAction
@@ -26,8 +33,15 @@ export type WorldAction =
   | GuildAction
   | MobAction
   | ArenaFight
+  | LordAction
+  | WarAction
   | SpotAction
   | MarketAction
+  | TerritoryAction
+  | FlagAction
+  | ExploreAction
+  | LegionAction
+  | SupplyAction
 
 const WORLD: WorldActions<WorldAction> = {
   ...raidActions,
@@ -35,8 +49,15 @@ const WORLD: WorldActions<WorldAction> = {
   ...guildActions,
   ...mobActions,
   ...arenaActions,
+  ...lordActions,
+  ...warActions,
   ...spotActions,
   ...marketActions,
+  ...territoryActions,
+  ...flagActions,
+  ...exploreActions,
+  ...legionActions,
+  ...supplyActions,
 }
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 

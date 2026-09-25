@@ -91,6 +91,7 @@ export const players = pgTable(
     pvp: integer().notNull().default(1000), // điểm tranh đoạt
     weekNo: integer('week_no').notNull().default(0), // sự kiện tuần: tuần của week_pts
     weekPts: integer('week_pts').notNull().default(0),
+    kills: integer().notNull().default(0), // chiến công (Kill Points)
     mutedUntil: ts('muted_until'), // cấm chat tới lúc này (admin)
     createdAt: ts('created_at').notNull().defaultNow(),
     updatedAt: ts('updated_at').notNull().defaultNow(),

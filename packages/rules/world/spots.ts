@@ -1,15 +1,28 @@
 // Điểm trên bản đồ giới: chiếm (đóng quân), khai mỏ, đánh yêu vương, kết trận; buff linh mạch / linh triều.
 import { regionOf, route, tide, type Point } from '../atlas.ts'
 import { no } from '../core/action.ts'
-import { marchError, launch } from '../core/battle.ts'
+import { fieldError, launch } from '../core/battle.ts'
 import { isId, int, isElder, oneOf, pickArmy } from '../core/parse.ts'
+import { apOf, spendAp } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Buff, type March } from '../core/types.ts'
 import { compact, noGain } from '../core/util.ts'
-import { BOSSES, GARRISON_MAX, RALLY_MAX, RALLY_WAIT, TIDE_PROD, VEIN_BUFF, VEIN_CAP, type ElderId } from '../data.ts'
+import {
+  AP_HUNT,
+  BOSSES,
+  GARRISON_MAX,
+  RALLY_MAX,
+  RALLY_WAIT,
+  TIDE_PROD,
+  VEIN_BUFF,
+  VEIN_CAP,
+  type ElderId,
+} from '../data.ts'
 import {
   allyBuffs,
   allyOf,
+  blessBuffs,
+  titleBuffs,
   garrison,
   setSpot,
   sideKey,
@@ -33,7 +46,7 @@ export type SpotAction =
   | { type: 'recall'; id: number } // gọi đội đang đóng quân / đang khai mỏ / đang viện binh về
   | { type: 'rally'; i: number; wait: 0 | 1 | 2; elder: ElderId; army: Army } // mở kết trận ở điểm i (chiếm / đánh yêu vương)
   | { type: 'rallyJoin'; id: number; elder: ElderId; army: Army } // góp đội vào kết trận
-const TASKS: readonly Task[] = ['take', 'gather', 'hit']
+const TASKS: readonly Task[] = ['take', 'gather', 'hit', 'hunt']
 const spotIndex = int(0, Number.MAX_SAFE_INTEGER)
 
 export const spotActions: WorldActions<SpotAction> = {
@@ -80,13 +93,16 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
   const sp = spotOf(w, map, a.i, t)
   if (a.task === 'hit' && (!BOSSES[p.lv] || (sp.until ?? 0) > t)) return no('cooldown')
   if (a.task === 'gather' && ((sp.until ?? 0) > t || !sp.left)) return no('empty')
+  if (a.task === 'hunt' && (sp.until ?? 0) > t) return no('cooldown') // vừa có người hạ, chưa hồi
+  if (a.task === 'take' && sp.own && sp.own > 0 && allyOf(w, pid)?.naps?.includes(sp.own)) return no('friend') // minh ước
+  if (a.task === 'hunt' && apOf(s, t) < AP_HUNT) return no('limit') // hết hành lực
   if (
     a.task === 'take' &&
     garrison(ps, a.i).filter(([id]) => sideKey(w, id) === sideKey(w, pid)).length >= GARRISON_MAX
   )
     return no('full')
   if (s.marches.some(m => m.target.kind === 'spot' && m.target.i === a.i)) return no('busy') // mỗi người một đội mỗi điểm
-  const e = marchError(s, a.elder, a.army)
+  const e = fieldError(s, a.elder, a.army)
   if (e) return no(e)
   const army = compact(a.army)
   const m: March = {
@@ -102,7 +118,8 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
     returnAt: 0,
     path: r.path,
   }
-  return { ok: true, world: w, changed: new Map([[pid, launch(s, army, m)]]) }
+  const paid = a.task === 'hunt' ? spendAp(s, t, AP_HUNT) : s
+  return { ok: true, world: w, changed: new Map([[pid, launch(paid, army, m)]]) }
 }
 
 // Gọi về: đội đóng quân về nhà (còn ai của phe mình ở đó thì điểm vẫn giữ); đội đang khai mỏ mang về phần đã khai theo tỉ lệ thời gian
@@ -146,6 +163,7 @@ function rallyAct(
   if (!al) return no('locked')
   const rally = a.type === 'rallyJoin' ? w.rallies[a.id] : undefined
   if (a.type === 'rallyJoin' && (!rally || rally.ally !== al.id || rally.at <= t)) return no('gone')
+  if (rally?.task === 'raid') return no('bad') // công sơn: raidJoin
   const i = a.type === 'rally' ? a.i : rally!.i
   const p = map.atlas.points[i]
   const task = rally?.task ?? (p && rallyTask(p))
@@ -157,7 +175,7 @@ function rallyAct(
   const members = [...ps.values()].flatMap(x => x.marches.filter(m => rally && m.rally === rally.id)).length
   if (rally && (members >= RALLY_MAX || s.marches.some(m => m.rally === rally.id))) return no('full')
   if (rally && t + ms > rally.at) return no('far') // không kịp tới lúc hẹn
-  const e = marchError(s, a.elder, a.army)
+  const e = fieldError(s, a.elder, a.army)
   if (e) return no(e)
   const army = compact(a.army)
   const at = a.type === 'rally' ? t + Math.max(RALLY_WAIT[a.wait], ms) : rally!.at
@@ -192,7 +210,8 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
   }
   const t = tide(map.atlas, at)
   const changed: Players = new Map()
-  const mapped = (b: Buff) => b.src === 'vein' || b.src === 'ally' || b.src.startsWith('tide')
+  const mapped = (b: Buff) =>
+    b.src === 'vein' || b.src === 'ally' || b.src === 'title' || b.src === 'bless' || b.src.startsWith('tide')
   for (const [pid, s] of ps) {
     const v = Math.min(VEIN_CAP, veins.get(sideKey(w, pid)) ?? 0)
     const want: Buff[] = [
@@ -201,6 +220,8 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
         ? [{ key: 'prod' as const, v: TIDE_PROD, until: t.end, src: `tide${t.cycle}` }]
         : []),
       ...allyBuffs(allyOf(w, pid)), // Hộ Minh Đại Trận
+      ...titleBuffs(w, pid, at), // sắc phong của Giới Chủ
+      ...blessBuffs(w, at), // Giới Chủ ban phúc cả giới
     ]
     const keep = s.buffs.filter(b => !mapped(b))
     const have = s.buffs.filter(mapped)

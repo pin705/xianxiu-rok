@@ -18,11 +18,12 @@ import {
 import { unsold } from './market.ts'
 import { dropIncoming, raid } from './raid.ts'
 import { spotArrive } from './arrive.ts'
+import { razeArrive } from './flags.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
-const waiting = (m: March) =>
-  (m.target.kind === 'pvp' || m.target.kind === 'spot' || m.target.kind === 'trib') && !m.returnAt && !m.stay && !m.back
+const WAIT = ['pvp', 'spot', 'trib', 'flag']
+const waiting = (m: March) => WAIT.includes(m.target.kind) && !m.returnAt && !m.stay && !m.back
 export function nextRaid(ps: Players) {
   let at = Infinity
   for (const s of ps.values()) for (const m of s.marches) if (waiting(m) && m.arriveAt < at) at = m.arriveAt
@@ -46,6 +47,22 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
   const cur = (id: number) => changed.get(id) ?? ps.get(id)
   const view = (): Players => new Map([...ps.keys()].map(id => [id, cur(id)!])) // cả giới như lúc này (quân đóng ở điểm)
   const done = new Set<string>() // đội đã giải cùng nhóm kết trận
+  // nhóm kết trận: mọi đội cùng mã, cùng lúc tới, giải một lần như một bên (không kết trận: một mình đội này)
+  const party = (at: number, pid: number, att: State, m: March): Party => {
+    const group: Party =
+      m.rally === undefined
+        ? [[pid, att, m]]
+        : due.flatMap(([a2, p2, id2]) => {
+            if (a2 !== at) return []
+            const s2 = p2 === pid ? att : advance(cur(p2)!, at)
+            const m2 = s2.marches.find(x => x.id === id2)!
+            return m2.rally === m.rally ? [[p2, s2, m2] as [number, State, March]] : []
+          })
+    for (const [p2, , m2] of group) done.add(`${p2}:${m2.id}`)
+    if (m.rally !== undefined)
+      w = { ...w, rallies: Object.fromEntries(Object.entries(w.rallies).filter(([k]) => Number(k) !== m.rally)) }
+    return group
+  }
   for (const [at, pid, id] of due) {
     if (done.has(`${pid}:${id}`)) continue
     const att = advance(cur(pid)!, at)
@@ -61,25 +78,19 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
       for (const [hp, hm] of guards) changed.set(hp, giveExp(advance(cur(hp)!, at), hm.elder, exp))
       continue
     }
+    if (m.target.kind === 'flag') {
+      const r = razeArrive(view(), w, [pid, att, m], at)
+      for (const [k, v] of r.changed) changed.set(k, v)
+      w = r.world
+      continue
+    }
     if (m.target.kind === 'spot') {
-      // kết trận: mọi đội cùng mã, cùng lúc tới, giải một lần như một bên
-      const group: Party =
-        m.rally === undefined
-          ? [[pid, att, m]]
-          : due.flatMap(([a2, p2, id2]) => {
-              if (a2 !== at) return []
-              const s2 = p2 === pid ? att : advance(cur(p2)!, at)
-              const m2 = s2.marches.find(x => x.id === id2)!
-              return m2.rally === m.rally ? [[p2, s2, m2] as [number, State, March]] : []
-            })
-      for (const [p2, , m2] of group) done.add(`${p2}:${m2.id}`)
+      const group = party(at, pid, att, m)
       const r = map
         ? spotArrive(view(), w, map, group, at)
         : { changed: new Map(group.map(([p2, s2, m2]) => [p2, turnBack(s2, m2, at)])), world: w }
       for (const [k, v] of r.changed) changed.set(k, v)
       w = r.world
-      if (m.rally !== undefined)
-        w = { ...w, rallies: Object.fromEntries(Object.entries(w.rallies).filter(([k]) => Number(k) !== m.rally)) }
       continue
     }
     const d = cur(m.target.i)
@@ -90,18 +101,21 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
       changed.set(pid, ok ? withMarch(att, { ...m, stay: true }) : turnBack(att, m, at))
       continue
     }
-    // tông môn kia không còn (xoá tài khoản), hoặc vừa có khiên (người khác cướp trước): quay về tay không
-    if (!d || d.shield > at) {
-      changed.set(pid, turnBack(att, m, at))
-      if (d && dropIncoming(d, pid, m.id) !== d) changed.set(m.target.i, dropIncoming(d, pid, m.id))
+    // tông môn kia không còn (xoá tài khoản), vừa có khiên (người khác cướp trước), hay đã dời đi nơi khác: quay về tay không
+    const group = party(at, pid, att, m)
+    const calm = (x: State) => group.reduce((y, [p2, , m2]) => dropIncoming(y, p2, m2.id), x) // hết cảnh báo các đội này
+    const end = m.path?.at(-1)
+    if (!d || d.shield > at || (end && d.seat && (end.x !== d.seat.x || end.y !== d.seat.y))) {
+      for (const [p2, s2, m2] of group) changed.set(p2, turnBack(s2, m2, at))
+      if (d && calm(d) !== d) changed.set(m.target.i, calm(d))
       continue
     }
     const helpers = aidAt(view(), m.target.i).map(
       ([hp, hm]) => [hp, advance(cur(hp)!, at), hm] as [number, State, March],
     )
-    const r = raid(att, pid, advance(d, at), m.target.i, m, at, helpers)
-    changed.set(pid, r.att)
-    changed.set(m.target.i, dropIncoming(r.def, pid, m.id)) // trận đã giải: hết cảnh báo đội này
+    const r = raid(group, advance(d, at), m.target.i, at, helpers)
+    for (const [k, v] of r.atts) changed.set(k, v)
+    changed.set(m.target.i, calm(r.def))
     for (const [k, v] of r.helpers) changed.set(k, v)
   }
   return { changed, world: w }

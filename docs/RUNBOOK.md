@@ -134,7 +134,7 @@ Lưu lượng WAL ở 10k CCU vào khoảng 3–6 MB/giây. Núm `COMMIT_MS` quy
 | Postgres mất > 12 giây | Giới chỉ đọc; thao tác bị từ chối `unavailable`; có DB lại thì tự chạy tiếp | Sửa DB. Nếu đã có node khác nhận giới thì node cũ tự đẩy client sang (`bye moved`) |
 | Một người chơi bị cách ly (state hỏng) | Chỉ người đó không vào được, cả giới vẫn chạy | Sửa `players.state` bằng tay (so với `migrate()` trong `packages/rules/index.ts`), rồi nhả/nhận lại giới (khởi động lại node) |
 | Chat bị lạm dụng | — | `POST /api/admin/mute {world, pid, minutes}`; báo cáo của người chơi nằm ở bảng `chat_reports` |
-| Chợ bị lạm dụng (chuyển của cho acc phụ) | — | `MARKET=off` rồi deploy lại; soi bảng `events` |
+| Chợ / Vận Linh Trận bị lạm dụng (chuyển của cho acc phụ) | — | `MARKET=off` (tắt cả hai) rồi deploy lại; soi bảng `events` |
 | Cần bồi thường sau sự cố | — | `POST /api/admin/mail {world, pid?, title, body, gift?}` (không có `pid`: cả giới): thư có quà, mỗi người nhận đúng một lần |
 | Người chơi xin xoá dữ liệu | — | Họ tự xoá trong Cài đặt › Tài khoản. Chủ giới gỡ khỏi giới, tiên minh, rồi xoá dây chuyền |
 

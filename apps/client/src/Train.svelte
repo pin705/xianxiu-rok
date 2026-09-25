@@ -12,6 +12,9 @@
     trainError,
     trainTime,
     unitOf,
+    promoteCost,
+    promoteError,
+    promoteTime,
     type Tier,
     type UnitId,
     type UnitType,
@@ -42,6 +45,18 @@
   const count = $derived(Math.min(n || most, cap))
   const err = $derived(trainError(game, u, count))
   const stat = (k: 'atk' | 'def' | 'hp') => Math.round(UNIT_BASE[type][k] * TIER[tier].stat)
+
+  // Nâng bậc: bậc thấp hơn bậc đang chọn một bậc, cùng hệ (đang chọn bậc 1 thì không có)
+  const from = $derived(tier > 1 ? (`${type}${tier - 1}` as UnitId) : null)
+  let pn = $state(0)
+  const pcount = $derived(from ? Math.min(pn || game.troops[from], game.troops[from], cap) : 0)
+  const perr = $derived(from && pcount ? promoteError(game, from, pcount) : 'empty')
+  function promote() {
+    if (from && act({ type: 'promote', unit: from, n: pcount })) {
+      sfx('build')
+      pn = 0
+    }
+  }
 
   function go() {
     if (act({ type: 'train', unit: u, n: count })) {
@@ -116,3 +131,26 @@
   >
   {#if err === 'busy'}<p class="center t-small t-soft">{L.err.busy}</p>{/if}
 </Section>
+
+{#if from && game.troops[from] > 0 && tierOpen(game, tier)}
+  <!-- Nâng bậc (Upgrade Troops của RoK): đệ tử bậc dưới đang ở nhà lên bậc đang chọn -->
+  <Section title="{L.train.promote} · {num(pcount)}/{num(Math.min(game.troops[from], cap))}">
+    <p class="t-small t-soft">{L.train.promoteHint}</p>
+    <Slider
+      value={pcount}
+      min={1}
+      max={Math.max(1, Math.min(game.troops[from], cap))}
+      label={L.train.promote}
+      onchange={v => (pn = v)}
+    />
+    <Bag res={promoteCost(from, pcount)} have={game.res} />
+    <Button
+      wide
+      variant="gold"
+      trail={clock(promoteTime(game, from, pcount))}
+      trailIcon="clock"
+      disabled={!!perr}
+      onclick={promote}>{L.train.promoteGo(num(pcount), L.tiers[(tier - 1) as Tier], L.tiers[tier])}</Button
+    >
+  </Section>
+{/if}

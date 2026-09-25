@@ -18,13 +18,15 @@ import {
   type Res,
 } from '../data.ts'
 
+// Số việc xây cùng lúc: một tạp dịch, thêm một khi đang thuê tạp dịch thứ hai (việc đang xây dở vẫn xong khi hết thuê)
+export const queueSize = (s: State) => QUEUE_SIZE + ((s.builder2 ?? 0) > s.time ? 1 : 0)
 export function upgradeError(s: State, b: BuildingId): Err | null {
   const level = s.levels[b] + 1
   if (level > MAX_LEVEL) return 'max_level'
   if (b === 'chuDien' && TRIBS.some(t => t.hall === s.levels.chuDien)) return 'trib'
   if (b !== 'chuDien' && s.levels.chuDien < Math.max(level, BUILDINGS[b].unlock)) return 'need_main_hall'
   if (s.queue.some(j => j.building === b)) return 'busy'
-  if (s.queue.length >= QUEUE_SIZE) return 'queue_full'
+  if (s.queue.length >= queueSize(s)) return 'queue_full'
   return afford(s.res, cost(b, level)) ? null : 'not_enough'
 }
 

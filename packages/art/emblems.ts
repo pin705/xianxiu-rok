@@ -6,7 +6,7 @@ import { outline, ring } from './chrome'
 import { PIGMENT as C, mix, rgba, WHITE } from './palette'
 
 // Tông đĩa theo ngũ hành đặt đúng tên hành (kim, moc, thuy, hoa, tho): medal(ELEMENT_EMBLEMS[el], el)
-export type MedalTone = 'kiem' | 'phap' | 'the' | 'beast' | 'sect' | 'realm' | 'thunder' | 'trib' | 'ink' | 'jade' | 'gold' | 'red' | 'tower' | 'pvp' | 'spot' | keyof typeof ELEMENT_EMBLEMS
+export type MedalTone = 'kiem' | 'phap' | 'the' | 'beast' | 'sect' | 'realm' | 'thunder' | 'trib' | 'ink' | 'jade' | 'gold' | 'red' | 'tower' | 'pvp' | 'spot' | 'flag' | keyof typeof ELEMENT_EMBLEMS
 export const BEAST_EMBLEMS = ['wolf', 'snake', 'bear', 'fox', 'eagle', 'ape', 'windWolf', 'leopard', 'rhino', 'nineFox', 'hawk', 'turtle', 'tiger', 'phoenix', 'dragon'] as const
 export const SECT_EMBLEMS = ['wind', 'blood', 'poison', 'demon', 'ghost'] as const
 // 3 bí cảnh đầu (rừng, hoả, băng), Lôi Trì, Hỗn Độn
@@ -35,6 +35,7 @@ const DISC: Record<MedalTone, [string, string]> = {
   tower: [C.azuriteL, mix(C.indigo, C.ink, 0.3)],
   pvp: [mix(C.cinnabarL, '#8a73cf', 0.35), '#3a1030'], // tông môn người chơi khác: son pha tím
   spot: [mix(C.malachiteL, C.goldL, 0.4), mix(C.malachiteD, C.ink, 0.35)], // điểm trên bản đồ giới
+  flag: [C.cinnabarL, mix(C.cinnabar, C.ink, 0.3)], // trận kỳ minh khác (đội đi phá)
   kim: [mix(C.silk, C.ink3, 0.18), mix(C.ink3, C.ink, 0.5)],
   moc: [C.malachiteL, C.malachiteD],
   thuy: [mix(C.azuriteL, C.indigo, 0.25), mix(C.indigo, C.ink, 0.5)],

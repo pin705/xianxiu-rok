@@ -193,7 +193,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Tương tác:** nền của **tài khoản farm** (acc phụ đi thu rồi gửi về acc chính) và của việc góp tài nguyên chữa quân trong KvK.
 - **UI/UX:** chạm thành đồng minh trên bản đồ hoặc từ danh sách thành viên → "Hỗ trợ tài nguyên" → kéo thanh từng loại, thấy thuế và số nhận về → đoàn buôn chạy trên bản đồ [chưa xác minh].
 - **Tu tiên hoá:** "**Truyền Tống Trận**" (hoặc "Vận Linh Trận"): gửi linh thạch/thảo/khoáng cho đồng minh trong tiên minh, "hao tổn linh lực" 35 % → 8 % theo tầng, mỗi chuyến chiếm 1 đội.
-- **Game mình:** ❌ Có **Chợ** giữa người chơi (Tàng Bảo Các tầng 10, chỉ bán lấy linh thạch, giá 0,8–1,25×, thuế 10 % đốt đi) và **Thương hội** (tự đổi 60–75 %). Không có tặng tài nguyên cho đồng minh — có chủ đích, để chặn dồn của qua acc phụ.
+- **Game mình:** ✅ **Vận Linh Trận** (25/09, `world/supply.ts`): Chủ điện 10, gửi cho người cùng minh từ hồ sơ, hao tổn 35 % → 8 % theo Tàng Bảo Các (đốt đi), nhận qua thư; trần ngày: gửi 2× sức chứa kho mình, nhận 1× sức chứa kho người nhận. Không chiếm đội hành quân, không có đoàn buôn trên bản đồ (tới ngay). Bên cạnh vẫn có **Chợ** và **Thương hội**.
 - **Ưu tiên:** P1 (RoK dựa nhiều vào tương trợ) · **Công sức:** M. Cần trần chống dồn của: chỉ gửi cho người cùng minh ≥ 3 ngày, trần mỗi ngày theo sức chứa kho người nhận, thuế đốt đi.
 
 ---

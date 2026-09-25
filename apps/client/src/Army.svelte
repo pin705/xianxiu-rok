@@ -1,8 +1,12 @@
 <script lang="ts">
   // Chọn đội: trưởng lão dẫn đội + số đệ tử mỗi loại. Trước khi đánh: lực chiến hai bên + tỉ lệ thắng ước lượng.
+  // Trận đồ (march presets của RoK): 3 ô lưu trưởng lão + đệ tử, chạm để dùng lại, "Lưu" ghi đội đang chọn vào ô đang chọn.
+  // Phó trưởng lão (từ DEPUTY_HALL, như tướng phụ của RoK): chọn ngay dưới chủ tướng, mỗi chủ tướng nhớ phó của mình.
   import {
+    DEPUTY_HALL,
     ELDER_IDS,
     UNITS,
+    deputyOf,
     count,
     elderLevel,
     might,
@@ -11,7 +15,11 @@
     type Army,
     type ElderId,
     type UnitId,
+    type UnitType,
     isMarching,
+    PRESETS,
+    capArmy,
+    capOf,
   } from '@rok/rules'
   import { Portrait } from '@rok/art'
   import { Button, Card, Medal, Meter, Section, Slider } from './ui'
@@ -26,6 +34,8 @@
     disabled = false,
     onsubmit,
     onrecruit,
+    counter,
+    field = false,
   }: {
     foe?: number // lực chiến địch (không biết thì bỏ: chỉ hiện lực chiến của mình)
     chance?: (elder: ElderId, army: Army) => number // tỉ lệ thắng ước lượng (rules.winChance); không có: không đoán
@@ -34,6 +44,8 @@
     disabled?: boolean
     onsubmit: (elder: ElderId, army: Army) => void
     onrecruit?: () => void
+    counter?: UnitType // hệ khắc được hệ chính của địch: nút "Theo hệ khắc" chỉ mang hệ này
+    field?: boolean // ra bản đồ giới: giới hạn trận dung của trưởng lão dẫn đội
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -46,13 +58,18 @@
   const home = $derived(UNITS.filter(u => game.troops[u] > 0))
   let picks = $state<Partial<Record<UnitId, number>>>({})
   let touched = $state(false)
-  // Mặc định mang tất cả; chỉnh tay thì giữ theo người chơi (nhưng không quá số đang có)
-  const army = $derived(
+  // Mặc định mang tất cả (ra bản đồ giới: vừa trận dung, bậc cao trước); chỉnh tay thì giữ theo người chơi
+  const cap = $derived(field && lead ? capOf(game, lead) : Infinity)
+  const picked = $derived(
     Object.fromEntries(
       home.map(u => [u, Math.min(game.troops[u], touched ? (picks[u] ?? 0) : game.troops[u])]),
     ) as Army,
   )
-  const ours = $derived(lead ? might(sideOf(game, lead, army)) : 0)
+  const army = $derived(!touched && field && lead ? capArmy(game, lead, picked) : picked)
+  const over = $derived(count(army) > cap)
+  const deputy = $derived(lead ? deputyOf(game, lead) : undefined)
+  const ours = $derived(lead ? might(sideOf(game, lead, army, deputy)) : 0)
+  const pair = (d: ElderId | null) => lead && g.act({ type: 'pair', elder: lead, deputy: d }, 'tap')
   // Nhận định dựa trên đánh thử (tính hệ khắc, công pháp), không dựa lực chiến thô
   const p = $derived(lead && chance ? chance(lead, army) : 0)
   const verdict = $derived(p >= 0.8 ? 'strong' : p >= 0.35 ? 'even' : 'weak')
@@ -62,11 +79,42 @@
     touched = true
     picks = { ...picks, [u]: n }
   }
+  let slot = $state(0)
+  function load(k: number) {
+    slot = k
+    const saved = game.presets?.[k]
+    if (!saved) return
+    elder = saved.elder
+    touched = true
+    picks = { ...saved.army }
+  }
+  function only(type: UnitType) {
+    touched = true
+    picks = Object.fromEntries(home.map(u => [u, unitOf(u).type === type ? game.troops[u] : 0]))
+  }
   function all(on: boolean) {
     touched = true
-    picks = Object.fromEntries(home.map(u => [u, on ? game.troops[u] : 0]))
+    const every = Object.fromEntries(home.map(u => [u, on ? game.troops[u] : 0])) as Army
+    picks = on && field && lead ? capArmy(game, lead, every) : every
   }
 </script>
+
+<div class="row wrap presets" style:--gap="4px">
+  <small class="t-tiny t-soft">{L.army.presets}</small>
+  {#each Array.from({ length: PRESETS }, (_, k) => k) as k (k)}
+    <!-- ghost cả ô đang chọn (đánh dấu bằng ✓): nút vàng / chính trong bảng chỉ dành cho Xuất quân -->
+    <Button size="sm" variant="ghost" icon={slot === k ? 'check' : undefined} onclick={() => load(k)}
+      >{L.army.preset(k + 1)}</Button
+    >
+  {/each}
+  <Button
+    size="sm"
+    variant="ghost"
+    icon="download"
+    disabled={!lead || !count(army)}
+    onclick={() => lead && g.act({ type: 'preset', i: slot, elder: lead, army }, 'tap')}>{L.army.save}</Button
+  >
+</div>
 
 <Section title={L.army.elder}>
   {#if idle.length}
@@ -90,9 +138,43 @@
   {#if !lead}<p class="t-small t-bad">{L.army.noElder}</p>{/if}
 </Section>
 
-<Section title="{L.army.troops} · {num(count(army))}">
+{#if lead && game.levels.chuDien >= DEPUTY_HALL && idle.length > 1}
+  {@const cur = game.pairs?.[lead]}
+  <Section title={L.army.deputy}>
+    <div class="row scroll">
+      <span class="pick">
+        <Card selected={!cur} onclick={() => pair(null)} label={L.army.noDeputy}
+          ><small class="t-tiny t-soft">{L.army.noDeputy}</small></Card
+        >
+      </span>
+      {#each idle.filter(e => e !== lead) as e (e)}
+        {@const out = isMarching(game, e)}
+        <span class="pick">
+          <Card selected={cur === e} disabled={out} onclick={() => pair(e)} label="{L.army.deputy}: {L.elders[e].name}">
+            <span class="row">
+              <Portrait look={LOOK[e]} size={30} dim={out} />
+              <span class="stack" style:--gap="0">
+                <b class="t-small">{L.elders[e].name}</b>
+                <small class="t-tiny t-soft">{out ? L.army.deputyOut : L.elders[e].skill}</small>
+              </span>
+            </span>
+          </Card>
+        </span>
+      {/each}
+    </div>
+    <p class="t-tiny t-soft">{L.army.deputyHint}</p>
+  </Section>
+{/if}
+
+<Section title="{L.army.troops} · {num(count(army))}{Number.isFinite(cap) ? ` / ${num(cap)}` : ''}">
   {#snippet aside()}
     {#if home.length}
+      {#if counter && home.some(u => unitOf(u).type === counter)}<Button
+          variant="ghost"
+          size="sm"
+          label="{L.army.counter}: {L.units[counter]}"
+          onclick={() => only(counter)}>{L.army.counter}</Button
+        >{/if}
       <Button variant="ghost" size="sm" onclick={() => all(true)}>{L.army.all}</Button>
       <Button variant="ghost" size="sm" onclick={() => all(false)}>{L.army.none}</Button>
     {/if}
@@ -142,6 +224,7 @@
   <p class="center t-small mt-4"><span class="t-soft">{L.army.might}:</span> <b class="t-num">{num(ours)}</b></p>
 {/if}
 <!-- yếu thế mà vẫn còn quân: chỉ đường đi tuyển thêm (không quân thì nút đã có ở trên) -->
+{#if over}<p class="center t-small t-bad mt-2">{L.army.over(num(cap))}</p>{/if}
 {#if chance && verdict === 'weak' && home.length && onrecruit}
   <div class="row center mt-2">
     <Button variant="ghost" size="sm" icon="people" onclick={onrecruit}>{L.army.recruit}</Button>
@@ -155,7 +238,7 @@
     icon="flag"
     trail={time}
     trailIcon="clock"
-    disabled={disabled || !lead || !count(army)}
+    disabled={disabled || !lead || !count(army) || over}
     onclick={() => lead && onsubmit(lead, army)}>{cta}</Button
   >
 </div>
@@ -167,5 +250,9 @@
   }
   .pick {
     flex: none;
+  }
+  .presets {
+    align-items: center;
+    margin-top: var(--sp-2);
   }
 </style>

@@ -51,7 +51,8 @@ function social(w: World, slot: Slot, sock: Sock, raw: unknown, now: number, ack
   let r: WorldResult
   try {
     if (!a) r = { ok: false, error: 'bad' }
-    else if (!w.info.market && MARKET_ACTIONS.includes(a.type)) r = { ok: false, error: 'locked' }
+    else if (!w.info.market && (MARKET_ACTIONS.includes(a.type) || a.type === 'supply'))
+      r = { ok: false, error: 'locked' }
     else r = w.play(slot.id, a, now)
   } catch (e) {
     r = { ok: false, error: 'bad' }

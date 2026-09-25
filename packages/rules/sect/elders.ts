@@ -1,16 +1,27 @@
-// Trưởng lão: Bồi Nguyên Đan (kinh nghiệm), thiên phú, Tẩy Tủy Đan, giữ nhà.
+// Trưởng lão: Bồi Nguyên Đan (kinh nghiệm), thiên phú, Tẩy Tủy Đan, giữ nhà, ghép phó trưởng lão.
 import { no, ok, use, type Actions } from '../core/action.ts'
 import { giveExp } from '../core/battle.ts'
-import { int, isElder } from '../core/parse.ts'
+import { int, isElder, oneOf } from '../core/parse.ts'
 import { talentPoints, talentUsed, isMarching } from '../core/stats.ts'
 import { type Talent } from '../core/types.ts'
-import { BOI_NGUYEN_EXP, TALENT_MAX, type ElderId } from '../data.ts'
+import {
+  BOI_NGUYEN_EXP,
+  DAO_COOL,
+  DAO_HALL,
+  DAO_IDS,
+  DEPUTY_HALL,
+  TALENT_MAX,
+  type DaoId,
+  type ElderId,
+} from '../data.ts'
 
 export type ElderAction =
   | { type: 'feed'; elder: ElderId; n: number }
   | { type: 'talent'; elder: ElderId; branch: 0 | 1 | 2 }
   | { type: 'wash'; elder: ElderId } // Tẩy Tủy Đan
   | { type: 'guard'; elder: ElderId | null } // trưởng lão giữ nhà
+  | { type: 'pair'; elder: ElderId; deputy: ElderId | null } // phó trưởng lão của chủ tướng elder (null: bỏ ghép)
+  | { type: 'dao'; id: DaoId } // theo đạo thống (lần đầu miễn phí, đổi lại sau DAO_COOL)
 
 export const elderActions: Actions<ElderAction> = {
   feed: {
@@ -49,5 +60,29 @@ export const elderActions: Actions<ElderAction> = {
   guard: {
     pick: a => (a.elder === null || isElder(a.elder) ? { type: 'guard', elder: a.elder } : null),
     run: (s, a) => (a.elder && s.elders[a.elder] === undefined ? no('locked') : ok({ ...s, guard: a.elder })),
+  },
+  // Ghép có hiệu lực từ lần xuất quân sau (đội đang đi giữ phó cũ); một phó ghép được cho nhiều chủ tướng,
+  // nhưng mỗi lúc chỉ đi cùng một đội
+  pair: {
+    pick: a =>
+      isElder(a.elder) && (a.deputy === null || isElder(a.deputy))
+        ? { type: 'pair', elder: a.elder, deputy: a.deputy }
+        : null,
+    run: (s, a) => {
+      if (s.levels.chuDien < DEPUTY_HALL) return no('locked')
+      if (s.elders[a.elder] === undefined || (a.deputy && s.elders[a.deputy] === undefined)) return no('locked')
+      if (a.deputy === a.elder) return no('bad')
+      const { [a.elder]: _, ...rest } = s.pairs ?? {}
+      return ok({ ...s, pairs: a.deputy ? { ...rest, [a.elder]: a.deputy } : rest })
+    },
+  },
+  dao: {
+    pick: a => (oneOf(DAO_IDS)(a.id) ? { type: 'dao', id: a.id } : null),
+    run: (s, a) => {
+      if (s.levels.chuDien < DAO_HALL) return no('locked')
+      if (s.dao?.id === a.id) return no('claimed')
+      if (s.dao && s.dao.at + DAO_COOL > s.time) return no('cooldown')
+      return ok({ ...s, dao: { id: a.id, at: s.time } })
+    },
   },
 }

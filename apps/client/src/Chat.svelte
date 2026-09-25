@@ -4,6 +4,7 @@
   // Toạ độ "(x,y)" trong tin (chia sẻ từ bản đồ giới) thành nút nhảy tới ô đó, như link toạ độ xanh của RoK.
   // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo. Truyền âm: danh sách cuộc gần đây → từng cuộc.
   import type { Channel, ChatMsg, Dm } from '@rok/protocol'
+  import type { Report } from '@rok/rules'
   import { MAP_W } from '@rok/rules/world'
   import type { Net } from './net'
   import { Icon } from '@rok/art'
@@ -21,6 +22,8 @@
     toast,
     inline = false,
     onmap,
+    onreplay,
+    narrow = false,
   }: {
     me: number | null
     ally?: boolean
@@ -28,6 +31,8 @@
     toast: (t: string) => void
     inline?: boolean
     onmap?: (x: number, y: number) => void // nhảy tới ô trên bản đồ giới
+    onreplay?: (r: Report) => void // xem trận người khác chia sẻ ("#r<id>" trong tin)
+    narrow?: boolean // dải chat ở núi: chừa chỗ nút tạp dịch bên phải
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -91,6 +96,14 @@
     else toast(L.chat.err[r.err] ?? L.chat.err.bad)
   }
   const ago = (at: number) => clock(Math.max(0, game.time - at)).replace(/:\d\d$/, '')
+  // chiến báo chia sẻ trong tin: "#r<id>" (của chính người gửi)
+  const shared = (t: string) => [...t.matchAll(/#r(\d{1,9})\b/g)].map(m => Number(m[1]))
+  async function watch(m: ChatMsg, id: number) {
+    const r = await api?.ask({ k: 'shared', pid: m.pid, id })
+    if (!r) return toast(L.chat.err.unavailable)
+    open = false
+    onreplay?.(r)
+  }
   // toạ độ trong tin: "(x,y)" nằm trong bản đồ giới
   const coords = (t: string) =>
     [...t.matchAll(/\((\d{1,3}), ?(\d{1,3})\)/g)]
@@ -147,6 +160,13 @@
               >
             {/each}
           {/if}
+          {#if onreplay}
+            {#each shared(m.text) as id (id)}
+              <button class="coord" onclick={() => watch(m, id)}
+                ><Icon name="swords" size={12} />{L.report.watch}</button
+              >
+            {/each}
+          {/if}
           {#if pick?.id === m.id && m.pid !== me}
             <div class="row wrap" style:--gap="6px">
               <Button size="sm" variant="ghost" onclick={() => (social.profile = m.pid)}>{L.profile.open}</Button>
@@ -185,7 +205,7 @@
 {#if inline}
   <div class="inline stack">{@render body()}</div>
 {:else}
-  <button class="strip" onclick={() => (open = true)} aria-label={L.chat.world}>
+  <button class="strip" class:narrow onclick={() => (open = true)} aria-label={L.chat.world}>
     <Icon name="mail" size={14} />{#if unread.length}<span class="new" aria-hidden="true"></span>{/if}
     {#if last}<b>{last.name}:</b> <span class="t-ellipsis">{last.text}</span>{:else}<span class="t-soft"
         >{L.chat.empty}</span
@@ -214,6 +234,16 @@
     border-radius: 999px;
     translate: -50% 0;
     cursor: pointer;
+  }
+  .strip.narrow {
+    left: 12px;
+    width: min(calc(100vw - 110px), calc(var(--col) - 110px));
+    translate: 0 0;
+  }
+  @media (min-width: 1024px) and (min-height: 600px) {
+    .strip.narrow {
+      left: calc(var(--rail) + 16px);
+    }
   }
   .log {
     max-height: 50vh;

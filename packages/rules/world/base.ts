@@ -6,6 +6,7 @@ import { cutOf } from '../core/stats.ts'
 import { dayOf } from '../core/calendar.ts'
 import { type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
 import {
+  ALLY_WELCOME,
   ALLY_GIFT_LV,
   ALLY_GIFTS,
   ALLY_HELPS,
@@ -17,7 +18,12 @@ import {
   GIFT_PTS,
   HELP_CREDIT,
   HELP_CREDIT_DAY,
+  BLESSINGS,
+  TITLE_IDS,
+  TITLES,
+  type TitleId,
   type AllyTechId,
+  type BlessKey,
   type Bonus,
   type ItemId,
   type PillId,
@@ -38,7 +44,9 @@ export const routeMs = (s: State, len: number) => Math.round(len * TILE_TIME * c
 
 export type Players = Map<number, State>
 
-export type Role = 0 | 1 | 2 // thành viên · trưởng lão · minh chủ
+// Bậc trong minh R1–R5: −2 ngoại môn · −1 nội môn · 0 chân truyền · 1 đường chủ (R4: duyệt đơn, cắm cờ, ghi danh…) · 2 minh
+// chủ (R5). Số âm để dữ liệu cũ (0 thành viên · 1 trưởng lão · 2 minh chủ) giữ nguyên nghĩa; người mới vào là R1.
+export type Role = -2 | -1 | 0 | 1 | 2
 export type Help = { pid: number; job: JobKind; startAt: number; ms: number; by: number[] } // một việc đang nhờ giúp; ms: mỗi lần giúp bớt (chốt lúc nhờ)
 export type Alliance = {
   id: number
@@ -56,6 +64,11 @@ export type Alliance = {
   gift?: number // điểm quà minh (cấp Minh lễ)
   marks?: Mark[] // dấu trên bản đồ giới cho cả minh
   mob?: MobBoard // Minh vụ đường tuần này
+  closed?: boolean // phải duyệt đơn mới vào được (mặc định: vào tự do)
+  apps?: number[] // người xin vào đang chờ duyệt
+  invites?: number[] // người được mời: vào thẳng dù minh đóng
+  naps?: number[] // minh ước bất xâm phạm (NAP) với các minh này
+  napIn?: number[] // lời đề nghị minh ước đang chờ minh mình trả lời
 }
 // Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
 // tuần và số thứ tự nên client tự vẽ được), điểm từng người đã góp
@@ -72,12 +85,23 @@ export type Spot = {
   hp?: number
   dmg?: Record<number, number>
 }
-// Kết trận: người trong minh góp đội, mọi đội tới điểm i cùng lúc `at` rồi đánh như một bên
-export type Rally = { id: number; ally: number; by: number; i: number; task: 'take' | 'hit'; at: number }
+// Kết trận: người trong minh góp đội, mọi đội tới cùng lúc `at` rồi đánh như một bên — điểm i (chiếm / đánh yêu vương),
+// hay tông môn người chơi i (công sơn, foe: tên lúc mở)
+export type Rally = {
+  id: number
+  ally: number
+  by: number
+  i: number
+  task: 'take' | 'hit' | 'raid'
+  at: number
+  foe?: string
+}
 // Chợ: lệnh bán đang treo (hàng đã rời người bán; price: cả lô, linh thạch), mua / treo bán trong ngày của từng người
 export type Good = 'linhThao' | 'linhKhoang' | PillId
 export type Order = { id: number; pid: number; good: Good; n: number; price: number; at: number }
 export type Trades = { day: number; buys: number; sold: number }
+// Vận Linh Trận trong ngày của một người: đã gửi (trước hao tổn), đã nhận (sau hao tổn)
+export type Supply = { day: number; sent: number; got: number }
 // pts: điểm mùa đã chốt theo phe (sideKey) — phần đang giữ tính thêm ở seasonPts
 export type World = {
   allies: Record<number, Alliance>
@@ -89,7 +113,33 @@ export type World = {
   orders: Record<number, Order>
   nextOrder: number
   mkt: Record<number, Trades>
+  titles: Partial<Record<TitleId, Title>> // sắc phong của Giới Chủ
+  book: { ch: number; done: number[] } // Thiên Đạo Biên Niên: chương đang mở, các chương đã xong
+  bosses: number // yêu vương đã hạ trong mùa
+  war: War // Luận Kiếm Minh Chiến
+  bless?: { key: BlessKey; until: number; day: number } // Giới Chủ ban phúc cả giới (ngày dayOf đã ban)
+  boon?: { week: number; left: number } // Thiên Ân lễ Giới Chủ còn ban được trong tuần
+  flags?: Record<number, Flag> // trận kỳ các tiên minh đã cắm
+  nextFlag?: number
+  legion?: Legion // Ma Triều Công Sơn tuần này
+  sup?: Record<number, Supply> // Vận Linh Trận hôm nay của từng người
 }
+// Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
+export type Legion = {
+  week: number
+  signed: number[]
+  done: number
+  pts: Record<number, number>
+  by: Record<number, number>
+  held: Record<number, number>
+}
+// Trận kỳ: của minh aid, ở ô (x, y), dựng xong lúc done (từ đó mới nới lãnh thổ); hp / hit: độ bền còn lại sau lần bị đánh gần nhất
+export type Flag = { id: number; aid: number; x: number; y: number; done: number; hp?: number; hit?: number }
+// Minh chiến: tuần đã giải gần nhất, các minh ghi danh tuần này, điểm minh chiến (Elo) từng minh, kết quả lần giải gần nhất
+export type WarResult = { a: number; b: number; an: string; bn: string; wa: number; wb: number }
+export type War = { done: number; signed: number[]; pts: Record<number, number>; last: WarResult[] }
+// Một tước: ai giữ, phong lúc nào, tới lúc nào
+export type Title = { pid: number; at: number; until: number }
 export const freshWorld = (): World => ({
   allies: {},
   nextAlly: 1,
@@ -100,16 +150,50 @@ export const freshWorld = (): World => ({
   orders: {},
   nextOrder: 1,
   mkt: {},
+  titles: {},
+  book: { ch: 0, done: [] },
+  bosses: 0,
+  war: { done: -1, signed: [], pts: {}, last: [] },
 })
 // Điểm kiểu Elo cho bên đánh (bên thủ mất/được đúng bấy nhiêu): cướp, Luận Kiếm Đài. Chỉ server tính.
 export const elo = (a: number, d: number, win: boolean) =>
   Math.round(ELO_K * ((win ? 1 : 0) - 1 / (1 + 10 ** ((d - a) / 400))))
+// Hai người thuộc hai tiên minh đã kết minh ước (không cướp, không tranh điểm của nhau)
+export function napBetween(w: World, a: number, b: number) {
+  const x = allyOf(w, a),
+    y = allyOf(w, b)
+  return !!x && !!y && x.id !== y.id && !!x.naps?.includes(y.id)
+}
 export const put = (w: World, al: Alliance): World => ({ ...w, allies: { ...w.allies, [al.id]: al } })
+// Người trong các minh vừa đổi (bản ghi minh, hay kết trận của minh mở / giải) — server báo họ hỏi lại
+export function allyTouched(prev: World, next: World): number[] {
+  const rallies = (w: World, aid: number) =>
+    Object.values(w.rallies)
+      .filter(r => r.ally === aid)
+      .map(r => r.id)
+      .join()
+  const out = new Set<number>()
+  for (const al of [...Object.values(prev.allies), ...Object.values(next.allies)])
+    if (
+      prev.allies[al.id] !== next.allies[al.id] ||
+      (prev.rallies !== next.rallies && rallies(prev, al.id) !== rallies(next, al.id))
+    )
+      for (const pid of Object.keys(al.members)) out.add(Number(pid))
+  return [...out]
+}
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
+// Lễ nhập minh: lần đầu vào (hay lập) một tiên minh thì nhận quà qua thư, một lần mỗi tông môn
+export const welcome = (s: State, name: string, t: number): State =>
+  s.joined !== undefined ? s : mail({ ...s, joined: t }, { at: t, k: 'allyWelcome', a: [name], gift: ALLY_WELCOME })
+// Ai ở minh nào (đổi khi có người vào / rời / minh giải tán): lãnh thổ trên bản đồ theo đó mà đổi
+export const memberKey = (w: World) =>
+  Object.values(w.allies)
+    .map(a => `${a.id}:${Object.keys(a.members)}`)
+    .join('|')
 
 // world: phần chung sau thao tác (cùng tham chiếu nếu không đổi)
 export type WorldResult = { ok: true; changed: Players; world: World } | { ok: false; error: Err }
-export type Task = 'take' | 'gather' | 'hit'
+export type Task = 'take' | 'gather' | 'hit' | 'hunt'
 
 // Một thao tác giới: s là state người làm đã đưa tới lúc now (t = s.time); seed mới cho trận; map: bản đồ lúc này
 export type Ctx = { ps: Players; w: World; pid: number; s: State; now: number; seed: number; map?: MapCtx }
@@ -206,3 +290,16 @@ export function allyGifts(ps: Players, changed: Players, w: World, pids: number[
   }
   return next
 }
+// Phúc của Giới Chủ ban cho cả giới (còn hạn lúc at): worldBuffs gắn vào mọi tông môn, nguồn 'bless'
+export const blessBuffs = (w: World, at: number): Buff[] =>
+  w.bless && w.bless.until > at
+    ? [{ key: w.bless.key as Bonus, v: BLESSINGS[w.bless.key], until: w.bless.until, src: 'bless' }]
+    : []
+// Tăng ích (hay hoạ) từ tước Giới Chủ phong cho pid, còn hạn lúc at (worldBuffs gắn vào state, nguồn 'title')
+export const titleBuffs = (w: World, pid: number, at: number): Buff[] =>
+  TITLE_IDS.flatMap(id => {
+    const t = w.titles?.[id]
+    return t && t.pid === pid && t.until > at
+      ? Object.entries(TITLES[id].fx).map(([key, v]) => ({ key: key as Bonus, v, until: t.until, src: 'title' }))
+      : []
+  })

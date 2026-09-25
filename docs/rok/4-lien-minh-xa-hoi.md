@@ -862,42 +862,42 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 |---|---|---|---|---|
 | A1 | Lập liên minh (Create Alliance) | ✅ lập tầng 10, 20k mỗi loại; thiếu cờ/huy hiệu riêng | P2 | S–M |
 | A2 | Hồ sơ minh, đổi tên/tag/cờ | 🟡 có bố cáo; không đổi tên/tag | P2 | S |
-| A3 | Gia nhập tự do/duyệt, mời, passlist/blocklist | 🟡 vào tự do, không duyệt, không mời | P1 | S–M |
+| A3 | Gia nhập tự do/duyệt, mời, passlist/blocklist | ✅ cửa minh vào tự do / duyệt đơn, mời từ hồ sơ; thiếu passlist/blocklist | P1 | S–M |
 | A4 | Sĩ số tối đa tăng dần | 🟡 cố định 30 | P2 | S |
 | A5 | Cấp bậc R1–R5 và quyền | 🟡 3 bậc; tên "Trưởng lão" trùng tướng | P1 | S |
 | A6 | Chức vị officer có buff | ❌ | P2 | S |
 | A7 | Rời/đá/tự chuyển giao/giải tán | 🟡 thiếu tự chuyển khi minh chủ vắng | P1 | S |
-| B1 | Giúp đỡ (Alliance Help) | ✅ 10 lần/việc; người giúp chưa có thưởng | P1 | S |
-| B2 | Quà liên minh, rương chung, quà từ gói nạp | ❌ | **P0** | M |
-| B3 | Công nghệ liên minh và quyên góp | ❌ | **P0** | L |
-| B4 | Điểm cá nhân/quỹ minh và cửa hàng minh | ❌ | **P0** | M |
+| B1 | Giúp đỡ (Alliance Help) | ✅ 10 lần/việc, người giúp được cống hiến, đĩa giúp nổi ở mọi tab | P1 | S |
+| B2 | Quà liên minh, rương chung, quà từ gói nạp | ✅ Minh lễ (hạ yêu vương → cả minh nhận quà, cấp quà 1–5); không có gói nạp | **P0** | M |
+| B3 | Công nghệ liên minh và quyên góp | ✅ Hộ Minh Đại Trận 9 trận × 5 tầng, cung phụng, trận minh chủ điểm | **P0** | L |
+| B4 | Điểm cá nhân/quỹ minh và cửa hàng minh | ✅ cống hiến + Minh khố + Cống Hiến Các | **P0** | M |
 | B5 | Kỹ năng liên minh (buff có thời hạn) | ❌ | P2 | M |
 | C1 | Pháo đài trung tâm/phụ | ❌ | P1 | L |
-| C2 | Cờ, tiền đồn, khiên cờ, tháp tên | ❌ | P1 | L |
+| C2 | Cờ, tiền đồn, khiên cờ, tháp tên | 🟡 trận kỳ (cắm, nới lãnh thổ, bị phá, tự hồi); chưa đóng quân giữ cờ | P1 | L |
 | C3 | Trung tâm tài nguyên minh (thu an toàn) | 🟡 mỏ chung, ai cũng tranh được | P2 | M |
 | C4 | Điểm tài nguyên minh và kho minh | ❌ (linh mạch chỉ buff %) | P1 | M |
-| C5 | Buff lãnh thổ và dịch chuyển vào lãnh thổ | 🟡 buff linh mạch; không dời chỗ ngồi | P1 | M |
+| C5 | Buff lãnh thổ và dịch chuyển vào lãnh thổ | ✅ lãnh thổ tiên minh (khai mỏ +25 %), dời tông môn vào lãnh thổ, dời núi tân thủ | P1 | M |
 | C6 | Thánh địa, đèo, thưởng chiếm lần đầu | ✅ linh mạch/trận nhãn/Thiên Môn; thiếu thưởng lần đầu, buff đa dạng | P1 | S–M |
-| D1 | Kết trận và tab Chiến tranh | 🟡 chỉ cho điểm/yêu vương; không đánh tông môn | P1 | M |
+| D1 | Kết trận và tab Chiến tranh | ✅ điểm, yêu vương và tông môn (kết trận công sơn, 25/09); danh sách kết trận + nút góp đội ở trang Tiên minh | P1 | M |
 | D2 | Viện binh và đồn trú | ✅ 3 đội nhà đồng minh, hộ pháp độ kiếp | P2 | S |
-| D3 | Đánh dấu bản đồ cho minh | ❌ | **P0** | S |
+| D3 | Đánh dấu bản đồ cho minh | ✅ 5 dấu của minh + ghi nhớ cá nhân | **P0** | S |
 | D4 | Mệnh lệnh minh, cửa hàng chiến công | ❌ | P2 | M |
 | E1 | Chat vương quốc | ✅ kênh giới, lọc từ, báo cáo; thiếu dịch | P1 | M |
 | E2 | Chat minh và thông báo | ✅ thiếu ghim, tin hệ thống, @nhắc | P1 | S |
-| E3 | Chat riêng và nhóm tự tạo | ❌ | **P0** | M |
+| E3 | Chat riêng và nhóm tự tạo | 🟡 truyền âm 1-1 (Web Push khi offline); chưa có nhóm tự tạo | **P0** | M |
 | E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; threads trong giới thì 🟡 được | P2 | M |
-| E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | ❌ | **P0** | M |
+| E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | 🟡 chia sẻ toạ độ + chiến báo vào chat (nút tới / xem trận); chưa sửa / thu hồi tin | **P0** | M |
 | E6 | Thư người chơi/thư minh/báo cáo do thám | 🟡 chỉ thư hệ thống và chiến báo | P1 | M |
-| F1 | Gửi tài nguyên (Trading Post) | ❌ chủ ý (chợ có biên giá thay thế) | P2 | S–M |
-| G1 | Hồ sơ người chơi | ❌ không xem được người khác | P1 | M |
+| F1 | Gửi tài nguyên (Trading Post) | ✅ Vận Linh Trận (25/09): hao tổn 35 → 8 %, trần ngày theo sức chứa kho hai bên | P2 | S–M |
+| G1 | Hồ sơ người chơi | ✅ hồ sơ chưởng môn (từ chat, minh, bản đồ, chân dung): truyền âm, chặn, mời, tiếp tế | P1 | M |
 | G2 | Bảng xếp hạng | ✅ 5 bảng + mùa + phong thần; thiếu bảng chiến công/minh | P2 | S |
 | G3 | Bạn bè và chặn | 🟡 có chặn; thiếu bạn bè | P2 | S–M |
 | G4 | Báo vương quốc | 🟡 có biên niên giới | P2 | S |
-| H1 | Vua và Lost Temple | 🟡 có Thiên Môn; chưa có Giới Chủ | P1 | M |
-| H2 | Title vương quốc buff/debuff | ❌ | P1 | M |
-| H3 | Buff vương quốc, quà của vua | ❌ | P2 | S |
+| H1 | Vua và Lost Temple | ✅ Giới Chủ (minh chủ giữ Thiên Môn) | P1 | M |
+| H2 | Title vương quốc buff/debuff | ✅ sắc phong 4 phúc / 4 hoạ, giữ 24 giờ | P1 | M |
+| H3 | Buff vương quốc, quà của vua | ✅ ban phúc cả giới mỗi ngày + Thiên Ân lễ | P2 | S |
 | H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | ❌ (Bế Quan Lệnh đáng làm) | P2 (P1 cho Bế Quan) | M |
-| H5 | NAP, luật cộng đồng → minh ước | ❌ chỉ chặn đánh người cùng minh | P1 | S–M |
+| H5 | NAP, luật cộng đồng → minh ước | ✅ minh ước bất xâm phạm (đề nghị / nhận / huỷ) | P1 | S–M |
 | H6 | Di cư, bảng tuyển mộ | ⛔ di cư; bảng tuyển trong giới làm được | P2 | S |
 | H7 | Bảo vệ và dịch chuyển tân thủ | ✅ khiên 72 giờ, PvP từ tầng 6, sàn lực chiến 50% | — | — |
 | I1 | Điều kiện tấn công thành | ✅ | — | — |
@@ -916,7 +916,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | J2 | Ark of Osiris, Osiris League (khán giả, cược) | ❌ | P1 | L |
 | J3 | Karuak Ceremony / Trial | 🟡 có Tháp, yêu vương | P2 | S |
 | J4 | Ceroli Crisis/Assault (tổ đội PvE) | ❌ | P2 | L |
-| J5 | Shadow Legion (ma triều công sơn) | ❌ (nền viện binh đã có) | P1 | M |
+| J5 | Shadow Legion (ma triều công sơn) | ✅ | P1 | M |
 | J6 | Canyon Clash / Sunset Canyon | 🟡 có PvP bất đồng bộ | P2 | M |
 | J7 | Champions of Olympia 5v5 | ⛔ thời gian thực | — | — |
 | J8 | Đố vui minh, Ascension, tiệc lễ | ❌ | P2 | S–M |

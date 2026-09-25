@@ -2,13 +2,47 @@
   // Chạm trên bản đồ giới: tông môn (thông tin, đường đi, cướp), điểm (ai giữ, mỏ còn bao nhiêu, yêu vương còn máu; chiếm /
   // khai / đánh; gọi đội về), đội hành quân, ô trống (vùng, vòng, thời tiết). Luật ở rules/world.ts, server kiểm lại.
   // Mọi chỗ có toạ độ: chia sẻ vào chat (kênh minh / giới), trưởng lão / minh chủ đặt dấu cho cả minh.
-  import { CHAT_HALL, MINE_STOCK, BOSSES, cutOf, might, type Army, type ElderId } from '@rok/rules'
+  import {
+    AP_HUNT,
+    AP_MAX,
+    BEATS,
+    TYPES,
+    CHAT_HALL,
+    MINE_STOCK,
+    MOVE_COOL,
+    VILLAGE_GIFTS,
+    CAVE_GIFTS,
+    cellOf,
+    clear,
+    cranes,
+    cranesOut,
+    fogOf,
+    fold,
+    FLAG_COST,
+    FLAG_HP,
+    PVP_HALL,
+    BOSSES,
+    apOf,
+    cutOf,
+    might,
+    type Army,
+    type ElderId,
+  } from '@rok/rules'
   import { RALLY_WAIT } from '@rok/rules'
   import {
     TILE_TIME,
     bossSlice,
+    wildSide,
     dayIn,
+    craneTime,
+    frontier,
+    sitesOf,
+    flagCap,
+    flagHp,
+    newbieMove,
+    ownerAt,
     phaseOf,
+    snapClaims,
     raidChance,
     regionOf,
     route,
@@ -23,7 +57,7 @@
   import type { Net } from './net'
   import { landAt } from '@rok/art'
   import ArmyPick from './Army.svelte'
-  import { Button, Card, Medal, Section, Sheet, Tag } from './ui'
+  import { Bag, Button, Card, Medal, Meter, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, clock, marchDoing, num, sfx, spotName } from './lib'
   import type { Pick } from './world/worldmap'
   import { useGame } from './game'
@@ -58,7 +92,7 @@
   const busy = $derived(g.busy)
 
   const phase = $derived(phaseOf(dayIn(info.opened, now)))
-  const TASK = { vein: 'take', gate: 'take', heaven: 'take', mine: 'gather', boss: 'hit' } as const
+  const TASK = { vein: 'take', gate: 'take', heaven: 'take', mine: 'gather', boss: 'hit', wild: 'hunt' } as const
   const regionName = (r: number) => `${L.world.regions[r] ?? r} · ${L.world.ring[atlas.regions[r].ring]}`
   // đường đi từ tông môn mình; null: chưa có đường (cổng chưa mở)
   const road = (to: { x: number; y: number }) => (game.seat ? route(atlas, game.seat, to, phase) : null)
@@ -70,17 +104,29 @@
     pick?.kind === 'march' ? snap?.marches.find(m => m.pid === pick.pid && m.id === pick.id) : undefined,
   )
   const mine = $derived(point ? game.marches.find(m => m.target.kind === 'spot' && m.target.i === point.i) : undefined)
+  // khám phá: thôn trang / động phủ đang chạm; mê vụ của mình, linh điểu
+  const site = $derived(pick?.kind === 'site' ? sitesOf(atlas)[pick.i] : undefined)
+  const fog = $derived(fogOf(game))
+  const freeCranes = $derived(cranes(game) - cranesOut(fold(fog, now), now))
+  async function visit(i: number) {
+    if (!(await send({ type: 'visit', i })).ok) return
+    sfx('reward')
+    onclose()
+  }
   const title = $derived.by(() => {
     if (seat) return seat.name
     if (point) return `${spotName(point.kind)} · ${L.lv(point.lv)}`
     if (march) return snap?.seats.find(s => s.pid === march.pid)?.name ?? ''
+    if (site) return site.kind === 'village' ? L.world.explore.village : L.world.explore.cave
     return pick?.kind === 'tile' ? regionName(regionOf(atlas, pick)) : ''
   })
   // cách xuất quân tới điểm: một mình, mở kết trận (chờ 5/10/30 phút), hay góp vào kết trận đang mở
   let way = $state<'solo' | 'rally' | number>('solo')
   let wait = $state<0 | 1 | 2>(1)
   $effect(() => void (pick && (way = 'solo')))
-  const rallies = $derived(point && ally ? ally.rallies.filter(r => r.i === point.i && r.at > now) : [])
+  const rallies = $derived(
+    point && ally ? ally.rallies.filter(r => r.task !== 'raid' && r.i === point.i && r.at > now) : [],
+  )
   const isAlly = (pid: number) => !!ally?.people.some(p => p.pid === pid)
   const sent = () => {
     sfx('march')
@@ -101,9 +147,11 @@
   const pos = $derived.by(() => {
     if (seat) return { x: seat.x, y: seat.y }
     if (point) return { x: point.x, y: point.y }
+    if (site) return { x: site.x, y: site.y }
     return pick?.kind === 'tile' ? { x: pick.x, y: pick.y } : null
   })
-  const officer = $derived(!!ally && me !== null && (ally.members[me] ?? 0) >= 1)
+  const officer = $derived(!!ally && me !== null && (ally.members[me] ?? -9) >= 1)
+  const marker = $derived(!!ally && me !== null && (ally.members[me] ?? -9) >= 0) // dấu của minh: từ R3
   const markHere = $derived(pos ? ally?.marks?.find(m => m.x === pos.x && m.y === pos.y) : undefined)
   let markText = $state('')
   // đã gửi toạ độ ô này vào kênh nào (hiện ngay trên nút) / lỗi của lần gửi
@@ -116,6 +164,28 @@
     if (r.ok) sfx('tap')
   }
   $effect(() => void (markText = markHere?.text ?? title.slice(0, 20)))
+  // lãnh thổ tiên minh ở ô đang xem (cùng luật với server): chủ ô, dời tông môn tới ô trống trong lãnh thổ minh mình
+  const claims = $derived(snap ? snapClaims(snap, atlas, now) : [])
+  // trận kỳ ở ô đang xem; trưởng lão / minh chủ cắm được ở ô trống trong lãnh thổ minh mình
+  const flag = $derived(pos ? snap?.flags?.find(f => f.x === pos.x && f.y === pos.y) : undefined)
+  const flagCount = $derived(ally ? (snap?.flags ?? []).filter(f => f.aid === ally.id).length : 0)
+  // phá trận kỳ minh khác (không minh ước), từ tầng mở Tranh đoạt
+  const canRaze = $derived(
+    !!flag && game.levels.chuDien >= PVP_HALL && flag.aid !== ally?.id && !ally?.naps?.includes(flag.aid),
+  )
+  const owner = $derived(pos ? ownerAt(claims, pos.x, pos.y) : 0)
+  const moveWait = $derived((game.moved ?? -Infinity) + MOVE_COOL - now)
+  const newbie = $derived(newbieMove(game)) // dời núi tân thủ: một lần, tới mọi ô trống vùng ngoài
+  const moveNote = $derived.by(() => {
+    if (moveWait > 0) return L.world.terr.moveWait(clock(moveWait))
+    if (game.marches.length) return L.world.terr.moveAway
+    return newbie ? L.world.terr.newbieHint : L.world.terr.moveHint
+  })
+  async function move() {
+    if (!pos || !(await send({ type: 'move', x: pos.x, y: pos.y })).ok) return
+    sfx('reward')
+    onclose()
+  }
   let aiding = $state(false)
   async function aid(pid: number, elder: ElderId, army: Army) {
     const r = await send({ type: 'aid', pid, elder, army })
@@ -164,7 +234,7 @@
     </Card>
     {#if seat.pid !== me && isAlly(seat.pid) && r}
       {#if aiding}
-        <ArmyPick cta={L.world.aid} time={time(r.len)} disabled={busy} onsubmit={(e, a) => aid(seat.pid, e, a)} />
+        <ArmyPick field cta={L.world.aid} time={time(r.len)} disabled={busy} onsubmit={(e, a) => aid(seat.pid, e, a)} />
       {:else}
         <div class="mt-3">
           <Button variant="gold" wide icon="shield" onclick={() => (aiding = true)}>{L.world.aid}</Button>
@@ -196,6 +266,17 @@
               : `${L.world.left}: ${num(spot?.left ?? MINE_STOCK[point.lv - 1])}`}</small
           >
         {/if}
+        {#if point.kind === 'wild'}
+          {@const foe = wildSide(atlas, point.i)}
+          <small class="t-small"
+            >{dead
+              ? L.world.respawn(clock(spot!.until! - now))
+              : `${L.world.might}: ${num(foe ? might(foe) : 0)}`}</small
+          >
+          <small class="t-small" class:t-bad={apOf(game, now) < AP_HUNT}
+            >{L.world.ap(apOf(game, now), AP_MAX)} · {L.world.apCost(AP_HUNT)}</small
+          >
+        {/if}
         {#if point.kind === 'boss'}
           {@const hp = spot?.hp ?? BOSSES[point.lv]?.str ?? 0}
           <small class="t-small"
@@ -222,8 +303,8 @@
         </Card>
       </div>
     {:else if r && !dead && (point.kind !== 'heaven' || phase >= 3)}
-      {@const slice = task === 'hit' ? bossSlice(atlas, point.i) : null}
-      {#if ally && task !== 'gather'}
+      {@const slice = task === 'hit' ? bossSlice(atlas, point.i) : task === 'hunt' ? wildSide(atlas, point.i) : null}
+      {#if ally && task !== 'gather' && task !== 'hunt'}
         <Section title={L.world.rally}>
           <div class="row wrap">
             <Button size="sm" variant={way === 'solo' ? 'gold' : 'ghost'} onclick={() => (way = 'solo')}
@@ -250,12 +331,14 @@
         </Section>
       {/if}
       <ArmyPick
+        field
         foe={slice ? might(slice) : undefined}
         chance={slice ? (e, a) => raidChance(game, e, a, slice) : undefined}
-        cta={task === 'take' ? L.world.take : task === 'gather' ? L.world.gather : L.world.hit}
+        cta={{ take: L.world.take, gather: L.world.gather, hit: L.world.hit, hunt: L.world.hunt }[task]}
         time={time(r.len)}
-        disabled={busy}
+        disabled={busy || (task === 'hunt' && apOf(game, now) < AP_HUNT)}
         onsubmit={(e, a) => go(task, e, a)}
+        counter={slice ? TYPES.find(x => BEATS[x] === TYPES[point.i % TYPES.length]) : undefined}
       />
     {/if}
   {:else if march}
@@ -268,17 +351,118 @@
             : L.world.stay}
       </p>
     </Card>
+  {:else if site}
+    {@const gift = (site.kind === 'village' ? VILLAGE_GIFTS : CAVE_GIFTS)[site.ring]}
+    <Card>
+      <div class="stack" style:--gap="6px">
+        <p class="t-small t-lore">{site.kind === 'village' ? L.world.explore.villageLore : L.world.explore.caveLore}</p>
+        <Bag res={gift.res} items={gift.items} size="sm" />
+      </div>
+    </Card>
+    <div class="mt-3">
+      <Button wide variant="gold" disabled={busy || !!game.visited?.includes(site.i)} onclick={() => visit(site.i)}
+        >{game.visited?.includes(site.i) ? L.world.explore.visited : L.world.explore.visit}</Button
+      >
+    </div>
   {:else if pick?.kind === 'tile'}
     {@const reg = regionOf(atlas, pick)}
-    <Card>
-      <p class="t-small">
-        {L.world.land[landAt(atlas.seed, pick.x, pick.y)]} · {L.world.weather[weather(atlas, reg, now)]}
-      </p>
-    </Card>
+    {@const c = cellOf(pick)}
+    {#if game.seat && !clear(fog, c.cx, c.cy, now)}
+      <!-- mê vụ: thả linh điểu vào ô sương kề vùng đã khai -->
+      <Card>
+        <p class="t-small t-lore">{L.world.explore.fog}</p>
+      </Card>
+      <div class="stack mt-3" style:--gap="4px">
+        {#if frontier(fog, c.cx, c.cy, now)}
+          <Button
+            wide
+            icon="bolt"
+            disabled={busy || freeCranes < 1}
+            onclick={async () => (await send({ type: 'scout', cx: c.cx, cy: c.cy })).ok && sent()}
+            >{L.world.explore.scout(clock(craneTime(game.seat, c.cx, c.cy)))}</Button
+          >
+        {:else}<small class="t-tiny t-soft">{L.world.explore.far}</small>{/if}
+        <small class="t-tiny t-soft"
+          >{L.world.explore.cranes(Math.max(0, freeCranes), cranes(game))} · {L.world.explore.hint}</small
+        >
+      </div>
+    {:else}
+      <Card>
+        <p class="t-small">
+          {L.world.land[landAt(atlas.seed, pick.x, pick.y)]} · {L.world.weather[weather(atlas, reg, now)]}
+        </p>
+      </Card>
+    {/if}
+  {/if}
+  {#if pos && snap}
+    <div class="stack mt-2" style:--gap="4px">
+      <span class="row wrap" style:--gap="4px"
+        ><Tag tone={owner && owner === ally?.id ? 'good' : owner ? 'bad' : 'plain'} icon="flag"
+          >{owner && owner === ally?.id
+            ? L.world.terr.mine
+            : owner
+              ? L.world.terr.of(snap.allies?.find(a => a.id === owner)?.tag ?? '?')
+              : L.world.terr.none}</Tag
+        >{#if point?.kind === 'mine' && owner && owner === ally?.id}<Tag tone="gold">{L.world.terr.gather}</Tag
+          >{/if}</span
+      >
+      {#if flag}
+        <span class="row wrap" style:--gap="4px"
+          ><Tag icon="flag">{L.world.terr.flag(snap.allies?.find(a => a.id === flag.aid)?.tag ?? '?')}</Tag
+          >{#if flag.done > now}<small class="t-tiny t-soft">{L.world.terr.building(clock(flag.done - now))}</small
+            >{/if}</span
+        >
+        {@const hp = flagHp(flag, now)}
+        <span class="row" style:--gap="6px"
+          ><span class="grow"><Meter value={hp / FLAG_HP} tone="bad" size="sm" /></span><small class="t-tiny t-num"
+            >{L.world.terr.hp(Math.ceil((hp / FLAG_HP) * 100))}</small
+          ></span
+        >
+        {#if officer && ally && flag.aid === ally.id}<Button
+            size="sm"
+            variant="quiet"
+            onclick={async () => (await send({ type: 'unflag', id: flag.id })).ok && onclose()}
+            >{L.world.terr.pull}</Button
+          >{:else if canRaze}
+          {@const fr = road(flag)}
+          <small class="t-tiny t-soft">{L.world.terr.razeHint}</small>
+          <ArmyPick
+            field
+            cta={L.world.terr.raze}
+            time={fr ? time(fr.len) : undefined}
+            disabled={busy || !fr}
+            onsubmit={async (e, a) => (await send({ type: 'raze', id: flag.id, elder: e, army: a })).ok && sent()}
+          />
+        {/if}
+      {:else if pick?.kind === 'tile' && officer && ally && owner === ally.id}
+        <Button
+          size="sm"
+          variant="ghost"
+          icon="flag"
+          disabled={flagCount >= flagCap(ally) || (ally.fund ?? 0) < FLAG_COST}
+          onclick={async () => pos && (await send({ type: 'flag', x: pos.x, y: pos.y })).ok && sent()}
+          >{L.world.terr.plant(num(FLAG_COST))}</Button
+        >
+        <small class="t-tiny t-soft">{L.world.terr.plantHint(flagCount, flagCap(ally), num(ally.fund ?? 0))}</small>
+      {/if}
+      {#if pick?.kind === 'tile' && !flag && game.seat && (newbie || (ally && owner === ally.id))}
+        <Button size="sm" variant="ghost" icon="flag" disabled={moveWait > 0 || !!game.marches.length} onclick={move}
+          >{newbie ? L.world.terr.newbie : L.world.terr.move}</Button
+        >
+        <small class="t-tiny t-soft">{moveNote}</small>
+      {/if}
+    </div>
   {/if}
   {#if pos}
     <Section title={L.world.share}>
       <div class="row wrap">
+        <Button
+          size="sm"
+          variant={game.pins?.some(p => p.x === pos.x && p.y === pos.y) ? 'gold' : 'ghost'}
+          icon="star"
+          onclick={() => g.act({ type: 'pin', x: pos.x, y: pos.y, text: title.slice(0, 24) })}
+          >{game.pins?.some(p => p.x === pos.x && p.y === pos.y) ? L.world.unpin : L.world.pin}</Button
+        >
         {#if say && ally}<Button
             size="sm"
             variant="ghost"
@@ -295,7 +479,7 @@
       {#if shared}<small class="t-small" class:t-bad={!!shared.err} class:t-soft={!shared.err}
           >{shared.err ?? L.world.shared}</small
         >{/if}
-      {#if officer}
+      {#if marker}
         <div class="row mt-2">
           <input
             class="grow"

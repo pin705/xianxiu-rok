@@ -1,8 +1,10 @@
 <script lang="ts">
-  // Tranh đoạt: kẻ đã cướp mình (báo thù) và vài tông môn gần lực chiến; chọn một → xem dò thám → chọn đội → xuất quân cướp.
-  // Danh sách do server ghép (cần state của cả giới); tỉ lệ thắng ước lượng theo phòng thủ đã dò thám.
-  import { PVP_HALL, marchSlots, marchTime, might, type Army, type ElderId } from '@rok/rules'
-  import { raidChance, type Rival } from '@rok/rules/world'
+  // Tranh đoạt: kẻ đã cướp mình (báo thù) và vài tông môn gần lực chiến; chọn một → xem dò thám → chọn đội → xuất quân cướp
+  // (một mình, mở kết trận công sơn, hay góp vào kết trận đồng minh đang mở nhắm tông môn đó — mặc định góp nếu có).
+  // Danh sách do server ghép (cần state của cả giới); tỉ lệ thắng ước lượng theo phòng thủ đã dò thám (chỉ khi đi một mình).
+  import { untrack } from 'svelte'
+  import { PVP_HALL, RALLY_WAIT, marchSlots, marchTime, might, type Army, type ElderId } from '@rok/rules'
+  import { raidChance, type AllyInfo, type Rival, type WorldAction } from '@rok/rules/world'
   import { Icon, Portrait } from '@rok/art'
   import ArmyPick from './Army.svelte'
   import { Button, Card, Medal, Section, Sheet, Tag } from './ui'
@@ -12,6 +14,7 @@
   let {
     open,
     focus = null,
+    ally = null,
     load,
     onclose,
     onraid,
@@ -19,9 +22,10 @@
   }: {
     open: boolean
     focus?: number | null // mở thẳng một tông môn (chạm trên bản đồ giới)
+    ally?: AllyInfo | null // minh của mình: kết trận
     load: (pid?: number) => Promise<Rival[] | null>
     onclose: () => void
-    onraid: (pid: number, elder: ElderId, army: Army) => void
+    onraid: (a: WorldAction) => void
     onrecruit: () => void
   } = $props()
   const g = useGame()
@@ -44,6 +48,26 @@
     void refresh()
   })
   const full = $derived(game.marches.length >= marchSlots(game))
+
+  // cách xuất quân: một mình, mở kết trận (chờ 5/10/30 phút), hay góp vào kết trận đang mở nhắm tông môn này
+  let way = $state<'solo' | 'rally' | number>('solo')
+  let wait = $state<0 | 1 | 2>(1)
+  const rallies = $derived(
+    pick && ally ? ally.rallies.filter(x => x.task === 'raid' && x.i === pick?.pid && x.at > now) : [],
+  )
+  $effect(() => {
+    if (pick) untrack(() => (way = rallies[0]?.id ?? 'solo'))
+  })
+  function cta(r: Rival) {
+    if (way === 'solo') return r.revenge ? L.pvp.revenge : L.pvp.attack
+    const rl = rallies.find(x => x.id === way)
+    return rl ? L.world.joinRally(clock(rl.at - now)) : L.world.openRally
+  }
+  function go(r: Rival, elder: ElderId, army: Army) {
+    if (way === 'solo') onraid({ type: 'raid', pid: r.pid, elder, army })
+    else if (way === 'rally') onraid({ type: 'raidRally', pid: r.pid, wait, elder, army })
+    else onraid({ type: 'raidJoin', id: way, elder, army })
+  }
 </script>
 
 <Sheet
@@ -83,14 +107,42 @@
         {#if r.scout.wall}<Tag icon="shield">{L.pvp.wall(r.scout.wall)}</Tag>{/if}
       </div>
     </Section>
+    {#if ally}
+      <Section title={L.world.rally}>
+        <div class="row wrap">
+          <Button size="sm" variant={way === 'solo' ? 'gold' : 'ghost'} onclick={() => (way = 'solo')}
+            >{L.world.solo}</Button
+          >
+          <Button size="sm" variant={way === 'rally' ? 'gold' : 'ghost'} onclick={() => (way = 'rally')}
+            >{L.world.openRally}</Button
+          >
+          {#each rallies as rl (rl.id)}
+            <Button size="sm" variant={way === rl.id ? 'gold' : 'ghost'} onclick={() => (way = rl.id)}
+              >{L.world.joinRally(clock(rl.at - now))}</Button
+            >
+          {/each}
+        </div>
+        {#if way === 'rally'}
+          <div class="row wrap">
+            {#each RALLY_WAIT as ms, k (k)}
+              <Button size="sm" variant={wait === k ? 'gold' : 'quiet'} onclick={() => (wait = k as 0 | 1 | 2)}
+                >{L.world.wait(ms / 60_000)}</Button
+              >
+            {/each}
+          </div>
+        {/if}
+        <p class="t-tiny t-soft">{L.pvp.rallyHint}</p>
+      </Section>
+    {/if}
     {#if full}<Tag icon="flag" tone="bad">{L.map.slotsFull}</Tag>{/if}
     <ArmyPick
+      field
       foe={might(r.scout.side)}
-      chance={(e, a) => raidChance(game, e, a, r.scout.side)}
-      cta={r.revenge ? L.pvp.revenge : L.pvp.attack}
+      chance={way === 'solo' ? (e, a) => raidChance(game, e, a, r.scout.side) : undefined}
+      cta={cta(r)}
       time={clock(marchTime(game, { kind: 'pvp', i: r.pid }))}
       disabled={full || busy}
-      onsubmit={(e, a) => onraid(r.pid, e, a)}
+      onsubmit={(e, a) => go(r, e, a)}
       {onrecruit}
     />
     <div class="mt-3"><Button variant="ghost" wide icon="back" onclick={() => (pick = null)}>{L.pvp.find}</Button></div>

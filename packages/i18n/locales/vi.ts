@@ -29,12 +29,20 @@ import {
   MARKET_BAND,
   MARKET_BUYS,
   MARKET_TAX,
+  TERR_GATHER,
+  LEGION_WAVES,
+  LEGION_HOUR,
+  LEGION_GIFTS,
+  NEWBIE_MOVE_HALL,
+  FLAG_R,
   MARKET_TTL,
   ALLY_COST,
   ALLY_HALL,
   ALLY_HELPS,
   ALLY_MAX,
   ALLY_TECHS,
+  WAR_MIN,
+  TITLES,
   DONATE_MAX,
   HELP_CREDIT,
   HELP_CREDIT_DAY,
@@ -49,9 +57,12 @@ import {
   type Bonus,
   type BagFamily,
   type FestId,
+  type DaoId,
   type Metric,
   type AchId,
   type AllyTechId,
+  type TitleId,
+  type BookGoal,
   type BuildingId,
   type ElderId,
   type Element,
@@ -205,6 +216,7 @@ export const vi = {
   },
 
   panel: {
+    doneAt: (t: string) => `Xong lúc ${t}`,
     output: 'Sản lượng',
     perHour: '/giờ',
     capacity: 'Sức chứa mỗi loại',
@@ -349,7 +361,7 @@ export const vi = {
       heal: `hồi sinh ${pct(s.v)} đệ tử đã ngã`,
       weaken: `địch bớt ${pct(s.v)} công trong 2 lượt`,
     }[s.kind]
-    return `Lượt 3, 6, 9: ${text}.`
+    return `Chân nguyên đầy (lượt 3, 6, 9; bị đánh đau đầy sớm hơn): ${text}.`
   },
   bonus(key: Bonus, v: number) {
     const name: Record<string, string> = {
@@ -479,6 +491,7 @@ export const vi = {
     if (t.kind === 'pvp') return vi.pvp.kind
     if (t.kind === 'spot') return vi.world.point.vein
     if (t.kind === 'trib') return vi.trib.cloud
+    if (t.kind === 'flag') return 'Trận kỳ'
     return vi.realms[t.i].name
   },
   weekend: {
@@ -486,24 +499,76 @@ export const vi = {
     body: `Thứ Bảy, Chủ nhật: chiến lợi phẩm đánh lại và kinh nghiệm trưởng lão ×${String(WEEKEND).replace('.', ',')}`,
     tag: `Cuối tuần ×${String(WEEKEND).replace('.', ',')}`,
   },
+  // Đạo thống (Civilization): mỗi tông môn theo một đạo thống
+  dao: {
+    title: 'Đạo thống',
+    lore: 'Tông môn theo đạo thống nào thì được hai điều lợi của đạo ấy. Chọn lần đầu miễn phí; đổi đạo cần tịnh tâm 7 ngày giữa hai lần.',
+    change: 'Cải tu',
+    keep: 'Giữ đạo cũ',
+    wait: (t: string) => `Cải tu được sau ${t}`,
+    names: {
+      kiemTong: { name: 'Kiếm Tông', desc: 'Lấy kiếm nhập đạo, xuất quân như gió.' },
+      phapTong: { name: 'Pháp Tông', desc: 'Thuật pháp tinh thâm, công pháp uy lực hơn.' },
+      theTong: { name: 'Thể Tông', desc: 'Luyện thân như sắt, thương binh mau lành.' },
+      danTong: { name: 'Đan Tông', desc: 'Lò đan không tắt, linh điền sung túc.' },
+      tranTong: { name: 'Trận Tông', desc: 'Trận pháp hộ sơn vững chãi, dựng điện nhanh hơn.' },
+    } satisfies Record<DaoId, { name: string; desc: string }>,
+  },
+  // Ma Triều Công Sơn (Shadow Legion): sự kiện giữ núi của tiên minh tối thứ Tư
+  legion: {
+    title: 'Ma Triều Công Sơn',
+    lore: `Tối thứ Tư ${LEGION_HOUR}h, ${LEGION_WAVES} đợt ma triều cách nhau 5 phút đánh vào núi của từng người trong minh — đợt sau mạnh hơn đợt trước. Viện binh đồng minh đóng ở nhà cùng thủ; giữ được đợt nào có điểm đợt đó. Đệ tử ngã chỉ bị thương, không tử trận.`,
+    wave: (n: number) => `Ma triều · đợt ${n}`,
+    sign: 'Ghi danh',
+    unsign: 'Bỏ ghi danh',
+    signed: 'Đã ghi danh',
+    notSigned: 'Chưa ghi danh',
+    at: (t: string) => `Đợt đầu sau ${t}`,
+    next: (n: number, t: string) => `Đợt ${n}/${LEGION_WAVES} sau ${t}`,
+    over: 'Tuần này đã xong',
+    pts: (me: number, ally: number) => `Điểm của bạn ${me} · của minh ${ally}`,
+    hint: 'Đường chủ (R4) / minh chủ ghi danh trước giờ đánh.',
+    alarm: 'Ma triều sắp công sơn: kéo viện binh đồng minh về giữ nhà, chữa thương binh',
+  },
+  // Phường thị: chợ ký gửi giữa các tông môn trong giới (chỉ lệnh bán, trả bằng linh thạch, thuế đốt đi)
   market: {
-    tab: 'Chợ',
+    title: 'Phường thị',
+    lore: 'Chợ ký gửi của cả giới: tông môn treo bán linh thảo, linh khoáng, đan; người mua trả linh thạch.',
     hint: `Chợ của giới: treo bán linh thảo, linh khoáng, đan lấy linh thạch. Giá cả lô trong ${pct(MARKET_BAND[0])}–${pct(MARKET_BAND[1])} giá gốc, thuế ${pct(MARKET_TAX)} (đốt đi). Mỗi ngày mua được ${MARKET_BUYS} lần; lệnh treo ${MARKET_TTL / 3_600_000} giờ, hết hạn thì hàng về qua thư.`,
-    locked: (n: number) => `Chợ mở khi Chủ điện tầng ${n}`,
-    off: 'Chợ của giới đang đóng.',
+    open: 'Vào Phường thị',
+    locked: (n: number) => `Phường thị mở khi Chủ điện tầng ${n}`,
+    off: 'Phường thị của giới đang đóng.',
     buy: 'Mua',
     sell: 'Treo bán',
     cancel: 'Gỡ',
     all: 'Tất cả',
-    none: 'Chưa có ai bán.',
-    mine: 'Lệnh của bạn',
+    none: 'Chưa ai treo bán loại này.',
+    empty: 'Phường thị chưa có ai treo bán.',
+    over: 'Vượt hạn mức treo bán hôm nay — bớt số lượng hoặc hạ giá.',
+    mine: 'Lệnh của tôi',
+    mineNone: 'Bạn chưa treo lệnh nào.',
+    nothing: 'Không có hàng để bán (linh thảo, linh khoáng, đan).',
     by: (name: string) => `của ${name}`,
+    unit: (p: number) => (p === 0 ? 'giá gốc' : p < 0 ? `rẻ hơn giá gốc ${-p}%` : `đắt hơn giá gốc ${p}%`),
     good: 'Hàng',
     amount: 'Số lượng',
-    price: 'Giá cả lô (linh thạch)',
+    price: 'Giá so với giá gốc',
     net: (n: string) => `Bán được thì nhận ${n} linh thạch (sau thuế)`,
+    list: (n: string) => `Treo bán · ${n} linh thạch`,
     left: (buys: number, cap: string) => `Hôm nay: còn ${buys} lần mua · treo bán thêm được ${cap} linh thạch`,
+    slots: (n: number, of: number) => `Lệnh đang treo ${n}/${of}`,
     expires: (t: string) => `còn ${t}`,
+  },
+  supply: {
+    title: 'Vận Linh Trận',
+    lore: 'Truyền tống linh thạch, linh thảo, linh khoáng tới đồng minh; người nhận mở thư lấy về. Tàng Bảo Các càng cao, hao tổn càng ít.',
+    open: 'Tiếp tế',
+    locked: (n: number) => `Vận Linh Trận mở khi Chủ điện tầng ${n}`,
+    tax: (p: string) => `Hao tổn ${p}`,
+    net: (n: string) => `Họ nhận ${n}`,
+    left: (send: string, get: string) => `Hôm nay: bạn còn gửi được ${send} · họ còn nhận được ${get}`,
+    over: 'Vượt hạn mức hôm nay — bớt số lượng.',
+    done: (who: string) => `Đã tiếp tế cho ${who}`,
   },
   trade: {
     tab: 'Thương hội',
@@ -522,6 +587,10 @@ export const vi = {
     floor: (n: number) => `Tầng ${n}`,
     best: (n: number) => (n ? `Kỷ lục: qua ${n} tầng` : 'Chưa qua tầng nào'),
     hint: 'Mỗi tầng địch mạnh hơn và đổi hệ chính. Thưởng chỉ nhận lần đầu qua tầng.',
+    chest: 'Tĩnh tọa ngộ đạo',
+    chestOpen: 'Nhận hôm nay',
+    chestDone: 'Đã nhận hôm nay',
+    chestHint: 'Mỗi ngày một rương theo tầng tháp đã qua — leo cao hơn thì rương dày hơn (mỗi 5 tầng thêm một phần).',
   },
   map: {
     title: 'Bản đồ',
@@ -551,6 +620,9 @@ export const vi = {
   army: {
     elder: 'Trưởng lão dẫn đội',
     troops: 'Đệ tử xuất chiến',
+    presets: 'Trận đồ',
+    preset: (n: number) => `Trận ${n}`,
+    save: 'Lưu đội này',
     all: 'Tất cả',
     none: 'Bỏ chọn',
     counter: 'Theo hệ khắc',
@@ -563,6 +635,13 @@ export const vi = {
     noElder: 'Mọi trưởng lão đều đang xuất chinh',
     busy: 'Xuất chinh',
     recruit: 'Tuyển đệ tử',
+    deputy: 'Phó trưởng lão',
+    noDeputy: 'Không có phó',
+    deputyHint:
+      'Phó đi cùng đội: tâm pháp đã mở cộng vào đội, công pháp nổ ngay sau chủ tướng (nửa sức). Mỗi trưởng lão nhớ phó của mình.',
+    deputyOut: 'Đang đi đội khác',
+    over: (n: string) => `Quá trận dung: trưởng lão này dẫn tối đa ${n} đệ tử ra bản đồ giới`,
+    duo: (lead: string, deputy: string) => `${lead} + ${deputy}`,
   },
   report: {
     title: 'Chiến báo',
@@ -573,12 +652,17 @@ export const vi = {
     tribLose: 'Độ kiếp thất bại',
     wave: (n: number) => `Đợt lôi kiếp ${n}`,
     round: (n: number, of: number) => `Lượt ${n}/${of}`,
+    rage: 'Chân nguyên: đầy thì thi triển công pháp',
     hurt: 'Thương binh',
     dead: 'Tử trận',
     gain: 'Thu được',
     exp: 'Kinh nghiệm',
     newElder: 'Thu nhận trưởng lão',
     replay: 'Xem lại',
+    detail: 'Chi tiết trận',
+    casts: (n: number) => `Công pháp thi triển ${n} lần`,
+    share: 'Chia sẻ chiến báo vào chat',
+    watch: 'Xem trận',
     skip: 'Xem kết quả',
     speed: 'Tốc độ',
     close: 'Đóng',
@@ -600,6 +684,9 @@ export const vi = {
     doing: (n: number, u: string) => `Đang tuyển ${n} ${u}`,
     home: 'Ở tông môn',
     needBuild: 'Xây Diễn võ trường để tuyển đệ tử.',
+    promote: 'Nâng bậc',
+    promoteHint: 'Đệ tử đang ở tông môn lên bậc kế cùng hệ: chỉ trả phần chênh, nhanh hơn tuyển mới.',
+    promoteGo: (n: string, from: string, to: string) => `Nâng ${n} ${from} → ${to}`,
   },
   alchemy: {
     heal: 'Chữa thương',
@@ -653,10 +740,70 @@ export const vi = {
       'Lưu Ly',
     ],
     ring: ['Vòng ngoài', 'Vòng giữa', 'Tâm giới'],
-    point: { vein: 'Linh mạch', mine: 'Mỏ linh thạch', boss: 'Yêu vương', gate: 'Trận nhãn', heaven: 'Thiên Môn' },
+    point: {
+      vein: 'Linh mạch',
+      mine: 'Mỏ linh thạch',
+      boss: 'Yêu vương',
+      gate: 'Trận nhãn',
+      heaven: 'Thiên Môn',
+      wild: 'Yêu thú',
+    },
+    hunt: 'Săn',
+    ap: (n: number, max: number) => `Hành lực ${n}/${max}`,
+    apCost: (n: number) => `mỗi lần săn −${n} (hồi 1 mỗi 3 phút)`,
+    wildLv: (a: number, b: number) => `Cấp ${a}–${b}`,
+    might: 'Lực chiến',
     gateOpens: (phase: string) => `Mở khi vào pha ${phase}`,
     you: 'Tông môn của bạn',
     coord: (x: number, y: number) => `(${x},${y})`,
+    find: 'Tìm',
+    pin: 'Ghi nhớ',
+    unpin: 'Bỏ ghi nhớ',
+    // Khám phá: mê vụ, linh điểu, thôn trang, động phủ (Fog of War, Scout, Tribal Village, Mysterious Cave)
+    explore: {
+      village: 'Thôn trang',
+      cave: 'Động phủ cổ tu',
+      villageLore: 'Thôn trang phàm nhân giữa núi: tông môn ghé thăm được dân làng dâng lương thảo, kinh thư.',
+      caveLore: 'Động phủ của một vị cổ tu đã toạ hoá: dò vào nhận cơ duyên — phù chú, đan dược, thiếp mời hiền.',
+      visit: 'Ghé thăm',
+      visited: 'Đã ghé',
+      fog: 'Mê vụ chưa tan — chưa biết trong này có gì.',
+      scout: (t: string) => `Thả linh điểu · ${t}`,
+      hint: 'Linh điểu bay tới tan mê vụ quanh đó (3 × 3 ô sương) rồi bay về. Thôn trang, động phủ lộ ra thì ghé nhận quà.',
+      far: 'Chỉ thả được vào mê vụ kề vùng đã khai.',
+      cranes: (free: number, all: number) => `Linh điểu rảnh ${free}/${all}`,
+      back: (t: string) => `Linh điểu kế về sau ${t}`,
+    },
+    // Lãnh thổ tiên minh (Alliance Territory)
+    terr: {
+      mine: 'Lãnh thổ minh mình',
+      of: (tag: string) => `Lãnh thổ [${tag}]`,
+      none: 'Đất vô chủ',
+      gather: `Khai mỏ trong lãnh thổ minh mình nhanh hơn ${pct(TERR_GATHER)}`,
+      hint: 'Lãnh thổ: quanh tông môn người trong minh và linh mạch, cổng, Thiên Môn minh đang giữ.',
+      move: 'Dời tông môn tới đây',
+      moveHint:
+        'Dời vào lãnh thổ minh mình (vùng ngoài): gần đồng minh để giúp đỡ, viện binh, kết trận. Mọi đội phải ở nhà.',
+      moveWait: (t: string) => `Dời lại được sau ${t}`,
+      moveAway: 'Gọi mọi đội về nhà rồi mới dời được',
+      moved: 'Đã dời tông môn',
+      newbie: 'Dời núi tân thủ tới đây',
+      newbieHint: `Tông môn mới được dời núi một lần tới bất kỳ ô trống nào ở vùng ngoài (trước Chủ điện tầng ${NEWBIE_MOVE_HALL}) — về gần bạn bè, tiên minh. Mọi đội phải ở nhà.`,
+      // Trận kỳ (Alliance Flag)
+      flag: (tag: string) => `Trận kỳ [${tag}]`,
+      building: (t: string) => `Đang dựng · xong sau ${t}`,
+      plant: (cost: string) => `Cắm trận kỳ · ${cost} Minh khố`,
+      plantHint: (n: number, of: number, fund: string) =>
+        `Trận kỳ dựng xong nới lãnh thổ ${FLAG_R} ô quanh nó. Minh có ${n}/${of} trận kỳ · Minh khố ${fund}.`,
+      pull: 'Nhổ trận kỳ',
+      hp: (n: number) => `Độ bền ${n}%`,
+      raze: 'Phá trận kỳ',
+      razeHint:
+        'Lực chiến của đội trừ vào độ bền; hết độ bền thì cờ đổ, lãnh thổ minh kia co lại. Không giao tranh, không mất quân.',
+    },
+    pins: 'Chỗ đã ghi nhớ',
+    findGo: 'Tới điểm gần nhất',
+    findNone: 'Không có điểm nào như vậy trong tầm (cổng giữa các vùng chưa mở, hoặc đang hồi).',
     share: 'Chia sẻ',
     shareAlly: 'Gửi kênh minh',
     shareWorld: 'Gửi kênh giới',
@@ -665,7 +812,7 @@ export const vi = {
     unmark: 'Gỡ dấu',
     markText: 'Lời ghi cho cả minh',
     marks: 'Dấu của minh',
-    noMarks: 'Chưa có dấu nào. Trưởng lão / minh chủ đặt dấu khi chạm một chỗ trên bản đồ giới.',
+    noMarks: 'Chưa có dấu nào. Từ bậc R3, chạm một chỗ trên bản đồ giới để đặt dấu cho cả minh.',
     npc: 'Phân đà',
     stay: 'Đang đóng quân',
     held: 'Đang giữ',
@@ -686,6 +833,7 @@ export const vi = {
     wait: (min: number) => `Chờ ${min} phút`,
     rallyAt: (by: string, what: string, t: string) => `${by} mở kết trận · ${what} · xuất phát sau ${t}`,
     rallyHint: 'Mở bản đồ Giới, chạm vào điểm để góp đội — mọi đội tới cùng lúc và đánh như một.',
+    siege: (name: string) => `công sơn ${name}`,
     land: { water: 'Sông hồ', plain: 'Đồng bằng', forest: 'Rừng', hill: 'Đồi', mount: 'Núi' },
     weather: { clear: 'Trời quang', mist: 'Sương mù', rain: 'Mưa', snow: 'Tuyết' },
     gathering: 'Đang khai mỏ',
@@ -697,6 +845,11 @@ export const vi = {
       trib: (name: string, hall: number): string => `${name} độ kiếp thành công, đột phá ${vi.realmName(hall)}`,
       season: (n: number) => `Mùa ${n} mở: giới đổi bản đồ, các tông môn xếp lại chỗ`,
       boss: (lv: number) => `Yêu vương cấp ${lv} đã bị hạ`,
+      book: (ch: number, ok: number): string =>
+        ok
+          ? `Thiên Đạo Biên Niên: cả giới hoàn thành chương "${vi.book.names[ch] ?? ch + 1}"`
+          : `Thiên Đạo Biên Niên: chương "${vi.book.names[ch] ?? ch + 1}" hụt hạn`,
+      war: (a: string, b: string, wa: number, wb: number) => `Luận Kiếm Minh Chiến: [${a}] ${wa} – ${wb} [${b}]`,
       unknown: () => 'Giới có biến',
     } satisfies ChronTexts,
   },
@@ -708,6 +861,8 @@ export const vi = {
     none: 'Lúc này chưa có tông môn nào đánh được (đang có khiên, hoặc lực chiến chênh quá xa).',
     revenge: 'Báo thù',
     revengeTag: 'Kẻ thù',
+    rallyHint:
+      'Núi quá sức một đội? Mở kết trận — đồng minh góp đội, tới cùng lúc và đánh như một; chiến lợi phẩm chia theo sức mang.',
     shield: (t: string) => `Khiên bảo hộ còn ${t}`,
     noShield: 'Không có khiên',
     shieldHint: `Thủ thua được khiên ${SHIELD_TIME / 3_600_000} giờ; đi cướp người khác thì mất khiên. Tông môn mới có khiên ${NEWBIE_SHIELD / 3_600_000} giờ.`,
@@ -725,6 +880,7 @@ export const vi = {
     hint: `Chỉ đánh được tông môn có lực chiến từ một nửa của bạn trở lên (báo thù thì không giới hạn, trong ${REVENGE_TIME / 3_600_000} giờ). Cướp ${pct(RAID_SHARE)} phần vượt kho bảo hộ (${pct(PROTECT)} sức chứa), tuỳ sức mang của đội. Chữa thương đắt nên đánh người đang giữ nhà dễ lỗ.`,
     raided: (name: string) => `${name} vừa cướp tông môn!`,
     incoming: (name: string) => `${name} đang kéo quân tới!`,
+    incomingRally: (name: string, n: number) => `${name} kết trận ${n} đội kéo tới!`,
     incomingHint: 'Bật Hộ Sơn Phù trước khi địch tới, hoặc gọi đồng minh viện binh.',
     shieldUp: 'Bật khiên',
     repelled: (name: string) => `Đã đẩy lui ${name}`,
@@ -734,6 +890,7 @@ export const vi = {
   // Hồ sơ chưởng môn người khác (Governor Profile)
   profile: {
     open: 'Hồ sơ',
+    mine: 'Hồ sơ chưởng môn',
     noAlly: 'Chưa vào tiên minh',
     offline: 'Đang bế quan',
     ascended: (n: number) => `Phi thăng ${n} mùa`,
@@ -751,6 +908,14 @@ export const vi = {
     list: 'Các tiên minh trong giới',
     none: 'Giới chưa có tiên minh nào.',
     join: 'Gia nhập',
+    apply: 'Xin vào',
+    asked2: 'Đã gửi đơn',
+    accept: 'Nhận lời mời',
+    invite: 'Mời vào minh',
+    gate: 'Cửa minh',
+    open: 'Vào tự do',
+    closed: 'Duyệt đơn',
+    noApps: 'Chưa có đơn xin vào.',
     members: (n: number, max = ALLY_MAX) => `${n}/${max} tông môn`,
     found: 'Lập tiên minh',
     foundHint: `Cần Chủ điện tầng ${ALLY_HALL}, tốn ${ALLY_COST.toLocaleString('vi')} mỗi loại tài nguyên.`,
@@ -760,9 +925,10 @@ export const vi = {
     noNotice: 'Chưa có bố cáo.',
     edit: 'Sửa bố cáo',
     save: 'Lưu',
-    role: ['Thành viên', 'Trưởng lão', 'Minh chủ'],
-    promote: 'Phong trưởng lão',
-    demote: 'Giáng xuống thành viên',
+    // bậc −2…2 (R1–R5)
+    role: (r: number) => `R${r + 3} · ${['Ngoại môn', 'Nội môn', 'Chân truyền', 'Đường chủ', 'Minh chủ'][r + 2]}`,
+    promote: 'Thăng bậc',
+    demote: 'Giáng bậc',
     lead: 'Nhường minh chủ',
     kick: 'Mời ra khỏi minh',
     leave: 'Rời tiên minh',
@@ -778,6 +944,149 @@ export const vi = {
     noHelp: 'Chưa ai nhờ giúp.',
     wants: (name: string, job: string, n: number, max = ALLY_HELPS) => `${name}: ${job} · ${n}/${max}`,
   },
+  // Thiên Đạo Biên Niên (Monument)
+  book: {
+    title: 'Thiên Đạo Biên Niên',
+    lore: 'Thiên đạo ghi mọi đại sự của giới. Mỗi chương là một mục tiêu chung của mọi tông môn — xong trước hạn, cả giới nhận quà.',
+    chapter: (n: number, of: number) => `Chương ${n}/${of}`,
+    names: [
+      'Lập Tông',
+      'Khai Sơn',
+      'Kết Minh',
+      'Khai Vụ',
+      'Phá Quan',
+      'Tranh Mạch',
+      'Cắm Kỳ',
+      'Trúc Cơ Đại Thành',
+      'Trảm Yêu Vương',
+      'Binh Thế',
+      'Kim Đan Đại Thành',
+      'Thiên Môn',
+    ],
+    goal: {
+      hall5: (n: number) => `${n} tông môn đạt Chủ điện tầng 5`,
+      hall8: (n: number) => `${n} tông môn đạt Chủ điện tầng 8`,
+      explore: (n: number) => `Cả giới khai ${n} ô mê vụ`,
+      gates: (n: number) => `${n} trận nhãn (cổng) có người giữ`,
+      flags: (n: number) => `${n} trận kỳ tiên minh dựng xong`,
+      kp: (n: number) => `Cả giới đạt ${n.toLocaleString('vi-VN')} chiến công`,
+      hall20: (n: number) => `${n} tông môn đạt Chủ điện tầng 20`,
+      allies5: (n: number) => `${n} tiên minh có từ 5 tông môn`,
+      veins: (n: number) => `${n} linh mạch có người giữ`,
+      hall15: (n: number) => `${n} tông môn đạt Chủ điện tầng 15`,
+      bosses: (n: number) => `Hạ ${n} yêu vương`,
+      heaven: () => 'Một tiên minh chiếm Thiên Môn',
+    } satisfies Record<BookGoal, (n: number) => string>,
+    by: (day: number) => `hạn: ngày ${day + 1}`,
+    left: (d: number) => `còn ${d} ngày`,
+    done: 'Đã xong',
+    missed: 'Hụt hạn',
+    end: 'Đã qua hết các chương của mùa này.',
+  },
+  // Giới Chủ và sắc phong (King / Kingdom Titles)
+  lord: {
+    title: 'Giới Chủ',
+    is: 'Giới Chủ của giới',
+    hint: 'Minh chủ tiên minh giữ Thiên Môn là Giới Chủ (Thiên Môn chưa minh nào giữ: minh chủ tiên minh đứng đầu điểm mùa). Giới Chủ sắc phong phúc / hoạ cho người trong giới, mỗi tước giữ 24 giờ.',
+    crown: 'Sắc phong',
+    good: 'Phúc',
+    bad: 'Hoạ',
+    strip: 'Thu hồi tước',
+    held: (name: string) => `Đang giữ: ${name}`,
+    names: {
+      chienThan: 'Chiến Thần',
+      hoQuoc: 'Hộ Quốc Công',
+      thanCong: 'Thần Công',
+      bachThao: 'Bách Thảo Tiên',
+      phanDo: 'Phản Đồ',
+      khatCai: 'Khất Cái',
+      giaiDai: 'Giải Đãi',
+      siNhan: 'Si Nhân',
+    } satisfies Record<TitleId, string>,
+    fx: (id: TitleId): string =>
+      Object.entries(TITLES[id].fx)
+        .map(
+          ([k, v]) =>
+            `${vi.guild.stat[k as keyof typeof vi.guild.stat] ?? k} ${v > 0 ? '+' : ''}${Math.round(v * 100)}%`,
+        )
+        .join(' · '),
+    now: (name: string) => `Giới Chủ: ${name}`,
+    bless: 'Ban phúc cả giới',
+    blessHint: 'Mỗi ngày một lần: mọi tông môn trong giới được tăng ích 8 giờ.',
+    blessKeys: { build: 'Xây +5%', train: 'Tuyển +5%', prod: 'Sản lượng +5%', march: 'Hành quân +8%' },
+    blessed: (what: string, t: string) => `Phúc của Giới Chủ: ${what} · còn ${t}`,
+    boon: (n: number) => `Ban Thiên Ân lễ (tuần còn ${n})`,
+  },
+  // Trưởng lão dẫn đường (Advisor): giới thiệu tính năng vừa mở
+  tips: {
+    who: 'Mộc Thanh Phong dẫn đường',
+    go: 'Đi tới',
+    later: 'Để sau',
+    dao: {
+      title: 'Chọn đạo thống',
+      text: 'Tông môn nên theo một đạo thống: Kiếm, Pháp, Thể, Đan hay Trận Tông — mỗi đạo hai điều lợi. Chọn ở Chủ điện, lần đầu miễn phí.',
+    },
+    events: {
+      title: 'Trung tâm sự kiện',
+      text: 'Ngôi sao bên phải là các sự kiện đang mở: đăng nhập nhận lễ, mục tiêu tân thủ, tranh bá mỗi ngày. Đạt mốc là có quà.',
+    },
+    tavern: {
+      title: 'Chiêu Hiền Đài',
+      text: 'Ở Môn hạ có Chiêu Hiền Đài: thiếp bạc miễn phí mỗi 6 giờ, thiếp vàng mỗi ngày — mời trưởng lão mới, gom tín vật nâng sao.',
+    },
+    daily: {
+      title: 'Nhật Khóa',
+      text: 'Việc tu hành mỗi ngày cộng hoạt lực, đủ mốc mở rương. Nút cuộn giấy bên phải — làm mới 0h mỗi ngày.',
+    },
+    map: {
+      title: 'Bản đồ',
+      text: 'Bản đồ vùng có yêu thú, bí cảnh, tháp. Bản đồ giới (nút Giới) là nơi mọi tông môn chung sống: mỏ, linh mạch, yêu vương, chat.',
+    },
+    alliance: {
+      title: 'Tiên minh',
+      text: 'Vào tiên minh để được giúp rút ngắn việc, cung phụng Hộ Minh Đại Trận, nhận Minh lễ khi đồng minh hạ yêu vương, cùng làm Minh vụ.',
+    },
+    arena: {
+      title: 'Luận Kiếm Đài',
+      text: 'Nút kiếm bên phải: đấu đội hình trưởng lão với tông môn khác, không mất quân. 5 lượt mỗi ngày, có rương ngày và bảng tuần.',
+    },
+    merchant: {
+      title: 'Thương nhân vân du',
+      text: 'Khách buôn đã ghé Thương hội ở Tàng Bảo Các: đổi tài nguyên dư lấy phù tăng tốc, kinh thư — hàng mới mỗi 8 giờ.',
+    },
+  },
+  // Thương nhân vân du (Mysterious Merchant)
+  merchant: {
+    title: 'Thương nhân vân du',
+    lore: 'Khách buôn đi khắp tứ hải, ghé núi bán phù chú, kinh thư — trả bằng tài nguyên, mỗi món một lần',
+    next: (t: string) => `đổi hàng sau ${t}`,
+    buy: 'Mua',
+    sold: 'Đã mua',
+  },
+  // Minh ước bất xâm phạm (NAP) giữa các tiên minh
+  nap: {
+    title: 'Minh ước',
+    hint: 'Hai tiên minh kết minh ước thì không cướp nhau, không đánh điểm bên kia đang giữ. Một bên huỷ là huỷ cả hai.',
+    open: 'Xem các tiên minh',
+    asks: (name: string) => `${name} đề nghị kết minh ước`,
+    ok: 'Nhận',
+    no: 'Từ chối',
+    end: 'Huỷ minh ước',
+    ask: (name: string) => `Đề nghị ${name}`,
+  },
+  // Luận Kiếm Minh Chiến (minh đấu minh bằng đội hình Luận Kiếm Đài)
+  war: {
+    title: 'Luận Kiếm Minh Chiến',
+    hint: `Mỗi tối thứ Bảy (20h): các tiên minh đã ghi danh ghép cặp, người thứ k của hai minh (theo lực chiến) đấu nhau bằng đội hình Luận Kiếm Đài — không mất quân. Minh thắng nhiều cặp hơn thắng. Cần ít nhất ${WAR_MIN} người tầng 6.`,
+    sign: 'Ghi danh',
+    unsign: 'Rút tên',
+    signed: 'Đã ghi danh tuần này',
+    when: (t: string) => `Giải sau ${t}`,
+    pts: (n: number) => `Điểm minh chiến ${n}`,
+    last: 'Lần trước',
+    none: 'Chưa có trận nào.',
+    row: (a: string, b: string, wa: number, wb: number) => `[${a}] ${wa} – ${wb} [${b}]`,
+  },
   // Luận Kiếm Đài (Sunset Canyon bất đồng bộ)
   arena: {
     title: 'Luận Kiếm Đài',
@@ -792,13 +1101,15 @@ export const vi = {
     fight: 'Luận kiếm',
     noFoes: 'Chưa có đối thủ gần điểm — quay lại sau.',
     lineup: 'Đội hình thủ',
-    lineupHint: (n: number) => `Tối đa ${n} đội theo thứ tự ra trận. Mỗi đội: một trưởng lão + một hệ đệ tử ảo (bậc 3, số theo cấp trưởng lão). Chưa xếp thì lấy các trưởng lão cấp cao nhất.`,
+    lineupHint: (n: number) =>
+      `Tối đa ${n} đội theo thứ tự ra trận. Mỗi đội: một trưởng lão + một hệ đệ tử ảo (bậc 3, số theo cấp trưởng lão). Chưa xếp thì lấy các trưởng lão cấp cao nhất.`,
     save: 'Lưu đội hình',
     add: 'Thêm vào đội hình',
     remove: 'Bỏ',
     up: 'Lên trước',
     log: 'Nhật ký',
     noLog: 'Chưa có trận nào.',
+    revenge: 'Phục thù',
     won: (foe: string, d: number) => `Thắng ${foe} (+${d})`,
     lost: (foe: string, d: number) => `Thua ${foe} (${d})`,
     held: (foe: string, d: number) => `${foe} tới luận kiếm — giữ được đài (+${d})`,
@@ -807,6 +1118,10 @@ export const vi = {
     rank: (n: number) => `Hạng ${n}`,
     team: (lv: number, n: number) => `cấp ${lv} · ${n} đệ tử`,
     locked: 'Mở khi Chủ điện đạt tầng 6',
+    ky: 'Kiếm Ý',
+    shop: 'Thương điếm',
+    limit: (n: number, max: number) => `tuần ${n}/${max}`,
+    buy: 'Đổi',
     result: (win: boolean, d: number) => (win ? `Luận kiếm thắng! +${d} điểm đài` : `Luận kiếm thua. ${d} điểm đài`),
   },
   // Minh vụ đường (Alliance Mobilization)
@@ -835,7 +1150,7 @@ export const vi = {
     creditHint: 'Được khi cung phụng Đại Trận và giúp đồng minh; đổi hàng ở Cống Hiến Các. Giữ cả khi đổi minh.',
     fund: 'Minh khố',
     fundHint:
-      'Quỹ chung, lớn dần theo mỗi lượt cung phụng. Trưởng lão và minh chủ dùng để nhập hàng cho Cống Hiến Các.',
+      'Quỹ chung, lớn dần theo mỗi lượt cung phụng. Đường chủ (R4) và minh chủ dùng để nhập hàng cho Cống Hiến Các.',
     tech: 'Hộ Minh Đại Trận',
     techLore:
       'Mỗi tông môn góp một phần linh lực, đại trận hộ cả minh — tăng ích tới mọi người trong minh. Trận minh chủ điểm góp được gấp đôi.',
@@ -877,7 +1192,7 @@ export const vi = {
       return `${vi.guild.stat[d.key]} ${v}`
     },
     shop: 'Cống Hiến Các',
-    shopLore: 'Trưởng lão và minh chủ nhập hàng bằng Minh khố; đạo hữu đổi bằng cống hiến của mình.',
+    shopLore: 'Đường chủ (R4) và minh chủ nhập hàng bằng Minh khố; đạo hữu đổi bằng cống hiến của mình.',
     buy: 'Đổi',
     restock: 'Nhập',
     stock: (n: number) => `Còn ${n}`,
@@ -918,6 +1233,7 @@ export const vi = {
     reports: 'Chiến báo',
     empty: 'Chưa có thư.',
     claim: 'Nhận quà',
+    claimAll: (n: number) => `Nhận tất cả (${n})`,
     got: 'Đã nhận',
     // thư hệ thống: khoá k → [tiêu đề, nội dung]; khoá lạ vẫn hiện được (bản client cũ hơn server)
     msg: {
@@ -947,6 +1263,62 @@ export const vi = {
         `${n} ${goodName(g)} đã có người mua; nhận ${net} linh thạch (sau thuế).`,
       ],
       unsold: (g: string, n: number) => ['Lệnh chợ hết hạn', `${n} ${goodName(g)} chưa ai mua — hàng trả lại ở dưới.`],
+      razed: (tag: string, left: number, x: number, y: number): [string, string] =>
+        left
+          ? [
+              `Đánh trận kỳ [${tag}]`,
+              `Đội ta đánh trận kỳ của [${tag}] ở (${x},${y}): còn ${left}% độ bền. Đánh tiếp trước khi cờ liền lại.`,
+            ]
+          : [`Phá trận kỳ [${tag}]`, `Đội ta đã quật đổ trận kỳ của [${tag}] ở (${x},${y}) — lãnh thổ của họ co lại.`],
+      legion: (pts: number, waves: number): [string, string] => [
+        'Ma Triều Công Sơn đã tan',
+        `Đêm nay tông môn giữ được ${waves}/${LEGION_WAVES} đợt ma triều, được ${pts} điểm.${pts >= LEGION_GIFTS[0].pts ? ' Quà theo điểm ở dưới.' : ` Đạt ${LEGION_GIFTS[0].pts} điểm mới có quà — tuần sau kéo viện binh đồng minh về giữ nhà.`}`,
+      ],
+      supply: (who: string): [string, string] => [
+        `Tiếp tế từ ${who}`,
+        `Đồng minh ${who} gửi tài nguyên qua Vận Linh Trận. Nhận ở dưới.`,
+      ],
+      allyWelcome: (name: string): [string, string] => [
+        `Lễ nhập minh · ${name}`,
+        `Chúc mừng tông môn lần đầu kết minh! Đồng minh giúp nhau rút ngắn việc, cùng giữ linh mạch, kết trận hạ yêu vương. Lễ nhập minh ở dưới.`,
+      ],
+      legionTop: (rank: number): [string, string] => [
+        `Ma Triều Công Sơn · minh hạng ${rank}`,
+        `Tiên minh đứng hạng ${rank} về điểm giữ núi đêm nay. Quà cho người trong minh ở dưới.`,
+      ],
+      flagHit: (who: string, left: number, x: number, y: number): [string, string] =>
+        left
+          ? [
+              'Trận kỳ bị đánh',
+              `${who} vừa đánh trận kỳ của minh ở (${x},${y}): còn ${left}% độ bền. Không bị đánh 12 giờ thì cờ liền lại.`,
+            ]
+          : ['Trận kỳ bị phá', `${who} đã quật đổ trận kỳ của minh ở (${x},${y}). Cắm lại để giữ lãnh thổ.`],
+      mobTop: (rank: number): [string, string] => [
+        `Minh vụ hạng ${rank}`,
+        `Tuần qua tiên minh đứng hạng ${rank} Minh vụ đường của giới. Quà cho người đã góp sức ở dưới.`,
+      ],
+      boon: (lord: string): [string, string] => [
+        'Thiên Ân lễ',
+        `Giới Chủ ${lord} tự tay ban Thiên Ân lễ cho tông môn — mỗi tuần chỉ vài phần. Quà ở dưới.`,
+      ],
+      titled: (title: string, lord: string): [string, string] => [
+        `Sắc phong: ${vi.lord.names[title as TitleId] ?? title}`,
+        `Giới Chủ ${lord} vừa sắc phong cho tông môn tước "${vi.lord.names[title as TitleId] ?? title}" (${vi.lord.fx(title as TitleId)}) trong 24 giờ.`,
+      ],
+      book: (ch: number): [string, string] => [
+        `Biên niên · ${vi.book.names[ch] ?? ch + 1}`,
+        `Cả giới vừa hoàn thành chương "${vi.book.names[ch] ?? ch + 1}" của Thiên Đạo Biên Niên. Quà cho mọi tông môn ở dưới.`,
+      ],
+      war: (win: number, foe: string): [string, string] =>
+        win
+          ? [
+              'Minh chiến thắng!',
+              `Tiên minh vừa thắng [${foe}] ở Luận Kiếm Minh Chiến. Quà cho người trong minh ở dưới.`,
+            ]
+          : [
+              'Minh chiến thua',
+              `Tiên minh thua [${foe}] ở Luận Kiếm Minh Chiến — tuần sau phục thù. Quà an ủi ở dưới.`,
+            ],
       arenaTop: (rank: number) => [
         `Hạng ${rank} Luận Kiếm Đài`,
         `Tuần qua tông môn đứng hạng ${rank} Luận Kiếm Đài của giới. Quà ở dưới; tuần mới điểm đài nén về gần 1.000.`,
@@ -989,6 +1361,7 @@ export const vi = {
       tower: 'Thông Thiên Tháp',
       pvp: 'Tranh đoạt',
       week: 'Sự kiện tuần',
+      kills: 'Chiến công',
     },
     me: 'Tông môn của bạn',
     none: 'Chưa có ai.',
@@ -1223,7 +1596,7 @@ export const vi = {
       ],
       [
         'Trưởng lão',
-        `Mỗi đội cần một trưởng lão dẫn. Mỗi cấp trưởng lão cho cả đội +${pct(ELDER_STEP)} công và máu; công pháp chủ động bung ra ở lượt 3, 6, 9. Thu nhận thêm trưởng lão khi công phá tông môn đối địch và qua tầng 5 các bí cảnh.`,
+        `Mỗi đội cần một trưởng lão dẫn. Mỗi cấp trưởng lão cho cả đội +${pct(ELDER_STEP)} công và máu; công pháp chủ động bung ra khi chân nguyên đầy (lượt 3, 6, 9; bị đánh đau thì sớm hơn). Thu nhận thêm trưởng lão khi công phá tông môn đối địch và qua tầng 5 các bí cảnh.`,
       ],
       [
         'Thương binh',
@@ -1325,6 +1698,7 @@ export const vi = {
     weak: 'Đối thủ chưa tới một nửa lực chiến của bạn',
     gone: 'Tông môn này không còn',
     far: 'Chưa có đường tới đó — cổng giữa các vùng chưa mở',
+    cap: 'Quá trận dung của trưởng lão — bớt đệ tử hoặc chọn trưởng lão cấp cao hơn',
     frenzy: 'Sát khí chưa tan — vừa xuất quân cướp nên chưa bật được Hộ Sơn Phù',
   } as Record<string, string>,
   net: {
@@ -1431,6 +1805,31 @@ export const vi = {
     trade: 'Đổi ở Thương hội',
     upgrade: (b: string) => `Nâng ${b}`,
   },
+  // Dải tăng ích dưới chân dung (như dải buff của RoK): khiên, phù, đan, linh mạch, trận tiên minh, sắc phong
+  buffs: {
+    title: 'Tăng ích đang có',
+    open: (n: number) => `Tăng ích đang có: ${n}`,
+    none: 'Chưa có tăng ích nào. Dùng phù trong túi đồ để tăng sản lượng, hành quân hay sức chiến.',
+    shield: 'Khiên hộ sơn',
+    shieldFx: 'Không ai cướp được tông môn (tự tan khi bạn đi cướp)',
+    builder2: 'Tạp dịch thứ hai: xây song song hai công trình',
+    src: {
+      vein: 'Linh mạch phe mình giữ',
+      tide: 'Linh triều vùng mình',
+      ally: 'Hộ Minh Đại Trận',
+      title: 'Sắc phong của Giới Chủ',
+      bless: 'Phúc của Giới Chủ',
+    },
+    always: 'Thường trực',
+    items: 'Phù trong túi đồ',
+    // thời gian còn lại ngắn gọn trên chip
+    short: (ms: number) =>
+      ms >= 86_400_000
+        ? `${Math.round(ms / 86_400_000)}ng`
+        : ms >= 3_600_000
+          ? `${Math.round(ms / 3_600_000)}g`
+          : `${Math.max(1, Math.ceil(ms / 60_000))}p`,
+  },
   // Trung tâm sự kiện (như Events của RoK)
   fest: {
     title: 'Sự kiện',
@@ -1464,6 +1863,11 @@ export const vi = {
       gather: 'đơn vị tài nguyên khai mỏ',
       draw: 'lần mở thiếp Chiêu Hiền Đài',
       ally: 'lượt cung phụng / giúp đồng minh',
+      duel: 'trận Luận Kiếm Đài',
+      duelWin: 'trận Luận Kiếm Đài thắng',
+      kp: 'điểm chiến công',
+      explore: 'ô mê vụ đã khai',
+      sites: 'thôn trang / động phủ đã ghé',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Thế lực đạt ${n}`,
@@ -1484,6 +1888,11 @@ export const vi = {
       gather: (n: string) => `Khai mỏ mang về ${n} tài nguyên`,
       draw: (n: string) => `Mở ${n} thiếp ở Chiêu Hiền Đài`,
       ally: (n: string) => `Cung phụng Đại Trận hoặc giúp đồng minh ${n} lượt`,
+      duel: (n: string) => `Luận kiếm ${n} trận`,
+      duelWin: (n: string) => `Luận kiếm thắng ${n} trận`,
+      kp: (n: string) => `Đạt ${n} chiến công`,
+      explore: (n: string) => `Khai ${n} ô mê vụ`,
+      sites: (n: string) => `Ghé ${n} thôn trang / động phủ`,
     } satisfies Record<Metric, (n: string) => string>,
     // việc đo bằng phần tăng thêm (Nhật Khóa, Minh vụ): chỉ các chỉ số có câu khác với task (tổng tích luỹ)
     gain: {
@@ -1504,6 +1913,18 @@ export const vi = {
       tanThu: {
         name: 'Tân Thủ Chi Lộ',
         desc: 'Bảy ngày đầu: đi hết con đường tân thủ, mỗi mục tiêu một phần thưởng.',
+      },
+      khaiVu: {
+        name: 'Khai Vụ Tứ Phương',
+        desc: 'Bảy ngày đầu: thả linh điểu tan mê vụ trên bản đồ giới, ghé thôn trang, dò động phủ cổ tu — mỗi mốc một phần quà.',
+      },
+      binhThe: {
+        name: 'Binh Thế Tranh Hùng',
+        desc: 'Thứ Bảy, Chủ nhật: hạ đệ tử tông môn khác khi cướp, giữ nhà, tranh linh mạch đều ra chiến công. Đủ mốc mở rương phù chiến.',
+      },
+      tongLenh: {
+        name: 'Tông Lệnh Bảo Khố',
+        desc: 'Tám ngày đầu: xây, tuyển, săn yêu, nghiên cứu công pháp đều ra Tông Môn Lệnh. Đổi lấy quà trong bảo khố — mỗi món có hạn, lệnh bài không đủ đổi hết, chọn cho khéo.',
       },
       tranhBa: {
         name: 'Tông Môn Tranh Bá',
@@ -1537,12 +1958,24 @@ export const vi = {
         name: 'Trảm Yêu Lệnh',
         desc: 'Yêu thú kéo tới cổng núi: săn yêu, qua bí cảnh, thắng trận đều có điểm.',
       },
+      dongTam: {
+        name: 'Đồng Tâm Hiệp Lực',
+        desc: 'Hai ngày tiên minh đồng lòng: mỗi lượt cung phụng Hộ Minh Đại Trận, mỗi lượt giúp đồng minh đều có điểm.',
+      },
+      tranhPhong: {
+        name: 'Luận Kiếm Tranh Phong',
+        desc: 'Hai ngày Luận Kiếm Đài náo nhiệt: mỗi trận luận kiếm có điểm, thắng thêm điểm.',
+      },
       lienTram: {
         name: 'Liên Trảm Bất Hồi',
         desc: 'Cuối tuần chinh chiến: thắng trận, cướp thắng, leo tháp — trận nào cũng có điểm.',
       },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: 'Lịch 7 ngày',
+    tokens: (n: string) => `Tông Môn Lệnh: ${n}`,
+    buy: (price: string) => `Đổi · ${price}`,
+    left: (n: number, max: number) => `Còn ${n}/${max}`,
+    soldOut: 'Đã đổi hết',
     todayShort: 'Hôm nay',
     soon: 'Sắp mở',
     weekday: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
@@ -1591,6 +2024,10 @@ export const vi = {
       kinhThu: { name: 'Tâm Đắc Kinh Thư', desc: 'Tâm đắc của tiền bối: một trưởng lão nhận thêm kinh nghiệm.' },
       nganDuyen: { name: 'Ngân Duyên Phù', desc: 'Một lần mở thiếp bạc ở Chiêu Hiền Đài.' },
       kimDuyen: { name: 'Kim Duyên Phù', desc: 'Một lần mở thiếp vàng ở Chiêu Hiền Đài.' },
+      tapDich: {
+        name: 'Tạp Dịch Lệnh',
+        desc: 'Thuê thêm một tạp dịch: xây song song hai công trình. Dùng thêm thì kéo dài; việc đang xây dở vẫn xong khi hết hạn.',
+      },
     } satisfies Record<BagFamily, { name: string; desc: string }>,
   },
   ago(ms: number) {

@@ -4,18 +4,22 @@ import type { Report } from '@rok/rules'
 import { weekOf } from '@rok/rules'
 import {
   allyInfo,
+  allyOf,
   allyRows,
   arenaBoard,
   arenaFoes,
+  boonLeft,
+  lordOf,
   marketOf,
   profileOf,
   rivals,
   seasonBoard,
   sideKey,
+  supplyRoom,
 } from '@rok/rules/world'
 import type { Answer, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
-import { channel, dmsOf } from './talk.ts'
+import { channel, dmsOf, sharedIn } from './talk.ts'
 import type { Sock, World } from './world.ts'
 
 const SEASON_ROWS = 20 // bảng điểm mùa gửi client: top này
@@ -33,8 +37,19 @@ export const answersOf = (w: World): Answers => ({
     const key = channel(w, sock.data.pid, q.ch)
     return key ? w.chat.history(key) : []
   },
-  allies: () => allyRows(w.shared, w.ps),
-  profile: (_, q) => (w.npc.has(q.pid) ? null : profileOf(w.shared, w.ps, q.pid, !!w.slots.get(q.pid)?.conns.size)),
+  allies: sock => allyRows(w.shared, w.ps, sock.data.pid),
+  profile: (sock, q) => {
+    if (w.npc.has(q.pid)) return null
+    const now = w.now(),
+      lord = lordOf(w.shared, w.ps, w.map(now), now)
+    const p = profileOf(w.shared, w.ps, q.pid, !!w.slots.get(q.pid)?.conns.size, now, lord)
+    const mine = allyOf(w.shared, sock.data.pid)
+    const invite = !p?.ally && !!mine && (mine.members[sock.data.pid] ?? 0) >= 1 && q.pid !== sock.data.pid
+    const crown = lord === sock.data.pid
+    // Vận Linh Trận: còn gửi được bao nhiêu cho người này (chỉ người cùng minh; chợ tắt thì tắt cả tiếp tế)
+    const supply = w.info.market ? supplyRoom(w.shared, w.ps, sock.data.pid, q.pid, now) : null
+    return p && { ...p, crown, boon: crown ? boonLeft(w.shared, now) : 0, invite, supply }
+  },
   dms: sock => dmsOf(w, sock.data.pid),
   arena: sock => {
     const now = w.now()
@@ -63,6 +78,14 @@ export const answersOf = (w: World): Answers => ({
     const now = w.now()
     w.maps.watch(sock, now)
     return w.snapshot(now)
+  },
+  // Chiến báo người khác chia sẻ: chỉ khi trong kênh mình nghe được có tin của chính người đó mang mã "#r<id>"
+  shared: async (sock, q) => {
+    if (!sharedIn(w, sock.data.pid, q.pid, q.id)) return null
+    const mem = [...(w.persist.inflight?.reports ?? []), ...w.persist.pending.reports].find(
+      r => r.pid === q.pid && r.id === q.id,
+    )
+    return (mem?.body ?? (await store.playerReport(w.env.db, q.pid, q.id))) as Report | null
   },
   // chiến báo chưa kịp ghi DB (đang chờ / đang commit) cộng chiến báo đã ghi
   reports: async (sock, q) => {

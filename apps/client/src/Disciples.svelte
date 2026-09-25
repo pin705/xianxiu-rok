@@ -88,10 +88,8 @@
                     >{L.elders[e].title} · {L.units[ELDERS[e].type]} · {L.el[ELDERS[e].el]}</small
                   >
                   <span class="row" style:--gap="6px"
-                    ><b class="t-tiny t-gold">{L.lv(elderLevel(game.elders[e]))} · {'★'.repeat(starOf(game, e))}</b><span
-                      class="grow"
-                      ><Meter value={expPart(e)} tone="gold" size="sm" /></span
-                    ></span
+                    ><b class="t-tiny t-gold">{L.lv(elderLevel(game.elders[e]))} · {'★'.repeat(starOf(game, e))}</b
+                    ><span class="grow"><Meter value={expPart(e)} tone="gold" size="sm" /></span></span
                   >
                   <small class="t-tiny" class:t-bad={!!m} class:t-good={!m}
                     >{m ? `${L.monHa.out} · ${clock(m.returnAt - now)}` : L.monHa.home}</small

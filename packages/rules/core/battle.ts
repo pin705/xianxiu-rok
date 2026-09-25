@@ -1,9 +1,23 @@
 // Trận PvE: mục tiêu, đội địch, đội mình, thương binh, phần thưởng, chiến báo; lôi kiếp; tỉ lệ thắng ước lượng.
 import { fight, type Side } from '../combat.ts'
 import { bump, eventMul } from './calendar.ts'
-import { HIGH_FIRST, bonus, cutOf, elderLevel, expAt, hospital, lead, marchSlots, unitOf, isMarching } from './stats.ts'
+import {
+  HIGH_FIRST,
+  bonus,
+  capOf,
+  cutOf,
+  deputyOf,
+  elderLevel,
+  expAt,
+  hospital,
+  lead,
+  marchSlots,
+  passive,
+  unitOf,
+  isMarching,
+} from './stats.ts'
 import { type Army, type Err, type Gain, type March, type Report, type Snap, type State, type Target } from './types.ts'
-import { addBag, addItems, bag, count, grow, mark, minus, nextSeed, noGain } from './util.ts'
+import { addBag, addItems, bag, compact, count, grow, mark, minus, nextSeed, noGain } from './util.ts'
 import {
   BEAST_COOLDOWN,
   BEAST_EXP,
@@ -11,6 +25,7 @@ import {
   BEAST_STR,
   BEASTS,
   BEATS,
+  DEPUTY_SKILL,
   DO_KIEP,
   ELDER_DUP_EXP,
   ELDER_MAX,
@@ -137,15 +152,18 @@ export function enemyOf(s: State, t: Target): Side {
   return d.el ? { ...side, el: d.el } : side
 }
 
-// elder null: đội không người dẫn (giữ nhà khi không ai trấn thủ) — chỉ có bonus của tông môn
-export function sideOf(s: State, elder: ElderId | null, army: Army): Side {
+// elder null: đội không người dẫn (giữ nhà khi không ai trấn thủ) — chỉ có bonus của tông môn.
+// deputy: phó trưởng lão — tâm pháp đã mở cộng vào đội, công pháp nổ sau chủ tướng với DEPUTY_SKILL sức
+export function sideOf(s: State, elder: ElderId | null, army: Army, deputy?: ElderId): Side {
   const m = elder ? 1 + ELDER_STEP * (elderLevel(s.elders[elder]) - 1) : 1
-  const b = (k: Bonus) => (elder ? lead(s, elder, k) : bonus(s, k))
+  const b = (k: Bonus) => (elder ? lead(s, elder, k) : bonus(s, k)) + (deputy ? passive(s, deputy, k) : 0)
   const sk = elder ? ELDERS[elder].skill : undefined,
     power = elder ? b('skill') : 0
+  const ds = elder && deputy ? ELDERS[deputy].skill : undefined
   return {
     el: elder ? ELDERS[elder].el : undefined,
     skill: sk && power ? { ...sk, v: sk.v * (1 + power) } : sk,
+    ...(ds && { skill2: { ...ds, v: ds.v * DEPUTY_SKILL * (1 + power) } }),
     troops: UNITS.filter(u => (army[u] ?? 0) > 0).map(u => {
       const { type, tier } = unitOf(u)
       const base = UNIT_BASE[type],
@@ -174,8 +192,14 @@ export function armyError(s: State, elder: ElderId, army: Army): Err | null {
   return count(army) ? null : 'empty'
 }
 
-export const snap = (side: Side, elder?: ElderId, level = 1): Snap => ({
+// Đội đang đi (trên bản đồ giới): chủ tướng, phó đi cùng, quân mang theo; ảnh chụp đội đó trong chiến báo
+export const marchSide = (s: State, m: March) => sideOf(s, m.elder, compact(m.army), m.deputy)
+export const marchSnap = (s: State, side: Side, m: March) =>
+  snap(side, m.elder, elderLevel(s.elders[m.elder]), m.deputy)
+
+export const snap = (side: Side, elder?: ElderId, level = 1, deputy?: ElderId): Snap => ({
   elder,
+  ...(deputy && { deputy }),
   level,
   troops: side.troops.map(t => ({ type: t.type, tier: t.tier, n: t.n })),
 })
@@ -207,7 +231,12 @@ export const addGain = (s: State, elder: ElderId, g: Gain): State => giveExp(gra
 // Trưởng lão đã có thì đổi thành kinh nghiệm cho chính người đó (như tượng tướng trùng của RoK): quà không bao giờ mất.
 export function grant(s: State, r: Reward): State {
   const extra = (r.hallRes ?? 0) * s.levels.chuDien
-  const res = extra ? addBag(s.res, bag(x => (r.res?.[x] ?? 0) + extra)) : addBag(s.res, r.res ?? {})
+  const res = extra
+    ? addBag(
+        s.res,
+        bag(x => (r.res?.[x] ?? 0) + extra),
+      )
+    : addBag(s.res, r.res ?? {})
   const st: State = { ...s, res, items: addItems(s.items, r.items ?? {}) }
   if (!r.elder) return st
   return st.elders[r.elder] === undefined
@@ -236,9 +265,9 @@ export const pushReport = (s: State, r: Omit<Report, 'id'>): State => ({
 
 // Đánh một mục tiêu trên bản đồ. Cập nhật tiến độ bản đồ + chiến báo; phần thưởng trả về để người gọi trao
 // (hành quân: lúc về tới tông môn; bí cảnh: ngay).
-export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: number, at: number) {
+export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: number, at: number, deputy?: ElderId) {
   const ids = UNITS.filter(u => (army[u] ?? 0) > 0)
-  const me = sideOf(s, elder, army)
+  const me = sideOf(s, elder, army, deputy)
   const foe = enemyOf(s, t)
   const f = fight(me, foe, seed)
   const left = f.rounds.at(-1)?.n[0] ?? ids.map(u => army[u]!)
@@ -291,14 +320,16 @@ export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: nu
   if (f.win) st = bump(st, 'win')
   st = pushReport(st, {
     at,
-    kind: t.kind,
+    kind: t.kind as Report['kind'], // trận PvE: không bao giờ là trận kỳ (world/flags.ts)
     i: t.i,
     f: floor,
     win: f.win,
     hurt,
     dead: {},
     gain: g,
-    fights: [{ a: snap(me, elder, elderLevel(s.elders[elder])), b: snap(foe, undefined, foeLevel), rounds: f.rounds }],
+    fights: [
+      { a: snap(me, elder, elderLevel(s.elders[elder]), deputy), b: snap(foe, undefined, foeLevel), rounds: f.rounds },
+    ],
   })
   return { state: st, back, hurt, gain: g, report: st.nextId - 1 }
 }
@@ -311,12 +342,20 @@ export function tribPill(s: State, want: boolean): 'phaCanh' | 'doKiep' | null {
 }
 
 // Ba đợt lôi kiếp nối nhau; đệ tử còn đứng được đi tiếp sang đợt sau. mul: hộ pháp / phá kiếp (kiếp vân công khai)
-export function tribulation(s: State, elder: ElderId, army: Army, p: PillId | null, seed: number, mul = 1) {
+export function tribulation(
+  s: State,
+  elder: ElderId,
+  army: Army,
+  p: PillId | null,
+  seed: number,
+  mul = 1,
+  deputy?: ElderId,
+) {
   const tr = TRIBS[s.trib]
   const weaken =
     (1 - Math.min(MAX_CUT, lead(s, elder, 'trib'))) * (p === 'phaCanh' ? 1 - PHA_CANH : p ? 1 - DO_KIEP : 1) * mul
   const lv = elderLevel(s.elders[elder])
-  let me = sideOf(s, elder, army)
+  let me = sideOf(s, elder, army, deputy)
   let win = true
   const fights: Report['fights'] = []
   for (const w of tr.waves) {
@@ -324,7 +363,7 @@ export function tribulation(s: State, elder: ElderId, army: Army, p: PillId | nu
     const foe = w.el ? { ...wave, el: w.el } : wave
     const f = fight(me, foe, seed)
     seed = nextSeed(seed)
-    fights.push({ a: snap(me, elder, lv), b: snap(foe), rounds: f.rounds })
+    fights.push({ a: snap(me, elder, lv, deputy), b: snap(foe), rounds: f.rounds })
     const left = f.rounds.at(-1)?.n[0]
     if (left) me = { ...me, troops: me.troops.map((x, i) => ({ ...x, n: left[i] })) }
     if (!f.win) {
@@ -345,20 +384,38 @@ export function chance(win: (seed: number) => boolean) {
 export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'trib', pill = false) {
   if (!count(army) || s.elders[elder] === undefined) return 0
   if (t === 'trib' && !TRIBS[s.trib]) return 0
+  const d = deputyOf(s, elder)
   return chance(seed =>
     t === 'trib'
-      ? tribulation(s, elder, army, tribPill(s, pill), seed).win
-      : fight(sideOf(s, elder, army), enemyOf(s, t), seed).win,
+      ? tribulation(s, elder, army, tribPill(s, pill), seed, 1, d).win
+      : fight(sideOf(s, elder, army, d), enemyOf(s, t), seed).win,
   )
 }
 
 // Đội xuất quân được: trưởng lão rảnh, đủ quân, còn lượt xuất quân
 export const marchError = (s: State, elder: ElderId, army: Army) =>
   armyError(s, elder, army) ?? (s.marches.length >= marchSlots(s) ? 'slots' : null)
-// Đội rời nhà: trừ quân ở nhà, thêm hành quân
-export const launch = (s: State, army: Army, m: March): State => ({
-  ...s,
-  troops: minus(s.troops, army),
-  marches: [...s.marches, m],
-  nextId: s.nextId + 1,
-})
+// Đội ra bản đồ giới: như trên, thêm trận dung của trưởng lão dẫn đội
+export const fieldError = (s: State, elder: ElderId, army: Army) =>
+  marchError(s, elder, army) ?? (count(army) > capOf(s, elder) ? 'cap' : null)
+// Cắt đội vừa trận dung: giữ bậc cao trước (bot, nút "Tất cả" trên màn chọn đội)
+export function capArmy(s: State, elder: ElderId, army: Army): Army {
+  let room = capOf(s, elder)
+  const out: Army = {}
+  for (const u of HIGH_FIRST) {
+    const n = Math.min(army[u] ?? 0, room)
+    if (n > 0) out[u] = n
+    room -= n
+  }
+  return out
+}
+// Đội rời nhà: trừ quân ở nhà, thêm hành quân (phó trưởng lão đã ghép, đang rảnh thì đi cùng)
+export function launch(s: State, army: Army, m: March): State {
+  const deputy = deputyOf(s, m.elder)
+  return {
+    ...s,
+    troops: minus(s.troops, army),
+    marches: [...s.marches, deputy ? { ...m, deputy } : m],
+    nextId: s.nextId + 1,
+  }
+}

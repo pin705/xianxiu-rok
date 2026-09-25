@@ -4,6 +4,10 @@
   import { Tween } from 'svelte/motion'
   import {
     DAILY_HALL,
+    LEGION_WAVES,
+    PVP_HALL,
+    weekOf,
+    arenaOf,
     RESOURCES,
     count,
     achCount,
@@ -25,9 +29,12 @@
     type BuildingId,
     type State,
   } from '@rok/rules'
+  import Buffs from './Buffs.svelte'
   import ResSheet from './ResSheet.svelte'
   import VipSheet from './VipSheet.svelte'
   import { useGame } from './game'
+  import { social } from './social.svelte'
+  import { helpsOf, legionAt, type AllyInfo } from '@rok/rules/world'
   import { Icon, Portrait, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon, type Look } from '@rok/art'
   import { Badge, Bag, IconButton, Meter, Tag } from './ui'
   import { L, TABS, clock, num, progress, sfx, visitTab, visitedTabs, type Tab, type PanelTab } from './lib'
@@ -48,6 +55,9 @@
     onranks = () => {},
     onmail = () => {},
     onfocus,
+    ally = null,
+    me = null,
+    onhelp,
   }: {
     game: State
     now: number
@@ -61,9 +71,12 @@
     onsettings: () => void
     ondaily: () => void
     onfests?: () => void // trung tâm sự kiện
-    onranks?: () => void // chạm chân dung: xếp hạng
+    onranks?: () => void // chạm chân dung khi chưa vào giới: xếp hạng
     onmail?: () => void
     onfocus: (id: BuildingId, view?: PanelTab) => void // mở bảng công trình (danh sách việc đang chạy)
+    ally?: AllyInfo | null // tiên minh của mình: nút giúp đỡ nổi (như bàn tay giúp của RoK)
+    me?: number | null
+    onhelp?: () => Promise<unknown>
   } = $props()
 
   const MASTER: Look = {
@@ -84,7 +97,16 @@
   let vipOpen = $state(false)
   // đội địch đang kéo tới (chưa tới nơi) và Hộ Sơn Phù nhỏ nhất đang có để bật khiên ngay
   const g = useGame()
-  const incoming = $derived((game.incoming ?? []).filter(x => x.at > now && game.shield <= now))
+  // đội địch đang kéo tới; các đội tới cùng lúc là một kết trận — một thẻ, đếm số đội
+  const incoming = $derived.by(() => {
+    const live = (game.incoming ?? []).filter(x => x.at > now && game.shield <= now)
+    return live
+      .filter((x, k) => live.findIndex(y => y.at === x.at) === k)
+      .map(x => ({
+        ...x,
+        n: live.filter(y => y.at === x.at).length,
+      }))
+  })
   const ward = $derived((['hoSon8', 'hoSon24', 'hoSon72'] as const).find(id => (game.items[id] ?? 0) > 0))
   let visited = $state(visitedTabs())
   // Ghé tab bằng cách nào cũng tính (bấm tab, hay nhiệm vụ dẫn sang bản đồ)
@@ -94,6 +116,21 @@
   })
 
   const hall = $derived(game.levels.chuDien)
+  const duels = $derived(hall >= PVP_HALL ? arenaOf(game, now).left : 0) // lượt Luận Kiếm Đài còn hôm nay
+  // việc đồng minh đang nhờ mà mình giúp được: nút nổi, một chạm giúp tất cả
+  const helpable = $derived(
+    ally && me !== null
+      ? ally.helps.filter(h => h.pid !== me && !h.by.includes(me) && h.by.length < helpsOf(ally)).length
+      : 0,
+  )
+  // Ma Triều Công Sơn sắp tới / đang đánh (minh mình đã ghi danh): đợt kế và lúc giáng
+  const legion = $derived.by(() => {
+    const wk = weekOf(now)
+    const lg = ally?.legion
+    if (!lg?.signed || lg.week !== wk || lg.done >= LEGION_WAVES) return null
+    const at = legionAt(wk, lg.done)
+    return now >= legionAt(wk, 0) - 15 * 60_000 ? { k: lg.done, at } : null
+  })
   const cap = $derived(storage(game))
   const job = $derived(game.queue[0])
   const live = $derived(questOf(game))
@@ -115,7 +152,18 @@
   const ring = $derived(job ? progress(job, now) : 0)
   // Huy hiệu trên thanh tab: số chiến báo chưa đọc; chấm đỏ khi có thương binh chờ chữa
   const unread = $derived(game.reports.filter(r => r.id > game.seen).length)
-  const tabCount = $derived<Partial<Record<Tab, number>>>({ banDo: unread, baoKho: game.ach ? achCount(game) : 0 })
+  // Tiên minh: việc đồng minh nhờ giúp + đơn xin vào / lời đề nghị minh ước chờ trưởng lão, minh chủ trả lời
+  const allyTodo = $derived(
+    helpable +
+      (ally && me !== null && (ally.members[me] ?? 0) >= 1
+        ? (ally.applicants?.length ?? 0) + (ally.napIn?.length ?? 0)
+        : 0),
+  )
+  const tabCount = $derived<Partial<Record<Tab, number>>>({
+    banDo: unread,
+    baoKho: game.ach ? achCount(game) : 0,
+    tienMinh: allyTodo,
+  })
   const hurt = $derived(!game.heal && count(game.wounded) > 0)
   // thư mới chưa đọc hoặc còn quà chưa nhận
   const letters = $derived(game.mail.filter(m => m.id > game.seen || (m.gift && !m.got)).length)
@@ -198,9 +246,14 @@
 
 <div class="hud">
   <header class="topbar strip">
-    <div class="row who">
-      <!-- chân dung: chạm để xem xếp hạng; vòng khiên xanh khi đang được bảo hộ -->
-      <button class="avatar" class:shielded={game.shield > now} onclick={onranks} aria-label={L.rank.open}>
+    <div class="who">
+      <!-- chân dung: chạm xem hồ sơ của mình (như RoK; chưa vào giới thì xem xếp hạng); vòng khiên xanh khi được bảo hộ -->
+      <button
+        class="avatar"
+        class:shielded={game.shield > now}
+        onclick={() => (me !== null ? (social.profile = me) : onranks())}
+        aria-label={me !== null ? L.profile.mine : L.rank.open}
+      >
         <Portrait look={MASTER} size={50} /><img
           class="frame"
           src={paintedUrl('ring', portraitRing, 62)}
@@ -234,6 +287,8 @@
         ><Badge n={letters} /></IconButton
       >
       <IconButton icon="gear" label={L.settings.open} size={34} onclick={onsettings} />
+      <!-- dải tăng ích (khiên, phù, đan…) dưới cụm nút, chạm để xem từng nguồn và hạn -->
+      <span class="boosts"><Buffs /></span>
     </div>
     <ul class="res">
       {#each RESOURCES as r, i (r)}
@@ -263,9 +318,8 @@
       <div class="alarm" role="alert">
         <Icon name="swords" size={18} />
         <span class="grow"
-          ><b>{L.pvp.incoming(x.foe)}</b> <span class="t-num">{clock(x.at - now)}</span><br /><small
-            >{L.pvp.incomingHint}</small
-          ></span
+          ><b>{x.n > 1 ? L.pvp.incomingRally(x.foe, x.n) : L.pvp.incoming(x.foe)}</b>
+          <span class="t-num">{clock(x.at - now)}</span><br /><small>{L.pvp.incomingHint}</small></span
         >
         {#if ward}
           <button
@@ -276,6 +330,15 @@
         {/if}
       </div>
     {/each}
+    <!-- Ma Triều Công Sơn: minh đã ghi danh, từ 15 phút trước đợt đầu tới hết đợt cuối — nhắc kéo viện binh, chữa thương -->
+    {#if legion}
+      <button class="alarm legion" onclick={e => ontab('tienMinh', e)}>
+        <Icon name="shield" size={18} />
+        <span class="grow"
+          ><b>{L.legion.next(legion.k + 1, clock(legion.at - now))}</b><br /><small>{L.legion.alarm}</small></span
+        >
+      </button>
+    {/if}
   </header>
 
   <!-- màn hẹp: chỉ ở tab Tông môn; desktop: luôn nằm trong cột trái (CSS .away) -->
@@ -316,6 +379,17 @@
           ><Badge n={fests} /></IconButton
         >
       </span>
+      <!-- Luận Kiếm Đài: từ tầng mở Tranh đoạt, chấm đỏ = còn lượt hôm nay -->
+      {#if hall >= PVP_HALL}
+        <span class="daily" class:ready={duels > 0}>
+          <IconButton
+            icon="swords"
+            label="{L.arena.title}{duels ? ` (${duels})` : ''}"
+            size={46}
+            onclick={() => (social.arena = true)}><Badge n={duels} /></IconButton
+          >
+        </span>
+      {/if}
       {#if hall >= DAILY_HALL}
         <span class="daily" class:ready={ready > 0}>
           <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}
@@ -356,7 +430,20 @@
       </svg>
       <Icon name="hammer" size={24} />
       <span class="btime">{job ? clock(job.finishAt - now) : L.builder.idle}</span>
+      <!-- tạp dịch thứ hai (Tạp Dịch Lệnh) đang rảnh: chấm son nhắc xây thêm một công trình -->
+      {#if job && (game.builder2 ?? 0) > now && game.queue.length < 2}<Badge dot />{/if}
     </button>
+  {/if}
+
+  {#if helpable && onhelp && !storm}
+    <button
+      class="helpall"
+      onclick={async () => {
+        await onhelp()
+        sfx('reward')
+      }}
+      aria-label={L.ally.helpAll(helpable)}><Icon name="people" size={26} /><Badge n={helpable} /></button
+    >
   {/if}
 
   <nav class="tabs strip">
@@ -381,11 +468,7 @@
             draggable="false"
           />
           {#if locked}<span class="lk"><Icon name="lock" size={10} /></span>{/if}
-          {#if !on}<Badge
-              n={tabCount[t.id] ?? 0}
-              dot={t.id === 'monHa' && (hurt || tavernReady)}
-              {fresh}
-            />{/if}
+          {#if !on}<Badge n={tabCount[t.id] ?? 0} dot={t.id === 'monHa' && (hurt || tavernReady)} {fresh} />{/if}
         </span>
         <span class="tl">{L.tabs[t.id]}</span>
         {#if locked}<small>{t.unlock > 15 ? L.soonTag : L.level(t.unlock)}</small>{/if}
@@ -420,8 +503,22 @@
     padding: calc(var(--sp-2) + var(--safe-t)) 20px 18px;
     filter: drop-shadow(0 4px 10px rgb(var(--shade) / 0.18));
   }
+  /* điện thoại: chân dung, tên cao hai hàng; hàng dưới của cụm nút là dải tăng ích */
   .who {
-    gap: var(--sp-2);
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    grid-template-rows: 34px auto;
+    gap: 2px var(--sp-2);
+    align-items: center;
+  }
+  .avatar,
+  .id {
+    grid-row: span 2;
+  }
+  .boosts {
+    grid-column: 3 / -1;
+    justify-self: end;
+    min-height: 22px;
   }
   .avatar {
     position: relative;
@@ -525,6 +622,16 @@
   .alarm small {
     opacity: 0.85;
   }
+  /* Ma triều: chàm sẫm (không phải đội người đang kéo tới), chạm sang tab Tiên minh */
+  .legion {
+    width: 100%;
+    font: inherit;
+    font-size: var(--fs-2);
+    text-align: left;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--indigo) 86%, var(--ink));
+    animation: none;
+  }
   .shieldup {
     flex: none;
     padding: 4px 10px;
@@ -580,7 +687,7 @@
     top: -9px;
     right: 2px;
     padding: 1px 7px 2px;
-    font: 800 11px/1.4 var(--font);
+    font: 800 var(--fs-1) / 1.4 var(--font);
     font-style: normal;
     color: var(--silk);
     border: 0 solid transparent;
@@ -722,6 +829,25 @@
   .builder:active {
     transform: scale(0.94);
   }
+  /* giúp đỡ đồng minh: đĩa vàng nổi trên nút tạp dịch, mọi tab */
+  .helpall {
+    position: absolute;
+    right: calc(var(--sp-3) + 8px);
+    bottom: calc(190px + var(--safe-b));
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    color: var(--ink);
+    pointer-events: auto;
+    background: var(--img-disc-gold) center / 100% 100% no-repeat;
+    border: 0;
+    animation: glow 1.6s var(--ease) infinite;
+    cursor: pointer;
+  }
+  .helpall:active {
+    transform: scale(0.94);
+  }
   .builder.idle {
     animation: glow 1.6s var(--ease) infinite;
   }
@@ -825,7 +951,7 @@
     background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
   .tabs small {
-    font-size: 11px;
+    font-size: var(--fs-1);
     color: var(--text-faint);
   }
   .away {
@@ -937,8 +1063,13 @@
     .pow {
       order: 3;
     }
-    .who > :global(:last-child) {
+    /* thư, cài đặt về cuối hàng; dải tăng ích (con cuối) ngay sau tên */
+    .who > :global(:nth-last-child(2)),
+    .who > :global(:nth-last-child(3)) {
       order: 4;
+    }
+    .boosts {
+      order: 1;
     }
 
     .tabs {

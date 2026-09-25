@@ -11,9 +11,13 @@
     MOB_MIN,
     RESOURCES,
     jobOf,
+    weekOf,
+    LEGION_WAVES,
     type JobKind,
   } from '@rok/rules'
   import {
+    warAt,
+    legionAt,
     boardOf,
     donateLeft,
     mobOf,
@@ -44,6 +48,8 @@
     send,
     chat,
     onmap,
+    onraid,
+    list,
   }: {
     me: number | null
     ally: AllyInfo | null
@@ -51,6 +57,8 @@
     send: (a: WorldAction) => Promise<Ack>
     chat?: Snippet
     onmap?: (x: number, y: number) => void // tới dấu của minh trên bản đồ giới
+    onraid?: (pid: number) => void // góp đội vào kết trận công sơn (mở bảng Tranh đoạt ở tông môn đó)
+    list?: () => Promise<AllyRow[] | null> // các minh trong giới (minh ước)
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -60,6 +68,16 @@
   let editing = $state<string | null>(null)
   let pick = $state<number | null>(null)
   let sheet = $state<'tech' | 'shop' | 'mob' | null>(null)
+  // nút ở danh sách minh: nhận lời mời · đã gửi đơn · xin vào (minh đóng) · gia nhập
+  function joinLabel(r: AllyRow) {
+    if (r.invited) return L.ally.accept
+    if (r.asked) return L.ally.asked2
+    return r.closed ? L.ally.apply : L.ally.join
+  }
+  // Minh ước: danh sách các minh (tên theo mã) tải khi mở mục
+  let others = $state<AllyRow[] | null>(null)
+  const napName = (id: number) => others?.find(r => r.id === id)?.name ?? `#${id}`
+  const loadOthers = async () => (others = (await list?.()) ?? [])
   const maxHelps = $derived(ally ? helpsOf(ally) : 0)
   const left = $derived(donateLeft(game, g.now))
   const gift = $derived(ally ? giftLevel(ally) : 1)
@@ -76,15 +94,34 @@
       ? ((ally.gift ?? 0) - ALLY_GIFT_LV[gift - 1]) / (ALLY_GIFT_LV[gift] - ALLY_GIFT_LV[gift - 1])
       : 1,
   )
-  const myRole = $derived<Role | -1>(ally && me !== null ? (ally.members[me] ?? -1) : -1)
+  const myRole = $derived<Role | -9>(ally && me !== null ? (ally.members[me] ?? -9) : -9) // −9: chưa vào minh
   const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge']
   const running = $derived(JOBS.filter(k => jobOf(game, k)))
   const asked = (k: JobKind) =>
     !!ally?.helps.some(h => h.pid === me && h.job === k && h.startAt === jobOf(game, k)?.startAt)
-  const others = $derived(
+  const helpable = $derived(
     ally ? ally.helps.filter(h => h.pid !== me && me !== null && !h.by.includes(me) && h.by.length < maxHelps) : [],
   )
   const nameOf = (pid: number) => ally?.people.find(p => p.pid === pid)?.name ?? '?'
+  // kết trận đánh gì: tông môn (công sơn), yêu vương, hay điểm để chiếm
+  const rallyWhat = (r: AllyInfo['rallies'][number]) => {
+    if (r.task === 'raid') return L.world.siege(r.foe ?? '?')
+    return r.task === 'hit' ? L.world.point.boss : L.world.point.vein
+  }
+  // Ma Triều Công Sơn: tuần đang chờ (qua giờ đánh tuần này mà minh không đánh dở thì là tuần sau), như signWeek ở rules
+  const week = $derived.by(() => {
+    const wk = weekOf(g.now),
+      mine = ally?.legion
+    const mid = mine?.week === wk && mine.signed && mine.done < LEGION_WAVES
+    return g.now < legionAt(wk, 0) || mid ? wk : wk + 1
+  })
+  const lg = $derived(ally?.legion?.week === week ? ally.legion : { week, signed: false, done: 0, pts: 0, mine: 0 })
+  const legionLine = $derived.by(() => {
+    if (lg.done >= LEGION_WAVES) return L.legion.over
+    const ms = Math.max(0, legionAt(week, lg.done) - g.now)
+    const t = ms >= 3_600_000 ? L.ago(ms) : clock(ms) // còn lâu: "5 ngày 16 giờ"; sắp tới: đồng hồ
+    return lg.done ? L.legion.next(lg.done + 1, t) : L.legion.at(t)
+  })
   const go = async (a: WorldAction, sound: 'reward' | 'tap' = 'tap') => {
     const ok = (await send(a)).ok
     if (ok) sfx(sound)
@@ -108,7 +145,12 @@
                     >{L.ally.members(r.n, r.max)} · {L.power} {num(r.power)}</small
                   ></span
                 >
-                <Button size="sm" onclick={() => go({ type: 'allyJoin', id: r.id }, 'reward')}>{L.ally.join}</Button>
+                <Button
+                  size="sm"
+                  variant={r.invited ? 'gold' : 'primary'}
+                  disabled={r.asked}
+                  onclick={() => go({ type: 'allyJoin', id: r.id }, 'reward')}>{joinLabel(r)}</Button
+                >
               </span>
             </Card>
           </li>
@@ -149,7 +191,7 @@
         <Medal emblem="crest" tone="gold" size={46} />
         <span class="grow stack" style:--gap="1px"
           ><b class="t-head">{ally.name} [{ally.tag}]</b><small class="t-small t-soft"
-            >{L.ally.members(ally.people.length, seatsOf(ally))} · {L.ally.role[myRole === -1 ? 0 : myRole]}</small
+            >{L.ally.members(ally.people.length, seatsOf(ally))} · {myRole === -9 ? '' : L.ally.role(myRole)}</small
           ></span
         >
       </span>
@@ -195,6 +237,40 @@
     <AllyShop open={sheet === 'shop'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
     <AllyMob open={sheet === 'mob'} onclose={() => (sheet = null)} {ally} {me} {send} />
 
+    {#if myRole >= 1}
+      <!-- Quản trị: minh mở (vào tự do) hay đóng (duyệt đơn), đơn xin vào đang chờ -->
+      <Section title={L.ally.gate}>
+        <div class="row" style:--gap="6px">
+          <Button
+            size="sm"
+            variant={ally.closed ? 'ghost' : 'gold'}
+            onclick={() => go({ type: 'allyOpen', open: true })}>{L.ally.open}</Button
+          >
+          <Button
+            size="sm"
+            variant={ally.closed ? 'gold' : 'ghost'}
+            onclick={() => go({ type: 'allyOpen', open: false })}>{L.ally.closed}</Button
+          >
+        </div>
+        {#each ally.applicants as x (x.pid)}
+          <div class="row" style:--gap="6px">
+            <span class="grow stack" style:--gap="0"
+              ><b class="t-small">{x.name}</b><small class="t-tiny t-soft"
+                >{L.realm(x.hall)} · {L.power} {num(x.power)}</small
+              ></span
+            >
+            <Button size="sm" variant="gold" onclick={() => go({ type: 'allyAccept', pid: x.pid, ok: true }, 'reward')}
+              >{L.nap.ok}</Button
+            >
+            <Button size="sm" variant="quiet" onclick={() => go({ type: 'allyAccept', pid: x.pid, ok: false })}
+              >{L.nap.no}</Button
+            >
+          </div>
+        {/each}
+        {#if !ally.applicants.length}<p class="t-small t-soft">{L.ally.noApps}</p>{/if}
+      </Section>
+    {/if}
+
     <Section title={L.ally.notice}>
       {#if editing !== null}
         <textarea bind:value={editing} maxlength="200" rows="3" aria-label={L.ally.notice}></textarea>
@@ -232,8 +308,8 @@
         variant="gold"
         wide
         icon="people"
-        disabled={!others.length}
-        onclick={() => go({ type: 'helpAll' }, 'reward')}>{L.ally.helpAll(others.length)}</Button
+        disabled={!helpable.length}
+        onclick={() => go({ type: 'helpAll' }, 'reward')}>{L.ally.helpAll(helpable.length)}</Button
       >
     </Section>
 
@@ -249,7 +325,7 @@
                     >{L.realm(p.hall)} · {L.power} {num(p.power)}</small
                   ></span
                 >
-                <Tag size="sm" tone={p.role === 2 ? 'gold' : 'plain'}>{L.ally.role[p.role]}</Tag>
+                <Tag size="sm" tone={p.role >= 1 ? 'gold' : 'plain'}>{L.ally.role(p.role)}</Tag>
               </span>
             </Card>
             {#if pick === p.pid}
@@ -258,21 +334,24 @@
                 <Button size="sm" variant="ghost" icon="mail" onclick={() => (social.dm = { pid: p.pid, name: p.name })}
                   >{L.profile.dm}</Button
                 >
-                {#if myRole === 2}
-                  {#if p.role === 0}<Button
-                      size="sm"
-                      variant="ghost"
-                      onclick={() => go({ type: 'allyRole', pid: p.pid, role: 1 })}>{L.ally.promote}</Button
-                    >{/if}
-                  {#if p.role === 1}<Button
-                      size="sm"
-                      variant="ghost"
-                      onclick={() => go({ type: 'allyRole', pid: p.pid, role: 0 })}>{L.ally.demote}</Button
-                    >{/if}
-                  <Button size="sm" variant="ghost" onclick={() => go({ type: 'allyRole', pid: p.pid, role: 2 })}
-                    >{L.ally.lead}</Button
-                  >
-                {/if}
+                <!-- xếp bậc: minh chủ tới R4, đường chủ (R4) chỉ trong R1–R3 cho người dưới mình -->
+                {#if myRole >= 1 && p.role < myRole - 1}<Button
+                    size="sm"
+                    variant="ghost"
+                    onclick={() => go({ type: 'allyRole', pid: p.pid, role: (p.role + 1) as Role })}
+                    >{L.ally.promote}</Button
+                  >{/if}
+                {#if myRole >= 1 && myRole > p.role && p.role > -2}<Button
+                    size="sm"
+                    variant="ghost"
+                    onclick={() => go({ type: 'allyRole', pid: p.pid, role: (p.role - 1) as Role })}
+                    >{L.ally.demote}</Button
+                  >{/if}
+                {#if myRole === 2}<Button
+                    size="sm"
+                    variant="ghost"
+                    onclick={() => go({ type: 'allyRole', pid: p.pid, role: 2 })}>{L.ally.lead}</Button
+                  >{/if}
                 {#if myRole > p.role}<Button
                     size="sm"
                     variant="danger"
@@ -299,15 +378,98 @@
       {/if}
     </Section>
 
+    <Section title={L.war.title}>
+      <p class="t-small t-soft">{L.war.hint}</p>
+      <p class="row between t-small">
+        <b>{ally.war.signed ? L.war.signed : L.war.when(clock(warAt(weekOf(g.now)) - g.now))}</b>
+        <span class="t-num t-soft">{L.war.pts(ally.war.pts)}</span>
+      </p>
+      {#if myRole >= 1}
+        <Button
+          size="sm"
+          variant={ally.war.signed ? 'quiet' : 'gold'}
+          icon="swords"
+          onclick={() => go({ type: ally?.war.signed ? 'warUnsign' : 'warSign' }, 'reward')}
+          >{ally.war.signed ? L.war.unsign : L.war.sign}</Button
+        >
+      {/if}
+      {#if ally.war.last.length}
+        <small class="t-tiny t-soft">{L.war.last}</small>
+        <ul class="stack" style:--gap="2px">
+          {#each ally.war.last as r (r.a)}
+            <li class="t-small" class:t-strong={r.a === ally.id || r.b === ally.id}>
+              {L.war.row(r.an, r.bn, r.wa, r.wb)}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </Section>
+
+    <Section title={L.legion.title}>
+      <p class="t-small t-soft">{L.legion.lore}</p>
+      <p class="row between t-small">
+        <b>{legionLine}</b>
+        <Tag tone={lg.signed ? 'good' : 'plain'}>{lg.signed ? L.legion.signed : L.legion.notSigned}</Tag>
+      </p>
+      {#if lg.signed && lg.done}<small class="t-small t-num">{L.legion.pts(lg.mine, lg.pts)}</small>{/if}
+      {#if myRole >= 1 && g.now < legionAt(week, 0)}
+        <Button
+          size="sm"
+          variant={lg.signed ? 'quiet' : 'gold'}
+          icon="shield"
+          onclick={() => go({ type: lg.signed ? 'legionUnsign' : 'legionSign' }, 'reward')}
+          >{lg.signed ? L.legion.unsign : L.legion.sign}</Button
+        >
+      {:else if myRole < 1 && !lg.signed}<small class="t-tiny t-soft">{L.legion.hint}</small>{/if}
+    </Section>
+
+    <Section title={L.nap.title}>
+      <p class="t-small t-soft">{L.nap.hint}</p>
+      {#if !others}
+        <Button size="sm" variant="ghost" onclick={loadOthers}>{L.nap.open}</Button>
+      {:else}
+        {#each ally.napIn ?? [] as id (id)}
+          <div class="row wrap" style:--gap="6px">
+            <span class="t-small grow">{L.nap.asks(napName(id))}</span>
+            {#if myRole >= 1}
+              <Button size="sm" variant="gold" onclick={() => go({ type: 'napOk', id }, 'reward')}>{L.nap.ok}</Button>
+              <Button size="sm" variant="quiet" onclick={() => go({ type: 'napNo', id })}>{L.nap.no}</Button>
+            {/if}
+          </div>
+        {/each}
+        {#each ally.naps ?? [] as id (id)}
+          <div class="row" style:--gap="6px">
+            <span class="t-small grow"><Icon name="shield" size={14} /> {napName(id)}</span>
+            {#if myRole >= 1}<Button size="sm" variant="quiet" onclick={() => go({ type: 'napEnd', id })}
+                >{L.nap.end}</Button
+              >{/if}
+          </div>
+        {/each}
+        {#if myRole >= 1}
+          <div class="row wrap" style:--gap="4px">
+            {#each others.filter(r => r.id !== ally?.id && !ally?.naps?.includes(r.id)) as r (r.id)}
+              <Button size="sm" variant="ghost" onclick={() => go({ type: 'napAsk', id: r.id })}
+                >{L.nap.ask(`[${r.tag}] ${r.name}`)}</Button
+              >
+            {/each}
+          </div>
+        {/if}
+      {/if}
+    </Section>
+
     {#if ally.rallies.length}
       <Section title={L.world.rally}>
         <ul class="stack" style:--gap="2px">
-          {#each ally.rallies as r (r.id)}<li class="t-small">
-              {L.world.rallyAt(
-                nameOf(r.by),
-                r.task === 'hit' ? L.world.point.boss : L.world.point.vein,
-                clock(Math.max(0, r.at - game.time)),
-              )}
+          {#each ally.rallies as r (r.id)}<li class="row t-small">
+              <span class="grow"
+                >{L.world.rallyAt(nameOf(r.by), rallyWhat(r), clock(Math.max(0, r.at - game.time)))}</span
+              >
+              {#if r.task === 'raid' && onraid && r.at > game.time}<Button
+                  size="sm"
+                  variant="gold"
+                  icon="swords"
+                  onclick={() => onraid(r.i)}>{L.world.joinRally(clock(r.at - game.time))}</Button
+                >{/if}
             </li>{/each}
         </ul>
         <p class="t-tiny t-soft">{L.world.rallyHint}</p>

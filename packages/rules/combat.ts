@@ -7,7 +7,9 @@ import {
   EL_DISADV,
   MAX_ROUNDS,
   OVERCOMES,
-  SKILL_EVERY,
+  RAGE_HURT,
+  RAGE_MAX,
+  RAGE_TURN,
   type Element,
   type Skill,
   type Tier,
@@ -19,9 +21,11 @@ import {
 // theo tổng máu của nhóm, nhân hệ khắc, trừ phần thủ chặn được.
 
 export type Troop = { type: UnitType; tier: Tier; n: number; atk: number; def: number; hp: number }
-export type Side = { troops: Troop[]; skill?: Skill; el?: Element } // el: ngũ hành của người dẫn / của địch
-// n: số còn lại của từng nhóm sau lượt · cast: bên nào thi triển công pháp lượt này
-export type Round = { n: [number[], number[]]; cast: [boolean, boolean] }
+// el: ngũ hành của người dẫn / của địch · skill2: công pháp của phó trưởng lão (nổ cùng lượt, ngay sau chủ tướng)
+export type Side = { troops: Troop[]; skill?: Skill; skill2?: Skill; el?: Element }
+// n: số còn lại của từng nhóm sau lượt · cast: bên nào thi triển công pháp lượt này · rage: chân nguyên hai bên sau lượt
+// (chiến báo cũ chưa có)
+export type Round = { n: [number[], number[]]; cast: [boolean, boolean]; rage?: [number, number] }
 export type Fight = { win: boolean; rounds: Round[] }
 
 // mulberry32: chỉ dùng phép số nguyên 32-bit nên mọi engine ra cùng dãy
@@ -44,6 +48,8 @@ export function elAdv(att?: Element, def?: Element) {
   return OVERCOMES[def] === att ? EL_DISADV : 1
 }
 
+const skills = (s: Side) => (s.skill2 ? [s.skill!, s.skill2] : [s.skill!])
+
 export function fight(a: Side, b: Side, seed: number): Fight {
   const rand = rng(seed)
   const sides = [a, b]
@@ -55,18 +61,26 @@ export function fight(a: Side, b: Side, seed: number): Fight {
   ]
   const el = [elAdv(a.el, b.el), elAdv(b.el, a.el)]
   const alive = (i: number) => n[i].some(x => x > 0)
+  const rage = [0, 0]
+  const pool = sides.map((s, i) => s.troops.reduce((sum, t, k) => sum + n[i][k] * t.hp, 0)) // máu lúc vào trận
   const rounds: Round[] = []
 
   for (let r = 1; r <= MAX_ROUNDS && alive(0) && alive(1); r++) {
     const cast: [boolean, boolean] = [false, false]
     const guard = [1, 1]
     for (const i of [0, 1]) {
-      const sk = sides[i].skill
-      if (!sk || r % SKILL_EVERY) continue
+      if (!sides[i].skill) continue
+      rage[i] += RAGE_TURN
+      if (rage[i] < RAGE_MAX) continue
+      rage[i] -= RAGE_MAX
       cast[i] = true
-      if (sk.kind === 'shield') guard[i] = 1 - sk.v
-      if (sk.kind === 'weaken') weak[1 - i] = { v: sk.v, left: 2 }
-      if (sk.kind === 'heal') sides[i].troops.forEach((t, k) => (n[i][k] += Math.floor((t.n - n[i][k]) * sk.v)))
+      for (const sk of skills(sides[i])) {
+        if (sk.kind === 'shield') guard[i] *= 1 - sk.v
+        // hai độc vụ cùng lượt: chồng nhân (1 − v1)(1 − v2); một thì giữ đúng v
+        if (sk.kind === 'weaken')
+          weak[1 - i] = { v: weak[1 - i].left === 2 ? 1 - (1 - weak[1 - i].v) * (1 - sk.v) : sk.v, left: 2 }
+        if (sk.kind === 'heal') sides[i].troops.forEach((t, k) => (n[i][k] += Math.floor((t.n - n[i][k]) * sk.v)))
+      }
     }
     const atkMul = weak.map(w => (w.left-- > 0 ? 1 - w.v : 1))
 
@@ -83,25 +97,28 @@ export function fight(a: Side, b: Side, seed: number): Fight {
           dmg[j][k] += ((power * n[j][k] * t.hp) / bulk) * adv * (DEF_K / (DEF_K + t.def)) * guard[j] * el[i]
         })
       sides[i].troops.forEach((t, k) => n[i][k] && hit(n[i][k] * t.atk * atkMul[i] * (0.9 + 0.2 * rand()), t.type))
-      const sk = sides[i].skill
-      if (cast[i] && sk?.kind === 'burst') {
-        const base = sides[i].troops.reduce(
-          (sum, t, k) => sum + (!sk.type || t.type === sk.type ? n[i][k] * t.atk : 0),
-          0,
-        )
-        hit(base * sk.v * atkMul[i], sk.type)
-      }
+      for (const sk of cast[i] ? skills(sides[i]) : [])
+        if (sk.kind === 'burst') {
+          const base = sides[i].troops.reduce(
+            (sum, t, k) => sum + (!sk.type || t.type === sk.type ? n[i][k] * t.atk : 0),
+            0,
+          )
+          hit(base * sk.v * atkMul[i], sk.type)
+        }
     }
 
     for (const i of [0, 1]) {
+      let lost = 0
       sides[i].troops.forEach((t, k) => {
         hurt[i][k] += dmg[i][k]
         const kills = Math.min(n[i][k], Math.floor(hurt[i][k] / t.hp))
         n[i][k] -= kills
         hurt[i][k] = n[i][k] ? hurt[i][k] - kills * t.hp : 0
+        lost += kills * t.hp
       })
+      if (sides[i].skill && pool[i]) rage[i] += (RAGE_HURT * lost) / pool[i]
     }
-    rounds.push({ n: [[...n[0]], [...n[1]]], cast })
+    rounds.push({ n: [[...n[0]], [...n[1]]], cast, rage: [Math.floor(rage[0]), Math.floor(rage[1])] })
   }
   return { win: alive(0) && !alive(1), rounds }
 }

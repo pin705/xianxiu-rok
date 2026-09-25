@@ -134,6 +134,7 @@ export type Batch = {
     pvp: number
     weekNo: number
     weekPts: number
+    kills: number
     seen?: Seen
   }[]
   reports: { pid: number; id: number; at: number; kind: string; win: boolean; body: object }[]
@@ -167,9 +168,11 @@ export async function flushWorld(db: Database, b: Batch) {
       q.push(
         tx.execute(sql`
           update ${players} p set state = r.state, name = r.name, power = r.power, hall = r.hall, tower = r.tower, rebirths = r.rebirths,
-            pvp = r.pvp, week_no = r."weekNo", week_pts = r."weekPts", seen = coalesce(r.seen, p.seen), updated_at = now()
+            pvp = r.pvp, week_no = r."weekNo", week_pts = r."weekPts", kills = r.kills, seen = coalesce(r.seen, p.seen),
+            updated_at = now()
           from jsonb_to_recordset(${JSON.stringify(b.players)}::jsonb)
-            as r(id int, state jsonb, name text, power int, hall int, tower int, rebirths int, pvp int, "weekNo" int, "weekPts" int, seen jsonb)
+            as r(id int, state jsonb, name text, power int, hall int, tower int, rebirths int, pvp int, "weekNo" int, "weekPts" int,
+              kills int, seen jsonb)
           where p.id = r.id and p.world_id = ${b.world}`),
       )
     if (b.reports.length)
@@ -271,7 +274,7 @@ export const addInbox = (db: Database, world: number, kind: string, body: object
 
 // ---------- Xếp hạng ----------
 
-export const BOARDS = ['power', 'hall', 'tower', 'pvp', 'week'] as const
+export const BOARDS = ['power', 'hall', 'tower', 'pvp', 'week', 'kills'] as const
 export type Board = (typeof BOARDS)[number]
 const boardValue = {
   power: players.power,
@@ -279,6 +282,7 @@ const boardValue = {
   tower: players.tower,
   pvp: players.pvp,
   week: players.weekPts,
+  kills: players.kills,
 }
 const boardScope = (world: number, board: Board, week: number) =>
   and(eq(players.worldId, world), board === 'week' ? eq(players.weekNo, week) : undefined)
@@ -333,6 +337,14 @@ export async function playerReports(db: Database, pid: number, before?: number) 
     .orderBy(desc(reports.id))
     .limit(REPORTS_PAGE)
   return rows.map(r => r.body)
+}
+// Một chiến báo (chia sẻ vào chat)
+export async function playerReport(db: Database, pid: number, id: number) {
+  const rows = await db
+    .select({ body: reports.body })
+    .from(reports)
+    .where(and(eq(reports.playerId, pid), eq(reports.id, id)))
+  return rows[0]?.body ?? null
 }
 
 export const addWarp = (db: Database, world: number, ms: number) =>

@@ -32,7 +32,11 @@ export function channel(w: World, pid: number, ch: Channel, send = false) {
 // người nhận của một phòng: cả giới, người trong minh, hay hai người truyền âm
 function listeners(w: World, room: string) {
   if (room === 'w') return [...w.slots.values()]
-  if (room[0] === 'd') return room.slice(1).split('-').flatMap(p => w.slots.get(Number(p)) ?? [])
+  if (room[0] === 'd')
+    return room
+      .slice(1)
+      .split('-')
+      .flatMap(p => w.slots.get(Number(p)) ?? [])
   const al = w.shared.allies[Number(room.slice(1))]
   return al ? Object.keys(al.members).flatMap(p => w.slots.get(Number(p)) ?? []) : []
 }
@@ -73,6 +77,10 @@ export function say(
   }, true)
   w.persist.schedule()
 }
+
+// pid nghe được tin của author có mã chiến báo "#r<id>" (chia sẻ chiến báo vào chat)
+export const sharedIn = (w: World, pid: number, author: number, id: number) =>
+  w.chat.shares(author, `#r${id}`).some(room => listeners(w, room).some(s => s.id === pid))
 
 // Báo cáo một tin: chỉ người nghe được tin đó mới báo được
 export async function report(w: World, sock: Sock, id: number) {

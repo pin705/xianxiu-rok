@@ -17,6 +17,11 @@ import {
 import {
   BASE_CAP,
   BASE_RATE,
+  DAOS,
+  DEPUTY_HALL,
+  MARCH_CAP,
+  MARCH_CAP_STAR,
+  MARCH_CAP_STEP,
   BATCH_BASE,
   BATCH_STEP,
   BUILDINGS,
@@ -34,6 +39,8 @@ import {
   HEAL_TIME,
   HOSPITAL_BASE,
   HOSPITAL_STEP,
+  AP_EVERY,
+  AP_MAX,
   MARCH_SLOTS,
   MAX_CUT,
   MAX_LEVEL,
@@ -78,6 +85,7 @@ export function bonus(s: State, key: Bonus) {
   if (key === 'prod') v += REBIRTH_PROD * Math.min(REBIRTH_MAX, s.rebirths)
   if (key === 'build') v += REBIRTH_BUILD * Math.min(REBIRTH_MAX, s.rebirths)
   for (const b of s.buffs) if (b.key === key) v += b.v
+  if (s.dao) v += (DAOS[s.dao.id] as Partial<Record<Bonus, number>>)[key] ?? 0
   return v + (VIP_PERKS[vipLevel(s)][key] ?? 0)
 }
 // Cấp Hương Hỏa theo tổng điểm (save cũ chưa có: cấp 0)
@@ -95,10 +103,14 @@ export const elderLevel = (exp = 0) => {
   return n
 }
 export const expAt = (level: number) => EXP_BASE * level * (level - 1)
+// Tâm pháp (bị động) đã mở của trưởng lão e cho chỉ số key — phó trưởng lão chỉ góp phần này
+export function passive(s: State, e: ElderId, key: Bonus) {
+  const lv = elderLevel(s.elders[e])
+  return ELDERS[e].passives.reduce((sum, p) => sum + (lv >= p.at && p.key === key ? p.v : 0), 0)
+}
 // bonus của cả tông môn + của riêng trưởng lão dẫn đội: bị động, pháp bảo đang đeo, thiên phú
 export function lead(s: State, elder: ElderId, key: Bonus) {
-  const lv = elderLevel(s.elders[elder])
-  let v = bonus(s, key) + ELDERS[elder].passives.reduce((sum, p) => sum + (lv >= p.at && p.key === key ? p.v : 0), 0)
+  let v = bonus(s, key) + passive(s, elder, key)
   for (const g of GEAR_IDS) if (s.gear[g]?.on === elder && GEAR[g].key === key) v += GEAR[g].v * s.gear[g]!.lv
   const t = s.talents[elder]
   if (t) TALENTS.forEach((d, i) => d.key === key && (v += d.v * t[i]))
@@ -188,5 +200,26 @@ export const tradeKeep = (s: State) => Math.min(TRADE_KEEP_MAX, TRADE_KEEP + TRA
 
 export const realmOf = (level: number) => Math.min(5, Math.ceil(level / 5)) // 1 Luyện Khí · 2 Trúc Cơ · 3 Kim Đan · 4 Nguyên Anh · 5 Hóa Thần
 export const marchSlots = (s: State) => MARCH_SLOTS[realmOf(s.levels.chuDien) - 1]
-// Trưởng lão đang dẫn đội đi xa: không giữ nhà, không đổi pháp bảo / thiên phú giữa đường
-export const isMarching = (s: State, e?: ElderId | null) => !!e && s.marches.some(m => m.elder === e)
+// Trưởng lão đang dẫn đội (hay làm phó) đi xa: không giữ nhà, không đổi pháp bảo / thiên phú giữa đường
+export const isMarching = (s: State, e?: ElderId | null) => !!e && s.marches.some(m => m.elder === e || m.deputy === e)
+// Trận dung: số đệ tử tối đa một đội ra bản đồ giới do trưởng lão e dẫn
+export const capOf = (s: State, e: ElderId) =>
+  Math.floor(
+    (MARCH_CAP + MARCH_CAP_STEP * (elderLevel(s.elders[e]) - 1)) * (1 + MARCH_CAP_STAR * ((s.stars?.[e] ?? 1) - 1)),
+  )
+// Phó trưởng lão đi cùng chủ tướng e lúc này: đã ghép, đã mở (Chủ điện), đang ở nhà (không dẫn / không làm phó đội khác)
+export function deputyOf(s: State, e: ElderId | null): ElderId | undefined {
+  const d = e ? s.pairs?.[e] : undefined
+  return d && d !== e && s.levels.chuDien >= DEPUTY_HALL && s.elders[d] !== undefined && !isMarching(s, d)
+    ? d
+    : undefined
+}
+// Hành lực lúc t (chưa từng dùng: đầy)
+export const apOf = (s: State, t: number) =>
+  s.ap ? Math.min(AP_MAX, s.ap.n + Math.floor(Math.max(0, t - s.ap.at) / AP_EVERY)) : AP_MAX
+// Tiêu n hành lực lúc t (phần lẻ chưa đủ một lượt hồi vẫn giữ: mốc tính từ lúc hồi gần nhất)
+export function spendAp(s: State, t: number, n: number): State {
+  const have = apOf(s, t)
+  const at = have >= AP_MAX || !s.ap ? t : s.ap.at + Math.floor((t - s.ap.at) / AP_EVERY) * AP_EVERY
+  return { ...s, ap: { n: have - n, at } }
+}

@@ -1,25 +1,23 @@
-// Cướp giữa các tông môn: điều kiện, xuất quân, giải trận (server), điểm Elo, ghép đối thủ.
-import { fight } from '../combat.ts'
+// Cướp giữa các tông môn: xuất quân (một đội, hay kết trận công sơn của tiên minh), giải trận (server), điểm Elo.
+import { fight, might, type Side } from '../combat.ts'
 import { no } from '../core/action.ts'
-import { admit, pushReport, sideOf, snap, marchError, launch } from '../core/battle.ts'
+import { admit, marchSide, marchSnap, pushReport, snap, fieldError, launch } from '../core/battle.ts'
 import { bump, evBump } from '../core/calendar.ts'
-import { isId, isElder, pickArmy } from '../core/parse.ts'
-import { elderLevel, lead, power, storage } from '../core/stats.ts'
+import { int, isId, isElder, pickArmy } from '../core/parse.ts'
+import { deputyOf, elderLevel, lead, storage } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
-import { type Army, type Err, type March, type Report, type State } from '../core/types.ts'
-import { minus, compact, noGain } from '../core/util.ts'
+import { type Army, type March, type Report, type State } from '../core/types.ts'
+import { bag, minus, compact, noGain } from '../core/util.ts'
 import {
   FOES_MAX,
   FRENZY_TIME,
-  MATCH_PICK,
-  MATCH_POOL,
   PROTECT,
-  PVP_FLOOR,
-  PVP_HALL,
   RAID_SHARE,
+  RALLY_MAX,
+  RALLY_WAIT,
   RESOURCES,
-  REVENGE_TIME,
   SHIELD_TIME,
+  TIER,
   UNITS,
   type Bag,
   type ElderId,
@@ -30,41 +28,25 @@ import {
   raidPath,
   travel,
   withMarch,
-  type MapCtx,
+  type Ctx,
   type Party,
   type Players,
   type World,
   type WorldActions,
 } from './base.ts'
-import { addArmy, combine, defense, guardOf, scout, split, type Scout, carryOf, flipRounds } from './fight.ts'
+import { addArmy, combine, defense, guardOf, raidError, split, carryOf, flipRounds } from './fight.ts'
 
-const revenge = (att: State, pid: number, now: number) => att.foes.some(f => f.pid === pid && f.at + REVENGE_TIME > now)
 // Gỡ cảnh báo của một đội (trận đã giải / đội quay về)
 export const dropIncoming = (s: State, pid: number, id: number): State =>
   s.incoming?.some(x => x.pid === pid && x.id === id)
     ? { ...s, incoming: s.incoming.filter(x => !(x.pid === pid && x.id === id)) }
     : s
 
-export function raidError(
-  att: State,
-  def: State | undefined,
-  attPid: number,
-  defPid: number,
-  now: number,
-  map?: MapCtx,
-  w?: World,
-): Err | null {
-  if (!def || attPid === defPid) return 'gone'
-  if (w && allyOf(w, attPid)?.members[defPid] !== undefined) return 'friend' // không cướp đồng minh
-  if (!raidPath(att, def, map)) return 'far'
-  if (att.levels.chuDien < PVP_HALL || def.levels.chuDien < PVP_HALL) return 'locked'
-  if (def.shield > now) return 'shield'
-  if (!revenge(att, defPid, now) && power(def) < PVP_FLOOR * power(att)) return 'weak' // báo thù thì bỏ giới hạn
-  if (att.marches.some(m => m.target.kind === 'pvp' && m.target.i === defPid)) return 'busy'
-  return null
-}
-
-export type RaidAction = { type: 'raid'; pid: number; elder: ElderId; army: Army }
+export type RaidAction =
+  | { type: 'raid'; pid: number; elder: ElderId; army: Army }
+  | { type: 'raidRally'; pid: number; wait: 0 | 1 | 2; elder: ElderId; army: Army } // mở kết trận công sơn
+  | { type: 'raidJoin'; id: number; elder: ElderId; army: Army } // góp đội vào kết trận công sơn
+const pickWait = int(0, RALLY_WAIT.length - 1)
 
 export const raidActions: WorldActions<RaidAction> = {
   raid: {
@@ -72,43 +54,81 @@ export const raidActions: WorldActions<RaidAction> = {
       const army = pickArmy(a.army)
       return isId(a.pid) && army && isElder(a.elder) ? { type: 'raid', pid: a.pid, elder: a.elder, army } : null
     },
-    run: ({ ps, w, pid, s: att, now, seed, map }, a) => {
-      const t = att.time
-      const other = ps.get(a.pid)
-      const e = raidError(att, other && advance(other, now), pid, a.pid, t, map, w) ?? marchError(att, a.elder, a.army)
-      if (e) return no(e)
-      const army = compact(a.army)
-      const go = raidPath(att, other!, map)!
-      const m: March = {
-        id: att.nextId,
-        elder: a.elder,
-        army,
-        target: { kind: 'pvp', i: a.pid },
-        seed,
-        startAt: t,
-        arriveAt: t + go.ms,
-        returnAt: 0,
-        foe: other!.name,
-        ...(go.path && { path: go.path }),
-      }
-      // đi đánh người khác thì mất khiên, và nổi cơn sát khí (chưa bật lại khiên ngay được)
-      const me: State = { ...launch(att, army, m), shield: 0, frenzy: t + FRENZY_TIME }
-      // bên kia thấy đội đang kéo tới (như Tháp canh của RoK) — gỡ khi trận giải hoặc đội quay về
-      const def = advance(other!, now)
-      const warn = { id: m.id, pid, foe: att.name, at: m.arriveAt }
-      const them: State = { ...def, incoming: [...(def.incoming ?? []).filter(x => x.at > t), warn] }
-      return {
-        ok: true,
-        world: w,
-        changed: new Map([
-          [pid, me],
-          [a.pid, them],
-        ]),
-      }
+    run: (ctx, a) => sortie(ctx, a.pid, a.elder, a.army),
+  },
+  raidRally: {
+    pick: a => {
+      const army = pickArmy(a.army)
+      return isId(a.pid) && pickWait(a.wait) && army && isElder(a.elder)
+        ? { type: 'raidRally', pid: a.pid, wait: a.wait as 0 | 1 | 2, elder: a.elder, army }
+        : null
+    },
+    run: (ctx, a) => {
+      const al = allyOf(ctx.w, ctx.pid)
+      return al ? sortie(ctx, a.pid, a.elder, a.army, { wait: RALLY_WAIT[a.wait], ally: al.id }) : no('locked')
+    },
+  },
+  raidJoin: {
+    pick: a => {
+      const army = pickArmy(a.army)
+      return isId(a.id) && army && isElder(a.elder) ? { type: 'raidJoin', id: a.id, elder: a.elder, army } : null
+    },
+    run: (ctx, a) => {
+      const rl = ctx.w.rallies[a.id]
+      if (!rl || rl.task !== 'raid' || rl.ally !== allyOf(ctx.w, ctx.pid)?.id || rl.at <= ctx.s.time) return no('gone')
+      const n = [...ctx.ps.values()].reduce((k, x) => k + x.marches.filter(m => m.rally === rl.id).length, 0)
+      if (n >= RALLY_MAX || ctx.s.marches.some(m => m.rally === rl.id)) return no('full')
+      return sortie(ctx, rl.i, a.elder, a.army, { rally: rl.id, at: rl.at })
     },
   },
 }
 
+// Xuất một đội đi cướp `to`: một mình (tới ngay khi tới nơi), mở kết trận (hẹn giờ sau `wait`, cả minh góp đội) hay góp vào
+// kết trận đang mở (tới đúng giờ hẹn — không kịp thì thôi). Đội ở gần đi chậm lại cho khớp giờ.
+type Muster = { wait: number; ally: number } | { rally: number; at: number }
+function sortie({ ps, w, pid, s: att, now, seed, map }: Ctx, to: number, elder: ElderId, raw: Army, muster?: Muster) {
+  const t = att.time
+  const other = ps.get(to)
+  const e = raidError(att, other && advance(other, now), pid, to, t, map, w) ?? fieldError(att, elder, raw)
+  if (e) return no(e)
+  const army = compact(raw)
+  const go = raidPath(att, other!, map)!
+  const at = !muster ? t + go.ms : 'wait' in muster ? t + Math.max(muster.wait, go.ms) : muster.at
+  if (at < t + go.ms) return no('far') // không kịp tới lúc hẹn
+  const rally = muster && ('rally' in muster ? muster.rally : w.nextRally)
+  const m: March = {
+    id: att.nextId,
+    elder,
+    army,
+    target: { kind: 'pvp', i: to },
+    seed,
+    startAt: t,
+    arriveAt: at,
+    returnAt: 0,
+    foe: other!.name,
+    ...(go.path && { path: go.path }),
+    ...(rally !== undefined && { rally }),
+  }
+  // đi đánh người khác thì mất khiên, và nổi cơn sát khí (chưa bật lại khiên ngay được)
+  const me: State = { ...launch(att, army, m), shield: 0, frenzy: t + FRENZY_TIME }
+  // bên kia thấy đội đang kéo tới (như Tháp canh của RoK) — gỡ khi trận giải hoặc đội quay về
+  const def = advance(other!, now)
+  const warn = { id: m.id, pid, foe: att.name, at }
+  const them: State = { ...def, incoming: [...(def.incoming ?? []).filter(x => x.at > t), warn] }
+  const open =
+    muster && 'wait' in muster ? { id: rally!, ally: muster.ally, by: pid, i: to, at, foe: other!.name } : null
+  const world: World = open
+    ? { ...w, rallies: { ...w.rallies, [open.id]: { ...open, task: 'raid' } }, nextRally: open.id + 1 }
+    : w
+  return {
+    ok: true as const,
+    world,
+    changed: new Map([
+      [pid, me],
+      [to, them],
+    ]),
+  }
+}
 
 // Phần cướp được: RAID_SHARE phần vượt kho bảo hộ (bonus chiến lợi phẩm của người dẫn), không quá sức mang của đội còn đứng
 function plunder(att: State, def: State, elder: ElderId, back: Army): Partial<Bag> {
@@ -135,35 +155,37 @@ type Bout = {
   loot: Partial<Bag>
   delta: number // điểm Elo bên đánh được (bên thủ mất đúng bấy nhiêu)
   n1: number[] // quân bên thủ (nhà + viện binh) còn đứng sau trận
+  kp: [att: number, def: number] // chiến công mỗi bên (thế lực đệ tử bên kia hạ được)
   fights: Report['fights'] // nhìn từ bên đánh
   flip: Report['fights'] // nhìn từ bên thủ
 }
 
-// Một trận cướp lúc at: cả hai state đã đưa tới at. Bên thủ là mọi đệ tử đang ở nhà.
-// Viện binh (helpers) đứng cùng quân nhà: thua thì bị đánh bật về, thắng thì ở lại với phần còn lại.
+// Chiến công: thế lực đệ tử của một bên bị hạ (left: số còn đứng của từng nhóm sau trận)
+const killed = (side: Side, left?: number[]) =>
+  Math.round(side.troops.reduce((sum, t, g) => sum + (t.n - (left?.[g] ?? t.n)) * TIER[t.tier].power, 0))
+const addKp = (s: State, n: number): State => (n ? { ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + n } } : s)
+
+// Một trận cướp lúc at: mọi state đã đưa tới at. party: một đội, hay cả nhóm kết trận (đội mở trận đứng đầu, công pháp của
+// đội đó) gộp làm một bên — chiến lợi phẩm chia theo sức mang còn lại, chiến công theo lực chiến góp vào. Bên thủ là mọi đệ
+// tử đang ở nhà; viện binh (helpers) đứng cùng quân nhà: thua thì bị đánh bật về, thắng thì ở lại với phần còn lại.
 export function raid(
-  att: State,
-  attPid: number,
+  party: Party,
   def: State,
   defPid: number,
-  m: March,
   at: number,
   helpers: Party = [],
-): { att: State; def: State; helpers: Players } {
-  const me = sideOf(att, m.elder, m.army)
-  const { side: foe, at: hOffs } = combine([
-    defense(def),
-    ...helpers.map(([, hs, hm]) => sideOf(hs, hm.elder, compact(hm.army))),
-  ])
+): { atts: Players; def: State; helpers: Players } {
+  const [attPid, att, m] = party[0]
+  const parts = party.map(([, s2, m2]) => marchSide(s2, m2))
+  const { side: me, at: aOffs } = party.length > 1 ? combine(parts) : { side: parts[0], at: [0] }
+  const { side: foe, at: hOffs } = combine([defense(def), ...helpers.map(([, hs, hm]) => marchSide(hs, hm))])
   const f = fight(me, foe, m.seed)
   const last = f.rounds.at(-1)
-  const ids = UNITS.filter(u => (m.army[u] ?? 0) > 0)
-  const left = last?.n[0] ?? ids.map(u => m.army[u]!)
-  const back = Object.fromEntries(ids.map((u, k) => [u, left[k]])) as Army
-  const hurt = Object.fromEntries(ids.map((u, k) => [u, m.army[u]! - left[k]])) as Army
+  const outs = party.map(([, , m2], j) => split(m2, last?.n[0] ?? me.troops.map(t => t.n), aOffs[j]))
+  const back = outs.reduce((sum, o) => addArmy(sum, o.left), {} as Army)
   const g = guardOf(def)
-  const aSnap = snap(me, m.elder, elderLevel(att.elders[m.elder]))
-  const dSnap = snap(foe, g ?? undefined, g ? elderLevel(def.elders[g]) : 1)
+  const aSnap = marchSnap(att, me, m)
+  const dSnap = snap(foe, g ?? undefined, g ? elderLevel(def.elders[g]) : 1, deputyOf(def, g))
   const b: Bout = {
     at,
     att,
@@ -175,10 +197,24 @@ export function raid(
     loot: f.win ? plunder(att, def, m.elder, back) : {},
     delta: elo(att.pvp.pts, def.pvp.pts, f.win),
     n1: last?.n[1] ?? foe.troops.map(t => t.n),
+    kp: [killed(foe, last?.n[1]), killed(me, last?.n[0])],
     fights: [{ a: aSnap, b: dSnap, rounds: f.rounds }],
     flip: [{ a: dSnap, b: aSnap, rounds: flipRounds(f.rounds) }],
   }
-  return { att: attacker(b, back, hurt), def: defender(b), helpers: helping(b, helpers, hOffs) }
+  const carry = outs.map(o => carryOf(o.left)),
+    load = carry.reduce((x, y) => x + y, 0) || 1
+  const mights = parts.map(x => might(x)),
+    total = mights.reduce((x, y) => x + y, 0) || 1
+  const one = party.length === 1
+  const atts: Players = new Map(
+    party.map(([p2, s2, m2], j) => {
+      const loot = one ? b.loot : bag(r => Math.floor(((b.loot[r] ?? 0) * carry[j]) / load))
+      const mine = { ...b, att: s2, attPid: p2, m: m2, loot, delta: Math.round(b.delta / party.length) }
+      const kp = one ? b.kp[0] : Math.round((b.kp[0] * mights[j]) / total)
+      return [p2, addKp(attacker(mine, outs[j].left, outs[j].hurt), kp)]
+    }),
+  )
+  return { atts, def: addKp(defender(b, party), b.kp[1]), helpers: helping(b, helpers, hOffs) }
 }
 
 // Bên đánh: chiến báo, đội quay về mang chiến lợi phẩm (nhận lúc về tới nhà như PvE)
@@ -220,7 +256,7 @@ function attacker({ at, att, def, defPid, m, win, loot, delta, fights }: Bout, b
 }
 
 // Bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên
-function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout): State {
+function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout, party: Party): State {
   const dIds = UNITS.filter(u => def.troops[u] > 0)
   const dLeft = n1.slice(0, dIds.length)
   const dHurt = Object.fromEntries(dIds.map((u, k) => [u, def.troops[u] - dLeft[k]])) as Army
@@ -253,7 +289,11 @@ function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout): S
       win: def.pvp.win + (win ? 0 : 1),
       loss: def.pvp.loss + (win ? 1 : 0),
     },
-    foes: [...def.foes.filter(x => x.pid !== attPid), { pid: attPid, name: att.name, at }].slice(-FOES_MAX),
+    // mọi người trong trận (cả nhóm kết trận) vào danh sách báo thù
+    foes: [
+      ...def.foes.filter(x => !party.some(([p]) => p === x.pid)),
+      ...party.map(([p, s2]) => ({ pid: p, name: s2.name, at })),
+    ].slice(-FOES_MAX),
     shield: win ? Math.max(def.shield, at + SHIELD_TIME) : def.shield,
     marches: win ? dd.marches.map(x => (x.target.kind === 'trib' ? { ...x, foil: (x.foil ?? 0) + 1 } : x)) : dd.marches, // phá kiếp
   }
@@ -282,54 +322,4 @@ function helping({ at, att, attPid, win, n1, flip }: Bout, helpers: Party, offs:
     hs.set(hp, withMarch(x, march))
   })
   return hs
-}
-
-export type Rival = {
-  pid: number
-  name: string
-  hall: number
-  power: number
-  pts: number
-  revenge: boolean
-  scout: Scout
-  ms: number
-}
-
-// Kẻ đã đánh mình (báo thù, 24 giờ) + MATCH_PICK người ngẫu nhiên trong MATCH_POOL người gần lực chiến nhất, đánh được lúc này
-// only: chỉ hỏi một tông môn (chạm trên bản đồ) — trả [] nếu lúc này không đánh được
-export function rivals(
-  ps: Players,
-  pid: number,
-  now: number,
-  rand: () => number,
-  map?: MapCtx,
-  only?: number,
-  w?: World,
-): Rival[] {
-  const me = ps.get(pid)
-  if (!me || me.levels.chuDien < PVP_HALL) return []
-  const mine = power(me)
-  const row = (id: number, s: State, rev: boolean): Rival => ({
-    pid: id,
-    name: s.name,
-    hall: s.levels.chuDien,
-    power: Math.round(power(s)),
-    pts: s.pvp.pts,
-    revenge: rev,
-    scout: scout(s),
-    ms: raidPath(me, s, map)!.ms,
-  })
-  const open = [...ps].filter(
-    ([id, s]) => (only === undefined || id === only) && !raidError(me, s, pid, id, now, map, w),
-  )
-  const foes = open.filter(([id]) => revenge(me, id, now))
-  const pool = open
-    .filter(([id]) => !revenge(me, id, now))
-    .sort((a, b) => Math.abs(power(a[1]) - mine) - Math.abs(power(b[1]) - mine) || a[0] - b[0])
-    .slice(0, MATCH_POOL)
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1))
-    ;[pool[i], pool[j]] = [pool[j], pool[i]]
-  }
-  return [...foes.map(([id, s]) => row(id, s, true)), ...pool.slice(0, MATCH_PICK).map(([id, s]) => row(id, s, false))]
 }

@@ -12,6 +12,7 @@ import {
   IDS,
   REALMS,
   SECTS,
+  SUPPLY_HALL,
   advance,
   apply,
   expAt,
@@ -62,6 +63,10 @@ async function load(lang: 'vi' | 'en') {
     'AllyShop',
     'Profile',
     'AllyMob',
+    'Arena',
+    'Market',
+    'Supply',
+    'Advisor',
     'Chat',
     'world/WorldView',
     'world/MapTab',
@@ -69,6 +74,7 @@ async function load(lang: 'vi' | 'en') {
     'Events',
     'VipSheet',
     'ResSheet',
+    'Buffs',
     'SpeedUp',
     'Items',
     'Tavern',
@@ -609,6 +615,18 @@ test('sự kiện, túi đồ, tăng tốc, Hương Hỏa, bảng tài nguyên, 
       assert.ok(events.includes(L.fest.calendar), `trung tâm sự kiện phải có lịch 7 ngày (${label})`)
       paint('VipSheet', { game: full, now, open: true, onclose: noop }, label)
       paint('ResSheet', { game: full, now, res: 'linhThach', onclose: noop, onfocus: noop }, label)
+      const buffed: State = {
+        ...full,
+        shield: now + 5 * 3_600_000,
+        buffs: [
+          { key: 'prod', v: 0.5, until: now + 7 * 3_600_000, src: 'phu.prod' },
+          { key: 'atk', v: 0.1, until: now + 40 * 60_000, src: 'ngungThan' },
+          { key: 'prod', v: 0.1, until: 0, src: 'vein' },
+          { key: 'build', v: 0.05, until: now + 3_600_000, src: 'bless' },
+        ],
+      }
+      const strip = paint('Buffs', { game: buffed, now }, label)
+      assert.ok(strip.includes(L.buffs.open(5)) && strip.includes('+3'), `dải tăng ích: 2 chip + "+3" (${label})`)
       paint('Items', { game: full, now }, label)
       paint('Tavern', { game: full, now }, label)
       if (full.queue[0]) paint('SpeedUp', { game: full, now, kind: 'build', open: true, onclose: noop }, label)
@@ -630,7 +648,10 @@ test('tiên minh, chat', async () => {
     at: late.time,
     helps: [{ pid: 2, job: 'build' as const, startAt: 0, ms: 60_000, by: [] }],
     people,
-    rallies: [{ id: 1, ally: 1, by: 1, i: 3, task: 'hit' as const, at: late.time + 600_000 }],
+    rallies: [
+      { id: 1, ally: 1, by: 1, i: 3, task: 'hit' as const, at: late.time + 600_000 },
+      { id: 2, ally: 1, by: 2, i: 7, task: 'raid' as const, at: late.time + 900_000, foe: 'Hắc Sơn Tông' },
+    ],
     tech: { tuLinh: 1300, loBan: 10_000, dongTam: 50 },
     star: 'tuLinh' as const,
     fund: 820,
@@ -638,6 +659,9 @@ test('tiên minh, chat', async () => {
     gift: 700,
     marks: [{ x: 40, y: 52, text: 'Tập trung', by: 1, at: late.time }],
     mob: { week: 0, pts: 700, next: 9, board: [8, 1, 2, 3, 4, 5, 6, 7], by: { 1: 40 } },
+    war: { signed: true, pts: 1016, last: [{ a: 1, b: 2, an: 'TVM', bn: 'TK', wa: 3, wb: 2 }] },
+    applicants: [{ pid: 9, name: 'Tân Tông', hall: 7, power: 900 }],
+    closed: true,
   }
   const api = {
     ask: async () => [],
@@ -654,16 +678,29 @@ test('tiên minh, chat', async () => {
           game: s,
           me: 1,
           ally: null,
-          rows: [{ id: 1, name: 'Thanh Vân Minh', tag: 'TVM', n: 2, max: 32, power: 16000 }],
+          rows: [
+            {
+              id: 1,
+              name: 'Thanh Vân Minh',
+              tag: 'TVM',
+              n: 2,
+              max: 32,
+              power: 16000,
+              closed: true,
+              asked: false,
+              invited: true,
+            },
+          ],
           send: async () => ({ ok: true }),
         },
         `${label}, chưa vào minh`,
       )
       const inside = paint(
         'Alliance',
-        { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }) },
+        { game: s, me: 1, ally: info, rows: null, send: async () => ({ ok: true }), onraid: noop },
         `${label}, trong minh`,
       )
+      assert.ok(inside.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       for (const officer of [false, true]) {
         const who = officer ? 'trưởng lão' : 'thành viên'
@@ -682,6 +719,39 @@ test('tiên minh, chat', async () => {
       social.profile = 2
       paint('Profile', { game: s, api, me: 1 }, `${label}, hồ sơ đang tải`)
       social.profile = null
+      paint(
+        'Advisor',
+        { game: s, ontab: noop, onfests: noop, ondaily: noop, onfocus: noop },
+        `${label}, trưởng lão dẫn đường`,
+      )
+      social.arena = true
+      paint(
+        'Arena',
+        { game: s, api, me: 1, send: async () => ({ ok: true }), onreplay: noop },
+        `${label}, Luận Kiếm Đài`,
+      )
+      social.arena = false
+      social.market = true
+      paint('Market', { game: s, api, send: async () => ({ ok: true }) }, `${label}, Phường thị`)
+      social.market = false
+      const sup = paint(
+        'Supply',
+        {
+          game: s,
+          to: 2,
+          name: 'Thanh Vân',
+          room: { tax: 0.25, send: 5e4, get: 2e4 },
+          send: async () => ({ ok: true }),
+          onsent: noop,
+        },
+        `${label}, Vận Linh Trận`,
+      )
+      assert.ok(sup.includes(L.supply.tax('25%')), 'hao tổn hiện trên đầu mục')
+      assert.equal(
+        sup.includes(L.supply.locked(SUPPLY_HALL)),
+        s.levels.chuDien < SUPPLY_HALL,
+        'dưới tầng mở: chỉ báo tầng',
+      )
       paint('Chat', { game: s, me: 1, api: null, act, toast: noop }, `${label}, dải chat`)
     }
   }
@@ -728,6 +798,8 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
     { kind: 'point', i: a.points.find(p => p.kind === 'gate')!.i },
     { kind: 'point', i: a.points.find(p => p.kind === 'heaven')!.i },
     { kind: 'tile', x: 3, y: 4 },
+    { kind: 'site', i: 0 }, // thôn trang / động phủ
+    { kind: 'tile', x: 140, y: 140 }, // mê vụ chưa tan (xa tông môn)
   ]
   for (const lang of LANGS) {
     await load(lang)
@@ -791,6 +863,33 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
       'minh chủ chạm ô có dấu',
     )
     assert.ok(sheet.includes(L.world.shareAlly) && sheet.includes(L.world.unmark), 'chia sẻ + gỡ dấu')
+    // lãnh thổ: trận kỳ minh khác (đang bị đánh dở) → nút phá; ô trong lãnh thổ minh mình → cắm cờ / dời tông môn
+    const flagged = {
+      ...snap,
+      allies: [
+        { id: 1, tag: 'TVM' },
+        { id: 2, tag: 'HMT' },
+      ],
+      flags: [{ id: 9, aid: 2, x: 20, y: 20, done: now - 1, hp: 12_000, hit: now - 60_000 }],
+    }
+    const enemy = paint(
+      'TileSheet',
+      {
+        game,
+        now,
+        info,
+        atlas: a,
+        me: 1,
+        snap: flagged,
+        ally,
+        onclose: noop,
+        onraid: noop,
+        pick: { kind: 'tile', x: 20, y: 20 },
+        send: async () => ({ ok: true }),
+      },
+      'trận kỳ minh khác',
+    )
+    assert.ok(enemy.includes(L.world.terr.flag('HMT')) && enemy.includes(L.world.terr.hp(40)), 'cờ địch: hiệu + độ bền')
     paint(
       'WorldView',
       { game, now, info, me: 1, snap, allies: [3], marks: ally.marks, goto: { x: 3, y: 4 }, onpick: noop },

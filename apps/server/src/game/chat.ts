@@ -38,6 +38,13 @@ export class Chat {
     }
     return out.sort((x, y) => y.last.at - x.last.at)
   }
+  // Các phòng có tin của pid chứa mã tag (chia sẻ chiến báo)
+  shares(pid: number, tag: string) {
+    const out: string[] = []
+    for (const [room, list] of this.rooms)
+      if (list.some(m => m.pid === pid && new RegExp(`${tag}(?!\\d)`).test(m.text))) out.push(room)
+    return out
+  }
   // Tin id đang giữ và phòng của nó (báo cáo tin xấu)
   find(id: number) {
     for (const [room, list] of this.rooms) {

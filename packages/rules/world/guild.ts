@@ -2,7 +2,7 @@
 // Technology / Shop của RoK. Phần dùng chung (tầng trận, tăng ích, cống hiến, Minh lễ) ở base.ts.
 import { no } from '../core/action.ts'
 import { MAP_W } from '../atlas.ts'
-import { cleanText, int, oneOf } from '../core/parse.ts'
+import { cleanText, int, isId, oneOf } from '../core/parse.ts'
 import type { State } from '../core/types.ts'
 import {
   ALLY_MARKS,
@@ -38,17 +38,22 @@ export type GuildAction =
   | { type: 'allyBuy'; item: ItemId; n: number }
   | { type: 'allyMark'; x: number; y: number; text: string }
   | { type: 'allyUnmark'; x: number; y: number }
+  | { type: 'napAsk'; id: number }
+  | { type: 'napOk'; id: number }
+  | { type: 'napNo'; id: number }
+  | { type: 'napEnd'; id: number }
 
 export const SHOP_IDS = Object.keys(ALLY_SHOP) as ItemId[]
 const isTech = oneOf(ALLY_TECH_IDS)
 const isGood = oneOf(SHOP_IDS)
 const isN = int(1, ALLY_SHOP_MAX)
 const isXY = int(0, MAP_W - 1)
-// trưởng lão / minh chủ của minh mình
-const officer = (w: World, pid: number) => {
+// đường chủ (R4) / minh chủ của minh mình; dấu bản đồ thì từ chân truyền (R3)
+const officer = (w: World, pid: number, from = 1) => {
   const al = allyOf(w, pid)
-  return al && al.members[pid] >= 1 ? al : undefined
+  return al && al.members[pid] >= from ? al : undefined
 }
+const marker = (w: World, pid: number) => officer(w, pid, 0)
 
 export const guildActions: WorldActions<GuildAction> = {
   allyDonate: {
@@ -115,14 +120,16 @@ export const guildActions: WorldActions<GuildAction> = {
       }
     },
   },
-  // Dấu bản đồ cho cả minh (trưởng lão / minh chủ): đặt lại cùng ô thì đổi lời ghi; tối đa ALLY_MARKS dấu
+  // Dấu bản đồ cho cả minh (từ R3): đặt lại cùng ô thì đổi lời ghi; tối đa ALLY_MARKS dấu
   allyMark: {
     pick: a => {
       const text = cleanText(a.text)
-      return isXY(a.x) && isXY(a.y) && text && [...text].length <= 20 ? { type: 'allyMark', x: a.x, y: a.y, text } : null
+      return isXY(a.x) && isXY(a.y) && text && [...text].length <= 20
+        ? { type: 'allyMark', x: a.x, y: a.y, text }
+        : null
     },
     run: ({ w, pid, now }, a) => {
-      const al = officer(w, pid)
+      const al = marker(w, pid)
       if (!al) return no('locked')
       const rest = (al.marks ?? []).filter(m => m.x !== a.x || m.y !== a.y)
       if (rest.length >= ALLY_MARKS) return no('full')
@@ -133,11 +140,57 @@ export const guildActions: WorldActions<GuildAction> = {
   allyUnmark: {
     pick: a => (isXY(a.x) && isXY(a.y) ? { type: 'allyUnmark', x: a.x, y: a.y } : null),
     run: ({ w, pid }, a) => {
-      const al = officer(w, pid)
+      const al = marker(w, pid)
       if (!al) return no('locked')
       const marks = (al.marks ?? []).filter(m => m.x !== a.x || m.y !== a.y)
       if (marks.length === (al.marks ?? []).length) return no('gone')
       return { ok: true, changed: new Map(), world: put(w, { ...al, marks }) }
+    },
+  },
+  // Minh ước (NAP): trưởng lão / minh chủ đề nghị, minh kia nhận hay từ chối; một bên huỷ là huỷ cả hai. Minh ước: không cướp
+  // nhau, không đánh điểm bên kia đang giữ.
+  napAsk: {
+    pick: a => (isId(a.id) ? { type: 'napAsk', id: a.id } : null),
+    run: ({ w, pid }, a) => {
+      const al = officer(w, pid),
+        to = w.allies[a.id]
+      if (!al) return no('locked')
+      if (!to || to.id === al.id) return no('gone')
+      if (al.naps?.includes(to.id) || to.napIn?.includes(al.id)) return no('claimed')
+      return { ok: true, changed: new Map(), world: put(w, { ...to, napIn: [...(to.napIn ?? []), al.id] }) }
+    },
+  },
+  napOk: {
+    pick: a => (isId(a.id) ? { type: 'napOk', id: a.id } : null),
+    run: ({ w, pid }, a) => {
+      const al = officer(w, pid),
+        from = w.allies[a.id]
+      if (!al || !al.napIn?.includes(a.id)) return no('locked')
+      if (!from) return no('gone')
+      const me = { ...al, napIn: al.napIn.filter(x => x !== a.id), naps: [...(al.naps ?? []), from.id] }
+      return { ok: true, changed: new Map(), world: put(put(w, me), { ...from, naps: [...(from.naps ?? []), al.id] }) }
+    },
+  },
+  napNo: {
+    pick: a => (isId(a.id) ? { type: 'napNo', id: a.id } : null),
+    run: ({ w, pid }, a) => {
+      const al = officer(w, pid)
+      if (!al || !al.napIn?.includes(a.id)) return no('locked')
+      return { ok: true, changed: new Map(), world: put(w, { ...al, napIn: al.napIn.filter(x => x !== a.id) }) }
+    },
+  },
+  napEnd: {
+    pick: a => (isId(a.id) ? { type: 'napEnd', id: a.id } : null),
+    run: ({ w, pid }, a) => {
+      const al = officer(w, pid),
+        other = w.allies[a.id]
+      if (!al || !al.naps?.includes(a.id)) return no('locked')
+      const next = put(w, { ...al, naps: al.naps.filter(x => x !== a.id) })
+      return {
+        ok: true,
+        changed: new Map(),
+        world: other ? put(next, { ...other, naps: (other.naps ?? []).filter(x => x !== al.id) }) : next,
+      }
     },
   },
 }

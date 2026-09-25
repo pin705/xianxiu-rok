@@ -849,7 +849,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | A1 | Kingdom Map | ✅ Giới 150 × 150, sinh từ seed, reset theo mùa | P0 | — |
 | A2 | Zones 1–2–3 | ✅ 16 vùng ngoài / 8 giữa / 1 tâm | P0 | — |
 | A3 | Passes Lv.1–3 | 🟡 40 cổng trận nhãn mở theo pha; giữ cổng không chặn phe khác, không NPC giữ | P1 | M |
-| A4 | Alliance Territory (Fortress, Flags) | ❌ | P1 (theo vùng) / P2 (cờ từng ô) | M / L |
+| A4 | Alliance Territory (Fortress, Flags) | ✅ lãnh thổ + trận kỳ (chưa phá cờ) | P1 (theo vùng) / P2 (cờ từng ô) | M / L |
 | A5 | Holy Sites — luật chung (kỳ 3 ngày, giữ 4 giờ, không cộng dồn, NPC giữ) | 🟡 linh mạch luôn mở, cộng dồn tới 30 % | P1 | M |
 | A6 | Sanctum (4 loại buff) | 🟡 linh mạch cấp 1, chỉ buff sản lượng | P1 | S |
 | A7 | Altar (6 loại buff) | 🟡 như trên | P1 | S |
@@ -857,13 +857,13 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | A9 | Lost Temple & King (tước hiệu, buff vương quốc) | 🟡 Thiên Môn cho điểm mùa; chưa có Giới Chủ / phong hào | P2 | M |
 | A10 | Monument (dòng thời gian, mục tiêu chung, thưởng mốc) | 🟡 pha mùa theo ngày + biên niên giới | **P1** | M |
 | A11 | Eve of the Crusade & Lost Kingdom | ❌ (cố ý: không liên server) | P2 | M |
-| B1 | Fog of War | ❌ | P2 | M |
-| B2 | Scout Camp & scouts | ❌ | P2 | M |
-| B3 | Mysterious Caves | ❌ | P2 | S |
-| B4 | Tribal Villages | ❌ | P2 | S |
+| B1 | Fog of War | ✅ mê vụ riêng mỗi người | P2 | M |
+| B2 | Scout Camp & scouts | ✅ linh điểu | P2 | M |
+| B3 | Mysterious Caves | ✅ động phủ cổ tu | P2 | S |
+| B4 | Tribal Villages | ✅ thôn trang | P2 | S |
 | B5 | Scouting enemies (báo cáo trinh sát) | 🟡 dò thám miễn phí trong Tranh đoạt; không dò quân ở điểm | P1 | S |
 | B6 | Anti-scouting & Watchtower / cảnh báo | 🟡 Hộ Sơn Đại Trận; chưa báo đội địch đang tới | P1 / P2 | S |
-| C1 | Action Points | ❌ | P1 | S |
+| C1 | Action Points | ✅ hành lực săn yêu thú giới | P1 | S |
 | C2 | Barbarians (man tộc trên bản đồ chung) | 🟡 15 yêu thú cố định trên bản đồ vùng riêng | **P0** | M |
 | C3 | Continuous attack / chain farming | ❌ | P2 | S / M |
 | C4 | Barbarian Buster, Clarion Call | 🟡 nhiệm vụ "hạ yêu thú cấp n"; Săn Yêu Lệnh (Chủ nhật), Tông Môn Tranh Bá | P2 | S |
@@ -881,10 +881,10 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | D3 | Gem Deposits | ❌ | P2 | S |
 | D4 | Alliance Resource Points / Centers | ❌ | P2 | M |
 | D5 | Attacked while gathering | ❌ | P1 | M |
-| E1 | Beginner's Teleport | ❌ | **P1** | S |
+| E1 | Beginner's Teleport | ✅ dời núi tân thủ | **P1** | S |
 | E2 | Random Teleport | ❌ | P2 | S |
 | E3 | Targeted Teleport | ❌ | P2 | S |
-| E4 | Territorial Teleport | ❌ | **P1** | S–M |
+| E4 | Territorial Teleport | ✅ dời tông môn vào lãnh thổ | **P1** | S–M |
 | E5 | Luật chung khi dịch chuyển | ❌ | theo E1–E4 | — |
 | E6 | Migration | ❌ (cố ý) | P2 | M |
 | E7 | Beginner's protection & Peace Shield | 🟡 khiên 72 giờ / 8 giờ; Hộ Sơn Phù 8/24/72 giờ trong túi đồ | P1 | S |
@@ -894,10 +894,10 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | F4 | Sunset Canyon | 🟡 cướp bất đồng bộ (có mất tài nguyên) | P2 | M |
 | F5 | Arms Training, Golden Kingdom… (PvE sự kiện) | 🟡 khung tháp có sẵn | P2 | S / M |
 | G1 | Tactical / Strategic View | ✅ (thiếu lớp chiến lược, zoom đặt sẵn) | P2 | S–M |
-| G2 | Toạ độ, chia sẻ toạ độ vào chat | ❌ | P1 | S |
+| G2 | Toạ độ, chia sẻ toạ độ vào chat | ✅ | P1 | S |
 | G3 | Bookmarks | ❌ | P2 | S |
-| G4 | Alliance Markers | ❌ | P1 | S |
-| G5 | Search (tìm theo cấp) | ❌ | P1 | S |
+| G4 | Alliance Markers | ✅ | P1 | S |
+| G5 | Search (tìm theo cấp) | ✅ | P1 | S |
 | G6 | Filters | ❌ | P2 | S |
 | G7 | March Lines | ✅ | P0 | — |
 | G8 | Tap tile → action menu | ✅ (thiếu chia sẻ, dò thám, đánh dấu) | P0 | — |

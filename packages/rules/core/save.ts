@@ -12,6 +12,7 @@ import { bag, IDS, troops } from './util.ts'
 import {
   ACHS,
   DAILY,
+  DAOS,
   ELDERS,
   EVENT_GOALS,
   FESTS,
@@ -133,6 +134,18 @@ const num = (x: unknown) => typeof x === 'number' && Number.isFinite(x)
 const isBag = (x: unknown) => obj(x) && RESOURCES.every(r => num(x[r]))
 const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >= 0)
 const isTimed = (j: unknown) => j === null || (obj(j) && num(j.startAt) && num(j.finishAt))
+const validMarch = (m: any) =>
+  obj(m) &&
+  Object.hasOwn(ELDERS, m.elder) &&
+  (m.deputy === undefined || Object.hasOwn(ELDERS, m.deputy)) &&
+  obj(m.army) &&
+  obj(m.target) &&
+  ['beast', 'sect', 'pvp', 'spot', 'trib', 'flag'].includes(m.target.kind) &&
+  num(m.target.i) &&
+  num(m.seed) &&
+  num(m.startAt) &&
+  num(m.arriveAt) &&
+  num(m.returnAt)
 function valid(s: any): s is State {
   return (
     s.v === SAVE_VERSION &&
@@ -167,19 +180,7 @@ function valid(s: any): s is State {
       (b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string',
     ) &&
     Array.isArray(s.marches) &&
-    s.marches.every(
-      (m: any) =>
-        obj(m) &&
-        Object.hasOwn(ELDERS, m.elder) &&
-        obj(m.army) &&
-        obj(m.target) &&
-        ['beast', 'sect', 'pvp', 'spot', 'trib'].includes(m.target.kind) &&
-        num(m.target.i) &&
-        num(m.seed) &&
-        num(m.startAt) &&
-        num(m.arriveAt) &&
-        num(m.returnAt),
-    ) &&
+    s.marches.every(validMarch) &&
     Array.isArray(s.reports) &&
     s.reports.every(
       (r: any) => obj(r) && num(r.id) && Array.isArray(r.fights) && obj(r.gain) && obj(r.hurt) && obj(r.dead),
@@ -265,8 +266,27 @@ const validFest = (s: any) =>
     (Array.isArray(s.incoming) &&
       s.incoming.every((x: any) => obj(x) && num(x.id) && num(x.pid) && typeof x.foe === 'string' && num(x.at)))) &&
   (s.frenzy === undefined || num(s.frenzy)) &&
+  (s.moved === undefined || num(s.moved)) &&
+  (s.builder2 === undefined || num(s.builder2)) &&
+  (s.joined === undefined || num(s.joined)) &&
+  (s.towerDay === undefined || num(s.towerDay)) &&
+  (s.dao === undefined || (obj(s.dao) && Object.hasOwn(DAOS, s.dao.id) && num(s.dao.at))) &&
+  (s.fog === undefined ||
+    (obj(s.fog) && Array.isArray(s.fog.rows) && s.fog.rows.every(num) && Array.isArray(s.fog.fly))) &&
+  (s.visited === undefined || (Array.isArray(s.visited) && s.visited.every(num))) &&
   (s.contrib === undefined ||
     (obj(s.contrib) && num(s.contrib.credit) && num(s.contrib.full) && num(s.contrib.day) && num(s.contrib.helped))) &&
+  (s.ap === undefined || (obj(s.ap) && num(s.ap.n) && num(s.ap.at))) &&
+  (s.presets === undefined ||
+    (Array.isArray(s.presets) &&
+      s.presets.every((p: any) => p === null || (obj(p) && Object.hasOwn(ELDERS, p.elder) && obj(p.army))))) &&
+  (s.pairs === undefined ||
+    (obj(s.pairs) &&
+      Object.entries(s.pairs).every(([e, d]) => Object.hasOwn(ELDERS, e) && Object.hasOwn(ELDERS, String(d))))) &&
+  (s.pins === undefined ||
+    (Array.isArray(s.pins) &&
+      s.pins.every((p: any) => obj(p) && num(p.x) && num(p.y) && typeof p.text === 'string'))) &&
+  (s.merchant === undefined || (obj(s.merchant) && num(s.merchant.slot) && Array.isArray(s.merchant.bought))) &&
   (s.mob === undefined ||
     (obj(s.mob) &&
       num(s.mob.week) &&

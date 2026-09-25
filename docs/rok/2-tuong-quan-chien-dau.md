@@ -684,10 +684,10 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan | P2 | S |
 | 2.6 | Sao 1–6, tượng sao, may mắn | ❌ | P1 | M |
 | 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | ❌ | P1 | M |
-| 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | 🟡 công pháp cố định lượt 3/6/9 | P0 | M |
+| 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | ✅ chân nguyên (tụ theo lượt + khi mất máu) | P0 | M |
 | 2.9 | Expertise | ❌ | P2 | M |
 | 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | 🟡 8 điểm, 3 nhánh chung, Tẩy Tủy Đan | P1 | L |
-| 2.11 | Cặp tướng chính / phụ | ❌ (P3 dự định "phó") | P0 | M |
+| 2.11 | Cặp tướng chính / phụ | ✅ phó trưởng lão (tâm pháp + công pháp nửa sức) | P0 | M |
 | 2.12 | Truyện tướng, Trust, giao diện danh sách | 🟡 tên, danh hiệu, chân dung | P2 | S–M |
 | 2.13 | Museum (buff tướng theo mùa) | ❌ | P2 | M |
 | 2.14 | Đổi tướng (Commander Swap) | ❌ | P2 | S |
@@ -704,7 +704,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.22 | Huấn luyện (4 nhà, 4 hàng song song) | 🟡 1 nhà, 1 hàng | P2 | S |
 | 2.23 | Nâng bậc quân | ❌ | P1 | S |
 | 2.24 | Hàng đợi hành quân 1–5 | ✅ theo cảnh giới | — | — |
-| 2.25 | Sức chứa một đội (và vật phẩm mở rộng) | ❌ không có trần | P0 | M |
+| 2.25 | Sức chứa một đội (và vật phẩm mở rộng) | ✅ trận dung theo cấp / sao chủ tướng (bản đồ giới) | P0 | M |
 | 2.26 | Sức mạnh, không upkeep | ✅ | — | — |
 | 2.27 | Quân theo mùa, đánh xa | ❌ | P2 | L |
 | 2.28 | Bệnh viện (sức chứa, chữa, liên minh giúp) | ✅ Đan phòng | P2 (chọn số chữa) | S |
@@ -717,7 +717,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.35 | Công thành: độ bền tường, cháy, dời thành, khiên | 🟡 Hộ Sơn Đại Trận là bonus, khiên sau thua | P1 | M |
 | 2.36 | Trinh sát | ✅ dò thám làm tròn | P2 | S |
 | 2.37 | Chiến báo chi tiết (tách nguồn sát thương, chia sẻ) | 🟡 có phát lại, thiếu phân tách | P1 | S |
-| 2.38 | Điểm tiêu diệt (KP) | ❌ | P0 | S |
+| 2.38 | Điểm tiêu diệt (KP) | ✅ sát địch + bảng xếp hạng | P0 | S |
 | 2.39 | Danh dự (KvK) | 🟡 điểm mùa theo phe | P2 | S |
 | 2.40 | Zeroing | ❌ cố ý, khuyên giữ | P2 | M |
 | 2.41 | Man tộc, pháo đài, AP | 🟡 yêu thú, bí cảnh, tháp, không AP | P2 | S |

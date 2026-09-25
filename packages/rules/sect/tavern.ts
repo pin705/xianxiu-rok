@@ -71,7 +71,13 @@ function draw(s: State, k: TavernKind, last: Tavern['last']): State {
     const [r, t, next] = pick(k, seed)
     seed = next
     st = grant(st, r)
-    got = { res: addBag(bag(x => got.res?.[x] ?? 0), r.res ?? {}), items: addItems(got.items ?? {}, r.items ?? {}) }
+    got = {
+      res: addBag(
+        bag(x => got.res?.[x] ?? 0),
+        r.res ?? {},
+      ),
+      items: addItems(got.items ?? {}, r.items ?? {}),
+    }
     for (const [e, n] of t) addTokens(e, n)
   }
   let pity = st.tavern.pity

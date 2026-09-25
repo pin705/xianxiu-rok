@@ -1220,9 +1220,9 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | # | Sự kiện RoK | Tu tiên hoá | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|---|
 | — | Event Center (màn sự kiện, chấm đỏ) | Trung tâm Sự kiện | 🟡 có chip + chấm đỏ + đếm ngược; thiếu nhãn "Mới", lịch sử, ảnh bìa | P0 | S |
-| — | Event Calendar (lưới 7 ngày, báo trước ~3 ngày) | Lịch giới | ❌ | P0 | M |
+| — | Event Calendar (lưới 7 ngày, báo trước ~3 ngày) | Lịch giới | ✅ lịch 7 ngày | P0 | M |
 | A1 | Create Your Own History | Khai Sơn Thất Nhật | 🟡 Tân Thủ Chi Lộ + Thất Nhật Lễ | P0 | M |
-| A2 | Hero Returns | Tông Lệnh Bảo Khố | ❌ | P0 | S |
+| A2 | Hero Returns | Tông Lệnh Bảo Khố | ✅ | P0 | S |
 | A3 | Who Will Reign Supreme | Giới Chủ Tranh Phong | 🟡 | P1 | S |
 | A4 | Path of Wisdom | Nhập Môn Ngộ Đạo | ✅/🟡 | P2 | S |
 | A5 | Era Breakthrough | Cảnh Giới Đột Phá Lễ | ✅ | P2 | S |
@@ -1237,7 +1237,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | C6 | Tiles & Bricks | Thổ Mộc Hưng Công | 🟡 | P1 | S |
 | C7 | Boundless Wisdom | Tàng Kinh Ngộ Đạo | 🟡 | P1 | S |
 | C8 | Overwhelming Strength / Game of Power | Thế Lực Bạo Tăng | 🟡 | P2 | S |
-| C9 | Lord of War | Binh Thế Tranh Hùng | ❌ | P2 | S |
+| C9 | Lord of War | Binh Thế Tranh Hùng | ✅ | P2 | S |
 | C10 | Now or Never | Tụ Khí Tranh Thời | 🟡 | P1 | S |
 | C11 | Daily Gathering | Thu Linh Nhật Khóa | 🟡 | P1 | S |
 | C12 | Fill the Storehouse | Tàng Bảo Mãn Thương | ❌ | P2 | S |
@@ -1266,9 +1266,9 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | D12 | Protect the Supplies | Áp Tiêu Hộ Hàng | ❌ | P2 | M–L |
 | D13 | A Wall of Arrows | Trận Đồ Diễn Luyện | ❌ | P2 | M |
 | D14 | Tempest Clash | Vân Hải Phi Chu | ⛔ | — | — |
-| E1 | Alliance Mobilization | Tiên Minh Động Viên | ❌ | P1 | M |
+| E1 | Alliance Mobilization | Tiên Minh Động Viên | ✅ Minh vụ đường | P1 | M |
 | E2 | Silk Road Speculators | Linh Thương Hộ Tống | ❌ | P2 | L |
-| E3 | Shadow Legion Invasion | Ma Triều Công Sơn | ❌ (nền rẻ) | P1 | M |
+| E3 | Shadow Legion Invasion | Ma Triều Công Sơn | ✅ | P1 | M |
 | E4 | Rương liên minh ngày lễ | Tụ Bảo Minh Đỉnh | ❌ | P1 | S–M |
 | E5 | Alliance Quiz | Luận Đạo Vấn Đáp | ❌ | P2 | M |
 | F1 | More Than Gems | Tiên Ngọc Hồi Lễ | ❌ | P2 | S |

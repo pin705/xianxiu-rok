@@ -50,6 +50,11 @@ import {
   targetError,
   techTime,
   trainCost,
+  merchantStock,
+  merchantBought,
+  MERCHANT_SLOTS,
+  MERCHANT_EVERY,
+  promoteCost,
   trainTime,
   upgradeError,
   winChance,
@@ -65,6 +70,21 @@ import {
   PILL_IDS,
   type Action,
   type BuildingId,
+  type ElderId,
+  DEPUTY_HALL,
+  DEPUTY_SKILL,
+  deputyOf,
+  DAOS,
+  DAO_COOL,
+  towerChest,
+  bonus,
+  MARCH_CAP,
+  MARCH_CAP_STAR,
+  MARCH_CAP_STEP,
+  capArmy,
+  capOf,
+  fieldError,
+  marchError,
   type Side,
   type State,
   rng,
@@ -79,6 +99,7 @@ function run(s: State, a: Action, at = s.time) {
   return r.state
 }
 const up = (s: State, b: BuildingId) => run(s, { type: 'upgrade', building: b })
+const pair = (deputy: ElderId): Action => ({ type: 'pair', elder: 'thanhPhong', deputy })
 function err(s: State, a: Action) {
   const r = apply(s, a, s.time)
   return r.ok ? null : r.error
@@ -158,6 +179,50 @@ test('tuyển đệ tử: trừ tài nguyên, xong thì vào môn hạ; bậc 2 
   assert.equal(done.train, null)
   assert.equal(err(s, { type: 'train', unit: 'kiem2', n: 1 }), 'locked')
   assert.equal(err(s, { type: 'train', unit: 'kiem1', n: 10_000 }), 'bad')
+})
+
+test('nâng bậc đệ tử: trả phần chênh, dùng lượt tuyển, xong thì thành bậc kế; chưa mở bậc kế thì khoá', () => {
+  const s = { ...rich(5, 5), troops: { ...rich(5, 5).troops, kiem1: 100 } }
+  const t = run(s, { type: 'promote', unit: 'kiem1', n: 60 })
+  assert.equal(t.troops.kiem1, 40)
+  assert.deepEqual(t.train && [t.train.unit, t.train.n], ['kiem2', 60])
+  assert.equal(t.res.linhKhoang, s.res.linhKhoang - promoteCost('kiem1', 60).linhKhoang)
+  assert.ok(promoteCost('kiem1', 60).linhKhoang < trainCost('kiem2', 60).linhKhoang, 'rẻ hơn tuyển mới')
+  assert.equal(err(t, { type: 'promote', unit: 'kiem1', n: 1 }), 'busy')
+  const done = advance(t, t.train!.finishAt)
+  assert.deepEqual([done.troops.kiem1, done.troops.kiem2], [40, 60])
+  assert.equal(err(s, { type: 'promote', unit: 'kiem2', n: 1 }), 'locked', 'bậc 3 chưa mở')
+  assert.equal(err(s, { type: 'promote', unit: 'kiem1', n: 101 }), 'not_enough', 'không đủ đệ tử')
+})
+
+test('Thương nhân vân du: 6 món khác nhau tất định theo lượt 8 giờ, giá theo tầng, mỗi món mua một lần, lượt sau hàng mới', () => {
+  const s = { ...rich(8, 8), born: 12345 }
+  const a = merchantStock(s, s.time)
+  assert.equal(a.length, MERCHANT_SLOTS)
+  assert.equal(new Set(a.map(x => x.item)).size, MERCHANT_SLOTS, 'không trùng món')
+  assert.deepEqual(merchantStock(s, s.time), a, 'tất định')
+  assert.equal(a[0].cost, a[0].price * 8)
+  const t = run(s, { type: 'buy', i: 0 })
+  assert.equal(t.items[a[0].item], (s.items[a[0].item] ?? 0) + a[0].n)
+  assert.equal(t.res[a[0].res], s.res[a[0].res] - a[0].cost)
+  assert.equal(err(t, { type: 'buy', i: 0 }), 'claimed', 'mỗi món một lần')
+  const next = advance(t, s.time + MERCHANT_EVERY)
+  assert.deepEqual(merchantBought(next, next.time), [], 'lượt mới: mua lại được')
+  assert.equal(err(rich(8, 3), { type: 'buy', i: 0 }), 'locked')
+})
+
+test('ghi nhớ chỗ trên bản đồ giới: bấm lại thì bỏ, tối đa 20 chỗ', () => {
+  const s = run(rich(3), { type: 'pin', x: 5, y: 7, text: 'Mỏ cấp 2' })
+  assert.deepEqual(s.pins, [{ x: 5, y: 7, text: 'Mỏ cấp 2' }])
+  assert.deepEqual(run(s, { type: 'pin', x: 5, y: 7, text: '' }).pins, [], 'bấm lại cùng ô: bỏ')
+  let full = rich(3)
+  for (let i = 0; i < 20; i++) full = run(full, { type: 'pin', x: i, y: 0, text: `${i}` })
+  assert.equal(err(full, { type: 'pin', x: 99, y: 0, text: 'x' }), 'full')
+  assert.equal(err(full, { type: 'pin', x: 999, y: 0, text: 'x' }), 'bad', 'ngoài bản đồ')
+  // trận đồ: lưu vào một ô, các ô khác giữ nguyên
+  const p = run(rich(3), { type: 'preset', i: 1, elder: 'thanhPhong', army: { kiem1: 50 } })
+  assert.deepEqual(p.presets, [null, { elder: 'thanhPhong', army: { kiem1: 50 } }, null])
+  assert.equal(err(p, { type: 'preset', i: 3, elder: 'thanhPhong', army: { kiem1: 1 } }), 'bad')
 })
 
 test('trận đánh tất định theo seed và hệ khắc có tác dụng', () => {
@@ -316,6 +381,107 @@ test('trưởng lão: kinh nghiệm → cấp, cấp càng cao đội càng mạ
   assert.equal(fed.items.boiNguyen, 0)
   assert.ok(fed.elders.thanhPhong! > 0)
   assert.equal(err(s, { type: 'feed', elder: 'nhuYen', n: 1 }), 'locked')
+})
+
+test('phó trưởng lão: mở ở DEPUTY_HALL, đi cùng đội (bận theo), tâm pháp + công pháp của phó làm đội mạnh hơn', () => {
+  const lv12 = expAt(12)
+  const base = { ...rich(DEPUTY_HALL), elders: { thanhPhong: lv12, thachKien: lv12, nhuYen: lv12 } }
+  assert.equal(err({ ...base, levels: { ...base.levels, chuDien: DEPUTY_HALL - 1 } }, pair('thachKien')), 'locked')
+  assert.equal(err(base, { type: 'pair', elder: 'thanhPhong', deputy: 'thanhPhong' }), 'bad')
+  assert.equal(err(base, { type: 'pair', elder: 'thanhPhong', deputy: 'hanBang' }), 'locked', 'chưa thu nhận')
+  let s = run(base, pair('thachKien'))
+  assert.equal(deputyOf(s, 'thanhPhong'), 'thachKien')
+  // phó góp tâm pháp (Thạch Kiên cấp 12: máu hệ Thể, thủ) và công pháp (khiên, nửa sức)
+  const solo = sideOf(s, 'thanhPhong', { the1: 100 }),
+    duo = sideOf(s, 'thanhPhong', { the1: 100 }, 'thachKien')
+  assert.ok(duo.troops[0].hp > solo.troops[0].hp && duo.troops[0].def > solo.troops[0].def)
+  assert.deepEqual(duo.skill2, { kind: 'shield', v: 0.5 * DEPUTY_SKILL * (duo.skill!.v / 1.2) })
+  // khiên của phó giảm sát thương phải nhận ở lượt thi triển: cùng mầm, đội có phó mất ít người hơn
+  const foe = enemyOf(s, { kind: 'beast', i: 5 })
+  const lost = (me: Side) => 100 - fight(me, foe, 7).rounds.at(-1)!.n[0][0]
+  assert.ok(lost(duo) < lost(solo))
+  // xuất quân: phó đi cùng, bận theo (không dẫn đội khác, không làm phó đội khác), chiến báo có phó
+  s = { ...s, troops: { ...s.troops, the1: 300 } }
+  const target = { kind: 'beast', i: 0 } as const
+  s = run(s, { type: 'march', target, elder: 'thanhPhong', army: { the1: 200 } })
+  assert.equal(s.marches[0].deputy, 'thachKien')
+  assert.equal(err(s, { type: 'march', target, elder: 'thachKien', army: { the1: 10 } }), 'busy')
+  s = run(s, { type: 'pair', elder: 'nhuYen', deputy: 'thachKien' })
+  assert.equal(deputyOf(s, 'nhuYen'), undefined, 'phó đang đi với đội khác')
+  const back = advance(s, T0 + marchTime(s, target))
+  assert.equal(back.reports.at(-1)!.fights[0].a.deputy, 'thachKien')
+  assert.equal(run(s, { type: 'pair', elder: 'thanhPhong', deputy: null }).pairs?.thanhPhong, undefined)
+})
+
+test('Tạp Dịch Lệnh: thuê tạp dịch thứ hai 48 giờ — xây song song hai công trình; hết hạn thì lại một, việc dở vẫn xong', () => {
+  let s: State = { ...rich(10, 5), items: { tapDich48: 2 } }
+  s = up(s, 'linhDien')
+  assert.equal(err(s, { type: 'upgrade', building: 'khoangMach' }), 'queue_full')
+  s = run(s, { type: 'use', item: 'tapDich48', n: 1 })
+  assert.equal(s.builder2, T0 + 48 * HOUR)
+  s = up(s, 'khoangMach')
+  assert.equal(s.queue.length, 2)
+  assert.equal(err(s, { type: 'upgrade', building: 'tuLinhTran' }), 'queue_full', 'chỉ hai')
+  s = run(s, { type: 'use', item: 'tapDich48', n: 1 })
+  assert.equal(s.builder2, T0 + 96 * HOUR, 'dùng thêm thì kéo dài')
+  const late = advance({ ...s, builder2: T0 + HOUR }, T0 + 2 * HOUR)
+  assert.equal(late.levels.linhDien, 6, 'việc dở vẫn xong')
+  const one = up(late, 'tuLinhTran')
+  assert.equal(err(one, { type: 'upgrade', building: 'khoangMach' }), 'queue_full', 'hết hạn: lại một')
+})
+
+test('Tĩnh tọa ngộ đạo: rương ngày theo tầng tháp đã qua, mỗi ngày một lần, leo cao thì rương dày hơn', () => {
+  let s = rich(10)
+  assert.equal(err(s, { type: 'towerChest' }), 'locked', 'chưa qua tầng nào')
+  s = run({ ...s, tower: 12 }, { type: 'towerChest' })
+  assert.equal(s.items.thachNang1k, towerChest(12).items!.thachNang1k)
+  assert.equal(err(s, { type: 'towerChest' }), 'claimed')
+  assert.ok(towerChest(30).items!.thachNang1k! > towerChest(12).items!.thachNang1k!)
+  assert.equal(err(advance(s, s.time + 86_400_000), { type: 'towerChest' }), null, 'hôm sau nhận tiếp')
+})
+
+test('đạo thống: chọn lần đầu miễn phí từ tầng 2, hai tăng ích vào bonus, đổi lại sau 7 ngày', () => {
+  let s = rich(2)
+  assert.equal(err({ ...s, levels: { ...s.levels, chuDien: 1 } }, { type: 'dao', id: 'kiemTong' }), 'locked')
+  const atk0 = bonus(s, 'atk.kiem')
+  s = run(s, { type: 'dao', id: 'kiemTong' })
+  assert.equal(bonus(s, 'atk.kiem'), atk0 + DAOS.kiemTong['atk.kiem'])
+  assert.equal(err(s, { type: 'dao', id: 'kiemTong' }), 'claimed')
+  assert.equal(err(s, { type: 'dao', id: 'danTong' }), 'cooldown')
+  s = run({ ...s, time: s.time + DAO_COOL }, { type: 'dao', id: 'danTong' })
+  assert.equal(bonus(s, 'atk.kiem'), atk0, 'đổi đạo: bỏ tăng ích cũ')
+  assert.equal(bonus(s, 'prod') >= DAOS.danTong.prod, true)
+})
+
+test('trận dung: đội ra bản đồ giới mang tối đa theo cấp (và sao) chủ tướng; cắt đội giữ bậc cao trước', () => {
+  const s = { ...rich(10), elders: { thanhPhong: expAt(10) }, troops: { ...rich(10).troops, kiem1: 2000, kiem3: 400 } }
+  const cap = capOf(s, 'thanhPhong')
+  assert.equal(cap, MARCH_CAP + 9 * MARCH_CAP_STEP)
+  assert.equal(capOf({ ...s, stars: { thanhPhong: 3 } }, 'thanhPhong'), Math.floor(cap * (1 + 2 * MARCH_CAP_STAR)))
+  assert.equal(fieldError(s, 'thanhPhong', { kiem1: cap + 1 }), 'cap')
+  assert.equal(fieldError(s, 'thanhPhong', { kiem1: cap }), null)
+  assert.equal(marchError(s, 'thanhPhong', { kiem1: 2000 }), null, 'xuất chinh ở núi: không giới hạn')
+  assert.deepEqual(capArmy(s, 'thanhPhong', { kiem1: 2000, kiem3: 400 }), { kiem3: 400, kiem1: cap - 400 })
+})
+
+test('chân nguyên: không mất máu thì thi triển lượt 3, 6, 9; bị đánh đau thì ra chiêu sớm hơn', () => {
+  const troop = (n: number, atk: number, hp: number) => ({
+    type: 'kiem' as const,
+    tier: 1 as const,
+    n,
+    atk,
+    def: 0,
+    hp,
+  })
+  const shield = { kind: 'shield' as const, v: 0.1 }
+  const casts = (rounds: { cast: [boolean, boolean] }[]) => rounds.flatMap((r, k) => (r.cast[0] ? [k + 1] : []))
+  // bên kia không đánh: chân nguyên chỉ tụ theo lượt
+  const calm = fight({ troops: [troop(100, 0.001, 100)], skill: shield }, { troops: [troop(100, 0, 1e9)] }, 1)
+  assert.deepEqual(casts(calm.rounds), [3, 6, 9])
+  assert.ok(calm.rounds[1].rage![0] === 700, 'thanh chân nguyên ghi trong chiến báo')
+  // mất 70 % máu ngay lượt 1: đầy ở lượt 2
+  const hurt = fight({ troops: [troop(1000, 0.001, 10)], skill: shield }, { troops: [troop(100, 70, 1e9)] }, 1)
+  assert.equal(casts(hurt.rounds)[0], 2)
 })
 
 test('tỉ lệ thắng ước lượng: tính hệ khắc, đông áp đảo thì chắc thắng, ít thì chắc thua', () => {

@@ -1,8 +1,21 @@
 <script lang="ts">
   // Phát lại trận: luật đã tính xong (tất định), ở đây chỉ diễn lại từng lượt rồi hiện kết quả.
-  import { ELDERS, MAX_ROUNDS, RESOURCES, REVENGE_TIME, SECTS, count, type Report, type Skill } from '@rok/rules'
-  import { Icon, Portrait, paintedUrl, portraitRing, type Emblem } from '@rok/art'
-  import { Bag, Button, Card, Medal, Stat } from './ui'
+  import {
+    ELDERS,
+    MAX_ROUNDS,
+    RAGE_MAX,
+    RESOURCES,
+    REVENGE_TIME,
+    SECTS,
+    count,
+    type ElderId,
+    type Report,
+    type Skill,
+    type Tier,
+    type UnitType,
+  } from '@rok/rules'
+  import { Icon, Portrait, paintedUrl, portraitRing, type Emblem, type MedalTone } from '@rok/art'
+  import { Bag, Button, Card, Medal, Meter, Stat } from './ui'
   import { Battle } from './world/battle'
   import { cssPerDU, mountScene } from './world/stage'
   import { EMBLEM, L, LOOK, num, reportName, sfx } from './lib'
@@ -43,6 +56,10 @@
   const counts = (side: 0 | 1, at: number) =>
     !f ? [] : at <= 0 ? (side ? f.b : f.a).troops.map(t => t.n) : f.rounds[at - 1].n[side]
   const cast = $derived(f && r > 0 ? f.rounds[r - 1].cast : [false, false])
+  // chân nguyên hai bên sau lượt đang xem (thanh vàng dưới tên; chiến báo cũ không có thì ẩn)
+  const rage = $derived(f?.rounds[0]?.rage ? (r > 0 ? f.rounds[r - 1].rage : [0, 0]) : undefined)
+  // bên không có công pháp (yêu thú) không tụ chân nguyên: không vẽ thanh
+  const rageOn = $derived([0, 1].map(k => !!f?.rounds.some(x => x.rage?.[k])))
 
   // Cảnh trận WebGL: mượn canvas chung của game đặt vào hộp thoại (không tạo thêm context), trả lại khi đóng
   let host = $state<HTMLDivElement>()
@@ -62,7 +79,11 @@
               ? ELDERS[rep.fights[0].b.elder].skill
               : undefined, // PvP: trưởng lão bên kia
         ]
-        const b = new Battle(rep, skills, innerWidth / k, innerHeight / k)
+        const dep = (e?: ElderId) => (e ? ELDERS[e].skill : undefined)
+        const b = new Battle(rep, skills, innerWidth / k, innerHeight / k, [
+          dep(rep.fights[0]?.a.deputy),
+          dep(rep.fights[0]?.b.deputy),
+        ])
         b.root.scale.set(k)
         return b
       },
@@ -122,10 +143,34 @@
     return () => clearInterval(id)
   })
 
+  // Chi tiết trận (như báo cáo chi tiết của RoK): mỗi bên, từng loại đệ tử vào trận bao nhiêu, còn bao nhiêu; công pháp thi
+  // triển mấy lần — gộp mọi đợt / mọi cặp đấu
+  let detail = $state(false)
+  const breakdown = $derived.by(() => {
+    if (!report) return null
+    const sum = (side: 0 | 1) => {
+      const rows = new Map<string, { type: UnitType; tier: Tier; from: number; left: number }>()
+      for (const fx of report.fights) {
+        const troops = side ? fx.b.troops : fx.a.troops
+        const last = fx.rounds.at(-1)?.n[side]
+        troops.forEach((t, k) => {
+          const key = `${t.type}${t.tier}`
+          const row = rows.get(key) ?? { type: t.type, tier: t.tier, from: 0, left: 0 }
+          rows.set(key, { ...row, from: row.from + t.n, left: row.left + (last?.[k] ?? t.n) })
+        })
+      }
+      const casts = report.fights.reduce((n, fx) => n + fx.rounds.filter(rd => rd.cast[side]).length, 0)
+      return { rows: [...rows.values()], casts }
+    }
+    return [sum(0), sum(1)] as const
+  })
+  const TONE: Partial<Record<Report['kind'], MedalTone>> = { trib: 'thunder', arena: 'pvp', legion: 'thunder' }
+  const tone = $derived<MedalTone>(report ? (TONE[report.kind] ?? (report.kind as MedalTone)) : 'pvp')
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
   const foeEmblem: Emblem = $derived.by(() => {
     if (!report || report.kind === 'trib') return 'thunder'
-    if (report.kind === 'pvp') return 'crest'
+    if (report.kind === 'legion') return 'ghost'
+    if (report.kind === 'pvp' || report.kind === 'arena') return 'crest'
     if (report.kind === 'spot') return EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus'
     return EMBLEM[report.kind][report.i]
   })
@@ -145,11 +190,14 @@
   <div class="stage" bind:this={host} tabindex="-1" autofocus></div>
   {#if report && f}
     <header class="row foe">
-      <Medal emblem={foeEmblem} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={46} />
+      <Medal emblem={foeEmblem} {tone} size={46} />
       <span class="stack" style:--gap="0"
         ><b class="t-head">{foeName}</b>{#if report.kind === 'tower'}<small class="t-small t-bad t-strong"
             >{L.tower.floor(f.b.level)}</small
-          >{:else if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small>{/if}</span
+          >{:else if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small
+          >{/if}{#if rage && rageOn[1]}<span class="rage" title={L.report.rage}
+            ><Meter value={rage[1] / RAGE_MAX} tone="gold" size="xs" /></span
+          >{/if}</span
       >
     </header>
 
@@ -169,16 +217,16 @@
           >
           <span class="stack name" style:--gap="0"
             ><small class="t-strong">{L.elders[f.a.elder].name}</small><b class="skill">{L.elders[f.a.elder].skill}</b
-            ></span
+            >{#if f.a.deputy}<small class="t-strong depl"
+                >{L.army.deputy}: {L.elders[f.a.deputy].name} · {L.elders[f.a.deputy].skill}</small
+              >{/if}</span
           >
         </div>
       {/if}
       {#if cast[1]}
         <div class="cutin foe" style:--d="{pace * 1.7}s" aria-live="polite">
           <span class="band"></span>
-          <span class="who"
-            ><Medal emblem={foeEmblem} tone={report.kind === 'trib' ? 'thunder' : report.kind} size={72} /></span
-          >
+          <span class="who"><Medal emblem={foeEmblem} {tone} size={72} /></span>
           <span class="stack name" style:--gap="0"
             ><small class="t-strong">{foeName}</small><b class="skill">{L.report.foeSkill}</b></span
           >
@@ -201,10 +249,18 @@
 
     <header class="row ours">
       {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={46} />{/if}
+      {#if f.a.deputy}<span class="dep"><Portrait look={LOOK[f.a.deputy]} size={30} /></span>{/if}
       <span class="stack" style:--gap="0"
-        ><b class="t-head">{f.a.elder ? L.elders[f.a.elder].name : ''}</b><small class="t-small t-gold t-strong"
-          >{L.lv(f.a.level)}</small
-        ></span
+        ><b class="t-head"
+          >{f.a.elder
+            ? f.a.deputy
+              ? L.army.duo(L.elders[f.a.elder].name, L.elders[f.a.deputy].name)
+              : L.elders[f.a.elder].name
+            : ''}</b
+        ><small class="t-small t-gold t-strong">{L.lv(f.a.level)}</small>{#if rage && rageOn[0]}<span
+            class="rage"
+            title={L.report.rage}><Meter value={rage[0] / RAGE_MAX} tone="gold" size="xs" /></span
+          >{/if}</span
       >
     </header>
 
@@ -247,6 +303,26 @@
                 ></span
               >
             {/if}
+            {#if breakdown}
+              <Button variant="quiet" size="sm" onclick={() => (detail = !detail)}>{L.report.detail}</Button>
+              {#if detail}
+                <div class="detail">
+                  {#each breakdown as b, side (side)}
+                    <div class="stack" style:--gap="2px">
+                      <b class="t-small">{side ? foeName : L.army.ours}</b>
+                      {#each b.rows as x (`${x.type}${x.tier}`)}
+                        <small class="t-tiny t-num"
+                          >{L.units[x.type]}
+                          {L.tiers[x.tier]}: {num(x.from)} → {num(x.left)}
+                          <span class="t-bad">−{num(x.from - x.left)}</span></small
+                        >
+                      {/each}
+                      {#if b.casts}<small class="t-tiny t-gold">{L.report.casts(b.casts)}</small>{/if}
+                    </div>
+                  {/each}
+                </div>
+              {/if}
+            {/if}
             <div class="grid">
               <Button variant="ghost" onclick={again}>{L.report.replay}</Button>
               <Button variant="gold" onclick={() => dlg?.close()}>{L.report.close}</Button>
@@ -267,6 +343,14 @@
 </dialog>
 
 <style>
+  .detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-2);
+    padding: 8px;
+    background: color-mix(in srgb, var(--paper2, var(--paper)) 70%, transparent);
+    border-radius: 8px;
+  }
   .replay {
     width: 100vw;
     height: 100dvh;
@@ -295,6 +379,11 @@
   }
   .ours {
     bottom: calc(64px + var(--safe-b));
+  }
+  .rage {
+    display: block;
+    width: 96px;
+    margin-top: 3px;
   }
   .mid {
     top: 56%;
@@ -373,6 +462,11 @@
   }
   .foe .name {
     animation-name: slide-in;
+  }
+  /* dòng phó trưởng lão dưới tên chiêu: xuống dòng trong bề ngang màn, không tràn mép */
+  .depl {
+    max-width: min(60vw, 360px);
+    font-size: var(--fs-1);
   }
   .skill {
     padding-bottom: 6px;

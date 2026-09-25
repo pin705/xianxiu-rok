@@ -23,7 +23,7 @@
     min-width: 21px;
     height: 19px;
     padding: 0 6px 1px;
-    font: 800 11px/1 var(--font);
+    font: 800 var(--fs-1) / 1 var(--font);
     color: var(--silk);
     border: 0 solid transparent;
     border-image: var(--sk-badge);

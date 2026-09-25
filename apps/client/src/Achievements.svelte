@@ -1,9 +1,9 @@
 <script lang="ts">
   // Thành tựu (như Achievements của RoK): mỗi dòng một thành tựu — tên, bậc, thanh tiến độ tới bậc kế, quà bậc kế, nút Nhận.
   // Thành tựu đang chờ nhận lên đầu, rồi tới cái gần xong nhất.
-  import { ACH_IDS, ACH_REWARDS, ACHS, achGot, achNext, achReady, achValue, type AchId } from '@rok/rules'
+  import { ACH_IDS, ACH_REWARDS, ACHS, achCount, achGot, achNext, achReady, achValue, type AchId } from '@rok/rules'
   import { Bag, Button, Card, Meter } from './ui'
-  import { L, num } from './lib'
+  import { L, num, sfx } from './lib'
   import { useGame } from './game'
 
   const g = useGame()
@@ -19,6 +19,18 @@
   )
 </script>
 
+{#if achCount(game) > 1}
+  <!-- Nhận tất cả: mọi bậc đã đạt của mọi thành tựu -->
+  <Button
+    variant="gold"
+    wide
+    onclick={() => {
+      let any = false
+      for (const id of ACH_IDS) while (achReady(g.game, id) && act({ type: 'ach', id })) any = true
+      if (any) sfx('reward')
+    }}>{L.mail.claimAll(achCount(game))}</Button
+  >
+{/if}
 <ul class="stack rows">
   {#each list as id (id)}
     {@const next = achNext(game, id)}
@@ -41,7 +53,9 @@
             <div class="row between">
               <Bag res={ACH_REWARDS[got].res} items={ACH_REWARDS[got].items} size="sm" />
               {#if achReady(game, id)}
-                <Button size="sm" variant="gold" onclick={() => act({ type: 'ach', id }, 'reward')}>{L.ach.claim}</Button>
+                <Button size="sm" variant="gold" onclick={() => act({ type: 'ach', id }, 'reward')}
+                  >{L.ach.claim}</Button
+                >
               {/if}
             </div>
           {/if}

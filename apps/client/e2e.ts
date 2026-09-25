@@ -324,12 +324,13 @@ try {
   const t2 = (await api('/dev/state', thief.token)) as { state: any }
   const home = (await a.js(truth)).seat // giới vừa mở: cổng chưa mở, kẻ cướp phải cùng vùng
   await api('/dev/state', thief.token, {
-    state: { ...tenTo(t2.state, { kiem3: 1100 }), seat: { x: home.x + 1, y: home.y } },
+    // 500 đệ tử bậc 3: vừa trận dung của trưởng lão cấp 1, vẫn thắng chắc 200 thể tu bậc 1
+    state: { ...tenTo(t2.state, { kiem3: 500 }), seat: { x: home.x + 1, y: home.y } },
   })
   const victimPid = (await a.js(`fetch('/api/me').then(r => r.json()).then(d => d.pid)`)) as number
   const raid = await other
     .timeout(10_000)
-    .emitWithAck('act', { type: 'raid', pid: victimPid, elder: 'thanhPhong', army: { kiem3: 1100 } })
+    .emitWithAck('act', { type: 'raid', pid: victimPid, elder: 'thanhPhong', army: { kiem3: 500 } })
   assert.ok(raid.ok, `người chơi thứ hai không xuất quân được: ${JSON.stringify(raid)}`)
   await api('/dev/warp', thief.token, { min: 12 })
   assert.ok(

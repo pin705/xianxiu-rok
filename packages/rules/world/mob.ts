@@ -7,8 +7,8 @@ import { dayOf, weekOf } from '../core/calendar.ts'
 import { metric } from '../core/fest.ts'
 import { int } from '../core/parse.ts'
 import type { Mob, State } from '../core/types.ts'
-import { MOB_GOALS, MOB_MIN, MOB_POOL, MOB_REWARDS, MOB_SLOTS, MOB_TAKES, MOB_TIME } from '../data.ts'
-import { allyOf, put, type Alliance, type MobBoard, type WorldActions } from './base.ts'
+import { MOB_GOALS, MOB_MIN, MOB_POOL, MOB_PRIZES, MOB_REWARDS, MOB_SLOTS, MOB_TAKES, MOB_TIME } from '../data.ts'
+import { allyOf, put, type Alliance, type MobBoard, type World, type WorldActions } from './base.ts'
 
 // Việc thứ i của bảng minh aid tuần week: tất định, client tự suy ra được
 export const mobTask = (aid: number, week: number, i: number) =>
@@ -84,3 +84,10 @@ export const mobActions: WorldActions<MobAction> = {
     },
   },
 }
+
+// Hạng Minh vụ tuần week: các minh có điểm tuần đó, cao trước (hết tuần server phát MOB_PRIZES cho 3 minh đầu)
+export const mobTop = (w: World, week: number) =>
+  Object.values(w.allies)
+    .filter(al => al.mob?.week === week && al.mob.pts > 0)
+    .sort((a, b) => b.mob!.pts - a.mob!.pts || a.id - b.id)
+    .slice(0, MOB_PRIZES.length)

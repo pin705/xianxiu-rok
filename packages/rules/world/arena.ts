@@ -5,9 +5,21 @@ import { pushReport, snap } from '../core/battle.ts'
 import { isId } from '../core/parse.ts'
 import { elderLevel } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
+import { dayOf } from '../core/calendar.ts'
 import type { ArenaLog, ArenaTeam, State } from '../core/types.ts'
 import { noGain } from '../core/util.ts'
-import { ARENA_LOG, ARENA_PRIZES, ARENA_TOP, MATCH_PICK, MATCH_POOL, PVP_HALL, type Reward } from '../data.ts'
+import {
+  ARENA_LOG,
+  ARENA_PRIZES,
+  ARENA_TOP,
+  KY_LOSE,
+  KY_REVENGE,
+  KY_WIN,
+  MATCH_PICK,
+  MATCH_POOL,
+  PVP_HALL,
+  type Reward,
+} from '../data.ts'
 import { arenaN, arenaOf, arenaSide, duel, lineupOf } from '../sect/arena.ts'
 import { elo, type Players, type WorldActions } from './base.ts'
 
@@ -47,23 +59,37 @@ export const arenaBoard = (ps: Players, week: number) =>
     .filter(([, s]) => s.arena?.week === week && s.arena.log.length)
     .sort((a, b) => b[1].arena!.pts - a[1].arena!.pts || a[0] - b[0])
 // Thư quà hết tuần theo hạng (0: hạng 1): hạng 1 · 2–3 · 4–10
-export const arenaTop = (ps: Players, week: number) => arenaBoard(ps, week).slice(0, ARENA_TOP).map(([id]) => id)
+export const arenaTop = (ps: Players, week: number) =>
+  arenaBoard(ps, week)
+    .slice(0, ARENA_TOP)
+    .map(([id]) => id)
 export const arenaPrize = (rank: number): Reward => ARENA_PRIZES[rank === 0 ? 0 : rank < 3 ? 1 : 2]
 
-export type ArenaFight = { type: 'arena'; pid: number }
-const log = (s: State, t: number, e: ArenaLog, pts: number, left?: number): State => {
+export type ArenaFight = { type: 'arena'; pid: number; revenge?: boolean }
+// Phục thù được người pid lúc t: hôm nay chưa phục thù, và hôm nay người ấy đã thắng mình lúc mình giữ đài
+export const canRevenge = (s: State, pid: number, t: number) => {
   const a = arenaOf(s, t)
-  return { ...s, arena: { ...a, pts, left: left ?? a.left, log: [e, ...a.log].slice(0, ARENA_LOG) } }
+  return a.revenge !== a.day && a.log.some(e => e.def && !e.win && e.pid === pid && dayOf(e.at) === a.day)
+}
+const log = (s: State, t: number, e: ArenaLog, pts: number, left?: number, ky = 0): State => {
+  const a = arenaOf(s, t)
+  return {
+    ...s,
+    arena: { ...a, pts, left: left ?? a.left, log: [e, ...a.log].slice(0, ARENA_LOG), ky: (a.ky ?? 0) + ky },
+  }
 }
 
 export const arenaActions: WorldActions<ArenaFight> = {
   arena: {
-    pick: a => (isId(a.pid) ? { type: 'arena', pid: a.pid } : null),
+    pick: a =>
+      isId(a.pid) && (a.revenge === undefined || a.revenge === true)
+        ? { type: 'arena', pid: a.pid, ...(a.revenge && { revenge: true }) }
+        : null,
     run: ({ ps, w, pid, s, seed }, a) => {
       const t = s.time
       if (s.levels.chuDien < PVP_HALL) return no('locked')
       const mine = arenaOf(s, t)
-      if (mine.left < 1) return no('limit')
+      if (a.revenge ? !canRevenge(s, a.pid, t) : mine.left < 1) return no('limit')
       const foe = ps.get(a.pid)
       if (!foe || a.pid === pid) return no('gone')
       if (foe.levels.chuDien < PVP_HALL) return no('weak')
@@ -83,7 +109,11 @@ export const arenaActions: WorldActions<ArenaFight> = {
         b: snap(b.sd, D[b.d].elder, elderLevel(def.elders[D[b.d].elder])),
         rounds: b.f.rounds,
       }))
-      const me = pushReport(s, {
+      const fought = {
+        ...s,
+        stats: { ...s.stats, duels: (s.stats.duels ?? 0) + 1, duelWins: (s.stats.duelWins ?? 0) + (r.win ? 1 : 0) },
+      }
+      const me = pushReport(fought, {
         at: t,
         kind: 'arena',
         i: a.pid,
@@ -95,12 +125,24 @@ export const arenaActions: WorldActions<ArenaFight> = {
         fights,
       })
       const mark = { at: t, win: r.win, delta }
+      const ky = (r.win ? KY_WIN : KY_LOSE) + (a.revenge && r.win ? KY_REVENGE : 0)
+      const logged = log(
+        me,
+        t,
+        { ...mark, pid: a.pid, foe: def.name, def: false },
+        mine.pts + delta,
+        a.revenge ? mine.left : mine.left - 1, // phục thù không tốn lượt
+        ky,
+      )
       return {
         ok: true,
         world: w,
         changed: new Map([
-          [pid, log(me, t, { ...mark, pid: a.pid, foe: def.name, def: false }, mine.pts + delta, mine.left - 1)],
-          [a.pid, log(def, t, { ...mark, pid, foe: s.name, win: !r.win, delta: -delta, def: true }, theirs.pts - delta)],
+          [pid, a.revenge ? { ...logged, arena: { ...logged.arena!, revenge: mine.day } } : logged],
+          [
+            a.pid,
+            log(def, t, { ...mark, pid, foe: s.name, win: !r.win, delta: -delta, def: true }, theirs.pts - delta),
+          ],
         ]),
       }
     },

@@ -3,7 +3,7 @@ import { no, ok, use, type Actions, pay } from '../core/action.ts'
 import { admit, armyError, giveExp, pushReport, tribPill, tribulation } from '../core/battle.ts'
 import { bump } from '../core/calendar.ts'
 import { isElder, pickArmy } from '../core/parse.ts'
-import { cost, lead, marchSlots } from '../core/stats.ts'
+import { cost, deputyOf, lead, marchSlots } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Err, type March, type State } from '../core/types.ts'
 import { addBag, afford, minus, nextSeed, plus, compact } from '../core/util.ts'
@@ -31,10 +31,11 @@ function settle(
   at: number,
   mul: number,
   paid: boolean,
+  deputy?: ElderId,
 ) {
   const k = s.trib
   const tr = TRIBS[k]
-  const r = tribulation(s, elder, army, p, seed, mul)
+  const r = tribulation(s, elder, army, p, seed, mul, deputy)
   const ids = UNITS.filter(u => (army[u] ?? 0) > 0)
   const hurt = Object.fromEntries(ids.map((u, i) => [u, army[u]! - r.left[i]])) as Army
   const adm = admit({ ...s, troops: plus(s.troops, Object.fromEntries(ids.map((u, i) => [u, r.left[i]]))) }, hurt)
@@ -81,6 +82,7 @@ export function tribEnd(s: State, id: number, at: number, mul: number): State {
     at,
     mul,
     true,
+    m.deputy,
   ).state
 }
 
@@ -103,16 +105,18 @@ export const tribActions: Actions<TribAction> = {
       const army = compact(a.army)
       const sent: State = { ...s, troops: minus(s.troops, army), items: p ? use(s, p) : s.items }
       if (!s.seat) {
-        const r = settle(sent, a.elder, army, p, s.seed, t, 1, false)
+        const r = settle(sent, a.elder, army, p, s.seed, t, 1, false, deputyOf(s, a.elder))
         return ok({ ...r.state, seed: r.seed })
       }
       // có chỗ trên bản đồ giới: kiếp vân tụ trên núi cho cả giới thấy, trả chi phí ngay, server giải lúc giáng (tribEnd).
       // Đội độ kiếp là một đội xuất quân (chiếm một lượt)
       if (s.marches.length >= marchSlots(s)) return no('slots')
       const k = s.trib
+      const deputy = deputyOf(s, a.elder)
       const m: March = {
         id: s.nextId,
         elder: a.elder,
+        ...(deputy && { deputy }),
         army,
         target: { kind: 'trib', i: k },
         seed: s.seed,

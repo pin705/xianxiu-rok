@@ -2,6 +2,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { migrate } from '@rok/rules'
+import { allyOf, put } from '@rok/rules/world'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
 import type { Host } from '../game/host.ts'
@@ -54,4 +55,18 @@ export const devRoutes: FastifyPluginAsyncZod<{ db: Database; host: Host }> = as
     if (!state) return reply.code(400).send({ error: 'state' })
     return w.setState(s.pid, state) ? { ok: true } : reply.code(404).send({ error: 'gone' })
   })
+
+  // Minh khố của tiên minh mình (thử Cống Hiến Các, trận kỳ mà không phải cung phụng hàng trăm lượt)
+  app.post(
+    '/fund',
+    { preHandler: auth, schema: { body: z.object({ n: z.number().int().min(0) }) } },
+    async (req, reply) => {
+      const s = req.session
+      const w = await worldOf(s.world)
+      const al = w && s.pid ? allyOf(w.shared, s.pid) : undefined
+      if (!w || !al) return reply.code(409).send({ error: 'no ally' })
+      w.share(put(w.shared, { ...al, fund: req.body.n }))
+      return { ok: true }
+    },
+  )
 }

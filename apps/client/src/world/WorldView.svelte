@@ -3,14 +3,26 @@
   // + dải trên (ngày, pha mùa, biên niên). Dữ liệu sống: ảnh chụp server đẩy khi đổi (watch). Chạm: cờ hành quân → tông môn → điểm → ô.
   import { chronText } from '@rok/i18n'
   import { onMount, type Snippet } from 'svelte'
-  import { MAP_W, SEASON_DAYS, dayIn, phaseOf, type MapSnap, type Mark } from '@rok/rules/world'
-  import type { WorldInfo } from '@rok/protocol'
+  import {
+    MAP_W,
+    SEASON_DAYS,
+    atlas,
+    dayIn,
+    phaseOf,
+    route,
+    type MapSnap,
+    type Mark,
+    type WorldAction,
+  } from '@rok/rules/world'
+  import { BLESSINGS, BOOK, cellOf, clear, dayOf, fogOf, type BlessKey } from '@rok/rules'
+  import type { Ack, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
-  import { Button, Card } from '../ui'
+  import { Bag, Button, Card } from '../ui'
   import { L, clock, keyBlocked } from '../lib'
   import { mountScene, railPx } from './stage'
   import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Pick, type Rel } from './worldmap'
   import { useGame } from '../game'
+  import { social } from '../social.svelte'
 
   let {
     info,
@@ -22,6 +34,7 @@
     ongone,
     onpick,
     toggle,
+    send,
   }: {
     info: WorldInfo
     me: number | null
@@ -32,6 +45,7 @@
     ongone?: () => void
     onpick: (p: Pick) => void
     toggle?: Snippet // nút gạt Giới | Vùng (MapTab)
+    send?: (a: WorldAction) => Promise<Ack> // Giới Chủ ban phúc
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -44,17 +58,31 @@
   let scene = $state.raw<WorldScene>()
   let layer = $state<HTMLDivElement>()
   let chronOpen = $state(false)
+  let bookOpen = $state(false)
   const day = $derived(dayIn(info.opened, now))
   const phase = $derived(phaseOf(day))
   const zMin = () => Math.min(innerWidth - railPx(), innerHeight) / WORLD_DU
   const center = () => ({ x: railPx() + (innerWidth - railPx()) / 2, y: innerHeight / 2 })
   // giữ khung nhìn trong giới: phóng to thì mép màn không vượt mép giới (thu nhỏ hết thì giới nằm giữa)
+  // Kéo quá mép bằng chiều cao lớp phủ (px CSS): trên — HUD + thẻ mùa (đo thật: thẻ cao lên khi mở biên niên, tìm…),
+  // dưới — tab + dải chat. Tông môn / điểm sát mép giới vẫn kéo ra được chỗ trống giữa màn, không nằm kẹt dưới thẻ
+  let topCard = $state<HTMLDivElement>()
+  const PAD = { top: 260, bottom: 160, side: 48 }
+  const padTop = () => Math.max(PAD.top, (topCard?.getBoundingClientRect().bottom ?? 0) + 40)
+  // thẻ đổi cỡ (dữ liệu bản đồ tới sau): chưa ai kéo / nhảy khung nhìn thì đưa lại về tông môn, khỏi nằm dưới thẻ
+  let steered = false
+  onMount(() => {
+    const ro = new ResizeObserver(() => void (steered || (cam = clamp({ ...home(), z: cam.z }))))
+    if (topCard) ro.observe(topCard)
+    return () => ro.disconnect()
+  })
   const clamp = (c: Cam): Cam => {
     const z = Math.min(1.4, Math.max(zMin(), c.z))
     const hx = (innerWidth - railPx()) / 2 / z,
       hy = innerHeight / 2 / z
-    const fit = (v: number, h: number) => (h * 2 >= WORLD_DU ? WORLD_DU / 2 : Math.min(WORLD_DU - h, Math.max(h, v)))
-    return { z, x: fit(c.x, hx), y: fit(c.y, hy) }
+    const fit = (v: number, h: number, lo: number, hi: number) =>
+      h * 2 >= WORLD_DU + lo + hi ? WORLD_DU / 2 : Math.min(WORLD_DU - h + hi, Math.max(h - lo, v))
+    return { z, x: fit(c.x, hx, PAD.side / z, PAD.side / z), y: fit(c.y, hy, padTop() / z, PAD.bottom / z) }
   }
   // Đổi độ phóng mà giữ nguyên điểm dưới (sx, sy)
   function zoomAt(k: number, sx: number, sy: number) {
@@ -71,6 +99,7 @@
   let down: { x: number; y: number; t: number; moved: number } | null = null
   let pinch = 0
   function pointerdown(e: PointerEvent) {
+    steered = true
     layer?.setPointerCapture(e.pointerId)
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY })
     vel = { x: 0, y: 0 }
@@ -110,6 +139,7 @@
     down = null
   }
   function wheel(e: WheelEvent) {
+    steered = true
     e.preventDefault()
     zoomAt(Math.exp(-e.deltaY * 0.0022), e.clientX, e.clientY)
   }
@@ -127,6 +157,7 @@
     }
     if (k[e.key]) {
       e.preventDefault()
+      steered = true
       k[e.key]()
     }
   }
@@ -158,9 +189,12 @@
     return snap?.seats.find(s => s.pid === pid)?.npc ? 'npc' : 'other'
   }
   $effect(() => {
-    if (scene && snap) scene.setData(snap, rel, phase, now)
+    if (scene && snap)
+      scene.setData(snap, rel, phase, now, game.seat ? { fog: fogOf(game), visited: game.visited ?? [] } : undefined)
   })
 
+  // Giới Chủ (chạm: hồ sơ, sắc phong nếu mình là Giới Chủ)
+  const lordSeat = $derived(snap?.lord ? snap.seats.find(s => s.pid === snap.lord) : undefined)
   // Ô (x, y) của giới → toạ độ trên màn; null: ngoài màn
   const onScreen = (x: number, y: number, pad = 40) => {
     if (typeof innerWidth === 'undefined') return null
@@ -176,17 +210,45 @@
   let ping = $state<{ x: number; y: number; until: number } | null>(null)
   $effect(() => {
     if (!goto) return
+    steered = true
     cam = clamp({ x: (goto.x + 0.5) * T, y: (goto.y + 0.5) * T, z: Math.max(cam.z, 0.9) })
     ping = { ...goto, until: now + 4000 }
     ongone?.()
   })
   const pingAt = $derived(ping && ping.until > now ? onScreen(ping.x, ping.y) : null)
 
-  // Ghim tên: tối đa 60 tông môn gần tâm nhìn nhất, chỉ khi đủ phóng để đọc
+  // Tìm (như kính lúp của RoK): điểm gần nhất theo loại + cấp, còn sống, có đường đi — bay tới và mở bảng của điểm đó
+  type Find = 'mine' | 'vein' | 'boss' | 'wild'
+  let finding = $state(false)
+  let want = $state<{ kind: Find; lv: number }>({ kind: 'mine', lv: 1 })
+  let miss = $state(false)
+  function find() {
+    steered = true
+    const a = atlas(info.map),
+      from = game.seat
+    if (!from) return
+    const dead = new Set((snap?.spots ?? []).filter(x => (x.until ?? 0) > now).map(x => x.i))
+    const d = (p: { x: number; y: number }) => Math.hypot(p.x - from.x, p.y - from.y)
+    const hit = a.points
+      // yêu thú: "cấp" 1/2/3 là nhóm cấp 1–5 / 6–10 / 11–15
+      .filter(p => p.kind === want.kind && (p.kind === 'wild' ? Math.ceil(p.lv / 5) : p.lv) === want.lv)
+      .filter(p => !dead.has(p.i) && route(a, from, p, phase))
+      .sort((p, q) => d(p) - d(q))[0]
+    miss = !hit
+    if (!hit) return
+    cam = clamp({ x: (hit.x + 0.5) * T, y: (hit.y + 0.5) * T, z: Math.max(cam.z, 0.9) })
+    ping = { x: hit.x, y: hit.y, until: now + 4000 }
+    finding = false
+    pickAt(hit.x, hit.y)
+  }
+
+  // Ghim tên: tối đa 60 tông môn gần tâm nhìn nhất, chỉ khi đủ phóng để đọc; dưới mê vụ của mình thì không lộ tên
   const pins = $derived.by(() => {
     if (!snap || cam.z < FINE_Z * 0.8) return []
     const c = typeof innerWidth === 'undefined' ? { x: 0, y: 0 } : center()
+    const fog = game.seat ? fogOf(game) : null
     return snap.seats
+      .filter(s => !fog || clear(fog, cellOf(s).cx, cellOf(s).cy, now))
       .map(s => ({ s, x: c.x + ((s.x + 0.5) * T - cam.x) * cam.z, y: c.y + ((s.y + 0.5) * T - cam.y) * cam.z }))
       .filter(p => p.x > -40 && p.y > -40 && p.x < innerWidth + 40 && p.y < innerHeight + 40)
       .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))
@@ -220,21 +282,113 @@
       >
     {/if}
   {/each}
+  {#each game.pins ?? [] as m (`p${m.x},${m.y}`)}
+    {@const p = onScreen(m.x, m.y)}
+    {#if p}
+      <button class="mark pin" style="left:{p.x}px;top:{p.y}px" onclick={() => pickAt(m.x, m.y)}
+        ><Icon name="star" size={14} /><span>{m.text}</span></button
+      >
+    {/if}
+  {/each}
   {#if pingAt}<span class="ping" style="left:{pingAt.x}px;top:{pingAt.y}px" aria-hidden="true"></span>{/if}
 </div>
 
-<div class="top stack" style:--gap="6px">
+<div class="top stack" style:--gap="6px" bind:this={topCard}>
   {#if toggle}<div class="row">{@render toggle()}</div>{/if}
   <Card tone="silk">
     <div class="row">
       <span class="grow stack" style:--gap="0">
         <b class="t-small">{L.rank.fameRow(info.season)} · {L.world.day(day, SEASON_DAYS)} · {L.world.phase[phase]}</b>
+        {#if lordSeat}<button class="lord t-tiny" onclick={() => (social.profile = lordSeat.pid)}
+            ><Icon name="flag" size={12} />{L.lord.now(lordSeat.name)}</button
+          >{/if}
+        {#if snap?.bless && snap.bless.until > now}<small class="t-tiny t-gold"
+            >{L.lord.blessed(L.lord.blessKeys[snap.bless.key], clock(snap.bless.until - now))}</small
+          >{/if}
+        {#if send && snap?.lord === me && snap?.bless?.day !== dayOf(now)}
+          <!-- mình là Giới Chủ, hôm nay chưa ban phúc -->
+          <span class="row wrap" style:--gap="4px">
+            <small class="t-tiny">{L.lord.bless}:</small>
+            {#each Object.keys(BLESSINGS) as BlessKey[] as k (k)}
+              <Button size="sm" variant="ghost" onclick={() => send({ type: 'bless', key: k })}
+                >{L.lord.blessKeys[k]}</Button
+              >
+            {/each}
+          </span>
+        {/if}
         <small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>
       </span>
+      <Button size="sm" variant="ghost" onclick={() => (finding = !finding)}
+        ><Icon name="globe" size={14} />{L.world.find}</Button
+      >
       <Button size="sm" variant="ghost" onclick={() => (cam = clamp({ ...home(), z: Math.max(cam.z, 0.7) }))}
         ><Icon name="flag" size={14} />{L.world.you}</Button
       >
     </div>
+    {#if finding}
+      <div class="stack find" style:--gap="6px">
+        <div class="row wrap" style:--gap="4px">
+          {#each ['wild', 'mine', 'vein', 'boss'] as const as k (k)}
+            <Button size="sm" variant={want.kind === k ? 'gold' : 'ghost'} onclick={() => (want = { ...want, kind: k })}
+              >{L.world.point[k]}</Button
+            >
+          {/each}
+        </div>
+        <div class="row wrap" style:--gap="4px">
+          {#each [1, 2, 3] as lv (lv)}
+            <Button size="sm" variant={want.lv === lv ? 'gold' : 'quiet'} onclick={() => (want = { ...want, lv })}
+              >{want.kind === 'wild' ? L.world.wildLv(lv * 5 - 4, lv * 5) : L.lv(lv)}</Button
+            >
+          {/each}
+          <Button size="sm" variant="gold" icon="arrow" onclick={find}>{L.world.findGo}</Button>
+        </div>
+        {#if miss}<small class="t-tiny t-bad">{L.world.findNone}</small>{/if}
+        {#if game.pins?.length}
+          <small class="t-tiny t-soft">{L.world.pins}</small>
+          <div class="row wrap" style:--gap="4px">
+            {#each game.pins as m (`${m.x},${m.y}`)}
+              <Button
+                size="sm"
+                variant="quiet"
+                icon="star"
+                onclick={() => {
+                  cam = clamp({ x: (m.x + 0.5) * T, y: (m.y + 0.5) * T, z: Math.max(cam.z, 0.9) })
+                  ping = { x: m.x, y: m.y, until: now + 4000 }
+                  finding = false
+                  pickAt(m.x, m.y)
+                }}>{m.text} {L.world.coord(m.x, m.y)}</Button
+              >
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
+    {#if snap?.book}
+      {@const b = snap.book}
+      {@const g = BOOK[b.ch]}
+      <!-- Thiên Đạo Biên Niên (Monument): chương đang mở của cả giới, chạm để xem mọi chương -->
+      <button class="chron" onclick={() => (bookOpen = !bookOpen)} aria-expanded={bookOpen}>
+        <small class="t-tiny"
+          ><b>{L.book.title}:</b>
+          {g
+            ? `${L.book.names[b.ch]} — ${L.book.goal[g.m](g.n)} · ${Math.min(b.value, g.n)}/${g.n} · ${L.book.left(Math.max(0, g.day - day + 1))}`
+            : L.book.end}</small
+        >
+      </button>
+      {#if bookOpen}
+        <ol class="stack" style:--gap="4px">
+          {#each BOOK as x, k (k)}
+            <li class="row between t-tiny" class:t-soft={k > b.ch}>
+              <span
+                >{L.book.chapter(k + 1, BOOK.length)} · <b>{L.book.names[k]}</b> — {L.book.goal[x.m](x.n)} ·
+                {b.done.includes(k) ? L.book.done : k < b.ch ? L.book.missed : L.book.by(x.day)}</span
+              >
+              <Bag items={x.reward.items} size="sm" />
+            </li>
+          {/each}
+        </ol>
+      {/if}
+    {/if}
     {#if snap?.chron.length}
       <button class="chron" onclick={() => (chronOpen = !chronOpen)} aria-expanded={chronOpen}>
         <small class="t-tiny"><b>{L.world.chron}:</b> {chronText(L, snap.chron.at(-1)!)}</small>
@@ -308,6 +462,11 @@
     pointer-events: auto;
     cursor: pointer;
   }
+  .mark.pin {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--gold-l) 90%, transparent);
+    border-color: var(--gold-d);
+  }
   .ping {
     position: absolute;
     width: 44px;
@@ -347,6 +506,18 @@
       left: calc(var(--rail) + (100% - var(--rail)) / 2);
       width: min(100% - var(--rail), 640px);
     }
+  }
+  .lord {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0;
+    font: inherit;
+    font-weight: 700;
+    color: var(--gold-d);
+    background: none;
+    border: 0;
+    cursor: pointer;
   }
   .chron {
     display: block;

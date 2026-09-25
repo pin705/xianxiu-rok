@@ -1304,22 +1304,22 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 
 | Mục | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|
-| A6 Chạm viên tài nguyên → bảng sản lượng / sức chứa / nguồn thêm (điện thoại hiện không phản hồi) | 🟡 | **P0** | S |
-| H2 Cỡ chữ tối thiểu trên điện thoại (10–11 px → ≥12 px; số chính ≥16 px đậm) | 🟡 | **P0** | S |
-| A11 + A9 + G6 Dải "Đang diễn ra" (việc + đội) trên điện thoại (hiện CSS ẩn, chỉ desktop có) | 🟡 | **P0** | M |
-| C2 + G3 Bù tài nguyên thiếu một chạm (Thương hội ngay trong bảng / Đợi ~N phút / Đi tới) | ❌ | **P0** | M |
-| A1 + C34 Hồ sơ chưởng môn (chân dung → hồ sơ; thành tích, thế lực, luân hồi, xếp hạng) | ❌ / 🟡 | P1 | S–M |
+| A6 Chạm viên tài nguyên → bảng sản lượng / sức chứa / nguồn thêm (điện thoại hiện không phản hồi) | ✅ | **P0** | S |
+| H2 Cỡ chữ tối thiểu trên điện thoại (10–11 px → ≥12 px; số chính ≥16 px đậm) | ✅ | **P0** | S |
+| A11 + A9 + G6 Dải "Đang diễn ra" (việc + đội) trên điện thoại (hiện CSS ẩn, chỉ desktop có) | ✅ | **P0** | M |
+| C2 + G3 Bù tài nguyên thiếu một chạm (Thương hội ngay trong bảng / Đợi ~N phút / Đi tới) | ✅ | **P0** | M |
+| A1 + C34 Hồ sơ chưởng môn (chân dung → hồ sơ; thành tích, thế lực, luân hồi, xếp hạng) | ✅ | P1 | S–M |
 | A2 + D2 Thế lực: chạm xem nguồn, "+N Thế lực" bay lên | 🟡 | P1 | S |
-| A5 + F4 Dải buff dưới chân dung (khiên, đan) đọc được trên điện thoại | 🟡 | P1 | S |
+| A5 + F4 Dải buff dưới chân dung (khiên, đan) đọc được trên điện thoại | ✅ | P1 | S |
 | A15 Dải Truyền âm 1 dòng ở mọi tab (hiện chỉ Bản đồ, Tiên minh) | 🟡 | P1 | S |
-| A17 + G1 Đĩa "Tương trợ" (giúp tất cả) nổi trên HUD | 🟡 | P1 | S |
+| A17 + G1 Đĩa "Tương trợ" (giúp tất cả) nổi trên HUD | ✅ | P1 | S |
 | A18 Nút "?" theo ngữ cảnh → đúng mục Cẩm nang | 🟡 | P1 | S |
-| C1 Xem trước "Lên tầng N mở ra" + "xong lúc hh:mm" trong bảng | 🟡 | P1 | S |
+| C1 Xem trước "Lên tầng N mở ra" + "xong lúc hh:mm" trong bảng | ✅ | P1 | S |
 | C3 + G4 Tụ khí: dùng nhiều viên, "Dùng vừa đủ", xem trước kết quả | 🟡 | P1 | S |
 | C4 Xin tương trợ ngay từ bảng công trình / bong bóng | 🟡 | P1 | S |
-| C12 Màn xuất quân: thời gian đi / về, nút "Mang hệ khắc" | 🟡 | P1 | S |
+| C12 Màn xuất quân: thời gian đi / về, nút "Mang hệ khắc" | ✅ | P1 | S |
 | C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | 🟡 | P1 | S |
-| C32 + G2 "Nhận tất cả" (thư có quà, nhiệm vụ ngày, mốc sự kiện) | ❌ | P1 | S |
+| C32 + G2 "Nhận tất cả" (thư có quà, nhiệm vụ ngày, mốc sự kiện) | ✅ | P1 | S |
 | C36 + G11 Chế độ nhẹ / tiết kiệm pin, giảm chuyển động trong game | 🟡 | P1 | S |
 | D4 Màn "Mở khoá" khi Chủ điện lên tầng (huy hiệu bấm là tới) | 🟡 | P1 | S |
 | D5 Dải "Tạ lễ" liệt kê vật phẩm nhận được | 🟡 | P1 | S |
@@ -1328,12 +1328,12 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | F5 Thẻ "lần đầu" khi mở tính năng mới (Tranh đoạt, Tiên minh, Giới) | 🟡 | P1 | S |
 | H4 Soát tương phản chữ vàng trên giấy | 🟡 | P1 | S |
 | H6 Giảm độ phủ HUD trên điện thoại từ ~35% xuống ≤28% | 🟡 | P1 | S |
-| A8 + C22 Cột sự kiện + trang Sự kiện có Hoàng lịch 7 ngày | 🟡 | P1 | M |
-| C13 + G5 Trận đồ (preset đội) | ❌ | P1 | M |
-| C16 Tìm mục tiêu trên bản đồ Giới (loại + cấp) | ❌ | P1 | M |
-| E3 Cảnh báo có tông môn kéo quân tới (viền son, thẻ đồng hồ, đẩy) | ❌ | P1 | M |
+| A8 + C22 Cột sự kiện + trang Sự kiện có Hoàng lịch 7 ngày | ✅ | P1 | M |
+| C13 + G5 Trận đồ (preset đội) | ✅ | P1 | M |
+| C16 Tìm mục tiêu trên bản đồ Giới (loại + cấp) | ✅ | P1 | M |
+| E3 Cảnh báo có tông môn kéo quân tới (viền son, thẻ đồng hồ, đẩy) | ✅ | P1 | M |
 | E4 Thông báo đẩy chọn theo loại | 🟡 | P1 | M |
-| F1 Trưởng lão dẫn đường nói chuyện ở 5–6 mốc đầu | 🟡 | P1 | M |
+| F1 Trưởng lão dẫn đường nói chuyện ở 5–6 mốc đầu | ✅ | P1 | M |
 | A3 Điểm danh sơn môn / chuỗi 7 ngày | ❌ | P2 | S |
 | A10 Chương nhiệm vụ có tên, thẻ thu gọn | 🟡 | P2 | S |
 | A16 Tin lớn toàn giới quét ngang trên núi (tắt được) | 🟡 | P2 | S |
@@ -1352,20 +1352,20 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C9 Công pháp: bản gọn / đầy đủ, nút "Diễn thử" | 🟡 | P2 | M |
 | C10 Thiên phú: "% chưởng môn chọn", điểm theo gợi ý | 🟡 | P2 | S–M |
 | C14 Mức zoom định sẵn (Cận / Trung / Viễn), lớp tình hình | 🟡 | P2 | M |
-| C17 Ghi nhớ vị trí, chia sẻ thẻ vị trí | ❌ | P2 | M |
+| C17 Ghi nhớ vị trí, chia sẻ thẻ vị trí | ✅ | P2 | M |
 | C18 Bản đồ nhỏ góc bản đồ Giới | ❌ | P2 | M |
 | C19 Sương mù / thám tử trên Giới (cần kiểm lại) | 🟡 | P2 | M |
 | C24 Thẻ "Thí luyện" gom PvE | 🟡 | P2 | M |
-| C26 Lễ vật minh + nhận tất cả | ❌ | P2 | M |
-| C31 Phường thị (chợ Giới đã có luật, thiếu client) | ❌ | P2 | M |
+| C26 Lễ vật minh + nhận tất cả | ✅ | P2 | M |
+| C31 Phường thị (chợ Giới đã có luật, thiếu client) | ✅ | P2 | M |
 | C33 Chat: thẻ chia sẻ chiến báo / vị trí / trưởng lão, ghim bố cáo | 🟡 | P2 | M |
 | G8 Tự vận hành việc vặt (tự chữa, tự nhận thưởng ngày) | ❌ | P2 | M |
 | A7 Tiền cao cấp / cửa hàng (tuỳ kế hoạch kinh doanh) | ❌ | P2 | M–L |
-| C27 Minh pháp (công nghệ minh) | ❌ | P2 | M–L |
+| C27 Minh pháp (công nghệ minh) | ✅ | P2 | M–L |
 | A14 Zoom liền mạch núi ↔ bản đồ | 🟡 | P2 | L |
 | C25 Tiên minh đủ thẻ (kho, công pháp minh, lãnh thổ) | 🟡 | P2 | L |
-| C28 Lãnh thổ minh + lệnh kỳ | ❌ | P2 | L |
-| C29 Hợp kích (tập kết) | ❌ | P2 | L |
+| C28 Lãnh thổ minh + lệnh kỳ | ✅ | P2 | L |
+| C29 Hợp kích (tập kết) | ✅ | P2 | L |
 | H7 Sơn môn cảnh sắc (skin theo mùa) | ❌ | P2 | L |
 
 **Game mình đã hơn hoặc ngang RoK** (giữ, đừng phá khi thêm tính năng):

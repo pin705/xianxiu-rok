@@ -39,9 +39,12 @@ export class Battle {
     readonly skills: [Skill | undefined, Skill | undefined],
     readonly w: number,
     readonly h: number,
+    readonly deputies: [Skill | undefined, Skill | undefined] = [undefined, undefined], // công pháp phó trưởng lão
   ) {
     this.theme = report.kind === 'realm' ? (REALM[report.i] ?? 'forest') : THEME[report.kind]
-    this.enemy = report.kind === 'trib' ? 'spirit' : report.kind === 'sect' ? 'man' : 'beast'
+    // bên kia là người (tông môn NPC, cướp, Luận Kiếm Đài), kiếp vân, hay yêu thú
+    const people = report.kind === 'sect' || report.kind === 'pvp' || report.kind === 'arena'
+    this.enemy = report.kind === 'trib' ? 'spirit' : people ? 'man' : 'beast'
     // yêu vương canh tầng tháp: lông chàm sẫm, khác yêu thú ngoài đồng
     this.tint =
       report.kind === 'realm' ? (REALM_TINT[report.i] ?? C.ochre) : report.kind === 'tower' ? C.indigo : C.ochre

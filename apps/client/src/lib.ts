@@ -39,7 +39,10 @@ export const EMBLEM = {
   realm: REALM_EMBLEMS,
   tower: ['tower'] as const, // một tháp (i = 0) — mảng để tra theo report.kind[i] như các loại khác
   // điểm trên bản đồ giới theo loại
-  spot: { vein: 'lotus', mine: 'earth', boss: 'dragon', gate: 'tower', heaven: 'rebirth' } as Record<string, Emblem>,
+  spot: { vein: 'lotus', mine: 'earth', boss: 'dragon', gate: 'tower', heaven: 'rebirth', wild: 'wolf' } as Record<
+    string,
+    Emblem
+  >,
 }
 
 export const LOOK: Record<ElderId, Look> = {
@@ -172,8 +175,9 @@ export const spotName = (kind?: string) =>
   L.world.point[(kind ?? 'vein') as keyof typeof L.world.point] ?? L.world.point.vein
 export function reportName(r: Report) {
   if (r.kind === 'trib') return L.trib.title
-  if (r.kind === 'pvp') return r.foe ?? L.pvp.kind
+  if (r.kind === 'pvp' || r.kind === 'arena') return r.foe ?? L.pvp.kind
   if (r.kind === 'spot') return spotName(r.spot)
+  if (r.kind === 'legion') return L.legion.wave(r.i + 1)
   return L.target({ kind: r.kind, i: r.i })
 }
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE

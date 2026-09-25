@@ -1,9 +1,9 @@
 <script lang="ts">
-  // Hộp thư: thư (quà nhận ngay tại đây) và chiến báo (chạm để xem lại trận), mới nhất trên cùng.
+  // Hộp thư: thư (quà nhận ngay tại đây) và chiến báo (chạm để xem lại trận; chia sẻ vào chat), mới nhất trên cùng.
   import { mailText } from '@rok/i18n'
   import { RESOURCES, count, type Mail, type Report, type Res } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { Bag, Button, Card, Medal, Sheet, Tabs, fly } from './ui'
+  import { Bag, Button, Card, IconButton, Medal, Sheet, Tabs, fly } from './ui'
   import { L, defended, num, reportName, sfx } from './lib'
   import { useGame } from './game'
 
@@ -11,10 +11,12 @@
     open,
     onclose,
     onopen,
+    share,
   }: {
     open: boolean
     onclose: () => void
     onopen: (r: Report) => void
+    share?: (text: string) => void // gửi vào chat (kênh minh nếu có minh): người khác chạm "Xem trận"
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -55,6 +57,19 @@
   />
   {#if tab === 'mail'}
     {#if !mails.length}<p class="center t-lore mt-4">{L.mail.empty}</p>{/if}
+    {@const gifts = mails.filter(m => m.gift && !m.got)}
+    {#if gifts.length > 1}
+      <!-- như "Nhận tất cả" của RoK: mọi thư còn quà một chạm -->
+      <div class="mt-2">
+        <Button
+          variant="gold"
+          wide
+          onclick={() => {
+            if (gifts.map(m => act({ type: 'mail', id: m.id })).some(Boolean)) sfx('reward')
+          }}>{L.mail.claimAll(gifts.length)}</Button
+        >
+      </div>
+    {/if}
     <ul class="stack mt-2">
       {#each mails as m (m.id)}
         {@const [title, body] = text(m)}
@@ -94,17 +109,25 @@
     {#if !list.length}<p class="center t-lore mt-4">{L.report.none}</p>{/if}
     <ul class="stack mt-2">
       {#each list as r (r.id)}
-        <li>
-          <Card onclick={() => onopen(r)} label={reportName(r)}>
-            <span class="row">
-              <Medal emblem={r.win ? 'win' : 'lose'} tone={r.win ? 'red' : 'ink'} size={38} />
-              <span class="grow stack" style:--gap="1px">
-                <b>{reportName(r)}{r.f !== undefined ? ` · ${L.level(r.f + 1)}` : ''}</b>
-                <small class="t-small t-soft">{line(r)}</small>
+        <li class="row">
+          <span class="grow">
+            <Card onclick={() => onopen(r)} label={reportName(r)}>
+              <span class="row">
+                <Medal emblem={r.win ? 'win' : 'lose'} tone={r.win ? 'red' : 'ink'} size={38} />
+                <span class="grow stack" style:--gap="1px">
+                  <b>{reportName(r)}{r.f !== undefined ? ` · ${L.level(r.f + 1)}` : ''}</b>
+                  <small class="t-small t-soft">{line(r)}</small>
+                </span>
+                <Icon name="arrow" size={16} />
               </span>
-              <Icon name="arrow" size={16} />
-            </span>
-          </Card>
+            </Card>
+          </span>
+          {#if share && r.kind !== 'trib'}<IconButton
+              icon="upload"
+              label={L.report.share}
+              size={36}
+              onclick={() => share(`${L.report.fresh(reportName(r), r.win)} #r${r.id}`)}
+            />{/if}
         </li>
       {/each}
     </ul>

@@ -5,7 +5,8 @@ import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import postgres from 'postgres'
 import { io, type Socket } from 'socket.io-client'
-import type { Action, State } from '@rok/rules'
+import { expAt, type Action, type State } from '@rok/rules'
+import { atlas, regionOf } from '@rok/rules/world'
 import type { Ack, Answer, ClientToServer, Push, Query, QueryOf, Refuse, ServerToClient, Welcome } from '@rok/protocol'
 import { buildServer } from './src/app.ts'
 import { loadConfig } from './src/config.ts'
@@ -84,8 +85,20 @@ const getState = async (n: Node, token: string) =>
 const allLevels = (levels: State['levels'], lv: number) =>
   Object.fromEntries(Object.keys(levels).map(k => [k, lv])) as State['levels']
 // Giới riêng cho test cần cô lập (mỗi giới do đúng một node giữ)
+// Trưởng lão cấp 40: trận dung (MARCH_CAP) đủ cho các đội lớn trong test
+const VETERAN = expAt(40)
 const newWorld = async (n: Node) =>
   (await n.db.client`insert into worlds (seed) values (7) returning id`)[0].id as number
+// Ô kề cùng vùng với p trên giới thử (seed 7): đi cướp thẳng, không qua cổng (cổng chưa mở thì "far")
+const beside = (p: { x: number; y: number }) => {
+  const map = atlas(7)
+  return [
+    { x: p.x + 1, y: p.y },
+    { x: p.x - 1, y: p.y },
+    { x: p.x, y: p.y + 1 },
+    { x: p.x, y: p.y - 1 },
+  ].find(q => regionOf(map, q) === regionOf(map, p))!
+}
 async function guest(n: Node, name = `Tông ${randomBytes(3).toString('hex')}`, world?: number) {
   const r = await api(n, '/guest', { name, lang: 'vi', world })
   return { status: r.status, ...((await r.json()) as object) } as {
@@ -121,7 +134,8 @@ function client(n: Node, token: string, protocol = n.protocol) {
     frames.push(JSON.stringify(r))
     return r as Ack
   }
-  const push = async (pred: (p: Push) => boolean = () => true, ms = 5000) => {
+  // 10 giây: cả bộ test chạy song song (rules, client, server) thì actor giải trận chậm hơn lúc chạy riêng
+  const push = async (pred: (p: Push) => boolean = () => true, ms = 10_000) => {
     for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(20)) {
       const i = pushes.findIndex(pred)
       if (i >= 0) return pushes.splice(i, 1)[0]
@@ -367,6 +381,7 @@ test(
                 res,
                 shield: 0,
                 troops: { ...state.troops, ...troops },
+                elders: { ...state.elders, thanhPhong: VETERAN }, // trận dung đủ mang cả đội
                 ...(seat && { seat }),
               },
             },
@@ -379,7 +394,7 @@ test(
     }
     const seatA = await setup(A.token, { kiem3: 1100 })
     assert.ok(seatA, 'vào giới là có chỗ trên bản đồ')
-    await setup(B.token, { the1: 200 }, { x: seatA.x + 1, y: seatA.y })
+    await setup(B.token, { the1: 200 }, beside(seatA))
     const rivals = await ca.ask({ k: 'rivals' })
     assert.ok(
       rivals.some(r => r.pid === B.pid && r.scout.side.troops.length),
@@ -417,6 +432,12 @@ test(
     const rows = await n.db
       .client`select player_id, (body->>'def')::boolean as def from reports where kind = 'pvp' and player_id in (${A.pid}, ${B.pid})`
     assert.equal(rows.length, 2, 'cả hai chiến báo đã ghi')
+    // chia sẻ chiến báo vào chat: ai nghe được tin (của chính người đánh, mang "#r<id>") thì xem được trận
+    const rid = pa.rep!.find(r => r.kind === 'pvp')!.id
+    const said = await ca.s.timeout(5000).emitWithAck('say', { ch: 'world', text: `Cướp thắng #r${rid}` })
+    assert.ok(said.ok, JSON.stringify(said))
+    assert.equal((await cb.ask({ k: 'shared', pid: A.pid, id: rid }))?.id, rid)
+    assert.equal(await cb.ask({ k: 'shared', pid: A.pid, id: rid + 1 }), null, 'chưa chia sẻ thì không xem được')
     // xếp hạng tranh đoạt (cột chép từ state lúc commit)
     const rk = (await (await api(n, '/ranks/pvp', undefined, A.token)).json()) as {
       rows: { pid: number }[]
@@ -538,11 +559,22 @@ test(
     await until(() => heard.some(h => h.ch === `p${A.pid}`), 1500)
     assert.equal(heard.find(h => h.ch === `p${A.pid}`)?.text, 'Chào đạo hữu')
     assert.equal((await cb.ask({ k: 'chat', ch: `p${A.pid}` })).length, 1)
-    assert.deepEqual((await cb.ask({ k: 'dms' })).map(d => [d.pid, d.last.text]), [[A.pid, 'Chào đạo hữu']])
+    assert.deepEqual(
+      (await cb.ask({ k: 'dms' })).map(d => [d.pid, d.last.text]),
+      [[A.pid, 'Chào đạo hữu']],
+    )
     assert.deepEqual(await dm(cb, A.pid, 'chào'), { ok: false, err: 'locked' }, 'dưới tầng 3 chưa truyền âm được')
     assert.deepEqual(await dm(ca, A.pid, 'tự nhắn'), { ok: false, err: 'locked' })
     const prof = await cb.ask({ k: 'profile', pid: A.pid })
     assert.deepEqual([prof?.name, prof?.hall, prof?.ally?.tag, prof?.online], [state.name, 10, 'TVM', true])
+    assert.ok(prof?.supply && prof.supply.get > 0, 'cùng minh: hồ sơ có Vận Linh Trận')
+    const gift = { linhThach: 100, linhThao: 0, linhKhoang: 0 }
+    assert.deepEqual(
+      await cb.act({ type: 'supply', to: A.pid, res: gift }),
+      { ok: false, err: 'locked' },
+      'dưới tầng 10',
+    )
+    assert.ok((await ca.act({ type: 'supply', to: B.pid, res: gift })).ok, 'Vận Linh Trận qua server')
     const mute = await fetch(`http://127.0.0.1:${n.port}/api/admin/mute`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-rok': '1', 'x-admin-token': ADMIN },
@@ -564,7 +596,6 @@ test(
   'bản đồ giới: đi chiếm linh mạch trong vùng mình, đóng quân, được buff, ảnh chụp ghi người giữ, gọi về',
   { skip },
   async () => {
-    const { atlas, regionOf } = await import('@rok/rules/world')
     const n = await boot('p')
     const w = await newWorld(n)
     const A = await guest(n, undefined, w)
@@ -579,7 +610,12 @@ test(
     )
     assert.ok(vein, 'vùng nào cũng có linh mạch')
     // phân đà NPC cùng vùng cũng đi giữ mạch trống (có khi tới trước): mang đủ quân để thắng chắc đội đóng của chúng
-    await api(n, '/dev/state', { state: { ...state, troops: { ...state.troops, kiem2: 3000 } } }, A.token)
+    await api(
+      n,
+      '/dev/state',
+      { state: { ...state, troops: { ...state.troops, kiem2: 3000 }, elders: { thanhPhong: VETERAN } } },
+      A.token,
+    )
     const ack = await c.act({ type: 'go', i: vein!.i, task: 'take', elder: 'thanhPhong', army: { kiem2: 3000 } })
     assert.ok(ack.ok, JSON.stringify(ack))
     const m = ack.p!.marches!.at(-1)!
@@ -854,6 +890,7 @@ test(
       levels: allLevels(st.levels, 10),
       shield: 0,
       troops: { ...st.troops, the1: 200 },
+      elders: { ...st.elders, thanhPhong: VETERAN },
       res: { linhThach: 2e5, linhThao: 2e5, linhKhoang: 2e5 },
     }
     await api(
@@ -871,7 +908,7 @@ test(
     cv.close()
     await sleep(200)
     await api(n, '/dev/warp', { min: 31 }, V.token)
-    assert.ok(await until(() => got.length >= 1), 'không nhắc khi việc xong')
+    assert.ok(await until(() => got.length >= 1, 10_000), 'không nhắc khi việc xong') // chạy song song cả bộ test: chậm hơn
     assert.deepEqual(got[0], { pid: V.pid, title: en.push.title, body: en.push.done.build, tag: 'done' })
 
     // người khác cướp V lúc V offline → báo ngay khi trận giải
@@ -888,7 +925,7 @@ test(
           ...strong,
           time: ts.time,
           name: ts.name,
-          seat: { x: vs.seat!.x + 1, y: vs.seat!.y },
+          seat: beside(vs.seat!),
           troops: { ...ts.troops, kiem3: 1100 },
           queue: [],
         },
@@ -899,7 +936,7 @@ test(
     const raid = await ct.act({ type: 'raid', pid: V.pid, elder: 'thanhPhong', army: { kiem3: 1100 } })
     assert.ok(raid.ok, JSON.stringify(raid))
     await api(n, '/dev/warp', { min: 15 }, T.token)
-    assert.ok(await until(() => got.some(g => g.tag === 'raid')), 'bị cướp lúc offline mà không được báo')
+    assert.ok(await until(() => got.some(g => g.tag === 'raid'), 10_000), 'bị cướp lúc offline mà không được báo')
     assert.equal(got.find(g => g.tag === 'raid')!.pid, V.pid)
     assert.ok(!got.some(g => g.pid === T.pid), 'người đang chơi không nhận push')
     ct.close()

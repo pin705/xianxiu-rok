@@ -970,7 +970,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | D8 KvK → mùa giới 49 ngày | ✅ (cách riêng) | P0 | — |
 | B3 Daily Objectives → **Nhật khóa** 100 điểm, 5 hộp | 🟡 4 việc cố định + 1 rương | P1 | S |
 | C7 Rương ngày Expedition → **Tĩnh tọa ngộ đạo** theo tầng tháp / bí cảnh | 🟡 chỉ thưởng lần đầu | P1 | S |
-| A10 Vào liên minh sớm → nhiệm vụ "Bái nhập tiên minh" | 🟡 vào được, không có nhiệm vụ / quà | P1 | S |
+| A10 Vào liên minh sớm → nhiệm vụ "Bái nhập tiên minh" | ✅ lễ nhập minh (quà lần đầu) | P1 | S |
 | A3 Counselor → Thanh Phong dẫn đường (+ trận mở màn: M) | 🟡 có nhiệm vụ + mũi tên | P1 | S / M |
 | A9 Thợ thứ hai → tạp dịch thứ hai (thuê 2 ngày; vĩnh viễn bằng Công đức) | 🟡 1 hàng, P4 định bán | P1 | S / M |
 | C12 Mã quà + quà liên kết email | ❌ (thư admin thay tạm) | P1 | S |
@@ -980,7 +980,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | F3 Growth Fund → **Quỹ Tiên Lộ** | ❌ (P4) | P1 | S |
 | F4 Supply Depot → **Nguyệt Lệnh** | ❌ (P4) | P1 | S |
 | B2 Side Quests → **Tông vụ** 4 dòng | ❌ | P1 | S–M |
-| A1 Civilizations → **Đạo thống** | ❌ | P1 | M |
+| A1 Civilizations → **Đạo thống** | ✅ | P1 | M |
 | B4 Achievements → **Công tích bảng** + ấn vẽ tay | 🟡 chỉ thống kê | P1 | M |
 | B6 Monument → **Thiên Đạo Bia** (mục tiêu chung của giới) | 🟡 pha mùa theo giờ | P1 | M |
 | B7 / D10 Lịch theo tuổi vương quốc → **Lịch giới** + trung tâm sự kiện | 🟡 `FestWindow` đang làm, chưa có màn | P1 | M |
@@ -989,7 +989,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | F1 Gems → Tiên ngọc (chỉ cosmetic / pass / tiện lợi có trần) | ❌ (P4) | P1 | M |
 | F5 Lucerne Scroll / pass → **Tu Tiên Lệnh** | ❌ (kế hoạch) | P1 | M |
 | F12 Cosmetic → Sơn môn cảnh sắc, pháp tướng | ❌ (kế hoạch) | P1 | M |
-| A2 Đổi nền văn minh → Cải tu đạo thống | ❌ | P2 | S |
+| A2 Đổi nền văn minh → Cải tu đạo thống | ✅ (7 ngày một lần) | P2 | S |
 | A5 Quà lên cấp TTC → Đột phá chi lễ | ✅ qua nhiệm vụ | P2 | S |
 | A7 Dịch chuyển tân thủ → vào giới theo mã mời | 🟡 server tự xếp | P2 | S–M |
 | B5 Crusader Achievements → Chiến tích mùa | ❌ | P2 | S |
