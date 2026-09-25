@@ -4,7 +4,17 @@ import { type Pos } from '../atlas.ts'
 import { power } from '../core/stats.ts'
 import { type Atlas } from '../atlas.ts'
 import { TERR_SEAT } from '../data.ts'
-import { allyOf, freshWorld, garrison, sideName, type Flag, type Players, type World } from './base.ts'
+import {
+  allyOf,
+  flagGuards,
+  freshWorld,
+  garrison,
+  guardMight,
+  sideName,
+  type Flag,
+  type Players,
+  type World,
+} from './base.ts'
 import { claim, flagClaim, type Claim } from './points.ts'
 
 // Biên niên của giới: chữ dựng ở client theo khoá (@rok/i18n chronText). Thêm loại: thêm khoá ở đây — i18n báo thiếu chữ.
@@ -62,7 +72,7 @@ export type MapSnap = {
   book?: { ch: number; done: number[]; value: number }
   bless?: { key: BlessKey; until: number; day: number } // phúc Giới Chủ ban cả giới
   allies?: { id: number; tag: string }[] // tiên minh có lãnh thổ (hiệu để ghi trên bản đồ)
-  flags?: Flag[] // trận kỳ (đang dựng: done > lúc xem)
+  flags?: (Flag & { guard?: [n: number, might: number] })[] // trận kỳ (đang dựng: done > lúc xem); guard: đội giữ, lực chiến
 }
 
 export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[], w: World = freshWorld()): MapSnap {
@@ -104,7 +114,12 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
     spots.push({ i, own, side: sp.own, n: garrison(ps, i).length, left: sp.left, hp: sp.hp, until: sp.until })
   }
   const allies = Object.values(w.allies).map(al => ({ id: al.id, tag: al.tag }))
-  const flags = Object.values(w.flags ?? {}).filter(f => w.allies[f.aid])
+  const flags = Object.values(w.flags ?? {})
+    .filter(f => w.allies[f.aid])
+    .map(f => {
+      const g = flagGuards(ps, f.id)
+      return g.length ? { ...f, guard: [g.length, guardMight(g)] as [number, number] } : f
+    })
   return { seats, marches, chron, spots, allies, flags }
 }
 

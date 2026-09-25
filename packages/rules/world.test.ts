@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  ALLY_IDLE,
+  dayOf,
   ASCEND,
   ASCEND_HALL,
   KY_WIN,
@@ -493,6 +495,13 @@ test('bậc R1–R5: người mới R1; đường chủ (R4) chỉ xếp R1–R3
   assert.equal(act(1, { type: 'allyMail', text: 'Thêm' }), 'cooldown', 'mỗi giờ một thư')
   assert.equal(act(1, { type: 'allyLeave' }), null)
   assert.deepEqual([role(2), role(3), role(4)], [2, 0, -2], 'R4 lên minh chủ')
+  // minh chủ vắng ALLY_IDLE ngày: đường chủ nhận thay, người cũ xuống R4
+  assert.equal(act(2, { type: 'allyRole', pid: 3, role: 1 }), null)
+  assert.equal(act(3, { type: 'allyClaim' }), 'locked', 'minh chủ còn vào game')
+  ps.set(2, { ...ps.get(2)!, vip: { ...ps.get(2)!.vip, day: dayOf(T0) - ALLY_IDLE } })
+  assert.equal(act(4, { type: 'allyClaim' }), 'locked', 'R1 không nhận được')
+  assert.equal(act(3, { type: 'allyClaim' }), null)
+  assert.deepEqual([role(2), role(3)], [1, 2])
 })
 
 test('tiên minh giúp đỡ: nhờ một việc, mỗi người giúp một lần, mỗi lần bớt max(60 giây, 1 %), tối đa 10 lần', async () => {
@@ -1255,6 +1264,52 @@ test('phá trận kỳ: minh khác xuất quân tới cờ, lực chiến trừ 
   for (let k = 0; k < 10 && w.flags![7]; k++) go(ps.get(2)!.time)
   assert.equal(w.flags![7], undefined, 'đánh đủ thì cờ đổ')
   assert.deepEqual(ps.get(2)!.mail.at(-1)!.a?.slice(0, 2), ['T', 0])
+})
+
+test('giữ trận kỳ: người trong minh đóng quân ở cờ, lực chiến quân giữ chặn bớt sức phá; cờ đổ thì quân giữ về', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const r0 = a.regions.find(r => r.ring === 0)!
+  const home = { x: r0.cx, y: r0.cy }
+  const ps = world(
+    { ...sect('A', 10, { kiem3: 800 }), seat: home },
+    { ...sect('C', 10, { kiem3: 3000 }), seat: { x: home.x + 5, y: home.y } },
+  )
+  const al = { id: 1, name: 'M', tag: 'T', members: { 1: 2 as const }, notice: '', at: T0, helps: [] }
+  let w: World = {
+    ...freshWorld(),
+    allies: { 1: al },
+    flags: { 7: { id: 7, aid: 1, x: home.x + 3, y: home.y + 2, done: T0 } },
+  }
+  const step = (pid: number, x: object, t: number) => {
+    const r = worldAct(ps, pid, x as never, t, 1, map, w)
+    assert.ok(r.ok, r.ok ? '' : r.error)
+    for (const [k, v] of r.changed) ps.set(k, v)
+    const m = ps.get(pid)!.marches.at(-1)!
+    const done = advanceAll(ps, w, m.arriveAt, map)
+    for (const [k, v] of done.changed) ps.set(k, v)
+    w = done.world
+    return m.arriveAt
+  }
+  assert.equal(
+    err(worldAct(ps, 2, { type: 'flagGuard', id: 7, elder: 'thanhPhong', army: { kiem3: 1 } }, T0, 1, map, w)),
+    'locked',
+    'chỉ người trong minh',
+  )
+  const t1 = step(1, { type: 'flagGuard', id: 7, elder: 'thanhPhong', army: { kiem3: 800 } }, T0)
+  assert.ok(ps.get(1)!.marches[0].stay, 'đứng giữ cờ')
+  assert.equal(mapOf(ps, t1, new Set(), [], w).flags![0].guard?.[0], 1, 'bản đồ thấy quân giữ')
+  const raze = (n: number) => step(2, { type: 'raze', id: 7, elder: 'thanhPhong', army: { kiem3: n } }, ps.get(2)!.time)
+  raze(500)
+  assert.equal(flagHp(w.flags![7], ps.get(2)!.time), FLAG_HP, 'yếu hơn quân giữ: không sứt')
+  ps.set(2, advance(ps.get(2)!, ps.get(2)!.marches.at(-1)!.returnAt))
+  for (let k = 0; k < 40 && w.flags![7]; k++) {
+    raze(2000)
+    ps.set(2, advance(ps.get(2)!, ps.get(2)!.marches.at(-1)!.returnAt))
+  }
+  assert.equal(w.flags![7], undefined, 'mạnh hơn quân giữ: phá dần tới đổ')
+  const g = ps.get(1)!.marches[0]
+  assert.ok(!g.stay && g.returnAt > 0, 'cờ đổ: quân giữ về')
 })
 
 test('khám phá: mê vụ riêng mỗi người (quanh tông môn đã khai), linh điểu tan sương ô kề vùng đã khai, ghé thôn trang / động phủ một lần', () => {

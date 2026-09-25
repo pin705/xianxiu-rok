@@ -246,7 +246,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
   "sự kiện" trên bản đồ mà không tốn nội dung mới.
 - **Tu tiên hoá:** **Cổ Di Tích** (mở 1 giờ mỗi 39 giờ) và **Huyết Tế Đàn** (2 giờ mỗi 84 giờ): điểm trên bản đồ giới chỉ chiếm được trong cửa sổ, điểm
   mùa tính theo phút giữ; bắt đầu từ pha Trận nhãn.
-- **Game mình:** ❌. Nền có sẵn: `hold()` tính điểm theo thời gian giữ; `tide()` đã là lịch tất định theo seed.
+- **Game mình:** ✅ (25/09) Cổ Di Tích 1 giờ / 39 giờ, Huyết Tế Đàn 2 giờ / 84 giờ ở 6 vùng giữa; phe giữ lúc đóng cửa: điểm mùa + Công Huân theo phút cho quân đang đóng (`world/ruins.ts`).
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### A8. Crusader Achievements, Conquest Coins, cửa hàng KvK
@@ -796,7 +796,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | 🟡 thiếu buff theo loại điểm, thưởng chiếm lần đầu | P1 | S–M |
 | A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 pha theo ngày cứng, biên niên chỉ là nhật ký | **P0** | M |
 | A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | ✅ Công Huân cá nhân (25/09) + điểm mùa theo phe + chiến công | P1 | S |
-| A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ❌ | P1 | S–M |
+| A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ✅ (25/09) | P1 | S–M |
 | A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | ❌ | P1 | M |
 | A9 | Hall of Heroes | Anh Linh Điện | ❌ | P2 | S |
 | A10 | Past Glory | Tu Bổ Thiên Môn | ❌ | P1 (trong A5) | S |

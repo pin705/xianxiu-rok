@@ -14,6 +14,7 @@ import {
   SECTS,
   SUPPLY_HALL,
   advance,
+  dayOf,
   apply,
   expAt,
   marchTime,
@@ -637,8 +638,16 @@ test('sự kiện, túi đồ, tăng tốc, Hương Hỏa, bảng tài nguyên, 
 
 test('tiên minh, chat', async () => {
   const people = [
-    { pid: 1, name: 'Lạc Hà Tông', role: 2 as const, hall: 12, power: 9000, online: true },
-    { pid: 2, name: 'Huyết Kiếm Tông', role: 0 as const, hall: 10, power: 7000, online: false },
+    { pid: 1, name: 'Lạc Hà Tông', role: 2 as const, hall: 12, power: 9000, online: true, seen: dayOf(late.time) },
+    {
+      pid: 2,
+      name: 'Huyết Kiếm Tông',
+      role: 0 as const,
+      hall: 10,
+      power: 7000,
+      online: false,
+      seen: dayOf(late.time) - 8,
+    },
   ]
   const info = {
     id: 1,
@@ -702,6 +711,11 @@ test('tiên minh, chat', async () => {
         `${label}, trong minh`,
       )
       assert.ok(inside.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')
+      if (s.time >= late.time)
+        assert.ok(
+          inside.includes(L.ally.idle(dayOf(s.time) - dayOf(late.time) + 8)),
+          'thành viên vắng lâu: ghi số ngày',
+        )
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       for (const officer of [false, true]) {
         const who = officer ? 'trưởng lão' : 'thành viên'

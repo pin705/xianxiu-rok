@@ -13,6 +13,7 @@ import {
   FLAG_BUILD,
   FLAG_COST,
   FLAG_GAP,
+  FLAG_GUARD_MAX,
   FLAG_HP,
   FLAG_MAX,
   FLAG_PER,
@@ -25,9 +26,12 @@ import { mail } from '../sect/inbox.ts'
 import {
   addHonor,
   allyOf,
+  flagGuards,
+  guardMight,
   put,
   routeMs,
   turnBack,
+  withMarch,
   type Alliance,
   type Flag,
   type Players,
@@ -49,6 +53,7 @@ export type FlagAction =
   | { type: 'flag'; x: number; y: number }
   | { type: 'unflag'; id: number }
   | { type: 'raze'; id: number; elder: ElderId; army: Army }
+  | { type: 'flagGuard'; id: number; elder: ElderId; army: Army } // đóng quân giữ cờ minh mình
 
 export const flagActions: WorldActions<FlagAction> = {
   flag: {
@@ -82,12 +87,44 @@ export const flagActions: WorldActions<FlagAction> = {
   },
   unflag: {
     pick: a => (isId(a.id) ? { type: 'unflag', id: a.id } : null),
-    run: ({ w, pid }, a) => {
+    run: ({ ps, w, pid, s }, a) => {
       const al = allyOf(w, pid)
       const f = w.flags?.[a.id]
       if (!al || (al.members[pid] ?? 0) < 1 || !f || f.aid !== al.id) return no('locked')
       const { [a.id]: _, ...flags } = w.flags!
-      return { ok: true, changed: new Map(), world: { ...w, flags } }
+      return { ok: true, changed: guardsHome(ps, f.id, s.time), world: { ...w, flags } }
+    },
+  },
+  flagGuard: {
+    pick: a => {
+      const army = pickArmy(a.army)
+      return isId(a.id) && isElder(a.elder) && army ? { type: 'flagGuard', id: a.id, elder: a.elder, army } : null
+    },
+    run: ({ ps, w, pid, s, map, seed }, a) => {
+      const f = w.flags?.[a.id]
+      if (!f || !map || !s.seat) return no('gone')
+      if (allyOf(w, pid)?.id !== f.aid || f.done > s.time) return no('locked')
+      if (flagGuards(ps, f.id).length >= FLAG_GUARD_MAX) return no('full')
+      if (s.marches.some(m => m.target.kind === 'flag' && m.target.i === f.id)) return no('busy')
+      const e = fieldError(s, a.elder, a.army)
+      if (e) return no(e)
+      const r = route(map.atlas, s.seat, f, map.phase)
+      if (!r) return no('far')
+      const army = compact(a.army),
+        t = s.time
+      const m: March = {
+        id: s.nextId,
+        elder: a.elder,
+        army,
+        target: { kind: 'flag', i: f.id },
+        task: 'aid',
+        seed,
+        startAt: t,
+        arriveAt: t + routeMs(s, r.len),
+        returnAt: 0,
+        path: r.path,
+      }
+      return { ok: true, world: w, changed: new Map([[pid, launch(s, army, m)]]) }
     },
   },
   raze: {
@@ -129,23 +166,37 @@ export const flagActions: WorldActions<FlagAction> = {
 export function razeArrive(ps: Players, w: World, [pid, s, m]: [number, State, March], at: number) {
   const f = w.flags?.[m.target.i]
   const back = turnBack(s, m, at)
+  if (m.task === 'aid') return guardArrive(ps, w, [pid, s, m], at)
   if (!f || allyOf(w, pid)?.id === f.aid) return { changed: new Map([[pid, back]]) as Players, world: w }
   const before = flagHp(f, at)
-  const hp = Math.max(0, before - Math.round(might(marchSide(s, m))))
+  // quân đóng giữ chặn bớt: chỉ phần lực chiến vượt lực chiến của họ mới phá được độ bền
+  const hp = Math.max(0, before - Math.max(0, Math.round(might(marchSide(s, m))) - guardMight(flagGuards(ps, f.id))))
   const left = Math.ceil((hp / FLAG_HP) * 100)
   const { [f.id]: _, ...rest } = w.flags!
   const flags = hp ? { ...rest, [f.id]: { ...f, hp, hit: at } } : rest
-  const changed: Players = new Map([
-    [
-      pid,
-      addHonor(
-        mail(back, { at, k: 'razed', a: [w.allies[f.aid]?.tag ?? '?', left, f.x, f.y] }),
-        (before - hp) / HONOR_RAZE,
-      ),
-    ],
-  ])
+  const changed: Players = hp ? new Map() : guardsHome(ps, f.id, at) // cờ đổ: quân giữ về
+  changed.set(
+    pid,
+    addHonor(
+      mail(back, { at, k: 'razed', a: [w.allies[f.aid]?.tag ?? '?', left, f.x, f.y] }),
+      (before - hp) / HONOR_RAZE,
+    ),
+  )
   const lord = Number(Object.entries(w.allies[f.aid]?.members ?? {}).find(([, r]) => r === 2)?.[0])
-  const ls = ps.get(lord)
+  const ls = changed.get(lord) ?? ps.get(lord) // minh chủ có thể cũng đang giữ cờ (vừa được cho về)
   if (ls) changed.set(lord, mail(ls, { at, k: 'flagHit', a: [s.name, left, f.x, f.y] }))
   return { changed, world: { ...w, flags } }
 }
+
+// Đội giữ cờ tới nơi: còn là cờ minh mình, đã dựng xong, chưa đủ đội thì đứng lại; không thì về
+function guardArrive(ps: Players, w: World, [pid, s, m]: [number, State, March], at: number) {
+  const f = w.flags?.[m.target.i]
+  const ok = f && allyOf(w, pid)?.id === f.aid && f.done <= at && flagGuards(ps, f.id).length < FLAG_GUARD_MAX
+  return {
+    changed: new Map([[pid, ok ? withMarch(s, { ...m, stay: true }) : turnBack(s, m, at)]]) as Players,
+    world: w,
+  }
+}
+// Cờ đổ / bị nhổ: mọi đội đang giữ về nhà
+const guardsHome = (ps: Players, id: number, at: number): Players =>
+  new Map(flagGuards(ps, id).map(([p, s, m]) => [p, turnBack(s, m, at)]))

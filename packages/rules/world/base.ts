@@ -1,7 +1,8 @@
 // Phần chung của một giới (actor giữ, lưu ở worlds.state) và khung cho thao tác giới.
 import { route, TILE_TIME, type Atlas, type Pos } from '../atlas.ts'
+import { might } from '../combat.ts'
 import { type Pick } from '../core/action.ts'
-import { marchTime } from '../core/battle.ts'
+import { marchSide, marchTime } from '../core/battle.ts'
 import { cutOf } from '../core/stats.ts'
 import { dayOf } from '../core/calendar.ts'
 import { type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
@@ -44,6 +45,30 @@ export function raidPath(att: State, def: State, map?: MapCtx): { path?: Pos[]; 
 export const routeMs = (s: State, len: number) => Math.round(len * TILE_TIME * cutOf(s, 'march'))
 
 export type Players = Map<number, State>
+
+// Cho client: danh sách minh (tìm để vào), minh của mình với người trong đó
+// closed: phải xin vào · asked: mình đã gửi đơn · invited: minh đã mời mình
+export type AllyRow = {
+  id: number
+  name: string
+  tag: string
+  n: number
+  max: number
+  power: number
+  closed: boolean
+  asked: boolean
+  invited: boolean
+}
+// seen: ngày (dayOf) vào game gần nhất — minh chủ vắng lâu thì đường chủ nhận thay (allyClaim)
+export type Member = {
+  pid: number
+  name: string
+  role: Role
+  hall: number
+  power: number
+  online: boolean
+  seen: number
+}
 
 // Bậc trong minh R1–R5: −2 ngoại môn · −1 nội môn · 0 chân truyền · 1 đường chủ (R4: duyệt đơn, cắm cờ, ghi danh…) · 2 minh
 // chủ (R5). Số âm để dữ liệu cũ (0 thành viên · 1 trưởng lão · 2 minh chủ) giữ nguyên nghĩa; người mới vào là R1.
@@ -233,6 +258,14 @@ export const sideKey = (w: World, pid: number) => allyOf(w, pid)?.id ?? -pid
 export const sideName = (w: World, ps: Players, side: number) =>
   side > 0 ? w.allies[side] && `[${w.allies[side].tag}] ${w.allies[side].name}` : ps.get(-side)?.name
 // Quân đang đóng ở điểm i
+// Đội đóng quân giữ trận kỳ id (đồng minh gửi tới, đứng lại tới khi gọi về / cờ đổ)
+export const flagGuards = (ps: Players, id: number): Party =>
+  [...ps].flatMap(([pid, s]) =>
+    s.marches
+      .filter(m => m.stay && m.task === 'aid' && m.target.kind === 'flag' && m.target.i === id)
+      .map(m => [pid, s, m] as [number, State, March]),
+  )
+export const guardMight = (g: Party) => Math.round(g.reduce((n, [, s, m]) => n + might(marchSide(s, m)), 0))
 export const garrison = (ps: Players, i: number): [number, March][] =>
   [...ps].flatMap(([pid, s]) =>
     s.marches.filter(m => m.stay && m.target.kind === 'spot' && m.target.i === i).map(m => [pid, m] as [number, March]),

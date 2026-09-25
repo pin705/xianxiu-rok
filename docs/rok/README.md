@@ -95,6 +95,8 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Minimap | Bản đồ nhỏ ở góc bản đồ Giới (điện thoại: dưới trái trên dải chat; desktop: trên phải): ba vòng vùng, lãnh thổ các minh theo màu, mê vụ của mình phủ nhạt, chấm vàng tông môn mình / chấm lục đồng minh, khung đang nhìn; chạm hay kéo để bay khung nhìn tới, nút thu gọn | ✅ `world/Minimap.svelte` |
 | Power Up popup (file 8 D2) | "+N" thế lực bay lên dưới con số lực chiến trên HUD mỗi khi tăng (xây, tuyển, lĩnh ngộ xong, nhận quân…), gộp các lần tăng sát nhau | ✅ `Hud.svelte` |
 | Honor + Crusader achievements + season personal rewards | Công Huân: điểm cá nhân trong mùa — hạ đệ tử địch (chiến công / 100, cả khi thủ), săn yêu thú giới (2 × cấp), đánh yêu vương (sát thương / 200), khai mỏ (1 / 1.000 tài nguyên), phá trận kỳ (1 / 1.000 độ bền), giữ núi một đợt ma triều (10). Chinh Chiến Công Tích: 6 mốc (50 → 6.000) nhận lần lượt ngay trong mùa. Hết mùa top 10 nhận quà thư theo hạng (1 · 2–3 · 4–10), rồi về 0. Chip "Công Huân N" trên thẻ mùa bản đồ Giới (chấm son khi có mốc nhận) mở bảng: điểm, mốc, bảng xếp hạng giới | ✅ `HONOR_*` (data.ts), `sect/honor.ts`, `world/season.ts`, `Honor.svelte` |
+| Ancient Ruins + Altars of Darkness | Cổ Di Tích (mở 1 giờ mỗi 39 giờ) và Huyết Tế Đàn (2 giờ mỗi 84 giờ): 6 điểm ở các vùng giữa, mỗi điểm lệch giờ riêng (chu kỳ lẻ giờ nên giờ mở trôi dần). Chỉ xuất quân / chiếm được lúc mở; phe giữ lúc đóng cửa chốt điểm mùa theo giờ giữ (120 / 180 mỗi giờ) và mỗi người đang đóng quân nhận Công Huân 2 / 4 mỗi phút đã giữ, rồi quân về, điểm trống. Trên bản đồ: huy hiệu hồn / huyết nhịp sáng khi mở, mờ khi đóng; bảng điểm có đồng hồ "Đang mở · còn …" / "Mở sau …". Điểm mới đặt sau cùng (điểm, thôn trang của giới đang chạy không xê dịch) | ✅ `world/ruins.ts`, `ruinWindow` (points.ts), `atlas.ts` |
+| Inactive leader takeover | Thẻ thành viên ghi "vắng N ngày" (đỏ khi ≥ 7); minh chủ không vào game 7 ngày thì đường chủ (R4) có nút "Nhận minh chủ", người cũ xuống R4 — minh không chết theo minh chủ bỏ game | ✅ `allyClaim` (`world/guild.ts`), `Member.seen` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
 
 Nhịp sau các thay đổi (`npm run sim`, 25/09): bot giỏi Chủ điện 15 ngày 8,8 (24/09: 9,3), tầng 20 ngày 15,9, tầng 25 ngày
@@ -131,7 +133,7 @@ dưới phần bảo hộ: còn 23 %.
 2. Thiên Đạo Biên Niên: mở khoá theo chương thay vì theo ngày cứng (đã lên 12 chương).
 3. (Công Huân + mốc + thưởng hạng cá nhân: đã xong.) Còn: tiền tệ mùa mang sang + Thiên Môn Thương Điếm, danh hiệu mùa.
 4. Tranh Đoạt Linh Châu (Ark of Osiris giản lược): chiến trường ô + hiệp + lệnh đứng (bước 1 — Luận Kiếm Minh Chiến — đã xong).
-5. Luật mùa thay đổi: Linh Triều Mùa, Chính – Tà, Cổ Di Tích mở theo lịch.
+5. Luật mùa thay đổi: Linh Triều Mùa, Chính – Tà (Cổ Di Tích mở theo lịch: đã xong).
 
 **Đợt G — UI/UX** (file 8)
 - (Đã có: dải chat ở núi + bản đồ, chat trong trang Tiên minh, bản đồ nhỏ.) Còn: khách ghé cảnh núi có chức năng (B5),

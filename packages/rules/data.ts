@@ -1137,6 +1137,7 @@ export const ALLY_SHOP_MAX = 99 // tồn tối đa mỗi món
 export const ALLY_MARKS = 5 // dấu trên bản đồ giới đặt cho cả minh (Alliance Markers), từ R3
 export const ALLY_MAIL_COOL = 3_600_000 // thư minh (R4 / minh chủ gửi tới hộp thư cả minh): mỗi minh một thư mỗi giờ
 export const ALLY_MAIL_LEN = 300
+export const ALLY_IDLE = 7 // minh chủ không vào game chừng này ngày: đường chủ (R4) nhận minh chủ được
 // Minh lễ (Alliance Gifts): người trong minh hạ yêu vương → cả minh nhận quà qua thư, minh được GIFT_PTS điểm quà theo cấp
 // yêu vương; điểm quà nâng cấp quà (ALLY_GIFT_LV: điểm để lên cấp 1..5), cấp càng cao quà càng hậu.
 export const GIFT_PTS: Partial<Record<number, number>> = { 1: 50, 2: 150, 3: 400 }
@@ -1267,6 +1268,7 @@ export const FLAG_GAP = 2
 // Phá trận kỳ: đội minh khác tới cờ, trừ độ bền bằng lực chiến đội đánh (đầy: FLAG_HP); không bị đánh FLAG_REPAIR thì liền lại
 export const FLAG_HP = 30_000
 export const FLAG_REPAIR = 12 * 3_600_000
+export const FLAG_GUARD_MAX = 3 // đội đóng quân giữ mỗi trận kỳ: lực chiến của họ chặn bớt sức phá
 // Linh triều: mỗi TIDE_EVERY một vùng có triều trong TIDE_LEN: sản lượng +TIDE_PROD cho tông môn trong vùng, khai mỏ +TIDE_MINE
 export const TIDE_EVERY = 8 * 3_600_000
 export const TIDE_LEN = 2 * 3_600_000

@@ -39,6 +39,8 @@ import {
   type World,
   type WorldActions,
   type WorldResult,
+  type AllyRow,
+  type Member,
 } from './base.ts'
 
 const drop = (w: World, aid: number): World => {
@@ -50,10 +52,7 @@ function leave(w: World, al: Alliance, pid: number): World {
   const { [pid]: role, ...members } = al.members
   const rest = Object.keys(members).map(Number)
   if (!rest.length) return drop(w, al.id)
-  if (role === 2) {
-    const heir = rest.sort((x, y) => members[y] - members[x] || x - y)[0]
-    members[heir] = 2
-  }
+  if (role === 2) members[rest.sort((x, y) => members[y] - members[x] || x - y)[0]] = 2
   return put(w, { ...al, members, helps: al.helps.filter(h => h.pid !== pid) })
 }
 // Vào minh: thêm làm thành viên, bỏ khỏi đơn / lời mời của mọi minh
@@ -64,20 +63,6 @@ function join(w: World, al: Alliance, pid: number): World {
       next = put(next, { ...x, apps: x.apps?.filter(p => p !== pid), invites: x.invites?.filter(p => p !== pid) })
   return next
 }
-// Cho client: danh sách minh (tìm để vào), minh của mình với người trong đó
-// closed: phải xin vào · asked: mình đã gửi đơn · invited: minh đã mời mình
-export type AllyRow = {
-  id: number
-  name: string
-  tag: string
-  n: number
-  max: number
-  power: number
-  closed: boolean
-  asked: boolean
-  invited: boolean
-}
-export type Member = { pid: number; name: string; role: Role; hall: number; power: number; online: boolean }
 // war: Luận Kiếm Minh Chiến — đã ghi danh tuần này chưa, điểm minh chiến, kết quả lần giải gần nhất của cả giới
 export type AllyInfo = Alliance & {
   people: Member[]
@@ -116,6 +101,7 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
       hall: s?.levels.chuDien ?? 0,
       power: s ? Math.round(power(s)) : 0,
       online: online(Number(p)),
+      seen: s?.vip.day ?? -1,
     }
   })
   return {

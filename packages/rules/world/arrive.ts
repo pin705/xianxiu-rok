@@ -61,6 +61,7 @@ export function spotArrive(ps: Players, w: World, map: MapCtx, group: Party, at:
       ? back()
       : hitBoss(ps, w, map, group, sp, at)
   if (m.task === 'hunt') return (sp.until ?? 0) > at ? back() : hunt(w, map, group[0], at) // người khác vừa hạ: về
+  if (!ruinWindow(map.atlas, map.atlas.points[m.target.i], at).open) return back() // di tích đã đóng cửa: về
   return take(ps, w, map, group, sp, at) ?? back()
 }
 
@@ -231,7 +232,6 @@ function take(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at: nu
     p = map.atlas.points[i]
   const me = sideKey(w, pid)
   if (sp.own && sp.own > 0 && sp.own !== me && allyOf(w, pid)?.naps?.includes(sp.own)) return null // minh ước: về
-  if (!ruinWindow(map.atlas, p, at).open) return null // di tích đã đóng cửa: về
   const { side: mine, offs: aOffs, leadSnap: lead0 } = attackers(group)
   const changed: Players = new Map()
   const gar = garrison(ps, i)

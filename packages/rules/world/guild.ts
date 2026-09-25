@@ -2,9 +2,11 @@
 // Technology / Shop của RoK. Phần dùng chung (tầng trận, tăng ích, cống hiến, Minh lễ) ở base.ts.
 import { no } from '../core/action.ts'
 import { MAP_W } from '../atlas.ts'
+import { dayOf } from '../core/calendar.ts'
 import { cleanText, int, isId, oneOf } from '../core/parse.ts'
 import type { State } from '../core/types.ts'
 import {
+  ALLY_IDLE,
   ALLY_MAIL_COOL,
   ALLY_MAIL_LEN,
   ALLY_MARKS,
@@ -51,6 +53,7 @@ export type GuildAction =
   | { type: 'allyMark'; x: number; y: number; text: string }
   | { type: 'allyUnmark'; x: number; y: number }
   | { type: 'allyMail'; text: string } // thư tới hộp thư mọi người trong minh
+  | { type: 'allyClaim' } // đường chủ nhận minh chủ khi minh chủ vắng ALLY_IDLE ngày
   | { type: 'napAsk'; id: number }
   | { type: 'napOk'; id: number }
   | { type: 'napNo'; id: number }
@@ -176,6 +179,18 @@ export const guildActions: WorldActions<GuildAction> = {
         if (st) changed.set(p, mail(st, { at: now, k: 'allyMail', a: [s.name, al.tag, a.text] }))
       }
       return { ok: true, changed, world: put(w, { ...al, mailAt: now }) }
+    },
+  },
+  // Truất minh chủ vắng mặt: minh chủ không vào game ALLY_IDLE ngày thì đường chủ (R4) nhận minh chủ, người cũ xuống R4
+  allyClaim: {
+    pick: () => ({ type: 'allyClaim' }),
+    run: ({ w, ps, pid, s }) => {
+      const al = officer(w, pid)
+      const lead = al && Number(Object.keys(al.members).find(p => al.members[Number(p)] === 2))
+      if (!al || !lead || lead === pid) return no('locked')
+      const ls = ps.get(lead)
+      if (ls && dayOf(s.time) - ls.vip.day < ALLY_IDLE) return no('locked')
+      return { ok: true, changed: new Map(), world: put(w, { ...al, members: { ...al.members, [pid]: 2, [lead]: 1 } }) }
     },
   },
   // Minh ước (NAP): trưởng lão / minh chủ đề nghị, minh kia nhận hay từ chối; một bên huỷ là huỷ cả hai. Minh ước: không cướp

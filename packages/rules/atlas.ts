@@ -221,7 +221,10 @@ export function sitesOf(a: Atlas): Site[] {
           y: Math.round(r.cy + (rand() * 2 - 1) * CELL * 0.45),
         }
         if (p.x < 1 || p.y < 1 || p.x >= MAP_W - 1 || p.y >= MAP_W - 1 || regionOf(a, p) !== r.i) continue
-        if (a.points.some(t => t.kind !== 'ruin' && t.kind !== 'altar' && dist(t, p) < 3) || out.some(t => dist(t, p) < 3))
+        if (
+          a.points.some(t => t.kind !== 'ruin' && t.kind !== 'altar' && dist(t, p) < 3) ||
+          out.some(t => dist(t, p) < 3)
+        )
           continue
         out.push({ i: out.length, kind: k < v ? 'village' : 'cave', ...p, ring: r.ring })
         break

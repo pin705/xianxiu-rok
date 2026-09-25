@@ -19,6 +19,7 @@
     fogOf,
     fold,
     FLAG_COST,
+    FLAG_GUARD_MAX,
     FLAG_HP,
     PVP_HALL,
     BOSSES,
@@ -116,7 +117,10 @@
   }
   const title = $derived.by(() => {
     if (seat) return seat.name
-    if (point) return `${spotName(point.kind)} · ${L.lv(point.lv)}`
+    if (point)
+      return point.kind === 'ruin' || point.kind === 'altar'
+        ? spotName(point.kind)
+        : `${spotName(point.kind)} · ${L.lv(point.lv)}`
     if (march) return snap?.seats.find(s => s.pid === march.pid)?.name ?? ''
     if (site) return site.kind === 'village' ? L.world.explore.village : L.world.explore.cave
     return pick?.kind === 'tile' ? regionName(regionOf(atlas, pick)) : ''
@@ -124,7 +128,11 @@
   // cách xuất quân tới điểm: một mình, mở kết trận (chờ 5/10/30 phút), hay góp vào kết trận đang mở
   let way = $state<'solo' | 'rally' | number>('solo')
   let wait = $state<0 | 1 | 2>(1)
-  $effect(() => void (pick && (way = 'solo')))
+  $effect(() => {
+    if (!pick) return
+    way = 'solo'
+    guarding = false
+  })
   const rallies = $derived(
     point && ally ? ally.rallies.filter(r => r.task !== 'raid' && r.i === point.i && r.at > now) : [],
   )
@@ -188,6 +196,7 @@
     onclose()
   }
   let aiding = $state(false)
+  let guarding = $state(false) // đang chọn đội giữ trận kỳ
   async function aid(pid: number, elder: ElderId, army: Army) {
     const r = await send({ type: 'aid', pid, elder, army })
     if (r.ok) sent()
@@ -261,7 +270,9 @@
         {#if point.kind === 'ruin' || point.kind === 'altar'}
           <!-- di tích: chỉ chiếm được lúc mở; phe giữ khi đóng cửa nhận Công Huân theo phút -->
           <Tag icon={win.open ? 'clock' : 'lock'} tone={win.open ? 'good' : 'plain'}
-            >{win.open ? L.world.ruinOpen(clock(win.end - now)) : L.world.ruinOpens(clock(win.start - now))}</Tag
+            >{win.open
+              ? L.world.ruinOpen(clock(win.end - now))
+              : L.world.ruinOpens(win.start - now >= 3_600_000 ? L.ago(win.start - now) : clock(win.start - now))}</Tag
           >
           <small class="t-tiny t-soft">{L.world.ruinHint}</small>
         {/if}
@@ -427,12 +438,44 @@
             >{L.world.terr.hp(Math.ceil((hp / FLAG_HP) * 100))}</small
           ></span
         >
-        {#if officer && ally && flag.aid === ally.id}<Button
-            size="sm"
-            variant="quiet"
-            onclick={async () => (await send({ type: 'unflag', id: flag.id })).ok && onclose()}
-            >{L.world.terr.pull}</Button
-          >{:else if canRaze}
+        {#if flag.guard}<small class="t-tiny t-soft">{L.world.terr.guards(flag.guard[0], num(flag.guard[1]))}</small
+          >{/if}
+        {#if ally && flag.aid === ally.id}
+          <!-- cờ minh mình: đóng quân giữ (lực chiến chặn bớt sức phá), trưởng / minh chủ nhổ được -->
+          {@const mineG = game.marches.find(m => m.target.kind === 'flag' && m.target.i === flag.id)}
+          {#if mineG}
+            <div class="row">
+              <small class="grow t-small">{mineG.stay ? L.world.terr.guarding : marchDoing(mineG, now)}</small>
+              {#if mineG.stay}<Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onclick={() => send({ type: 'recall', id: mineG.id })}>{L.world.recall}</Button
+                >{/if}
+            </div>
+          {:else if flag.done <= now && (flag.guard?.[0] ?? 0) < FLAG_GUARD_MAX}
+            {@const fr = road(flag)}
+            {#if guarding}
+              <small class="t-tiny t-soft">{L.world.terr.guardHint}</small>
+              <ArmyPick
+                field
+                cta={L.world.terr.guard}
+                time={fr ? time(fr.len) : undefined}
+                disabled={busy || !fr}
+                onsubmit={async (e, a) =>
+                  (await send({ type: 'flagGuard', id: flag.id, elder: e, army: a })).ok && sent()}
+              />
+            {:else}<Button size="sm" variant="gold" icon="shield" onclick={() => (guarding = true)}
+                >{L.world.terr.guard}</Button
+              >{/if}
+          {/if}
+          {#if officer}<Button
+              size="sm"
+              variant="quiet"
+              onclick={async () => (await send({ type: 'unflag', id: flag.id })).ok && onclose()}
+              >{L.world.terr.pull}</Button
+            >{/if}
+        {:else if canRaze}
           {@const fr = road(flag)}
           <small class="t-tiny t-soft">{L.world.terr.razeHint}</small>
           <ArmyPick

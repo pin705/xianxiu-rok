@@ -866,7 +866,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | A4 | Sĩ số tối đa tăng dần | 🟡 cố định 30 | P2 | S |
 | A5 | Cấp bậc R1–R5 và quyền | ✅ R1 Ngoại môn … R4 Đường chủ, R5 Minh chủ (25/09); dấu bản đồ từ R3 | P1 | S |
 | A6 | Chức vị officer có buff | ❌ | P2 | S |
-| A7 | Rời/đá/tự chuyển giao/giải tán | 🟡 thiếu tự chuyển khi minh chủ vắng | P1 | S |
+| A7 | Rời/đá/tự chuyển giao/giải tán | ✅ minh chủ vắng 7 ngày: đường chủ nhận thay (25/09); thẻ thành viên ghi số ngày vắng | P1 | S |
 | B1 | Giúp đỡ (Alliance Help) | ✅ 10 lần/việc, người giúp được cống hiến, đĩa giúp nổi ở mọi tab | P1 | S |
 | B2 | Quà liên minh, rương chung, quà từ gói nạp | ✅ Minh lễ (hạ yêu vương → cả minh nhận quà, cấp quà 1–5); không có gói nạp | **P0** | M |
 | B3 | Công nghệ liên minh và quyên góp | ✅ Hộ Minh Đại Trận 9 trận × 5 tầng, cung phụng, trận minh chủ điểm | **P0** | L |

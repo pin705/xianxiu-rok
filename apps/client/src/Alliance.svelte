@@ -6,12 +6,14 @@
     ALLY_COST,
     ALLY_GIFT_LV,
     ALLY_HALL,
+    ALLY_IDLE,
     ALLY_MAIL_COOL,
     ALLY_MAIL_LEN,
     DONATE_MAX,
     MOB_GOALS,
     MOB_MIN,
     RESOURCES,
+    dayOf,
     jobOf,
     weekOf,
     LEGION_WAVES,
@@ -114,6 +116,7 @@
     ally ? ally.helps.filter(h => h.pid !== me && me !== null && !h.by.includes(me) && h.by.length < maxHelps) : [],
   )
   const nameOf = (pid: number) => ally?.people.find(p => p.pid === pid)?.name ?? '?'
+  const away = (p: { seen: number }) => (p.seen < 0 ? 0 : dayOf(g.now) - p.seen) // số ngày chưa vào game
   // kết trận đánh gì: tông môn (công sơn), yêu vương, hay điểm để chiếm
   const rallyWhat = (r: AllyInfo['rallies'][number]) => {
     if (r.task === 'raid') return L.world.siege(r.foe ?? '?')
@@ -345,7 +348,9 @@
                 <span class="dot" class:on={p.online} title={p.online ? L.ally.online : ''}></span>
                 <span class="grow stack" style:--gap="0"
                   ><b class="t-small">{p.name}</b><small class="t-tiny t-soft"
-                    >{L.realm(p.hall)} · {L.power} {num(p.power)}</small
+                    >{L.realm(p.hall)} · {L.power}
+                    {num(p.power)}{#if !p.online && away(p) >= 2}
+                      · <span class:t-bad={away(p) >= ALLY_IDLE}>{L.ally.idle(away(p))}</span>{/if}</small
                   ></span
                 >
                 <Tag size="sm" tone={p.role >= 1 ? 'gold' : 'plain'}>{L.ally.role(p.role)}</Tag>
@@ -374,6 +379,12 @@
                     size="sm"
                     variant="ghost"
                     onclick={() => go({ type: 'allyRole', pid: p.pid, role: 2 })}>{L.ally.lead}</Button
+                  >{/if}
+                <!-- minh chủ vắng lâu: đường chủ nhận thay -->
+                {#if myRole === 1 && p.role === 2 && away(p) >= ALLY_IDLE}<Button
+                    size="sm"
+                    variant="gold"
+                    onclick={() => go({ type: 'allyClaim' }, 'reward')}>{L.ally.claim}</Button
                   >{/if}
                 {#if myRole > p.role}<Button
                     size="sm"
