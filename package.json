@@ -20,7 +20,10 @@
     "package": "npm run build && rm -f release.zip && cd apps/client/dist && zip -qr ../../../release.zip . && echo 'release.zip: tải lên itch.io (HTML, chơi trên trình duyệt)'",
     "server": "npm run dev -w @rok/server",
     "db": "docker compose -f apps/server/deploy/compose.dev.yml up -d --wait",
-    "load": "node apps/server/load.ts"
+    "load": "node apps/server/load.ts",
+    "art": "tools/art/.venv/bin/python tools/art/make.py",
+    "art:export": "node tools/art/export.ts",
+    "art:spec": "node tools/art/spec.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

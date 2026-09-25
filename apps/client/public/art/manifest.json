@@ -7,6 +7,14 @@
     "src": "scene/bamboo-0.8-4.webp",
     "tex": true
   },
+  "bird:down": {
+    "src": "scene/bird-down.webp",
+    "tex": true
+  },
+  "bird:up": {
+    "src": "scene/bird-up.webp",
+    "tex": true
+  },
   "bld:chuDien:1": {
     "src": "bld/bld-chuDien-1.webp",
     "tex": true
@@ -523,6 +531,178 @@
     "src": "scene/blossom-1-11.webp",
     "tex": true
   },
+  "crane:down": {
+    "src": "scene/crane-down.webp",
+    "tex": true
+  },
+  "crane:up": {
+    "src": "scene/crane-up.webp",
+    "tex": true
+  },
+  "disciple": {
+    "src": "scene/disciple.webp",
+    "tex": true
+  },
+  "emblem:anvil": {
+    "src": "emblem/emblem-anvil.webp",
+    "tex": true
+  },
+  "emblem:ape": {
+    "src": "emblem/emblem-ape.webp",
+    "tex": true
+  },
+  "emblem:bear": {
+    "src": "emblem/emblem-bear.webp",
+    "tex": true
+  },
+  "emblem:blood": {
+    "src": "emblem/emblem-blood.webp",
+    "tex": true
+  },
+  "emblem:chaos": {
+    "src": "emblem/emblem-chaos.webp",
+    "tex": true
+  },
+  "emblem:crest": {
+    "src": "emblem/emblem-crest.webp",
+    "tex": true
+  },
+  "emblem:demon": {
+    "src": "emblem/emblem-demon.webp",
+    "tex": true
+  },
+  "emblem:dragon": {
+    "src": "emblem/emblem-dragon.webp",
+    "tex": true
+  },
+  "emblem:eagle": {
+    "src": "emblem/emblem-eagle.webp",
+    "tex": true
+  },
+  "emblem:earth": {
+    "src": "emblem/emblem-earth.webp",
+    "tex": true
+  },
+  "emblem:fire": {
+    "src": "emblem/emblem-fire.webp",
+    "tex": true
+  },
+  "emblem:fist": {
+    "src": "emblem/emblem-fist.webp",
+    "tex": true
+  },
+  "emblem:fox": {
+    "src": "emblem/emblem-fox.webp",
+    "tex": true
+  },
+  "emblem:ghost": {
+    "src": "emblem/emblem-ghost.webp",
+    "tex": true
+  },
+  "emblem:hawk": {
+    "src": "emblem/emblem-hawk.webp",
+    "tex": true
+  },
+  "emblem:ice": {
+    "src": "emblem/emblem-ice.webp",
+    "tex": true
+  },
+  "emblem:leopard": {
+    "src": "emblem/emblem-leopard.webp",
+    "tex": true
+  },
+  "emblem:lose": {
+    "src": "emblem/emblem-lose.webp",
+    "tex": true
+  },
+  "emblem:lotus": {
+    "src": "emblem/emblem-lotus.webp",
+    "tex": true
+  },
+  "emblem:metal": {
+    "src": "emblem/emblem-metal.webp",
+    "tex": true
+  },
+  "emblem:nineFox": {
+    "src": "emblem/emblem-nineFox.webp",
+    "tex": true
+  },
+  "emblem:orb": {
+    "src": "emblem/emblem-orb.webp",
+    "tex": true
+  },
+  "emblem:phoenix": {
+    "src": "emblem/emblem-phoenix.webp",
+    "tex": true
+  },
+  "emblem:poison": {
+    "src": "emblem/emblem-poison.webp",
+    "tex": true
+  },
+  "emblem:rebirth": {
+    "src": "emblem/emblem-rebirth.webp",
+    "tex": true
+  },
+  "emblem:rhino": {
+    "src": "emblem/emblem-rhino.webp",
+    "tex": true
+  },
+  "emblem:snake": {
+    "src": "emblem/emblem-snake.webp",
+    "tex": true
+  },
+  "emblem:sword": {
+    "src": "emblem/emblem-sword.webp",
+    "tex": true
+  },
+  "emblem:thunder": {
+    "src": "emblem/emblem-thunder.webp",
+    "tex": true
+  },
+  "emblem:thunderPool": {
+    "src": "emblem/emblem-thunderPool.webp",
+    "tex": true
+  },
+  "emblem:tick": {
+    "src": "emblem/emblem-tick.webp",
+    "tex": true
+  },
+  "emblem:tiger": {
+    "src": "emblem/emblem-tiger.webp",
+    "tex": true
+  },
+  "emblem:tower": {
+    "src": "emblem/emblem-tower.webp",
+    "tex": true
+  },
+  "emblem:turtle": {
+    "src": "emblem/emblem-turtle.webp",
+    "tex": true
+  },
+  "emblem:water": {
+    "src": "emblem/emblem-water.webp",
+    "tex": true
+  },
+  "emblem:win": {
+    "src": "emblem/emblem-win.webp",
+    "tex": true
+  },
+  "emblem:wind": {
+    "src": "emblem/emblem-wind.webp",
+    "tex": true
+  },
+  "emblem:windWolf": {
+    "src": "emblem/emblem-windWolf.webp",
+    "tex": true
+  },
+  "emblem:wolf": {
+    "src": "emblem/emblem-wolf.webp",
+    "tex": true
+  },
+  "emblem:wood": {
+    "src": "emblem/emblem-wood.webp",
+    "tex": true
+  },
   "face:bachVoNhai": {
     "src": "face/face-bachVoNhai.webp"
   },
@@ -561,6 +741,18 @@
   },
   "face:vanHac": {
     "src": "face/face-vanHac.webp"
+  },
+  "flag": {
+    "src": "scene/flag.webp",
+    "tex": true
+  },
+  "fly:open": {
+    "src": "scene/fly-open.webp",
+    "tex": true
+  },
+  "fly:shut": {
+    "src": "scene/fly-shut.webp",
+    "tex": true
   },
   "icon:boiNguyen": {
     "src": "icon/icon-boiNguyen.webp"
@@ -739,6 +931,86 @@
   },
   "ledge:8": {
     "src": "scene/ledge-8.webp",
+    "tex": true
+  },
+  "lotus": {
+    "src": "scene/lotus.webp"
+  },
+  "march": {
+    "src": "scene/march.webp",
+    "tex": true
+  },
+  "mask:arrow": {
+    "src": "icon/mask-arrow.png"
+  },
+  "mask:back": {
+    "src": "icon/mask-back.png"
+  },
+  "mask:check": {
+    "src": "icon/mask-check.png"
+  },
+  "mask:clock": {
+    "src": "icon/mask-clock.png"
+  },
+  "mask:close": {
+    "src": "icon/mask-close.png"
+  },
+  "mask:cross": {
+    "src": "icon/mask-cross.png"
+  },
+  "mask:download": {
+    "src": "icon/mask-download.png"
+  },
+  "mask:gear": {
+    "src": "icon/mask-gear.png"
+  },
+  "mask:globe": {
+    "src": "icon/mask-globe.png"
+  },
+  "mask:hammer": {
+    "src": "icon/mask-hammer.png"
+  },
+  "mask:lock": {
+    "src": "icon/mask-lock.png"
+  },
+  "mask:mail": {
+    "src": "icon/mask-mail.png"
+  },
+  "mask:minus": {
+    "src": "icon/mask-minus.png"
+  },
+  "mask:music": {
+    "src": "icon/mask-music.png"
+  },
+  "mask:mute": {
+    "src": "icon/mask-mute.png"
+  },
+  "mask:people": {
+    "src": "icon/mask-people.png"
+  },
+  "mask:plus": {
+    "src": "icon/mask-plus.png"
+  },
+  "mask:power": {
+    "src": "icon/mask-power.png"
+  },
+  "mask:rank": {
+    "src": "icon/mask-rank.png"
+  },
+  "mask:skull": {
+    "src": "icon/mask-skull.png"
+  },
+  "mask:sound": {
+    "src": "icon/mask-sound.png"
+  },
+  "mask:swords": {
+    "src": "icon/mask-swords.png"
+  },
+  "mask:upload": {
+    "src": "icon/mask-upload.png"
+  },
+  "moon": {
+    "src": "scene/moon.webp",
     "tex": true
   },
   "panel:chuDien:1": {
@@ -957,6 +1229,18 @@
     "src": "scene/peak-r.webp",
     "tex": true
   },
+  "pearl:1": {
+    "src": "scene/pearl-1.webp",
+    "tex": true
+  },
+  "pearl:1.2": {
+    "src": "scene/pearl-1.2.webp",
+    "tex": true
+  },
+  "pearl:1.5": {
+    "src": "scene/pearl-1.5.webp",
+    "tex": true
+  },
   "pine:14": {
     "src": "scene/pine-14.webp",
     "tex": true
@@ -984,12 +1268,19 @@
   "pointer": {
     "src": "icon/pointer.webp"
   },
+  "ring": {
+    "src": "scene/ring.webp"
+  },
   "rock:l": {
     "src": "scene/rock-l.webp",
     "tex": true
   },
   "rock:r": {
     "src": "scene/rock-r.webp",
+    "tex": true
+  },
+  "scaffold:120:72": {
+    "src": "scene/scaffold-120-72.webp",
     "tex": true
   },
   "skin:badge": {
@@ -1285,6 +1576,10 @@
     "src": "scene/stair-276,508.webp",
     "tex": true
   },
+  "sun": {
+    "src": "scene/sun.webp",
+    "tex": true
+  },
   "tab:banDo": {
     "src": "icon/tab-banDo.webp"
   },
@@ -1299,5 +1594,21 @@
   },
   "tab:tongMon": {
     "src": "icon/tab-tongMon.webp"
+  },
+  "walker:0": {
+    "src": "scene/walker-0.webp",
+    "tex": true
+  },
+  "walker:1": {
+    "src": "scene/walker-1.webp",
+    "tex": true
+  },
+  "worker": {
+    "src": "scene/worker.webp",
+    "tex": true
+  },
+  "wtoken": {
+    "src": "scene/wtoken.webp",
+    "tex": true
   }
 }

@@ -1132,6 +1132,7 @@ export const vi = {
       'Trảm Yêu Vương',
       'Binh Thế',
       'Kim Đan Đại Thành',
+      'Tu Bổ Thiên Môn',
       'Thiên Môn',
     ],
     goal: {
@@ -1146,6 +1147,7 @@ export const vi = {
       veins: (n: number) => `${n} linh mạch có người giữ`,
       hall15: (n: number) => `${n} tông môn đạt Chủ điện tầng 15`,
       bosses: (n: number) => `Hạ ${n} yêu vương`,
+      repair: (n: number) => `Cả giới góp ${n.toLocaleString('vi-VN')} tài nguyên tu bổ Thiên Môn`,
       heaven: () => 'Một tiên minh chiếm Thiên Môn',
     } satisfies Record<BookGoal, (n: number) => string>,
     by: (day: number) => `hạn: ngày ${day + 1}`,
@@ -1153,6 +1155,8 @@ export const vi = {
     done: 'Đã xong',
     missed: 'Hụt hạn',
     end: 'Đã qua hết các chương của mùa này.',
+    give: (n: string) => `Góp ${n} mỗi loại`,
+    gave: 'Góp tài nguyên thì được Công Huân (1 điểm mỗi 1.000).',
   },
   // Giới Chủ và sắc phong (King / Kingdom Titles)
   lord: {

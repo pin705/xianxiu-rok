@@ -1,8 +1,11 @@
 // Thiên Đạo Biên Niên (Monument của RoK): mục tiêu chung của cả giới theo chương. Server gọi bookStep định kỳ; chương xong
 // thì phát quà cho mọi người (rollover.ts), quá hạn thì hụt, sang chương sau.
+import { no } from '../core/action.ts'
 import { metric } from '../core/fest.ts'
-import { BOOK, type BookGoal } from '../data.ts'
-import { type MapCtx, type Players, type World } from './base.ts'
+import { obj } from '../core/parse.ts'
+import { bag } from '../core/util.ts'
+import { BOOK, REPAIR_HONOR, RESOURCES, type Bag, type BookGoal } from '../data.ts'
+import { addHonor, type MapCtx, type Players, type World, type WorldActions } from './base.ts'
 import { spotOf } from './points.ts'
 
 // Giá trị hiện tại của một mục tiêu (npc: phân đà NPC không tính)
@@ -24,6 +27,7 @@ export function bookValue(w: World, ps: Players, map: MapCtx, now: number, m: Bo
     veins: () => held('vein'),
     bosses: () => w.bosses ?? 0,
     heaven: () => held('heaven'),
+    repair: () => w.repair ?? 0,
   }
   return values[m]()
 }
@@ -41,4 +45,31 @@ export function bookStep(w: World, ps: Players, map: MapCtx, now: number, day: n
     return { world: { ...w, book: { ch: b.ch + 1, done: [...b.done, b.ch] } }, done: b.ch }
   if (day > g.day) return { world: { ...w, book: { ch: b.ch + 1, done: b.done } }, missed: b.ch }
   return { world: w }
+}
+
+// Tu Bổ Thiên Môn (Past Glory của RoK): lúc chương này đang mở, ai cũng góp tài nguyên vào thanh chung của giới; góp REPAIR_HONOR
+// thì được 1 Công Huân
+export type BookAction = { type: 'repair'; res: Partial<Bag> }
+export const bookActions: WorldActions<BookAction> = {
+  repair: {
+    pick: a => {
+      if (!obj(a.res)) return null
+      const res = Object.fromEntries(RESOURCES.map(r => [r, (a.res as Record<string, unknown>)[r] ?? 0]))
+      return Object.values(res).every(n => Number.isInteger(n) && (n as number) >= 0) &&
+        Object.values(res).some(n => (n as number) > 0)
+        ? { type: 'repair', res: res as Partial<Bag> }
+        : null
+    },
+    run: ({ w, pid, s }, a) => {
+      if (BOOK[w.book?.ch ?? 0]?.m !== 'repair') return no('locked')
+      if (RESOURCES.some(r => s.res[r] < (a.res[r] ?? 0))) return no('not_enough')
+      const paid = { ...s, res: bag(r => s.res[r] - (a.res[r] ?? 0)) }
+      const n = RESOURCES.reduce((sum, r) => sum + (a.res[r] ?? 0), 0)
+      return {
+        ok: true,
+        world: { ...w, repair: (w.repair ?? 0) + n },
+        changed: new Map([[pid, addHonor(paid, Math.floor(n / REPAIR_HONOR))]]),
+      }
+    },
+  },
 }

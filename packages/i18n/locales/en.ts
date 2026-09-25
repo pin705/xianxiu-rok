@@ -1149,6 +1149,7 @@ export const en: Text = {
       'Demon Slayers',
       'Lords of War',
       'Golden Core Masters',
+      'Mending the Gate',
       'Heaven Gate',
     ],
     goal: {
@@ -1163,6 +1164,7 @@ export const en: Text = {
       veins: (n: number) => `${n} spirit veins held`,
       hall15: (n: number) => `${n} sects reach Main Hall 15`,
       bosses: (n: number) => `Slay ${n} demon kings`,
+      repair: (n: number) => `The realm donates ${n.toLocaleString('en')} resources to mend the Heaven Gate`,
       heaven: () => 'An alliance takes the Heaven Gate',
     } satisfies Record<BookGoal, (n: number) => string>,
     by: (day: number) => `due day ${day + 1}`,
@@ -1170,6 +1172,8 @@ export const en: Text = {
     done: 'Done',
     missed: 'Missed',
     end: 'All chapters of this season are over.',
+    give: (n: string) => `Give ${n} of each`,
+    gave: 'Donations earn Honor (1 point per 1,000).',
   },
   lord: {
     title: 'Realm Lord',

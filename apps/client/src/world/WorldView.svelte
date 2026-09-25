@@ -14,7 +14,18 @@
     type Mark,
     type WorldAction,
   } from '@rok/rules/world'
-  import { BLESSINGS, BOOK, EVE_CHEST_N, HONOR_TIERS, cellOf, clear, dayOf, fogOf, type BlessKey } from '@rok/rules'
+  import {
+    BLESSINGS,
+    BOOK,
+    EVE_CHEST_N,
+    HONOR_TIERS,
+    RESOURCES,
+    cellOf,
+    clear,
+    dayOf,
+    fogOf,
+    type BlessKey,
+  } from '@rok/rules'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Badge, Bag, Button, Card } from '../ui'
@@ -454,6 +465,21 @@
             : L.book.end}</small
         >
       </button>
+      {#if g?.m === 'repair' && send}
+        <!-- Tu Bổ Thiên Môn: góp tài nguyên vào thanh chung của giới, được Công Huân -->
+        <span class="row wrap" style:--gap="4px">
+          {#each [10_000, 100_000, 1_000_000] as n (n)}
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={RESOURCES.some(r => game.res[r] < n)}
+              onclick={() => send({ type: 'repair', res: { linhThach: n, linhThao: n, linhKhoang: n } })}
+              >{L.book.give(num(n))}</Button
+            >
+          {/each}
+        </span>
+        <small class="t-tiny t-soft">{L.book.gave}</small>
+      {/if}
       {#if bookOpen}
         <ol class="stack" style:--gap="4px">
           {#each BOOK as x, k (k)}

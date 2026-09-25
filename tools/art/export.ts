@@ -5,6 +5,7 @@
 //   node tools/art/export.ts --port 9222      Chrome bất kỳ đang mở remote debugging
 // Trang phải mở với ?art=0 (không thì cache chứa tranh chứ không phải bản vẽ code) và đã đi qua cảnh cần xuất
 // (texture chỉ được nướng khi cảnh đó hiện lên: núi, bản đồ, trận…). Chạy nhiều lần, mỗi cảnh một lần — kết quả được gộp.
+import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -13,14 +14,18 @@ const HERE = import.meta.dirname
 const arg = (k: string) => process.argv[process.argv.indexOf(k) + 1]
 const player = process.argv.includes('--player') ? arg('--player') : undefined
 const port = player
-  ? JSON.parse(readFileSync(join(process.env.PLAY_DIR ?? join(tmpdir(), 'rok-play'), `player.${player}.json`), 'utf8')).debug
+  ? JSON.parse(readFileSync(join(process.env.PLAY_DIR ?? join(tmpdir(), 'rok-play'), `player.${player}.json`), 'utf8'))
+      .debug
   : Number(arg('--port') ?? 9222)
 
 // CDP tối giản: tab trang đầu tiên, Runtime.evaluate có chờ promise
-const tabs: { type: string; url: string; webSocketDebuggerUrl: string }[] = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
+const tabs: { type: string; url: string; webSocketDebuggerUrl: string }[] = await (
+  await fetch(`http://127.0.0.1:${port}/json/list`)
+).json()
 const tab = tabs.find(t => t.type === 'page' && /[?&]art=0/.test(t.url)) ?? tabs.find(t => t.type === 'page')
 if (!tab) throw new Error(`không có trang nào ở cổng ${port}`)
-if (!/[?&]art=0/.test(tab.url)) console.warn(`⚠ trang ${tab.url} không mở với ?art=0 — thêm ?art=0 vào địa chỉ rồi chạy lại`)
+if (!/[?&]art=0/.test(tab.url))
+  console.warn(`⚠ trang ${tab.url} không mở với ?art=0 — thêm ?art=0 vào địa chỉ rồi chạy lại`)
 const ws = new WebSocket(tab.webSocketDebuggerUrl)
 await new Promise(r => ws.addEventListener('open', r))
 let id = 0
@@ -31,10 +36,17 @@ const js = (expression: string) =>
       const m = JSON.parse(String(e.data))
       if (m.id !== i) return
       ws.removeEventListener('message', on)
-      if (m.error || m.result.exceptionDetails) no(new Error(JSON.stringify(m.error ?? m.result.exceptionDetails).slice(0, 400)))
+      if (m.error || m.result.exceptionDetails)
+        no(new Error(JSON.stringify(m.error ?? m.result.exceptionDetails).slice(0, 400)))
       else ok(m.result.result.value)
     })
-    ws.send(JSON.stringify({ id: i, method: 'Runtime.evaluate', params: { expression, awaitPromise: true, returnByValue: true } }))
+    ws.send(
+      JSON.stringify({
+        id: i,
+        method: 'Runtime.evaluate',
+        params: { expression, awaitPromise: true, returnByValue: true },
+      }),
+    )
   })
 
 // canvas → data URL (OffscreenCanvas thì qua blob)
@@ -86,4 +98,7 @@ for (const [k, v] of Object.entries<any>(got.keys)) {
   keys[k] = { ...keys[k], ...v, px: Math.max(v.px, keys[k]?.px ?? 0), screens: keys[k]?.screens ?? [] }
 }
 writeFileSync(kf, JSON.stringify(keys, null, 2) + '\n')
-console.log(`${got.painted.length} texture, ${got.skins.length} da, ${Object.keys(got.keys).length} key (${fresh} mới) → tools/art/.work, keys.json`)
+execFileSync('npx', ['prettier', '--write', kf], { cwd: join(HERE, '..', '..'), stdio: 'ignore' })
+console.log(
+  `${got.painted.length} texture, ${got.skins.length} da, ${Object.keys(got.keys).length} key (${fresh} mới) → tools/art/.work, keys.json`,
+)

@@ -146,7 +146,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Tu tiên hoá:** **Khai Giới Trảm Tà** — trong pha Khai giới (ngày 0–5, cổng còn đóng nên ai cũng ở vùng mình), "tà tu lưu khấu" hiện ở mỗi vùng; hạ
   chúng rơi "tàn quyển", đủ 7 mảnh đổi rương; điểm cộng theo vùng và theo minh thành "giới vận" → top 3 minh nhận buff nhỏ 24 giờ khi cổng mở
   (tốc hành quân hoặc sản lượng). Dùng lại yêu thú và phân đà NPC sẵn có.
-- **Game mình:** ❌ — pha Khai giới hiện chỉ là "cổng đóng", 5 ngày không có mục tiêu chung.
+- **Game mình:** ✅ Khai Giới Trảm Tà (`world/eve.ts`): yêu thú giới rơi tàn quyển trong pha Khai giới, 7 mảnh đổi rương; giới vận theo minh, cổng mở thì 3 minh đầu được sản lượng +10 % trong 24 giờ. Chưa có "tà tu lưu khấu" riêng — dùng yêu thú giới sẵn có.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### A3. KvK matchmaking, story registration & voting — ghép cặp, đăng ký truyện, bỏ phiếu
@@ -791,7 +791,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | # | Chế độ RoK | Tu tiên hoá | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|---|
 | A1 | Kingdom lifecycle (Preparation → Season 1–3 → SoC) | Giới Luân | ✅ mùa 49 ngày, 4 pha | P0 (có) | — |
-| A2 | Eve of the Crusade | Khai Giới Trảm Tà | ❌ | P1 | M |
+| A2 | Eve of the Crusade | Khai Giới Trảm Tà | ✅ tàn quyển + giới vận (`world/eve.ts`) | P1 | M |
 | A3 | Matchmaking, story registration, bỏ phiếu | Thiên Mệnh Chọn Luật (bỏ phiếu luật mùa) | ❌ (liên server ⛔) | P2 | S |
 | A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | ✅ buff theo loại linh mạch + thưởng chiếm lần đầu (25/09) | P1 | S–M |
 | A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 Thiên Đạo Biên Niên 12 chương (hạn theo ngày mùa); chưa mở khoá theo chương | **P0** | M |

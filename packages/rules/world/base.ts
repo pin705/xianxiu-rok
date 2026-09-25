@@ -189,6 +189,7 @@ export type World = {
   nextGroup?: number
   eve?: Record<number, number> // Khai Giới Trảm Tà: giới vận từng tiên minh trong pha Khai giới
   eveWin?: { ids: number[]; until: number } // minh đứng đầu giới vận lúc cổng mở: tăng ích tới until
+  repair?: number // Tu Bổ Thiên Môn: tài nguyên cả giới đã góp
 }
 // Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
 export type Legion = {

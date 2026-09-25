@@ -15,6 +15,7 @@ import {
   SUPPLY_HALL,
   QUIZ_KEY,
   PVP_HALL,
+  BOOK,
   advance,
   dayOf,
   apply,
@@ -927,6 +928,14 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
     await load(lang)
     const world = paint('WorldView', { game, now, info, me: 1, snap, allies: [3], onpick: noop }, 'bản đồ giới')
     assert.ok(world.includes(L.world.minimap), 'có bản đồ nhỏ')
+    // Tu Bổ Thiên Môn: chương đang mở → nút góp tài nguyên trên thẻ mùa
+    const mend = { ...snap, book: { ch: BOOK.findIndex(g => g.m === 'repair'), done: [], value: 0 } }
+    const mending = paint(
+      'WorldView',
+      { game, now, info, me: 1, snap: mend, allies: [3], onpick: noop, send: async () => ({ ok: true }) },
+      'Tu Bổ Thiên Môn',
+    )
+    assert.ok(mending.includes(L.book.gave), 'góp tài nguyên được Công Huân')
     paint(
       'WorldView',
       { game: { ...game, seat: null }, now, info, me: 1, snap: null, onpick: noop },

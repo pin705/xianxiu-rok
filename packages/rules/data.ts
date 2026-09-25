@@ -1042,7 +1042,10 @@ export type BookGoal =
   | 'bosses'
   | 'kp'
   | 'hall20'
+  | 'repair'
   | 'heaven'
+// Tu Bổ Thiên Môn: góp REPAIR_HONOR tài nguyên thì được 1 Công Huân (chỉ lúc chương đang mở)
+export const REPAIR_HONOR = 1000
 export const BOOK: { m: BookGoal; n: number; day: number; reward: Reward }[] = [
   { m: 'hall5', n: 15, day: 1, reward: { items: { thoiQuang15: 2, thachNang1k: 2 } } },
   { m: 'hall8', n: 10, day: 3, reward: { items: { thoiQuang60: 1, thachNang5k: 1 } } },
@@ -1055,6 +1058,7 @@ export const BOOK: { m: BookGoal; n: number; day: number; reward: Reward }[] = [
   { m: 'bosses', n: 15, day: 30, reward: { items: { thoiQuang480: 1, kinhThu8k: 1 } } },
   { m: 'kp', n: 200_000, day: 34, reward: { items: { chienY: 1, kimCuong: 1, hoThe: 1 } } }, // chiến công cả giới
   { m: 'hall20', n: 5, day: 38, reward: { items: { thoiQuang480: 1, daiTuKhi: 2 } } },
+  { m: 'repair', n: 10_000_000, day: 40, reward: { items: { thoiQuang480: 1, tuLinh24: 1 } } }, // Tu Bổ Thiên Môn (Past Glory): cả giới góp tài nguyên
   { m: 'heaven', n: 1, day: 42, reward: { items: { thoiQuang480: 1, kimDuyen: 2 } } },
 ]
 

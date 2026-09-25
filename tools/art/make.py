@@ -94,9 +94,12 @@ def masks():
 def props():
   for name, im in sheets(P.PROP_SHEETS, 'scenery props for a mountain sect scene', 'Each prop stands upright on its own base. ').items():
     for key in P.PROP_KEYS.get(name, []):
-      try: pim, _ = X.proc(key)
-      except (KeyError, FileNotFoundError): continue
-      X.save(key, X.fit_prop(im, pim), 'scene', tex=key not in ('lotus', 'ring'))
+      try:
+        pim, _ = X.proc(key)
+        X.save(key, X.fit_prop(im, pim), 'scene', tex=True)
+      except (KeyError, FileNotFoundError):  # ảnh HTML (hoa sen, vòng sáng) không có trong cache texture: ghép theo hộp trong keys.json
+        k = X.KEYS.get(key)
+        if k and k['kind'] == 'dom': X.save(key, X.fit_square(im, X.dom_side(key), 0.03, k['w'] / k['h']), 'scene')
 
 def troops():
   ref_im, _ = X.proc('sold:kiem:0:3')  # mọi quân cùng một hộp

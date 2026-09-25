@@ -6,3 +6,6 @@ apps/client/src/fonts.css
 *.md
 # Nét vẽ tay (mảng toạ độ): Prettier bẻ mỗi điểm một dòng, tranh một màn hình thành ba — giữ gọn theo tay
 packages/art/*.ts
+# ảnh thô và môi trường Python của công cụ vẽ tranh
+tools/art/.work
+tools/art/.venv
