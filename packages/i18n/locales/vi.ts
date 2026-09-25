@@ -31,6 +31,8 @@ import {
   MARKET_TAX,
   TERR_GATHER,
   ROB_SHARE,
+  EVE_BUFF,
+  EVE_CHEST_N,
   LEGION_WAVES,
   LEGION_HOUR,
   LEGION_GIFTS,
@@ -647,6 +649,15 @@ export const vi = {
     gifts: 'Mốc thắng',
     at: (n: number) => `${n} trận`,
     fightN: (n: number) => `Luận võ · trận ${n}`,
+  },
+  // Khai Giới Trảm Tà: pha Khai giới hạ yêu thú giới rơi tàn quyển; giới vận của minh
+  eve: {
+    title: 'Khai Giới Trảm Tà',
+    hint: 'Pha Khai giới: hạ yêu thú giới rơi tàn quyển (cấp cao rơi nhiều hơn), cộng giới vận cho tiên minh. Cổng mở thì 3 minh đầu được tăng ích sản lượng 24 giờ.',
+    frags: (n: number) => `Tàn quyển ${n}/${EVE_CHEST_N}`,
+    open: 'Đổi rương',
+    top: (list: string) => `Giới vận: ${list}`,
+    won: (tags: string, t: string) => `Giới vận đứng đầu: ${tags} · sản lượng +${pct(EVE_BUFF)} còn ${t}`,
   },
   honor: {
     title: 'Công Huân',
@@ -1449,6 +1460,10 @@ export const vi = {
         `Chiếm lần đầu · ${({ vein: 'Linh mạch', gate: 'Trận nhãn', heaven: 'Thiên Môn' } as Record<string, string>)[kind] ?? kind} cấp ${lv}`,
         'Tiên minh vừa là phe đầu tiên trong mùa giữ được điểm này. Quà cho mọi người trong minh ở dưới.',
       ],
+      eveTop: (rank: number, pts: number): [string, string] => [
+        `Khai Giới Trảm Tà · minh hạng ${rank}`,
+        `Cổng giới đã mở. Tiên minh đứng hạng ${rank} giới vận với ${pts.toLocaleString('vi')} tàn quyển — cả minh được sản lượng +${pct(EVE_BUFF)} trong 24 giờ.`,
+      ],
       tribeTop: (rank: number, pts: number): [string, string] => [
         `Phá Yêu Trại · minh hạng ${rank}`,
         `Tiên minh đứng hạng ${rank} tuần này với ${pts.toLocaleString('vi')} điểm phá yêu trại. Quà cho mọi người trong minh ở dưới.`,
@@ -2218,6 +2233,9 @@ export const vi = {
     speedTitle: 'Tăng tốc',
     remaining: 'Còn lại',
     speedHint: 'Chọn phù để bớt thời gian. Phù riêng (Lỗ Ban, Luyện Binh…) chỉ dùng cho đúng việc.',
+    auto: 'Dùng vừa đủ',
+    after: (t: string) => `còn ${t}`,
+    doneNow: 'xong ngay',
     saves: (t: string) => `Bớt ${t}`,
     finish: 'Xong ngay',
     // mệnh giá ghi trên góc icon

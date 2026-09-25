@@ -24,6 +24,7 @@ import { razeArrive } from './flags.ts'
 import { ruinClose } from './ruins.ts'
 import { storeStep } from './storehouse.ts'
 import { tribeStep } from './tribe.ts'
+import { eveStep } from './eve.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
@@ -129,16 +130,25 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     changed.set(m.target.i, calm(r.def))
     for (const [k, v] of r.helpers) changed.set(k, v)
   }
-  // Cổ Di Tích / Huyết Tế Đàn hết giờ mở: chốt, trả quân
-  if (map) {
-    const r = ruinClose(view(), w, map, now)
+  for (const step of hourly(view, now, map)) {
+    const r = step(w)
     for (const [k, v] of r.changed) changed.set(k, v)
-    w = storeStep(view(), r.world, map, now) // kho minh: lãnh thổ sinh Minh khố theo giờ
+    w = r.world
   }
-  const tb = tribeStep(view(), w, now) // Phá Yêu Trại hết khung: quà top minh
-  for (const [k, v] of tb.changed) changed.set(k, v)
-  w = tb.world
   return { changed, world: w }
 }
+// Việc theo giờ của giới, lần lượt (mỗi bước đọc cả giới như lúc đó): Cổ Di Tích / Huyết Tế Đàn hết giờ mở (chốt, trả quân) ·
+// kho minh (lãnh thổ sinh Minh khố) · Khai Giới Trảm Tà (cổng mở: chốt giới vận) · Phá Yêu Trại hết khung (quà top minh)
+type Step = (x: World) => { changed: Players; world: World }
+const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
+  ...(map
+    ? [
+        (x: World) => ruinClose(view(), x, map, now),
+        (x: World) => ({ changed: new Map(), world: storeStep(view(), x, map, now) }),
+        (x: World) => eveStep(view(), x, map, now),
+      ]
+    : []),
+  x => tribeStep(view(), x, now),
+]
 // Chỉ trận cướp, không bản đồ (sim, test P2)
 export const advanceWorld = (ps: Players, now: number): Players => advanceAll(ps, freshWorld(), now).changed

@@ -1,6 +1,6 @@
 // Sân trận theo cảnh (rừng, lửa, băng, lôi kiếp, đồng, tông môn, tháp) và đội hình hai bên.
 import { Container, Sprite, Text, TilingSprite } from 'pixi.js'
-import { PIGMENT as C, battlefield, beast, cloud, mistTex, soldier, type Theme, type Troop } from '@rok/art'
+import { PIGMENT as C, artOf, battlefield, beast, cloud, mistTex, soldier, type Theme, type Troop } from '@rok/art'
 import type { Report } from '@rok/rules'
 import { hex, painted, sprite, texOf, fxTex } from '../stage'
 import type { Battle } from '../battle'
@@ -26,13 +26,19 @@ export function paint(b: Battle) {
   const pap = new TilingSprite({ texture: fxTex.paper(), width: w + 400, height: h + 400 })
   pap.position.set(-200, -200)
   pap.tileScale.set(0.5)
-  const bg = painted(
-    `field:${b.theme}:${Math.round(w)}x${Math.round(h)}`,
-    () => battlefield(w, h, b.theme),
-    Math.min(2, window.devicePixelRatio || 1),
-  )
+  // tranh vẽ tay theo cảnh (manifest 'field:<cảnh>') phủ kín sân mọi cỡ màn; không có thì vẽ bằng code đúng cỡ
+  const drawn = artOf(`field:${b.theme}`)
+  const bg = drawn
+    ? painted(`field:${b.theme}`, () => battlefield(400, 866, b.theme))
+    : painted(
+        `field:${b.theme}:${Math.round(w)}x${Math.round(h)}`,
+        () => battlefield(w, h, b.theme),
+        Math.min(2, window.devicePixelRatio || 1),
+      )
   const s = new Sprite(bg.tex)
-  s.scale.set(1 / bg.scale)
+  const cover = drawn ? Math.max(w / (bg.tex.width / bg.scale), h / (bg.tex.height / bg.scale)) : 1
+  s.scale.set(cover / bg.scale)
+  if (drawn) s.position.set((w - (bg.tex.width / bg.scale) * cover) / 2, (h - (bg.tex.height / bg.scale) * cover) / 2)
   b.field.addChild(pap, s)
   if (b.theme === 'storm') b.field.tint = 0x77709a // trời kiếp: tối cả sân
   // sương giữa hai trận tuyến
@@ -103,11 +109,14 @@ export function squad(b: Battle, side: number, type: Troop, n0: number, x: numbe
       b.tick_.push(() => (core.alpha = 0.55 + 0.45 * Math.abs(Math.sin(b.t * 5 + i))))
     } else {
       // bậc 1–3 chung một dáng đệ tử
+      // yêu thú vẽ tay: một dáng lông xám mỗi hệ (manifest 'beast:<hệ>'), tô màu loài bằng tint
+      const inked = kind === 'beast' && artOf(`beast:${type}`)
       const p =
         kind === 'man'
           ? painted(`sold:${type}:${side}:${Math.max(3, tier)}`, () => soldier(type, side === 1, tier))
-          : painted(`beast:${type}:${b.tint}`, () => beast(type, b.tint))
+          : painted(inked ? `beast:${type}` : `beast:${type}:${b.tint}`, () => beast(type, b.tint))
       s = sprite(p)
+      if (inked) s.tint = hex(b.tint)
       const scale = (kind === 'beast' ? 1.7 : 1.75) * (1 - row * 0.06)
       s.scale.set(scale / p.scale)
       if (side === 1 && kind === 'beast') s.scale.x *= -1 // yêu thú nhìn xuống phía quân ta

@@ -14,7 +14,7 @@
     type Mark,
     type WorldAction,
   } from '@rok/rules/world'
-  import { BLESSINGS, BOOK, HONOR_TIERS, cellOf, clear, dayOf, fogOf, type BlessKey } from '@rok/rules'
+  import { BLESSINGS, BOOK, EVE_CHEST_N, HONOR_TIERS, cellOf, clear, dayOf, fogOf, type BlessKey } from '@rok/rules'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
   import { Badge, Bag, Button, Card } from '../ui'
@@ -368,6 +368,23 @@
           </span>
         {/if}
         {#if !slim}<small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>{/if}
+        {#if !slim && phase === 0}
+          <!-- Khai Giới Trảm Tà: yêu thú giới rơi tàn quyển (đủ thì đổi rương), giới vận của các minh đầu -->
+          <span class="row wrap" style:--gap="6px">
+            <small class="t-tiny" title={L.eve.hint}><b>{L.eve.title}</b> · {L.eve.frags(game.frag ?? 0)}</small>
+            {#if (game.frag ?? 0) >= EVE_CHEST_N}<Button
+                size="sm"
+                variant="gold"
+                onclick={() => g.act({ type: 'eveChest' }, 'reward')}>{L.eve.open}</Button
+              >{/if}
+          </span>
+          {#if snap?.eve}<small class="t-tiny t-soft"
+              >{L.eve.top(snap.eve.map(x => `[${x.tag}] ${num(x.pts)}`).join(' · '))}</small
+            >{/if}
+        {/if}
+        {#if !slim && snap?.eveWin && snap.eveWin.until > now && snap.eveWin.tags.length}<small class="t-tiny t-gold"
+            >{L.eve.won(snap.eveWin.tags.join(', '), clock(snap.eveWin.until - now))}</small
+          >{/if}
       </span>
       <Button size="sm" variant="ghost" onclick={() => (finding = !finding)}
         ><Icon name="globe" size={14} />{L.world.find}</Button

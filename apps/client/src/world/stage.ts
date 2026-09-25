@@ -1,7 +1,20 @@
 // Một ứng dụng WebGL (PixiJS) cho cả game: cảnh núi, bản đồ… là các Container gắn vào stage.
 // Hình vẽ tay nướng một lần ra texture (bake), sau đó GPU chỉ việc ghép và diễn chuyển động.
 import { Application, Container, Sprite, Texture } from 'pixi.js'
-import { artOf, bake, beamTex, noteArt, glowTex, paper, puffTex, rayTex, ringTex, sparkTex, type Asset } from '@rok/art'
+import {
+  artOf,
+  bake,
+  beamTex,
+  dump,
+  noteArt,
+  glowTex,
+  paper,
+  puffTex,
+  rayTex,
+  ringTex,
+  sparkTex,
+  type Asset,
+} from '@rok/art'
 
 export const DPR = Math.min(globalThis.devicePixelRatio || 1, 2)
 // Cảnh rộng 400 DU. Màn hẹp: cả bề ngang, tối đa bề rộng cột (--col: 480px điện thoại, 620px máy tính bảng).
@@ -97,6 +110,7 @@ export function mountScene<S extends Scene>(o: {
 
 export type Painted<M = unknown> = { tex: Texture; anchor: readonly [number, number]; scale: number; meta: M }
 const cache = new Map<string, Painted<unknown>>()
+dump.painted = cache // ?art=0: tools/art/export.ts xuất các texture vẽ bằng code
 
 // Nướng một asset vẽ tay (một lần mỗi key + độ phân giải)
 export function painted<M>(key: string, make: () => Asset<M>, scale = texScale()): Painted<M> {

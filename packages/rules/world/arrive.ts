@@ -23,6 +23,7 @@ import {
   UNITS,
   WILD_LOOT,
   WILD_RESPAWN,
+  eveFrags,
   type Reward,
 } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
@@ -30,6 +31,7 @@ import {
   addHonor,
   addKp,
   allyGifts,
+  eveAdd,
   routeMs,
   tribeBank,
   allyOf,
@@ -242,7 +244,11 @@ function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Ar
     returnAt: at + (at - startAt),
   })
   if (f.win) x = addHonor({ ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1 } }, HONOR_WILD * p.lv)
-  return { changed: new Map([[pid, x]]), world: f.win ? setSpot(w, i, { until: at + WILD_RESPAWN }) : w }
+  if (!f.win) return { changed: new Map([[pid, x]]), world: w }
+  // Khai Giới Trảm Tà: pha Khai giới rơi tàn quyển, cộng giới vận cho minh
+  const n = map.phase === 0 ? eveFrags(p.lv) : 0
+  if (n) x = { ...x, frag: (x.frag ?? 0) + n }
+  return { changed: new Map([[pid, x]]), world: eveAdd(setSpot(w, i, { until: at + WILD_RESPAWN }), pid, n) }
 }
 
 // Thế lực của một đội (đệ tử × thế lực mỗi bậc) và cộng chiến công

@@ -34,3 +34,24 @@ export const speedMin = (id: BagId) => {
   return d.use === 'speed' ? d.min : 0
 }
 export const owned = (s: State) => BAG_IDS.filter(id => (s.items[id] ?? 0) > 0)
+
+// "Dùng vừa đủ": tổ hợp phù / đan để xong việc — mệnh giá lớn trước, không vượt thời gian còn lại; phần lẻ cuối dùng một cái
+// nhỏ nhất còn lại (cái nào còn trong kho cũng đủ che phần lẻ). Hết đồ mà chưa xong thì rest > 0.
+// ponytail: tham lam, không tối ưu tuyệt đối lượng phí — đủ cho vài mệnh giá cố định
+export type SpeedStock = { id: string; ms: number; have: number }
+export function speedPlan(stock: SpeedStock[], left: number): { use: [SpeedStock, number][]; rest: number } {
+  const big = [...stock].sort((a, b) => b.ms - a.ms)
+  const use = new Map<SpeedStock, number>()
+  let rest = left
+  for (const s of big) {
+    const n = Math.min(s.have, Math.floor(rest / s.ms))
+    if (n > 0) use.set(s, n)
+    rest -= n * s.ms
+  }
+  const cover = rest > 0 ? [...big].reverse().find(s => s.have > (use.get(s) ?? 0)) : undefined
+  if (cover) {
+    use.set(cover, (use.get(cover) ?? 0) + 1)
+    rest = 0
+  }
+  return { use: big.filter(s => use.has(s)).map(s => [s, use.get(s)!]), rest: Math.max(0, rest) }
+}

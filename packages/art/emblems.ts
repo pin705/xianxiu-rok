@@ -2,6 +2,7 @@
 // Hình chạm: 15 yêu thú, 5 tông môn đối địch, 5 bí cảnh, ngũ hành, lôi kiếp, 3 hệ đệ tử và vài biểu tượng khoảnh khắc lớn.
 // Hộp 48 × 48 DU, tâm (0, 0); hình chạm nằm trong bán kính ~16.
 import { blot, ellipse, grain, stroke, wash, type Asset, type G, type Press, type Pt } from './brush'
+import { artOf } from './art'
 import { outline, ring } from './chrome'
 import { PIGMENT as C, mix, rgba, WHITE } from './palette'
 
@@ -666,7 +667,10 @@ export function medal(emblem: Emblem, tone: MedalTone): Asset {
       g.fill()
       ring(g, 0, 0, 19.6, 1.5, C.goldL, 9, 0.9, 0.03)
       ring(g, 0, 0, 21.2, 0.6, C.goldD, 10, 0.8, 0.05)
-      DRAW[emblem](g)
+      // hình chạm vẽ tay (manifest 'emblem:<tên>', nạp sẵn): một tranh cho mọi tông đĩa — đĩa vẫn vẽ bằng code theo tông
+      const art = artOf(`emblem:${emblem}`)?.img
+      if (art) g.drawImage(art, -16, -16, 32, 32)
+      else DRAW[emblem](g)
       stroke(g, [[-15, -8], [-11, -13.5], [-5, -16.5]], { w: 1.6, color: WHITE, alpha: 0.32, press: 'swell', dry: 0.4, seed: 11 })
       stroke(g, [...disc, disc[0], disc[1]], { w: 1.1, color: C.ink, alpha: 0.9, press: 'even', rough: 0.3, seed: 12 })
       grain(g, 0.2)

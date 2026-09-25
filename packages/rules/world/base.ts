@@ -27,6 +27,7 @@ import {
   TRIBE_LEN,
   TRIBE_PTS,
   BLESSINGS,
+  EVE_BUFF,
   TITLE_IDS,
   TITLES,
   type TitleId,
@@ -186,6 +187,8 @@ export type World = {
   tribe?: Tribe // Phá Yêu Trại tuần này
   firsts?: number[] // điểm đã có tiên minh chiếm lần đầu trong mùa (quà chiếm lần đầu)
   nextGroup?: number
+  eve?: Record<number, number> // Khai Giới Trảm Tà: giới vận từng tiên minh trong pha Khai giới
+  eveWin?: { ids: number[]; until: number } // minh đứng đầu giới vận lúc cổng mở: tăng ích tới until
 }
 // Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
 export type Legion = {
@@ -408,6 +411,17 @@ export const blessBuffs = (w: World, at: number): Buff[] =>
   w.bless && w.bless.until > at
     ? [{ key: w.bless.key as Bonus, v: BLESSINGS[w.bless.key], until: w.bless.until, src: 'bless' }]
     : []
+// Khai Giới Trảm Tà: tàn quyển cộng giới vận cho tiên minh của pid; minh đứng đầu lúc cổng mở được tăng ích sản lượng (nguồn 'eve')
+export const eveAdd = (w: World, pid: number, n: number): World => {
+  const al = allyOf(w, pid)
+  return al && n > 0 ? { ...w, eve: { ...w.eve, [al.id]: (w.eve?.[al.id] ?? 0) + n } } : w
+}
+export const eveBuffs = (w: World, pid: number, at: number): Buff[] => {
+  const id = allyOf(w, pid)?.id
+  return w.eveWin && w.eveWin.until > at && id !== undefined && w.eveWin.ids.includes(id)
+    ? [{ key: 'prod', v: EVE_BUFF, until: w.eveWin.until, src: 'eve' }]
+    : []
+}
 // Tăng ích (hay hoạ) từ tước Giới Chủ phong cho pid, còn hạn lúc at (worldBuffs gắn vào state, nguồn 'title')
 export const titleBuffs = (w: World, pid: number, at: number): Buff[] =>
   TITLE_IDS.flatMap(id => {

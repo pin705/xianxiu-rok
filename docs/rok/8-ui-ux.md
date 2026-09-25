@@ -485,7 +485,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - các viên đan xếp theo thời lượng, mỗi viên có ô số lượng;
   - nút vàng **"Dùng vừa đủ"**: tự chọn tổ hợp Đại Tụ Khí / Tụ Khí ít lãng phí nhất, xem trước "còn 0:12";
   - khi nuốt đan, linh khí xoáy vào bong bóng đồng hồ trên núi.
-- **Game mình:** 🟡. JobRow có nút dùng **từng viên** Tụ Khí Đan (−15:00) / Đại Tụ Khí Đan (−2:00:00) (`JobRow.svelte`). Bảo khố cho chọn việc để dùng. Chưa có dùng nhiều viên, chưa có "vừa đủ", chưa xem trước kết quả.
+- **Game mình:** ✅. Bảng Tăng tốc (`SpeedUp.svelte`): mọi phù / đan dùng được, từng dòng Dùng 1 / Xong ngay, thẻ vàng "Dùng vừa đủ" chọn tổ hợp ít phí và xem trước kết quả ("→ xong ngay" / "→ còn 0:12").
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### C4 · Alliance Help: xin giúp từ chính việc đang chạy
@@ -1309,13 +1309,13 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | A11 + A9 + G6 Dải "Đang diễn ra" (việc + đội) trên điện thoại (hiện CSS ẩn, chỉ desktop có) | ✅ | **P0** | M |
 | C2 + G3 Bù tài nguyên thiếu một chạm (Thương hội ngay trong bảng / Đợi ~N phút / Đi tới) | ✅ | **P0** | M |
 | A1 + C34 Hồ sơ chưởng môn (chân dung → hồ sơ; thành tích, thế lực, luân hồi, xếp hạng) | ✅ | P1 | S–M |
-| A2 + D2 Thế lực: chạm xem nguồn, "+N Thế lực" bay lên | 🟡 | P1 | S |
+| A2 + D2 Thế lực: chạm xem nguồn, "+N Thế lực" bay lên | ✅ `PowerSheet.svelte` | P1 | S |
 | A5 + F4 Dải buff dưới chân dung (khiên, đan) đọc được trên điện thoại | ✅ | P1 | S |
 | A15 Dải Truyền âm 1 dòng ở mọi tab (hiện chỉ Bản đồ, Tiên minh) | 🟡 | P1 | S |
 | A17 + G1 Đĩa "Tương trợ" (giúp tất cả) nổi trên HUD | ✅ | P1 | S |
 | A18 Nút "?" theo ngữ cảnh → đúng mục Cẩm nang | 🟡 | P1 | S |
 | C1 Xem trước "Lên tầng N mở ra" + "xong lúc hh:mm" trong bảng | ✅ | P1 | S |
-| C3 + G4 Tụ khí: dùng nhiều viên, "Dùng vừa đủ", xem trước kết quả | 🟡 | P1 | S |
+| C3 + G4 Tụ khí: dùng nhiều viên, "Dùng vừa đủ", xem trước kết quả | ✅ `SpeedUp.svelte` | P1 | S |
 | C4 Xin tương trợ ngay từ bảng công trình / bong bóng | 🟡 | P1 | S |
 | C12 Màn xuất quân: thời gian đi / về, nút "Mang hệ khắc" | ✅ | P1 | S |
 | C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | ✅ `verdict.ts` (chưa chia sẻ vào chat minh) | P1 | S |

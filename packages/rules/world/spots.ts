@@ -23,6 +23,7 @@ import {
   allyOf,
   officeBuffs,
   blessBuffs,
+  eveBuffs,
   titleBuffs,
   garrison,
   setSpot,
@@ -259,6 +260,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     b.src === 'office' ||
     b.src === 'title' ||
     b.src === 'bless' ||
+    b.src === 'eve' ||
     b.src.startsWith('tide')
   for (const [pid, s] of ps) {
     const want: Buff[] = [
@@ -275,6 +277,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
       ...officeBuffs(allyOf(w, pid), pid), // chức vị đường chủ
       ...titleBuffs(w, pid, at), // sắc phong của Giới Chủ
       ...blessBuffs(w, at), // Giới Chủ ban phúc cả giới
+      ...eveBuffs(w, pid, at), // Khai Giới Trảm Tà: minh đứng đầu giới vận
     ]
     const keep = s.buffs.filter(b => !mapped(b))
     const have = s.buffs.filter(mapped)

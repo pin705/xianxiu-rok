@@ -469,6 +469,20 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       const side = (type: string) => ({ level: 1, troops: [{ type, tier: 1, n: 100 }] })
       const lost = { kind: 'beast', win: false, fights: [{ a: side('kiem'), b: side('the'), rounds: [] }] }
       assert.equal(verdictOf(lost).counter, 'phap', 'Kiếm tu thua Thể tu → tuyển Pháp tu')
+      // "Dùng vừa đủ": mệnh giá lớn trước, phần lẻ dùng cái nhỏ nhất còn lại; hết đồ thì còn lại bao lâu
+      const { speedPlan } = await vite.ssrLoadModule('/src/bag.ts')
+      const plan = (left: number) =>
+        speedPlan(
+          [
+            { id: 'h', ms: 60, have: 2 },
+            { id: 'q', ms: 15, have: 5 },
+          ],
+          left,
+        )
+      const ids = (p: { use: [{ id: string }, number][] }) => p.use.map(([x, n]) => `${x.id}${n}`).join(' ')
+      assert.deepEqual([ids(plan(70)), plan(70).rest], ['h1 q1', 0])
+      assert.deepEqual([ids(plan(200)), plan(200).rest], ['h2 q5', 5])
+      assert.deepEqual([ids(plan(0)), plan(0).rest], ['', 0])
     }
     assert.ok(
       mid.reports.length >= 2 && afterTrib.reports.at(-1)!.fights.length === 3,

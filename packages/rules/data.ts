@@ -756,6 +756,15 @@ export const SEASON_HEAVEN = 12
 export const SEASON_BOSS = [0, 0, 60, 200]
 export const JOIN_DAYS = 21
 export const ASCEND_HALL = 16
+// Khai Giới Trảm Tà (Eve of the Crusade của RoK): pha Khai giới (pha 0, cổng còn đóng) hạ yêu thú giới rơi tàn quyển (eveFrags
+// theo cấp); đủ EVE_CHEST_N đổi một rương tiếp tế. Mỗi tàn quyển cộng một điểm giới vận cho tiên minh; cổng mở (hết pha 0) thì
+// EVE_TOP minh đầu được sản lượng +EVE_BUFF trong EVE_BUFF_TIME, mỗi người trong minh một thư báo hạng
+export const EVE_CHEST_N = 7
+export const EVE_CHEST: Reward = { items: { thoiQuang60: 1, luyenBinh60: 1, thachNang5k: 1, kinhThu500: 1 } }
+export const EVE_TOP = 3
+export const EVE_BUFF = 0.1
+export const EVE_BUFF_TIME = 24 * 3_600_000
+export const eveFrags = (lv: number) => 1 + Math.floor((lv - 1) / 5)
 export const ASCEND = 2
 
 // ---------- Chợ (giữa người chơi trong một giới; server có cờ bật/tắt) ----------

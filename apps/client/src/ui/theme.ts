@@ -6,6 +6,8 @@
 import {
   PIGMENT,
   artOf,
+  artOff,
+  dump,
   noteArt,
   type ArtEntry,
   badgeSkin,
@@ -56,7 +58,7 @@ async function image(
   if (art) return { url: `url(${art.src})`, art }
   const c = await store
   const req = `./__skin/${name}@${S}.png`
-  const hit = await c?.match(req).catch(() => undefined)
+  const hit = artOff() ? undefined : await c?.match(req).catch(() => undefined) // ?art=0: vẽ lại để export có canvas
   if (hit) {
     const meta = hit.headers.get('x-skin')
     return { url: `url(${URL.createObjectURL(await hit.blob())})`, skin: meta ? JSON.parse(meta) : undefined }
@@ -64,6 +66,11 @@ async function image(
   const drawn = draw()
   const skin = 'cv' in drawn ? drawn : undefined
   const cv = skin ? skin.cv : (drawn as Canvas)
+  dump.skins[name] = {
+    cv,
+    S,
+    ...(skin && { slice: skin.slice, w: skin.w, h: skin.h, outset: skin.outset, repeat: skin.repeat }),
+  }
   noteArt(`skin:${name}`, {
     kind: 'skin',
     w: skin?.w ?? cv.width / S,

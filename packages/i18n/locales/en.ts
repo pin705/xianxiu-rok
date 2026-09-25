@@ -31,6 +31,8 @@ import {
   MARKET_TAX,
   TERR_GATHER,
   ROB_SHARE,
+  EVE_BUFF,
+  EVE_CHEST_N,
   LEGION_WAVES,
   LEGION_HOUR,
   LEGION_GIFTS,
@@ -668,6 +670,14 @@ export const en: Text = {
     gifts: 'Win milestones',
     at: (n: number) => `${n} wins`,
     fightN: (n: number) => `Arms Training · fight ${n}`,
+  },
+  eve: {
+    title: 'Eve of the Crusade',
+    hint: 'While the gates are closed, world beasts drop scroll fragments (more at higher levels) and add realm fortune to your alliance. When the gates open, the top 3 alliances get a 24-hour production boost.',
+    frags: (n: number) => `Fragments ${n}/${EVE_CHEST_N}`,
+    open: 'Open chest',
+    top: (list: string) => `Realm fortune: ${list}`,
+    won: (tags: string, t: string) => `Top realm fortune: ${tags} · production +${pct(EVE_BUFF)} for ${t}`,
   },
   honor: {
     title: 'Honor',
@@ -1459,6 +1469,10 @@ export const en: Text = {
         `First capture · ${({ vein: 'Spirit vein', gate: 'Array eye', heaven: 'Heaven Gate' } as Record<string, string>)[kind] ?? kind} level ${lv}`,
         'Your alliance is the first this season to hold this point. A reward for every member is below.',
       ],
+      eveTop: (rank: number, pts: number): [string, string] => [
+        `Eve of the Crusade · alliance rank ${rank}`,
+        `The realm gates are open. Your alliance placed ${rank} with ${pts.toLocaleString('en')} scroll fragments — every member gets +${pct(EVE_BUFF)} production for 24 hours.`,
+      ],
       tribeTop: (rank: number, pts: number): [string, string] => [
         `King of the Tribes · alliance rank ${rank}`,
         `Your alliance placed ${rank} this week with ${pts.toLocaleString('en')} points. A reward for every member is below.`,
@@ -2221,6 +2235,9 @@ export const en: Text = {
     speedTitle: 'Speed up',
     remaining: 'Remaining',
     speedHint: 'Pick talismans to cut the time. Specific talismans (Builder, Drill…) only work on their own task.',
+    auto: 'Use just enough',
+    after: (t: string) => `${t} left`,
+    doneNow: 'done',
     saves: (t: string) => `Cuts ${t}`,
     finish: 'Finish now',
     denom: {

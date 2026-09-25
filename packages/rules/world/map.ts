@@ -78,6 +78,8 @@ export type MapSnap = {
   allies?: { id: number; tag: string }[] // tiên minh có lãnh thổ (hiệu để ghi trên bản đồ)
   flags?: (Flag & { guard?: [n: number, might: number] })[] // trận kỳ (đang dựng: done > lúc xem); guard: đội giữ, lực chiến
   firsts?: number[] // điểm đã có minh chiếm lần đầu trong mùa
+  eve?: { tag: string; pts: number }[] // Khai Giới Trảm Tà: giới vận các minh đầu (pha Khai giới)
+  eveWin?: { tags: string[]; until: number } // minh đứng đầu lúc cổng mở, tăng ích tới until
 }
 
 export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[], w: World = freshWorld()): MapSnap {
@@ -126,7 +128,26 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
       const g = flagGuards(ps, f.id)
       return g.length ? { ...f, guard: [g.length, guardMight(g)] as [number, number] } : f
     })
-  return { seats, marches, chron, spots, allies, flags, firsts: w.firsts ?? [] }
+  const eve = Object.entries(w.eve ?? {})
+    .filter(([id]) => w.allies[Number(id)])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([id, pts]) => ({ tag: w.allies[Number(id)].tag, pts }))
+  const eveWin = w.eveWin && {
+    tags: w.eveWin.ids.flatMap(id => (w.allies[id] ? [w.allies[id].tag] : [])),
+    until: w.eveWin.until,
+  }
+  return {
+    seats,
+    marches,
+    chron,
+    spots,
+    allies,
+    flags,
+    firsts: w.firsts ?? [],
+    ...(eve.length && { eve }),
+    ...(eveWin && { eveWin }),
+  }
 }
 
 // Mốc lãnh thổ từ ảnh chụp (client tô bản đồ): cùng luật với claimsOf phía server

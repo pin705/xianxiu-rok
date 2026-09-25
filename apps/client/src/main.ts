@@ -27,15 +27,18 @@ async function loadArt() {
     Object.entries(m).map(([k, e]) => {
       e.src = new URL(e.src, base).href
       if (!e.tex) return
+      // chờ load chứ không chờ decode(): trang đang ở tab nền thì Chrome hoãn decode — game không bao giờ mount (trang trắng)
       const img = new Image()
-      img.src = e.src
-      return img.decode().then(
-        () => void (e.img = img),
-        () => {
+      const ready = new Promise<void>(ok => {
+        img.onload = () => ok(void (e.img = img))
+        img.onerror = () => {
           console.warn('art: không mở được', e.src)
           delete m[k]
-        },
-      )
+          ok()
+        }
+      })
+      img.src = e.src
+      return ready
     }),
   )
   setArt(m)

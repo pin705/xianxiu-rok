@@ -1,10 +1,10 @@
 <script lang="ts">
   // Bảng tăng tốc một việc đang chờ (như RoK): đồng hồ còn lại, mọi phù/đan dùng được, mệnh giá nhỏ trước.
   // Mỗi dòng: dùng 1 cái, hoặc "dùng đủ" — số cái vừa đủ xong việc (không phí quá một cái).
-  import { SPEEDUP, SPEEDUP_BIG, bagFamily, jobOf, type JobKind } from '@rok/rules'
+  import { SPEEDUP, SPEEDUP_BIG, bagFamily, jobOf, type Action, type BagId, type JobKind } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { Button, Meter, Sheet } from './ui'
-  import { denom, speedMin, speedsFor } from './bag'
+  import { Button, Card, Meter, Sheet } from './ui'
+  import { denom, speedMin, speedPlan, speedsFor, type SpeedStock } from './bag'
   import { L, clock, progress } from './lib'
   import { useGame } from './game'
 
@@ -30,10 +30,29 @@
   )
   // số cái vừa đủ xong việc, không quá số đang có
   const enough = (ms: number, have: number) => Math.min(have, Math.ceil(left / ms))
-  // xong việc thì tự đóng
-  $effect(() => {
-    if (open && !job) onclose()
-  })
+  // "Dùng vừa đủ": gộp mọi phù / đan, xem trước còn bao lâu
+  const plan = $derived(
+    speedPlan(
+      [
+        ...pills.map(([p, ms]) => ({ id: p, ms, have: game.items[p] ?? 0 })),
+        ...talismans.map(id => ({ id, ms: speedMin(id) * 60_000, have: game.items[id] ?? 0 })),
+      ],
+      left,
+    ),
+  )
+  const nameOf = (x: SpeedStock) =>
+    x.id === 'tuKhi' || x.id === 'daiTuKhi'
+      ? L.pills[x.id].name
+      : `${L.bag.family[bagFamily(x.id as BagId)].name} ${denom(x.id as BagId)}`
+  // đan tăng tốc cũ: thao tác speed; phù trong túi: use
+  const actOf = (x: SpeedStock, n: number): Action => {
+    if (x.id === 'daiTuKhi') return { type: 'speed', job: kind, n, pill: 'daiTuKhi' }
+    if (x.id === 'tuKhi') return { type: 'speed', job: kind, n }
+    return { type: 'use', item: x.id as BagId, n, job: kind }
+  }
+  function useAll() {
+    for (const [x, n] of plan.use) if (!act(actOf(x, n), 'reward')) return
+  }
 </script>
 
 <Sheet {open} {onclose} center title={L.bag.speedTitle} sub={L.jobs[kind]}>
@@ -43,6 +62,20 @@
       <Meter value={progress(job, now)} size="md" />
       <p class="t-small t-soft">{L.bag.speedHint}</p>
       {#if !talismans.length && !pills.length}<p class="t-small t-soft">{L.bag.empty}</p>{/if}
+      {#if plan.use.length}
+        <Card tone="glow">
+          <div class="row">
+            <span class="grow stack" style:--gap="2px"
+              ><b>{L.bag.auto}</b><small class="t-small"
+                >{plan.use.map(([x, n]) => `${nameOf(x)} ×${n}`).join(' · ')} → {plan.rest
+                  ? L.bag.after(clock(plan.rest))
+                  : L.bag.doneNow}</small
+              ></span
+            >
+            <Button variant="gold" size="sm" onclick={useAll}>{L.bag.use}</Button>
+          </div>
+        </Card>
+      {/if}
       <ul class="stack rows">
         {#each pills as [p, ms] (p)}
           {@const have = game.items[p] ?? 0}

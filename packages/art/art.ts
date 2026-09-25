@@ -26,3 +26,9 @@ export function noteArt(key: string, s: Seen) {
   if (!old || s.px > old.px) seen.set(key, s)
 }
 export const artKeys = () => Object.fromEntries(seen)
+
+// ?art=0: tắt tranh (chụp so trước/sau) và mở kho hình vẽ bằng code cho tools/art/export.ts đọc qua globalThis.__art
+// (texture cảnh, canvas da giao diện, key đã nướng) — nguồn để vẽ đè giữ nguyên hình. Chỉ giữ tham chiếu, không tốn gì thêm.
+export const artOff = () => typeof location !== 'undefined' && new URLSearchParams(location.search).get('art') === '0'
+export const dump: { painted?: unknown; skins: Record<string, unknown>; keys: typeof artKeys } = { skins: {}, keys: artKeys }
+if (artOff()) Object.assign(globalThis, { __art: dump })

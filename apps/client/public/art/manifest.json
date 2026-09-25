@@ -1084,32 +1084,16 @@
     "repeat": "stretch"
   },
   "skin:disc-azure": {
-    "src": "skin/skin-disc-azure.webp",
-    "slice": [0, 0, 0, 0],
-    "width": [0, 0, 0, 0],
-    "outset": 0,
-    "repeat": "stretch"
+    "src": "skin/skin-disc-azure.webp"
   },
   "skin:disc-gold": {
-    "src": "skin/skin-disc-gold.webp",
-    "slice": [0, 0, 0, 0],
-    "width": [0, 0, 0, 0],
-    "outset": 0,
-    "repeat": "stretch"
+    "src": "skin/skin-disc-gold.webp"
   },
   "skin:disc-paper": {
-    "src": "skin/skin-disc-paper.webp",
-    "slice": [0, 0, 0, 0],
-    "width": [0, 0, 0, 0],
-    "outset": 0,
-    "repeat": "stretch"
+    "src": "skin/skin-disc-paper.webp"
   },
   "skin:disc-silk": {
-    "src": "skin/skin-disc-silk.webp",
-    "slice": [0, 0, 0, 0],
-    "width": [0, 0, 0, 0],
-    "outset": 0,
-    "repeat": "stretch"
+    "src": "skin/skin-disc-silk.webp"
   },
   "skin:field": {
     "src": "skin/skin-field.webp",
@@ -1161,11 +1145,7 @@
     "repeat": "stretch"
   },
   "skin:knob": {
-    "src": "skin/skin-knob.webp",
-    "slice": [0, 0, 0, 0],
-    "width": [0, 0, 0, 0],
-    "outset": 0,
-    "repeat": "stretch"
+    "src": "skin/skin-knob.webp"
   },
   "skin:plate": {
     "src": "skin/skin-plate.webp",
@@ -1210,18 +1190,10 @@
     "repeat": "round"
   },
   "skin:switch": {
-    "src": "skin/skin-switch.webp",
-    "slice": [0, 0, 0, 0],
-    "width": [0, 0, 0, 0],
-    "outset": 0,
-    "repeat": "stretch"
+    "src": "skin/skin-switch.webp"
   },
   "skin:switch-on": {
-    "src": "skin/skin-switch-on.webp",
-    "slice": [0, 0, 0, 0],
-    "width": [0, 0, 0, 0],
-    "outset": 0,
-    "repeat": "stretch"
+    "src": "skin/skin-switch-on.webp"
   },
   "skin:tag": {
     "src": "skin/skin-tag.webp",
