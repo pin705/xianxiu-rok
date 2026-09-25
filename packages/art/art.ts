@@ -9,6 +9,7 @@ export type ArtEntry = {
   outset?: number // phần tràn ra ngoài hộp (px CSS)
   repeat?: 'stretch' | 'round'
   fill?: boolean // lòng skin có vẽ (mặc định có)
+  tex?: boolean // texture cảnh (Pixi): bộ nạp giải mã sẵn trước khi vào game; còn lại (icon, chân dung, da) trình duyệt tự tải khi cần
   img?: HTMLImageElement // ảnh đã giải mã sẵn (bộ nạp của client) — texture Pixi cần ảnh có ngay, không chờ
 }
 export type ArtManifest = Record<string, ArtEntry>

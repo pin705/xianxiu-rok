@@ -863,7 +863,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | A1 | Lập liên minh (Create Alliance) | ✅ lập tầng 10, 20k mỗi loại; thiếu cờ/huy hiệu riêng | P2 | S–M |
 | A2 | Hồ sơ minh, đổi tên/tag/cờ | 🟡 có bố cáo; không đổi tên/tag | P2 | S |
 | A3 | Gia nhập tự do/duyệt, mời, passlist/blocklist | ✅ cửa minh vào tự do / duyệt đơn, mời từ hồ sơ; thiếu passlist/blocklist | P1 | S–M |
-| A4 | Sĩ số tối đa tăng dần | 🟡 cố định 30 | P2 | S |
+| A4 | Sĩ số tối đa tăng dần | ✅ 30 → 40 theo Hộ Minh Đại Trận | P2 | S |
 | A5 | Cấp bậc R1–R5 và quyền | ✅ R1 Ngoại môn … R4 Đường chủ, R5 Minh chủ (25/09); dấu bản đồ từ R3 | P1 | S |
 | A6 | Chức vị officer có buff | ✅ 4 chức cho R4 (25/09) | P2 | S |
 | A7 | Rời/đá/tự chuyển giao/giải tán | ✅ minh chủ vắng 7 ngày: đường chủ nhận thay (25/09); thẻ thành viên ghi số ngày vắng | P1 | S |
@@ -901,28 +901,28 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | H6 | Di cư, bảng tuyển mộ | ⛔ di cư; bảng tuyển trong giới làm được | P2 | S |
 | H7 | Bảo vệ và dịch chuyển tân thủ | ✅ khiên 72 giờ, PvP từ tầng 6, sàn lực chiến 50% | — | — |
 | I1 | Điều kiện tấn công thành | ✅ | — | — |
-| I2 | Khiên chủ động, War Frenzy | 🟡 khiên tự bật khi thua; không có vật phẩm/sát khí | P1 | S |
+| I2 | Khiên chủ động, War Frenzy | ✅ Hộ Sơn Phù 8–72 giờ + sát khí 30 phút | P1 | S |
 | I3 | Đốt thành, độ bền tường, dời thành | ❌ | P2 | M |
 | I4 | Cướp tài nguyên và kho bảo hộ | ✅ | — | — |
 | I5 | Do thám, chống do thám | 🟡 xem miễn phí trong danh sách đối thủ | P1 | S–M |
-| I6 | Cảnh báo bị tấn công | 🟡 thấy hành quân trên bản đồ; push chỉ sau trận | **P0** | S |
+| I6 | Cảnh báo bị tấn công | ✅ Tháp canh: thẻ son mọi tab + Web Push khi địch xuất quân | **P0** | S |
 | I7 | Phản công, phản kết trận | ✅ báo thù 24 giờ; thiếu phản kết trận | P2 | M |
 | I8 | Thương nặng/tử trận, bệnh viện | ✅ Đan phòng | — | — |
 | I9 | Zeroing | ⛔ chủ ý chặn | — | — |
 | I10 | Acc phụ nuôi acc chính | ⛔ chủ ý chặn | — | — |
-| I11 | Kill points, honor, lực chiến | 🟡 lực chiến, Elo, điểm mùa; thiếu chiến công | P1 | S |
+| I11 | Kill points, honor, lực chiến | ✅ chiến công (bảng xếp hạng), Công Huân, lực chiến, Elo | P1 | S |
 | I12 | KvK, xếp hạng vương quốc | ⛔ thay bằng mùa 49 ngày | — | — |
-| J1 | Động viên liên minh (Mobilization) | ❌ | **P0** | M |
-| J2 | Ark of Osiris, Osiris League (khán giả, cược) | ❌ | P1 | L |
+| J1 | Động viên liên minh (Mobilization) | ✅ Minh vụ đường | **P0** | M |
+| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến (minh đấu minh mỗi tuần); chưa có chiến trường, khán giả | P1 | L |
 | J3 | Karuak Ceremony / Trial | 🟡 có Tháp, yêu vương | P2 | S |
 | J4 | Ceroli Crisis/Assault (tổ đội PvE) | ❌ | P2 | L |
 | J5 | Shadow Legion (ma triều công sơn) | ✅ | P1 | M |
-| J6 | Canyon Clash / Sunset Canyon | 🟡 có PvP bất đồng bộ | P2 | M |
+| J6 | Canyon Clash / Sunset Canyon | ✅ Luận Kiếm Minh Chiến + Luận Kiếm Đài | P2 | M |
 | J7 | Champions of Olympia 5v5 | ⛔ thời gian thực | — | — |
-| J8 | Đố vui minh, Ascension, tiệc lễ | ❌ | P2 | S–M |
-| J9 | Kết trận pháo đài hằng ngày (tạo quà minh) | 🟡 có yêu vương; thiếu mục tiêu nhỏ hằng ngày | **P0** | S–M |
-| J10 | MGE | 🟡 có sự kiện tuần | P2 | S |
-| K1 | Lịch minh, đăng ký, phân vai officer | 🟡 có nhịp linh triều/mùa; chưa có lịch minh | P1 | S |
+| J8 | Đố vui minh, Ascension, tiệc lễ | 🟡 Vấn Đạo Đài (đố vui cá nhân); chưa có đố vui minh | P2 | S–M |
+| J9 | Kết trận pháo đài hằng ngày (tạo quà minh) | ✅ yêu trại cấp 1 (hồi 8 giờ) → Minh lễ cả minh | **P0** | S–M |
+| J10 | MGE | ✅ Tông Môn Tranh Bá (6 giai đoạn) | P2 | S |
+| K1 | Lịch minh, đăng ký, phân vai officer | 🟡 minh ghi danh minh chiến / ma triều, chức vị đường chủ; chưa có lịch minh | P1 | S |
 | K2 | Địa vị, danh hiệu, tag | 🟡 | P2 | S |
 
 **Gợi ý thứ tự làm (P0, rẻ trước):**

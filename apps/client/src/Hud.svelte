@@ -13,6 +13,7 @@
     count,
     achCount,
     dailyReady,
+    sideReady,
     dayOf,
     festReady,
     tavernFree,
@@ -91,7 +92,7 @@
     bg: '#78a6c2',
     mark: '#b8382a',
   }
-  const ready = $derived(dailyReady(game) + festReady(game, now, 'daily'))
+  const ready = $derived(dailyReady(game) + festReady(game, now, 'daily') + sideReady(game))
   const fests = $derived(festReady(game, now))
   // chấm trên tab: Bảo khố = thành tựu chờ nhận; Môn hạ còn chấm khi Chiêu Hiền Đài có lượt miễn phí
   const tavernReady = $derived(

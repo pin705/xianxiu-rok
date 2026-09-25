@@ -7,6 +7,7 @@
     EVENT_REWARDS,
     FESTS,
     RESOURCES,
+    SIDE_LINES,
     WEEKLY,
     WEEKLY_BONUS,
     advance,
@@ -17,9 +18,12 @@
     isWeekend,
     nextDay,
     nextWeek,
+    sideAt,
+    sideProgress,
     weeklyDone,
     weeklyReward,
     type PillId,
+    type SideGoal,
     type State,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
@@ -40,6 +44,8 @@
   // quà có phần theo tầng Chủ điện (hallRes): hiện số thật người chơi sẽ nhận
   const withHall = (res: Partial<Record<(typeof RESOURCES)[number], number>> = {}, per = 0) =>
     Object.fromEntries(RESOURCES.map(r => [r, (res[r] ?? 0) + per * s.levels.chuDien]))
+  const sideText = (q: SideGoal) =>
+    q.line === 'linhMach' ? L.side.goal.linhMach(L.b[q.id!].name, q.n) : L.side.goal[q.line](q.n)
 </script>
 
 {#snippet task(
@@ -186,6 +192,43 @@
     </div>
   {/if}
   {@render nhat()}
+  <!-- Tông vụ (Side Quests của RoK): 4 dòng song song, mỗi dòng một việc; nhận xong hiện việc kế -->
+  <Section title={L.side.title}>
+    <p class="t-small t-soft">{L.side.hint}</p>
+    <ul class="stack mt-2">
+      {#each SIDE_LINES as line, i (line)}
+        {@const q = sideAt(s, i)}
+        {@const have = q ? sideProgress(s, q) : 0}
+        <li>
+          <Card tone={q && have >= q.n ? 'glow' : 'paper'}>
+            <div class="row">
+              <span class="grow stack" style:--gap="4px">
+                <small class="t-tiny t-gold t-strong">{L.side.lines[line]}</small>
+                {#if q}
+                  <b>{sideText(q)}</b>
+                  <Meter value={Math.min(have, q.n) / q.n} tone="gold" size="sm" />
+                  <span class="row t-small"
+                    ><b class="t-num">{num(Math.min(have, q.n))}/{num(q.n)}</b><Bag
+                      items={q.reward.items}
+                      size="sm"
+                    /></span
+                  >
+                {:else}
+                  <b class="t-good">{L.side.done}</b>
+                {/if}
+              </span>
+              {#if q}<Button
+                  variant="gold"
+                  size="sm"
+                  disabled={have < q.n}
+                  onclick={() => act({ type: 'side', line: i }, 'reward')}>{L.quest.claim}</Button
+                >{/if}
+            </div>
+          </Card>
+        </li>
+      {/each}
+    </ul>
+  </Section>
   {#if game.levels.chuDien >= DAILY_HALL}
     <!-- Sự kiện tuần: chủ đề đổi theo tuần, đủ mốc nhận quà, top của giới nhận thư lúc hết tuần -->
     {@const theme = themeFor(game, game.ev.week)}

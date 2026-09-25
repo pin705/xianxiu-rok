@@ -15,7 +15,8 @@ document.title = L.game
 addEventListener('pointerdown', () => isMusicOn() && startMusic(), { once: true })
 
 // Tranh vẽ tay thay hình vẽ bằng code: public/art/manifest.json (key → ảnh, xem @rok/art art.ts); thiếu file thì vẽ code như cũ.
-// ?art=0 tắt để chụp so sánh trước/sau. ponytail: giải mã sẵn mọi ảnh lúc mở game — vài trăm ảnh thì chuyển sang nạp theo cảnh.
+// ?art=0 tắt để chụp so sánh trước/sau. Chỉ giải mã sẵn texture cảnh (tex) — Pixi cần ảnh có ngay; ảnh HTML/CSS trình duyệt tự tải.
+// ponytail: mọi texture nạp một lượt lúc mở game — nhiều cảnh nặng thì chuyển sang nạp theo cảnh.
 async function loadArt() {
   if (new URLSearchParams(location.search).get('art') === '0') return
   const base = new URL('./art/', location.href)
@@ -25,6 +26,7 @@ async function loadArt() {
   await Promise.all(
     Object.entries(m).map(([k, e]) => {
       e.src = new URL(e.src, base).href
+      if (!e.tex) return
       const img = new Image()
       img.src = e.src
       return img.decode().then(

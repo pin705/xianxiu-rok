@@ -1230,6 +1230,40 @@ export const QUIZ_GIFTS: Reward[] = [
   { items: { thoiQuang60: 1, kinhThu2k: 1 } },
   { items: { thoiQuang60: 1, kinhThu2k: 1, nganDuyen: 1 } },
 ]
+// Tông vụ (Side Quests của RoK): 4 dòng song song — công trình tài nguyên, công pháp, thắng trận, tuyển đệ tử — mỗi dòng hiện
+// một việc (công thức ở sect/side.ts), nhận xong thì hiện việc kế; quà là phù tăng tốc / kinh thư vào túi, bậc theo việc thứ mấy
+export const SIDE_LINES = ['linhMach', 'truyenCong', 'hangYeu', 'luyenBinh'] as const
+export type SideLine = (typeof SIDE_LINES)[number]
+export const SIDE_GIFTS: Record<SideLine, Reward[]> = {
+  linhMach: [
+    { items: { loBan15: 1 } },
+    { items: { loBan60: 1 } },
+    { items: { loBan180: 1 } },
+    { items: { loBan480: 1 } },
+    { items: { loBan480: 2 } },
+  ],
+  truyenCong: [
+    { items: { ngoDao15: 1 } },
+    { items: { ngoDao60: 1 } },
+    { items: { ngoDao180: 1 } },
+    { items: { ngoDao480: 1 } },
+    { items: { ngoDao480: 2 } },
+  ],
+  hangYeu: [
+    { items: { kinhThu500: 1 } },
+    { items: { kinhThu2k: 1 } },
+    { items: { kinhThu2k: 2 } },
+    { items: { kinhThu8k: 1 } },
+    { items: { kinhThu8k: 2 } },
+  ],
+  luyenBinh: [
+    { items: { luyenBinh15: 1 } },
+    { items: { luyenBinh60: 1 } },
+    { items: { luyenBinh180: 1 } },
+    { items: { luyenBinh480: 1 } },
+    { items: { luyenBinh480: 2 } },
+  ],
+}
 // Quà gắn email (tài khoản không mất khi đổi máy): một lần, server gửi qua thư ngay khi gắn
 export const LINK_GIFT: Reward = { items: { kimDuyen: 1, thoiQuang60: 2, hoSon8: 1 } }
 // Minh lễ (Alliance Gifts): người trong minh hạ yêu vương → cả minh nhận quà qua thư, minh được GIFT_PTS điểm quà theo cấp

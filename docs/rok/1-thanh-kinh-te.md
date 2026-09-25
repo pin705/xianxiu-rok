@@ -934,26 +934,26 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | A1b | Điều kiện phụ mỗi cấp CH (Tường N−1 + 1 nhà xoay vòng) | ❌ | P1 | S |
 | A1c | Thưởng mỗi cấp CH, "Era Breakthrough" | 🟡 qua nhiệm vụ chính tuyến | P1 | S |
 | A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới; 🟡 chưa có hình tầng 16–25 | P2 | S–M |
-| A3 | Văn minh (kiến trúc + buff) | ❌ | P2 | M |
+| A3 | Văn minh (kiến trúc + buff) | 🟡 Đạo thống (buff); chưa có kiến trúc riêng | P2 | M |
 | B0 | Bong bóng chạm thu tài nguyên | 🟡 tự cộng vào kho, chỉ có hiệu ứng | P1 | M |
 | B1–B4 | 4 bản mỗi công trình tài nguyên | 🟡 1 bản mỗi loại | P2 | M |
 | B4 | Tài nguyên mở muộn (đá CH 4, vàng CH 10) | ❌ 3 loại có từ đầu | P2 | L |
-| B5 | Nhà kho: bảo hộ lượng tuyệt đối theo cấp | 🟡 bảo hộ 30 % cố định | P1 | S |
-| B6 | Trạm giao thương (gửi đồng minh, thuế 35→8 %) | ❌ (có Chợ, Thương hội) | P1 | M |
+| B5 | Nhà kho: bảo hộ lượng tuyệt đối theo cấp | 🟡 bảo hộ 45 % sức chứa, phẳng | P1 | S |
+| B6 | Trạm giao thương (gửi đồng minh, thuế 35→8 %) | ✅ Vận Linh Trận | P1 | M |
 | C1 | Tường: độ bền, tướng thủ | 🟡 Hộ Sơn Đại Trận (+thủ/máu, trấn thủ) | P1 | M |
-| C2 | Tháp canh: bắn địch, báo trước | ❌ | P1 | S |
+| C2 | Tháp canh: bắn địch, báo trước | 🟡 Tháp canh báo trước (thẻ son + Web Push); chưa bắn địch | P1 | S |
 | C3–C6 | 4 trại lính riêng, hàng song song | ✅ gộp 1 Diễn võ trường | P2 | M |
 | C7 | 4 bệnh viện, viện đầy thì chết | ✅ Đan phòng (1 nhà) | — | — |
 | C8 | Lâu đài: sức chứa kết trận | 🟡 kết trận 8 đội cố định | P2 | S |
-| C9 | Trại trinh sát, làng/hang | ❌ (file 3) | P2 | M |
+| C9 | Trại trinh sát, làng/hang | ✅ linh điểu + thôn trang / động phủ (mê vụ) | P2 | M |
 | D1 | Học viện: tốc nghiên cứu, cây kinh tế | ✅ Tàng Kinh Các; 🟡 thiếu tốc nghiên cứu | P2 | S |
-| D2 | Trung tâm liên minh: 5→30 lượt giúp, viện binh | 🟡 10 lượt cố định, không công trình | P1 | S |
-| D3 | Tửu quán: rương miễn phí theo giờ | ❌ (bản trả tiền ⛔) | P1 | M |
-| D4/F1 | Thợ xây thứ 2 (thuê 2 ngày / VIP 6) | ❌ 1 Tạp dịch | P1 | M |
+| D2 | Trung tâm liên minh: 5→30 lượt giúp, viện binh | 🟡 10 → 15 lượt theo Hộ Minh Đại Trận, không công trình | P1 | S |
+| D3 | Tửu quán: rương miễn phí theo giờ | ✅ Chiêu Hiền Đài (thiếp bạc 6 giờ, vàng 48 giờ; không bán) | P1 | M |
+| D4/F1 | Thợ xây thứ 2 (thuê 2 ngày / VIP 6) | ✅ Tạp Dịch Lệnh (thuê 48 giờ, không vĩnh viễn) | P1 | M |
 | D5 | Lò rèn, nguyên liệu | ✅ Luyện Khí Phòng tất định (chủ đích) | — | — |
 | D6/I1 | Cửa hàng VIP (làm mới tuần) | ❌ | P1 | M |
-| D7/I4 | Thương nhân bí ẩn | ❌ | P1 | S–M |
-| D8 | Đài kỷ niệm: mốc chung cả vương quốc | 🟡 biên niên giới, pha mùa | P1 | M |
+| D7/I4 | Thương nhân bí ẩn | ✅ Thương nhân vân du | P1 | S–M |
+| D8 | Đài kỷ niệm: mốc chung cả vương quốc | ✅ Thiên Đạo Biên Niên (12 chương, quà cả giới) | P1 | M |
 | D9 | Lyceum (câu đố) | ✅ Vấn Đạo Đài | P2 | M |
 | D10 | Bảng tin | 🟡 thư admin | P2 | S |
 | D11 | State Forum (armaments) | ❌ (file 2) | P2 | L |
@@ -963,16 +963,16 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | E6 | Không upkeep quân | ✅ | — | — |
 | E7 | Kho không trần, túi đồ an toàn | 🟡 kho có trần (chủ đích); ✅ túi an toàn | P1 | S |
 | E8 | Thu thập trên bản đồ | ✅ mỏ, linh mạch, linh triều (P3) | — | — |
-| F3 | Giúp đỡ trả điểm cho người giúp | ❌ | P1 | S |
+| F3 | Giúp đỡ trả điểm cho người giúp | ✅ cống hiến (trần 250/ngày từ giúp) | P1 | S |
 | F4 | Tăng tốc chung/riêng, dùng từ việc đang chạy | ✅ | — | — |
 | F5 | Hoàn thành ngay bằng gem | ❌ ⛔ (chỉ bản có trần) | P2 | S |
-| F6 | Miễn phí khi còn < N phút | ❌ (RoK nhiều khả năng không có) | P2 | S |
-| F7 | Quick Replenish (bù bằng nang) | ❌ | P1 | S |
-| G1 | Cấp VIP 0–19 + SVIP | ❌ (đề xuất "Hương Hỏa" không bán) | P1 | M |
-| G2 | Điểm danh chuỗi 40→200/ngày | 🟡 Thất Nhật Lễ 7 ngày | P1 | S |
-| G3 | Rương VIP hằng ngày (tượng từ VIP 10) | 🟡 rương nhiệm vụ ngày/tuần | P1 | S |
+| F6 | Miễn phí khi còn < N phút | ✅ Hương Hỏa: xong miễn phí việc còn ≤ 1–8 phút | P2 | S |
+| F7 | Quick Replenish (bù bằng nang) | ✅ bù tài nguyên thiếu một chạm | P1 | S |
+| G1 | Cấp VIP 0–19 + SVIP | ✅ Hương Hỏa 12 cấp (không bán) | P1 | M |
+| G2 | Điểm danh chuỗi 40→200/ngày | ✅ Hương Hỏa 40→200 điểm/ngày theo chuỗi | P1 | S |
+| G3 | Rương VIP hằng ngày (tượng từ VIP 10) | ✅ lễ vật Hương Hỏa mỗi ngày (theo cấp) | P1 | S |
 | G4 | Rương đặc quyền mỗi cấp | ❌ | P2 | S |
-| G5 | Buff VIP vĩnh viễn | ❌ | P1 | M |
+| G5 | Buff VIP vĩnh viễn | ✅ tăng ích Hương Hỏa theo cấp (có trần) | P1 | M |
 | G6 | VIP 19, SVIP, SVIP shop | ❌ | P2 | M |
 | H0 | Túi đồ, tab, dùng nhiều | ✅ | — | — |
 | H1–H2 | Tăng tốc chung + 4 loại riêng | ✅ (5 phút → 24 giờ) | — | — |
@@ -983,40 +983,40 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H8 | Mở rộng quân | ❌ | P2 | S |
 | H9 | Khiên 8 giờ/24 giờ/3 ngày | ✅ Hộ Sơn Phù 8/24/72 giờ | — | — |
 | H10 | Chống do thám | ❌ | P2 | S |
-| H11 | 4 loại dịch chuyển | ❌ | P2 | M |
-| H12 | Chìa Tửu quán | ❌ | P1 | S |
+| H11 | 4 loại dịch chuyển | 🟡 dời núi tân thủ + dời vào lãnh thổ minh; chưa có phù dịch chuyển | P2 | M |
+| H12 | Chìa Tửu quán | ✅ Ngân / Kim Duyên Phù | P1 | S |
 | H13 | Sách kinh nghiệm | ✅ Tâm Đắc Kinh Thư | — | — |
-| H14 | Tượng tướng, Starlight | ❌ (file 2) | P2 | L |
+| H14 | Tượng tướng, Starlight | 🟡 tín vật trưởng lão (thu nhận, nâng sao); chưa có vạn năng | P2 | L |
 | H15 | Nguyên liệu, bản vẽ | ❌ chủ đích (file 2) | P2 | L |
 | H16 | Vật phẩm nâng nhà đặc biệt (sách, tên, Blueprint) | ❌ | P2 | S |
 | H17 | Vật phẩm điểm VIP | ❌ | P1 | S |
 | H18 | Hồi AP | ❌ (không có AP) | — | — |
-| H19 | Thuê thợ 2 ngày | ❌ | P1 | S |
+| H19 | Thuê thợ 2 ngày | ✅ Tạp Dịch Lệnh 48 giờ | P1 | S |
 | H20 | Bản đồ xoá sương | ❌ (file 3) | P2 | — |
 | H21 | Hộ chiếu di cư | ⛔ | — | — |
-| H22 | Đổi văn minh | ❌ | P2 | — |
+| H22 | Đổi văn minh | ✅ cải tu đạo thống (7 ngày một lần) | P2 | — |
 | H23 | Đổi tên, khung hồ sơ | ❌ | P2 | S |
-| H24 | Coin sự kiện | 🟡 điểm lễ hội | P2 | S |
+| H24 | Coin sự kiện | ✅ Tông Môn Lệnh, lệnh bài Danh Môn Tuần Lễ | P2 | S |
 | I2 | SVIP shop (đồ ngắm) | ❌ | P2 | M |
-| I3 | Cửa hàng liên minh + điểm cá nhân + Reclaim | ❌ | P1 | M |
-| I5 | Cửa hàng viễn chinh | 🟡 tháp/bí cảnh chưa có tiền tệ | P1 | S–M |
-| I6 | Cửa hàng Sunset Canyon | ❌ (file 6) | P2 | — |
-| I7 | Cửa hàng/tiền tệ KvK | 🟡 điểm mùa (file 6) | P2 | — |
-| I8 | Cửa hàng sự kiện | 🟡 quà theo mốc điểm | P2 | S |
+| I3 | Cửa hàng liên minh + điểm cá nhân + Reclaim | ✅ Cống Hiến Các (cống hiến + Minh khố); chưa có Reclaim | P1 | M |
+| I5 | Cửa hàng viễn chinh | 🟡 tháp/bí cảnh + rương ngày Tĩnh tọa ngộ đạo; chưa có tiền tệ | P1 | S–M |
+| I6 | Cửa hàng Sunset Canyon | ✅ Luận Kiếm Thương Điếm (Kiếm Ý) | P2 | — |
+| I7 | Cửa hàng/tiền tệ KvK | 🟡 điểm mùa, Công Huân; chưa có cửa hàng mùa | P2 | — |
+| I8 | Cửa hàng sự kiện | ✅ Tông Lệnh Bảo Khố, Danh Môn Tuần Lễ (đổi lệnh bài) | P2 | S |
 | I9 | Gói nạp (Growth Fund, gem 30 ngày…) | ❌ (P4) | P1 | L |
 | I10 | Mua vật phẩm bằng gem | ❌ ⛔ nếu bán sức mạnh | — | — |
-| J1 | Bảng buff thành | 🟡 buff có, chưa có bảng tổng | P2 | S |
+| J1 | Bảng buff thành | ✅ dải tăng ích (bảng từng nguồn, hạn) | P2 | S |
 | J2 | Bảo hộ tân thủ | ✅ 72 giờ | — | — |
 | J3 | Bị cướp theo sức mang | ✅ | — | — |
 | J4 | Thành cháy, độ bền tụt | ❌ | P1 | M |
 | J5 | Bị buộc dịch chuyển | ❌ | P2 | M |
-| J6 | War Frenzy (khoá khiên/dịch chuyển sau khi đánh) | 🟡 mất khiên khi cướp, chưa khoá bật lại | P1 | S |
-| J7 | Cảnh báo đội địch đang tới | ❌ | P1 | S |
+| J6 | War Frenzy (khoá khiên/dịch chuyển sau khi đánh) | ✅ sát khí (cướp xong 30 phút không bật Hộ Sơn Phù) | P1 | S |
+| J7 | Cảnh báo đội địch đang tới | ✅ Tháp canh (thẻ son mọi tab + Web Push) | P1 | S |
 | K1 | Sửa bố cục thành | ❌ | P2 | L |
 | K2 | Đồ trang trí | ❌ | P2 | M |
 | K3 | Skin thành (có loại có buff) | ❌ (P4, không buff) | P2 | M |
 | K4 | Hiệu ứng thành/dịch chuyển/hành quân | ❌ | P2 | S–M |
-| K5 | Danh hiệu vương quốc có buff | 🟡 danh hiệu phi thăng (file 4) | P2 | S |
+| K5 | Danh hiệu vương quốc có buff | ✅ sắc phong Giới Chủ (4 phúc / 4 hoạ) | P2 | S |
 | L | Gems: nguồn miễn phí, chỗ tiêu, More Than Gems | ❌ (Tiên ngọc P4) | P1 | L |
 
 ### 3.1 Năm khoảng cách lớn nhất (đề xuất thứ tự làm)

@@ -13,35 +13,48 @@ import {
   TECH_IDS,
   TOWER,
   jobOf,
+  type BuildingId,
+  type ItemId,
+  type Items,
   type Report,
   type State,
 } from '@rok/rules'
-import { L, TABS, defended, read, reportName, write } from './lib'
+import type { Emblem, IconName, MedalTone } from '@rok/art'
+import { EMBLEM, L, TABS, defended, read, reportName, write, type Tab } from './lib'
+import { social } from './social.svelte'
 
 export type Note = { text: string; report?: Report; bad?: boolean }
 
-// Chủ điện lên tầng n: những gì vừa mở (UX.md mục 4 — mở dần theo tầng)
-export function unlocked(n: number): Note[] {
-  const opened = [
-    ...IDS.filter(id => id !== 'chuDien' && BUILDINGS[id].unlock === n).map(id => L.b[id].name),
-    ...TABS.filter(t => t.unlock === n).map(t => L.tabs[t.id]),
-    ...(n === MAP_HALL ? [L.map.title] : []),
-    ...SECTS.flatMap((d, i) => (d.hall === n ? [L.sects[i].name] : [])),
-    ...REALMS.flatMap((d, i) => (d.hall === n ? [L.realms[i].name] : [])),
-    ...(n === TOWER.hall ? [L.tower.name] : []),
-    ...(n === TAVERN_HALL ? [L.tavern.title] : []),
-    ...(n === CHAT_HALL ? [`${L.chat.world} (chat)`] : []),
-    ...(n === PVP_HALL ? [L.pvp.title, L.arena.title] : []),
-    ...(n === ALLY_HALL ? [L.ally.found] : []),
+// Chủ điện lên tầng n: những gì vừa mở (UX.md mục 4 — mở dần theo tầng) — màn Mở khoá vẽ từng cái (tranh công trình, huy
+// hiệu điểm đánh, hay icon) và bấm là tới: công trình mở bảng công trình, còn lại chuyển tab
+// b: công trình (tranh) · tab: chỉ tab thì vẽ icon tab · emblem: huy hiệu điểm đánh · icon: icon thao tác
+export type Unlock = { name: string; b?: BuildingId; tab?: Tab; emblem?: [Emblem, MedalTone]; icon?: IconName }
+export function unlockList(n: number): Unlock[] {
+  const map = (name: string, x: Pick<Unlock, 'emblem' | 'icon'>): Unlock => ({ name, tab: 'banDo', ...x })
+  const list: Unlock[] = [
+    ...IDS.filter(id => id !== 'chuDien' && BUILDINGS[id].unlock === n).map(id => ({ name: L.b[id].name, b: id })),
+    ...TABS.filter(t => t.unlock === n).map(t => ({ name: L.tabs[t.id], tab: t.id })),
+    ...(n === MAP_HALL ? [map(L.map.title, { icon: 'globe' })] : []),
+    ...SECTS.flatMap((d, i) => (d.hall === n ? [map(L.sects[i].name, { emblem: [EMBLEM.sect[i], 'sect'] })] : [])),
+    ...REALMS.flatMap((d, i) => (d.hall === n ? [map(L.realms[i].name, { emblem: [EMBLEM.realm[i], 'realm'] })] : [])),
+    ...(n === TOWER.hall ? [map(L.tower.name, { emblem: ['tower', 'tower'] })] : []),
+    ...(n === TAVERN_HALL ? [{ name: L.tavern.title, tab: 'monHa' as const, icon: 'star' as const }] : []),
+    ...(n === CHAT_HALL ? [map(`${L.chat.world} (chat)`, { icon: 'mail' })] : []),
+    ...(n === PVP_HALL ? [map(L.pvp.title, { icon: 'swords' }), map(L.arena.title, { icon: 'rank' })] : []),
+    ...(n === ALLY_HALL ? [{ name: L.ally.found, tab: 'tienMinh' as const, icon: 'people' as const }] : []),
   ]
-  return opened.length ? [{ text: L.unlocked([...new Set(opened)].join(', ')) }] : []
+  return list.filter((u, k) => list.findIndex(x => x.name === u.name) === k)
+}
+export function unlocked(n: number): Note[] {
+  const names = unlockList(n).map(u => u.name)
+  return names.length ? [{ text: L.unlocked(names.join(', ')) }] : []
 }
 
 // Công trình vừa lên tầng (up), và các dòng báo theo thứ tự: mở khoá, chiến báo mới (khi reports; trừ skip — trận
 // người chơi đang xem tận mắt), thư mới, việc xong
 export function changes(prev: State, next: State, reports: boolean, skip?: Report) {
   const up = IDS.filter(id => next.levels[id] > prev.levels[id])
-  const notes: Note[] = up.includes('chuDien') ? unlocked(next.levels.chuDien) : []
+  const notes: Note[] = []
   if (reports)
     for (const r of next.reports.filter(r => r.id >= prev.nextId && r !== skip))
       notes.push({ text: r.def ? defended(r) : L.report.fresh(reportName(r), r.win), report: r, bad: !r.win })
@@ -53,7 +66,23 @@ export function changes(prev: State, next: State, reports: boolean, skip?: Repor
   if (more('brewed') > 0) notes.push({ text: L.away.brewed(more('brewed')) })
   for (const t of TECH_IDS)
     if ((next.tech[t] ?? 0) > (prev.tech[t] ?? 0)) notes.push({ text: L.away.tech(L.techs[t], next.tech[t]!) })
-  return { up, notes }
+  // Chủ điện vừa lên tầng có gì mở: App mở màn Mở khoá thay vì một dòng báo
+  const hall = up.includes('chuDien') && unlockList(next.levels.chuDien).length ? next.levels.chuDien : 0
+  const items = Object.fromEntries(
+    Object.entries(next.items).filter(([id, n]) => (n ?? 0) > (prev.items[id as ItemId] ?? 0)),
+  ) as Items
+  for (const id of Object.keys(items) as ItemId[]) items[id] = next.items[id]! - (prev.items[id] ?? 0)
+  return { up, notes, hall, items }
+}
+// Màn mừng sau khi đổi state: Mở khoá (Chủ điện lên tầng có tính năng mới), dải Tạ lễ (vật phẩm vừa nhận — dồn nếu đang hiện)
+export function reveal(c: { hall: number; items: Items }) {
+  if (c.hall) social.unlock = c.hall
+  const ids = Object.keys(c.items) as ItemId[]
+  if (ids.length)
+    social.gift = {
+      ...social.gift,
+      ...Object.fromEntries(ids.map(id => [id, (social.gift?.[id] ?? 0) + c.items[id]!])),
+    }
 }
 
 // Vừa giao một việc dài (≥ 30 phút): lúc hợp để hỏi bật thông báo đẩy

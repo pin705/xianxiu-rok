@@ -8,6 +8,7 @@
     REVENGE_TIME,
     SECTS,
     count,
+    type BuildingId,
     type ElderId,
     type Report,
     type Skill,
@@ -18,14 +19,23 @@
   import { Bag, Button, Card, Medal, Meter, Stat } from './ui'
   import { Battle } from './world/battle'
   import { cssPerDU, mountScene } from './world/stage'
-  import { EMBLEM, L, LOOK, num, reportName, sfx } from './lib'
+  import { EMBLEM, L, LOOK, num, reportName, sfx, type PanelTab } from './lib'
+  import { verdictOf } from './verdict'
 
   let {
     report,
     onclose,
     onrevenge,
+    onfocus,
     now = 0,
-  }: { report: Report | null; onclose: () => void; onrevenge?: (pid: number) => void; now?: number } = $props()
+  }: {
+    report: Report | null
+    onclose: () => void
+    onrevenge?: (pid: number) => void
+    onfocus?: (id: BuildingId, tab: PanelTab) => void // lối đi khi thua: tuyển, chữa thương, công pháp
+    now?: number
+  } = $props()
+  const verdict = $derived(report && verdictOf(report))
   // bị cướp mà thua, còn trong hạn báo thù
   const revenge = $derived(
     !!report && report.kind === 'pvp' && report.def && !report.win && now < report.at + REVENGE_TIME,
@@ -290,6 +300,20 @@
                   ? L.report.win
                   : L.report.lose}
             </h2>
+            {#if verdict}<p class="center t-small t-strong" class:t-gold={report.win}>{verdict.text}</p>{/if}
+            {#if verdict && !report.win && onfocus && report.kind !== 'drill'}
+              <div class="row wrap center">
+                <Button size="sm" variant="gold" onclick={() => onfocus('dienVoTruong', 'train')}
+                  >{verdict.counter ? L.verdict.recruit(L.units[verdict.counter]) : L.verdict.recruitAny}</Button
+                >
+                {#if count(report.hurt)}<Button size="sm" variant="ghost" onclick={() => onfocus('danPhong', 'alchemy')}
+                    >{L.verdict.heal}</Button
+                  >{/if}
+                <Button size="sm" variant="ghost" onclick={() => onfocus('tangKinhCac', 'library')}
+                  >{L.verdict.study}</Button
+                >
+              </div>
+            {/if}
             {#if retreat}<p class="center t-small t-lore">{L.report.retreat}</p>{/if}
             {#if count(report.hurt) - dead}<Stat label={L.report.hurt}
                 ><Icon name="heal" size={16} />{num(count(report.hurt) - dead)}</Stat

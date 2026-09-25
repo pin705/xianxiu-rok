@@ -679,11 +679,11 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 |---|---|---|---|---|
 | 2.1 | Độ hiếm tướng (4 bậc màu) | ❌ | P1 | S |
 | 2.2 | Chuyên môn / vai trò tướng (15+ nhánh) | 🟡 1 hệ + 1 hành, bị động có vai trò | P1 | M |
-| 2.3 | Nguồn tướng đa dạng (sự kiện, VIP, shop) | 🟡 cột mốc nội dung cố định | P1 | M |
-| 2.4 | Tavern (rương tướng, bảo hiểm) | ❌ cố ý (PLAN §1) | P1 (free) / P2 (bán) | M |
+| 2.3 | Nguồn tướng đa dạng (sự kiện, VIP, shop) | ✅ cột mốc + tín vật Chiêu Hiền Đài (thiếp từ sự kiện, cửa hàng) | P1 | M |
+| 2.4 | Tavern (rương tướng, bảo hiểm) | ✅ Chiêu Hiền Đài (thiếp miễn phí, bảo hiểm thiếp vàng; không bán) | P1 (free) / P2 (bán) | M |
 | 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan | P2 | S |
-| 2.6 | Sao 1–6, tượng sao, may mắn | ❌ | P1 | M |
-| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | ❌ | P1 | M |
+| 2.6 | Sao 1–6, tượng sao, may mắn | ✅ sao 1–6 bằng tín vật (tất định, không may rủi) | P1 | M |
+| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | 🟡 tín vật (thu nhận, nâng sao); chưa nâng công pháp | P1 | M |
 | 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | ✅ chân nguyên (tụ theo lượt + khi mất máu) | P0 | M |
 | 2.9 | Expertise | ❌ | P2 | M |
 | 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | 🟡 8 điểm, 3 nhánh chung, Tẩy Tủy Đan | P1 | L |
@@ -695,14 +695,14 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.16 | Lò rèn: 8 ô, nguyên liệu, bản vẽ, bộ | 🟡 9 pháp bảo tất định, 1 món mỗi trưởng lão | P1 | L |
 | 2.17 | Tinh luyện, thức tỉnh, Iconic I–V | ❌ | P2 | M |
 | 2.18 | Đội hình, Armament, Inscription | ❌ (PLAN §4 để sau) | P2 | L |
-| 2.19 | Lưu cấu hình đội | ❌ | P2 | S |
+| 2.19 | Lưu cấu hình đội | ✅ Trận đồ (3 ô lưu trưởng lão + đệ tử) | P2 | S |
 | 2.20 | Loại quân thứ 4 (công thành) | ❌ | P2 | M |
 | 2.20 | Khắc chế giữa các loại quân | ✅ 3 hệ ×1,3 / ×0,8 | — | — |
-| 2.20 | Tốc độ và tải theo loại quân | ❌ | P1 | S |
+| 2.20 | Tốc độ và tải theo loại quân | ✅ tốc độ + sức mang theo hệ (bản đồ giới) | P1 | S |
 | 2.21 | 5 bậc quân và chỉ số | ✅ (chênh bậc lớn hơn RoK) | — | — |
 | 2.21 | Quân đặc thù theo văn minh | ❌ | P2 | M |
 | 2.22 | Huấn luyện (4 nhà, 4 hàng song song) | 🟡 1 nhà, 1 hàng | P2 | S |
-| 2.23 | Nâng bậc quân | ❌ | P1 | S |
+| 2.23 | Nâng bậc quân | ✅ nâng bậc đệ tử (Diễn võ trường) | P1 | S |
 | 2.24 | Hàng đợi hành quân 1–5 | ✅ theo cảnh giới | — | — |
 | 2.25 | Sức chứa một đội (và vật phẩm mở rộng) | ✅ trận dung theo cấp / sao chủ tướng (bản đồ giới) | P0 | M |
 | 2.26 | Sức mạnh, không upkeep | ✅ | — | — |
@@ -714,16 +714,16 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.32 | Rút lui, điều khiển giữa trận | 🟡 tự rút sau 10 lượt, gọi về đội đóng quân | P1 | M |
 | 2.33 | Kết trận (sức chứa theo Castle, 4 mốc giờ) | ✅ 8 đội, 5/10/30 phút | P1 | S |
 | 2.34 | Đồn trú và tiếp viện | ✅ | P2 | S |
-| 2.35 | Công thành: độ bền tường, cháy, dời thành, khiên | 🟡 Hộ Sơn Đại Trận là bonus, khiên sau thua | P1 | M |
+| 2.35 | Công thành: độ bền tường, cháy, dời thành, khiên | 🟡 Hộ Sơn Đại Trận là bonus, khiên sau thua + Hộ Sơn Phù | P1 | M |
 | 2.36 | Trinh sát | ✅ dò thám làm tròn | P2 | S |
-| 2.37 | Chiến báo chi tiết (tách nguồn sát thương, chia sẻ) | 🟡 có phát lại, thiếu phân tách | P1 | S |
+| 2.37 | Chiến báo chi tiết (tách nguồn sát thương, chia sẻ) | 🟡 phát lại, chi tiết trận, chia sẻ vào chat; chưa tách sát thương theo nguồn | P1 | S |
 | 2.38 | Điểm tiêu diệt (KP) | ✅ sát địch + bảng xếp hạng | P0 | S |
-| 2.39 | Danh dự (KvK) | 🟡 điểm mùa theo phe | P2 | S |
+| 2.39 | Danh dự (KvK) | ✅ Công Huân (điểm cá nhân trong mùa) | P2 | S |
 | 2.40 | Zeroing | ❌ cố ý, khuyên giữ | P2 | M |
-| 2.41 | Man tộc, pháo đài, AP | 🟡 yêu thú, bí cảnh, tháp, không AP | P2 | S |
+| 2.41 | Man tộc, pháo đài, AP | ✅ yêu thú giới, yêu trại, hành lực | P2 | S |
 | 2.42 | Academy — cây Quân sự | 🟡 Tàng Kinh Các 28 môn | P1 | M |
 | 2.43 | Academy — cây Kinh tế | 🟡 | P2 | M |
-| 2.44 | Crystal Tech, công nghệ liên minh | ❌ | P2 | M |
+| 2.44 | Crystal Tech, công nghệ liên minh | 🟡 Hộ Minh Đại Trận (công nghệ minh); chưa có Crystal Tech | P2 | M |
 | 2.45 | Trải nghiệm chiến đấu (thấy trận, điều khiển, bảng điểm) | 🟡 có trình diễn, thiếu điều khiển | P0 | theo mục |
 
 **5 khoảng cách lớn nhất** (ưu tiên cao, khác biệt rõ nhất với cảm giác RoK):

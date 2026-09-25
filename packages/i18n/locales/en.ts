@@ -766,6 +766,19 @@ export const en: Text = {
       'On the world map: sword cultivators march fast · body cultivators march slow but carry more · spell cultivators carry less. An army moves at its slowest type.',
     duo: (lead: string, deputy: string) => `${lead} + ${deputy}`,
   },
+  verdict: {
+    winCounter: (a: string, b: string) => `Won by counter: ${a} beat ${b}`,
+    winBig: 'Overwhelming win — far stronger army',
+    winClean: 'Clean win — few casualties',
+    winHard: 'Hard-won — heavy casualties, heal them',
+    loseCounter: (a: string, b: string, c: string) => `Lost: ${a} are countered by ${b} — bring ${c} (beats ${b})`,
+    loseBig: 'Lost to a far stronger army — train more, upgrade tiers, research',
+    loseClose: 'Narrow loss — a few more troops or another elder would win it',
+    recruit: (u: string) => `Train ${u}`,
+    recruitAny: 'Train disciples',
+    heal: 'Heal',
+    study: 'Research',
+  },
   report: {
     title: 'Reports',
     none: 'No battles yet.',
@@ -1767,6 +1780,12 @@ export const en: Text = {
     enter: 'Enter the sect',
   },
   unlocked: (what: string) => `Unlocked: ${what}`,
+  gift: { title: 'Received' },
+  unlock: {
+    title: (n: number) => `Main Hall level ${n} · Unlocked`,
+    sub: 'Tap one to go there now',
+    go: 'Go ›',
+  },
   guide: {
     title: 'Guide',
     items: [
@@ -1835,6 +1854,18 @@ export const en: Text = {
     activity: (n: number, of: number) => `Activity ${n}/${of}`,
     chest: (n: number) => `${n}-activity chest`,
     pts: (n: number) => `+${n} activity`,
+  },
+  side: {
+    title: 'Side quests',
+    hint: 'Four quest lines at once — claim each as it completes, then the next one appears.',
+    lines: { linhMach: 'Resources', truyenCong: 'Research', hangYeu: 'Battles', luyenBinh: 'Training' },
+    goal: {
+      linhMach: (b: string, n: number) => `${b} to level ${n}`,
+      truyenCong: (n: number) => `${n} research levels in total`,
+      hangYeu: (n: number) => `Win ${n} battles (beasts, realms, tower…)`,
+      luyenBinh: (n: number) => `Train ${n} disciples in total`,
+    },
+    done: 'Line complete',
   },
   weekly: {
     title: 'Weekly tasks',

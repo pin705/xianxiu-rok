@@ -961,51 +961,51 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 
 | Tính năng (RoK → tu tiên) | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|
-| C3 Chuỗi đăng nhập VIP → **Công đức** (điểm danh tăng dần, mở tiện ích) | 🟡 7 quà tân thủ đang làm; ⚠ quà ngày 7 (Như Yên) thường trùng | P0 | S |
+| C3 Chuỗi đăng nhập VIP → **Công đức** (điểm danh tăng dần, mở tiện ích) | ✅ Hương Hỏa (chuỗi 40→200 điểm/ngày, 12 cấp) | P0 | S |
 | A4 Mở khoá theo TTC → Chủ điện / cảnh giới | ✅ | P0 | — |
 | A8 Khiên tân thủ | ✅ 72 giờ | P0 | — |
 | B1 Nhiệm vụ chính | ✅ 71 nhiệm vụ | P0 | — |
 | C6 Kho đầy kéo quay lại | ✅ | P0 | — |
 | C15 Đồng hồ dài, "đặt việc rồi đi" | ✅ + Xuất quan | P0 | — |
 | D8 KvK → mùa giới 49 ngày | ✅ (cách riêng) | P0 | — |
-| B3 Daily Objectives → **Nhật khóa** 100 điểm, 5 hộp | 🟡 4 việc cố định + 1 rương | P1 | S |
-| C7 Rương ngày Expedition → **Tĩnh tọa ngộ đạo** theo tầng tháp / bí cảnh | 🟡 chỉ thưởng lần đầu | P1 | S |
+| B3 Daily Objectives → **Nhật khóa** 100 điểm, 5 hộp | ✅ Nhật Khóa (100 điểm hoạt lực, 5 rương mốc) | P1 | S |
+| C7 Rương ngày Expedition → **Tĩnh tọa ngộ đạo** theo tầng tháp / bí cảnh | ✅ Tĩnh tọa ngộ đạo (rương ngày theo tầng tháp) | P1 | S |
 | A10 Vào liên minh sớm → nhiệm vụ "Bái nhập tiên minh" | ✅ lễ nhập minh (quà lần đầu) | P1 | S |
-| A3 Counselor → Thanh Phong dẫn đường (+ trận mở màn: M) | 🟡 có nhiệm vụ + mũi tên | P1 | S / M |
-| A9 Thợ thứ hai → tạp dịch thứ hai (thuê 2 ngày; vĩnh viễn bằng Công đức) | 🟡 1 hàng, P4 định bán | P1 | S / M |
+| A3 Counselor → Thanh Phong dẫn đường (+ trận mở màn: M) | 🟡 trưởng lão dẫn đường (Mộc Thanh Phong); chưa có trận mở màn | P1 | S / M |
+| A9 Thợ thứ hai → tạp dịch thứ hai (thuê 2 ngày; vĩnh viễn bằng Công đức) | ✅ Tạp Dịch Lệnh (thuê 48 giờ, không vĩnh viễn) | P1 | S / M |
 | C12 Mã quà + quà liên kết email | 🟡 quà gắn email ✅ (25/09); mã quà: thư admin thay tạm | P1 | S |
-| C14 Thông báo đẩy thêm loại + chọn loại | 🟡 3 loại | P1 | S |
-| D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | 🟡 đang làm `tranhBa` | P1 | S |
+| C14 Thông báo đẩy thêm loại + chọn loại | 🟡 4 loại (việc xong, bị cướp + tháp canh, truyền âm, kiếp vân); chưa chọn loại | P1 | S |
+| D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | ✅ Tông Môn Tranh Bá (6 giai đoạn) | P1 | S |
 | D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | ❌ | P1 | S / M |
 | F3 Growth Fund → **Quỹ Tiên Lộ** | ❌ (P4) | P1 | S |
 | F4 Supply Depot → **Nguyệt Lệnh** | ❌ (P4) | P1 | S |
-| B2 Side Quests → **Tông vụ** 4 dòng | ❌ | P1 | S–M |
+| B2 Side Quests → **Tông vụ** 4 dòng | ✅ Tông vụ 4 dòng (trong bảng Nhiệm vụ ngày) | P1 | S–M |
 | A1 Civilizations → **Đạo thống** | ✅ | P1 | M |
-| B4 Achievements → **Công tích bảng** + ấn vẽ tay | 🟡 chỉ thống kê | P1 | M |
-| B6 Monument → **Thiên Đạo Bia** (mục tiêu chung của giới) | 🟡 pha mùa theo giờ | P1 | M |
-| B7 / D10 Lịch theo tuổi vương quốc → **Lịch giới** + trung tâm sự kiện | 🟡 `FestWindow` đang làm, chưa có màn | P1 | M |
-| C1 Tavern → **Chiêu Hiền Đài** (thiếp miễn phí, pity tất định, không bán) | ❌ | P1 | M |
-| C11 Quà / điểm / cửa hàng liên minh → **Cống hiến**, **Minh lễ** | 🟡 chỉ có giúp đỡ | P1 | M |
+| B4 Achievements → **Công tích bảng** + ấn vẽ tay | ✅ Thành tựu 15 chuỗi × 5 bậc có thưởng; chưa có ấn vẽ tay | P1 | M |
+| B6 Monument → **Thiên Đạo Bia** (mục tiêu chung của giới) | ✅ Thiên Đạo Biên Niên (12 chương, quà cả giới); pha mùa vẫn theo ngày | P1 | M |
+| B7 / D10 Lịch theo tuổi vương quốc → **Lịch giới** + trung tâm sự kiện | 🟡 trung tâm sự kiện + lịch 7 ngày tới; chưa có sự kiện theo ngày mùa | P1 | M |
+| C1 Tavern → **Chiêu Hiền Đài** (thiếp miễn phí, pity tất định, không bán) | ✅ Chiêu Hiền Đài | P1 | M |
+| C11 Quà / điểm / cửa hàng liên minh → **Cống hiến**, **Minh lễ** | ✅ cống hiến + Cống Hiến Các + Minh lễ | P1 | M |
 | F1 Gems → Tiên ngọc (chỉ cosmetic / pass / tiện lợi có trần) | ❌ (P4) | P1 | M |
 | F5 Lucerne Scroll / pass → **Tu Tiên Lệnh** | ❌ (kế hoạch) | P1 | M |
 | F12 Cosmetic → Sơn môn cảnh sắc, pháp tướng | ❌ (kế hoạch) | P1 | M |
 | A2 Đổi nền văn minh → Cải tu đạo thống | ✅ (7 ngày một lần) | P2 | S |
 | A5 Quà lên cấp TTC → Đột phá chi lễ | ✅ qua nhiệm vụ | P2 | S |
-| A7 Dịch chuyển tân thủ → vào giới theo mã mời | 🟡 server tự xếp | P2 | S–M |
-| B5 Crusader Achievements → Chiến tích mùa | ❌ | P2 | S |
+| A7 Dịch chuyển tân thủ → vào giới theo mã mời | 🟡 server tự xếp + dời núi tân thủ (trước tầng 8); chưa có mã mời | P2 | S–M |
+| B5 Crusader Achievements → Chiến tích mùa | ✅ Chinh Chiến Công Tích (6 mốc Công Huân) | P2 | S |
 | C4 Cửa hàng VIP → cửa hàng Công đức / cống hiến | ⛔ VIP | P2 | S |
-| C5 Mysterious Merchant → **Vân Du Tán Tu** | ❌ (có Thương hội, chợ) | P2 | S |
+| C5 Mysterious Merchant → **Vân Du Tán Tu** | ✅ Thương nhân vân du | P2 | S |
 | C9 Peerless Scholar → Vấn Đạo Đài | ✅ | P2 | S |
 | C10 Kingdom Newspaper → Giới báo | ✅/🟡 biên niên giới | P2 | S |
 | C13 Power + mốc → mốc thế lực có quà | ✅ / 🟡 | P2 | S |
-| D4 Lohar's Trial → Yêu triều | 🟡 cuối tuần ×1,5, `sanYeu` đang làm | P2 | S |
+| D4 Lohar's Trial → Yêu triều | 🟡 Săn Yêu Lệnh (Chủ nhật) + Luận Võ Liên Hoàn; chưa có yêu đan đổi quà | P2 | S |
 | F11 Quà minh từ nạp → Minh lễ từ cosmetic | ❌ | P2 | S |
 | A6 Thời đại → hình công trình tầng 16–25 | ✅ tới 15 / 🟡 | P2 | M |
-| A11 Khám phá sương mù → Thần thức dò xét | ❌ | P2 | M |
-| C8 Sunset Canyon → Luận Kiếm Đài | 🟡 cướp + Elo | P2 | M |
+| A11 Khám phá sương mù → Thần thức dò xét | ✅ mê vụ + linh điểu + thôn trang / động phủ | P2 | M |
+| C8 Sunset Canyon → Luận Kiếm Đài | ✅ Luận Kiếm Đài | P2 | M |
 | D5 Golden Kingdom → Hư Vô Bí Cảnh | 🟡 tháp | P2 | M |
 | D6 Ceroli Crisis → trấn yêu tổ đội | 🟡 yêu vương | P2 | M |
-| D7 Ark of Osiris → Tiên Minh Luận Chiến (bất đồng bộ) | 🟡 tranh linh mạch | P2 | L |
+| D7 Ark of Osiris → Tiên Minh Luận Chiến (bất đồng bộ) | 🟡 Luận Kiếm Minh Chiến (minh đấu minh mỗi tuần); chưa có chiến trường | P2 | L |
 | A12 Man di + AP | ✅ yêu thú + hồi hang (không thêm AP) | P2 | — |
 | C2 Legendary Tavern | ⛔ gacha | — | — |
 | D2 Wheel of Fortune | ⛔ gacha | — | — |

@@ -72,6 +72,8 @@ async function load(lang: 'vi' | 'en') {
     'Honor',
     'Drill',
     'Quiz',
+    'Unlocks',
+    'GiftStrip',
     'Advisor',
     'Chat',
     'world/WorldView',
@@ -455,8 +457,17 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
           },
           `${label}, ${target.kind} ${target.i}`,
         )
-      for (const report of s.reports as Report[])
-        paint('Replay', { report, onclose: noop }, `${label}, chiến báo ${report.kind} ${report.i}`)
+      const { verdictOf } = await vite.ssrLoadModule('/src/verdict.ts')
+      for (const report of s.reports as Report[]) {
+        paint('Replay', { report, onclose: noop, onfocus: noop }, `${label}, chiến báo ${report.kind} ${report.i}`)
+        // đánh giá một câu: mọi trận trừ độ kiếp, chữ không hỏng; thua vì bị khắc thì gợi ý đúng hệ khắc lại
+        const v = verdictOf(report)
+        assert.equal(!!v, report.kind !== 'trib', `đánh giá ${report.kind}`)
+        if (v) assert.ok(!/undefined|NaN|\[object/.test(v.text), v.text)
+      }
+      const side = (type: string) => ({ level: 1, troops: [{ type, tier: 1, n: 100 }] })
+      const lost = { kind: 'beast', win: false, fights: [{ a: side('kiem'), b: side('the'), rounds: [] }] }
+      assert.equal(verdictOf(lost).counter, 'phap', 'Kiếm tu thua Thể tu → tuyển Pháp tu')
     }
     assert.ok(
       mid.reports.length >= 2 && afterTrib.reports.at(-1)!.fights.length === 3,
@@ -579,6 +590,7 @@ test('môn hạ, bảo khố, nhiệm vụ ngày, cài đặt', async () => {
       paint('Vault', { game: s, now, act, onfocus: noop }, label)
       const daily = paint('Daily', { game: s, now, open: true, onclose: noop, act }, label)
       assert.ok(daily.includes(L.weekly.title) && daily.includes(L.weekly.bonus), `nhiệm vụ tuần phải hiện (${label})`)
+      assert.ok(daily.includes(L.side.title) && daily.includes(L.side.lines.truyenCong), `Tông vụ (${label})`)
       const sat = Date.UTC(2026, 8, 26, 3) // thứ Bảy 10h giờ VN
       assert.equal(
         paint('Daily', { game: s, now: sat, open: true, onclose: noop, act }, `${label}, cuối tuần`).includes(
@@ -811,6 +823,16 @@ test('tiên minh, chat', async () => {
       if (s.levels.chuDien >= 3) assert.ok(quiz.includes(L.quiz.step(1, 5)), 'câu đầu hôm nay')
       assert.equal(L.quiz.q.length, QUIZ_KEY.length, 'mỗi đáp án một câu hỏi')
       social.quiz = false
+      // màn Mở khoá: Chủ điện lên tầng mở tab + bản đồ + chat (tầng 3), Tranh đoạt (tầng 6) — mỗi mục một huy hiệu
+      for (const hall of [3, 6]) {
+        social.unlock = hall
+        const un = paint('Unlocks', { onfocus: noop, ontab: noop }, `${label}, mở khoá tầng ${hall}`)
+        assert.ok(un.includes(L.unlock.title(hall)) && un.includes(L.unlock.go), 'huy hiệu bấm là tới')
+      }
+      social.unlock = 0
+      social.gift = { thoiQuang60: 2, kinhThu500: 1 }
+      assert.ok(paint('GiftStrip', {}, `${label}, Tạ lễ`).includes(L.gift.title), 'dải vật phẩm vừa nhận')
+      social.gift = null
       const sup = paint(
         'Supply',
         {

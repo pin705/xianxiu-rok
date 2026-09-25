@@ -794,15 +794,15 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A2 | Eve of the Crusade | Khai Giới Trảm Tà | ❌ | P1 | M |
 | A3 | Matchmaking, story registration, bỏ phiếu | Thiên Mệnh Chọn Luật (bỏ phiếu luật mùa) | ❌ (liên server ⛔) | P2 | S |
 | A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | ✅ buff theo loại linh mạch + thưởng chiếm lần đầu (25/09) | P1 | S–M |
-| A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 pha theo ngày cứng, biên niên chỉ là nhật ký | **P0** | M |
+| A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 Thiên Đạo Biên Niên 12 chương (hạn theo ngày mùa); chưa mở khoá theo chương | **P0** | M |
 | A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | ✅ Công Huân cá nhân (25/09) + điểm mùa theo phe + chiến công | P1 | S |
 | A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ✅ (25/09) | P1 | S–M |
-| A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | ❌ | P1 | M |
+| A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | 🟡 Chinh Chiến Công Tích (6 mốc Công Huân); chưa có Phi Thăng Tệ, Thiên Môn Thương Điếm | P1 | M |
 | A9 | Hall of Heroes | Anh Linh Điện | ❌ | P2 | S |
 | A10 | Past Glory | Tu Bổ Thiên Môn | ❌ | P1 (trong A5) | S |
-| A11 | Coalition, Camp, Camp Treaty | Minh Ước, Hiệp Ước Thiên Môn | ❌ | P2 | M |
+| A11 | Coalition, Camp, Camp Treaty | Minh Ước, Hiệp Ước Thiên Môn | 🟡 minh ước bất xâm phạm (hai minh); chưa chung kết trận / viện binh | P2 | M |
 | A12 | Crystal Tech, Crystal Mine, Bastions | Linh Tinh Trận Pháp, Ẩn Sĩ Động Phủ | ❌ | P2 | M |
-| A13 | Xếp hạng cuối mùa, Hall of Fame, danh hiệu mùa | Phong Thần Bảng + Lưu Danh Sử Sách | 🟡 top 3 phe × 10 mùa | P1 | S |
+| A13 | Xếp hạng cuối mùa, Hall of Fame, danh hiệu mùa | Phong Thần Bảng + Lưu Danh Sử Sách | 🟡 top 3 phe × 10 mùa + thưởng hạng Công Huân top 10; chưa có danh hiệu mùa | P1 | S |
 | A14 | Migration | — | ⛔ | — | — |
 | A15 | Vacation Permit, Rest Mode | Bế Quan Lệnh | 🟡 Hộ Sơn Phù, khiên | P2 | S |
 | B1 | The Lost Kingdom (Season 1–2) | Tranh Mạch Luật (mặc định) | ✅ | P0 (có) | — |
@@ -824,8 +824,8 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | C1 | Ark of Osiris (Golden) | Tranh Đoạt Linh Châu (theo hiệp) | ❌ | P1 | L (giản lược M) |
 | C2 | Ark of Osiris (Silver) | Tán Tu Tranh Châu | ❌ | P2 | S |
 | C3 | Osiris League + Bets + xem trực tiếp | Cửu Thiên Luận Đạo Hội | ❌ | P2 | M |
-| C4 | Canyon Clash | Luận Kiếm Minh Chiến | ❌ | P1 | S–M |
-| D1 | Sunset Canyon | Luận Kiếm Đài (xa luân chiến) | 🟡 PvP bất đồng bộ nhưng mất thật | **P0** | M |
+| C4 | Canyon Clash | Luận Kiếm Minh Chiến | ✅ Luận Kiếm Minh Chiến | P1 | S–M |
+| D1 | Sunset Canyon | Luận Kiếm Đài (xa luân chiến) | ✅ Luận Kiếm Đài | **P0** | M |
 | D2 | Sunset Canyon Tournament | Luận Kiếm Đại Hội | ❌ | P2 | S |
 | D3 | Lost Canyon | Luận Kiếm Đài · Thượng Tầng | ❌ | P2 | S |
 | D4 | Champions of Olympia | Tiên Môn Đại Bỉ (bất đồng bộ, 3 hiệp × 5 cờ) | ⛔ thời gian thực → ❌ | P2 | M |

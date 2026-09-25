@@ -13,7 +13,7 @@
     children,
   }: {
     tone?: 'paper' | 'silk' | 'glow'
-    onclick?: () => void
+    onclick?: (e: MouseEvent) => void
     disabled?: boolean
     selected?: boolean
     label?: string
@@ -28,9 +28,9 @@
     {disabled}
     aria-label={label}
     aria-pressed={selected || undefined}
-    onclick={() => {
+    onclick={e => {
       sfx('tap')
-      onclick()
+      onclick(e)
     }}
   >
     {@render children()}

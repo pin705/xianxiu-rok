@@ -10,6 +10,8 @@ import {
   QUIZ_DAY,
   QUIZ_GIFTS,
   QUIZ_KEY,
+  MAX_LEVEL,
+  SIDE_GIFTS,
   STRATS,
   STRAT_HALL,
   apply,
@@ -19,6 +21,9 @@ import {
   guestGift,
   newGame,
   quizOf,
+  sideAt,
+  sideGoal,
+  sideReady,
   seasonEnd,
   storage,
   type State,
@@ -147,4 +152,37 @@ test('Vấn Đạo Đài: năm câu khác nhau mỗi ngày, trả lời lần l�
   )
   assert.deepEqual(apply(s, { type: 'quiz', pick: 0 }, s.time), { ok: false, error: 'claimed' }, 'hôm nay xong rồi')
   assert.ok(apply(s, { type: 'quiz', pick: 0 }, s.time + DAY).ok, 'ngày mới làm lại')
+})
+
+test('Tông vụ: 4 dòng, mỗi dòng một việc; nhận từng việc thì hiện việc kế, quà vào túi; dòng linh mạch hết ở tầng tối đa', () => {
+  let s = sect() // mọi công trình tầng 10
+  assert.deepEqual(sideGoal('linhMach', 0), {
+    line: 'linhMach',
+    n: 2,
+    id: 'tuLinhTran',
+    reward: SIDE_GIFTS.linhMach[0],
+  })
+  assert.equal(sideGoal('linhMach', 3)?.n, 3, 'ba công trình rồi lên tầng')
+  assert.equal(sideGoal('linhMach', 3 * (MAX_LEVEL - 1)), null, 'hết ở tầng 25')
+  assert.deepEqual(
+    [0, 1, 2, 3].map(k => sideGoal('luyenBinh', k)?.n),
+    [100, 300, 600, 1000],
+  )
+  assert.equal(sideReady(s), 1, 'chỉ linh mạch xong sẵn (tầng 10 ≥ 2)')
+  assert.deepEqual(run(s, { type: 'side', line: 1 }), { ok: false, error: 'not_done' })
+  // nhận hết việc linh mạch tới tầng 10: 27 việc (tầng 2…10 × 3 công trình), rồi dừng ở tầng 11
+  const before = s.items.loBan60 ?? 0
+  for (let k = 0; k < 27; k++) {
+    const r = run(s, { type: 'side', line: 0 })
+    assert.ok(r.ok, `việc ${k}`)
+    s = r.state
+  }
+  assert.deepEqual(s.side, [27, 0, 0, 0])
+  assert.equal(sideAt(s, 0)?.n, 11)
+  assert.deepEqual(run(s, { type: 'side', line: 0 }), { ok: false, error: 'not_done' })
+  assert.equal((s.items.loBan60 ?? 0) - before, 12, 'bậc hai (tầng 7…11): đã nhận tầng 7…10 × 3 công trình')
+  assert.equal(sideReady(s), 0)
+  // thắng trận / tuyển đệ tử: đọc bộ đếm tích luỹ
+  s = { ...s, stats: { ...s.stats, won: 5, trained: 100 } }
+  assert.equal(sideReady(s), 2)
 })

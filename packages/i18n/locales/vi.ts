@@ -742,6 +742,20 @@ export const vi = {
       'Trên bản đồ giới: kiếm tu đi nhanh · thể tu đi chậm mà mang nhiều · pháp tu mang ít. Đội đi theo hệ chậm nhất.',
     duo: (lead: string, deputy: string) => `${lead} + ${deputy}`,
   },
+  // đánh giá một câu trên chiến báo: vì sao thắng / thua, thua thì lối đi
+  verdict: {
+    winCounter: (a: string, b: string) => `Thắng nhờ hệ khắc: ${a} khắc ${b}`,
+    winBig: 'Thắng áp đảo — lực chiến vượt xa',
+    winClean: 'Thắng gọn — thương vong ít',
+    winHard: 'Thắng chật vật — thương vong nhiều, nhớ chữa thương',
+    loseCounter: (a: string, b: string, c: string) => `Thua: ${a} bị ${b} khắc — đem ${c} (khắc ${b}) sẽ dễ hơn`,
+    loseBig: 'Thua vì lực chiến kém xa — tuyển thêm, nâng bậc đệ tử, học công pháp',
+    loseClose: 'Thua sát nút — thêm ít quân hay đổi trưởng lão là thắng',
+    recruit: (u: string) => `Tuyển ${u}`,
+    recruitAny: 'Tuyển đệ tử',
+    heal: 'Chữa thương',
+    study: 'Học công pháp',
+  },
   report: {
     title: 'Chiến báo',
     none: 'Chưa có trận nào.',
@@ -1750,6 +1764,13 @@ export const vi = {
     enter: 'Vào tông môn',
   },
   unlocked: (what: string) => `Mở khóa: ${what}`,
+  gift: { title: 'Tạ lễ — vừa nhận' }, // dải liệt kê vật phẩm vừa nhận
+  // màn Mở khoá khi Chủ điện lên tầng: bấm từng huy hiệu là tới
+  unlock: {
+    title: (n: number) => `Chủ điện tầng ${n} · Mở khóa`,
+    sub: 'Bấm một mục để tới ngay',
+    go: 'Tới ›',
+  },
   guide: {
     title: 'Cẩm nang',
     items: [
@@ -1818,6 +1839,19 @@ export const vi = {
     activity: (n: number, of: number) => `Hoạt lực ${n}/${of}`,
     chest: (n: number) => `Rương ${n} hoạt lực`,
     pts: (n: number) => `+${n} hoạt lực`,
+  },
+  // Tông vụ (Side Quests): 4 dòng song song, nhận từng việc
+  side: {
+    title: 'Tông vụ',
+    hint: 'Bốn dòng việc song song — xong việc nào nhận việc đó, rồi hiện việc kế.',
+    lines: { linhMach: 'Linh mạch', truyenCong: 'Truyền công', hangYeu: 'Hàng yêu', luyenBinh: 'Luyện binh' },
+    goal: {
+      linhMach: (b: string, n: number) => `${b} lên tầng ${n}`,
+      truyenCong: (n: number) => `Tổng ${n} tầng công pháp`,
+      hangYeu: (n: number) => `Thắng ${n} trận (yêu thú, bí cảnh, tháp…)`,
+      luyenBinh: (n: number) => `Tuyển tổng ${n} đệ tử`,
+    },
+    done: 'Đã xong cả dòng',
   },
   weekly: {
     title: 'Nhiệm vụ tuần',

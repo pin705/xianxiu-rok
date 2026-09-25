@@ -254,6 +254,7 @@ export type State = {
   seat: { x: number; y: number } | null // chỗ trên bản đồ giới (server xếp lúc vào giới lần đầu)
   blocks: number[] // người chơi đã chặn (ẩn chat của họ)
   friends?: number[] // đạo hữu đã kết giao
+  side?: number[] // Tông vụ: số việc đã nhận của từng dòng (SIDE_LINES)
   quiz?: { day: number; n: number; right: number; last?: boolean } // Vấn Đạo Đài hôm nay: đã trả lời n câu, đúng right, câu vừa rồi đúng không
   ascended: number[] // các mùa đã phi thăng (danh hiệu)
   fest: Partial<Record<FestId, Fest>> // trung tâm sự kiện

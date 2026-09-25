@@ -30,6 +30,8 @@
   import Honor from './Honor.svelte'
   import Drill from './Drill.svelte'
   import Quiz from './Quiz.svelte'
+  import Unlocks from './Unlocks.svelte'
+  import GiftStrip from './GiftStrip.svelte'
   import Advisor from './Advisor.svelte'
   import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
@@ -45,7 +47,7 @@
   import Vault from './Vault.svelte'
   import AwaySummary from './AwaySummary.svelte'
   import { summarize, type Away } from './away'
-  import { changes, newHelps, pushTime, unlocked } from './notices'
+  import { changes, newHelps, pushTime, reveal } from './notices'
   import { createNet, type Net, type Status } from './net'
   import { provideGame } from './game'
   import { setMood } from './music'
@@ -167,6 +169,7 @@
       if (!document.hidden) sfx('done') // tab ẩn (tab khác cùng người chơi đang bấm) thì im
     }
     for (const n of c.notes) toast(n.text, n)
+    reveal(c) // màn Mở khoá, dải Tạ lễ
   }
 
   onMount(() => {
@@ -410,7 +413,7 @@
         sfx(r.win ? 'win' : 'lose')
         if (r.win) {
           bursts = [...bursts, { id: 'chuDien', level: hall, t: now }]
-          for (const n of unlocked(hall)) toast(n.text)
+          reveal({ hall, items: {} }) // màn Mở khoá
         }
       },
       800 + r.fights.length * 1200,
@@ -541,6 +544,7 @@
     <Honor api={net ?? null} />
     <Drill onfight={() => fightNow({ type: 'drillFight' })} onreplay={r => (replay = r)} />
     <Quiz />
+    <Unlocks onfocus={id => focus(id)} ontab={switchTab} />
     {#if tab === 'tongMon' && !selected && !storm}<Advisor
         game={shown}
         ontab={t => (tab = t)}
@@ -598,6 +602,11 @@
     <Replay
       report={replay}
       onclose={() => (replay = null)}
+      onfocus={(id, t) => {
+        replay = null
+        reportsOpen = false
+        focus(id, t)
+      }}
       onrevenge={() => {
         replay = null
         reportsOpen = false
@@ -645,6 +654,7 @@
       toast={t => toast(t)}
     />
 
+    <GiftStrip />
     <Toasts
       list={toasts}
       top={DESK?.matches ? 'calc(var(--top) + 16px)' : `calc(${tab === 'tongMon' ? 236 : 150}px + var(--safe-t))`}

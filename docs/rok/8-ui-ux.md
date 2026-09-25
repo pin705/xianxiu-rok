@@ -880,14 +880,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Milestone Moment**: lên cấp Toà thị chính, mở thời đại mới, nhận tướng huyền thoại có màn riêng (chưa xác minh chi tiết). Nhận tướng mới có hiệu ứng làm lại ✔[9]. Thẻ trang bị lộ ra bằng cú vuốt ✔[17].
 - **Tu tiên hoá:** độ kiếp (trời tím, sét 3 đợt) → màn ĐỘT PHÁ hoa sen, luân hồi (đã có). Nên thêm màn **"Mở khoá"** khi Chủ điện lên tầng có tính năng mới: một cuộn tranh hé ra các huy hiệu vừa mở, bấm từng cái là tới luôn. Hiện chỉ có một thông báo chữ.
-- **Game mình:** 🟡. Khoảnh khắc lớn làm rất tốt. Mở khoá chỉ là một dòng thông báo.
+- **Game mình:** ✅. Khoảnh khắc lớn làm rất tốt; lên tầng có tính năng mới thì mở màn Mở khoá (`Unlocks.svelte`): huy hiệu từng thứ vừa mở, bấm là tới.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### D5 · Reward Popup: màn phần thưởng
 
 - **Reward Popup**: nhận rương / sự kiện thì hiện bảng liệt kê phần thưởng (chưa xác minh). Nhận hàng loạt ở nhiều nơi ✔[16][21].
 - **Tu tiên hoá:** "Tạ lễ": với phần thưởng có vật phẩm (rương ngày / tuần / sự kiện, thư có quà), hiện một dải giấy ngắn liệt kê vật phẩm vẽ tay, 1,2 giây rồi tự bay vào túi. Không bắt bấm đóng.
-- **Game mình:** 🟡. Tài nguyên bay vào ô. Đan dược bay vào tab Bảo khố nhưng không liệt kê tên, người chơi dễ không biết vừa nhận gì.
+- **Game mình:** ✅. Tài nguyên bay vào ô; vật phẩm (từ bất cứ nguồn nào) hiện dải "Tạ lễ — vừa nhận" liệt kê tên + số lượng, tự tắt (`GiftStrip.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### D6 · Combat Feedback: phản hồi khi đánh
@@ -1321,8 +1321,8 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | 🟡 | P1 | S |
 | C32 + G2 "Nhận tất cả" (thư có quà, nhiệm vụ ngày, mốc sự kiện) | ✅ | P1 | S |
 | C36 + G11 Chế độ nhẹ / tiết kiệm pin, giảm chuyển động trong game | 🟡 | P1 | S |
-| D4 Màn "Mở khoá" khi Chủ điện lên tầng (huy hiệu bấm là tới) | 🟡 | P1 | S |
-| D5 Dải "Tạ lễ" liệt kê vật phẩm nhận được | 🟡 | P1 | S |
+| D4 Màn "Mở khoá" khi Chủ điện lên tầng (huy hiệu bấm là tới) | ✅ `Unlocks.svelte` | P1 | S |
+| D5 Dải "Tạ lễ" liệt kê vật phẩm nhận được | ✅ `GiftStrip.svelte` | P1 | S |
 | E1 Bổ sung chấm: Tiên minh có người xin giúp, chat chưa đọc, sự kiện có mốc nhận | 🟡 | P1 | S |
 | F2 Mũi tên dẫn trong bảng cho lần đầu (Tuyển, Xuất quân, Độ kiếp) | 🟡 | P1 | S |
 | F5 Thẻ "lần đầu" khi mở tính năng mới (Tranh đoạt, Tiên minh, Giới) | 🟡 | P1 | S |

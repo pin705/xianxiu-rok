@@ -4,13 +4,20 @@
 
 <script lang="ts">
   // Thông báo ngắn: dải giấy hai đầu lụa lam lục, viền mực (báo lỗi: giấy ửng son), hiện ra như nét bút đang vẽ;
-  // có nút phụ (vd. "Xem lại" chiến báo).
+  // có nút phụ (vd. "Xem lại" chiến báo). popover: lên lớp trên cùng — mở lại mỗi khi có dòng mới để nổi trên bảng (hộp thoại
+  // modal) đang mở, không thì báo lỗi lúc đang ở trong bảng bị che mất
   import { Icon } from '@rok/art'
 
   let { list, top }: { list: ToastItem[]; top: string } = $props()
+  let el = $state<HTMLElement>()
+  $effect(() => {
+    if (!el?.showPopover) return
+    el.hidePopover()
+    if (list.length) el.showPopover()
+  })
 </script>
 
-<div class="toasts" style:top aria-live="polite">
+<div class="toasts" popover="manual" bind:this={el} style:top aria-live="polite">
   {#each list as t (t.id)}
     {#if t.onaction}
       <button class="toast" class:bad={t.bad} onclick={t.onaction}>
@@ -25,7 +32,13 @@
 <style>
   .toasts {
     position: fixed;
+    inset: auto;
     left: 50%;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: none;
+    border: 0;
     z-index: var(--z-toast);
     display: grid;
     justify-items: center;
