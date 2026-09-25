@@ -86,4 +86,6 @@ test('kết trận công sơn: mở nhắm một tông môn, đồng minh góp �
   assert.equal(d.incoming?.length ?? 0, 0, 'hết cảnh báo')
   assert.ok(a.marches[0].returnAt > rl.at && b.marches[0].returnAt > rl.at, 'hai đội đang về')
   assert.ok((a.stats.kp ?? 0) > 0 && (b.stats.kp ?? 0) > 0, 'chiến công chia cho cả hai')
+  assert.equal(a.honor, Math.floor((a.stats.kp ?? 0) / 100), 'chiến công cộng Công Huân')
+  assert.ok((d.honor ?? 0) > 0, 'bên thủ hạ được địch cũng có Công Huân')
 })

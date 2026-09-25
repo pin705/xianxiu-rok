@@ -5,10 +5,13 @@ import { fight, might } from '../combat.ts'
 import { beastExp, beastLoot, marchSide, marchSnap, pushReport, snap } from '../core/battle.ts'
 import { lead, unitOf } from '../core/stats.ts'
 import { HOUR, noGain } from '../core/util.ts'
-import type { Army, March, State } from '../core/types.ts'
+import type { Army, March } from '../core/types.ts'
 import {
   BOSSES,
   GARRISON_MAX,
+  HONOR_BOSS,
+  HONOR_GATHER,
+  HONOR_WILD,
   MINE_RATE,
   MINE_RESPAWN,
   RESOURCES,
@@ -23,6 +26,8 @@ import {
 } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
 import {
+  addHonor,
+  addKp,
   allyGifts,
   allyOf,
   garrison,
@@ -81,7 +86,7 @@ function gather(ps: Players, w: World, map: MapCtx, [pid, att, m]: Party[number]
   const changed: Players = new Map()
   changed.set(
     pid,
-    withMarch(att, {
+    withMarch(addHonor(att, amount / HONOR_GATHER), {
       ...m,
       mine: { end, amount, res },
       back: m.army,
@@ -135,7 +140,7 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
       report: x.nextId - 1,
       returnAt: at + travel(m2),
     })
-    changed.set(p2, x)
+    changed.set(p2, addHonor(x, mine2 / HONOR_BOSS))
   })
   const hp = (sp.hp ?? boss.str) - dmg
   if (hp > 0) return { changed, world: setSpot(w, i, { hp, dmg: dmgs }) }
@@ -194,14 +199,12 @@ function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Ar
     fights: [{ a: marchSnap(s, me, m), b: snap(foe, undefined, p.lv), rounds: f.rounds }],
   })
   x = withMarch(x, { ...m, back: left, hurt, gain, report: x.nextId - 1, returnAt: at + travel(m) })
-  if (f.win) x = { ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1 } }
+  if (f.win) x = addHonor({ ...x, stats: { ...x.stats, hunted: (x.stats.hunted ?? 0) + 1 } }, HONOR_WILD * p.lv)
   return { changed: new Map([[pid, x]]), world: f.win ? setSpot(w, i, { until: at + WILD_RESPAWN }) : w }
 }
 
 // Thế lực của một đội (đệ tử × thế lực mỗi bậc) và cộng chiến công
 const pow = (a: Army) => UNITS.reduce((n, u) => n + (a[u] ?? 0) * TIER[unitOf(u).tier].power, 0)
-const addKp = (s: State, n: number): State =>
-  n >= 1 ? { ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + Math.round(n) } } : s
 
 // Chiến công trận tranh điểm: mỗi bên được thế lực đệ tử bên kia hạ, chia theo thế lực đội mình mang tới
 function takeKp(

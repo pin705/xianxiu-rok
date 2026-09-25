@@ -1,6 +1,7 @@
 // Lật mùa và lật tuần của cả giới: hết mùa (phi thăng / luân hồi, trả hàng chợ, làm mới phần chung), top sự kiện tuần.
 // Điều phối nhiều tính năng (như act.ts, advance.ts) nên được import các file tính năng khác trong world/.
-import { ASCEND, ASCEND_HALL, EVENT_PRIZES, EVENT_TOP, MAX_LEVEL } from '../data.ts'
+import { ASCEND, ASCEND_HALL, EVENT_PRIZES, EVENT_TOP, HONOR_RANKS, MAX_LEVEL, honorPrize } from '../data.ts'
+import type { State } from '../core/types.ts'
 import { mail } from '../sect/inbox.ts'
 import { seasonEnd } from '../sect/rebirth.ts'
 import { freshWorld, sideKey, type MapCtx, type Players, type World } from './base.ts'
@@ -20,19 +21,17 @@ export function endSeason(
   const top = seasonBoard(w, ps, map, now)
   const first = top.find(r => r.side > 0)?.side
   const rank = new Map(top.map((r, k) => [r.side, k + 1]))
+  const honors = honorBoard(ps, skip).slice(0, HONOR_RANKS)
   const changed: Players = new Map()
   for (const [pid, s] of ps) {
     if (skip.has(pid)) continue
     const side = sideKey(w, pid)
     const up = (side === first && s.levels.chuDien >= ASCEND_HALL) || s.levels.chuDien >= MAX_LEVEL
-    changed.set(
-      pid,
-      mail(seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined), {
-        at: now,
-        k: 'season',
-        a: [season, rank.get(side) ?? 0, up ? 1 : 0],
-      }),
-    )
+    // Công Huân: top HONOR_RANKS nhận quà theo hạng (thư trước thư kết mùa); mùa mới mọi người về 0
+    let x: State = { ...seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined), honor: 0, honorGot: 0 }
+    const hr = honors.findIndex(([id]) => id === pid)
+    if (hr >= 0) x = mail(x, { at: now, k: 'honorTop', a: [hr + 1, s.honor ?? 0], gift: honorPrize(hr) })
+    changed.set(pid, mail(x, { at: now, k: 'season', a: [season, rank.get(side) ?? 0, up ? 1 : 0] }))
   }
   // hàng đang treo trên chợ: trả về qua thư (thư giữ qua luân hồi)
   for (const [k, v] of unsold(new Map([...ps, ...changed]), w, Object.values(w.orders)).changed) changed.set(k, v)
@@ -43,6 +42,12 @@ export function endSeason(
     top,
   }
 }
+
+// Bảng Công Huân trong mùa (người có điểm, cao nhất trước; bỏ skip: NPC)
+export const honorBoard = (ps: Players, skip = new Set<number>()) =>
+  [...ps]
+    .filter(([id, s]) => !skip.has(id) && (s.honor ?? 0) > 0)
+    .sort((a, b) => (b[1].honor ?? 0) - (a[1].honor ?? 0) || a[0] - b[0])
 
 // Quà thư hết tuần theo hạng (0: hạng 1): hạng 1 · 2–3 · 4–10
 export const eventPrize = (rank: number) => EVENT_PRIZES[rank === 0 ? 0 : rank < 3 ? 1 : 2]

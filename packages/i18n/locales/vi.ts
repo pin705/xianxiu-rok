@@ -559,6 +559,20 @@ export const vi = {
     slots: (n: number, of: number) => `Lệnh đang treo ${n}/${of}`,
     expires: (t: string) => `còn ${t}`,
   },
+  honor: {
+    title: 'Công Huân',
+    lore: 'Điểm cá nhân trong mùa: hạ đệ tử địch (cả khi giữ nhà), săn yêu thú giới, đánh yêu vương, khai mỏ, phá trận kỳ, giữ núi trước ma triều. Hết mùa về 0.',
+    mine: (n: string) => `Công Huân của bạn: ${n}`,
+    tiers: 'Chinh Chiến Công Tích',
+    claim: 'Nhận',
+    got: 'Đã nhận',
+    need: (n: string) => `cần ${n}`,
+    board: 'Bảng Công Huân mùa này',
+    boardHint: 'Hết mùa: hạng 1 · 2–3 · 4–10 nhận quà qua thư.',
+    rank: (k: number) => `Hạng ${k}`,
+    none: 'Chưa ai có Công Huân mùa này.',
+    chip: (n: string) => `Công Huân ${n}`,
+  },
   supply: {
     title: 'Vận Linh Trận',
     lore: 'Truyền tống linh thạch, linh thảo, linh khoáng tới đồng minh; người nhận mở thư lấy về. Tàng Bảo Các càng cao, hao tổn càng ít.',
@@ -834,6 +848,8 @@ export const vi = {
     rallyAt: (by: string, what: string, t: string) => `${by} mở kết trận · ${what} · xuất phát sau ${t}`,
     rallyHint: 'Mở bản đồ Giới, chạm vào điểm để góp đội — mọi đội tới cùng lúc và đánh như một.',
     siege: (name: string) => `công sơn ${name}`,
+    minimap: 'Bản đồ nhỏ — chạm để tới',
+    minimapHide: 'Thu bản đồ nhỏ',
     land: { water: 'Sông hồ', plain: 'Đồng bằng', forest: 'Rừng', hill: 'Đồi', mount: 'Núi' },
     weather: { clear: 'Trời quang', mist: 'Sương mù', rain: 'Mưa', snow: 'Tuyết' },
     gathering: 'Đang khai mỏ',
@@ -928,6 +944,11 @@ export const vi = {
     // bậc −2…2 (R1–R5)
     role: (r: number) => `R${r + 3} · ${['Ngoại môn', 'Nội môn', 'Chân truyền', 'Đường chủ', 'Minh chủ'][r + 2]}`,
     promote: 'Thăng bậc',
+    mail: 'Thư minh',
+    mailHint: 'Vào hộp thư mọi người trong minh, cả người đang bế quan. Mỗi giờ một thư.',
+    mailSend: 'Gửi cả minh',
+    mailWait: (t: string) => `Thư kế tiếp sau ${t}`,
+    mailSent: 'Đã gửi thư cho cả minh.',
     demote: 'Giáng bậc',
     lead: 'Nhường minh chủ',
     kick: 'Mời ra khỏi minh',
@@ -1273,6 +1294,11 @@ export const vi = {
       legion: (pts: number, waves: number): [string, string] => [
         'Ma Triều Công Sơn đã tan',
         `Đêm nay tông môn giữ được ${waves}/${LEGION_WAVES} đợt ma triều, được ${pts} điểm.${pts >= LEGION_GIFTS[0].pts ? ' Quà theo điểm ở dưới.' : ` Đạt ${LEGION_GIFTS[0].pts} điểm mới có quà — tuần sau kéo viện binh đồng minh về giữ nhà.`}`,
+      ],
+      allyMail: (who: string, tag: string, text: string): [string, string] => [`Thư minh [${tag}] · ${who}`, text],
+      honorTop: (rank: number, n: number): [string, string] => [
+        `Công Huân mùa · hạng ${rank}`,
+        `Mùa vừa qua đạo hữu tích ${n.toLocaleString('vi')} Công Huân, đứng hạng ${rank} cả giới. Quà ở dưới.`,
       ],
       supply: (who: string): [string, string] => [
         `Tiếp tế từ ${who}`,

@@ -17,11 +17,13 @@ import {
   FLAG_MAX,
   FLAG_PER,
   FLAG_REPAIR,
+  HONOR_RAZE,
   PVP_HALL,
   type ElderId,
 } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
 import {
+  addHonor,
   allyOf,
   put,
   routeMs,
@@ -128,12 +130,19 @@ export function razeArrive(ps: Players, w: World, [pid, s, m]: [number, State, M
   const f = w.flags?.[m.target.i]
   const back = turnBack(s, m, at)
   if (!f || allyOf(w, pid)?.id === f.aid) return { changed: new Map([[pid, back]]) as Players, world: w }
-  const hp = Math.max(0, flagHp(f, at) - Math.round(might(marchSide(s, m))))
+  const before = flagHp(f, at)
+  const hp = Math.max(0, before - Math.round(might(marchSide(s, m))))
   const left = Math.ceil((hp / FLAG_HP) * 100)
   const { [f.id]: _, ...rest } = w.flags!
   const flags = hp ? { ...rest, [f.id]: { ...f, hp, hit: at } } : rest
   const changed: Players = new Map([
-    [pid, mail(back, { at, k: 'razed', a: [w.allies[f.aid]?.tag ?? '?', left, f.x, f.y] })],
+    [
+      pid,
+      addHonor(
+        mail(back, { at, k: 'razed', a: [w.allies[f.aid]?.tag ?? '?', left, f.x, f.y] }),
+        (before - hp) / HONOR_RAZE,
+      ),
+    ],
   ])
   const lord = Number(Object.entries(w.allies[f.aid]?.members ?? {}).find(([, r]) => r === 2)?.[0])
   const ls = ps.get(lord)

@@ -6,6 +6,8 @@
     ALLY_COST,
     ALLY_GIFT_LV,
     ALLY_HALL,
+    ALLY_MAIL_COOL,
+    ALLY_MAIL_LEN,
     DONATE_MAX,
     MOB_GOALS,
     MOB_MIN,
@@ -66,6 +68,15 @@
   let name = $state('')
   let tag = $state('')
   let editing = $state<string | null>(null)
+  // thư minh (R4 / minh chủ): nội dung đang viết, vừa gửi xong, còn bao lâu mới gửi tiếp được
+  let letter = $state('')
+  let mailed = $state(false)
+  const mailWait = $derived(ally ? (ally.mailAt ?? -Infinity) + ALLY_MAIL_COOL - g.now : 0)
+  async function sendMail() {
+    if (!(await go({ type: 'allyMail', text: letter }))) return
+    letter = ''
+    mailed = true
+  }
   let pick = $state<number | null>(null)
   let sheet = $state<'tech' | 'shop' | 'mob' | null>(null)
   // nút ở danh sách minh: nhận lời mời · đã gửi đơn · xin vào (minh đóng) · gia nhập
@@ -286,6 +297,18 @@
           >{/if}
       {/if}
     </Section>
+
+    {#if myRole >= 1}
+      <Section title={L.ally.mail}>
+        <p class="t-tiny t-soft">{L.ally.mailHint}</p>
+        <textarea bind:value={letter} maxlength={ALLY_MAIL_LEN} rows="3" aria-label={L.ally.mail}></textarea>
+        {#if mailWait > 0}<small class="t-tiny t-soft">{L.ally.mailWait(clock(mailWait))}</small>{/if}
+        {#if mailed}<small class="t-tiny t-good">{L.ally.mailSent}</small>{/if}
+        <Button size="sm" variant="gold" icon="mail" disabled={!letter.trim() || mailWait > 0} onclick={sendMail}
+          >{L.ally.mailSend}</Button
+        >
+      </Section>
+    {/if}
 
     <Section title={L.ally.help}>
       <p class="t-small t-soft">{L.ally.helpHint(maxHelps)}</p>

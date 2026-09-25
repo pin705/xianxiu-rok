@@ -5,6 +5,8 @@ import { MAP_W } from '../atlas.ts'
 import { cleanText, int, isId, oneOf } from '../core/parse.ts'
 import type { State } from '../core/types.ts'
 import {
+  ALLY_MAIL_COOL,
+  ALLY_MAIL_LEN,
   ALLY_MARKS,
   ALLY_SHOP,
   ALLY_SHOP_MAX,
@@ -20,7 +22,17 @@ import {
   type ItemId,
   type Res,
 } from '../data.ts'
-import { allyOf, contribOf, put, techLevel, type Alliance, type World, type WorldActions } from './base.ts'
+import { mail } from '../sect/inbox.ts'
+import {
+  allyOf,
+  contribOf,
+  put,
+  techLevel,
+  type Alliance,
+  type Players,
+  type World,
+  type WorldActions,
+} from './base.ts'
 
 // Lượt cung phụng còn lúc t (hồi đầy lúc contrib.full) và bao lâu nữa hồi thêm một lượt (0: đang đầy)
 export const donateLeft = (s: State, t: number) =>
@@ -38,6 +50,7 @@ export type GuildAction =
   | { type: 'allyBuy'; item: ItemId; n: number }
   | { type: 'allyMark'; x: number; y: number; text: string }
   | { type: 'allyUnmark'; x: number; y: number }
+  | { type: 'allyMail'; text: string } // thư tới hộp thư mọi người trong minh
   | { type: 'napAsk'; id: number }
   | { type: 'napOk'; id: number }
   | { type: 'napNo'; id: number }
@@ -145,6 +158,24 @@ export const guildActions: WorldActions<GuildAction> = {
       const marks = (al.marks ?? []).filter(m => m.x !== a.x || m.y !== a.y)
       if (marks.length === (al.marks ?? []).length) return no('gone')
       return { ok: true, changed: new Map(), world: put(w, { ...al, marks }) }
+    },
+  },
+  // Thư minh (R4 / minh chủ): vào hộp thư mọi người trong minh, kể cả người đang offline; mỗi minh một thư mỗi ALLY_MAIL_COOL
+  allyMail: {
+    pick: a => {
+      const text = cleanText(a.text)
+      return text && [...text].length <= ALLY_MAIL_LEN ? { type: 'allyMail', text } : null
+    },
+    run: ({ w, ps, pid, s, now }, a) => {
+      const al = officer(w, pid)
+      if (!al) return no('locked')
+      if ((al.mailAt ?? -Infinity) + ALLY_MAIL_COOL > now) return no('cooldown')
+      const changed: Players = new Map()
+      for (const p of Object.keys(al.members).map(Number)) {
+        const st = p === pid ? s : ps.get(p)
+        if (st) changed.set(p, mail(st, { at: now, k: 'allyMail', a: [s.name, al.tag, a.text] }))
+      }
+      return { ok: true, changed, world: put(w, { ...al, mailAt: now }) }
     },
   },
   // Minh ước (NAP): trưởng lão / minh chủ đề nghị, minh kia nhận hay từ chối; một bên huỷ là huỷ cả hai. Minh ước: không cướp

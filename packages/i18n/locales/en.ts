@@ -571,6 +571,20 @@ export const en: Text = {
     slots: (n: number, of: number) => `Active listings ${n}/${of}`,
     expires: (t: string) => `${t} left`,
   },
+  honor: {
+    title: 'Honor',
+    lore: 'Your personal score this season: defeat enemy disciples (defending counts too), hunt world beasts, strike beast kings, gather mines, raze banners, hold your sect against the shadow tide. Resets each season.',
+    mine: (n: string) => `Your honor: ${n}`,
+    tiers: 'Crusade Milestones',
+    claim: 'Claim',
+    got: 'Claimed',
+    need: (n: string) => `needs ${n}`,
+    board: 'Honor ranking this season',
+    boardHint: 'At season end, rank 1 · 2–3 · 4–10 get a reward by mail.',
+    rank: (k: number) => `Rank ${k}`,
+    none: 'No one has honor yet this season.',
+    chip: (n: string) => `Honor ${n}`,
+  },
   supply: {
     title: 'Spirit Conduit',
     lore: 'Teleport spirit stones, herbs and ore to an ally; they collect it from their mail. A higher Treasure Pavilion loses less in transit.',
@@ -847,6 +861,8 @@ export const en: Text = {
     rallyAt: (by: string, what: string, t: string) => `${by} started a rally · ${what} · departs in ${t}`,
     rallyHint: 'Open the World map and tap the point to join — every army arrives together and fights as one.',
     siege: (name: string) => `siege of ${name}`,
+    minimap: 'Minimap — tap to go there',
+    minimapHide: 'Hide minimap',
     land: { water: 'Waters', plain: 'Plains', forest: 'Forest', hill: 'Hills', mount: 'Mountains' },
     weather: { clear: 'Clear', mist: 'Mist', rain: 'Rain', snow: 'Snow' },
     gathering: 'Mining',
@@ -940,6 +956,11 @@ export const en: Text = {
     role: (r: number) =>
       `R${r + 3} · ${['Outer disciple', 'Inner disciple', 'Core disciple', 'Hall master', 'Leader'][r + 2]}`,
     promote: 'Promote',
+    mail: 'Alliance mail',
+    mailHint: "Lands in every member's mailbox, even those in seclusion. One mail per hour.",
+    mailSend: 'Send to all',
+    mailWait: (t: string) => `Next mail in ${t}`,
+    mailSent: 'Mail sent to the whole alliance.',
     demote: 'Demote',
     lead: 'Hand over leadership',
     kick: 'Remove from alliance',
@@ -1276,6 +1297,11 @@ export const en: Text = {
       legion: (pts: number, waves: number): [string, string] => [
         'The Shadow Tide has receded',
         `Tonight your sect held ${waves}/${LEGION_WAVES} waves of the shadow tide and earned ${pts} points.${pts >= LEGION_GIFTS[0].pts ? ' Your reward is below.' : ` Rewards start at ${LEGION_GIFTS[0].pts} points — next week, bring allied reinforcements home.`}`,
+      ],
+      allyMail: (who: string, tag: string, text: string): [string, string] => [`[${tag}] alliance mail · ${who}`, text],
+      honorTop: (rank: number, n: number): [string, string] => [
+        `Season honor · rank ${rank}`,
+        `You earned ${n.toLocaleString('en')} honor last season, rank ${rank} in the realm. Your reward is below.`,
       ],
       supply: (who: string): [string, string] => [
         `Supplies from ${who}`,

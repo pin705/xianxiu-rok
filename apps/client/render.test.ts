@@ -66,6 +66,7 @@ async function load(lang: 'vi' | 'en') {
     'Arena',
     'Market',
     'Supply',
+    'Honor',
     'Advisor',
     'Chat',
     'world/WorldView',
@@ -734,6 +735,10 @@ test('tiên minh, chat', async () => {
       social.market = true
       paint('Market', { game: s, api, send: async () => ({ ok: true }) }, `${label}, Phường thị`)
       social.market = false
+      social.honor = true
+      const hon = paint('Honor', { game: { ...s, honor: 420, honorGot: 1 }, api }, `${label}, Công Huân`)
+      assert.ok(hon.includes(L.honor.mine('420')) && hon.includes(L.honor.claim), 'điểm của mình + mốc nhận được')
+      social.honor = false
       const sup = paint(
         'Supply',
         {
@@ -803,7 +808,8 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
   ]
   for (const lang of LANGS) {
     await load(lang)
-    paint('WorldView', { game, now, info, me: 1, snap, allies: [3], onpick: noop }, 'bản đồ giới')
+    const world = paint('WorldView', { game, now, info, me: 1, snap, allies: [3], onpick: noop }, 'bản đồ giới')
+    assert.ok(world.includes(L.world.minimap), 'có bản đồ nhỏ')
     paint(
       'WorldView',
       { game: { ...game, seat: null }, now, info, me: 1, snap: null, onpick: noop },

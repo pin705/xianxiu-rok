@@ -11,6 +11,7 @@ import type { Army, State } from '../core/types.ts'
 import { DAY, minus, noGain, plus } from '../core/util.ts'
 import {
   DAY_OFFSET,
+  HONOR_LEGION,
   LEGION_DAY,
   LEGION_GAP,
   LEGION_GIFTS,
@@ -23,7 +24,7 @@ import {
   UNITS,
 } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
-import { aidAt, allyOf, type Legion, type Players, type World, type WorldActions } from './base.ts'
+import { addHonor, aidAt, allyOf, type Legion, type Players, type World, type WorldActions } from './base.ts'
 import { combine, defense, flipRounds, guardOf } from './fight.ts'
 
 // Lúc đợt k (0..) của tuần wk giáng (thứ Tư LEGION_HOUR giờ VN + k × LEGION_GAP)
@@ -133,7 +134,7 @@ export function legionStep(ps: Players, w: World, now: number, seed: number): { 
       for (const p of Object.keys(w.allies[aid]?.members ?? {}).map(Number)) {
         if (!ps.has(p)) continue
         const r = defend(view(), p, advance(cur(p), at), k, at, (seed + p * 7919 + k * 104_729) >>> 0)
-        changed.set(p, r.s)
+        changed.set(p, r.held ? addHonor(r.s, HONOR_LEGION) : r.s)
         if (!r.held) continue
         by[p] = (by[p] ?? 0) + LEGION_PTS[k]
         held[p] = (held[p] ?? 0) + 1

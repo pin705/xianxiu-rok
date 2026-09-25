@@ -27,6 +27,7 @@
   import Profile from './Profile.svelte'
   import Arena from './Arena.svelte'
   import Market from './Market.svelte'
+  import Honor from './Honor.svelte'
   import Advisor from './Advisor.svelte'
   import Chat from './Chat.svelte'
   import Panel from './Panel.svelte'
@@ -540,6 +541,7 @@
     <Profile api={net ?? null} {me} onmap={goMap} send={sendWorld} onranks={() => (ranksOpen = true)} />
     <Arena api={net ?? null} send={sendWorld} {me} onreplay={r => (replay = r)} />
     <Market api={net ?? null} send={sendWorld} />
+    <Honor api={net ?? null} />
     {#if tab === 'tongMon' && !selected && !storm}<Advisor
         game={shown}
         ontab={t => (tab = t)}

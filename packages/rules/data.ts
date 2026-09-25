@@ -905,6 +905,33 @@ export const LEGION_TOP: Reward[] = [
   { items: { nganDuyen: 2, tuKhi: 3 } },
 ]
 
+// ---------- Công Huân (Honor của KvK) ----------
+// Điểm cá nhân trong mùa: hạ đệ tử địch (chiến công / HONOR_KP, cả khi thủ), săn yêu thú giới (HONOR_WILD × cấp), đánh yêu
+// vương (sát thương / HONOR_BOSS), khai mỏ (tài nguyên / HONOR_GATHER), đánh trận kỳ (độ bền phá / HONOR_RAZE), giữ núi một đợt
+// ma triều (HONOR_LEGION). Mốc HONOR_TIERS nhận quà ngay trong mùa (Chinh Chiến Công Tích); hết mùa top HONOR_RANKS nhận thư
+// quà theo hạng (1 · 2–3 · 4–10), rồi mọi người về 0.
+export const HONOR_KP = 100
+export const HONOR_WILD = 2
+export const HONOR_BOSS = 200
+export const HONOR_GATHER = 1000
+export const HONOR_RAZE = 1000
+export const HONOR_LEGION = 10
+export const HONOR_TIERS: { n: number; reward: Reward }[] = [
+  { n: 50, reward: { items: { thoiQuang60: 2, thachNang5k: 1 } } },
+  { n: 150, reward: { items: { thoiQuang180: 1, hoiXuan: 1 } } },
+  { n: 400, reward: { items: { thoiQuang180: 2, nganDuyen: 1 } } },
+  { n: 1000, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+  { n: 2500, reward: { items: { thoiQuang480: 2, kimDuyen: 1, kinhThu8k: 1 } } },
+  { n: 6000, reward: { items: { kimDuyen: 2, daiTuKhi: 2, tapDich48: 1 } } },
+]
+export const HONOR_RANKS = 10
+const HONOR_TOP: Reward[] = [
+  { items: { kimDuyen: 3, daiTuKhi: 3 } },
+  { items: { kimDuyen: 2, daiTuKhi: 2 } },
+  { items: { kimDuyen: 1, daiTuKhi: 1 } },
+]
+export const honorPrize = (rank: number) => HONOR_TOP[rank === 0 ? 0 : rank < 3 ? 1 : 2] // rank tính từ 0
+
 // ---------- Thương nhân vân du (Mysterious Merchant của RoK) ----------
 // Mỗi MERCHANT_EVERY một lượt hàng mới: MERCHANT_SLOTS món rút từ MERCHANT_POOL (tất định theo tông môn và lượt), giá bằng
 // một loại tài nguyên = price × tầng Chủ điện, mỗi món mua một lần. Ở Tàng Bảo Các (Thương hội) từ tầng MERCHANT_HALL.
@@ -1096,7 +1123,9 @@ export const ALLY_SHOP: Partial<Record<ItemId, { price: number; stock: number }>
   khoangNang5k: { price: 150, stock: 75 },
 }
 export const ALLY_SHOP_MAX = 99 // tồn tối đa mỗi món
-export const ALLY_MARKS = 5 // dấu trên bản đồ giới trưởng lão / minh chủ đặt cho cả minh (Alliance Markers)
+export const ALLY_MARKS = 5 // dấu trên bản đồ giới đặt cho cả minh (Alliance Markers), từ R3
+export const ALLY_MAIL_COOL = 3_600_000 // thư minh (R4 / minh chủ gửi tới hộp thư cả minh): mỗi minh một thư mỗi giờ
+export const ALLY_MAIL_LEN = 300
 // Minh lễ (Alliance Gifts): người trong minh hạ yêu vương → cả minh nhận quà qua thư, minh được GIFT_PTS điểm quà theo cấp
 // yêu vương; điểm quà nâng cấp quà (ALLY_GIFT_LV: điểm để lên cấp 1..5), cấp càng cao quà càng hậu.
 export const GIFT_PTS: Partial<Record<number, number>> = { 1: 50, 2: 150, 3: 400 }

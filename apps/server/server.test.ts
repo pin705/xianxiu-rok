@@ -531,7 +531,7 @@ test(
       info.people.map(p => [p.pid, p.role]).sort(),
       [
         [A.pid, 2],
-        [B.pid, 0],
+        [B.pid, -2],
       ].sort(),
     )
     const rows = await n.db.client`select state->'world'->'allies' as a from worlds where id = ${w}`

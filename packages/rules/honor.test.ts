@@ -1,0 +1,48 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { HONOR_KP, HONOR_TIERS, apply, newGame, type State } from './index.ts'
+import { addKp, atlas, endSeason, freshWorld, type Players } from './world.ts'
+
+const T0 = Date.UTC(2026, 8, 23, 3)
+const sect = (name: string, honor = 0): State => ({ ...newGame(T0, name), honor })
+
+test('Công Huân: chiến công cộng Công Huân; mốc nhận lần lượt; hết mùa top nhận quà theo hạng rồi về 0', () => {
+  // chiến công → Công Huân (cả phần lẻ dưới HONOR_KP thì chưa tính)
+  const k = addKp(sect('A'), 3 * HONOR_KP + 40)
+  assert.deepEqual([k.stats.kp, k.honor], [3 * HONOR_KP + 40, 3])
+
+  // mốc: đủ điểm thì nhận lần lượt, chưa đủ thì khoá, hết mốc thì thôi
+  let s = sect('B', HONOR_TIERS[1].n)
+  const claim = () => apply(s, { type: 'honorClaim' }, T0)
+  for (const want of [0, 1]) {
+    const r = claim()
+    assert.ok(r.ok, `mốc ${want}`)
+    s = r.state
+    for (const [id, n] of Object.entries(HONOR_TIERS[want].reward.items ?? {}))
+      assert.ok((s.items[id as keyof State['items']] ?? 0) >= (n ?? 0))
+  }
+  assert.equal(s.honorGot, 2)
+  assert.deepEqual(claim(), { ok: false, error: 'locked' }, 'mốc 3 chưa đủ điểm')
+  assert.deepEqual(apply({ ...s, honor: 1e9, honorGot: HONOR_TIERS.length }, { type: 'honorClaim' }, T0), {
+    ok: false,
+    error: 'claimed',
+  })
+
+  // hết mùa: hạng theo điểm (NPC không xếp), thư quà trước thư kết mùa, mọi người về 0
+  const ps: Players = new Map([
+    [1, sect('Nhất', 900)],
+    [2, sect('Nhì', 500)],
+    [3, sect('Không', 0)],
+    [4, sect('NPC', 5000)],
+  ])
+  const end = endSeason(ps, freshWorld(), { atlas: atlas(7), phase: 3 }, T0 + 3_600_000, 1, new Set([4]))
+  const [a, b, c] = [1, 2, 3].map(p => end.changed.get(p)!)
+  assert.deepEqual(a.mail.at(-2)!.a, [1, 900])
+  assert.equal(a.mail.at(-2)!.k, 'honorTop')
+  assert.deepEqual(b.mail.at(-2)!.a, [2, 500])
+  assert.notEqual(c.mail.at(-2)?.k, 'honorTop', 'không điểm: không xếp hạng')
+  for (const x of [a, b, c]) {
+    assert.equal(x.mail.at(-1)!.k, 'season')
+    assert.deepEqual([x.honor, x.honorGot], [0, 0], 'mùa mới về 0')
+  }
+})

@@ -270,6 +270,8 @@ const validFest = (s: any) =>
   (s.builder2 === undefined || num(s.builder2)) &&
   (s.joined === undefined || num(s.joined)) &&
   (s.towerDay === undefined || num(s.towerDay)) &&
+  (s.honor === undefined || num(s.honor)) &&
+  (s.honorGot === undefined || num(s.honorGot)) &&
   (s.dao === undefined || (obj(s.dao) && Object.hasOwn(DAOS, s.dao.id) && num(s.dao.at))) &&
   (s.fog === undefined ||
     (obj(s.fog) && Array.isArray(s.fog.rows) && s.fog.rows.every(num) && Array.isArray(s.fog.fly))) &&

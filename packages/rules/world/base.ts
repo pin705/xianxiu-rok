@@ -18,6 +18,7 @@ import {
   GIFT_PTS,
   HELP_CREDIT,
   HELP_CREDIT_DAY,
+  HONOR_KP,
   BLESSINGS,
   TITLE_IDS,
   TITLES,
@@ -69,6 +70,7 @@ export type Alliance = {
   invites?: number[] // người được mời: vào thẳng dù minh đóng
   naps?: number[] // minh ước bất xâm phạm (NAP) với các minh này
   napIn?: number[] // lời đề nghị minh ước đang chờ minh mình trả lời
+  mailAt?: number // lúc gửi thư minh gần nhất
 }
 // Bảng Minh vụ của minh: tuần, điểm cả minh, số thứ tự việc kế tiếp, các việc trên bảng (số thứ tự — việc suy ra từ mã minh,
 // tuần và số thứ tự nên client tự vẽ được), điểm từng người đã góp
@@ -235,6 +237,10 @@ export const garrison = (ps: Players, i: number): [number, March][] =>
   [...ps].flatMap(([pid, s]) =>
     s.marches.filter(m => m.stay && m.target.kind === 'spot' && m.target.i === i).map(m => [pid, m] as [number, March]),
   )
+// Công Huân trong mùa (HONOR_* ở data.ts) và chiến công (cộng Công Huân theo HONOR_KP)
+export const addHonor = (s: State, n: number): State => (n >= 1 ? { ...s, honor: (s.honor ?? 0) + Math.floor(n) } : s)
+export const addKp = (s: State, n: number): State =>
+  n >= 1 ? addHonor({ ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + Math.round(n) } }, n / HONOR_KP) : s
 export const withMarch = (s: State, m: March): State => ({ ...s, marches: s.marches.map(x => (x.id === m.id ? m : x)) })
 export const travel = (m: March) => m.arriveAt - m.startAt
 export const setSpot = (w: World, i: number, sp: Spot): World => ({ ...w, spots: { ...w.spots, [i]: sp } })

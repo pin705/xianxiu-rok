@@ -795,7 +795,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A3 | Matchmaking, story registration, bỏ phiếu | Thiên Mệnh Chọn Luật (bỏ phiếu luật mùa) | ❌ (liên server ⛔) | P2 | S |
 | A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | 🟡 thiếu buff theo loại điểm, thưởng chiếm lần đầu | P1 | S–M |
 | A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 pha theo ngày cứng, biên niên chỉ là nhật ký | **P0** | M |
-| A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | 🟡 điểm mùa theo phe, Elo | P1 | S |
+| A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | ✅ Công Huân cá nhân (25/09) + điểm mùa theo phe + chiến công | P1 | S |
 | A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ❌ | P1 | S–M |
 | A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | ❌ | P1 | M |
 | A9 | Hall of Heroes | Anh Linh Điện | ❌ | P2 | S |

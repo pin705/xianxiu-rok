@@ -90,6 +90,11 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Dải tăng ích (A5 + F4) | Chip dưới cụm nút HUD: khiên hộ sơn, phù, đan, linh mạch, trận tiên minh, sắc phong/phúc Giới Chủ — icon + giờ còn lại đọc được trên điện thoại (nhiều thì "+N"); chạm mở bảng từng nguồn, hiệu quả, hạn, và phù tăng ích / hộ sơn trong túi dùng ngay | ✅ `Buffs` |
 | Trading Post (Resource Assistance) | Vận Linh Trận: từ Chủ điện tầng 10, trong hồ sơ người cùng minh kéo từng loại tài nguyên gửi đi — hao tổn 35 % (Tàng Bảo Các tầng 1) → 8 % (tầng 25) đốt đi, người nhận nhận qua thư; mỗi ngày gửi tối đa 2× sức chứa kho mình, mỗi người nhận tối đa 1× sức chứa kho họ (chống dồn của qua acc phụ; `MARKET=off` tắt cùng chợ). Sửa kèm: nút "Mời vào minh" trong hồ sơ trước chỉ hiện cho Giới Chủ | ✅ `world/supply.ts`, `Supply.svelte` |
 | Rally on cities | Kết trận công sơn: người trong minh mở kết trận nhắm một tông môn (chờ 5/10/30 phút) ngay trong bảng Tranh đoạt; đồng minh góp đội từ nút "Góp đội" ở danh sách kết trận trang Tiên minh (mở bảng tông môn đó, chọn sẵn góp đội); tối đa 8 đội tới cùng lúc đánh như một bên (công pháp của đội mở) — núi mạnh quá trận dung một đội thì phải kết trận. Chiến lợi phẩm chia theo sức mang còn lại, chiến công theo lực chiến góp; bên thủ thấy một thẻ "X kết trận n đội kéo tới!", báo thù được mọi người trong trận. Server giờ báo cả minh khi kết trận mở / giải (trước chỉ khi bản ghi minh đổi — cả kết trận điểm cũng không tự hiện) | ✅ `world/raid.ts` (`raidRally`, `raidJoin`), `Rivals.svelte` |
+| Alliance ranks R1–R5 | 5 bậc trong tiên minh: R1 Ngoại môn (người mới vào) · R2 Nội môn · R3 Chân truyền (đặt dấu bản đồ cho cả minh) · R4 Đường chủ (duyệt đơn, mời, cắm / nhổ trận kỳ, ghi danh minh chiến / ma triều, nhập hàng, minh ước — tối đa 4 người) · R5 Minh chủ. Minh chủ xếp mọi bậc, R4 chỉ xếp R1–R3 cho người dưới mình; minh chủ rời thì bậc cao nhất lên thay. Đổi tên chức "Trưởng lão" (trùng trưởng lão dẫn quân) thành Đường chủ; dữ liệu cũ giữ nghĩa (thành viên cũ = R3) | ✅ `Role` −2…2 (`world/base.ts`), `allyRole` |
+| Alliance mail | Thư minh: đường chủ (R4) / minh chủ viết tối đa 300 chữ ở trang Tiên minh, thư vào hộp thư mọi người trong minh (cả người đang offline), mỗi minh một thư mỗi giờ, lọc từ như bố cáo | ✅ `allyMail` (`world/guild.ts`) |
+| Minimap | Bản đồ nhỏ ở góc bản đồ Giới (điện thoại: dưới trái trên dải chat; desktop: trên phải): ba vòng vùng, lãnh thổ các minh theo màu, mê vụ của mình phủ nhạt, chấm vàng tông môn mình / chấm lục đồng minh, khung đang nhìn; chạm hay kéo để bay khung nhìn tới, nút thu gọn | ✅ `world/Minimap.svelte` |
+| Power Up popup (file 8 D2) | "+N" thế lực bay lên dưới con số lực chiến trên HUD mỗi khi tăng (xây, tuyển, lĩnh ngộ xong, nhận quân…), gộp các lần tăng sát nhau | ✅ `Hud.svelte` |
+| Honor + Crusader achievements + season personal rewards | Công Huân: điểm cá nhân trong mùa — hạ đệ tử địch (chiến công / 100, cả khi thủ), săn yêu thú giới (2 × cấp), đánh yêu vương (sát thương / 200), khai mỏ (1 / 1.000 tài nguyên), phá trận kỳ (1 / 1.000 độ bền), giữ núi một đợt ma triều (10). Chinh Chiến Công Tích: 6 mốc (50 → 6.000) nhận lần lượt ngay trong mùa. Hết mùa top 10 nhận quà thư theo hạng (1 · 2–3 · 4–10), rồi về 0. Chip "Công Huân N" trên thẻ mùa bản đồ Giới (chấm son khi có mốc nhận) mở bảng: điểm, mốc, bảng xếp hạng giới | ✅ `HONOR_*` (data.ts), `sect/honor.ts`, `world/season.ts`, `Honor.svelte` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
 
 Nhịp sau các thay đổi (`npm run sim`, 25/09): bot giỏi Chủ điện 15 ngày 8,8 (24/09: 9,3), tầng 20 ngày 15,9, tầng 25 ngày
@@ -124,10 +129,10 @@ dưới phần bảo hộ: còn 23 %.
 **Đợt F — mùa giải & đấu trường** (file 6, mục 3 có thiết kế chi tiết)
 1. Luận Kiếm Đài: "Luận Kiếm Lệnh" từ nhiệm vụ ngày (bản chính + Kiếm Ý + Thương Điếm + phục thù đã xong).
 2. Thiên Đạo Biên Niên: mở khoá theo chương thay vì theo ngày cứng (đã lên 12 chương).
-3. Thưởng cá nhân của mùa: điểm công huân, thành tựu mùa, thưởng hạng cá nhân.
+3. (Công Huân + mốc + thưởng hạng cá nhân: đã xong.) Còn: tiền tệ mùa mang sang + Thiên Môn Thương Điếm, danh hiệu mùa.
 4. Tranh Đoạt Linh Châu (Ark of Osiris giản lược): chiến trường ô + hiệp + lệnh đứng (bước 1 — Luận Kiếm Minh Chiến — đã xong).
 5. Luật mùa thay đổi: Linh Triều Mùa, Chính – Tà, Cổ Di Tích mở theo lịch.
 
 **Đợt G — UI/UX** (file 8)
-- Bản đồ nhỏ trên bản đồ Giới.
-  (Đã có: dải chat ở núi + bản đồ, chat trong trang Tiên minh.)
+- (Đã có: dải chat ở núi + bản đồ, chat trong trang Tiên minh, bản đồ nhỏ.) Còn: khách ghé cảnh núi có chức năng (B5),
+  mức zoom định sẵn / lớp tình hình trên bản đồ Giới.

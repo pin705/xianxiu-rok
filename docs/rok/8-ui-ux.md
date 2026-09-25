@@ -151,7 +151,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Không làm VIP trả phí. Thay bằng **"Điểm danh sơn môn" / "Linh mạch hằng ngày"**: đăng nhập nhận một túi nhỏ, chuỗi 7 ngày thì ngày thứ 7 thưởng lớn hơn.
   - Nút là một đĩa ở cột phải, có giọt son khi chưa nhận. Nên nhận ngay trong màn Xuất quan cho gọn.
-- **Game mình:** ❌. Có Xuất quan và nhiệm vụ ngày, chưa có điểm danh.
+- **Game mình:** ✅ Hương Hỏa: điểm danh chuỗi, 12 cấp, lễ vật mỗi ngày, huy hiệu cạnh chân dung.
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### A4 · Action Points: điểm hành động
@@ -172,7 +172,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Một hàng huy hiệu nhỏ (18–22 px) sát dưới chân dung: khiên bảo hộ, Ngưng Thần Đan đang có hiệu lực, sự kiện cuối tuần…
   - Chạm → bảng "Đang hưởng" có đồng hồ từng dòng.
-- **Game mình:** 🟡
+- **Game mình:** ✅ dải tăng ích dưới cụm nút HUD (khiên, phù, đan, linh mạch, trận minh, sắc phong), chạm mở bảng (`Buffs.svelte`).
   - Khiên có (vòng xanh + icon, đồng hồ trong `title`).
   - Buff đan chỉ thấy ở Bảo khố. Nhãn "Cuối tuần" nằm dưới nút nhiệm vụ ngày.
   - `title` không hiện trên điện thoại, nên người chơi di động không đọc được thời gian khiên.
@@ -335,7 +335,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - "Truyền âm": một dải giấy mảnh 28 px nằm ngay trên thanh tab, **ở mọi tab**. Gồm dấu kênh (Giới / Minh), tên người, một dòng tin, số tin chưa đọc.
   - Chạm → Sheet chat (đã có).
   - Nên có nút ẩn cho ai muốn yên tĩnh.
-- **Game mình:** 🟡. Có dải một dòng, kênh Giới / Minh, chặn, báo cáo (`Chat.svelte`). Nhưng **chỉ ở tab Bản đồ và Tiên minh**. Tab Tông môn là nơi người chơi ở lâu nhất thì không có.
+- **Game mình:** ✅ dải chat ở cả núi, bản đồ và trang Tiên minh; kênh Giới / Minh / Truyền âm.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### A16 · Newspaper: tin toàn server
@@ -360,7 +360,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Đĩa lụa hình **hai tay áo chắp quyền** nổi phía trên nút Tạp dịch khi có người xin, kèm giọt son ghi số.
   - Chạm → "Đã tương trợ 4 đồng môn", điểm cống hiến bay về, tiếng mõ.
   - Tự ẩn khi không còn ai xin.
-- **Game mình:** 🟡. Có "Giúp tất cả (n)" và xin giúp từng việc, nhưng **chỉ trong trang Tiên minh** (`Alliance.svelte`).
+- **Game mình:** ✅ đĩa giúp đỡ nổi trên nút tạp dịch ở mọi tab, một chạm giúp tất cả.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### A18 · Info Button và mô tả theo lớp
@@ -470,7 +470,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - hoặc **"Đủ sau ~12 phút"**: tính theo sản lượng mỗi giờ;
   - hoặc **[Đi tới: Linh điền]**: công trình sản xuất loại đang thiếu.
   - Thiếu mà Thương hội chưa mở thì chỉ hiện hai lựa chọn sau.
-- **Game mình:** ❌. Có Thương hội (đổi tài nguyên có phí, mặc định đổi loại nhiều nhất lấy loại ít nhất; `Trade.svelte`) nhưng **không nối vào bảng nâng cấp / tuyển / lĩnh ngộ**. Bảng chỉ tô đỏ.
+- **Game mình:** ✅ bù tài nguyên thiếu một chạm ngay trong bảng công trình (`Refill.svelte`).
 - **Ưu tiên:** **P0** · **Công sức:** M
 
 #### C3 · Speedup Window: cửa sổ tăng tốc
@@ -496,7 +496,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Trong JobRow và trên bong bóng đồng hồ: nút **"Xin tương trợ"** (tay chắp) khi đã vào minh.
   - Sau khi xin, bong bóng hiện "3/10" số người đã giúp.
-- **Game mình:** 🟡. Xin giúp từng loại việc ở trang Tiên minh. Bảng công trình và bong bóng thì không có.
+- **Game mình:** ✅ việc vừa giao tự nhờ giúp khi đang trong minh; xin giúp từng việc ở trang Tiên minh.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### C5 · Troop Training: huấn luyện quân
@@ -602,7 +602,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - **"Trận đồ"**: lưu 3–5 đội (trưởng lão + số đệ tử mỗi hệ, hoặc "tỉ lệ %" để tự co theo quân đang có).
   - Chọn ở đầu màn xuất quân bằng 3–5 thẻ lụa nhỏ, đặt tên được ("Săn thú", "Độ kiếp", "Phá môn").
-- **Game mình:** ❌. Mỗi lần phải chọn lại. Mặc định "mang hết" nên giảm được đau, nhưng từ Trúc Cơ có 2–3 đội thì cần.
+- **Game mình:** ✅ Trận đồ: 3 ô lưu trưởng lão + đệ tử trong mọi bảng chọn đội.
 - **Ưu tiên:** P1 · **Công sức:** M
 
 #### C14 · Map Navigation: điều khiển và mức zoom bản đồ
@@ -647,7 +647,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Nút **"Tầm"** (kính lúp nét mực) trên dải trên bản đồ Giới.
   - Chọn loại (linh mạch, mỏ, yêu vương, tông môn) và cấp −/+ → camera trượt tới điểm gần nhất phù hợp.
   - Bản đồ Vùng không cần: đã có vòng sáng quanh "yêu thú nên đánh tiếp".
-- **Game mình:** ❌ trên bản đồ Giới. Bản đồ Vùng đã có gợi ý mục tiêu (vòng sáng).
+- **Game mình:** ✅ nút Tìm trên bản đồ Giới (mỏ / linh mạch / yêu vương / yêu thú theo cấp) bay tới và mở bảng.
 - **Ưu tiên:** P1 · **Công sức:** M
 
 #### C17 · Bookmarks, Coordinates, Sharing: đánh dấu, toạ độ, chia sẻ
@@ -660,7 +660,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Nút "Ghi nhớ" (sao) trong TileSheet.
   - Danh sách "Chỗ đã ghi" ở dải trên bản đồ, chia sẻ vào chat Minh bằng thẻ chạm để bay tới.
   - Toạ độ chỉ hiện ở mức Cận.
-- **Game mình:** ❌
+- **Game mình:** ✅ ghi nhớ ★ (20 chỗ), dấu của minh, chia sẻ toạ độ vào chat thành nút Tới.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C18 · Minimap: bản đồ nhỏ
@@ -670,7 +670,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Trước đây bản đồ nhỏ không đánh dấu nơi đang đánh ✔[2]. Các bản sau có điểm nóng giao tranh (Lost Kingdom) ✔[13] và bản đồ nhiệt ✔[21].
   - Vị trí và kích thước bản đồ nhỏ: chưa xác minh.
 - **Tu tiên hoá:** một **ô tranh nhỏ góc dưới phải** bản đồ Giới (84×84 px), vẽ tay giản lược: vùng, tông môn mình (son), minh (lam), chỗ đang đánh (chấm nhấp nháy). Chạm để nhảy.
-- **Game mình:** ❌
+- **Game mình:** ✅ (25/09) bản đồ nhỏ ở góc bản đồ Giới: vùng, lãnh thổ, mê vụ, tông môn mình / đồng minh, khung nhìn; chạm để tới (`world/Minimap.svelte`).
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C19 · Fog và Scouting: sương mù, dò thám
@@ -680,7 +680,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Trinh sát khám phá làng, hang ✔[riseofkingdomsguides scout-camp, xem 5]. Từ 1.0.88 gửi nhiều trinh sát cùng lúc ✔[20].
   - Chạm thành địch → Dò thám. Báo cáo dò thám về hộp thư ✔[30].
 - **Tu tiên hoá:** "Mây mù" trên bản đồ Giới đang có (theo pha mùa?). Dò thám = "Thám tử" (hạc giấy bay tới). Báo cáo dò thám là một tờ giấy vẽ tay ghi phòng thủ.
-- **Game mình:** 🟡. Tranh đoạt có "xem dò thám" trước khi cướp (`Rivals.svelte`). Bản đồ Vùng dùng mây che mục tiêu khoá. Chưa rõ Giới có sương mù không.
+- **Game mình:** ✅ mê vụ riêng mỗi tông môn trên bản đồ Giới + linh điểu khai sương; dò thám trong bảng Tranh đoạt.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C20 · Troop Control: điều quân trên bản đồ
@@ -751,14 +751,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Nhận quà khi thành viên mua gói, khi hạ thành man rợ, xong sự kiện ✔[35]. Mở quà tăng cấp quà. Quà có hạn 24 giờ, phải dọn kẻo mất ✔[ldshop, xem 5].
   - *Claim all*: chưa xác minh cho quà minh. Đã có cho phần thưởng làng ✔[21].
 - **Tu tiên hoá:** "Lễ vật": minh hạ yêu vương → mọi người nhận hộp lễ vật. Nút **"Nhận tất cả"**.
-- **Game mình:** ❌
+- **Game mình:** ✅ Minh lễ (hạ yêu vương → cả minh nhận quà, cấp quà 1–5), lễ nhập minh.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C27 · Alliance Technology: công nghệ liên minh
 
 - **Alliance Technology**: đóng góp bằng tài nguyên / gems, lượt đóng góp hồi theo thời gian, có xếp hạng đóng góp ngày / tuần ✔[35][36]. Dấu "đề xuất" của sĩ quan: chưa xác minh.
 - **Tu tiên hoá:** "Minh pháp": trưởng minh đánh dấu một công pháp minh "đang tu", thành viên góp linh thạch. Xếp hạng tuần.
-- **Game mình:** ❌
+- **Game mình:** ✅ Hộ Minh Đại Trận: 9 trận × 5 tầng, cung phụng, trận minh chủ điểm.
 - **Ưu tiên:** P2 · **Công sức:** M–L
 
 #### C28 · Alliance Territory và Markers: lãnh thổ, đánh dấu
@@ -767,7 +767,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Cờ, pháo đài đang xây hiện vùng kiểm soát dự kiến bằng nét đứt ✔[13]. Có thể lên kế hoạch cắm cờ trước, đủ điều kiện thì tự xây ✔[24].
   - Đánh dấu minh có đếm ngược ✔[22]. Thủ lĩnh đặt đánh dấu liên minh ✔[39].
 - **Tu tiên hoá:** khi có lãnh thổ minh trên Giới: viền mực lam quanh vùng, cờ minh vẽ tay. Đánh dấu = cắm "lệnh kỳ".
-- **Game mình:** ❌ (có điểm / linh mạch, chiếm / khai; chưa có lãnh thổ minh).
+- **Game mình:** ✅ lãnh thổ tiên minh (màu + viền trên bản đồ Giới), trận kỳ, dấu của minh.
 - **Ưu tiên:** P2 · **Công sức:** L
 
 #### C29 · Rally: tập kết đánh chung
@@ -777,7 +777,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Người gia nhập phải xem khoảng cách (thời gian hành quân), yêu cầu loại quân của người mở ✔[36].
   - Sĩ quan đổi đội trưởng đồn trú, rút quân khỏi hàng tập kết ✔[14][15].
 - **Tu tiên hoá:** "Hợp kích": minh mở trận vây yêu vương. Mỗi người gửi một đội, thấy đồng hồ tập hợp, loại đệ tử nên gửi.
-- **Game mình:** ❌ (chưa có tính năng).
+- **Game mình:** ✅ kết trận ở điểm, yêu vương và tông môn (công sơn); danh sách + nút góp đội ở trang Tiên minh.
 - **Ưu tiên:** P2 · **Công sức:** L
 
 #### C30 · Items / Inventory: túi đồ
@@ -793,7 +793,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Shops**: cửa hàng VIP, cửa hàng huân chương viễn chinh, cửa hàng liên minh, thương nhân bí ẩn ✔[34], cửa hàng Zenith (đổi huy hiệu sự kiện lấy giao diện thành…) ✔[25]. Gói ưu đãi dạng vuốt ✔[2].
 - **Tu tiên hoá:** "Phường thị": chợ Giới (luật đã có trong `world/market.ts`), cửa hàng điểm sự kiện, thương nhân vân du. Một trang có thẻ, không rải icon khắp HUD.
-- **Game mình:** ❌ (luật chợ có, client chưa có).
+- **Game mình:** ✅ Phường thị (chợ ký gửi), Thương hội, Thương nhân vân du, Cống Hiến Các, Luận Kiếm Thương Điếm, Tông Lệnh Bảo Khố.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C32 · Mail: hộp thư
@@ -810,7 +810,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Chat**: xem A15. Thêm: lobby chat cho giai đoạn lập đội của một số chế độ ✔[22]. Kênh Lost Kingdom thành dạng chủ đề trả lời theo luồng ✔[14]. Dịch tự động: chưa xác minh.
 - **Tu tiên hoá:** Sheet chat (đã có), thêm: gửi thẻ chiến báo / thẻ vị trí / thẻ trưởng lão, ghim bố cáo của trưởng minh.
-- **Game mình:** 🟡. Kênh Giới / Minh, chặn, báo cáo, chữ đã lọc ở server. Chưa có tin riêng, chưa có thẻ chia sẻ.
+- **Game mình:** ✅ kênh Giới / Minh / Truyền âm 1-1, chia sẻ chiến báo và toạ độ, chặn, báo cáo.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C34 · Governor Profile: hồ sơ thống đốc
@@ -821,7 +821,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Tường thành tựu 5 ô trưng bày ✔[3][27]. Nền văn minh, danh hiệu theo ngưỡng sức mạnh ✔[3].
   - Biểu đồ "tổng quan phát triển" so với người cùng vương quốc (1.0.91) ✔[23]. Hướng dẫn cách chơi (1.0.89) ✔[21]. Trang thống kê cá nhân của một số chế độ ✔[11].
 - **Tu tiên hoá:** "Hồ sơ chưởng môn": chân dung, danh hiệu cảnh giới, kiếp luân hồi, thế lực và đồ thị thế lực 7 ngày, thành tích (đang ở Bảo khố), trưởng lão mạnh nhất, minh. Chạm tên tông môn người khác ở Biên niên / Xếp hạng / Chat → xem hồ sơ của họ.
-- **Game mình:** ❌ (xem A1).
+- **Game mình:** ✅ hồ sơ chưởng môn từ chân dung, chat, minh, bản đồ (truyền âm, chặn, mời, tiếp tế).
 - **Ưu tiên:** P1 · **Công sức:** S–M
 
 #### C35 · Rankings: bảng xếp hạng
@@ -866,7 +866,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Power Up Popup**: xong công trình / nghiên cứu / huấn luyện thì "Power +xxx" hiện ra (chưa xác minh hình thức).
 - **Tu tiên hoá:** "+128 Thế lực" màu vàng lá viền mực, bay lên từ ô Thế lực. Nếu tăng lớn (≥5%) thì thêm một vòng 圆相 loang quanh ô.
-- **Game mình:** 🟡. Số chạy tween, không có chữ "+N" (xem A2).
+- **Game mình:** ✅ (25/09) "+N" thế lực bay lên dưới con số trên HUD, gộp các lần tăng sát nhau.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### D3 · Construction Complete: khi công trình xong
@@ -927,7 +927,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - "Hộ Sơn Đại Trận cảnh giới": khi có tông môn đang kéo quân tới (đội cướp có thời gian đi `arriveAt`), mép màn loang **son nhạt** như mực thấm.
   - Một thẻ son ở đầu HUD: "Huyết Sát Môn đang kéo tới · 3:20 [Xem]". Thông báo đẩy nếu đang tắt game.
   - Lối đi: gọi đội về giữ nhà, chữa thương, xem Hộ Sơn Đại Trận.
-- **Game mình:** ❌. Chỉ biết sau khi bị cướp (thông báo + chiến báo "bị cướp / đẩy lui").
+- **Game mình:** ✅ Tháp canh: thẻ son ở mọi tab khi đội địch vừa xuất quân (kết trận: một thẻ đếm số đội) + nút bật khiên; Web Push khi offline.
 - **Ưu tiên:** P1 · **Công sức:** M (server phải báo đội đang tới cho bên thủ)
 
 #### E4 · Push Notifications: thông báo đẩy
@@ -995,19 +995,19 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 #### G1 · Help All: giúp tất cả
 
 - **Help All**: xem A17 ✔[36].
-- **Game mình:** 🟡 (chỉ trong trang Tiên minh) · **Ưu tiên:** P1 · **Công sức:** S
+- **Game mình:** ✅ đĩa giúp đỡ ở mọi tab · **Ưu tiên:** P1 · **Công sức:** S
 
 #### G2 · Claim All: nhận tất cả
 
 - **Claim All**: nhận hết phần thưởng làng, hết thưởng nhiệm vụ mùa ✔[21], rương theo lô ✔[16].
 - **Tu tiên hoá:** "Nhận tất cả" ở: Thư có quà, nhiệm vụ ngày (khi ≥2 việc chờ), mốc sự kiện.
-- **Game mình:** ❌ (nhận từng cái).
+- **Game mình:** ✅ "Nhận tất cả" ở thư, sự kiện, thành tựu.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### G3 · Quick Replenish: bù nhanh
 
 - **Quick Replenish**: xem C2 ✔[19].
-- **Game mình:** ❌ · **Ưu tiên:** P0 · **Công sức:** M
+- **Game mình:** ✅ (`Refill.svelte`) · **Ưu tiên:** P0 · **Công sức:** M
 
 #### G4 · Smart Speedup: dùng tăng tốc thông minh
 
@@ -1017,7 +1017,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 #### G5 · Presets: lưu đội
 
 - **Presets**: xem C13 ✔[13].
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** M
+- **Game mình:** ✅ Trận đồ · **Ưu tiên:** P1 · **Công sức:** M
 
 #### G6 · Idle Visibility: thấy hàng / đội đang rảnh
 

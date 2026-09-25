@@ -23,6 +23,7 @@ import {
   type ElderId,
 } from '../data.ts'
 import {
+  addKp,
   allyOf,
   elo,
   raidPath,
@@ -163,7 +164,6 @@ type Bout = {
 // Chiến công: thế lực đệ tử của một bên bị hạ (left: số còn đứng của từng nhóm sau trận)
 const killed = (side: Side, left?: number[]) =>
   Math.round(side.troops.reduce((sum, t, g) => sum + (t.n - (left?.[g] ?? t.n)) * TIER[t.tier].power, 0))
-const addKp = (s: State, n: number): State => (n ? { ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + n } } : s)
 
 // Một trận cướp lúc at: mọi state đã đưa tới at. party: một đội, hay cả nhóm kết trận (đội mở trận đứng đầu, công pháp của
 // đội đó) gộp làm một bên — chiến lợi phẩm chia theo sức mang còn lại, chiến công theo lực chiến góp vào. Bên thủ là mọi đệ

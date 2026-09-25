@@ -9,6 +9,7 @@ import {
   arenaBoard,
   arenaFoes,
   boonLeft,
+  honorBoard,
   lordOf,
   marketOf,
   profileOf,
@@ -24,6 +25,7 @@ import type { Sock, World } from './world.ts'
 
 const SEASON_ROWS = 20 // bảng điểm mùa gửi client: top này
 const ARENA_ROWS = 20 // bảng tuần Luận Kiếm Đài: top này
+const HONOR_ROWS = 20 // bảng Công Huân mùa: top này
 
 export type Answers = { [K in Query['k']]: (sock: Sock, q: QueryOf<K>) => Answer[K] | Promise<Answer[K]> }
 
@@ -60,6 +62,14 @@ export const answersOf = (w: World): Answers => ({
       foes: arenaFoes(w.ps, sock.data.pid, now, Math.random),
       board: board.slice(0, ARENA_ROWS).map(([pid, s]) => ({ pid, name: s.name, pts: s.arena!.pts })),
       rank: k < 0 ? null : k + 1,
+    }
+  },
+  honor: sock => {
+    const board = honorBoard(w.ps, w.npc)
+    const k = board.findIndex(([pid]) => pid === sock.data.pid)
+    return {
+      top: board.slice(0, HONOR_ROWS).map(([pid, s]) => ({ pid, name: s.name, n: s.honor ?? 0 })),
+      me: k < 0 ? null : { rank: k + 1, n: board[k][1].honor ?? 0 },
     }
   },
   ally: sock => allyInfo(w.shared, w.ps, sock.data.pid, p => !!w.slots.get(p)?.conns.size),

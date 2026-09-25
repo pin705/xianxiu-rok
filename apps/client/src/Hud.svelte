@@ -1,6 +1,7 @@
 <script lang="ts">
   // HUD: dải giấy bồi lụa trên cùng (chưởng môn, thế lực, tài nguyên), thẻ nhiệm vụ giấy, nút tạp dịch,
   // dải tab dưới cùng — mọi mặt đều vẽ tay (da từ theme.ts, icon/huy hiệu từ @rok/art), cùng họ màu với tranh.
+  import { untrack } from 'svelte'
   import { Tween } from 'svelte/motion'
   import {
     DAILY_HALL,
@@ -241,6 +242,15 @@
 
   // Số chạy mượt khi tăng/giảm
   const powerT = Tween.of(() => power(game), { duration: 700 })
+  // thế lực tăng (xây / tuyển / lĩnh ngộ xong…): "+N" bay lên cạnh con số như RoK, gộp các lần tăng sát nhau
+  let powUp = $state<{ n: number; t: number } | null>(null)
+  let lastPow = -1 // −1: chưa đo (lần đầu không bay)
+  $effect(() => {
+    const p = Math.round(power(game))
+    const d = lastPow < 0 ? 0 : p - lastPow
+    lastPow = p
+    if (d > 0) untrack(() => (powUp = { n: (powUp && Date.now() - powUp.t < 1500 ? powUp.n : 0) + d, t: Date.now() }))
+  })
   const resT = RESOURCES.map(r => Tween.of(() => game.res[r], { duration: 450 }))
 </script>
 
@@ -281,7 +291,9 @@
         >
       </div>
       <span class="pow" title={L.power}
-        ><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(Math.round(powerT.current))}</span
+        ><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(
+          Math.round(powerT.current),
+        )}{#if powUp}{#key powUp.t}<span class="float up" aria-hidden="true">+{num(powUp.n)}</span>{/key}{/if}</span
       >
       <IconButton icon="mail" label="{L.mail.title}{letters ? ` (${letters})` : ''}" size={34} onclick={onmail}
         ><Badge n={letters} /></IconButton
@@ -568,6 +580,7 @@
     color: var(--cinnabar);
   }
   .pow {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -703,6 +716,14 @@
     paint-order: stroke fill;
     pointer-events: none;
     animation: float 1.4s var(--ease) forwards;
+  }
+  .float.up {
+    left: 50%;
+    top: 100%;
+    font-size: var(--fs-3);
+    color: var(--malachite);
+    white-space: nowrap;
+    translate: -50% 0;
   }
   @keyframes float {
     from {

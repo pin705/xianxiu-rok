@@ -14,15 +14,16 @@
     type Mark,
     type WorldAction,
   } from '@rok/rules/world'
-  import { BLESSINGS, BOOK, cellOf, clear, dayOf, fogOf, type BlessKey } from '@rok/rules'
+  import { BLESSINGS, BOOK, HONOR_TIERS, cellOf, clear, dayOf, fogOf, type BlessKey } from '@rok/rules'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
-  import { Bag, Button, Card } from '../ui'
-  import { L, clock, keyBlocked } from '../lib'
+  import { Badge, Bag, Button, Card } from '../ui'
+  import { L, clock, keyBlocked, num } from '../lib'
   import { mountScene, railPx } from './stage'
   import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Pick, type Rel } from './worldmap'
   import { useGame } from '../game'
   import { social } from '../social.svelte'
+  import Minimap from './Minimap.svelte'
 
   let {
     info,
@@ -193,6 +194,10 @@
       scene.setData(snap, rel, phase, now, game.seat ? { fog: fogOf(game), visited: game.visited ?? [] } : undefined)
   })
 
+  const honorReady = $derived.by(() => {
+    const t = HONOR_TIERS[game.honorGot ?? 0]
+    return !!t && (game.honor ?? 0) >= t.n
+  })
   // Giới Chủ (chạm: hồ sơ, sắc phong nếu mình là Giới Chủ)
   const lordSeat = $derived(snap?.lord ? snap.seats.find(s => s.pid === snap.lord) : undefined)
   // Ô (x, y) của giới → toạ độ trên màn; null: ngoài màn
@@ -216,6 +221,18 @@
     ongone?.()
   })
   const pingAt = $derived(ping && ping.until > now ? onScreen(ping.x, ping.y) : null)
+
+  // bản đồ nhỏ: khung đang nhìn theo ô; chạm trên đó thì bay tới (giữ độ phóng)
+  const viewTiles = $derived.by(() => {
+    if (typeof innerWidth === 'undefined') return { x: 0, y: 0, w: MAP_W, h: MAP_W }
+    const hw = (innerWidth - railPx()) / 2 / cam.z,
+      hh = innerHeight / 2 / cam.z
+    return { x: (cam.x - hw) / T, y: (cam.y - hh) / T, w: (2 * hw) / T, h: (2 * hh) / T }
+  })
+  function jumpTo(x: number, y: number) {
+    steered = true
+    cam = clamp({ x: (x + 0.5) * T, y: (y + 0.5) * T, z: cam.z })
+  }
 
   // Tìm (như kính lúp của RoK): điểm gần nhất theo loại + cấp, còn sống, có đường đi — bay tới và mở bảng của điểm đó
   type Find = 'mine' | 'vein' | 'boss' | 'wild'
@@ -293,12 +310,27 @@
   {#if pingAt}<span class="ping" style="left:{pingAt.x}px;top:{pingAt.y}px" aria-hidden="true"></span>{/if}
 </div>
 
+<Minimap
+  atlas={atlas(info.map)}
+  {snap}
+  fog={game.seat ? fogOf(game) : null}
+  {me}
+  {allies}
+  view={viewTiles}
+  {now}
+  onjump={jumpTo}
+/>
+
 <div class="top stack" style:--gap="6px" bind:this={topCard}>
   {#if toggle}<div class="row">{@render toggle()}</div>{/if}
   <Card tone="silk">
     <div class="row">
       <span class="grow stack" style:--gap="0">
         <b class="t-small">{L.rank.fameRow(info.season)} · {L.world.day(day, SEASON_DAYS)} · {L.world.phase[phase]}</b>
+        <!-- Công Huân mùa: điểm của mình, chấm son khi có mốc nhận được -->
+        <button class="lord t-tiny" onclick={() => (social.honor = true)}
+          ><Icon name="star" size={12} />{L.honor.chip(num(game.honor ?? 0))}{#if honorReady}<Badge dot />{/if}</button
+        >
         {#if lordSeat}<button class="lord t-tiny" onclick={() => (social.profile = lordSeat.pid)}
             ><Icon name="flag" size={12} />{L.lord.now(lordSeat.name)}</button
           >{/if}

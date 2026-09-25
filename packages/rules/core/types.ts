@@ -178,6 +178,8 @@ export type MailArgs = {
   legionTop: [rank: number] // minh mình đứng hạng rank Ma Triều Công Sơn
   allyWelcome: [name: string] // lễ nhập minh lần đầu
   supply: [who: string] // đồng minh who gửi tài nguyên qua Vận Linh Trận (ở phần quà)
+  allyMail: [who: string, tag: string, text: string] // thư minh: R4 / minh chủ who của minh tag gửi cả minh
+  honorTop: [rank: number, n: number] // hết mùa: hạng Công Huân cá nhân, điểm
 }
 export type MailKind = keyof MailArgs
 // Thư mới (chưa có id): a bắt buộc, đúng kiểu theo khoá
@@ -253,6 +255,8 @@ export type State = {
   joined?: number // lần đầu vào một tiên minh (đã nhận lễ nhập minh)
   dao?: { id: DaoId; at: number } // đạo thống đang theo, chọn lúc at
   towerDay?: number // ngày (dayOf) đã nhận rương Tĩnh tọa ngộ đạo
+  honor?: number // Công Huân trong mùa (hết mùa về 0)
+  honorGot?: number // số mốc Chinh Chiến Công Tích đã nhận trong mùa
   fog?: Fog // mê vụ đã khai (chưa có: chỉ quanh tông môn)
   visited?: number[] // thôn trang / động phủ đã ghé (chỉ số trong sitesOf)
   born?: number // lúc lập tông môn (ms) — sự kiện tân thủ tính theo giờ từ đây (lập lúc 23h vẫn đủ 24 giờ ngày đầu)

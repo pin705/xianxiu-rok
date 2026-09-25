@@ -87,7 +87,10 @@ export type Query =
   | { k: 'profile'; pid: number }
   | { k: 'dms' }
   | { k: 'arena' }
+  | { k: 'honor' }
   | { k: 'shared'; pid: number; id: number }
+// Công Huân mùa này: top (người có điểm), hạng của mình (null: chưa có điểm)
+export type HonorView = { top: { pid: number; name: string; n: number }[]; me: { rank: number; n: number } | null }
 // Luận Kiếm Đài: đối thủ gợi ý, bảng tuần (top), hạng của mình (null: chưa có trận tuần này)
 export type ArenaView = { foes: ArenaFoe[]; board: { pid: number; name: string; pts: number }[]; rank: number | null }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
@@ -115,6 +118,7 @@ export type Answer = {
   profile: Profile | null // người không còn trong giới
   dms: Dm[]
   arena: ArenaView
+  honor: HonorView
   shared: Report | null // chiến báo người khác chia sẻ vào kênh mình nghe được
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>

@@ -462,6 +462,39 @@ test('tiên minh: lập (tầng 10, tốn phí, tên/tag không trùng), vào, c
   assert.equal(Object.keys(w.allies).length, 0)
 })
 
+test('bậc R1–R5: người mới R1; đường chủ (R4) chỉ xếp R1–R3 cho người dưới; dấu bản đồ từ R3; thư minh; minh chủ rời thì bậc cao nhất lên thay', () => {
+  const ps = world(sect('A', 10), sect('B', 10), sect('C', 10), sect('D', 10))
+  let w = freshWorld()
+  const act = (pid: number, a: Parameters<typeof worldAct>[2]) => {
+    const r = worldAct(ps, pid, a, T0, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [id, s] of r.changed) ps.set(id, s)
+    w = r.world
+    return null
+  }
+  act(1, { type: 'allyFound', name: 'Thanh Vân', tag: 'TV' })
+  const aid = allyOf(w, 1)!.id
+  for (const p of [2, 3, 4]) act(p, { type: 'allyJoin', id: aid })
+  const role = (p: number) => w.allies[aid].members[p]
+  assert.deepEqual([role(1), role(2), role(3)], [2, -2, -2], 'minh chủ R5, người mới R1')
+  const mark = (p: number) => act(p, { type: 'allyMark', x: 10, y: 10, text: 'Tụ' })
+  assert.equal(mark(2), 'locked', 'R1 chưa đặt dấu')
+  assert.equal(act(1, { type: 'allyRole', pid: 2, role: 1 }), null, 'minh chủ phong R4')
+  assert.equal(act(2, { type: 'allyRole', pid: 3, role: 0 }), null, 'R4 thăng người dưới lên R3')
+  assert.equal(mark(3), null, 'R3 đặt dấu được')
+  assert.equal(act(2, { type: 'allyRole', pid: 3, role: 1 }), 'locked', 'R4 không phong R4')
+  assert.equal(act(3, { type: 'allyRole', pid: 4, role: -1 }), 'locked', 'R3 không xếp bậc')
+  assert.equal(act(2, { type: 'allyRole', pid: 1, role: 1 }), 'locked', 'không đụng tới minh chủ')
+  assert.equal(parseWorldAction({ type: 'allyRole', pid: 4, role: 3 }), null, 'ngoài R1–R5')
+  // thư minh: R4 / minh chủ, vào hộp thư cả minh, mỗi giờ một thư
+  assert.equal(act(3, { type: 'allyMail', text: 'Tối nay 8h' }), 'locked', 'R3 chưa gửi thư minh')
+  assert.equal(act(2, { type: 'allyMail', text: '  Tối nay 8h   tập trung ' }), null)
+  for (const p of [1, 2, 3, 4]) assert.deepEqual(ps.get(p)!.mail.at(-1)!.a, ['B', 'TV', 'Tối nay 8h tập trung'])
+  assert.equal(act(1, { type: 'allyMail', text: 'Thêm' }), 'cooldown', 'mỗi giờ một thư')
+  assert.equal(act(1, { type: 'allyLeave' }), null)
+  assert.deepEqual([role(2), role(3), role(4)], [2, 0, -2], 'R4 lên minh chủ')
+})
+
 test('tiên minh giúp đỡ: nhờ một việc, mỗi người giúp một lần, mỗi lần bớt max(60 giây, 1 %), tối đa 10 lần', async () => {
   const ps = world(...Array.from({ length: 12 }, (_, i) => sect(`S${i}`, 12)))
   let w = freshWorld()
@@ -877,12 +910,12 @@ test('cửa minh: đóng thì xin vào chờ duyệt (nhận / từ chối), đ�
   assert.deepEqual(w.allies[1].apps, [], 'vào minh khác: đơn cũ bị bỏ')
   assert.equal(act(3, { type: 'allyJoin', id: 1 }), null)
   assert.equal(act(1, { type: 'allyAccept', pid: 3, ok: true }), null)
-  assert.equal(w.allies[1].members[3], 0, 'duyệt: vào minh')
+  assert.equal(w.allies[1].members[3], -2, 'duyệt: vào minh (bậc R1)')
   const lone = sect('E', 12)
   ps.set(5, lone)
   assert.equal(act(1, { type: 'allyInvite', pid: 5 }), null)
   assert.equal(act(5, { type: 'allyJoin', id: 1 }), null)
-  assert.equal(w.allies[1].members[5], 0, 'được mời: vào thẳng dù minh đóng')
+  assert.equal(w.allies[1].members[5], -2, 'được mời: vào thẳng dù minh đóng')
   assert.equal(allyRows(w, ps, 5)[0].invited, false)
 })
 
