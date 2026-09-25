@@ -683,7 +683,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.4 | Tavern (rương tướng, bảo hiểm) | ✅ Chiêu Hiền Đài (thiếp miễn phí, bảo hiểm thiếp vàng; không bán) | P1 (free) / P2 (bán) | M |
 | 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan | P2 | S |
 | 2.6 | Sao 1–6, tượng sao, may mắn | ✅ sao 1–6 bằng tín vật (tất định, không may rủi) | P1 | M |
-| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | 🟡 tín vật (thu nhận, nâng sao); chưa nâng công pháp | P1 | M |
+| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | ✅ tín vật: thu nhận + nâng sao (mỗi sao: công pháp +5 %, công / máu +3 %); chưa có nâng ngẫu nhiên / reset kỹ năng | P1 | M |
 | 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | ✅ chân nguyên (tụ theo lượt + khi mất máu) | P0 | M |
 | 2.9 | Expertise | ❌ | P2 | M |
 | 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | 🟡 8 điểm, 3 nhánh chung, Tẩy Tủy Đan | P1 | L |

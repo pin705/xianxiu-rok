@@ -5,7 +5,7 @@
 
 /* Font chữ: src/fonts.css (sinh bởi fonts.mjs — Alegreya đủ Latin, Việt, Cyrillic, Hy Lạp; tải theo hệ chữ đang dùng) */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* Chữ */
   /* hệ chữ Alegreya chưa có thì rơi về Noto Serif (đủ mọi hệ chữ) của máy, rồi serif mặc định */
@@ -20,7 +20,7 @@
   --fs-7: 32px;
 
   /* Màu theo vai trò (pigment do theme.ts bơm vào) */
-  /* chữ ngà (giao diện sơn mài); thiếu tranh thì theme.ts không bơm --ivory → rơi về mực trên giấy */
+  /* chữ (theme.ts SUONG bơm --ivory = mực); thiếu tranh thì rơi về mực gốc */
   --text: var(--ivory, var(--ink));
   --text-soft: var(--ivory2, var(--ink2));
   --text-faint: var(--ivory3, var(--ink3));

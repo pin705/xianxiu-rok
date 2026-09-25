@@ -197,3 +197,27 @@ export const pushSubs = pgTable(
   },
   t => [index().on(t.accountId)],
 )
+
+// Mã quà tặng (admin tạo, người chơi nhập ở Cài đặt → Tài khoản): mỗi tài khoản một lần mỗi mã; max: tổng lượt (null: không giới
+// hạn); until: hết hạn (null: không hết). gift: quà như thư admin (Reward)
+export const giftCodes = pgTable('gift_codes', {
+  code: text().primaryKey(), // chữ hoa, bỏ khoảng trắng / gạch nối
+  gift: jsonb().notNull(),
+  max: integer(),
+  uses: integer().notNull().default(0),
+  until: ts('until'),
+  createdAt: ts('created_at').notNull().defaultNow(),
+})
+export const giftRedeems = pgTable(
+  'gift_redeems',
+  {
+    code: text()
+      .notNull()
+      .references(() => giftCodes.code, { onDelete: 'cascade' }),
+    accountId: integer()
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
+    at: ts('at').notNull().defaultNow(),
+  },
+  t => [primaryKey({ columns: [t.code, t.accountId] })],
+)

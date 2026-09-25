@@ -1741,6 +1741,10 @@ export const en: Text = {
           `The ${what} stage is over: Light ${a.toLocaleString('en')} – Darkness ${b.toLocaleString('en')}. Your camp, ${camp}, won the stage and earns extra season points. A reward for contributors is below.`,
         ]
       },
+      code: (code: string): [string, string] => [
+        `Gift code ${code}`,
+        'The reward for the code you entered is below — claim it into your bag.',
+      ],
       spied: (foe: string): [string, string] => [
         'You were scouted',
         `A crane from ${foe} just circled your mountain — someone is eyeing your sect. Raise a shield or call reinforcements if needed.`,
@@ -1936,6 +1940,11 @@ export const en: Text = {
     renameTo: 'New name',
     renameGo: 'Rename',
     renamed: 'Renamed — the new name shows in a few seconds',
+    redeem: 'Gift code',
+    redeemHint:
+      'Enter a code from events or the community. Each account can use each code once; the reward arrives by mail.',
+    redeemGo: 'Redeem',
+    redeemed: 'Code redeemed — check your mail',
     login: 'Sign in',
     have: 'Already have an account?',
     enterCode: 'Enter transfer code',
@@ -1955,6 +1964,8 @@ export const en: Text = {
       name_taken: 'Another sect already uses this name',
       no_item: 'Needs a Renaming Decree',
       nosect: 'No sect yet',
+      used: 'You already used this code',
+      gone: 'This code has run out',
     } as Record<string, string>,
   },
   push: {

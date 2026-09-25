@@ -99,32 +99,36 @@ const nine = async (name: string, draw: () => Skin, fill = true) => {
   return `${url} ${t * S} ${r * S} ${b * S} ${l * S}${fill ? ' fill' : ''} / ${t}px ${r}px ${b}px ${l}px / ${skin!.outset ?? 0}px ${skin!.repeat ?? 'stretch'}`
 }
 
-// Giao diện sơn mài (27/9/2026): bề mặt lam sẫm, chữ ngà, vàng chỉ là đường viền đồng cổ — không tô mảng vàng/giấy (người chơi
-// thấy rẻ). Ghi đè các màu gốc mà giao diện dùng làm bề mặt/chữ; tranh cảnh (Pixi) vẫn dùng PIGMENT gốc.
-const LACQUER = {
-  paper: '#0f272b', // bề mặt bảng, thẻ — cùng tông lòng khung góc chạm (không thành hộp lồng hộp)
-  paper2: '#16343a', // bề mặt nổi (ô, thẻ con)
-  paper3: '#35534f', // đường chia, viền mảnh
-  rim: '#9a8456', // viền đồng cổ
-  ivory: '#efe7d6', // chữ chính
-  ivory2: '#c3baa8',
-  ivory3: '#8e887c',
-  goldD: '#d8b974', // chữ vàng trên nền tối
-  // son, lục, lam làm chữ trên nền tối: sáng lên cho tương phản ≥ 4,5 (đo bằng tools/art/contrast.ts)
-  cinnabar: '#e57a66',
-  cinnabarL: '#ee9480',
-  malachite: '#6cc193',
-  malachiteD: '#86c79d',
-  azurite: '#8fb6dc',
-  azuriteD: '#8fb6dc',
+// Giao diện trắng sương (27/9/2026, theo concept sáng tạo — tools/art/.work/raw/creative-*.webp): giấy sương lạnh, nét mực, điểm son,
+// ngọc lam. Không vàng ngà (người chơi thấy "giống giấy, rẻ"), không lam sẫm. Chỉ bật khi da tranh đã tải (xem applyTheme).
+const SUONG = {
+  paper: '#f3f4f0', // bề mặt bảng, thẻ: trắng sương hơi lạnh
+  paper2: '#e9ebe6', // bề mặt nổi / lõm nhẹ
+  paper3: '#c6cac2', // đường chia, viền mảnh
+  rim: '#2b2723', // viền mực
+  ivory: '#1f1b17', // chữ chính (mực)
+  ivory2: '#4b4640',
+  ivory3: '#6f6a62',
+  goldD: '#7a5a1c',
+  cinnabar: '#b3372a',
+  cinnabarL: '#d9604a',
+  malachite: '#2f7a58',
+  malachiteD: '#285f4b',
+  azurite: '#1b4566',
+  azuriteD: '#1b4566',
 }
 
 export async function applyTheme() {
   const root = document.documentElement.style
   for (const [k, v] of Object.entries(PIGMENT)) root.setProperty(`--${kebab(k)}`, v)
-  // chỉ khi da sơn mài (tranh) đã có: thiếu tranh (mất mạng lần đầu, ?art=0) thì da vẽ bằng code là giấy sáng → giữ chữ mực
-  if (artOf('skin:card')) for (const [k, v] of Object.entries(LACQUER)) root.setProperty(`--${kebab(k)}`, v)
-  else root.colorScheme = 'light'
+  // chỉ khi da tranh đã có: thiếu tranh (mất mạng lần đầu, ?art=0) thì dùng bảng màu gốc của da vẽ bằng code
+  if (artOf('skin:card')) for (const [k, v] of Object.entries(SUONG)) root.setProperty(`--${kebab(k)}`, v)
+  root.colorScheme = 'light'
+  // núi mờ đáy bảng (tools/art make.py ui): nền giấy sương có dãy núi như tranh thủy mặc
+  const mountains = artOf('ui:mountains')?.src
+  if (mountains) root.setProperty('--img-mountains', `url(${mountains})`)
+  const seal = artOf('ui:seal')?.src // nút ấn son vẽ tay (nâng cấp…)
+  if (seal) root.setProperty('--ui-seal-img', `url(${seal})`)
   const P = PIGMENT
   const vars: Record<string, Promise<string>> = {
     '--paper-tex': img('paper', () => paper(256)),

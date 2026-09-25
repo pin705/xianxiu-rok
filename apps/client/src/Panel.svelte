@@ -40,7 +40,7 @@
     type Tier,
     type UnitType,
   } from '@rok/rules'
-  import { Icon, building, tierOf, type Kind } from '@rok/art'
+  import { Icon, artOf, building, tierOf, type IconName, type Kind } from '@rok/art'
   import { Bag, Button, Card, Confirm, Medal, Painting, Section, Sheet, Stat, Tabs, Tag, Toggle } from './ui'
   import Alchemy from './Alchemy.svelte'
   import ArmyPick from './Army.svelte'
@@ -117,7 +117,7 @@
   lore={id ? L.b[id].lore : ''}
 >
   {#snippet art()}
-    {#if id}
+    {#if id && tab !== 'upgrade'}
       {@const lv = Math.max(1, game.levels[id])}
       <span class="art"
         ><Painting key="panel:{id}:{tierOf(lv)}" make={() => building(id as Kind, lv).art} w={118} h={104} /></span
@@ -135,6 +135,8 @@
     {@const err = upgradeError(game, id)}
     {@const c = cost(id, Math.min(next, MAX_LEVEL))}
     {@const tr = TRIBS[game.trib]}
+    <!-- nâng cấp thường (không đang xây, không độ kiếp, chưa tối đa): bố cục nghi lễ — hai tầng, lễ vật trên án, nút ấn son -->
+    {@const rite = !job && !(err === 'trib' && tr) && err !== 'max_level'}
 
     {#if fn}
       <Tabs
@@ -228,7 +230,7 @@
         <Button variant="gold" wide onclick={() => onselect('chuDien')}>{L.panel.goTo}: {L.b.chuDien.name}</Button>
       </div>
     {:else}
-      <Card>
+      {#snippet gains()}
         {#if d.makes}
           <Stat label={L.panel.output} tone="good">
             <Icon name={d.makes} size={16} />{num(rate(game, d.makes))}{#if lv < MAX_LEVEL}<span class="to"
@@ -267,7 +269,8 @@
         {#if lv < MAX_LEVEL}
           <Stat label={L.power} tone="good"><Icon name="power" size={14} />+{num(d.power * next)}</Stat>
         {/if}
-      </Card>
+      {/snippet}
+      {#if !rite}<Card>{@render gains()}</Card>{/if}
 
       {#if job}
         <div class="mt-3"><JobRow kind="build" label={L.panel.upgrading(job.level)} /></div>
@@ -330,9 +333,28 @@
       {:else if err === 'max_level'}
         <p class="mt-3 center t-gold t-strong">{L.panel.maxed}</p>
       {:else}
-        <Section title={L.panel.requires}>
+        <div class="rite">
+          <div class="tiers">
+            <figure>
+              <Painting
+                key="panel:{id}:{tierOf(Math.max(1, lv))}"
+                make={() => building(id as Kind, Math.max(1, lv)).art}
+                w={120}
+                h={96}
+              />
+              <figcaption>{lv ? L.level(lv) : L.panel.notBuilt}</figcaption>
+            </figure>
+            <svg class="arrow" viewBox="0 0 60 24" aria-hidden="true"
+              ><path d="M4 14 C 18 4, 30 22, 46 11" /><path d="M40 5 L 52 10 L 42 18" /></svg
+            >
+            <figure class="nx">
+              <Painting key="panel:{id}:{tierOf(next)}" make={() => building(id as Kind, next).art} w={132} h={106} />
+              <figcaption>{L.level(next)}</figcaption>
+            </figure>
+          </div>
+          <div class="gains">{@render gains()}</div>
           {#if need || err === 'queue_full'}
-            <div class="row wrap">
+            <div class="row wrap center-row">
               {#if need}
                 <Tag icon={hall >= need ? 'check' : 'cross'} tone={hall >= need ? 'good' : 'bad'}
                   >{L.panel.hall(need)}</Tag
@@ -344,31 +366,41 @@
               {#if err === 'queue_full'}<Tag icon="cross" tone="bad">{L.panel.busy}</Tag>{/if}
             </div>
           {/if}
-          <Bag res={c} have={game.res} />
+          <!-- lễ vật trên án son: mỗi tài nguyên một món, số đủ / thiếu -->
+          <div class="altar">
+            {#each Object.entries(c) as [r, v] (r)}
+              {@const have = game.res[r as keyof typeof game.res] ?? 0}
+              <span class="gift" class:short={have < (v ?? 0)}>
+                {#if artOf(`ui:res-${r}`)}<img src={artOf(`ui:res-${r}`)!.src} alt="" draggable="false" />{:else}<Icon
+                    name={r as IconName}
+                    size={40}
+                  />{/if}
+                <b class="t-num">{num(v ?? 0)}</b>
+                <small class="t-num">{L.panel.have(num(have))}</small>
+              </span>
+            {/each}
+          </div>
           {@render store(c)}
           <Refill cost={c} />
-        </Section>
-        <div class="mt-4">
-          <Button
-            wide
-            size="lg"
-            icon="hammer"
-            trail={clock(buildTime(game, id, next))}
-            trailIcon="clock"
-            disabled={!!err}
-            onclick={() => onupgrade(id)}
-          >
-            {lv ? L.panel.upgrade : L.panel.build}
-          </Button>
-          <!-- xong lúc mấy giờ (giờ máy); Chủ điện: lên tầng sau mở ra gì -->
-          <p class="center t-tiny t-soft mt-2">
-            {L.panel.doneAt(
-              new Date(now + buildTime(game, id, next)).toLocaleTimeString(LANG, {
-                hour: '2-digit',
-                minute: '2-digit',
-              }),
-            )}{#if id === 'chuDien' && unlocked(next).length}<br />{unlocked(next)[0].text}{/if}
-          </p>
+          <div class="go">
+            <button class="seal" disabled={!!err} onclick={() => onupgrade(id)}>
+              <span>{lv ? L.panel.upgrade : L.panel.build}</span>
+            </button>
+            <span class="when">
+              <b class="t-num"><Icon name="clock" size={14} />{clock(buildTime(game, id, next))}</b>
+              <small
+                >{L.panel.doneAt(
+                  new Date(now + buildTime(game, id, next)).toLocaleTimeString(LANG, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }),
+                )}</small
+              >
+            </span>
+          </div>
+          {#if id === 'chuDien' && unlocked(next).length}<p class="center t-tiny t-soft">
+              {unlocked(next)[0].text}
+            </p>{/if}
         </div>
       {/if}
       {#if id === 'chuDien'}<DaoPick />{/if}
@@ -423,5 +455,158 @@
     border: 0 solid transparent;
     border-image: var(--sk-card-plain);
     background: linear-gradient(90deg, rgb(138 115 207 / 0.18), transparent) padding-box;
+  }
+
+  /* ---------- Nghi lễ nâng cấp: hai tầng, lễ vật trên án son, nút ấn son ---------- */
+  .rite {
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
+  }
+  .tiers {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+  }
+  figure {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    margin: 0;
+  }
+  figcaption {
+    font-size: var(--fs-2);
+    font-weight: 800;
+    color: var(--text-soft);
+  }
+  .nx :global(img) {
+    filter: drop-shadow(0 0 10px rgb(236 208 138 / 0.9)) drop-shadow(0 0 3px rgb(255 255 255 / 0.9));
+  }
+  .nx figcaption {
+    color: var(--cinnabar);
+  }
+  .arrow {
+    flex: none;
+    width: 52px;
+    margin-bottom: 44px;
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .gains {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+  }
+  .center-row {
+    justify-content: center;
+  }
+  /* án son: mặt bàn sơn đỏ viền vàng, hai chân; lễ vật đứng trên mặt bàn */
+  .altar {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    width: 100%;
+    padding: 4px 20px 26px;
+    background:
+      linear-gradient(#c9a45a, #c9a45a) left 8px bottom 18px / calc(100% - 16px) 2px no-repeat,
+      linear-gradient(#c0443a, #7d2218) left 0 bottom 10px / 100% 12px no-repeat;
+  }
+  .altar::before,
+  .altar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(#8a2a20, #5a1510);
+    border-radius: 0 0 3px 3px;
+  }
+  .altar::before {
+    left: 26px;
+  }
+  .altar::after {
+    right: 26px;
+  }
+  .gift {
+    display: grid;
+    justify-items: center;
+    gap: 0;
+    min-width: 64px;
+  }
+  .gift img {
+    width: 52px;
+    height: 52px;
+    filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.25));
+  }
+  .gift b {
+    font-size: var(--fs-4);
+    font-weight: 900;
+  }
+  .gift small {
+    font-size: var(--fs-1);
+    color: var(--text-faint);
+  }
+  .gift.short b {
+    color: var(--cinnabar);
+  }
+  /* nút ấn son: tròn to, chữ trắng; giờ xong đặt cạnh */
+  .go {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    margin-top: var(--sp-2);
+  }
+  .seal {
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    padding: 12px;
+    font-size: var(--fs-4);
+    font-weight: 900;
+    line-height: 1.1;
+    color: #fff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+    background: var(--ui-seal-img, radial-gradient(circle at 40% 35%, #e0604c, #a8352a 60%, #6e1f18)) center / 100% 100%
+      no-repeat;
+    border: 0;
+    border-radius: 50%;
+    filter: drop-shadow(0 6px 10px rgb(110 31 24 / 0.35));
+    transition: transform var(--dur-1) var(--ease);
+    cursor: pointer;
+  }
+  .seal:active {
+    transform: scale(0.94) rotate(-4deg);
+  }
+  .seal:disabled {
+    filter: grayscale(0.85) opacity(0.7);
+    cursor: default;
+  }
+  .when {
+    display: grid;
+    gap: 2px;
+    padding: 6px 12px;
+    background: var(--paper2);
+    border: 1px solid var(--paper3);
+    border-radius: 8px;
+  }
+  .when b {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-4);
+  }
+  .when small {
+    font-size: var(--fs-1);
+    color: var(--text-faint);
   }
 </style>

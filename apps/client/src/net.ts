@@ -339,6 +339,7 @@ export function createNet(h: Handlers, lang: string) {
       logout: (all: boolean) => api<{ ok: boolean }>(all ? '/account/logout-all' : '/logout', {}).then(forget),
       remove: (pass?: string) => api<{ ok: boolean }>('/account/delete', { pass }).then(forget),
       rename: (name: string) => api<{ ok: boolean }>('/account/rename', { name }), // Cải Danh Lệnh
+      redeem: (code: string) => api<{ ok: boolean }>('/account/redeem', { code }), // mã quà tặng
       push: (key: string) => enablePush(key),
     },
     tick() {

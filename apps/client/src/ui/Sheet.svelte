@@ -7,8 +7,9 @@
   // Bảng trượt từ dưới lên như một cuộn tranh mở ra: trục gỗ sơn mài đầu đồng, giấy bồi lụa, khung mực kẻ tay — vẽ bằng bút lông.
   // Dùng <dialog> gốc: có sẵn bẫy focus, Esc để đóng, nằm trên cùng. Đầu bảng chuẩn: hình (art), tiêu đề, phụ đề, lời dẫn.
   import type { Snippet } from 'svelte'
-  import { Icon } from '@rok/art'
+  import { Icon, artOf } from '@rok/art'
   import { DESK, L, sfx } from '../lib'
+  const back = artOf('ui:back')?.src // nút đóng vẽ tay: đám mây mũi tên lùi
 
   let {
     open,
@@ -141,7 +142,9 @@
           onclick={() => {
             sfx('tap')
             dismiss()
-          }}><Icon name="close" size={16} /></button
+          }}
+          class:cloud={!!back}
+          >{#if back}<img src={back} alt="" draggable="false" />{:else}<Icon name="close" size={16} />{/if}</button
         >
         {#if title}
           <header class="head" class:has-art={!!art}>
@@ -226,6 +229,23 @@
   .x:active {
     transform: scale(0.9);
   }
+  .x.cloud {
+    width: 54px;
+    height: 40px;
+    background: none;
+  }
+  .x.cloud img {
+    width: 54px;
+    height: auto;
+    filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.2));
+  }
+  /* nền bảng: giấy sương + dãy núi mờ ở đáy (theme.ts --img-mountains) */
+  .scroll {
+    background:
+      var(--img-mountains, linear-gradient(transparent, transparent)) center bottom / 240% auto no-repeat,
+      var(--paper-tex) 0 0 / 128px,
+      var(--paper);
+  }
   .head {
     display: grid;
     gap: var(--sp-3);
@@ -243,10 +263,14 @@
     display: grid;
     gap: 3px;
   }
+  /* tiêu đề: chữ to, nét cọ son quét dưới (như biển tiêu đề của game studio) */
   h2 {
-    font-size: var(--fs-6);
+    justify-self: start;
+    padding: 0 22px 9px 2px;
+    font-size: var(--fs-7);
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 1.05;
+    background: var(--stroke-red) no-repeat left bottom / 100% 11px;
   }
   .sub {
     font-size: var(--fs-2);

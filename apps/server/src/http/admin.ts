@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { ELDER_IDS, ITEM_IDS, RESOURCES, type ElderId, type ItemId, type Res } from '@rok/rules'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
+import { addGiftCode, cleanGiftCode } from '../db/codes.ts'
 import { ErrorReply } from './session.ts'
 
 const Gift = z.object({
@@ -48,6 +49,28 @@ export const adminRoutes: FastifyPluginAsyncZod<{ db: Database; token: string }>
       const until = req.body.minutes ? Date.now() + req.body.minutes * 60_000 : 0
       await store.setMute(o.db, req.body.pid, until ? new Date(until) : null)
       await store.addInbox(o.db, req.body.world, 'mute', { pid: req.body.pid, until })
+      return { ok: true }
+    },
+  )
+  // mã quà tặng: người chơi nhập ở Cài đặt → Tài khoản, quà về qua thư (mỗi tài khoản một lần)
+  app.post(
+    '/codes',
+    {
+      schema: {
+        body: z.object({
+          code: z.string().min(4).max(32),
+          gift: Gift,
+          max: z.number().int().positive().optional(), // tổng lượt đổi (không có: không giới hạn)
+          days: z.number().positive().max(3650).optional(), // hạn dùng (không có: không hết hạn)
+        }),
+        response: { 200: Ok, 401: ErrorReply, 409: ErrorReply },
+      },
+    },
+    async (req, reply) => {
+      const { code, gift, max, days } = req.body
+      const until = days ? new Date(Date.now() + days * 86_400_000) : undefined
+      if (!(await addGiftCode(o.db, { code: cleanGiftCode(code), gift, max, until })))
+        return reply.code(409).send({ error: 'code' })
       return { ok: true }
     },
   )

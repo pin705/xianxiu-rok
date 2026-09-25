@@ -8,6 +8,7 @@ import { z } from 'zod'
 import type { Database } from '../db/index.ts'
 import * as accounts from '../db/accounts.ts'
 import { addInbox, findPlayer } from '../db/store.ts'
+import { cleanGiftCode, redeemGiftCode } from '../db/codes.ts'
 import { LINK_GIFT } from '@rok/rules'
 import {
   CODE_TTL,
@@ -59,6 +60,7 @@ export const accountRoutes: FastifyPluginAsyncZod<AccountOptions> = async (app, 
   profileRoutes(app, o, auth)
   pushRoutes(app, o, auth)
   renameRoutes(app, o, auth)
+  codeRoutes(app, o, auth)
 }
 
 // Đăng nhập bằng email + mật khẩu, hoặc bằng mã chuyển máy
@@ -291,6 +293,27 @@ function renameRoutes(app: App, o: AccountOptions, auth: Auth) {
       if (!(await accounts.renamePlayer(o.db, s.pid, n.name, n.key)))
         return reply.code(409).send({ error: 'name_taken' })
       await addInbox(o.db, s.world, 'rename', { pid: s.pid, name: n.name })
+      return { ok: true }
+    },
+  )
+}
+
+// Mã quà tặng (Redeem Code của RoK): mỗi tài khoản một lần mỗi mã; quà về tông môn đang chơi qua hộp lệnh như thư admin
+function codeRoutes(app: App, o: AccountOptions, auth: Auth) {
+  app.post(
+    '/account/redeem',
+    {
+      preHandler: auth,
+      config: strict,
+      schema: { body: z.object({ code: z.string().min(1).max(64) }), response: { 200: Ok, ...errors } },
+    },
+    async (req, reply) => {
+      const s = req.session
+      if (!s.pid || !s.world) return reply.code(403).send({ error: 'nosect' })
+      const code = cleanGiftCode(req.body.code)
+      const r = await redeemGiftCode(o.db, code, s.account)
+      if ('error' in r) return reply.code(r.error === 'code' ? 400 : 409).send({ error: r.error })
+      await addInbox(o.db, s.world, 'mail', { pid: s.pid, mail: { k: 'code', a: [code], gift: r.gift } })
       return { ok: true }
     },
   )

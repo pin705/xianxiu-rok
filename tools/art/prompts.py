@@ -376,8 +376,8 @@ KIT = {  # da (ui/theme.ts) → (mẫu gốc, màu tối, màu sáng[, bề dày
   # khung (thẻ, bảng, HUD): viền kép mảnh vẽ bằng code (chrome.py DOUBLE) — mẫu góc chạm 'ornate' vẫn còn nhưng không dùng: nặng, rẻ
   # nút: tấm sơn mài đầu bịt đồng, chỉ nhuộm mặt
   # màu sơn trầm (son đỏ thắm, ngọc lam) — không đỏ tươi bão hoà như nhựa
-  'btn': ('plaque', '#2a5c55', None, 16), 'btn-gold': ('plaque', '#8e2c22', None, 16), 'btn-danger': ('plaque', '#5a1c16', None, 16),
-  'btn-off': ('plaque', '#263033', None, 16), 'btn-ghost': ('plaque', '#16302f', None, 16),
+  'btn': ('plaque', '#2f6b64', None, 16), 'btn-gold': ('plaque', '#b3372a', None, 16), 'btn-danger': ('plaque', '#6e1f18', None, 16),
+  'btn-off': ('plaque', '#c9ccc5', None, 16), 'btn-ghost': ('plaque', '#f3f4f0', None, 16),
 }
 
 # ---------- mây (key động: fog:<rộng>:<hạt>, cloud:…, thunder:…) ----------

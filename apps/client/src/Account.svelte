@@ -28,6 +28,15 @@
   const g = useGame()
   const decrees = $derived(g.game.items.caiDanh ?? 0)
   let fresh = $state('')
+  // mã quà tặng
+  let gift = $state('')
+  async function redeem(e: SubmitEvent) {
+    e.preventDefault()
+    if (await run(() => account.redeem(gift.trim()), L.account.redeemed)) {
+      gift = ''
+      sfx('reward')
+    }
+  }
   async function renameSect(e: SubmitEvent) {
     e.preventDefault()
     if (await run(() => account.rename(fresh.trim()), L.account.renamed)) {
@@ -159,6 +168,19 @@
       <Button variant="ghost" wide type="submit" disabled={busy || !decrees || [...fresh.trim()].length < 2}
         >{L.account.renameGo}</Button
       >
+    </form>
+
+    <form class="stack" onsubmit={redeem}>
+      <b class="t-small">{L.account.redeem}</b>
+      <small class="t-tiny t-soft">{L.account.redeemHint}</small>
+      <input
+        bind:value={gift}
+        maxlength="32"
+        autocapitalize="characters"
+        placeholder={L.account.redeem}
+        aria-label={L.account.redeem}
+      />
+      <Button variant="ghost" wide type="submit" disabled={busy || gift.trim().length < 4}>{L.account.redeemGo}</Button>
     </form>
 
     {#if info.push && !pushed}<Button variant="ghost" wide icon="mail" onclick={push}

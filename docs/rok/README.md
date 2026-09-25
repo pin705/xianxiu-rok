@@ -194,7 +194,7 @@ dưới phần bảo hộ: còn 23 %.
 | Trung tâm sự kiện + lịch | Có | ✅ |
 | Do thám, cảnh báo địch tới | Do thám, Tháp canh | ✅ |
 | Đổi chân dung | — | ❌ (hồ sơ người khác hiện huy hiệu đạo thống) |
-| Mã quà tặng (redeem code) | — | ❌ (cần bảng mã + trang admin) |
+| Mã quà tặng (redeem code) | Cài đặt → Tài khoản → Mã quà tặng; admin tạo mã `POST /api/admin/codes {code, gift, max?, days?}` (bảng gift_codes / gift_redeems), mỗi tài khoản một lần, quà về thư | ✅ |
 | Điểm danh hằng tháng | Thất Nhật Lễ chỉ cho tân thủ | 🟡 (quà điểm danh làm lệch sim) |
 | Gói nạp, Growth Fund, gem | — | ❌ cố ý (không bán) |
 

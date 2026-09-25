@@ -1084,3 +1084,36 @@ test(
     ca.close()
   },
 )
+
+test(
+  'mã quà tặng: admin tạo mã, người chơi đổi một lần mỗi tài khoản, hết lượt / hết hạn / sai mã bị từ chối, quà về thư',
+  { skip },
+  async () => {
+    const ADMIN = 'g'.repeat(32)
+    const n = await boot('gift', { ADMIN_TOKEN: ADMIN })
+    const w = await newWorld(n)
+    const A = await guest(n, undefined, w),
+      B = await guest(n, undefined, w)
+    const ca = client(n, A.token)
+    await ca.welcome
+    const admin = (body: object) =>
+      fetch(`http://127.0.0.1:${n.port}/api/admin/codes`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-rok': '1', 'x-admin-token': ADMIN },
+        body: JSON.stringify(body),
+      })
+    const redeem = async (token: string, code: string) => {
+      const r = await api(n, '/account/redeem', { code }, token)
+      return { status: r.status, ...((await r.json()) as { ok?: boolean; error?: string }) }
+    }
+    assert.equal((await admin({ code: 'khai-son-2026', gift: { items: { kimDuyen: 2 } }, max: 1 })).status, 200)
+    assert.equal((await admin({ code: 'KHAISON2026', gift: { items: {} } })).status, 409, 'trùng mã (sau chuẩn hoá)')
+    assert.equal((await redeem(A.token, 'khong co')).error, 'code')
+    assert.equal((await redeem(A.token, ' khai son 2026 ')).ok, true, 'không phân biệt hoa thường, khoảng trắng')
+    assert.equal((await redeem(A.token, 'KHAISON2026')).error, 'used', 'mỗi tài khoản một lần')
+    assert.equal((await redeem(B.token, 'KHAISON2026')).error, 'gone', 'hết lượt (max 1)')
+    const got = await until(async () => (await getState(n, A.token)).state.mail.some(m => m.k === 'code' && !!m.gift))
+    assert.ok(got, 'quà về thư qua hộp lệnh')
+    ca.close()
+  },
+)

@@ -227,6 +227,7 @@ export type MailArgs = {
     level: number,
   ]
   spied: [foe: string] // bị do thám
+  code: [code: string] // quà mã quà tặng
   league: [rank: number] // Cửu Thiên Luận Đạo Hội: minh mình hạng rank cả mùa
   camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
   campStage: [n: number, m: string, won: 0 | 1, a: number, b: number] // chặng thi đua n (việc m): phái mình thắng, điểm hai phái

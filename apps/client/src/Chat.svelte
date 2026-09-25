@@ -307,7 +307,7 @@
   .strip {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--safe-b) + 88px);
+    bottom: calc(var(--safe-b) + var(--nav-h, 88px));
     z-index: var(--z-hud);
     display: flex;
     align-items: center;

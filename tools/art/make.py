@@ -317,7 +317,7 @@ def paper():
   wgt = np.clip(d * 2, 0, 1)[..., None]  # giữa lấy bản gốc (che đường nối giữa của bản cuộn), mép lấy bản cuộn
   tex = Image.fromarray((a * wgt + rolled * (1 - wgt)).astype(np.uint8)).convert('RGBA')
   # sơn mài: vân giấy nhuộm thành vân sơn lam sẫm, độ tương phản thấp (nền mọi bảng, trang)
-  X.save('skin:paper', X.tint(tex, '#0d2326', '#12292d'), 'skin')  # vân rất nhẹ: chỉ đủ thấy chất liệu, không loang lổ
+  X.save('skin:paper', X.tint(tex, '#e6e8e3', '#f7f8f5'), 'skin')  # giấy sương lạnh, vân rất nhẹ
 
 def strokes():
   run([('sheet-strokes', P.sheet(P.STROKES, 'ink brush marks'), [X.ref(ICONS)], '1:1', '2K')])
@@ -326,7 +326,6 @@ def strokes():
   X.key_magenta(X.raw('sheet-strokes'), k)
   for name, im in X.cut_sheet(k, P.STROKES, False).items():
     # nét cọ: CSS kéo giãn 100% bề ngang (ui/Section.svelte) → trải kín khung 320×28 (như bản code, 2x); vết mực: vuông
-    if name == 'stroke': im = X.tint(im, '#6f5d3a', '#b59d68')  # gạch dưới tiêu đề: đồng cổ (nét mực đen chìm trên nền sơn mài)
     X.save(f'skin:{name}', X.fit_square(im, 256, 0.01) if name == 'blot' else im.resize((320, 28), X.Image.LANCZOS), 'skin')
 
 def concept():
@@ -352,8 +351,7 @@ def chrome():
     if n not in meta: continue
     im, extra = C.render_double(n, meta[n]) if n in C.DOUBLE else C.render(n, meta[n])
     X.save(f'skin:{n}', im, 'skin', extra=extra, fmt='PNG')  # PNG: mép kim loại sắc, không nhoè nén
-  if not args[1:]:
-    for n, c in C.UNDERLINES.items(): X.save(f'skin:{n}', C.underline(c), 'skin', fmt='PNG')
+
 
 def creative():
   """concept sáng tạo (prompts.CREATIVE): ảnh bố cục của mình + ảnh mẫu phong cách → .work/raw/creative-<tên>"""
@@ -374,6 +372,16 @@ def ui():
     for name, im in X.cut_sheet(k, items, name_ok := True).items():
       side = 192 if name.startswith(('nav-', 'frame-', 'sundial', 'ev-')) else 144
       X.save(f'ui:{name}', X.fit_square(im, side, 0.02, im.width / im.height if name in ('ribbon', 'signboard', 'back') else 1.0), 'ui')
+  # núi mờ đáy bảng: cắt từ dải núi xa đã vẽ (không tốn tiền), nhạt thành vệt mực loang
+  far = os.path.join(X.ART, 'scene', 'far1.webp')
+  if os.path.exists(far):
+    im = Image.open(far).convert('RGBA')
+    im = im.crop((0, 0, min(im.width, 1400), im.height))
+    a = np.asarray(im).astype(np.float32)
+    L = a[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)
+    a[..., :3] = (L[..., None] * 0.6 + np.array([96, 110, 112]) * 0.4)
+    a[..., 3] *= 0.22
+    X.save('ui:mountains', Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA'), 'ui')
 
 GROUPS = {'pack': X.pack_all, 'ui': ui, 'creative': creative, 'chrome': chrome, 'concept': concept, 'kit': kit, 'clouds': clouds, 'buildings': buildings, 'faces': faces, 'icons': icons, 'emblems': emblems, 'figures': figures, 'landmarks': landmarks, 'masks': masks, 'props': props, 'troops': troops,
           'beasts': beasts, 'skins': skins, 'scenery': scenery, 'fields': fields, 'map': map_, 'far': far, 'paper': paper, 'strokes': strokes}

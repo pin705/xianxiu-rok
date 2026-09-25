@@ -1743,6 +1743,10 @@ export const vi = {
           `Chặng thi đua ${what} khép lại: Chính phái ${a.toLocaleString('vi')} – Tà phái ${b.toLocaleString('vi')}. ${camp} của bạn thắng chặng, cả phái được thêm điểm mùa. Quà cho người có góp ở dưới.`,
         ]
       },
+      code: (code: string): [string, string] => [
+        `Mã quà tặng ${code}`,
+        'Quà của mã bạn vừa nhập ở dưới — nhận vào túi.',
+      ],
       spied: (foe: string): [string, string] => [
         'Bị do thám',
         `Linh điểu của ${foe} vừa lượn qua núi — có kẻ đang nhắm tông môn. Bật khiên, gọi viện binh nếu cần.`,
@@ -1932,6 +1936,10 @@ export const vi = {
     renameTo: 'Tên mới',
     renameGo: 'Đổi tên',
     renamed: 'Đã đổi tên — tên mới hiện trong vài giây',
+    redeem: 'Mã quà tặng',
+    redeemHint: 'Nhập mã từ sự kiện, cộng đồng. Mỗi tài khoản dùng mỗi mã một lần; quà về thư.',
+    redeemGo: 'Đổi mã',
+    redeemed: 'Đổi mã thành công — quà nằm trong thư',
     login: 'Đăng nhập',
     have: 'Đã có tài khoản?',
     enterCode: 'Nhập mã chuyển máy',
@@ -1951,6 +1959,8 @@ export const vi = {
       name_taken: 'Tên này đã có tông môn khác dùng',
       no_item: 'Cần Cải Danh Lệnh',
       nosect: 'Chưa có tông môn',
+      used: 'Bạn đã dùng mã này rồi',
+      gone: 'Mã đã hết lượt đổi',
     } as Record<string, string>,
   },
   push: {
