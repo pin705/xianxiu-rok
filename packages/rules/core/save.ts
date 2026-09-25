@@ -277,6 +277,7 @@ const validFest = (s: any) =>
   (s.guestAt === undefined || num(s.guestAt)) &&
   (s.friends === undefined || (Array.isArray(s.friends) && s.friends.every(num))) &&
   (s.frag === undefined || num(s.frag)) &&
+  (s.thoi === undefined || (obj(s.thoi) && num(s.thoi.n) && num(s.thoi.pick))) &&
   (s.side === undefined || (Array.isArray(s.side) && s.side.length <= 4 && s.side.every(num))) &&
   (s.quiz === undefined || (obj(s.quiz) && num(s.quiz.day) && num(s.quiz.n) && num(s.quiz.right))) &&
   (s.strat === undefined || Object.hasOwn(STRATS, s.strat)) &&

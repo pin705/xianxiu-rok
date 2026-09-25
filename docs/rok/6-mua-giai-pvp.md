@@ -279,7 +279,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Tương tác:** cả vương quốc đổ đồ tích được vào một thanh chung.
 - **Vì sao hấp dẫn:** "góp gạch xây thành" trước trận cuối; ai cũng góp được.
 - **Tu tiên hoá:** **Tu Bổ Thiên Môn** — một chương của biên niên (mục 3.3).
-- **Game mình:** ❌.
+- **Game mình:** ✅ chương 12 của Thiên Đạo Biên Niên: cả giới góp tài nguyên vào thanh chung, góp 1.000 được 1 Công Huân (`world/book.ts`). Chưa có chặng đánh man / nộp tượng.
 - **Ưu tiên:** P1 (làm trong A5) · **Công sức:** S.
 
 #### A11. Coalition, Camp, Camp Treaty — liên quân, phe, hiệp ước phe
@@ -799,7 +799,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ✅ (25/09) | P1 | S–M |
 | A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | 🟡 Chinh Chiến Công Tích (6 mốc Công Huân); chưa có Phi Thăng Tệ, Thiên Môn Thương Điếm | P1 | M |
 | A9 | Hall of Heroes | Anh Linh Điện | ❌ | P2 | S |
-| A10 | Past Glory | Tu Bổ Thiên Môn | ❌ | P1 (trong A5) | S |
+| A10 | Past Glory | Tu Bổ Thiên Môn | ✅ chương biên niên `repair` | P1 (trong A5) | S |
 | A11 | Coalition, Camp, Camp Treaty | Minh Ước, Hiệp Ước Thiên Môn | 🟡 minh ước bất xâm phạm (hai minh); chưa chung kết trận / viện binh | P2 | M |
 | A12 | Crystal Tech, Crystal Mine, Bastions | Linh Tinh Trận Pháp, Ẩn Sĩ Động Phủ | ❌ | P2 | M |
 | A13 | Xếp hạng cuối mùa, Hall of Fame, danh hiệu mùa | Phong Thần Bảng + Lưu Danh Sử Sách | 🟡 top 3 phe × 10 mùa + thưởng hạng Công Huân top 10; chưa có danh hiệu mùa | P1 | S |

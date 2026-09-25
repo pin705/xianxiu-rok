@@ -650,6 +650,17 @@ export const vi = {
     at: (n: number) => `${n} trận`,
     fightN: (n: number) => `Luận võ · trận ${n}`,
   },
+  // Thiên Thời: mỗi 4 ngày một thời ngũ hành, tăng ích chung + chỉ lệnh riêng
+  thoi: {
+    names: { kim: 'Kim thời', thuy: 'Thủy thời', moc: 'Mộc thời', hoa: 'Hỏa thời', tho: 'Thổ thời' } as Record<
+      Element,
+      string
+    >,
+    hint: 'Thiên thời: mỗi 4 ngày một thời theo ngũ hành, cả giới được tăng ích của thời; mỗi tông môn chọn thêm một chỉ lệnh cho riêng mình tới hết thời.',
+    left: (d: number) => `còn ${d} ngày`,
+    pick: 'Chỉ lệnh',
+    picked: 'Chỉ lệnh',
+  },
   // Khai Giới Trảm Tà: pha Khai giới hạ yêu thú giới rơi tàn quyển; giới vận của minh
   eve: {
     title: 'Khai Giới Trảm Tà',

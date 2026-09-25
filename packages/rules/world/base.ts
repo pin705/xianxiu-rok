@@ -28,6 +28,7 @@ import {
   TRIBE_PTS,
   BLESSINGS,
   EVE_BUFF,
+  thoiAt,
   TITLE_IDS,
   TITLES,
   type TitleId,
@@ -42,7 +43,7 @@ import { DAY, noGain } from '../core/util.ts'
 import { mail } from '../sect/inbox.ts'
 
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
-export type MapCtx = { atlas: Atlas; phase: number }
+export type MapCtx = { atlas: Atlas; phase: number; day?: number } // day: ngày thứ mấy của mùa (Thiên Thời; sim không có)
 // Đường đi cướp giữa hai chỗ ngồi; null: chưa có đường (cổng chưa mở)
 export function raidPath(att: State, def: State, map?: MapCtx, army?: Army): { path?: Pos[]; ms: number } | null {
   if (!map || !att.seat || !def.seat) return { ms: marchTime(att, { kind: 'pvp', i: 0 }) }
@@ -422,6 +423,19 @@ export const eveBuffs = (w: World, pid: number, at: number): Buff[] => {
   return w.eveWin && w.eveWin.until > at && id !== undefined && w.eveWin.ids.includes(id)
     ? [{ key: 'prod', v: EVE_BUFF, until: w.eveWin.until, src: 'eve' }]
     : []
+}
+// Thiên Thời: tăng ích chung của thời đang chạy + chỉ lệnh tông môn đã chọn cho thời này (nguồn 'thoi'; sang thời mới thì
+// worldBuffs thay cả bộ)
+export function thoiBuffs(map: MapCtx, s: State): Buff[] {
+  if (map.day === undefined) return []
+  const t = thoiAt(map.day)
+  const pick = s.thoi?.n === t.n ? t.picks[s.thoi.pick] : undefined
+  return [...Object.entries(t.fx), ...Object.entries(pick ?? {})].map(([key, v]) => ({
+    key: key as Bonus,
+    v,
+    until: 0,
+    src: 'thoi',
+  }))
 }
 // Tăng ích (hay hoạ) từ tước Giới Chủ phong cho pid, còn hạn lúc at (worldBuffs gắn vào state, nguồn 'title')
 export const titleBuffs = (w: World, pid: number, at: number): Buff[] =>

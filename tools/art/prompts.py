@@ -6,7 +6,8 @@
 INK = ('traditional Chinese ink-wash (shuimo) painting: loose calligraphic ink contour lines with natural wobble and varying weight, dry-brush texture, '
        'thin translucent mineral-pigment washes (malachite green, cinnabar, ochre, pale ink grey) with soft bleeding edges, imperfect and hand-made, '
        'simplified with far fewer details than a realistic render, no individual tiny ornaments')
-MAGENTA = 'Solid flat pure magenta (#FF00FF) background filling the whole image.'  # tách nền bằng pipeline.key()
+MAGENTA = ('The background MUST be solid flat pure magenta (#FF00FF) filling the whole image — not white, not paper, not a gradient.'  # tách nền: pipeline.key_magenta
+           ' No glow or aura that spills onto the background.')
 NO_TEXT = 'No text, no letters, no characters, no labels, no numbers.'
 
 # ---------- công trình (10 loại × 5 bậc) ----------
@@ -180,9 +181,9 @@ PROP_KEYS = {  # ô → key trong manifest (key nào không có trong keys.json 
 # Quân (packages/art/figures.ts soldier): key sold:<hệ>:<phe 0 ta / 1 địch>:<bậc 3–5>. Quay mặt sang phải.
 TROOP = {'kiem': 'a sword cultivator holding a sword', 'phap': 'a mage cultivator holding a glowing orb', 'the': 'a bare-chested muscular body cultivator with raised fists'}
 SIDE = {0: 'in a white-and-blue robe', 1: 'in dark crimson-black robes with a cinnabar sash, menacing'}
-RANK = {3: '', 4: ', with a gold sash and a faint glowing aura', 5: ', in radiant white-gold robes with a golden halo'}
+RANK = {3: '', 4: ', with a gold sash and gold trim', 5: ', in white-and-gold robes with ornate gold armor pieces'}  # không hào quang: vầng sáng trên nền hồng thành vệt hồng
 def soldier_items(side):
-  return [(f'sold:{t}:{side}:{r}', f'a tiny chibi {TROOP[t]} {SIDE[side]}{RANK[r] if side == 0 or r < 5 else ", with a dark red aura"}, full body, facing right')
+  return [(f'sold:{t}:{side}:{r}', f'a tiny chibi {TROOP[t]} {SIDE[side]}{RANK[r] if side == 0 or r < 5 else ", with ornate dark red armor pieces"}, full body, facing right, no glow')
           for t in TROOP for r in (3, 4, 5)]
 TROOP_SHEETS = {'S0': soldier_items(0), 'S1': soldier_items(1)}
 # Yêu thú: một dáng lông xám nhạt mỗi hệ, game tô màu loài bằng tint (field.ts) — nên vẽ sáng, gần như không màu.

@@ -6,6 +6,9 @@ import {
   EVE_CHEST_N,
   EVE_TOP,
   REPAIR_HONOR,
+  THOI,
+  THOI_DAYS,
+  thoiAt,
   apply,
   eveFrags,
   expAt,
@@ -21,6 +24,7 @@ import {
   freshWorld,
   mapOf,
   worldAct,
+  worldBuffs,
   type Players,
   type World,
 } from './world.ts'
@@ -117,4 +121,32 @@ test('Tu Bổ Thiên Môn: chỉ lúc chương đang mở, góp tài nguyên và
   assert.equal(r.changed.get(1)!.res.linhThach, 40_000)
   assert.equal((r.changed.get(1)!.honor ?? 0) - (s.honor ?? 0), 30_000 / REPAIR_HONOR)
   assert.equal(bookValue(r.world, ps, map, T0, 'repair'), 30_000)
+})
+
+test('Thiên Thời: 4 ngày một thời ngũ hành, tăng ích chung cả giới + một chỉ lệnh riêng mỗi thời, chọn rồi không đổi', () => {
+  assert.deepEqual([thoiAt(0).el, thoiAt(0).n, thoiAt(0).end], ['kim', 0, THOI_DAYS])
+  assert.deepEqual([thoiAt(THOI_DAYS + 1).el, thoiAt(THOI_DAYS + 1).n], ['thuy', 1])
+  assert.equal(thoiAt(THOI_DAYS * THOI.length).el, 'kim', 'hết vòng thì quay lại')
+  const a = atlas(777)
+  const ps: Players = new Map([[1, sect('Thiên Thời', { x: 3, y: 3 })]])
+  const w = freshWorld()
+  const pick = (day: number | undefined, k: number) =>
+    worldAct(ps, 1, { type: 'thoi', pick: k }, T0, 1, { atlas: a, phase: 1, ...(day !== undefined && { day }) }, w)
+  assert.deepEqual(pick(undefined, 0), { ok: false, error: 'locked' }, 'không biết ngày mùa')
+  const r = pick(THOI_DAYS + 1, 2)
+  assert.ok(r.ok)
+  ps.set(1, r.changed.get(1)!)
+  assert.deepEqual(ps.get(1)!.thoi, { n: 1, pick: 2 })
+  assert.deepEqual(pick(THOI_DAYS + 2, 0), { ok: false, error: 'claimed' }, 'một thời một lần')
+  assert.ok(pick(THOI_DAYS * 2, 0).ok, 'thời mới chọn lại được')
+  // tăng ích: thời Thủy (sản lượng) + chỉ lệnh thứ 3 của thời đó
+  const buffs = worldBuffs(ps, w, { atlas: a, phase: 1, day: THOI_DAYS + 1 }, T0)
+    .get(1)!
+    .buffs.filter(b => b.src === 'thoi')
+  const want = [...Object.entries(THOI[1].fx), ...Object.entries(THOI[1].picks[2])]
+  assert.deepEqual(
+    buffs.map(b => [b.key, b.v]),
+    want,
+  )
+  assert.equal(worldBuffs(ps, w, { atlas: a, phase: 1 }, T0).get(1), undefined, 'sim không có ngày mùa: không đổi gì')
 })

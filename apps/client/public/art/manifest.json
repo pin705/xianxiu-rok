@@ -7,6 +7,18 @@
     "src": "scene/bamboo-0.8-4.webp",
     "tex": true
   },
+  "beast:kiem": {
+    "src": "battle/beast-kiem.webp",
+    "tex": true
+  },
+  "beast:phap": {
+    "src": "battle/beast-phap.webp",
+    "tex": true
+  },
+  "beast:the": {
+    "src": "battle/beast-the.webp",
+    "tex": true
+  },
   "bird:down": {
     "src": "scene/bird-down.webp",
     "tex": true
@@ -742,6 +754,26 @@
   "face:vanHac": {
     "src": "face/face-vanHac.webp"
   },
+  "field:fire": {
+    "src": "battle/field-fire.webp",
+    "tex": true
+  },
+  "field:forest": {
+    "src": "battle/field-forest.webp",
+    "tex": true
+  },
+  "field:ice": {
+    "src": "battle/field-ice.webp",
+    "tex": true
+  },
+  "field:storm": {
+    "src": "battle/field-storm.webp",
+    "tex": true
+  },
+  "field:wild": {
+    "src": "battle/field-wild.webp",
+    "tex": true
+  },
   "flag": {
     "src": "scene/flag.webp",
     "tex": true
@@ -935,6 +967,14 @@
   },
   "lotus": {
     "src": "scene/lotus.webp"
+  },
+  "map": {
+    "src": "map/map.webp",
+    "tex": true
+  },
+  "map:home": {
+    "src": "map/map-home.webp",
+    "tex": true
   },
   "march": {
     "src": "scene/march.webp",
@@ -1555,6 +1595,78 @@
     "width": [5, 6, 5, 6],
     "outset": 0,
     "repeat": "stretch"
+  },
+  "sold:kiem:0:3": {
+    "src": "battle/sold-kiem-0-3.webp",
+    "tex": true
+  },
+  "sold:kiem:0:4": {
+    "src": "battle/sold-kiem-0-4.webp",
+    "tex": true
+  },
+  "sold:kiem:0:5": {
+    "src": "battle/sold-kiem-0-5.webp",
+    "tex": true
+  },
+  "sold:kiem:1:3": {
+    "src": "battle/sold-kiem-1-3.webp",
+    "tex": true
+  },
+  "sold:kiem:1:4": {
+    "src": "battle/sold-kiem-1-4.webp",
+    "tex": true
+  },
+  "sold:kiem:1:5": {
+    "src": "battle/sold-kiem-1-5.webp",
+    "tex": true
+  },
+  "sold:phap:0:3": {
+    "src": "battle/sold-phap-0-3.webp",
+    "tex": true
+  },
+  "sold:phap:0:4": {
+    "src": "battle/sold-phap-0-4.webp",
+    "tex": true
+  },
+  "sold:phap:0:5": {
+    "src": "battle/sold-phap-0-5.webp",
+    "tex": true
+  },
+  "sold:phap:1:3": {
+    "src": "battle/sold-phap-1-3.webp",
+    "tex": true
+  },
+  "sold:phap:1:4": {
+    "src": "battle/sold-phap-1-4.webp",
+    "tex": true
+  },
+  "sold:phap:1:5": {
+    "src": "battle/sold-phap-1-5.webp",
+    "tex": true
+  },
+  "sold:the:0:3": {
+    "src": "battle/sold-the-0-3.webp",
+    "tex": true
+  },
+  "sold:the:0:4": {
+    "src": "battle/sold-the-0-4.webp",
+    "tex": true
+  },
+  "sold:the:0:5": {
+    "src": "battle/sold-the-0-5.webp",
+    "tex": true
+  },
+  "sold:the:1:3": {
+    "src": "battle/sold-the-1-3.webp",
+    "tex": true
+  },
+  "sold:the:1:4": {
+    "src": "battle/sold-the-1-4.webp",
+    "tex": true
+  },
+  "sold:the:1:5": {
+    "src": "battle/sold-the-1-5.webp",
+    "tex": true
   },
   "stair:126,506": {
     "src": "scene/stair-126,506.webp",

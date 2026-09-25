@@ -760,6 +760,21 @@ export const ASCEND_HALL = 16
 // theo cấp); đủ EVE_CHEST_N đổi một rương tiếp tế. Mỗi tàn quyển cộng một điểm giới vận cho tiên minh; cổng mở (hết pha 0) thì
 // EVE_TOP minh đầu được sản lượng +EVE_BUFF trong EVE_BUFF_TIME, mỗi người trong minh một thư báo hạng
 export const EVE_CHEST_N = 7
+// Thiên Thời (Tides of War của RoK): mùa băm thành nhịp THOI_DAYS ngày theo vòng ngũ hành tương sinh; mỗi thời một tăng ích chung cho
+// cả giới (fx) và ba chỉ lệnh, mỗi tông môn chọn một cho riêng mình tới hết thời (picks)
+export const THOI_DAYS = 4
+export const THOI: { el: Element; fx: Partial<Record<Bonus, number>>; picks: Partial<Record<Bonus, number>>[] }[] = [
+  { el: 'kim', fx: { 'atk.kiem': 0.15 }, picks: [{ atk: 0.05 }, { loot: 0.15 }, { march: 0.1 }] },
+  { el: 'thuy', fx: { prod: 0.1 }, picks: [{ prod: 0.05 }, { storage: 0.15 }, { build: 0.05 }] },
+  { el: 'moc', fx: { heal: 0.2 }, picks: [{ hp: 0.05 }, { hospital: 0.15 }, { train: 0.05 }] },
+  { el: 'hoa', fx: { 'atk.phap': 0.15 }, picks: [{ atk: 0.05 }, { skill: 0.1 }, { exp: 0.1 }] },
+  { el: 'tho', fx: { 'hp.the': 0.15 }, picks: [{ def: 0.05 }, { hp: 0.05 }, { brew: 0.1 }] },
+]
+// Thời thứ n của mùa (từ 0) vào ngày day, và lúc hết (ngày)
+export const thoiAt = (day: number) => {
+  const n = Math.floor(day / THOI_DAYS)
+  return { n, ...THOI[n % THOI.length], end: (n + 1) * THOI_DAYS }
+}
 export const EVE_CHEST: Reward = { items: { thoiQuang60: 1, luyenBinh60: 1, thachNang5k: 1, kinhThu500: 1 } }
 export const EVE_TOP = 3
 export const EVE_BUFF = 0.1

@@ -241,7 +241,7 @@ export class World {
 
   // Bản đồ giới lúc now: seed của giới + pha mùa (cổng nào đã mở)
   map(now: number): MapCtx {
-    return { atlas: atlas(this.seed), phase: phaseOf(dayIn(this.opened, now)) }
+    return { atlas: atlas(this.seed), phase: phaseOf(dayIn(this.opened, now)), day: dayIn(this.opened, now) }
   }
   // Ảnh chụp bản đồ giới cho client (chỗ ngồi, hành quân trên bản đồ, biên niên, điểm)
   snapshot(now: number) {

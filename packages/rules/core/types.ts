@@ -257,6 +257,7 @@ export type State = {
   friends?: number[] // đạo hữu đã kết giao
   side?: number[] // Tông vụ: số việc đã nhận của từng dòng (SIDE_LINES)
   frag?: number // Khai Giới Trảm Tà: tàn quyển đang có (đủ EVE_CHEST_N đổi rương)
+  thoi?: { n: number; pick: number } // Thiên Thời: chỉ lệnh đã chọn cho thời thứ n của mùa
   quiz?: { day: number; n: number; right: number; last?: boolean } // Vấn Đạo Đài hôm nay: đã trả lời n câu, đúng right, câu vừa rồi đúng không
   ascended: number[] // các mùa đã phi thăng (danh hiệu)
   fest: Partial<Record<FestId, Fest>> // trung tâm sự kiện

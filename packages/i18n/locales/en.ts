@@ -671,6 +671,16 @@ export const en: Text = {
     at: (n: number) => `${n} wins`,
     fightN: (n: number) => `Arms Training · fight ${n}`,
   },
+  thoi: {
+    names: { kim: 'Metal tide', thuy: 'Water tide', moc: 'Wood tide', hoa: 'Fire tide', tho: 'Earth tide' } as Record<
+      Element,
+      string
+    >,
+    hint: 'Heavenly tides: every 4 days a new element rules the realm and everyone gets its bonus; each sect also picks one directive of its own for the tide.',
+    left: (d: number) => `${d} days left`,
+    pick: 'Directive',
+    picked: 'Directive',
+  },
   eve: {
     title: 'Eve of the Crusade',
     hint: 'While the gates are closed, world beasts drop scroll fragments (more at higher levels) and add realm fortune to your alliance. When the gates open, the top 3 alliances get a 24-hour production boost.',

@@ -120,6 +120,7 @@ Mỗi mục trong các file có: cơ chế gốc · tu tiên hoá · **Game mìn
 | Power details (file 8 A2) | Chạm chip Thế lực trên HUD → bảng Thế lực chia theo 5 nguồn (công trình, đệ tử, công pháp, pháp bảo, trưởng lão), vạch tỉ lệ từng nguồn, nút "Tăng" tới đúng chỗ nâng (Chủ điện, Diễn võ trường, Tàng Kinh Các, Luyện Khí Phòng, Môn hạ); "+N Thế lực" bay lên khi tăng | ✅ `PowerSheet.svelte`, `powerParts` (core/stats.ts) |
 | Speedup window "use just enough" (file 8 C3 + G4) | Bảng Tăng tốc có thẻ vàng "Dùng vừa đủ": gộp mọi phù / đan dùng được cho việc đó, chọn tổ hợp ít phí (mệnh giá lớn trước, phần lẻ dùng cái nhỏ nhất đủ che), xem trước "Lỗ Ban Phù 5p ×2 → xong ngay" hay "→ còn 0:12" khi thiếu, một chạm là dùng; từng dòng vẫn có Dùng 1 / Xong ngay | ✅ `SpeedUp.svelte`, `speedPlan` (bag.ts) |
 | Eve of the Crusade | Khai Giới Trảm Tà: trong pha Khai giới (5 ngày đầu mùa, cổng còn đóng) hạ yêu thú giới rơi tàn quyển (cấp 1–5: 1, 6–10: 2, 11–15: 3); đủ 7 đổi một rương tiếp tế ngay trên thẻ mùa. Mỗi tàn quyển cộng một điểm giới vận cho tiên minh (thẻ mùa hiện 5 minh đầu); cổng mở thì 3 minh đầu được sản lượng +10 % trong 24 giờ, mỗi người một thư báo hạng | ✅ `world/eve.ts`, `sect/eve.ts`, `WorldView.svelte` |
+| Past Glory | Tu Bổ Thiên Môn: chương 12/13 của Thiên Đạo Biên Niên (trước chương Thiên Môn, hạn ngày 40) — lúc chương đang mở, ai cũng góp tài nguyên (10 N / 100 N / 1 Tr mỗi loại, ngay trên thẻ mùa) vào một thanh chung 10 triệu của cả giới; góp 1.000 được 1 Công Huân; đủ thì cả giới nhận quà chương như mọi chương | ✅ `world/book.ts` (`repair`), `WorldView.svelte` |
 | Troop speed + load by type | Trên bản đồ Giới (bản đồ vùng giữ nguyên): kiếm tu đi nhanh ×1,15 · pháp tu ×1 · thể tu ×0,85, đội đi theo hệ chậm nhất; sức mang kiếm ×1 · pháp ×0,8 · thể ×1,25 (khai mỏ, cướp). Nút xuất quân hiện thời gian theo đội đang chọn; bảng chọn đội có dòng giải thích | ✅ `UNIT_SPEED`, `UNIT_CARRY`, `armySpeed`, `routeMs(…, army)` |
 | Friends | Đạo hữu: nút "Kết giao" trong hồ sơ (một chiều như theo dõi, tối đa 50); thẻ Truyền âm có dải đạo hữu (chấm lục: đang chơi, đang chơi xếp trước), chạm tên để truyền âm | ✅ `friend` (sect/inbox.ts), truy vấn `friends` |
 | Watchtower + War Frenzy | Tháp canh: đội địch vừa xuất quân là bên bị cướp thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên"; offline thì Web Push. Sát khí: vừa đi cướp thì 30 phút không bật được Hộ Sơn Phù | ✅ `world/raid.ts`, `Hud.svelte`, `notify.ts` |
@@ -155,7 +156,7 @@ dưới phần bảo hộ: còn 23 %.
 
 **Đợt F — mùa giải & đấu trường** (file 6, mục 3 có thiết kế chi tiết)
 1. Luận Kiếm Đài: "Luận Kiếm Lệnh" từ nhiệm vụ ngày (bản chính + Kiếm Ý + Thương Điếm + phục thù đã xong).
-2. Thiên Đạo Biên Niên: mở khoá theo chương thay vì theo ngày cứng (đã lên 12 chương).
+2. Thiên Đạo Biên Niên: mở khoá theo chương thay vì theo ngày cứng (đã lên 13 chương, có Tu Bổ Thiên Môn — Past Glory).
 3. (Công Huân + mốc + thưởng hạng cá nhân: đã xong.) Còn: tiền tệ mùa mang sang + Thiên Môn Thương Điếm, danh hiệu mùa.
 4. Tranh Đoạt Linh Châu (Ark of Osiris giản lược): chiến trường ô + hiệp + lệnh đứng (bước 1 — Luận Kiếm Minh Chiến — đã xong).
 5. Luật mùa thay đổi: Linh Triều Mùa, Chính – Tà (Cổ Di Tích mở theo lịch: đã xong).

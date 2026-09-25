@@ -20,6 +20,8 @@
     EVE_CHEST_N,
     HONOR_TIERS,
     RESOURCES,
+    thoiAt,
+    type Bonus,
     cellOf,
     clear,
     dayOf,
@@ -61,6 +63,10 @@
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
+  const fxText = (fx: Partial<Record<Bonus, number>>) =>
+    Object.entries(fx)
+      .map(([k, v]) => L.bonus(k as Bonus, v ?? 0))
+      .join(' · ')
   const now = $derived(g.now)
 
   const T = WORLD_DU / MAP_W
@@ -379,6 +385,23 @@
           </span>
         {/if}
         {#if !slim}<small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>{/if}
+        {#if !slim}
+          <!-- Thiên Thời: thời ngũ hành đang chạy (tăng ích cả giới) và chỉ lệnh riêng của mình cho thời này -->
+          {@const t = thoiAt(day)}
+          <small class="t-tiny" title={L.thoi.hint}
+            ><b>{L.thoi.names[t.el]}</b> · {fxText(t.fx)} · {L.thoi.left(t.end - day)}</small
+          >
+          {#if game.thoi?.n === t.n}<small class="t-tiny t-gold"
+              >{L.thoi.picked}: {fxText(t.picks[game.thoi?.pick ?? 0] ?? {})}</small
+            >{:else if send}
+            <span class="row wrap" style:--gap="4px">
+              <small class="t-tiny">{L.thoi.pick}:</small>
+              {#each t.picks as p, k (k)}
+                <Button size="sm" variant="ghost" onclick={() => send({ type: 'thoi', pick: k })}>{fxText(p)}</Button>
+              {/each}
+            </span>
+          {/if}
+        {/if}
         {#if !slim && phase === 0}
           <!-- Khai Giới Trảm Tà: yêu thú giới rơi tàn quyển (đủ thì đổi rương), giới vận của các minh đầu -->
           <span class="row wrap" style:--gap="6px">
