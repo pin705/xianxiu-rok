@@ -19,7 +19,7 @@
     type UnitId,
     type UnitType,
   } from '@rok/rules'
-  import { Bag, Button, Card, Medal, Section, Slider, Stat, Tag } from './ui'
+  import { Bag, Button, Card, FirstTap, Medal, Section, Slider, Stat, Tag } from './ui'
   import JobRow from './JobRow.svelte'
   import { EMBLEM, L, clock, num, sfx } from './lib'
   import { useGame } from './game'
@@ -126,9 +126,11 @@
   {#snippet aside()}<Button variant="ghost" size="sm" onclick={() => (n = most)}>{L.train.max}</Button>{/snippet}
   <Slider value={count} min={1} max={cap} label={L.train.count} onchange={v => (n = v)} />
   <Bag res={trainCost(u, count)} have={game.res} />
-  <Button wide size="lg" trail={clock(trainTime(game, u, count))} trailIcon="clock" disabled={!!err} onclick={go}
-    >{L.train.go} {num(count)}</Button
-  >
+  <FirstTap key="train">
+    <Button wide size="lg" trail={clock(trainTime(game, u, count))} trailIcon="clock" disabled={!!err} onclick={go}
+      >{L.train.go} {num(count)}</Button
+    >
+  </FirstTap>
   {#if err === 'busy'}<p class="center t-small t-soft">{L.err.busy}</p>{/if}
 </Section>
 

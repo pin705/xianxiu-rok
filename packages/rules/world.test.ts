@@ -1863,9 +1863,9 @@ test('mùa: điểm mùa theo giờ giữ điểm (chốt khi đổi phe), cổn
   for (const s of [A, B, C]) {
     assert.equal(s.marches.length, 0, 'hành quân huỷ')
     assert.equal(s.seat, null, 'server xếp chỗ lại trên bản đồ mùa mới')
-    assert.equal(s.mail.at(-1)!.k, 'season')
+    assert.deepEqual([s.mail.at(-2)!.k, s.mail.at(-1)!.k], ['season', 'yearbook'], 'thư kết mùa rồi thư tổng kết')
   }
-  assert.deepEqual(A.mail.at(-1)!.a, [1, 1, 1])
+  assert.deepEqual(A.mail.at(-2)!.a, [1, 1, 1])
   assert.deepEqual(end.world.spots, {})
   assert.deepEqual(end.world.pts, {})
   assert.equal(end.world.allies[1].name, 'Vạn Kiếm', 'tiên minh giữ qua mùa')

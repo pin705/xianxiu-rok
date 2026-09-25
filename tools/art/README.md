@@ -73,6 +73,10 @@ Game tải hết tranh ngay lúc đầu rồi mới vào, vào rồi không cả
 | `map`, `world`, `battle` | bản đồ vùng; token bản đồ giới; quân, yêu thú, sân trận |
 | (không gói) | icon, chân dung, icon thao tác, `panel:*` — trình duyệt tự tải khi hiện |
 
+**Hai bộ độ nét** (như bản @1x/@2x của engine): bộ thường 3 px/DU cho điện thoại, bộ HD 6 px/DU (`atlas-hd/`, trang 4096, nguồn `.work/hd/`) cho màn to độ nét cao. `main.ts` chọn HD khi `cssPerDU() × DPR > 3,4`, tức desktop Retina (cảnh ~2,85 px CSS mỗi DU × 2). Mỗi mục có bản HD ghi `hd: { page, frame }`, hoặc `hd: { src }` khi quá khổ. Bản HD không phóng quá độ phân giải thật của ảnh vẽ (`raw_k`). Bộ thường khoảng 3,9 MB; bộ HD khoảng 10 MB, chỉ desktop tải và tải một lần.
+
+Cảnh Pixi vẽ ở tỉ lệ điểm ảnh của màn, tối đa 3 (`stage.ts` `DPR`; máy dưới 6 nhân giữ 2). Cảnh 2x trên màn 3x bị phóng 1,5 lần, trông nhoè cạnh chữ HTML sắc nét.
+
 Cảnh vẫn đợi gói của mình (`mountScene({ art })`). Texture thuộc gói chưa về thì game tạm vẽ bằng code rồi tự đổi sang tranh (`stage.ts` `painted`). Hai lớp này để phòng khi có người vào cảnh trước lúc tải xong.
 
 Đo trên 4G giả lập (4 Mbps, trễ 150 ms, 390×844):
@@ -93,6 +97,8 @@ Trước màn tiêu đề, phần còn lại chủ yếu là JS (~1,1 MB, phần
 - **Vẽ đè giữ hình** (núi, da, bản đồ, sân trận): gửi bản vẽ code đệm tới tỉ lệ model nhận; lấy alpha của bản vẽ code làm alpha cuối, nên đường bao và phần mờ dần khớp tuyệt đối. Cảnh dùng nền giấy chứ không dùng nền hồng, vì nền hồng lọt vào phần mờ thành vệt hồng.
 - **Giao diện phải yên**: trang trí chỉ ở khung bảng lớn, còn thẻ, nút, nhãn phẳng một màu với viền mực mảnh (nhóm `kit`). Tranh (công trình, icon, chân dung) mới là thứ nổi. Bài học 26/9: bộ 43 da mỗi món một hoa văn và loang màu nhìn lung tung, lòe loẹt; hoa văn trong vùng góc 9 mảnh đè chữ ở nút nhỏ.
 - **Chữ giả**: model hay viết chữ Hán vô nghĩa lên biển hiệu; mọi prompt có "no writing / no text".
+- **Độ phân giải ảnh gốc**: Nano Banana Pro khi sửa từ ảnh mẫu trả ảnh khoảng 2752 px dù chọn 1K hay 2K. Xem cỡ ảnh thô trong `.work/raw` trước khi trả tiền vẽ lại "cho nét hơn" (26/9: phí 2.700đ vì vẽ lại núi mà không tăng độ phân giải). Tạo mới không có ảnh mẫu ở 1K (sân trận cũ) mới chỉ ~768 px, và chọn 2K thì tăng thật.
+- **Vẽ lại thì so từng tấm**: model có lúc vẽ chồng 2 tầng bậc đá, hoặc loang màu lạ. Tấm hỏng thì lấy lại bản cũ (`.work/old1k`).
 - **Mây bậc 5 chạm mép ảnh**: `feather` làm mờ 4% sát mép trước khi cắt sát.
 
 ## Nối vào game

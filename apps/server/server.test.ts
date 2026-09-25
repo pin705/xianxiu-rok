@@ -712,7 +712,10 @@ test(
     assert.notEqual(w2.world.map, w1.world.map, 'bản đồ mới')
     assert.equal(w2.state.rebirths, 1)
     assert.ok(w2.state.seat, 'có chỗ trên bản đồ mùa mới')
-    assert.equal(w2.state.mail.at(-1)?.k, 'season')
+    assert.deepEqual(
+      w2.state.mail.slice(-2).map((m: { k: string }) => m.k),
+      ['season', 'yearbook'],
+    )
     const [saved] = await n.db.client`select season, seed, state from worlds where id = ${w}`
     assert.equal(saved.season, 2)
     assert.equal(saved.seed, w2.world.map)

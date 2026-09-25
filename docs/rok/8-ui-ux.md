@@ -1324,7 +1324,7 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | D4 Màn "Mở khoá" khi Chủ điện lên tầng (huy hiệu bấm là tới) | ✅ `Unlocks.svelte` | P1 | S |
 | D5 Dải "Tạ lễ" liệt kê vật phẩm nhận được | ✅ `GiftStrip.svelte` | P1 | S |
 | E1 Bổ sung chấm: Tiên minh có người xin giúp, chat chưa đọc, sự kiện có mốc nhận | ✅ | P1 | S |
-| F2 Mũi tên dẫn trong bảng cho lần đầu (Tuyển, Xuất quân, Độ kiếp) | 🟡 | P1 | S |
+| F2 Mũi tên dẫn trong bảng cho lần đầu (Tuyển, Xuất quân, Độ kiếp) | ✅ Tuyển, Xuất quân (`FirstTap`) | P1 | S |
 | F5 Thẻ "lần đầu" khi mở tính năng mới (Tranh đoạt, Tiên minh, Giới) | 🟡 | P1 | S |
 | H4 Soát tương phản chữ vàng trên giấy | 🟡 | P1 | S |
 | H6 Giảm độ phủ HUD trên điện thoại từ ~35% xuống ≤28% | 🟡 | P1 | S |

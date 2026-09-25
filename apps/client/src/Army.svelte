@@ -22,7 +22,7 @@
     capOf,
   } from '@rok/rules'
   import { Portrait } from '@rok/art'
-  import { Button, Card, Medal, Meter, Section, Slider } from './ui'
+  import { Button, Card, FirstTap, Medal, Meter, Section, Slider } from './ui'
   import { EMBLEM, L, LOOK, num } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
@@ -241,15 +241,17 @@
 {/if}
 
 <div class="mt-3">
-  <Button
-    wide
-    size="lg"
-    icon="flag"
-    trail={timeOf && count(army) ? timeOf(army) : time}
-    trailIcon="clock"
-    disabled={disabled || !lead || !count(army) || over}
-    onclick={() => lead && onsubmit(lead, army)}>{cta}</Button
-  >
+  <FirstTap key="march">
+    <Button
+      wide
+      size="lg"
+      icon="flag"
+      trail={timeOf && count(army) ? timeOf(army) : time}
+      trailIcon="clock"
+      disabled={disabled || !lead || !count(army) || over}
+      onclick={() => lead && onsubmit(lead, army)}>{cta}</Button
+    >
+  </FirstTap>
 </div>
 
 <style>
