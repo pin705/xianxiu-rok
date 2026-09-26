@@ -159,6 +159,7 @@ function valid(s: any): s is State {
     num(s.time) &&
     isBag(s.res) &&
     isBag(s.carry) &&
+    (s.yard === undefined || isBag(s.yard)) &&
     obj(s.levels) &&
     IDS.every(id => num(s.levels[id]) && s.levels[id] >= 0 && s.levels[id] <= MAX_LEVEL) &&
     Array.isArray(s.queue) &&

@@ -2,10 +2,10 @@
 import { addGain, admit, battle, coolKey } from './battle.ts'
 import { rollDay } from './calendar.ts'
 import { festDrop, rollFest } from './fest.ts'
-import { rate, storage, unitOf } from './stats.ts'
+import { rate, storage, unitOf, wildRate, yardCap } from './stats.ts'
 import { type Job, type JobKind, type State, type TrainJob } from './types.ts'
 import { addItems, count, HOUR, minus, plus, noGain } from './util.ts'
-import { RESOURCES, TRAIN_PTS, hallGift } from '../data.ts'
+import { RESOURCES, TRAIN_PTS, hallGift, type Bag } from '../data.ts'
 import { mail } from './mail.ts'
 
 function accrue(s: State, t: number): State {
@@ -14,18 +14,23 @@ function accrue(s: State, t: number): State {
   const cap = storage(s)
   const res = { ...s.res }
   const carry = { ...s.carry }
+  const yard: Bag = { ...(s.yard ?? { linhThach: 0, linhThao: 0, linhKhoang: 0 }) }
   for (const r of RESOURCES) {
-    const total = rate(s, r) * dt + carry[r]
+    // linh khí tự nhiên: thẳng vào kho
+    const total = wildRate(s, r) * dt + carry[r]
     const gained = Math.floor(total / HOUR)
     if (res[r] + gained >= cap) {
-      res[r] = Math.max(res[r], cap) // đầy kho thì ngừng sản xuất, nhưng không cắt phần đang vượt
+      res[r] = Math.max(res[r], cap) // đầy kho thì ngừng, nhưng không cắt phần đang vượt
       carry[r] = 0
     } else {
       res[r] += gained
       carry[r] = total % HOUR
     }
+    // sản lượng công trình: nằm ở công trình chờ chạm thu (collect), đầy YARD_HOURS giờ thì ngừng
+    const made = ((rate(s, r) - wildRate(s, r)) * dt) / HOUR
+    if (made > 0) yard[r] = Math.max(yard[r], Math.min(yardCap(s, r), yard[r] + made))
   }
-  return { ...s, time: t, res, carry }
+  return { ...s, time: t, res, carry, ...((s.yard || RESOURCES.some(r => yard[r] > 0)) && { yard }) }
 }
 
 // Điểm tuyển của một lượt: theo bậc; nâng bậc chỉ tính phần chênh với bậc cũ

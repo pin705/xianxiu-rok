@@ -2,7 +2,7 @@
 import { no, ok, pay, use, type Actions } from '../core/action.ts'
 import { bump } from '../core/calendar.ts'
 import { int, JOB_KINDS, oneOf } from '../core/parse.ts'
-import { buildTime, cost, tradeKeep } from '../core/stats.ts'
+import { buildTime, cost, storage, tradeKeep } from '../core/stats.ts'
 import { advance, jobOf, shorten } from '../core/time.ts'
 import { type Err, type JobKind, type State } from '../core/types.ts'
 import { afford, IDS } from '../core/util.ts'
@@ -32,6 +32,7 @@ export function upgradeError(s: State, b: BuildingId): Err | null {
 
 export type BuildingAction =
   | { type: 'upgrade'; building: BuildingId }
+  | { type: 'collect'; res?: Res } // chạm bong bóng: thu sản lượng một loại (không nói: cả ba)
   | { type: 'speed'; job: JobKind; n: number; pill?: 'daiTuKhi' } // mặc định Tụ Khí Đan
   | { type: 'trade'; from: Res; to: Res; n: number }
 
@@ -44,6 +45,23 @@ export const buildingActions: Actions<BuildingAction> = {
       const level = s.levels[a.building] + 1
       const job = { building: a.building, level, startAt: s.time, finishAt: s.time + buildTime(s, a.building, level) }
       return ok(bump({ ...s, res: pay(s, cost(a.building, level)), queue: [...s.queue, job] }, 'build'))
+    },
+  },
+  // Thu sản lượng nằm ở công trình vào kho, tới sức chứa (phần thừa nằm lại); không có gì thu được thì báo đầy / trống
+  collect: {
+    pick: a =>
+      a.res === undefined || oneOf(RESOURCES)(a.res) ? { type: 'collect', ...(a.res && { res: a.res }) } : null,
+    run: (s, a) => {
+      if (!s.yard) return no('empty')
+      const cap = storage(s)
+      const res = { ...s.res },
+        yard = { ...s.yard }
+      for (const r of a.res ? [a.res] : RESOURCES) {
+        const n = Math.floor(Math.min(yard[r], cap - res[r]))
+        if (n > 0) [res[r], yard[r]] = [res[r] + n, yard[r] - n]
+      }
+      if (RESOURCES.every(r => res[r] === s.res[r])) return no(RESOURCES.some(r => s.yard![r] >= 1) ? 'full' : 'empty')
+      return ok({ ...s, res, yard })
     },
   },
   speed: {

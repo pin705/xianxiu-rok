@@ -286,6 +286,7 @@ export type State = {
   time: number // tài nguyên đã tính tới mốc này
   res: Bag
   carry: Bag // phần lẻ chưa đủ 1 đơn vị (đơn vị × ms), để kết quả không phụ thuộc số lần gọi advance
+  yard?: Bag // sản lượng nằm ở công trình chờ chạm thu (có lẻ; thu phần nguyên)
   levels: Record<BuildingId, number>
   queue: Job[]
   troops: Troops // đệ tử đang ở tông môn

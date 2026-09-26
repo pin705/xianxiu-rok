@@ -17,6 +17,7 @@ import {
 import {
   BASE_CAP,
   BASE_RATE,
+  YARD_HOURS,
   DAOS,
   STRATS,
   DEPUTY_HALL,

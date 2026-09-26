@@ -177,6 +177,7 @@ export function turn(start: State, o: BotOpts = {}): State {
         : fight(sideOf(st, e, army, deputyOf(st, e)), enemyOf(st, t), st.seed).win
   const sumType = (t: string) =>
     UNITS.filter(u => unitOf(u).type === t).reduce((sum, u) => sum + s.troops[u] * unitOf(u).tier, 0)
+  tryDo({ type: 'collect' }) // vào núi: chạm thu sản lượng trước
 
   function build() {
     const hall = s.levels.chuDien
