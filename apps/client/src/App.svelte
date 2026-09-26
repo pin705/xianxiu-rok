@@ -38,6 +38,7 @@
   import Ranks from './Ranks.svelte'
   import Rivals from './Rivals.svelte'
   import Replay from './Replay.svelte'
+  import Opening from './Opening.svelte'
   import Reports from './Reports.svelte'
   import Result, { type Outcome } from './Result.svelte'
   import Home from './world/Home.svelte'
@@ -583,6 +584,7 @@
       api={net ?? null}
       opened={info?.opened}
       onmaze={(i, team) => fightNow({ type: 'mazeOpen', i, team })}
+      onescort={(id, lv, elder, army) => fightNow({ type: 'escort', id, lv, elder, army })}
       onfight={(elder, army, thief) =>
         fightNow(thief ? { type: 'thief', elder, army } : { type: 'trialFight', elder, army })}
       onreplay={r => (replay = r)}
@@ -611,6 +613,7 @@
           ?.say(ally ? 'ally' : 'world', t)
           .then(r => toast(r.ok ? L.world.shared : (L.chat.err[r.err] ?? L.chat.err.bad)))}
     />
+    <Opening onplay={r => (replay = r)} />
     <Replay
       report={replay}
       onclose={() => (replay = null)}

@@ -3,9 +3,24 @@ import { fight, type Side, type Round } from '../combat.ts'
 import { sideOf, chance } from '../core/battle.ts'
 import { deputyOf, elderLevel, unitOf, isMarching, power } from '../core/stats.ts'
 import { type Army, type Err, type March, type State } from '../core/types.ts'
-import { CARRY, GUARD_STEP, PVP_FLOOR, PVP_HALL, REVENGE_TIME, TIER, UNIT_CARRY, UNITS, type ElderId } from '../data.ts'
-import { compact } from '../core/util.ts'
-import { allyOf, farErr, napBetween, raidPath, type MapCtx, type World } from './base.ts'
+import {
+  CARRY,
+  DAY_OFFSET,
+  GUARD_STEP,
+  PVP_FLOOR,
+  PVP_HALL,
+  REVENGE_TIME,
+  TIER,
+  TRIBE_DAY,
+  TRIBE_LEN,
+  TRIBE_PTS,
+  UNIT_CARRY,
+  UNITS,
+  type ElderId,
+} from '../data.ts'
+import { compact, DAY } from '../core/util.ts'
+import { weekOf } from '../core/calendar.ts'
+import { allyOf, farErr, napBetween, raidPath, type MapCtx, type Tribe, type World } from './base.ts'
 
 // Trưởng lão giữ nhà chỉ tính khi đang ở tông môn
 export const guardOf = (s: State) =>
@@ -102,4 +117,23 @@ export function raidError(
   if (!revenge(att, defPid, now) && power(def) < PVP_FLOOR * power(att)) return 'weak' // báo thù thì bỏ giới hạn
   if (att.marches.some(m => m.target.kind === 'pvp' && m.target.i === defPid)) return 'busy'
   return null
+}
+
+// Khung Phá Yêu Trại của tuần wk (thứ Ba 0h → thứ Năm 0h giờ VN)
+export const tribeStart = (wk: number) => (wk * 7 + 4 + TRIBE_DAY) * DAY - DAY_OFFSET
+export const tribeEnd = (wk: number) => tribeStart(wk) + TRIBE_LEN * DAY
+export const tribeOf = (w: World, t: number): Tribe =>
+  w.tribe?.week === weekOf(t) ? w.tribe : { week: weekOf(t), pts: {} }
+// Yêu vương cấp lv vừa đổ lúc at (trong khung): điểm TRIBE_PTS[lv] chia theo sát thương cho minh của từng người
+export function tribeBank(w: World, at: number, lv: number, dmgs: Record<number, number>): World {
+  const wk = weekOf(at)
+  if (at < tribeStart(wk) || at >= tribeEnd(wk)) return w
+  const sum = Object.values(dmgs).reduce((a, b) => a + b, 0) || 1
+  const tr = tribeOf(w, at)
+  const pts = { ...tr.pts }
+  for (const [p, d] of Object.entries(dmgs)) {
+    const al = allyOf(w, Number(p))
+    if (al) pts[al.id] = (pts[al.id] ?? 0) + ((TRIBE_PTS[lv] ?? 0) * d) / sum
+  }
+  return { ...w, tribe: { ...tr, pts } }
 }

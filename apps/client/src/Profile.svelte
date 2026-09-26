@@ -6,7 +6,7 @@
   import { DAO_TONES, Portrait, artOf, paintedUrl, portraitRing } from '@rok/art'
   import type { WorldAction } from '@rok/rules/world'
   import type { Net } from './net'
-  import { BigStat, Button, Card, Face, Medal, Orb, Plaque, Sheet, Tag } from './ui'
+  import { BADGE_EMBLEMS, BADGE_TONES, BigStat, Button, Card, Face, Medal, Orb, Plaque, Sheet, Tag } from './ui'
   import { L, LOOK, MASTER, num } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
@@ -92,7 +92,13 @@
     <div class="stack">
       <!-- danh thiếp chưởng môn: ấn minh bên trái (chưa vào minh: ấn mờ), minh · trạng thái · đạo · tước hiệu bên phải -->
       <div class="vista split items-start" style:--gap="12px">
-        <Medal emblem="crest" tone={p.ally ? 'gold' : 'ink'} size={48} dim={!p.ally} />
+        <!-- cờ minh đã chọn (không có: ấn vàng mặc định) -->
+        <Medal
+          emblem={p.ally?.badge ? BADGE_EMBLEMS[p.ally.badge[0]] : 'crest'}
+          tone={p.ally?.badge ? BADGE_TONES[p.ally.badge[1]] : p.ally ? 'gold' : 'ink'}
+          size={48}
+          dim={!p.ally}
+        />
         <div class="stack" style:--gap="4px">
           <b class="t-small"
             >{#if p.ally}[{p.ally.tag}] {p.ally.name} · {L.ally.role(p.ally.role)}{:else}<span class="t-soft"

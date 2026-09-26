@@ -52,6 +52,7 @@ const ORE = { linhThach: 'water', linhThao: 'wood', linhKhoang: 'metal' } as con
 // phù văn: loại (RUNE_KINDS: công, thủ, sinh lực, khai mỏ, hành quân, tuyển) → hình; phẩm → đĩa
 const RUNE_EMBLEM: Emblem[] = ['sword', 'earth', 'lotus', 'wood', 'wind', 'fist']
 const RUNE_TONE: MedalTone[] = ['ink', 'jade', 'phap', 'realm', 'gold']
+const GOODS_TONE: MedalTone[] = ['ink', 'jade', 'gold'] // hàng thương đội: thường / tốt / quý
 export type Pick =
   | { kind: 'seat'; pid: number }
   | { kind: 'point'; i: number }
@@ -212,9 +213,11 @@ export class WorldScene {
       this.marks.addChild(s)
     }
     for (const d of snap.digs ?? []) add(d, 'orb', 'gold', 0.8, 1, 0.2) // Tàng Bảo Đồ: điểm đào (ai cũng thấy) — bảo châu vàng
-    this.tileMarks = [...(snap.digs ?? []), ...(snap.runes ?? [])] // chọn được trước điểm bên cạnh
+    this.tileMarks = [...(snap.digs ?? []), ...(snap.runes ?? []), ...(snap.goods ?? [])] // chọn được trước điểm bên cạnh
     // phù văn quanh linh địa: hình theo loại, đĩa theo phẩm (Bạch mực → Cam vàng)
     for (const r of snap.runes ?? []) add(r, RUNE_EMBLEM[r.k], RUNE_TONE[r.t], 0.55, 1, 0.3)
+    // Thương Đội Gặp Nạn: kiện hàng rơi quanh thôn trang — huy hiệu, đĩa theo phẩm
+    for (const g of snap.goods ?? []) add(g, 'crest', GOODS_TONE[g.t], 0.6, 1, 0.3)
     this.terrData = {
       snap,
       mine,

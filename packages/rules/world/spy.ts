@@ -6,18 +6,18 @@ import { might } from '../combat.ts'
 import { no } from '../core/action.ts'
 import { cellOf, cranes, cranesOut, fogOf, fold } from '../core/fog.ts'
 import { int, isId } from '../core/parse.ts'
-import { elderLevel, storage } from '../core/stats.ts'
+import { elderLevel, protectOf } from '../core/stats.ts'
 import { count } from '../core/util.ts'
 import type { State } from '../core/types.ts'
 import { wallHp, wallMax } from '../core/wall.ts'
-import { CRANE_TIME, MIRAGE_LOOT, MIRAGE_SHOW, PROTECT, PVP_HALL, RAID_SHARE, RESOURCES, SPY_COST } from '../data.ts'
+import { CRANE_TIME, MIRAGE_LOOT, MIRAGE_SHOW, PVP_HALL, RAID_SHARE, RESOURCES, SPY_COST } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
 import { aidAt, garrison, guardMight, napBetween, sideKey, sideName, type WorldActions } from './base.ts'
 import { defense, guardOf } from './fight.ts'
 import { spotOf, troopsOf } from './points.ts'
 
 // Tài nguyên ước cướp được (chưa tính chiến lợi phẩm của người dẫn và sức mang)
-const lootable = (d: State) => RESOURCES.map(r => Math.floor(Math.max(0, d.res[r] - PROTECT * storage(d)) * RAID_SHARE))
+const lootable = (d: State) => RESOURCES.map(r => Math.floor(Math.max(0, d.res[r] - protectOf(d)) * RAID_SHARE))
 
 export type SpyAction = { type: 'spy'; pid: number } | { type: 'spySpot'; i: number }
 export const spyActions: WorldActions<SpyAction> = {

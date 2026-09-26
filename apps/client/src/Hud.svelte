@@ -27,6 +27,8 @@
     power,
     questDone,
     questOf,
+    questChapter,
+    QUESTS,
     questProgress,
     rate,
     storage,
@@ -34,6 +36,7 @@
     type Bag as Res,
     type Res as ResId,
     type BuildingId,
+    type Incoming,
     type State,
   } from '@rok/rules'
   import Buffs from './Buffs.svelte'
@@ -147,11 +150,20 @@
     )
     return live
       .filter((x, k) => live.findIndex(y => y.at === x.at) === k)
-      .map(x => ({
-        ...x,
-        n: live.filter(y => y.at === x.at).length,
-      }))
+      .map(x => {
+        const team = live.filter(y => y.at === x.at)
+        return { ...x, teams: team.length, eye: eyeText(team) }
+      })
   })
+  // Thiên Nhãn: tin lộ theo tầng Hộ Sơn Đại Trận — trưởng lão dẫn, tổng quân số, hệ chính của đội mở trận
+  function eyeText(team: Incoming[]) {
+    const parts = [
+      ...new Set(team.flatMap(y => (y.elder ? [L.elders[y.elder].name] : []))),
+      ...(team.some(y => y.n !== undefined) ? [L.pvp.eyeTroops(num(team.reduce((k, y) => k + (y.n ?? 0), 0)))] : []),
+      ...(team[0].main ? [L.pvp.eyeMain(L.units[team[0].main])] : []),
+    ]
+    return parts.length ? L.pvp.eyeLine(parts) : ''
+  }
   const ward = $derived((['hoSon8', 'hoSon24', 'hoSon72'] as const).find(id => (game.items[id] ?? 0) > 0))
   let visited = $state(visitedTabs())
   // Ghé tab bằng cách nào cũng tính (bấm tab, hay nhiệm vụ dẫn sang bản đồ)
@@ -198,6 +210,7 @@
   let held = $state<{ quest: typeof live; prog: typeof liveProg } | null>(null)
   const quest = $derived(held ? held.quest : live)
   const prog = $derived(held ? held.prog : liveProg)
+  const chapter = $derived(quest ? questChapter(QUESTS.indexOf(quest)) : -1) // chương nhiệm vụ (tên ở quest.chapters)
   const done = $derived(!!held || questDone(game))
   function claim(e: MouseEvent) {
     if (held) return
@@ -317,7 +330,7 @@
 </script>
 
 <HudFrame {ink}>
-  <TopBar {ink}>
+  <TopBar {ink} solid={tab !== 'tongMon' && tab !== 'banDo'}>
     {#snippet avatar()}
       <!-- chân dung: chạm xem hồ sơ của mình (như RoK; chưa vào giới thì xem xếp hạng); vòng khiên xanh khi được bảo hộ -->
       <Avatar
@@ -420,11 +433,11 @@
         icon="swords"
         title={x.spot !== undefined
           ? L.pvp.robIncoming(x.foe)
-          : x.n > 1
-            ? L.pvp.incomingRally(x.foe, x.n)
+          : x.teams > 1
+            ? L.pvp.incomingRally(x.foe, x.teams)
             : L.pvp.incoming(x.foe)}
         time={clock(x.at - now)}
-        hint={x.spot !== undefined ? L.pvp.robIncomingHint : L.pvp.incomingHint}
+        hint={x.eye || (x.spot !== undefined ? L.pvp.robIncomingHint : L.pvp.incomingHint)}
         actions={[
           ...(digger ? [{ label: L.world.recall, onclick: () => onrecall(digger.id) }] : []),
           ...(ward && x.spot === undefined
@@ -458,7 +471,7 @@
         {#if quest}
           <QuestNote
             {ink}
-            title={L.quest.title}
+            title={chapter >= 0 ? L.quest.chapter(chapter, L.quest.chapters[chapter]) : L.quest.title}
             prog={prog ? `${num(Math.min(prog[0], prog[1]))}/${num(prog[1])}` : undefined}
             text={L.quest.text(quest)}
             state={held ? 'held' : done ? 'done' : 'todo'}

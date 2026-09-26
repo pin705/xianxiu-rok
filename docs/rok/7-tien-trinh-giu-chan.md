@@ -296,7 +296,7 @@
   - Mỗi việc 10–20 "tu vi điểm". 5 hộp ở 20/40/60/80/100.
   - Hộp 100: một lượng Tiên ngọc nhỏ (khi có tiền tệ này) + "Tiên duyên phù" (C1) + đan.
   - Cho đổi 1 việc mỗi ngày.
-- **Game mình:** ✅ Nhật Khóa (fest kiểu `activity` `nhatKhoa` ở `data.ts`, đầu bảng Nhiệm vụ ngày): 12 việc (có giúp đồng minh, cướp, khai mỏ, mở thiếp), mỗi việc 10–20 điểm hoạt lực, tổng dư quá 100 nên được chọn việc; 5 rương ở 20/40/60/80/100 (rương cuối có Kim Duyên Phù + Luận Kiếm Lệnh), mở ở tầng 3, làm mới 0h giờ VN. Danh sách việc cố định, chưa bốc ngẫu nhiên / đổi việc.
+- **Game mình:** ✅ Nhật Khóa (fest kiểu `activity` `nhatKhoa` ở `data.ts`, đầu bảng Nhiệm vụ ngày): 14 việc (có giúp đồng minh, cướp, khai mỏ, mở thiếp, Luận Kiếm Đài, Thương nhân vân du), mỗi việc 10–20 điểm hoạt lực, tổng dư quá 100 nên được chọn việc; 5 rương ở 20/40/60/80/100 (rương cuối có Kim Duyên Phù + Luận Kiếm Lệnh), mở ở tầng 3, làm mới 0h giờ VN. Danh sách việc cố định, chưa bốc ngẫu nhiên / đổi việc.
 - **Ưu tiên:** P1 · **Công sức:** S (khung đếm có sẵn trong `dailyDone`/`dailyReward`; `fest.ts` đang làm có sẵn `METRIC`).
 
 #### B4 · Achievements — thành tựu
@@ -951,12 +951,12 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | B3 Daily Objectives → **Nhật khóa** 100 điểm, 5 hộp | ✅ Nhật Khóa (100 điểm hoạt lực, 5 rương mốc) | P1 | S |
 | C7 Rương ngày Expedition → **Tĩnh tọa ngộ đạo** theo tầng tháp / bí cảnh | ✅ Tĩnh tọa ngộ đạo (rương ngày theo tầng tháp) | P1 | S |
 | A10 Vào liên minh sớm → nhiệm vụ "Bái nhập tiên minh" | ✅ lễ nhập minh (quà lần đầu) | P1 | S |
-| A3 Counselor → Thanh Phong dẫn đường (+ trận mở màn: M) | 🟡 trưởng lão dẫn đường (Mộc Thanh Phong); chưa có trận mở màn | P1 | S / M |
+| A3 Counselor → Thanh Phong dẫn đường (+ trận mở màn: M) | ✅ trưởng lão dẫn đường (Mộc Thanh Phong) + trận mở màn: tông môn vừa lập thì Huyết Sát Môn tập kích, Thanh Phong nghênh chiến (trận thật của luật, quân ảo, xem được / bỏ qua; `opening.ts`, `Opening.svelte`) | P1 | S / M |
 | A9 Thợ thứ hai → tạp dịch thứ hai (thuê 2 ngày; vĩnh viễn bằng Công đức) | ✅ Tạp Dịch Lệnh (thuê 48 giờ, không vĩnh viễn) | P1 | S / M |
 | C12 Mã quà + quà liên kết email | ✅ mã quà tặng + quà gắn email | P1 | S |
 | C14 Thông báo đẩy thêm loại + chọn loại | ✅ tắt được từng loại; nhắc việc dài xong, đội về, bị cướp / đội địch đang tới, khiên sắp hết, kho sắp đầy, chuỗi Hương Hỏa, rương Nhật Khóa chưa nhận (trước 0h), lễ tích điểm sắp đóng (`notify.ts`) | P1 | S |
 | D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | ✅/🟡 Tông Môn Tranh Bá (6 ải, bảng từng ải + cả lượt, trưởng lão của đợt); sự kiện tuần cũ chưa gộp | P1 | S |
-| D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | 🟡 tổng kết mùa + lễ theo lịch + điểm danh đầu mùa (Khánh Điển Khai Tông) + Hồi Quy Lễ + Tân Giới Thất Nhật; Cố Nhân Tương Phùng: gọi đạo hữu vắng ≥ 7 ngày về, cả hai nhận quà (`world/recall.ts`) | P1 | S / M |
+| D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | ✅ tổng kết mùa + lễ theo lịch + điểm danh đầu mùa (Khánh Điển Khai Tông) + Hồi Quy Lễ + Tân Giới Thất Nhật; Cố Nhân Tương Phùng: gọi đạo hữu vắng ≥ 7 ngày về, cả hai nhận quà (`world/recall.ts`) | P1 | S / M |
 | F3 Growth Fund → **Quỹ Tiên Lộ** | ❌ (P4) | P1 | S |
 | F4 Supply Depot → **Nguyệt Lệnh** | ❌ (P4) | P1 | S |
 | B2 Side Quests → **Tông vụ** 4 dòng | ✅ Tông vụ 4 dòng (trong bảng Nhiệm vụ ngày) | P1 | S–M |

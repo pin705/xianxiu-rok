@@ -7,6 +7,7 @@ import { fieldError, launch, marchSide, marchSnap, pushReport } from '../core/ba
 import { isElder, isId, pickArmy } from '../core/parse.ts'
 import { lead, power, unitOf } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
+import { eyeOf } from '../core/wall.ts'
 import type { Army, Err, March, State } from '../core/types.ts'
 import { compact, noGain } from '../core/util.ts'
 import { FOES_MAX, FRENZY_TIME, PVP_FLOOR, PVP_HALL, ROB_SHARE, TIER, UNITS, type ElderId } from '../data.ts'
@@ -93,7 +94,7 @@ function robAct({ ps, w, pid, s, now, seed, map }: Ctx, a: RobAction): WorldResu
   }
   // như đi cướp tông môn: mất khiên, nổi sát khí; bên kia thấy đội kéo tới (Tháp canh) để kịp gọi đội khai về
   const me: State = { ...launch(s, army, m), shield: 0, frenzy: t + FRENZY_TIME }
-  const warn = { id: m.id, pid, foe: s.name, at, spot: i }
+  const warn = { id: m.id, pid, foe: s.name, at, spot: i, ...eyeOf(def, a.elder, army) }
   const them: State = { ...def, incoming: [...(def.incoming ?? []).filter(x => x.at > t), warn] }
   return {
     ok: true,

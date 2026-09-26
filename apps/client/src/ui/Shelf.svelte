@@ -50,7 +50,9 @@
   .cols {
     grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   }
+  /* món đứng TRÊN ván (mép trên ván cách đáy ô 14px): lề ngoài chứ không đệm trong — đệm trong làm số lượng ở góc dưới
+     của món rơi xuống đè lên ván, viền "đang chọn" kéo dài xuống ván */
   .shelf > :global(*) {
-    padding-bottom: 12px;
+    margin-bottom: 14px;
   }
 </style>

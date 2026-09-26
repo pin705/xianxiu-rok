@@ -1,12 +1,17 @@
 <script lang="ts">
   // Trang Môn hạ: trưởng lão (trụ cột "truyền thừa của riêng mình": hành, pháp bảo, thiên phú), đệ tử theo hệ × bậc, thương binh.
   import {
+    BAG,
+    BAG_IDS,
     ELDERS,
     RARITY,
     ELDER_IDS,
     ELDER_MAX,
     GEAR,
     GEAR_IDS,
+    GEAR_SETS,
+    GEAR_SLOTS,
+    TALENT_PAGES,
     TALENT_STAR,
     TALENT_TIER,
     TALENT_TREES,
@@ -19,7 +24,8 @@
     count,
     elderLevel,
     expAt,
-    gearOf,
+    gearSets,
+    gearsOf,
     hospital,
     talentPoints,
     talentUsed,
@@ -40,6 +46,8 @@
     expertOf,
     ngoCost,
     ngoError,
+    unngoError,
+    unngoRefund,
     skillLv,
   } from '@rok/rules'
   import Tavern from './Tavern.svelte'
@@ -50,6 +58,7 @@
   import { Beads, Button, Card, Medal, Meter, Page, Scroll, Section, Sheet, Tabs, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num, unitName, type PanelTab } from './lib'
   import Help from './Help.svelte'
+  import { itemName } from './bag'
   import { useGame } from './game'
 
   let {
@@ -65,7 +74,7 @@
   const act = g.act
 
   let open = $state<ElderId | null>(null)
-  let picking = $state(false) // đang chọn pháp bảo cho trưởng lão đang mở
+  let picking = $state(-1) // ô pháp bảo đang chọn món cho trưởng lão đang mở (-1: không)
   const out = $derived(away(game))
   const hurt = $derived(count(game.wounded))
   const marchOf = (e: ElderId) => game.marches.find(m => m.elder === e)
@@ -212,7 +221,7 @@
   open={!!open}
   onclose={() => {
     open = null
-    picking = false
+    picking = -1
   }}
   title={open ? L.elders[open].name : ''}
   sub={open
@@ -255,6 +264,27 @@
           onclick={() => act({ type: 'star', elder: e }, 'reward')}>{L.tavern.star(starCost(game, e))}</Button
         >
       {/if}
+      <!-- Vạn Năng Tín Vật cùng phẩm (tượng vạn năng của RoK): đổi thành tín vật của người này -->
+      {@const uni = BAG_IDS.find(id => {
+        const b = BAG[id]
+        return b.use === 'token' && b.rarity === RARITY[e]
+      })}
+      {#if uni && game.elders[e] !== undefined && (game.items[uni] ?? 0) > 0}
+        {@const have = game.items[uni] ?? 0}
+        <div class="row">
+          <Icon name="vanNang" size={26} />
+          <small class="grow t-small">{L.tavern.uni(itemName(uni), have)}</small>
+          <Button size="sm" variant="ghost" onclick={() => act({ type: 'uni', item: uni, elder: e, n: 1 }, 'reward')}
+            >{L.tavern.uniOne}</Button
+          >
+          {#if have > 1}<Button
+              size="sm"
+              variant="gold"
+              onclick={() => act({ type: 'uni', item: uni, elder: e, n: have }, 'reward')}
+              >{L.tavern.uniAll(have)}</Button
+            >{/if}
+        </div>
+      {/if}
     </Section>
     {@const sk = skillLv(game, e)}
     <Section title={L.monHa.skill}>
@@ -293,6 +323,12 @@
           >{L.monHa.ngo(ngoCost(game, e))}</Button
         >
       {/if}
+      <!-- Hoàn Nguyên Phù (Skill Reset của RoK): mọi môn về tầng 1, trả đủ tín vật đã ngộ -->
+      {#if game.items.hoanNguyen && !unngoError(game, e)}
+        <Button size="sm" variant="ghost" icon="hoanNguyen" onclick={() => act({ type: 'unngo', elder: e }, 'reward')}
+          >{L.monHa.unngo(game.items.hoanNguyen, unngoRefund(game, e))}</Button
+        >
+      {/if}
       {#if expertOf(game, e)}
         <Card tone="glow">
           <span class="stack" style:--gap="2px"
@@ -308,60 +344,71 @@
       <ElderSwap elder={e} />
       <ElderRelic elder={e} />
     </Section>
-    {@const g = gearOf(game, e)}
+    {@const worn = gearsOf(game, e)}
     {@const busy = isMarching(game, e)}
+    <!-- ba ô pháp bảo (binh khí, hộ thân, linh bảo): đeo món cùng ô thì thay; dưới là thưởng bộ đang có -->
     <Section title={L.forge.slot}>
-      <Card>
-        <div class="row">
-          {#if g}
-            <Icon name={g} size={30} />
-            <span class="grow stack" style:--gap="1px"
-              ><b class="t-small">{L.gear[g]} · {L.lv(game.gear[g]!.lv)}</b><small class="t-small t-soft"
-                >{L.bonus(GEAR[g].key, GEAR[g].v * game.gear[g]!.lv)}</small
-              ></span
-            >
-            <Button
-              variant="quiet"
-              size="sm"
-              disabled={busy}
-              onclick={() => act({ type: 'equip', gear: g, elder: null })}>{L.forge.unequip}</Button
-            >
-          {:else}
-            <span class="grow t-small t-soft">{owned.length ? L.forge.none : L.forge.empty}</span>
-          {/if}
-          {#if owned.some(x => x !== g)}<Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onclick={() => (picking = !picking)}>{L.forge.equip}</Button
-            >{/if}
-        </div>
-      </Card>
-      {#if picking && !busy}
-        <p class="t-small t-strong t-gold">{L.forge.pick}</p>
-        {#each owned.filter(x => x !== g) as x (x)}
-          {@const on = game.gear[x]!.on}
-          <Card
-            onclick={on && isMarching(game, on)
-              ? undefined
-              : () => {
-                  if (act({ type: 'equip', gear: x, elder: e }, 'reward')) picking = false
-                }}
-            disabled={!!on && isMarching(game, on)}
-            label={L.gear[x]}
-          >
-            <span class="row">
-              <Icon name={x} size={26} />
-              <span class="grow stack" style:--gap="0"
-                ><b class="t-small">{L.gear[x]} · {L.lv(game.gear[x]!.lv)}</b><small class="t-tiny t-soft"
-                  >{L.bonus(GEAR[x].key, GEAR[x].v * game.gear[x]!.lv)}</small
+      {#each worn as g, k (k)}
+        <Card>
+          <div class="row">
+            {#if g}
+              <Icon name={g} size={30} />
+              <span class="grow stack" style:--gap="1px"
+                ><b class="t-small">{L.gear[g]} · {L.lv(game.gear[g]!.lv)}</b><small class="t-small t-soft"
+                  >{L.forge.slots[k]} · {L.bonus(GEAR[g].key, GEAR[g].v * game.gear[g]!.lv)}</small
                 ></span
               >
-              {#if on}<small class="t-tiny t-soft">{L.forge.worn(L.elders[on].name)}</small>{/if}
-            </span>
-          </Card>
-        {/each}
-      {/if}
+              <Button
+                variant="quiet"
+                size="sm"
+                disabled={busy}
+                onclick={() => act({ type: 'equip', gear: g, elder: null })}>{L.forge.unequip}</Button
+              >
+            {:else}
+              <span class="grow t-small t-soft">{L.forge.slots[k]} · {owned.length ? L.forge.none : L.forge.empty}</span
+              >
+            {/if}
+            {#if owned.some(x => GEAR[x].slot === k && x !== g)}<Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onclick={() => (picking = picking === k ? -1 : k)}>{g ? L.forge.change : L.forge.wear}</Button
+              >{/if}
+          </div>
+        </Card>
+        {#if picking === k && !busy}
+          <p class="t-small t-strong t-gold">{L.forge.pick}</p>
+          {#each owned.filter(x => GEAR[x].slot === k && x !== g) as x (x)}
+            {@const on = game.gear[x]!.on}
+            <Card
+              onclick={on && isMarching(game, on)
+                ? undefined
+                : () => {
+                    if (act({ type: 'equip', gear: x, elder: e }, 'reward')) picking = -1
+                  }}
+              disabled={!!on && isMarching(game, on)}
+              label={L.gear[x]}
+            >
+              <span class="row">
+                <Icon name={x} size={26} />
+                <span class="grow stack" style:--gap="0"
+                  ><b class="t-small">{L.gear[x]} · {L.lv(game.gear[x]!.lv)}</b><small class="t-tiny t-soft"
+                    >{L.forge.sets[GEAR[x].set]} · {L.bonus(GEAR[x].key, GEAR[x].v * game.gear[x]!.lv)}</small
+                  ></span
+                >
+                {#if on}<small class="t-tiny t-soft">{L.forge.worn(L.elders[on].name)}</small>{/if}
+              </span>
+            </Card>
+          {/each}
+        {/if}
+      {/each}
+      {#each gearSets(game, e) as [set, n] (set)}
+        {@const d = GEAR_SETS[set]}
+        <p class="t-small" class:t-gold={n >= 2} class:t-soft={n < 2}>
+          {L.forge.setLine(L.forge.sets[set], n, GEAR_SLOTS)} · {L.bonus(d.two.key, d.two.v)}{#if n >= 3}
+            · {L.bonus(d.three.key, d.three.v)}{/if}
+        </p>
+      {/each}
     </Section>
     {@const pts = talentPoints(game, e) - talentUsed(game, e)}
     {@const tal = game.talents[e] ?? []}
@@ -369,6 +416,21 @@
     <Section title={L.talent.title}>
       {#snippet aside()}{L.talent.points(pts)}{/snippet}
       <p class="t-small t-soft">{L.talent.hint(TALENT_TIER, TALENT_STAR)}</p>
+      <!-- lưu bộ thiên phú (talent pages của RoK): mỗi bộ cộng điểm riêng, đổi miễn phí -->
+      {@const page = game.tpage?.[e]?.at ?? 0}
+      <div class="row wrap" style:--gap="6px">
+        <small class="t-tiny t-soft grow">{L.talent.page}</small>
+        {#each { length: TALENT_PAGES } as _, k (k)}
+          <Button
+            size="sm"
+            variant={page === k ? 'gold' : 'ghost'}
+            disabled={busy}
+            onclick={() => page !== k && act({ type: 'tpage', elder: e, page: k }, 'reward')}
+            >{L.talent.pageName(k + 1)}</Button
+          >
+        {/each}
+      </div>
+      <small class="t-tiny t-soft">{L.talent.pageHint}</small>
       <Tabs
         items={TALENT_TREES.map((_, k) => ({
           id: String(k),
@@ -407,6 +469,16 @@
           </div>
         </div>
       {/each}
+      {#if pts > 0}
+        <!-- cộng theo gợi ý: dồn hết điểm còn lại vào cây đang xem, tầng dưới trước -->
+        <Button
+          variant="gold"
+          wide
+          disabled={busy}
+          onclick={() => act({ type: 'talentAuto', elder: e, tree }, 'reward')}
+          >{L.talent.auto(pts, L.talent.trees[tree])}</Button
+        >
+      {/if}
       {#if game.items.taiTuy && talentUsed(game, e)}
         <Button
           variant="ghost"

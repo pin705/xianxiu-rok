@@ -43,6 +43,7 @@ import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
 import { partyActions, type PartyAction } from './party.ts'
+import { convoyActions, type ConvoyAction } from './convoy.ts'
 import { aquizActions, type AquizAction } from './aquiz.ts'
 import { rescueActions, type RescueAction } from './rescue.ts'
 import { planActions, type PlanAction } from './plans.ts'
@@ -81,6 +82,7 @@ export type WorldAction =
   | PotAction
   | ArkAction
   | PartyAction
+  | ConvoyAction
   | AquizAction
   | RescueAction
   | PlanAction
@@ -118,6 +120,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...potActions,
   ...arkActions,
   ...partyActions,
+  ...convoyActions,
   ...aquizActions,
   ...rescueActions,
   ...planActions,
@@ -172,3 +175,8 @@ export function allyTouched(prev: World, next: World): number[] {
         for (const pid of Object.keys(next.allies[id]?.members ?? {})) out.add(Number(pid))
   return [...out]
 }
+// Ai ở minh nào (đổi khi có người vào / rời / minh giải tán): lãnh thổ trên bản đồ theo đó mà đổi
+export const memberKey = (w: World) =>
+  Object.values(w.allies)
+    .map(a => `${a.id}:${Object.keys(a.members)}`)
+    .join('|')

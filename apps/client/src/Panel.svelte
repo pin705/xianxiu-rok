@@ -4,7 +4,9 @@
   import {
     BUILDINGS,
     DO_KIEP,
+    EYE,
     GUARD_STEP,
+    WALL_VOLLEY,
     HO_PHAP,
     MARKET_HALL,
     DRILL_HALL,
@@ -30,6 +32,7 @@
     marchSlots,
     might,
     mob,
+    protectOf,
     rate,
     storage,
     storeNeed,
@@ -261,6 +264,12 @@
           <Stat label={L.panel.capacity}
             >{num(capAt(lv))}{#if lv < MAX_LEVEL}<span class="t-good">→ {num(capAt(next))}</span>{/if}</Stat
           >
+          <!-- kho bảo hộ theo tầng (Storehouse của RoK): phần không bị cướp -->
+          <Stat label={L.resInfo.safe}
+            >{num(protectOf(game))}{#if lv < MAX_LEVEL}<span class="t-good"
+                >→ {num(protectOf(withLevel(id, next)))}</span
+              >{/if}</Stat
+          >
         {:else if id === 'dienVoTruong'}
           <Stat label={L.panel.batch}
             >{num(batch(game))}{#if lv < MAX_LEVEL}<span class="t-good">→ {num(batch(withLevel(id, next)))}</span
@@ -282,9 +291,22 @@
         {:else if id === 'chuDien'}
           <Stat label={L.panel.slots}>{marchSlots(game)}</Stat>
         {:else if id === 'hoSonDaiTran'}
+          {@const seen = L.pvp.eyeSees.filter((_, k) => lv >= EYE[k])}
+          {@const soon = EYE.findIndex(x => x > lv)}
           <Stat label={L.pvp.wall(lv)}
             >+{Math.round(GUARD_STEP * lv * 100)}%{#if lv < MAX_LEVEL}<span class="t-good"
                 >→ +{Math.round(GUARD_STEP * next * 100)}%</span
+              >{/if}</Stat
+          >
+          <!-- Thiên Nhãn (tháp canh của RoK): kiếm trận chém trước trận, thẻ báo địch lộ thêm theo tầng -->
+          <Stat label={L.pvp.volley}
+            >{L.pvp.volleyPct(WALL_VOLLEY * lv)}{#if lv < MAX_LEVEL}<span class="t-good"
+                >→ {L.pvp.volleyPct(WALL_VOLLEY * next)}</span
+              >{/if}</Stat
+          >
+          <Stat label={L.pvp.eye}
+            >{seen.length ? seen.join(', ') : L.pvp.eyeNone}{#if soon >= 0}<span class="t-good"
+                >→ {L.pvp.eyeNext(EYE[soon], L.pvp.eyeSees[soon])}</span
               >{/if}</Stat
           >
         {:else if id === 'luyenKhiPhong'}

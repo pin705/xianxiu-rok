@@ -5,7 +5,7 @@ import { isElder, oneOf } from '../core/parse.ts'
 import { gearCap, gearCost, gearTime, isMarching } from '../core/stats.ts'
 import { type Err, type State } from '../core/types.ts'
 import { afford, GEAR_IDS } from '../core/util.ts'
-import { GEAR_MAX, type ElderId, type GearId } from '../data.ts'
+import { GEAR, GEAR_MAX, type ElderId, type GearId } from '../data.ts'
 
 export function forgeError(s: State, g: GearId): Err | null {
   if (!s.levels.luyenKhiPhong) return 'locked'
@@ -38,9 +38,10 @@ export const forgeActions: Actions<ForgeAction> = {
       const g = s.gear[a.gear]
       if (!g?.lv || (a.elder && s.elders[a.elder] === undefined)) return no('locked')
       if (isMarching(s, g.on) || isMarching(s, a.elder)) return no('busy')
-      // mỗi trưởng lão một món: món người nhận đang đeo được tháo ra
+      // mỗi ô một món: món cùng ô người nhận đang đeo được tháo ra
       const gear = { ...s.gear }
-      for (const id of GEAR_IDS) if (a.elder && gear[id]?.on === a.elder) gear[id] = { lv: gear[id]!.lv }
+      for (const id of GEAR_IDS)
+        if (a.elder && gear[id]?.on === a.elder && GEAR[id].slot === GEAR[a.gear].slot) gear[id] = { lv: gear[id]!.lv }
       gear[a.gear] = a.elder ? { lv: g.lv, on: a.elder } : { lv: g.lv }
       return ok({ ...s, gear })
     },

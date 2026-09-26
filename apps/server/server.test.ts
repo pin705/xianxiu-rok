@@ -674,6 +674,11 @@ test(
     const prof = await cb.ask({ k: 'profile', pid: A.pid })
     assert.deepEqual([prof?.name, prof?.hall, prof?.ally?.tag, prof?.online], [state.name, 10, 'TVM', true])
     assert.ok(prof?.supply && prof.supply.get > 0, 'cùng minh: hồ sơ có Vận Linh Trận')
+    // Tìm đạo hữu theo tên: không phân biệt hoa thường, dấu; không ra chính người tìm
+    const bare = state.name.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/gi, 'd').toLowerCase()
+    const found = await cb.ask({ k: 'search', q: bare })
+    assert.deepEqual(found[0], { pid: A.pid, name: state.name, hall: 10, tag: 'TVM' })
+    assert.ok(!(await ca.ask({ k: 'search', q: bare })).some(x => x.pid === A.pid), 'không ra chính mình')
     const gift = { linhThach: 100, linhThao: 0, linhKhoang: 0 }
     assert.deepEqual(
       await cb.act({ type: 'supply', to: A.pid, res: gift }),

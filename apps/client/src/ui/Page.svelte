@@ -29,7 +29,8 @@
     z-index: var(--z-page);
     max-width: var(--col);
     margin: 0 auto;
-    padding: calc(132px + var(--safe-t)) 26px calc(max(104px, var(--nav-h, 0px) + 20px) + var(--safe-b));
+    padding: calc(var(--hud-top, calc(132px + var(--safe-t))) + 12px) 26px
+      calc(max(104px, var(--nav-h, 0px) + 20px) + var(--safe-b));
     overflow-y: auto;
     overscroll-behavior: contain;
     border: 0 solid transparent;

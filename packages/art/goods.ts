@@ -26,6 +26,8 @@ export const GOOD_ICONS = [
   'baoDo', // Tàng Bảo Đồ tàn phiến
   'truyenCong', // Truyền Công Phù: truyền công giữa hai trưởng lão
   'hongBao', // Hồng Bao: lì xì gửi ở kênh chat
+  'vanNang', // Vạn Năng Tín Vật: tín vật dùng cho mọi trưởng lão cùng phẩm
+  'hoanNguyen', // Hoàn Nguyên Phù: đặt lại công pháp đã ngộ
   'nganDuyen', 'kimDuyen', // thiếp Chiêu Hiền Đài: bạc, vàng
 ] as const
 export type GoodIcon = (typeof GOOD_ICONS)[number]
@@ -245,6 +247,8 @@ const DRAW: Record<GoodIcon, (g: G) => void> = {
   baoDo: g => talisman(g, mix(C.ochreL, C.silk, 0.35), C.cinnabar, openBook, 390),
   truyenCong: g => talisman(g, mix(C.malachiteL, C.silk, 0.45), C.cinnabar, spiritRise, 400),
   hongBao: g => invite(g, C.cinnabarL, C.goldD, 420),
+  vanNang: g => talisman(g, mix('#a597d8', C.silk, 0.4), C.goldD, spiritRise, 430),
+  hoanNguyen: g => talisman(g, mix(C.azuriteL, C.silk, 0.35), C.goldD, openBook, 440),
 }
 
 export function goodIcon(name: GoodIcon): Asset {

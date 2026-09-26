@@ -1,7 +1,7 @@
 <script lang="ts">
   // Thiên Mệnh Chọn Luật (luật ở rules/world/vote.ts): luật của mùa này (tăng ích cả giới); ba ngày cuối mùa bỏ phiếu luật mùa sau —
   // mỗi luật một nút có số phiếu, phiếu của mình tô vàng, bấm luật khác là đổi phiếu
-  import { RULES, type Bonus } from '@rok/rules'
+  import { RULES, RULE_FFA, type Bonus } from '@rok/rules'
   import type { WorldAction } from '@rok/rules/world'
   import type { Ack, Season } from '@rok/protocol'
   import { Button, Card, Tag } from './ui'
@@ -13,9 +13,10 @@
     onvoted,
   }: { vote: NonNullable<Season['vote']>; send?: (a: WorldAction) => Promise<Ack>; onvoted: () => void } = $props()
   const fx = (k: number) =>
-    Object.entries(RULES[k])
-      .map(([b, v]) => L.bonus(b as Bonus, v ?? 0))
-      .join(' · ')
+    [
+      ...Object.entries(RULES[k]).map(([b, v]) => L.bonus(b as Bonus, v ?? 0)),
+      ...(k === RULE_FFA ? [L.rule.ffa] : []),
+    ].join(' · ')
   async function pick(k: number) {
     if (send && (await send({ type: 'vote', k })).ok) onvoted()
   }

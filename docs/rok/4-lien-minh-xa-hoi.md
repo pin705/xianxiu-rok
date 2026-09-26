@@ -861,7 +861,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | # | Tính năng (tên gốc) | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|
 | A1 | Lập liên minh (Create Alliance) | ✅ lập từ tầng 4 (lúc mở thẻ Tiên minh), 5k mỗi loại; thiếu cờ/huy hiệu riêng | P2 | S–M |
-| A2 | Hồ sơ minh, đổi tên/tag/cờ | 🟡 bố cáo, đổi tên / hiệu, giải tán; chưa có huy hiệu minh riêng | P2 | S |
+| A2 | Hồ sơ minh, đổi tên/tag/cờ | ✅ bố cáo, đổi tên / hiệu, giải tán, cờ minh (trưởng lão chọn linh thú 15 + màu đĩa 8, hiện ở sảnh minh và bảng tiên minh) | P2 | S |
 | A3 | Gia nhập tự do/duyệt, mời, passlist/blocklist | ✅ cửa minh vào tự do / duyệt đơn, mời từ hồ sơ; thiếu passlist/blocklist | P1 | S–M |
 | A4 | Sĩ số tối đa tăng dần | ✅ 30 → 40 theo Hộ Minh Đại Trận | P2 | S |
 | A5 | Cấp bậc R1–R5 và quyền | ✅ R1 Ngoại môn … R4 Đường chủ, R5 Minh chủ (25/09); dấu bản đồ từ R3 | P1 | S |
@@ -896,7 +896,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | H1 | Vua và Lost Temple | ✅ Giới Chủ (minh chủ giữ Thiên Môn) | P1 | M |
 | H2 | Title vương quốc buff/debuff | ✅ sắc phong 4 phúc / 4 hoạ, giữ 24 giờ | P1 | M |
 | H3 | Buff vương quốc, quà của vua | ✅ ban phúc cả giới mỗi ngày + Thiên Ân lễ | P2 | S |
-| H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | 🟡 Bế Quan Lệnh (`sect/seclude.ts`) + Phóng Trục (Banish của Giới Chủ); chưa quản lý nhập cư | P2 (P1 cho Bế Quan) | M |
+| H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | 🟡 Bế Quan Lệnh (`sect/seclude.ts`) + Phóng Trục (Banish của Giới Chủ) + Chiếu Giới Chủ (thông cáo cả giới, `decree`); chưa quản lý nhập cư | P2 (P1 cho Bế Quan) | M |
 | H5 | NAP, luật cộng đồng → minh ước | ✅ minh ước bất xâm phạm (đề nghị / nhận / huỷ) | P1 | S–M |
 | H6 | Di cư, bảng tuyển mộ | ⛔ di cư; ✅ chiêu mộ qua kênh Giới (tin có nút Vào minh); chưa có bảng tuyển có yêu cầu | P2 | S |
 | H7 | Bảo vệ và dịch chuyển tân thủ | ✅ khiên 72 giờ, PvP từ tầng 6, sàn lực chiến 50% | — | — |

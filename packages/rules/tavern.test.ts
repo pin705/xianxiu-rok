@@ -31,6 +31,7 @@ import {
   advance,
   festOpen,
   festWindow,
+  RARITY,
   FESTS,
   DAY,
   type State,
@@ -95,6 +96,37 @@ test('tín vật: đủ 10 thu nhận trưởng lão chưa có; dư thì nâng s
   assert.equal(lead(s, 'thanhPhong', 'atk'), atk + STAR_BONUS.atk!)
   assert.deepEqual(apply(s, { type: 'star', elder: 'thanhPhong' }, s.time), { ok: false, error: 'not_enough' })
   assert.deepEqual(apply(s, { type: 'star', elder: 'macSau' }, s.time), { ok: false, error: 'locked' })
+})
+
+test('Hoàn Nguyên Phù: mọi môn về tầng 1, trả đủ tín vật đã ngộ; chưa ngộ, không có phù thì không', () => {
+  const n = 1 + ELDERS.thanhPhong.passives.length
+  const skl = [3, 2, ...Array(n - 2).fill(1)]
+  let s: State = { ...hall2(), tokens: { thanhPhong: 3 }, items: { hoanNguyen: 1 }, skl: { thanhPhong: skl } }
+  s = run(s, { type: 'unngo', elder: 'thanhPhong' })
+  assert.equal(s.tokens.thanhPhong, 3 + SKILL_COST[0] + SKILL_COST[1] + SKILL_COST[2], 'ba lần ngộ được trả')
+  assert.deepEqual(skillLv(s, 'thanhPhong'), Array(n).fill(1))
+  assert.equal(s.items.hoanNguyen, 0)
+  assert.deepEqual(apply(s, { type: 'unngo', elder: 'thanhPhong' }, s.time), { ok: false, error: 'empty' })
+  const again = { ...s, skl: { thanhPhong: skl } }
+  assert.deepEqual(apply(again, { type: 'unngo', elder: 'thanhPhong' }, s.time), { ok: false, error: 'no_item' })
+})
+
+test('Vạn Năng Tín Vật: đổi 1 : 1 thành tín vật của trưởng lão cùng phẩm đã thu nhận; khác phẩm, chưa thu nhận, thiếu thì không', () => {
+  let s: State = { ...hall2(), items: { vanNang2: 12, vanNang3: 1 } }
+  const uni = (st: State, item: string, elder: string, n: number) =>
+    apply(st, { type: 'uni', item, elder, n } as never, st.time)
+  assert.equal(RARITY.thanhPhong, 2)
+  s = run(s, { type: 'uni', item: 'vanNang2', elder: 'thanhPhong', n: 10 })
+  assert.deepEqual([s.tokens.thanhPhong, s.items.vanNang2], [10, 2])
+  assert.deepEqual(uni(s, 'vanNang3', 'thanhPhong', 1), { ok: false, error: 'bad' }, 'khác phẩm')
+  assert.deepEqual(
+    uni(s, 'vanNang3', 'hanBang', 1),
+    { ok: false, error: 'locked' },
+    'chưa thu nhận: không dùng để thu nhận',
+  )
+  assert.deepEqual(uni(s, 'vanNang2', 'thanhPhong', 3), { ok: false, error: 'not_enough' })
+  assert.deepEqual(uni(s, 'hongBao', 'thanhPhong', 1), { ok: false, error: 'bad' }, 'không phải tín vật')
+  assert.equal(apply(s, { type: 'use', item: 'vanNang2', n: 1 } as never, s.time).ok, false, 'không dùng thẳng từ túi')
 })
 
 test('thành tựu: đạt bậc thì nhận quà bậc đó, lần lượt từng bậc, hết bậc thì thôi', async () => {

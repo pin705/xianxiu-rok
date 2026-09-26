@@ -15,6 +15,7 @@ import {
   sideName,
   type Flag,
   type Players,
+  type Decree,
   type World,
 } from './base.ts'
 import { claim, flagClaim, runesLeft, troopsOf, type Claim, type Rune } from './points.ts'
@@ -82,6 +83,7 @@ export type MapSnap = {
   chron: Chron[]
   spots: SpotView[]
   lord?: number | null
+  decree?: Decree // Chiếu Giới Chủ còn hiệu lực
   book?: { ch: number; done: number[]; value: number; by?: [number, number][] } // by: đóng góp từng người (chương có chỉ số riêng)
   bless?: { key: BlessKey; until: number; day: number } // phúc Giới Chủ ban cả giới
   allies?: { id: number; tag: string }[] // tiên minh có lãnh thổ (hiệu để ghi trên bản đồ)
@@ -91,6 +93,7 @@ export type MapSnap = {
   eveWin?: { tags: string[]; until: number } // minh đứng đầu lúc cổng mở, tăng ích tới until
   digs?: { x: number; y: number; pid: number; name: string }[] // điểm đào Tàng Bảo Đồ (ai cũng thấy, chỉ chủ đào được)
   runes?: Rune[] // phù văn còn trên bản đồ (chu kỳ này, chưa ai nhặt)
+  goods?: { i: number; x: number; y: number; t: number }[] // Thương Đội Gặp Nạn: kiện hàng rơi còn trên bản đồ (phẩm t)
 }
 
 // atl: bản đồ của giới (có thì kèm phù văn còn trên bản đồ)

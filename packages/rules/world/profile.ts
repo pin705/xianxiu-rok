@@ -9,7 +9,7 @@ export type Profile = {
   name: string
   hall: number
   power: number
-  ally: { tag: string; name: string; role: Role } | null
+  ally: { tag: string; name: string; role: Role; badge?: [number, number] } | null // badge: cờ minh
   seat: { x: number; y: number } | null
   pvp: { win: number; loss: number; pts: number }
   rebirths: number
@@ -44,7 +44,7 @@ export function profileOf(
     name: s.name,
     hall: s.levels.chuDien,
     power: Math.round(power(s)),
-    ally: al ? { tag: al.tag, name: al.name, role: al.members[pid] } : null,
+    ally: al ? { tag: al.tag, name: al.name, role: al.members[pid], ...(al.badge && { badge: al.badge }) } : null,
     seat: s.seat,
     pvp: s.pvp,
     rebirths: s.rebirths,

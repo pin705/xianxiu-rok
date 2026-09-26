@@ -178,9 +178,9 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Tương tác:** là cơ sở của văn hoá "tiêu hết trước khi off" và của cướp nhà người vắng.
 - **UI/UX:** bảng Nhà kho hiện 4 dòng "được bảo hộ", thanh so với số đang có [chưa xác minh].
 - **Tu tiên hoá:** "**Mật khố**" trong Tàng Bảo Các: tầng càng cao giấu được càng nhiều. Lore: kết giới ẩn kho, kẻ cướp không phá được.
-- **Game mình:** 🟡
-  - Có: **Tàng Bảo Các** là kho **có trần** (2 000 khi chưa có, ×1,3 mỗi tầng); đổi tài nguyên (Thương hội). PvP bảo hộ **45 % sức chứa kho** (`PROTECT`), cướp 30 % phần vượt theo sức mang (`RAID_SHARE`, `CARRY`). Vật phẩm trong túi (nang tài nguyên) không bị cướp (cướp chỉ lấy `res`).
-  - Thiếu: bảo hộ theo **tầng công trình** (lượng tuyệt đối).
+- **Game mình:** ✅
+  - **Tàng Bảo Các** là kho **có trần** (2 000 khi chưa có, ×1,3 mỗi tầng); đổi tài nguyên (Thương hội). Cướp 30 % phần vượt theo sức mang (`RAID_SHARE`, `CARRY`). Vật phẩm trong túi (nang tài nguyên) không bị cướp (cướp chỉ lấy `res`).
+  - Bảo hộ theo **tầng công trình**: `protectOf` = sức chứa kho × (35 % + 1 % mỗi tầng Tàng Bảo Các) (`PROTECT`, `PROTECT_STEP`, `core/stats.ts`) — tầng 10 giữ 45 % như cũ, tầng 25 giữ 60 %. Khác RoK: vẫn là phần của sức chứa (có tính phần tăng sức chứa), vì kho có trần — tính theo sức chứa gốc thì sim PvP lên 26–31 % (bot có phần tăng sức chứa lớn). Bảng tài nguyên và bảng nâng Tàng Bảo Các hiện lượng bảo hộ (→ tầng sau); do thám, cướp, bot mở nang đều dùng chung `protectOf` (sim PvP 21 → 16 %).
 - **Ưu tiên:** P1 · **Công sức:** S (đổi `PROTECT` thành hàm theo tầng Tàng Bảo Các; chạy lại `npm run sim -- 30 4 --pvp 20`).
 
 #### B6. Trading Post — Trạm giao thương (gửi tài nguyên cho đồng minh)
@@ -231,7 +231,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** khi có đội địch nhắm vào thành, HUD có cảnh báo đỏ và đồng hồ đếm tới lúc tới [chưa xác minh chi tiết theo cấp tháp].
 - **Vì sao hấp dẫn:** biết trước để kịp khiên, kịp gọi viện. Ngồi nhà vẫn "đánh trả" được.
 - **Tu tiên hoá:** "**Thiên Nhãn Lâu**" (vọng lâu): tầng càng cao càng báo sớm, lộ càng nhiều (số đội → trưởng lão → quân số). Có "kiếm trận" chém đội đến cướp một lượt trước khi giao chiến.
-- **Game mình:** 🟡 **Tháp canh** báo trước (`world/raid.ts`, `Hud.svelte`): đội địch vừa xuất quân (cướp tông môn, kết trận, cướp khoáng) là bên bị nhắm thấy thẻ son ở mọi tab (tên, giờ tới, nút Bật khiên), offline thì Web Push. Chưa có công trình riêng, không bắn đội tới, không lộ thêm theo tầng.
+- **Game mình:** ✅ **Tháp canh** báo trước (`world/raid.ts`, `Hud.svelte`): đội địch vừa xuất quân (cướp tông môn, kết trận, cướp khoáng) là bên bị nhắm thấy thẻ son ở mọi tab (tên, giờ tới, nút Bật khiên), offline thì Web Push. **Thiên Nhãn** gộp vào Hộ Sơn Đại Trận (không thêm công trình): thẻ lộ thêm theo tầng trận — tầng 3 trưởng lão dẫn, 7 quân số, 12 hệ chính (`eyeOf`, `EYE`); trận lực còn thì kiếm trận chém trước trận 0,2 % mỗi tầng quân đánh tới (`volleyOf`, `WALL_VOLLEY`; tầng 25 = 5 %), chiến báo hai bên ghi số bị chém. Khác RoK: tháp không có máu riêng, bắn một lượt trước trận thay vì mỗi hiệp.
 - **Ưu tiên:** P1 · **Công sức:** S (báo trước) + S (lượt bắn trong `fight`).
 
 #### C3. Barracks — Doanh trại (bộ binh)
@@ -291,7 +291,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** cây nút nối nhau, nút khoá hiện điều kiện. Chạm nút → bảng chi phí/thời gian/hiệu quả cấp sau → "Nghiên cứu" / "Nghiên cứu ngay" (gem). Danh hiệu "Nhà khoa học" của vua cộng thêm tốc độ [2 nguồn].
 - **Vì sao hấp dẫn:** "sức mạnh vĩnh viễn tốt nhất trong game" [1 nguồn], cây dài để theo đuổi.
 - **Tu tiên hoá:** **Tàng Kinh Các** (công pháp), đã làm.
-- **Game mình:** ✅ Tàng Kinh Các: 28 công pháp, 7 hàng mở ở tầng 1/3/6/9/12/16/21, có sản lượng từng loại, sức chứa, tốc xây, tuyển, chữa, luyện đan, hành quân… ✅ tốc lĩnh ngộ: mỗi tầng Tàng Kinh Các bớt 1 % thời gian lĩnh ngộ công pháp (tầng 25: −25 %, như Học viện RoK cấp 25) — khoá `study` (`bonus`, `techTime` ở `core/stats.ts`), bảng Tàng Kinh Các hiện "Thời gian lĩnh ngộ −n % → −(n+1) %".
+- **Game mình:** ✅ Tàng Kinh Các: 32 công pháp, 8 hàng mở ở tầng 1/3/6/9/12/16/21/25 (hàng cuối quân sự: trận dung, khai mỏ, công pháp, sinh lực), có sản lượng từng loại, sức chứa, tốc xây, tuyển, chữa, luyện đan, hành quân… ✅ tốc lĩnh ngộ: mỗi tầng Tàng Kinh Các bớt 1 % thời gian lĩnh ngộ công pháp (tầng 25: −25 %, như Học viện RoK cấp 25) — khoá `study` (`bonus`, `techTime` ở `core/stats.ts`), bảng Tàng Kinh Các hiện "Thời gian lĩnh ngộ −n % → −(n+1) %".
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### D2. Alliance Center — Trung tâm liên minh
@@ -383,7 +383,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Mở khoá:** khi vương quốc vào **Season of Conquest** [1 nguồn].
 - **Cơ chế:** 14+ **phòng trưng bày** ứng với tướng huyền thoại. Dùng **Exhibit Coins** mở phòng (giá tăng dần), **Relic Coins** mua cổ vật cho buff chiến đấu (vd công +25–30 %). Buff chỉ có tác dụng trong SoC. Phòng Aethelflaed miễn phí; tháo lại được 70 Exhibit Coins. Coin lấy từ chuỗi nhiệm vụ "Civilization Explorer" (có bản trả phí $10) và gói nạp [1 nguồn].
 - **Tu tiên hoá:** "Truyền Thừa Điện": di vật của tổ sư, chỉ hiển linh trong mùa tranh giới.
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** M.
+- **Game mình:** ✅ Anh Linh Điện (`relic` ở `sect/honor.ts`, doc 2 mục 2.13): trong mùa giới, cung phụng di vật 3 bậc cho tối đa 3 trưởng lão bằng Phi Thăng Tệ, mỗi bậc công / thủ / sinh lực cho đội người đó dẫn; hết mùa di vật tan · **Ưu tiên:** P2 · **Công sức:** M.
 
 #### D13. Crystal Mine & Crystal Research Center — Mỏ pha lê, Trung tâm nghiên cứu pha lê
 - **Mở khoá:** CH 25, 25 cấp mỗi nhà. Cấp 1 tốn 1 000 mỗi loại; cấp 25 xây 27 ngày 20 giờ [1 nguồn: rokstats].
@@ -665,7 +665,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
   - **Starlight Sculpture** (Brand-new / Dazzling…) là tượng hướng về tướng mình chọn [2 nguồn].
   - Nguồn: rương VIP (từ VIP 10), Ark of Osiris (3–5), Wheel of Fortune, MGE, Karuak, cửa hàng viễn chinh (tượng riêng 2 500 huân chương), VIP shop (sử thi 200 gem, huyền thoại 2 000 gem), More Than Gems [2 nguồn]. Chi tiết ở file 2.
 - **Tu tiên hoá:** "**Hồn Ấn**" của trưởng lão (riêng / vạn năng).
-- **Game mình:** 🟡 Tín vật riêng từng trưởng lão (Chiêu Hiền Đài, Thiên Cơ Luân): đủ 10 thu nhận, dư thì nâng sao 1–6 (`STAR_COST`; mỗi sao tăng công / sinh lực / công pháp khi dẫn đội) hoặc ngộ công pháp (`ngo`, `SKILL_COST`: một môn ngẫu nhiên lên một tầng, tối đa 5) — `sect/tavern.ts`. Chưa có tín vật vạn năng / Starlight; tâm pháp vẫn mở theo cấp trưởng lão.
+- **Game mình:** 🟡 Tín vật riêng từng trưởng lão (Chiêu Hiền Đài, Thiên Cơ Luân): đủ 10 thu nhận, dư thì nâng sao 1–6 (`STAR_COST`; mỗi sao tăng công / sinh lực / công pháp khi dẫn đội) hoặc ngộ công pháp (`ngo`, `SKILL_COST`: một môn ngẫu nhiên lên một tầng, tối đa 5) — `sect/tavern.ts`. **Vạn Năng Tín Vật** (26/09, `vanNang2/3/4` theo phẩm Tinh / Huyền / Tiên, lệnh `uni`): đổi 1 : 1 thành tín vật của trưởng lão cùng phẩm đã thu nhận (không dùng để thu nhận, như tượng vạn năng của RoK), ở trang trưởng lão; nguồn: Thông Thiên Tháp (5 Tinh phẩm), Hương Hỏa Các (Huyền / Tiên phẩm mỗi tuần), Tông Lệnh Bảo Khố (5 Tiên phẩm). Chưa có Starlight; tâm pháp vẫn mở theo cấp trưởng lão.
 - **Ưu tiên:** P2 (file 2) · **Công sức:** L.
 
 #### H15. Equipment materials & blueprints — Nguyên liệu, bản vẽ trang bị
@@ -939,10 +939,10 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | B0 | Bong bóng chạm thu tài nguyên | ✅ bong bóng trên công trình, chạm thu, phần chờ thu an toàn | P1 | M |
 | B1–B4 | 4 bản mỗi công trình tài nguyên | 🟡 1 bản mỗi loại | P2 | M |
 | B4 | Tài nguyên mở muộn (đá CH 4, vàng CH 10) | ❌ 3 loại có từ đầu | P2 | L |
-| B5 | Nhà kho: bảo hộ lượng tuyệt đối theo cấp | 🟡 bảo hộ 45 % sức chứa, phẳng | P1 | S |
+| B5 | Nhà kho: bảo hộ lượng tuyệt đối theo cấp | ✅ `protectOf`: sức chứa × (35 % + 1 %/tầng Tàng Bảo Các) | P1 | S |
 | B6 | Trạm giao thương (gửi đồng minh, thuế 35→8 %) | ✅ Vận Linh Trận | P1 | M |
 | C1 | Tường: độ bền, tướng thủ | ✅ Hộ Sơn Đại Trận: trận lực, linh hỏa, trấn thủ (`core/wall.ts`) | P1 | M |
-| C2 | Tháp canh: bắn địch, báo trước | 🟡 Tháp canh báo trước (thẻ son + Web Push); chưa bắn địch | P1 | S |
+| C2 | Tháp canh: bắn địch, báo trước | ✅ báo trước (thẻ son + Web Push) + Thiên Nhãn lộ tin theo tầng Hộ Sơn Đại Trận + kiếm trận chém trước trận | P1 | S |
 | C3–C6 | 4 trại lính riêng, hàng song song | ✅ gộp 1 Diễn võ trường | P2 | M |
 | C7 | 4 bệnh viện, viện đầy thì chết | ✅ Đan phòng (1 nhà) | — | — |
 | C8 | Lâu đài: sức chứa kết trận | 🟡 kết trận 8 đội cố định | P2 | S |
@@ -987,7 +987,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H11 | 4 loại dịch chuyển | ✅ dời núi tân thủ, dời vào lãnh thổ, Di Sơn Phù, Càn Khôn Phù | P2 | M |
 | H12 | Chìa Tửu quán | ✅ Ngân / Kim Duyên Phù | P1 | S |
 | H13 | Sách kinh nghiệm | ✅ Tâm Đắc Kinh Thư | — | — |
-| H14 | Tượng tướng, Starlight | 🟡 tín vật trưởng lão (thu nhận, nâng sao); chưa có vạn năng | P2 | L |
+| H14 | Tượng tướng, Starlight | 🟡 tín vật trưởng lão (thu nhận, nâng sao, ngộ công pháp) + Vạn Năng Tín Vật theo phẩm; chưa có Starlight | P2 | L |
 | H15 | Nguyên liệu, bản vẽ | ❌ chủ đích (file 2) | P2 | L |
 | H16 | Vật phẩm nâng nhà đặc biệt (sách, tên, Blueprint) | ❌ | P2 | S |
 | H17 | Vật phẩm điểm VIP | ✅ Hương Hỏa Lệnh | P1 | S |

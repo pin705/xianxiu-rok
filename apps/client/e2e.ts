@@ -193,9 +193,9 @@ try {
     await sleep(200)
   const a = await tab()
   await a.js(
-    `localStorage.setItem('rok.lang', 'vi'); localStorage.setItem('rok.save', '{}'); localStorage.setItem('rok.first', 'world,ally,pvp,trib'); location.reload()`,
+    `localStorage.setItem('rok.lang', 'vi'); localStorage.setItem('rok.save', '{}'); localStorage.setItem('rok.first', 'world,ally,pvp,trib,opening'); location.reload()`,
   ) // save P1 cũ: phải được dọn · thẻ "lần đầu" coi như đã xem
-  for (const sel of ['button.cover', '.skip button', '.choose > .btn', 'form button[type=submit]']) {
+  for (const sel of ['button.cover', '.corner button', 'button.btn.gold.lg.wide', 'form button[type=submit]']) {
     assert.ok(await a.until(`!!document.querySelector('${sel}')`), `màn mở đầu thiếu ${sel}`)
     await a.js(`document.querySelector('${sel}').click()`)
   }
@@ -443,10 +443,10 @@ try {
     `đăng xuất không về màn mở đầu — ${await seen()}`,
   )
   await a.js(`document.querySelector('button.cover').click()`)
-  assert.ok(await a.until(`!!document.querySelector('.skip button')`))
-  await a.js(`document.querySelector('.skip button').click()`)
-  assert.ok(await a.until(`!!document.querySelector('.choose > .btn')`), 'thiếu màn chọn đạo thống')
-  await a.js(`document.querySelector('.choose > .btn').click()`)
+  assert.ok(await a.until(`!!document.querySelector('.corner button')`))
+  await a.js(`document.querySelector('.corner button').click()`)
+  assert.ok(await a.until(`!!document.querySelector('button.btn.gold.lg.wide')`), 'thiếu màn chọn đạo thống')
+  await a.js(`document.querySelector('button.btn.gold.lg.wide').click()`)
   assert.ok(
     await a.until(`[...document.querySelectorAll('button')].some(b => b.innerText.includes('Đăng nhập'))`),
     'màn đặt tên không có lối đăng nhập',

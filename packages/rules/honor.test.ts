@@ -4,6 +4,8 @@ import {
   COIN_PER,
   COIN_SHOP,
   HERO_GIFT,
+  HONOR_BRONZE,
+  HONOR_SILVER,
   HONOR_KP,
   HONOR_TIERS,
   RELIC_BONUS,
@@ -68,6 +70,7 @@ test('Công Huân: chiến công cộng Công Huân; mốc nhận lần lượt;
   const end = endSeason(ps, freshWorld(), { atlas: atlas(7), phase: 3 }, T0 + 3_600_000, 1, new Set([4]))
   const [a, b, c] = [1, 2, 3].map(p => end.changed.get(p)!)
   assert.deepEqual([a.crowns, b.crowns], [[1], undefined], 'danh hiệu mùa: đệ nhất Công Huân')
+  assert.deepEqual([a.honors, b.honors, c.honors], [undefined, [1 * 8 + HONOR_SILVER], undefined], 'á quân Công Huân')
   // thứ tự thư: hạng Công Huân (nếu có) → kết mùa → tổng kết mùa
   assert.deepEqual(a.mail.at(-3)!.a, [1, 900])
   assert.equal(a.mail.at(-3)!.k, 'honorTop')
@@ -252,8 +255,8 @@ test('Lưu Danh Sử Sách: ba ngày cuối mùa chốt ứng viên theo chỉ s
   assert.deepEqual(got(2), [])
   assert.deepEqual(
     [out.changed.get(3)!.honors, out.changed.get(1)!.honors, out.changed.get(2)!.honors],
-    [[1 * 8 + 1], [1 * 8 + 0], undefined],
-    'danh hiệu mùa: Công Thần mùa 1 cho người 3, Chiến Thần mùa 1 cho người 1',
+    [[1 * 8 + 1, 1 * 8 + HONOR_BRONZE], [1 * 8 + 0, 1 * 8 + HONOR_SILVER], undefined],
+    'danh hiệu mùa: người 3 Công Thần + hạng ba Công Huân, người 1 Chiến Thần + á quân Công Huân (người 2 đệ nhất: crowns)',
   )
   assert.equal(out.world.heroes, undefined, 'mùa mới bình chọn lại')
 })

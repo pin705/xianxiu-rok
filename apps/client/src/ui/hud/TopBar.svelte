@@ -1,11 +1,13 @@
 <script lang="ts">
   // Thanh trên HUD: chân dung, tên + cảnh giới, thế lực, cụm nút (thư, cài đặt), dải tăng ích, hàng viên tài nguyên,
   // rồi các thẻ báo động (children). Điện thoại: hai tầng; desktop: một hàng ngang trên giấy sương viền kép.
-  // ink: cụm nổi trên sương mờ dần (không thanh kín); tắt art: dải giấy bồi lụa.
+  // ink: cụm nổi trên sương mờ dần (không thanh kín); tắt art: dải giấy bồi lụa. solid: đang ở trang (Môn hạ, Tiên minh,
+  // Bảo khố) — thanh giấy kín, không để chữ của trang cuộn chui xuống lớp sương trong suốt.
   import type { Snippet } from 'svelte'
 
   let {
     ink = false,
+    solid = false,
     avatar,
     name,
     power,
@@ -15,6 +17,7 @@
     children,
   }: {
     ink?: boolean
+    solid?: boolean
     avatar: Snippet
     name: Snippet
     power: Snippet
@@ -23,9 +26,16 @@
     res: Snippet
     children?: Snippet
   } = $props()
+  // chiều cao thật của thanh (thêm thẻ báo động thì cao lên) → --hud-top: trang (Page) đệm đúng bằng, không bị thanh che
+  let h = $state(0)
+  $effect(() => {
+    if (!h) return
+    document.documentElement.style.setProperty('--hud-top', `${h}px`)
+    return () => document.documentElement.style.removeProperty('--hud-top')
+  })
 </script>
 
-<header class="topbar" class:strip={!ink} class:ink>
+<header class="topbar" class:strip={!ink} class:ink class:solid bind:offsetHeight={h}>
   <div class="who">
     <span class="av">{@render avatar()}</span>
     <span class="id">{@render name()}</span>
@@ -91,6 +101,18 @@
   }
   .ink > * {
     pointer-events: auto;
+  }
+  /* chỉ điện thoại: desktop thanh trên vốn đã là giấy kín viền kép */
+  @media (max-width: 1023px), (max-height: 599px) {
+    .ink.solid {
+      padding-bottom: 12px;
+      background:
+        var(--paper-tex) 0 0 / 128px,
+        var(--paper);
+      border-bottom: 4px double var(--rim, var(--ink3));
+      box-shadow: 0 4px 10px rgb(var(--shade) / 0.12);
+      pointer-events: auto;
+    }
   }
   .ink .res {
     gap: 10px;

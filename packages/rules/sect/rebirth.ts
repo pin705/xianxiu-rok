@@ -20,6 +20,7 @@ function reborn(s: State, t: number, n: number): State {
     brew: s.brew,
     elders: s.elders,
     talents: s.talents,
+    ...(s.tpage && { tpage: s.tpage }),
     gear: s.gear,
     forge: s.forge,
     guard: s.guard,

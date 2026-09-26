@@ -3,6 +3,7 @@
   // khai / đánh; gọi đội về), đội hành quân, ô trống (vùng, vòng, thời tiết). Luật ở rules/world.ts, server kiểm lại.
   // Mọi chỗ có toạ độ: chia sẻ vào chat (kênh minh / giới), trưởng lão / minh chủ đặt dấu cho cả minh.
   import {
+    GOODS_GIFTS,
     RUNE_HOURS,
     RUNE_KINDS,
     RUNE_TIERS,
@@ -875,6 +876,28 @@
           timeOf={a => (rr ? time(rr.len, a) : '')}
           disabled={busy || !rr}
           onsubmit={async (e, a) => (await send({ type: 'rune', x: pos.x, y: pos.y, elder: e, army: a })).ok && sent()}
+        />
+      {/if}
+    </Section>
+  {/if}
+  {#if pick?.kind === 'tile' && pos && snap?.goods?.some(g => g.x === pos.x && g.y === pos.y)}
+    <!-- Thương Đội Gặp Nạn: kiện hàng rơi — phẩm, quà; xuất quân tới nhặt (ai tới trước được) -->
+    {@const gd = snap.goods.find(x => x.x === pos.x && x.y === pos.y)!}
+    {@const going = game.marches.find(m => m.goods && m.target.i === campTile(pos.x, pos.y))}
+    {@const gr = road(pos)}
+    <Section title={L.world.goods.title(L.world.goods.tiers[gd.t])}>
+      <Bag items={GOODS_GIFTS[gd.t].items} size="sm" />
+      {#if going}<small class="t-small">{marchDoing(going, now)}</small>
+      {:else}
+        <small class="t-tiny t-soft">{L.world.goods.hint}</small>
+        <ArmyPick
+          field
+          cta={L.world.goods.go}
+          time={gr ? time(gr.len) : undefined}
+          timeOf={a => (gr ? time(gr.len, a) : '')}
+          disabled={busy || !gr}
+          onsubmit={async (e, a) =>
+            (await send({ type: 'caravan', x: pos.x, y: pos.y, elder: e, army: a })).ok && sent()}
         />
       {/if}
     </Section>

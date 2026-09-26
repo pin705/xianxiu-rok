@@ -254,6 +254,8 @@ async function open(p: Player) {
   return { send, js, errors }
 }
 
+const VK: Record<string, number> = { Enter: 13, Escape: 27 } // mã phím Windows cho CDP
+
 async function serve(name: string) {
   const p = load<Player>('player', name)
   const { send, js, errors } = await open(p)
@@ -303,7 +305,7 @@ async function serve(name: string) {
     },
     key: async ([key]) => {
       for (const type of ['keyDown', 'keyUp'])
-        await send('Input.dispatchKeyEvent', { type, key, code: key, windowsVirtualKeyCode: key === 'Enter' ? 13 : 0 })
+        await send('Input.dispatchKeyEvent', { type, key, code: key, windowsVirtualKeyCode: VK[key] ?? 0 })
       return after(`phím ${key}`)
     },
     scroll: async ([dx, dy, x = String(p.w / 2), y = String(p.h / 2)]) => {

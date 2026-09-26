@@ -32,10 +32,9 @@ import {
   elderLevel,
   enemyOf,
   fight,
-  gearOf,
   sideOf,
   storage,
-  PROTECT,
+  protectOf,
   talentError,
   talentPoints,
   talentUsed,
@@ -45,6 +44,8 @@ import {
   type Action,
   type Army,
   type ElderId,
+  GEAR,
+  GEAR_SLOTS,
   type GearId,
   type PillId,
   type State,
@@ -128,7 +129,7 @@ export function perks(start: State): State {
   for (const id of BAG_IDS) {
     const d = BAG[id]
     if (d.use !== 'res') continue
-    while (s.items[id] && s.res[d.res] + d.n <= PROTECT * storage(s) && tryDo({ type: 'use', item: id, n: 1 }));
+    while (s.items[id] && s.res[d.res] + d.n <= protectOf(s) && tryDo({ type: 'use', item: id, n: 1 }));
   }
   if (!s.buffs.some(b => b.src === 'phu.prod'))
     (['tuLinh24', 'tuLinh8'] as const).some(id => s.items[id] && tryDo({ type: 'use', item: id, n: 1 }))
@@ -221,11 +222,15 @@ export function turn(start: State, o: BotOpts = {}): State {
           acted = true
           break
         }
+    // mỗi ô: món đầu theo thứ tự luyện cho trưởng lão mạnh nhất, món sau cho người kế
     const owned = GEAR_PLAN.filter(g => s.gear[g]?.lv)
-    idleElders(s).forEach((e, i) => {
-      const g = owned[i]
-      if (g && gearOf(s, e) !== g && tryDo({ type: 'equip', gear: g, elder: e })) acted = true
-    })
+    for (let slot = 0; slot < GEAR_SLOTS; slot++) {
+      const pieces = owned.filter(g => GEAR[g].slot === slot)
+      idleElders(s).forEach((e, i) => {
+        const g = pieces[i]
+        if (g && s.gear[g]?.on !== e && tryDo({ type: 'equip', gear: g, elder: e })) acted = true
+      })
+    }
     // phó trưởng lão (từ DEPUTY_HALL): người mạnh nhì làm phó cho người mạnh nhất (xếp trên mọi trưởng lão, kể cả đang đi)
     const [main, second] = ELDER_IDS.filter(e => s.elders[e] !== undefined).sort(
       (a, b) => (s.elders[b] ?? 0) - (s.elders[a] ?? 0),

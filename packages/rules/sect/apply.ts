@@ -10,6 +10,7 @@ import { armyActions, type ArmyAction } from './army.ts'
 import { bagActions, type BagAction } from './bag.ts'
 import { festActions, type FestAction } from './fest.ts'
 import { stallActions, type StallAction } from './stall.ts'
+import { escortActions, type EscortAction } from './escort.ts'
 import { passActions, type PassAction } from './pass.ts'
 import { trialActions, type TrialAction } from './trial.ts'
 import { thiefActions, type ThiefAction } from './thief.ts'
@@ -55,6 +56,7 @@ export type Action =
   | BagAction
   | FestAction
   | StallAction
+  | EscortAction
   | PassAction
   | TrialAction
   | ThiefAction
@@ -91,6 +93,7 @@ const ACTIONS: Actions<Action> = {
   ...bagActions,
   ...festActions,
   ...stallActions,
+  ...escortActions,
   ...passActions,
   ...trialActions,
   ...thiefActions,

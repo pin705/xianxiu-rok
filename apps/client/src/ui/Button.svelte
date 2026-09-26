@@ -113,10 +113,14 @@
   .ghost.sm {
     padding-bottom: 1px;
   }
+  /* chưa bấm được: giấy nhạt viền mờ, chữ nhạt (không phải thỏi kim loại xám) */
   .btn:disabled {
-    --sk: var(--sk-btn-off);
-    --fg: var(--text-soft);
+    --sk: none;
+    --fg: var(--text-faint);
     --shade: none;
+    background: var(--paper2);
+    border: 1.5px solid var(--paper3);
+    border-radius: 6px;
   }
   .ghost:disabled,
   .ink:disabled {
@@ -180,6 +184,10 @@
   }
   .quiet .label {
     text-shadow: none;
+  }
+  .quiet:disabled {
+    background: none;
+    border: 0;
   }
   .sm {
     min-height: 38px;

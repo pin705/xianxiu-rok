@@ -4,7 +4,7 @@ import { might } from '../combat.ts'
 import { type Pick } from '../core/action.ts'
 import { marchSide, marchTime } from '../core/battle.ts'
 import { armySpeed, cutOf } from '../core/stats.ts'
-import { dayOf, weekOf } from '../core/calendar.ts'
+import { dayOf } from '../core/calendar.ts'
 import { type Army, type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
 import {
   ALLY_WELCOME,
@@ -22,11 +22,8 @@ import {
   HELP_CREDIT,
   HELP_CREDIT_DAY,
   HONOR_KP,
-  DAY_OFFSET,
-  TRIBE_DAY,
-  TRIBE_LEN,
-  TRIBE_PTS,
   BLESSINGS,
+  RULE_FFA,
   type PartyRole,
   TITLE_IDS,
   TITLES,
@@ -40,7 +37,7 @@ import {
   type PillId,
   type Res,
 } from '../data.ts'
-import { DAY, noGain } from '../core/util.ts'
+import { noGain } from '../core/util.ts'
 import { mail } from '../sect/inbox.ts'
 
 // Bản đồ giới của lần tính này (server: seed + pha mùa của giới). Không có (sim, test): đi cướp ra mép vùng như P2.
@@ -67,6 +64,7 @@ export type AllyRow = {
   id: number
   name: string
   tag: string
+  badge?: [number, number]
   n: number
   max: number
   power: number
@@ -115,6 +113,9 @@ export type Alliance = {
   offices?: Partial<Record<OfficeId, number>> // chức vị đường chủ: ai giữ
   pot?: Pot // Tụ Bảo Minh Đỉnh tuần này
   party?: PartyRoom // Man Hoang Cổ Tộc: phòng tổ đội đang chờ (mỗi minh một phòng)
+  convoy?: Convoy // Linh Thương Hộ Tống: đoàn buôn đang chờ khởi hành (mỗi minh một đoàn)
+  convoyBest?: number // điểm chuyến hộ tống cao nhất của minh (mở độ khó)
+  badge?: [number, number] // cờ minh: linh thú (0…ALLY_BADGE[0]−1), màu (0…ALLY_BADGE[1]−1)
   plans?: Plan[] // Minh sự lịch: việc chung đã hẹn giờ
   skills?: Partial<Record<AllySkillId, number>> // Minh trận thần thông: hiệu lực tới lúc này
   named?: number // lần đổi tên / hiệu gần nhất
@@ -123,6 +124,10 @@ export type Alliance = {
 }
 // Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
 export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
+// Chiếu Giới Chủ: lời chiếu, lúc ban, tên tông môn Giới Chủ lúc ban
+export type Decree = { text: string; at: number; by: string }
+// Đoàn buôn: người mở, độ khó, lúc khởi hành (server giải), người hộ tống (theo thứ tự ghi danh)
+export type Convoy = { by: number; lv: number; at: number; guards: number[] }
 // Chặng thi đua Chính Tà: chặng thứ n của mùa, mốc chỉ số của từng người lúc chặng mở (hay lúc thấy lần đầu)
 export type CampStage = { n: number; base: Record<number, number> }
 // Minh sự lịch: việc chung lúc at (người hẹn, lời nhắn, ai tham gia, đã nhắc trước giờ chưa)
@@ -164,24 +169,6 @@ export type Order = { id: number; pid: number; good: Good; n: number; price: num
 export type Trades = { day: number; buys: number; sold: number }
 // Phá Yêu Trại: tuần, điểm từng minh, đã phát quà chưa
 export type Tribe = { week: number; pts: Record<number, number>; done?: boolean }
-// Khung Phá Yêu Trại của tuần wk (thứ Ba 0h → thứ Năm 0h giờ VN)
-export const tribeStart = (wk: number) => (wk * 7 + 4 + TRIBE_DAY) * DAY - DAY_OFFSET
-export const tribeEnd = (wk: number) => tribeStart(wk) + TRIBE_LEN * DAY
-export const tribeOf = (w: World, t: number): Tribe =>
-  w.tribe?.week === weekOf(t) ? w.tribe : { week: weekOf(t), pts: {} }
-// Yêu vương cấp lv vừa đổ lúc at (trong khung): điểm TRIBE_PTS[lv] chia theo sát thương cho minh của từng người
-export function tribeBank(w: World, at: number, lv: number, dmgs: Record<number, number>): World {
-  const wk = weekOf(at)
-  if (at < tribeStart(wk) || at >= tribeEnd(wk)) return w
-  const sum = Object.values(dmgs).reduce((a, b) => a + b, 0) || 1
-  const tr = tribeOf(w, at)
-  const pts = { ...tr.pts }
-  for (const [p, d] of Object.entries(dmgs)) {
-    const al = allyOf(w, Number(p))
-    if (al) pts[al.id] = (pts[al.id] ?? 0) + ((TRIBE_PTS[lv] ?? 0) * d) / sum
-  }
-  return { ...w, tribe: { ...tr, pts } }
-}
 // Nhóm chat tự tạo: tên, người giữ nhóm, người trong nhóm (theo thứ tự vào)
 export type Group = { id: number; name: string; owner: number; members: number[] }
 // Vận Linh Trận trong ngày của một người: đã gửi (trước hao tổn), đã nhận (sau hao tổn)
@@ -220,6 +207,8 @@ export type World = {
   bless?: { key: BlessKey; until: number; day: number } // Giới Chủ ban phúc cả giới (ngày dayOf đã ban)
   boon?: { week: number; left: number } // Thiên Ân lễ Giới Chủ còn ban được trong tuần
   banishAt?: number // lần Phóng Trục gần nhất của Giới Chủ (world/lord.ts)
+  decree?: Decree // Chiếu Giới Chủ gần nhất (world/lord.ts)
+  goods?: { cyc: number; got: number[] } // Thương Đội Gặp Nạn (world/encamp.ts): kiện hàng rơi đã nhặt trong chu kỳ cyc
   flags?: Record<number, Flag> // trận kỳ các tiên minh đã cắm
   nextFlag?: number
   legion?: Legion // Ma Triều Công Sơn tuần này
@@ -348,18 +337,13 @@ export const elo = (a: number, d: number, win: boolean) =>
 export function napBetween(w: World, a: number, b: number) {
   const x = allyOf(w, a),
     y = allyOf(w, b)
-  return !!x && !!y && x.id !== y.id && !!x.naps?.includes(y.id)
+  return w.rule !== RULE_FFA && !!x && !!y && x.id !== y.id && !!x.naps?.includes(y.id) // Hỗn Chiến: minh ước vô hiệu
 }
 export const put = (w: World, al: Alliance): World => ({ ...w, allies: { ...w.allies, [al.id]: al } })
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
 // Lễ nhập minh: lần đầu vào (hay lập) một tiên minh thì nhận quà qua thư, một lần mỗi tông môn
 export const welcome = (s: State, name: string, t: number): State =>
   s.joined !== undefined ? s : mail({ ...s, joined: t }, { at: t, k: 'allyWelcome', a: [name], gift: ALLY_WELCOME })
-// Ai ở minh nào (đổi khi có người vào / rời / minh giải tán): lãnh thổ trên bản đồ theo đó mà đổi
-export const memberKey = (w: World) =>
-  Object.values(w.allies)
-    .map(a => `${a.id}:${Object.keys(a.members)}`)
-    .join('|')
 
 // world: phần chung sau thao tác (cùng tham chiếu nếu không đổi)
 export type WorldResult = { ok: true; changed: Players; world: World } | { ok: false; error: Err }

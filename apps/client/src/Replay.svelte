@@ -188,6 +188,7 @@
     trial: 'red',
     thief: 'ink',
     maze: 'gold',
+    escort: 'gold',
   }
   const tone = $derived<MedalTone>(report ? (TONE[report.kind] ?? (report.kind as MedalTone)) : 'pvp')
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
@@ -197,6 +198,7 @@
     if (report.kind === 'drill') return 'fist'
     if (report.kind === 'trial') return 'demon'
     if (report.kind === 'thief') return 'ghost'
+    if (report.kind === 'escort') return 'demon' // tà tu phục kích
     if (report.kind === 'maze') return 'demon'
     if (report.kind === 'pvp' || report.kind === 'arena' || report.kind === 'camp') return 'crest'
     if (report.kind === 'spot') return EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus'
@@ -328,6 +330,9 @@
                 ><Icon name="heal" size={16} />{num(count(report.light ?? {}))}</Stat
               >{/if}
             {#if dead}<Stat label={L.report.dead} tone="bad"><Icon name="skull" size={16} />{num(dead)}</Stat>{/if}
+            {#if report.wall}<Stat label={L.pvp.wallCut} tone={report.def ? 'good' : 'bad'}
+                ><Icon name="shield" size={16} />{num(report.wall)}</Stat
+              >{/if}
             {#if report.gain.exp && f.a.elder}<Stat label="{L.report.exp} · {L.elders[f.a.elder].name}" tone="gold"
                 >+{num(report.gain.exp)}</Stat
               >{/if}

@@ -445,7 +445,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Mở khoá · nhịp:** sự kiện có lịch, lặp lại (lịch cụ thể chưa xác minh); Race Against Time 3 lượt/ngày; Protect the Supplies tính lượt tốt nhất.
 - **Vì sao giữ chân:** biến man tộc thường ngày thành trò chơi ngắn có xếp hạng và tượng tướng.
 - **Tu tiên hoá:** *Nhất Chú Hương* (Race Against Time), *Hộ Tống Linh Thuyền* (Protect the Supplies), *Thương đội phàm nhân gặp nạn* (Barbarian Incursions / Silk Road), *Quỷ tiết* (Halloween → Trung Nguyên, quỷ hồn hiện trên bản đồ).
-- **Game mình:** 🟡 ✅ Race Against Time = **Trảm Yêu Tốc Chiến** (`tocChien`, 3 lượt đua/ngày săn yêu thú giới, con cấp cao cộng giờ, bảng kỷ lục một lượt — README). ❌ chưa có Hộ Tống, Silk Road hay quỷ hồn sự kiện trên bản đồ — Trung Nguyên Quỷ Tiết, Liên Trảm Bất Hồi chỉ đếm việc có sẵn. Vật thể sự kiện trên bản đồ mới có thôn trang cháy của Thôn Trang Gặp Nạn (`world/rescue.ts`) và Yêu Vương Tuần Sơn (C8).
+- **Game mình:** 🟡 ✅ Race Against Time = **Trảm Yêu Tốc Chiến** (`tocChien`, 3 lượt đua/ngày săn yêu thú giới, con cấp cao cộng giờ, bảng kỷ lục một lượt — README). ✅ Silk Road / Barbarian Incursions = **Thương Đội Gặp Nạn** (lễ `thuongDoi` 3 ngày mỗi 14 ngày, Chủ điện ≥ 6 — `goodsAt` / `goodsLeft` / `caravan` ở `world/encamp.ts`, vị trí qua `nearTile` ở `points.ts`): mỗi 3 giờ quanh mỗi thôn trang có 1/3 rơi một kiện hàng ở ô trống cách tối đa 2 ô (tất định theo mầm bản đồ), phẩm thường / tốt / quý (60 / 30 / 10 %); hiện trên bản đồ giới (huy hiệu đĩa theo phẩm), chạm ô → xuất quân nhặt, ai tới trước được, người sau về tay không; quà theo phẩm qua thư, lễ tính mốc theo số kiện (3 / 8 / 15 / 25). ✅ Protect the Supplies = **Áp Tiêu Hộ Hàng** (lễ `apTieu`, `sect/escort.ts`: 10 hành lực/lượt, 1–5 sao mở dần, đội ảo qua 3 đợt phục kích, giữ lượt tốt nhất — là chuỗi trận, không phải đoàn xe chạy trên bản đồ). ❌ chưa có quỷ hồn sự kiện trên bản đồ. Vật thể sự kiện trên bản đồ mới có thôn trang cháy của Thôn Trang Gặp Nạn (`world/rescue.ts`) và Yêu Vương Tuần Sơn (C8).
 - **Ưu tiên:** P2 · **Công sức:** S–M mỗi sự kiện.
 
 ### 2.D Điểm tài nguyên và khai thác
@@ -673,7 +673,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Mở khoá · nhịp:** sự kiện có lịch, lặp lại; Arms Training 3 ngày × 5 lượt; Golden Kingdom cần TTC 17.
 - **Vì sao giữ chân:** biến thể ngắn, có xếp hạng, thưởng tướng / bản vẽ.
 - **Tu tiên hoá:** Arms Training → *Thí Luyện Yêu Vương* (yêu vương học thêm thần thông sau mỗi lần thua); Protect the Supplies → *Hộ Tống Linh Thuyền*; Race Against Time → *Nhất Chú Hương* (đốt một nén nhang, giết yêu thú tới khi tàn); Golden Kingdom → *Luân Hồi Huyễn Cảnh* (mỗi tầng chọn một *cơ duyên*).
-- **Game mình:** 🟡 Luận Võ Liên Hoàn (`sect/drill.ts`, như Arms Training): mỗi ngày một phiên, đội ảo đấu liên tiếp giáo đầu mạnh dần, cứ 3 trận thắng tự chọn 1 trong 3 công pháp cho giáo đầu, mốc quà 3 / 6 / 9 / 12 / 15 trận. Thiếu: Golden Kingdom (hầm chọn cơ duyên), Race Against Time, Protect the Supplies, Kau Karuak.
+- **Game mình:** 🟡 Luận Võ Liên Hoàn (`sect/drill.ts`, như Arms Training): mỗi ngày một phiên, đội ảo đấu liên tiếp giáo đầu mạnh dần, cứ 3 trận thắng tự chọn 1 trong 3 công pháp cho giáo đầu, mốc quà 3 / 6 / 9 / 12 / 15 trận. Đã thêm: Golden Kingdom = Hoàng Kim Mê Cảnh (`maze`), Race Against Time = Trảm Yêu Tốc Chiến (`tocChien`), Protect the Supplies = Áp Tiêu Hộ Hàng (`apTieu`), Karuak = Thí Luyện Yêu Hoàng (`yeuHoang`).
 - **Ưu tiên:** P2 · **Công sức:** S mỗi sự kiện khi đã có khung (tháp + sự kiện tuần), M cho roguelike.
 
 ### 2.G UI bản đồ
@@ -875,7 +875,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C10 | Karuak Ceremony / Trial of Kau Karuak | ✅ Thí Luyện Yêu Hoàng (5 độ khó × 50 cửa); thiếu nhờ minh giúp | P2 | S–M |
 | C11 | Shadow Legion (minh thủ sóng quái) | ✅ Ma Triều Công Sơn (`world/legion.ts`) | P1 | M |
 | C12 | Holy-site Guardians & Runes | ✅ hộ trận linh thú + phù văn 12 giờ | P2 | M |
-| C13 | Race Against Time, Protect the Supplies, Silk Road, Halloween… | 🟡 Race Against Time = Trảm Yêu Tốc Chiến; chưa Hộ Tống / Silk Road / quỷ hồn | P2 | S–M |
+| C13 | Race Against Time, Protect the Supplies, Silk Road, Halloween… | 🟡 Race Against Time = Trảm Yêu Tốc Chiến; Silk Road = Thương Đội Gặp Nạn (hàng rơi, ai tới trước nhặt); Protect the Supplies = Áp Tiêu Hộ Hàng; chưa quỷ hồn | P2 | S–M |
 | D1 | Resource Points | ✅ 144 mỏ, 2 cấp, hồi 2 giờ, linh triều +50 % | P0 | — |
 | D2 | Gathering buffs & commanders | ✅ khoá `gather`: Khai Linh Phù, bị động khai mỏ của 2 trưởng lão (+ linh triều, lãnh thổ); chưa có công pháp / Hương Hỏa khai mỏ | P1 | S |
 | D3 | Gem Deposits | ❌ | P2 | S |

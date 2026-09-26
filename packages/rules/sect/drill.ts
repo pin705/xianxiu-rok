@@ -7,7 +7,7 @@ import { dayOf } from '../core/calendar.ts'
 import { int, isElder, pickArmy } from '../core/parse.ts'
 import { deputyOf, elderLevel } from '../core/stats.ts'
 import type { Army, Drill, State } from '../core/types.ts'
-import { compact, nextSeed, noGain } from '../core/util.ts'
+import { compact, mainType, nextSeed, noGain } from '../core/util.ts'
 import {
   BEATS,
   DRILL_BASE,
@@ -26,12 +26,6 @@ import {
 const MODS = Object.keys(DRILL_MODS) as DrillMod[]
 // Phiên hôm nay (hết ngày: phiên mới)
 export const drillToday = (s: State) => (s.drill?.day === dayOf(s.time) ? s.drill : undefined)
-// hệ chính của đội: hệ đông đệ tử nhất
-const mainType = (a: Army) =>
-  TYPES.reduce((best, t) => {
-    const n = (x: string) => UNITS.filter(u => u.startsWith(x)).reduce((k, u) => k + (a[u] ?? 0), 0)
-    return n(t) > n(best) ? t : best
-  })
 // Giáo đầu trận kế tiếp: sức theo lực chiến đội lúc vào phiên × DRILL_GROW^thắng, hệ chính xoay vòng (Khắc Chế: hệ khắc hệ chính
 // đội mình), công pháp đã chọn cộng dồn
 export function drillFoe(s: State, d: Drill): Side {

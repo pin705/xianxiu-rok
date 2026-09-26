@@ -22,7 +22,9 @@ export function useError(s: State, a: BagAction): Err | null {
     d.use === 'rename' ||
     d.use === 'frag' ||
     d.use === 'swap' ||
-    d.use === 'packet'
+    d.use === 'packet' ||
+    d.use === 'token' ||
+    d.use === 'reset'
   )
     return 'bad' // thiếp: Chiêu Hiền Đài · Luận Kiếm Lệnh: Luận Kiếm Đài · phù dời núi: bản đồ giới
   if (a.n > (s.items[a.item] ?? 0)) return 'no_item'
@@ -73,7 +75,9 @@ export const bagActions: Actions<BagAction> = {
       const d = BAG[a.item]
       const st: State = { ...s, items: use(s, a.item, a.n) }
       if (d.use === 'speed') {
-        const sped = { ...st, stats: { ...st.stats, sped: (st.stats.sped ?? 0) + d.min * a.n } }
+        const min = d.min * a.n,
+          train = a.job === 'train' ? { spedTrain: (st.stats.spedTrain ?? 0) + min } : {}
+        const sped = { ...st, stats: { ...st.stats, sped: (st.stats.sped ?? 0) + min, ...train } }
         return ok(advance(shorten(sped, a.job!, d.min * 60_000 * a.n), s.time))
       }
       if (d.use === 'res' || d.use === 'pick') {

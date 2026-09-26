@@ -69,6 +69,9 @@ const METRIC: Record<Metric, (s: State) => number> = {
   train2: s => (s.stats.t2kiem ?? 0) + (s.stats.t2phap ?? 0) + (s.stats.t2the ?? 0),
   drain: s => s.stats.drained ?? 0,
   forts: s => s.stats.forts ?? 0,
+  speedTrain: s => s.stats.spedTrain ?? 0,
+  goods: s => s.stats.goods ?? 0,
+  bought: s => s.stats.bought ?? 0,
 }
 export const metric = (s: State, m: Metric) => METRIC[m](s)
 
@@ -235,6 +238,7 @@ export const festPoints = (s: State, id: FestId) => {
   if (!f) return 0
   // hoạt lực: tổng điểm các việc đã xong trong lượt này
   if (d.kind === 'activity') return sum(d.tasks.map(x => (festProgress(s, id, x.m) >= x.n ? x.pts : 0)))
+  if (d.kind === 'escort') return f.sp?.[0] ?? 0 // Áp Tiêu Hộ Hàng: điểm lượt tốt nhất
   return f.bank + (f.shut ? 0 : stagePts(s, d, f))
 }
 // Điểm riêng của ải k trong lượt đang giữ (lễ FEST_STAGED): ải đang chạy tính sống, ải đã xong lấy bản ghi

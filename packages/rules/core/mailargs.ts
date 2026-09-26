@@ -16,6 +16,7 @@ export type MailArgs = {
   titled: [title: string, lord: string] // được Giới Chủ sắc phong
   boon: [lord: string] // Giới Chủ ban Thiên Ân lễ
   banish: [lord: string, x: number, y: number] // Giới Chủ phóng trục tông môn mình ra vùng ngoài, tới (x, y)
+  goods: [x: number, y: number, tier: number] // Thương Đội Gặp Nạn: nhặt được kiện hàng phẩm tier ở (x, y)
   mobTop: [rank: number] // hạng Minh vụ của minh mình khi hết tuần
   book: [ch: number] // chương Thiên Đạo Biên Niên cả giới vừa hoàn thành
   bookTop: [ch: number, rank: number] // công đầu chương đó: hạng đóng góp
@@ -40,6 +41,7 @@ export type MailArgs = {
   eveTop: [rank: number, pts: number] // Khai Giới Trảm Tà: cổng mở, minh mình hạng rank giới vận, điểm
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
   party: [lv: number, waves: number, n: number] // Man Hoang Cổ Tộc: độ khó, số đợt qua, số người trong đội
+  convoy: [lv: number, hp: number, n: number] // Linh Thương Hộ Tống: độ khó, % hàng còn, số người hộ tống
   wallFall: [x: number, y: number] // sơn môn thất thủ: trận lực về 0, tông môn bị đánh bật tới (x, y)
   // do thám linh địa: loại điểm, toạ độ, phe giữ, số đội đóng, tổng đệ tử, lực chiến
   spySpot: [kind: string, x: number, y: number, owner: string, n: number, troops: number, might: number]

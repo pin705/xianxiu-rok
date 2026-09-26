@@ -63,6 +63,7 @@ export type March = {
   prey?: { pid: number; id: number } // cướp khoáng: đội khai mỏ bị nhắm
   dig?: true // đi đào kho báu ở ô target.i (Tàng Bảo Đồ)
   rune?: { i: number; cyc: number; k: number; t: number } // đi nhặt phù văn thứ i của chu kỳ cyc (loại k, phẩm t)
+  goods?: { i: number; cyc: number; t: number } // đi nhặt kiện hàng rơi thứ i của chu kỳ cyc (phẩm t) — Thương Đội Gặp Nạn
   rally?: number // thuộc kết trận này (mọi đội cùng tới lúc hẹn, đánh như một bên)
   spot?: string // loại điểm (để hiện tên): vein, mine, boss, gate, heaven
   stay?: boolean // đang đóng quân ở điểm (chỉ về khi bị đánh bật hoặc gọi về)
@@ -112,7 +113,8 @@ export type Report = {
     | 'camp'
     | 'trial'
     | 'thief'
-    | 'maze' // maze: Hoàng Kim Mê Cảnh (i: tầng × 100 + ô) · thief: Dạ Hành Đạo Tặc (i: phần nghìn sát thương) · legion: đợt i Ma triều · drill: trận i Luận Võ · camp: trận ở trại ô i · trial: cửa i Thí Luyện
+    | 'escort'
+    | 'maze' // escort: Áp Tiêu Hộ Hàng (i: số sao) · maze: Hoàng Kim Mê Cảnh (i: tầng × 100 + ô) · thief: Dạ Hành Đạo Tặc (i: phần nghìn sát thương) · legion: đợt i Ma triều · drill: trận i Luận Võ · camp: trận ở trại ô i · trial: cửa i Thí Luyện
   i: number
   spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
@@ -124,6 +126,7 @@ export type Report = {
   hurt: Army // thương vong
   dead: Army // phần Đan phòng không còn chỗ nằm
   light?: Army // thương nhẹ tự lành khi đội về núi (không vào Đan phòng)
+  wall?: number // PvP: đệ tử bên đánh bị kiếm trận Hộ Sơn chém trước trận
   gain: Gain
 }
 // Việc cứu nạn đang làm: ở thôn i, tăng chỉ số m thêm n (từ mức from lúc nhận) trước lúc until
@@ -144,6 +147,9 @@ export type Stats = {
   chained?: number // yêu thú giới hạ bằng săn liên hoàn
   rescued?: number // việc cứu nạn Thôn Trang Gặp Nạn đã báo công
   sped?: number // phút tăng tốc đã dùng
+  spedTrain?: number // … trong đó dùng cho việc tuyển đệ tử (Luyện Binh Phù Hội)
+  goods?: number // kiện hàng Thương Đội Gặp Nạn đã nhặt
+  bought?: number // lần mua ở Thương nhân vân du
   raided?: number // lần cướp thắng
   gathered?: number // tài nguyên khai mỏ mang về
   drawn?: number // lần mở thiếp Chiêu Hiền Đài
@@ -216,7 +222,17 @@ export type Mob = { week: number; task: MobTask | null; day: number; took: numbe
 // Mê vụ: hàng rows[cy] bit cx = ô sương đã khai; fly: linh điểu đang bay — các ô sương tan lúc at, điểu về lúc back
 export type Fog = { rows: number[]; fly: { cells: number[]; at: number; back: number }[] }
 // Đội đang kéo tới: mã hành quân và người chơi bên kia (để gỡ đúng lúc trận giải), tên tông môn, lúc tới nơi
-export type Incoming = { id: number; pid: number; foe: string; at: number; spot?: number } // spot: tới cướp đội khai ở điểm này
+// spot: tới cướp đội khai ở điểm này · elder / n / main: Thiên Nhãn lộ theo tầng Hộ Sơn Đại Trận (trưởng lão dẫn, quân số, hệ chính)
+export type Incoming = {
+  id: number
+  pid: number
+  foe: string
+  at: number
+  spot?: number
+  elder?: ElderId
+  n?: number
+  main?: UnitType
+}
 // Thư: chữ dựng ở client theo khoá k và tham số a (@rok/i18n mailText), quà nhận đúng một lần.
 // Thêm loại thư: thêm khoá vào MailArgs — i18n báo thiếu chữ ở mọi ngôn ngữ.
 export type MailKind = keyof MailArgs
@@ -256,7 +272,9 @@ export type State = {
   tech: Partial<Record<TechId, number>>
   items: Items
   elders: Partial<Record<ElderId, number>> // trưởng lão đã thu nhận → kinh nghiệm
-  talents: Partial<Record<ElderId, Talent>> // điểm thiên phú đã cộng
+  talents: Partial<Record<ElderId, Talent>> // điểm thiên phú đã cộng (của bộ đang dùng)
+  convoyDay?: number // ngày (giờ VN) đã hộ tống Linh Thương — mỗi ngày một chuyến
+  tpage?: Partial<Record<ElderId, { at: number; pages: Talent[] }>> // lưu bộ thiên phú: bộ đang dùng + các bộ đã lưu
   gear: Partial<Record<GearId, Gear>>
   buffs: Buff[]
   marches: March[]

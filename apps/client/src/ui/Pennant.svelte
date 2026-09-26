@@ -1,18 +1,29 @@
+<script module lang="ts">
+  import { BEAST_EMBLEMS, type MedalTone } from '@rok/art'
+  // cờ minh đã chọn (rules ALLY_BADGE [linh thú, màu]): chỉ số → hình chạm linh thú, màu đĩa
+  export const BADGE_EMBLEMS = BEAST_EMBLEMS
+  export const BADGE_TONES: MedalTone[] = ['red', 'jade', 'gold', 'ink', 'kiem', 'phap', 'the', 'thunder']
+</script>
+
 <script lang="ts">
-  // Cờ minh treo: lá cờ vẽ tay (ui:ally-banner) đung đưa, hiệu minh viết son trong đĩa trắng giữa cờ. mini: cờ nhỏ đầu dòng
-  // (danh sách minh), đứng yên. Tắt art thì về huy hiệu.
+  // Cờ minh treo: lá cờ vẽ tay (ui:ally-banner) đung đưa, trong đĩa trắng giữa cờ là huy hiệu minh đã chọn (badge) hay hiệu minh
+  // viết son. mini: cờ nhỏ đầu dòng (danh sách minh), đứng yên. Tắt art thì về huy hiệu.
   import { artOf } from '@rok/art'
   import Medal from './Medal.svelte'
 
-  let { tag, mini = false }: { tag?: string; mini?: boolean } = $props()
+  let { tag, badge, mini = false }: { tag?: string; badge?: [number, number]; mini?: boolean } = $props()
   const src = artOf('ui:ally-banner')?.src
+  const emblem = $derived(badge ? BADGE_EMBLEMS[badge[0]] : undefined)
+  const tone = $derived(badge ? BADGE_TONES[badge[1]] : undefined)
 </script>
 
 {#if src}
   <span class="pennant" class:mini
-    ><img {src} alt="" draggable="false" />{#if tag}<b class="tag">{tag}</b>{/if}</span
+    ><img {src} alt="" draggable="false" />{#if emblem}<span class="tag"
+        ><Medal {emblem} {tone} size={mini ? 16 : 30} /></span
+      >{:else if tag}<b class="tag">{tag}</b>{/if}</span
   >
-{:else}<Medal emblem="crest" tone="gold" size={mini ? 34 : 46} />{/if}
+{:else}<Medal emblem={emblem ?? 'crest'} tone={tone ?? 'gold'} size={mini ? 34 : 46} />{/if}
 
 <style>
   .pennant {

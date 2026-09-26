@@ -2,7 +2,7 @@
 import { giveExp } from '../core/battle.ts'
 import { advance } from '../core/time.ts'
 import { type March, type State } from '../core/types.ts'
-import { HO_PHAP, HO_PHAP_EXP, MARKET_TTL, PHA_KIEP, REINFORCE_MAX, TRIB_AID, TRIB_EXP } from '../data.ts'
+import { DECREE_TTL, HO_PHAP, HO_PHAP_EXP, MARKET_TTL, PHA_KIEP, REINFORCE_MAX, TRIB_AID, TRIB_EXP } from '../data.ts'
 import { tribEnd } from '../sect/trib.ts'
 import {
   aidAt,
@@ -22,7 +22,10 @@ import { raid } from './raid.ts'
 import { spotArrive } from './arrive.ts'
 import { robArrive } from './rob.ts'
 import { mineExpire, razeArrive } from './flags.ts'
-import { campArrive } from './encamp.ts'
+import { campArrive, goodsLeft } from './encamp.ts'
+import { mapOf, type Chron, type MapSnap } from './map.ts'
+import { lordOf } from './lord.ts'
+import { bookView } from './book.ts'
 import { ruinClose } from './ruins.ts'
 import { storeStep } from './storehouse.ts'
 import { tribeStep } from './tribe.ts'
@@ -166,3 +169,17 @@ const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
 ]
 // Chỉ trận cướp, không bản đồ (sim, test P2)
 export const advanceWorld = (ps: Players, now: number): Players => advanceAll(ps, freshWorld(), now).changed
+
+// Ảnh chụp bản đồ giới cho client (server gửi khi đổi): chỗ ngồi, hành quân, biên niên, điểm (map.ts) + Giới Chủ, chương Thiên Đạo Biên
+// Niên, phúc Giới Chủ, kiện hàng Thương Đội Gặp Nạn còn trên bản đồ
+export function worldSnap(ps: Players, w: World, map: MapCtx, now: number, npc: Set<number>, chron: Chron[]): MapSnap {
+  const goods = goodsLeft(w, map.atlas, now)
+  return {
+    ...mapOf(ps, now, npc, chron, w, map.atlas),
+    lord: lordOf(w, ps, map, now),
+    book: bookView(w, ps, map, now, npc),
+    bless: w.bless,
+    ...(goods.length && { goods }),
+    ...(w.decree && w.decree.at + DECREE_TTL > now && { decree: w.decree }),
+  }
+}

@@ -221,6 +221,7 @@ export function reportName(r: Report) {
   if (r.kind === 'drill') return L.drill.fightN(r.i + 1)
   if (r.kind === 'trial') return L.trial.name(r.i + 1)
   if (r.kind === 'thief') return L.thief.name
+  if (r.kind === 'escort') return L.escort.name(r.i)
   if (r.kind === 'maze') return L.maze.name(Math.floor(r.i / 100) + 1)
   return L.target({ kind: r.kind, i: r.i })
 }

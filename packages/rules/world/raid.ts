@@ -4,15 +4,14 @@ import { no } from '../core/action.ts'
 import { admit, marchSide, marchSnap, pushReport, snap, fieldError, launch } from '../core/battle.ts'
 import { bump, evBump } from '../core/calendar.ts'
 import { int, isId, isElder, pickArmy } from '../core/parse.ts'
-import { deputyOf, elderLevel, lead, storage } from '../core/stats.ts'
+import { deputyOf, elderLevel, lead, protectOf } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
-import { wallHit } from '../core/wall.ts'
+import { eyeOf, volleyOf, wallHit } from '../core/wall.ts'
 import { type Army, type March, type Report, type State } from '../core/types.ts'
 import { bag, minus, compact, noGain } from '../core/util.ts'
 import {
   FOES_MAX,
   FRENZY_TIME,
-  PROTECT,
   RAID_SHARE,
   RALLY_MAX,
   RALLY_WAIT,
@@ -109,9 +108,9 @@ function sortie({ ps, w, pid, s: att, now, seed, map }: Ctx, to: number, elder: 
   }
   // đi đánh người khác thì mất khiên, và nổi cơn sát khí (chưa bật lại khiên ngay được)
   const me: State = { ...launch(att, army, m), shield: 0, frenzy: t + FRENZY_TIME }
-  // bên kia thấy đội đang kéo tới (như Tháp canh của RoK) — gỡ khi trận giải hoặc đội quay về
+  // bên kia thấy đội đang kéo tới (như Tháp canh của RoK; Thiên Nhãn lộ thêm theo tầng trận) — gỡ khi trận giải hoặc đội quay về
   const def = advance(other!, now)
-  const warn = { id: m.id, pid, foe: att.name, at }
+  const warn = { id: m.id, pid, foe: att.name, at, ...eyeOf(def, elder, army) }
   const them: State = { ...def, incoming: [...(def.incoming ?? []).filter(x => x.at > t), warn] }
   const open =
     muster && 'wait' in muster ? { id: rally!, ally: muster.ally, by: pid, i: to, at, foe: other!.name } : null
@@ -131,7 +130,7 @@ function sortie({ ps, w, pid, s: att, now, seed, map }: Ctx, to: number, elder: 
 // Phần cướp được: RAID_SHARE phần vượt kho bảo hộ (bonus chiến lợi phẩm của người dẫn), không quá sức mang của đội còn đứng
 function plunder(att: State, def: State, elder: ElderId, back: Army): Partial<Bag> {
   const room = carryOf(back)
-  const keep = PROTECT * storage(def)
+  const keep = protectOf(def)
   const want = RESOURCES.map(r => {
     const over = Math.max(0, def.res[r] - keep)
     return Math.floor(Math.min(over, over * RAID_SHARE * (1 + lead(att, elder, 'loot'))))
@@ -150,6 +149,7 @@ type Bout = {
   defPid: number
   m: March
   win: boolean
+  wall: number // đệ tử bên đánh bị kiếm trận Hộ Sơn chém trước trận
   loot: Partial<Bag>
   delta: number // điểm Elo bên đánh được (bên thủ mất đúng bấy nhiêu)
   n1: number[] // quân bên thủ (nhà + viện binh) còn đứng sau trận
@@ -174,14 +174,17 @@ export function raid(
 ): { atts: Players; def: State; helpers: Players } {
   const [attPid, att, m] = party[0]
   const parts = party.map(([, s2, m2]) => marchSide(s2, m2))
-  const { side: me, at: aOffs } = party.length > 1 ? combine(parts) : { side: parts[0], at: [0] }
+  const { side: full, at: aOffs } = party.length > 1 ? combine(parts) : { side: parts[0], at: [0] }
   const { side: foe, at: hOffs } = combine([defense(def), ...helpers.map(([, hs, hm]) => marchSide(hs, hm))])
+  // kiếm trận Hộ Sơn chém trước trận: phần bị chém tính như thương vong của trận (chiến báo diễn từ đội đủ lúc tới)
+  const cut = volleyOf(def, at)
+  const me = { ...full, troops: full.troops.map(x => ({ ...x, n: x.n - Math.floor(x.n * cut) })) }
   const f = fight(me, foe, m.seed)
   const last = f.rounds.at(-1)
   const outs = party.map(([, , m2], j) => split(m2, last?.n[0] ?? me.troops.map(t => t.n), aOffs[j]))
   const back = outs.reduce((sum, o) => addArmy(sum, o.left), {} as Army)
   const g = guardOf(def)
-  const aSnap = marchSnap(att, me, m)
+  const aSnap = marchSnap(att, full, m)
   const dSnap = snap(foe, g ?? undefined, g ? elderLevel(def.elders[g]) : 1, deputyOf(def, g))
   const b: Bout = {
     at,
@@ -191,10 +194,11 @@ export function raid(
     defPid,
     m,
     win: f.win,
+    wall: full.troops.reduce((k, x, i) => k + x.n - me.troops[i].n, 0),
     loot: f.win ? plunder(att, def, m.elder, back) : {},
     delta: elo(att.pvp.pts, def.pvp.pts, f.win),
     n1: last?.n[1] ?? foe.troops.map(t => t.n),
-    kp: [killed(foe, last?.n[1]), killed(me, last?.n[0])],
+    kp: [killed(foe, last?.n[1]), killed(full, last?.n[0])],
     fights: [{ a: aSnap, b: dSnap, rounds: f.rounds }],
     flip: [{ a: dSnap, b: aSnap, rounds: flipRounds(f.rounds) }],
   }
@@ -215,7 +219,7 @@ export function raid(
 }
 
 // Bên đánh: chiến báo, đội quay về mang chiến lợi phẩm (nhận lúc về tới nhà như PvE)
-function attacker({ at, att, def, defPid, m, win, loot, delta, fights }: Bout, back: Army, hurt: Army): State {
+function attacker({ at, att, def, defPid, m, win, wall, loot, delta, fights }: Bout, back: Army, hurt: Army): State {
   const exp = win ? Math.round(40 * def.levels.chuDien * (1 + lead(att, m.elder, 'exp'))) : 0
   let a: State = pushReport(att, {
     at,
@@ -227,6 +231,7 @@ function attacker({ at, att, def, defPid, m, win, loot, delta, fights }: Bout, b
     dead: {},
     gain: { res: loot, items: {}, exp },
     fights,
+    ...(wall > 0 && { wall }),
   })
   a = {
     ...a,
@@ -253,7 +258,7 @@ function attacker({ at, att, def, defPid, m, win, loot, delta, fights }: Bout, b
 }
 
 // Bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên và núi bốc linh hỏa
-function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout, party: Party): State {
+function defender({ at, att, attPid, def, win, wall, loot, delta, n1, flip }: Bout, party: Party): State {
   const dIds = UNITS.filter(u => def.troops[u] > 0)
   const dLeft = n1.slice(0, dIds.length)
   const dHurt = Object.fromEntries(dIds.map((u, k) => [u, def.troops[u] - dLeft[k]])) as Army
@@ -278,6 +283,7 @@ function defender({ at, att, attPid, def, win, loot, delta, n1, flip }: Bout, pa
     lost: loot,
     gain: noGain(),
     fights: flip,
+    ...(wall > 0 && { wall }),
   })
   const out: State = {
     ...dd,

@@ -17,6 +17,8 @@ import {
 } from './util.ts'
 import {
   BASE_CAP,
+  PROTECT,
+  PROTECT_STEP,
   BASE_RATE,
   DAOS,
   STRATS,
@@ -36,6 +38,8 @@ import {
   EXP_BASE,
   GEAR,
   GEAR_COST_GROWTH,
+  GEAR_SETS,
+  GEAR_SLOTS,
   GEAR_MAX,
   GEAR_TIME_GROWTH,
   HEAL_COST,
@@ -131,6 +135,11 @@ export function passive(s: State, e: ElderId, key: Bonus) {
 export function lead(s: State, elder: ElderId, key: Bonus) {
   let v = bonus(s, key) + passive(s, elder, key)
   for (const g of GEAR_IDS) if (s.gear[g]?.on === elder && GEAR[g].key === key) v += GEAR[g].v * s.gear[g]!.lv
+  gearSets(s, elder).forEach(([t, n]) => {
+    const d = GEAR_SETS[t]
+    if (n >= 2 && d.two.key === key) v += d.two.v
+    if (n >= 3 && d.three.key === key) v += d.three.v
+  })
   const t = s.talents[elder]
   const own = (k: string) => k.replace('.own', `.${ELDERS[elder].type}`) // nút theo hệ của chính trưởng lão
   if (t) TALENT_NODES.forEach((d, i) => own(d.key) === key && (v += d.v * (t[i] ?? 0)))
@@ -142,7 +151,14 @@ export function lead(s: State, elder: ElderId, key: Bonus) {
 export const talentPoints = (s: State, elder: ElderId) =>
   elderLevel(s.elders[elder]) - 1 + TALENT_STAR * ((s.stars?.[elder] ?? 1) - 1)
 export const talentUsed = (s: State, elder: ElderId) => (s.talents[elder] ?? []).reduce((a, b) => a + b, 0)
-export const gearOf = (s: State, elder: ElderId) => GEAR_IDS.find(g => s.gear[g]?.on === elder)
+// pháp bảo trưởng lão đang đeo theo ô (binh khí, hộ thân, linh bảo; ô trống: undefined)
+export const gearsOf = (s: State, elder: ElderId) =>
+  Array.from({ length: GEAR_SLOTS }, (_, k) => GEAR_IDS.find(g => GEAR[g].slot === k && s.gear[g]?.on === elder))
+// số món mỗi bộ trưởng lão đang đeo (chỉ bộ có món)
+export const gearSets = (s: State, elder: ElderId) =>
+  (Object.keys(GEAR_SETS) as UnitType[])
+    .map(t => [t, GEAR_IDS.filter(g => GEAR[g].set === t && s.gear[g]?.on === elder).length] as const)
+    .filter(([, n]) => n > 0)
 
 export const cost = (b: BuildingId, level: number) =>
   bag(r => climb(BUILDINGS[b].cost[r], COST_GROWTH, COST_GROWTH2, level - 1))
@@ -150,6 +166,8 @@ export const buildTime = (s: State, b: BuildingId, level: number) =>
   Math.round(climb(BUILDINGS[b].time, TIME_GROWTH, TIME_GROWTH2, level - 1) * cutOf(s, 'build')) * 1000
 export const capAt = (vaultLevel: number) => grow(BASE_CAP, CAP_GROWTH, vaultLevel)
 export const storage = (s: State) => Math.round(capAt(s.levels.tangBaoCac) * (1 + bonus(s, 'storage')))
+// Kho bảo hộ mỗi loại (phần không bị cướp): phần sức chứa kho tăng theo tầng Tàng Bảo Các
+export const protectOf = (s: State) => Math.floor(storage(s) * (PROTECT + PROTECT_STEP * s.levels.tangBaoCac))
 // Tầng Tàng Bảo Các cần để kho chứa nổi chi phí c (0: đã đủ tiền hoặc kho đủ chỗ).
 // Sản lượng dừng khi kho đầy: chi phí vượt sức chứa thì chờ bao lâu cũng không đủ, chỉ còn thưởng/chiến lợi phẩm vượt kho.
 export function storeNeed(s: State, c: Bag) {

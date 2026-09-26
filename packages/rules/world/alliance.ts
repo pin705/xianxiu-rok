@@ -40,7 +40,6 @@ import {
   type World,
   type WorldActions,
   type WorldResult,
-  type AllyRow,
   type Member,
 } from './base.ts'
 
@@ -75,23 +74,6 @@ export type AllyInfo = Alliance & {
   terr?: number // ô lãnh thổ (server tính lúc trả lời, cần bản đồ)
   tribe: { week: number; pts: number; rank: number } // Phá Yêu Trại tuần `week`: điểm minh, hạng (0: chưa có điểm)
 }
-export const allyRows = (w: World, ps: Players, me = 0): AllyRow[] =>
-  Object.values(w.allies)
-    .map(al => ({
-      id: al.id,
-      name: al.name,
-      tag: al.tag,
-      n: Object.keys(al.members).length,
-      max: seatsOf(al),
-      closed: !!al.closed,
-      asked: !!al.apps?.includes(me),
-      invited: !!al.invites?.includes(me),
-      power: Object.keys(al.members).reduce((sum, p) => {
-        const s = ps.get(Number(p))
-        return sum + (s ? Math.round(power(s)) : 0)
-      }, 0),
-    }))
-    .sort((a, b) => b.power - a.power || a.id - b.id)
 // Phá Yêu Trại của minh: điểm, hạng trong giới
 function tribeRow(w: World, aid: number) {
   const pts = w.tribe?.pts ?? {}

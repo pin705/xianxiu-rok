@@ -52,6 +52,7 @@ import {
   paperStep,
   SEASON_DAYS,
   partyStep,
+  convoyStep,
   aquizStep,
   wallStep,
   planStep,
@@ -202,6 +203,7 @@ export function allyEvents(w: World, now: number) {
   warCheck(w, now)
   arkCheck(w, now)
   partyCheck(w, now)
+  convoyCheck(w, now)
   wallCheck(w, now)
   planCheck(w, now)
   tourneyCheck(w, now)
@@ -270,6 +272,16 @@ function aquizCheck(w: World, now: number) {
 // Man Hoang Cổ Tộc: phòng tổ đội đủ người hay hết giờ chờ thì giải (mầm bí mật của server), quà qua thư
 function partyCheck(w: World, now: number) {
   const r = partyStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Linh Thương Hộ Tống: đoàn buôn tới giờ khởi hành hay đủ người thì giải (mầm bí mật của server), quà qua thư
+function convoyCheck(w: World, now: number) {
+  const r = convoyStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
   if (r.world === w.shared) return
   w.share(r.world)
   for (const [pid, s] of r.changed) {

@@ -9,16 +9,14 @@ import type { FastifyBaseLogger } from 'fastify'
 import type { Socket } from 'socket.io'
 import { NPC_EVERY, advance, dayOf, migrate, weekOf, type Action, type Report, type State } from '@rok/rules'
 import {
-  bookView,
-  lordOf,
   SEASON_DAYS,
   advanceAll,
+  worldSnap,
   allyTouched,
   worldBuffs,
   atlas,
   dayIn,
   freshWorld,
-  mapOf,
   memberKey,
   nextRaid,
   phaseOf,
@@ -246,10 +244,7 @@ export class World {
   }
   // Ảnh chụp bản đồ giới cho client (chỗ ngồi, hành quân trên bản đồ, biên niên, điểm)
   snapshot(now: number) {
-    const [w, map] = [this.shared, this.map(now)]
-    const lord = lordOf(w, this.ps, map, now)
-    const book = bookView(w, this.ps, map, now, this.npc)
-    return { ...mapOf(this.ps, now, this.npc, this.chron, w, map.atlas), lord, book, bless: w.bless }
+    return worldSnap(this.ps, this.shared, this.map(now), now, this.npc, this.chron)
   }
   // Luật giới cho một người (mầm mới mỗi lần, trừ khi truyền seed)
   play(pid: number, a: WorldAction, now: number, seed = newSeed()): WorldResult {

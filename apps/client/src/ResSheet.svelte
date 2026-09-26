@@ -7,8 +7,8 @@
     BAG_IDS,
     BUILDINGS,
     IDS,
-    PROTECT,
     bonus,
+    protectOf,
     rate,
     storage,
     type BagId,
@@ -47,7 +47,7 @@
       (toFull || full) && { label: L.resInfo.toFull, value: full ? L.full : clock(toFull), bad: full },
       maker && { label: L.resInfo.maker, value: `${L.b[maker].name} · ${L.level(game.levels[maker])}` },
       boost && { label: L.resInfo.boost, value: `+${Math.round(boost * 100)}%` },
-      { label: L.resInfo.safe, value: num(Math.floor(cap * PROTECT)) },
+      { label: L.resInfo.safe, value: num(protectOf(game)) },
     ].filter(f => !!f) as { label: string; value: string; bad?: boolean }[],
   )
   const go = (id: BuildingId, view: PanelTab) => {

@@ -42,8 +42,8 @@ export class Battle {
     readonly deputies: [Skill | undefined, Skill | undefined] = [undefined, undefined], // công pháp phó trưởng lão
   ) {
     this.theme = report.kind === 'realm' ? (REALM[report.i] ?? 'forest') : THEME[report.kind]
-    // bên kia là người (tông môn NPC, cướp, Luận Kiếm Đài), kiếp vân, hay yêu thú
-    const people = report.kind === 'sect' || report.kind === 'pvp' || report.kind === 'arena'
+    // bên kia là người (tông môn NPC, cướp, Luận Kiếm Đài, giáo đầu Luận Võ, đạo tặc, tà tu phục kích xe hàng), kiếp vân, hay yêu thú
+    const people = (['sect', 'pvp', 'arena', 'drill', 'thief', 'escort'] as Report['kind'][]).includes(report.kind)
     this.enemy = report.kind === 'trib' ? 'spirit' : people ? 'man' : 'beast'
     // yêu vương canh tầng tháp: lông chàm sẫm, khác yêu thú ngoài đồng
     this.tint =

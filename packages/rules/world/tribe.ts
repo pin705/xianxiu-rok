@@ -2,7 +2,8 @@
 // theo hạng; mỗi tuần một lần. Điểm cộng lúc yêu vương đổ (base.ts tribeBank).
 import { TRIBE_TOP } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
-import { tribeEnd, tribeOf, type Players, type World } from './base.ts'
+import { type Players, type World } from './base.ts'
+import { tribeEnd, tribeOf } from './fight.ts'
 
 export function tribeStep(ps: Players, w: World, now: number): { changed: Players; world: World } {
   const changed: Players = new Map()

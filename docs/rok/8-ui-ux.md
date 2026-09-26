@@ -244,7 +244,8 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Cho thu gọn còn một dòng khi người chơi đã quen (ví dụ sau Chủ điện tầng 6).
 - **Game mình:** 🟡
   - Có: thẻ nhiệm vụ có tiến độ x/y, phần thưởng, mũi tên *đi* (`goQuest` dẫn tới công trình / thẻ chức năng / mục tiêu bản đồ); xong thì ánh vàng "Nhận thưởng", nhận thì dấu son đóng, icon bay, nhiệm vụ mới trượt vào.
-  - Thiếu: tên chương, thu gọn thẻ còn một dòng. Trên điện thoại thẻ chỉ hiện ở tab Tông môn.
+  - Có tên chương (26/09): 6 chương theo cảnh giới — Dựng lại sơn môn, Hàng yêu trừ ma, Trúc Cơ vấn đạo, Kim Đan thành tựu, Nguyên Anh xuất thế, Hóa Thần phi thăng (`QUEST_CHAPTERS`, `questChapter`), ghi trên đầu thẻ nhiệm vụ.
+  - Thiếu: thu gọn thẻ còn một dòng. Trên điện thoại thẻ chỉ hiện ở tab Tông môn.
 - **Ưu tiên:** P2 (chương, thu gọn) · **Công sức:** S
 
 #### A11 · Task Queues: hàng đợi việc đang chạy
@@ -494,7 +495,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Tàng Kinh Các như **một bức cuộn dài**: 5 hàng công pháp nối bằng nét mực.
   - Công pháp đang lĩnh ngộ có vòng linh khí. Hàng chưa mở phủ sương ghi "Tàng Kinh Các tầng N".
   - Có một dấu son "Nên học" cho người mới.
-- **Game mình:** 🟡. 28 công pháp chia 7 hàng, hàng sau mở theo tầng Tàng Kinh Các (hàng khoá mờ đi), mỗi lúc lĩnh ngộ một môn (`Library.svelte`). Chỉ là danh sách thẻ theo hàng: chưa có nét nối cây, chưa có dấu "Nên học".
+- **Game mình:** 🟡. 32 công pháp chia 8 hàng, hàng sau mở theo tầng Tàng Kinh Các (hàng khoá mờ đi), mỗi lúc lĩnh ngộ một môn (`Library.svelte`). Chỉ là danh sách thẻ theo hàng: chưa có nét nối cây, chưa có dấu "Nên học".
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C7 · Hospital: chữa thương
@@ -690,7 +691,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Daily Objectives**: mỗi mục tiêu xong cho điểm hoạt động, có 5 rương mốc trong thẻ mục tiêu ngày ✔[34]. Người chơi được khuyên đăng nhập mỗi ngày để lấy tăng tốc, vật phẩm ✔[7].
 - **Tu tiên hoá:** như hiện có. Nếu thêm việc thì chuyển sang "điểm công đức" + 3–5 rương mốc, đỡ bắt nhận từng việc.
-- **Game mình:** ✅ Nhật Khóa: 12 việc hằng ngày cộng hoạt lực, 5 rương mốc (20 → 100), làm mới 0h (`Daily.svelte`); huy hiệu số việc chờ nhận trên nút.
+- **Game mình:** ✅ Nhật Khóa: 14 việc hằng ngày cộng hoạt lực, 5 rương mốc (20 → 100), làm mới 0h (`Daily.svelte`); huy hiệu số việc chờ nhận trên nút.
 - **Ưu tiên:** — · **Công sức:** —
 
 #### C24 · Campaign Hub: gom các chế độ PvE
@@ -1301,7 +1302,7 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | E4 Thông báo đẩy chọn theo loại | ✅ công tắc 6 loại (`/push/off`) | P1 | M |
 | F1 Trưởng lão dẫn đường nói chuyện ở 5–6 mốc đầu | ✅ | P1 | M |
 | A3 Điểm danh sơn môn / chuỗi 7 ngày | ✅ Hương Hỏa | P2 | S |
-| A10 Chương nhiệm vụ có tên, thẻ thu gọn | 🟡 | P2 | S |
+| A10 Chương nhiệm vụ có tên, thẻ thu gọn | 🟡 6 chương theo cảnh giới (`QUEST_CHAPTERS`, tên ở thẻ nhiệm vụ); chưa thu gọn | P2 | S |
 | A16 Tin lớn toàn giới quét ngang trên núi (tắt được) | 🟡 | P2 | S |
 | C5 Bù tài nguyên + "xong lúc" ở Diễn võ trường | 🟡 | P2 | S |
 | C7 Cảnh báo Đan phòng sắp đầy ngay ở màn xuất quân (cần kiểm lại) | 🟡 | P2 | S |
@@ -1309,14 +1310,14 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C35 Xếp hạng: "cần X để lên hạng Y" | ✅ `Ranks.svelte` | P2 | S |
 | C37 Màn thu nhận trưởng lão | ✅ `ElderReveal.svelte` | P2 | S |
 | D3 Giữ hiệu ứng lên tầng để diễn khi quay lại núi | 🟡 | P2 | S |
-| G10 Ghim / tìm kiếm trong danh sách dài | ❌ | P2 | S |
+| G10 Ghim / tìm kiếm trong danh sách dài | 🟡 tìm đạo hữu theo tên ở thẻ Truyền âm (query `search`, không phân biệt dấu); chưa ghim | P2 | S |
 | G12 Phím tắt desktop mở rộng | 🟡 | P2 | S |
 | H3 Soát icon ở 16 px | 🟡 | P2 | S |
 | B1 Chip nhanh trên công trình đang có việc | 🟡 | P2 | M |
 | B5 Khách lạ trên cảnh (thương nhân vân du, hạc đưa thư) | ✅ Vân Du Khách | P2 | M |
 | C6 Cây công pháp trực quan + dấu "Nên học" (cần kiểm lại) | 🟡 | P2 | M |
 | C9 Công pháp: bản gọn / đầy đủ, nút "Diễn thử" | 🟡 | P2 | M |
-| C10 Thiên phú: "% chưởng môn chọn", điểm theo gợi ý | 🟡 | P2 | S–M |
+| C10 Thiên phú: "% chưởng môn chọn", điểm theo gợi ý | 🟡 "Cộng hết vào cây đang xem" (`talentAuto`, tầng dưới trước) + lưu 3 bộ; chưa có % người chọn | P2 | S–M |
 | C14 Mức zoom định sẵn (Cận / Trung / Viễn), lớp tình hình | 🟡 | P2 | M |
 | C17 Ghi nhớ vị trí, chia sẻ thẻ vị trí | ✅ | P2 | M |
 | C18 Bản đồ nhỏ góc bản đồ Giới | ✅ `world/Minimap.svelte` | P2 | M |

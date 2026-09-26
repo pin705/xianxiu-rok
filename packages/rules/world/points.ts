@@ -262,20 +262,28 @@ export const flagClaim = (f: { x: number; y: number; aid: number; fort?: boolean
 })
 // Phù văn của chu kỳ cyc (RUNE_CYCLE): mỗi linh mạch / trận nhãn / Thiên Môn một phù văn ở ô trống gần đó — tất định theo mầm bản đồ
 export type Rune = { i: number; x: number; y: number; k: number; t: number }
+// Ô trống tất định (mầm bản đồ, chu kỳ cyc, loại vật salt) cách mốc p tối đa r ô, kèm dãy số next() cho các thuộc tính khác; null: ra
+// ngoài bản đồ hay trúng ô đã có (điểm, thôn trang, vật đặt trước — taken)
+export function nearTile(a: Atlas, p: Pos & { i: number }, cyc: number, salt: number, r: number, taken: Set<number>) {
+  let h = (Math.imul(a.seed ^ (cyc * 0x9e3779b1) ^ salt, 2654435761) ^ Math.imul(p.i + 1, 0x85ebca6b)) >>> 0
+  const next = () => (h = (Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) >>> 0)
+  const x = p.x + (next() % (2 * r + 1)) - r,
+    y = p.y + (next() % (2 * r + 1)) - r
+  if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_W || taken.has(y * MAP_W + x)) return null
+  taken.add(y * MAP_W + x)
+  return { x, y, next }
+}
+export const occupied = (a: Atlas) => new Set([...a.points, ...sitesOf(a)].map(p => p.y * MAP_W + p.x))
 export function runesAt(a: Atlas, cyc: number): Rune[] {
-  const taken = new Set([...a.points, ...sitesOf(a)].map(p => p.y * MAP_W + p.x))
+  const taken = occupied(a)
   const out: Rune[] = []
   for (const p of a.points) {
     if (p.kind !== 'vein' && p.kind !== 'gate' && p.kind !== 'heaven') continue
-    let h = (Math.imul(a.seed ^ (cyc * 0x9e3779b1), 2654435761) ^ Math.imul(p.i + 1, 0x85ebca6b)) >>> 0
-    const next = () => (h = (Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) >>> 0)
-    const x = p.x + (next() % (2 * RUNE_R + 1)) - RUNE_R,
-      y = p.y + (next() % (2 * RUNE_R + 1)) - RUNE_R
-    if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_W || taken.has(y * MAP_W + x)) continue
-    taken.add(y * MAP_W + x)
+    const at = nearTile(a, p, cyc, 0, RUNE_R, taken)
+    if (!at) continue
     const ring = p.kind === 'heaven' ? 2 : p.kind === 'gate' ? 1 : 0
-    const t = Math.min(RUNE_TIERS.length - 1, (next() % 3) + ring)
-    out.push({ i: out.length, x, y, k: next() % RUNE_KINDS.length, t })
+    const t = Math.min(RUNE_TIERS.length - 1, (at.next() % 3) + ring)
+    out.push({ i: out.length, x: at.x, y: at.y, k: at.next() % RUNE_KINDS.length, t })
   }
   return out
 }

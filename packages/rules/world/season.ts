@@ -8,8 +8,10 @@ import {
   EVENT_TOP,
   FEST_PRIZES,
   HERO_GIFT,
+  HONOR_BRONZE,
   HONOR_CUP,
   HONOR_RANKS,
+  HONOR_SILVER,
   LEAGUE_PRIZES,
   MAX_LEVEL,
   honorPrize,
@@ -69,7 +71,12 @@ export function endSeason(
     if (won !== null && campOf(side) === won)
       x = mail(x, { at: now, k: 'camp', a: [won, camps[won], camps[won ? 0 : 1]], gift: CAMP_WIN })
     // danh hiệu mùa (giữ qua luân hồi): anh kiệt từng hạng mục, người trong minh quán quân Cửu Thiên
-    const titled = [...heroes.flatMap((h, k) => (h?.pid === pid ? [k] : [])), ...(lr === 0 ? [HONOR_CUP] : [])]
+    const podium = hr === 1 ? [HONOR_SILVER] : hr === 2 ? [HONOR_BRONZE] : [] // hạng 2 / 3 Công Huân
+    const titled = [
+      ...heroes.flatMap((h, k) => (h?.pid === pid ? [k] : [])),
+      ...(lr === 0 ? [HONOR_CUP] : []),
+      ...podium,
+    ]
     heroes.forEach((h, k) => {
       if (h?.pid === pid) x = mail(x, { at: now, k: 'hero', a: [k, h.votes], gift: HERO_GIFT })
     })

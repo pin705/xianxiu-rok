@@ -8,6 +8,7 @@ import {
   FEST_STAGED,
   arenaUpper,
   festAt,
+  power,
   weekOf,
   type FestId,
 } from '@rok/rules'
@@ -118,8 +119,23 @@ const pollsOf = (w: World, pid: number) => ({
   heroes: heroView(w.shared, w.ps, pid, w.map(w.now()).day), // Lưu Danh Sử Sách
 })
 
-// Truy vấn xã giao: truyền âm, nhóm chat, đạo hữu, Giới Báo
-const social = (w: World): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper' | 'board' | 'topic'> => ({
+const FIND_MAX = 10 // số người tìm được mỗi lần
+// Tìm đạo hữu theo tên (như tìm thống đốc của RoK): không phân biệt hoa thường, dấu; khớp đầu tên trước, rồi thế lực
+const plainKey = (x: string) => x.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/gi, 'd').toLocaleLowerCase('vi')
+function findPlayers(w: World, me: number, q: string) {
+  const k = plainKey(q.trim())
+  const hits = k ? [...w.ps].filter(([pid, s]) => pid !== me && plainKey(s.name).includes(k)) : []
+  const head = (name: string) => Number(plainKey(name).startsWith(k))
+  hits.sort(([, a], [, b]) => head(b.name) - head(a.name) || power(b) - power(a))
+  return hits.slice(0, FIND_MAX).map(([pid, s]) => {
+    const tag = allyOf(w.shared, pid)?.tag
+    return { pid, name: s.name, hall: s.levels.chuDien, ...(tag && { tag }) }
+  })
+}
+
+// Truy vấn xã giao: truyền âm, nhóm chat, đạo hữu, Giới Báo, tìm người
+const social = (w: World): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper' | 'board' | 'topic' | 'search'> => ({
+  search: (sock, q) => findPlayers(w, sock.data.pid, q.q),
   board: sock => boardView(w.shared, sock.data.pid), // Luận Đạo Bảng
   topic: (_sock, q) => topicView(w.shared, q.id),
   dms: sock => dmsOf(w, sock.data.pid),

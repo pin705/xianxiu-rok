@@ -1,12 +1,13 @@
 <script lang="ts">
-  // Luyện Khí Phòng: 9 pháp bảo tất định, luyện từng cấp (cấp tối đa theo tầng), đeo cho một trưởng lão.
-  // Bố cục lò rèn: đe luyện trên cùng đặt pháp bảo đang chọn (to, bonus, người đeo, chi phí, nút luyện),
-  // dưới là giá binh khí ba hàng — mỗi pháp bảo một ô, cấp trên đồng tiền, người đeo là chân dung nhỏ.
+  // Luyện Khí Phòng: 9 pháp bảo tất định, luyện từng cấp (cấp tối đa theo tầng), mỗi trưởng lão đeo ba ô (binh khí, hộ thân,
+  // linh bảo); 2 / 3 món cùng bộ có thưởng bộ. Bố cục lò rèn: đe luyện trên cùng đặt pháp bảo đang chọn (to, ô · bộ, bonus, người
+  // đeo, chi phí, nút luyện), dưới là giá binh khí — mỗi hàng một bộ, mỗi cột một ô; cấp trên đồng tiền, người đeo là chân dung nhỏ.
   import {
     ELDER_IDS,
     GEAR,
     GEAR_IDS,
     GEAR_MAX,
+    GEAR_SETS,
     forgeError,
     gearCap,
     gearCost,
@@ -14,6 +15,7 @@
     isMarching,
     type ElderId,
     type GearId,
+    type UnitType,
   } from '@rok/rules'
   import { Icon, Portrait } from '@rok/art'
   import { Bag, Banner, Button, Card, Shelf, Tag, Ware } from './ui'
@@ -37,6 +39,10 @@
   const err = $derived(forgeError(game, cur))
   // chi phí + nút luyện (ẩn khi đang luyện chính món này)
   const costRow = $derived(lv >= GEAR_MAX || lv + 1 > cap || game.forge?.gear !== cur)
+  // kệ: hàng = bộ (theo hệ), cột = ô
+  const shelf = (Object.keys(GEAR_SETS) as UnitType[]).flatMap(t =>
+    [0, 1, 2].map(k => GEAR_IDS.find(x => GEAR[x].set === t && GEAR[x].slot === k)!),
+  )
   const equip = (gear: GearId, elder: ElderId | null) => {
     if (act({ type: 'equip', gear, elder }, 'reward')) picking = false
   }
@@ -65,6 +71,7 @@
       {/if}
     </div>
     {#if picking && !on}
+      <p class="t-tiny t-soft">{L.forge.swap}</p>
       <ul class="grid plain">
         {#each elders as e (e)}
           <li>
@@ -108,6 +115,7 @@
 <Banner title={L.gear[cur]} band="{lv}/{GEAR_MAX}" picSize={96} halo foot={lv || costRow ? anvilFoot : undefined}>
   {#snippet pic()}<Icon name={cur} size={76} />{/snippet}
   {#snippet lead()}
+    <small class="t-tiny t-soft">{L.forge.slots[d.slot]} · {L.forge.sets[d.set]}</small>
     <p class="t-small">
       {L.bonus(d.key, d.v * Math.max(1, lv))}
       {#if lv && lv < GEAR_MAX}<span class="t-good">
@@ -124,7 +132,7 @@
 <!-- giá binh khí: mỗi pháp bảo một món trên kệ, cấp trên đồng tiền, người đeo là chân dung nhỏ -->
 <div class="mt-2">
   <Shelf cols={3} row={92}>
-    {#each GEAR_IDS as x (x)}
+    {#each shelf as x (x)}
       {@const xl = game.gear[x]?.lv ?? 0}
       {@const wearer = game.gear[x]?.on}
       <Ware

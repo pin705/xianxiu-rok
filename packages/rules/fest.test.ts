@@ -52,6 +52,13 @@ import {
   FEST_PRIZES,
   FEST_RANKED,
   expAt,
+  cost,
+  techCost,
+  stallCost,
+  stallSp,
+  AP_MAX,
+  apOf,
+  escortTop,
   type FestId,
   type State,
 } from './index.ts'
@@ -889,4 +896,125 @@ test('Tân Giới Thất Nhật: 8 ngày đầu mùa giới, chỉ tông môn đ
   assert.equal(festError(advance(tall, seasonAt + DAY + 1000), 'tanGioi', k), null)
   const end = seasonAt + 8 * DAY + 1
   assert.equal(festOpen(advance(s, end), 'tanGioi', end), false, 'hết 8 ngày đầu mùa')
+})
+
+test('Cát Tường Hạ Giá: chọn việc, ước mức giảm (lần đầu miễn phí, mầm server); xây rẻ hơn tới trần, ước lại tốn tệ, đã ước thì không đổi việc', () => {
+  const d = FESTS.catTuong
+  assert.equal(d.kind, 'stall')
+  if (d.kind !== 'stall') return
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 8, tuLinhTran: 7 } }
+  while (!festOpen(advance(base, t), 'catTuong', t)) t += DAY
+  let s: State = { ...advance(base, t), seed: 999, res: { linhThach: 1e6, linhThao: 1e6, linhKhoang: 1e6 } }
+  assert.equal(festError(s, 'catTuong', 0), 'bad', 'không có quà nhận')
+  assert.throws(() => run(s, { type: 'stallWish', id: 'catTuong' }), /bad/, 'chưa chọn việc')
+  s = run(s, { type: 'stallJob', id: 'catTuong', job: 0 })
+  assert.deepEqual(apply({ ...s, seed: 0 }, { type: 'stallWish', id: 'catTuong' }, t), {
+    ok: true,
+    state: { ...s, seed: 0 },
+  })
+  s = run(s, { type: 'stallWish', id: 'catTuong' })
+  const [job, tier] = stallSp(s, 'catTuong')
+  assert.deepEqual([job, tier >= 0], [0, true], 'đã ước một mức')
+  assert.throws(() => run(s, { type: 'stallJob', id: 'catTuong', job: 1 }), /claimed/, 'đã ước thì không đổi việc')
+  assert.throws(() => run(s, { type: 'stallWish', id: 'catTuong' }), /not_enough/, 'ước lại tốn tệ')
+  // xây: trả giá đã giảm, sổ lễ ghi phần được bớt
+  const cut = d.tiers[tier].cut
+  const full = cost('tuLinhTran', 8)
+  const before = s.res.linhThao
+  s = run(s, { type: 'upgrade', building: 'tuLinhTran' })
+  const paid = before - s.res.linhThao
+  assert.equal(paid, full.linhThao - Math.floor(full.linhThao * cut))
+  assert.equal(stallSp(s, 'catTuong')[3], full.linhThao - paid, 'đã bớt linh thảo')
+  // việc khác (lĩnh ngộ) nguyên giá
+  assert.deepEqual(stallCost(s, 'tech', techCost('tuLinh', 1)), techCost('tuLinh', 1))
+  // tới trần: chỉ bớt phần còn lại
+  const near = {
+    ...s,
+    fest: { ...s.fest, catTuong: { ...s.fest.catTuong!, sp: [0, tier, d.cap - 10, d.cap - 10, d.cap - 10] } },
+  }
+  assert.deepEqual(stallCost(near, 'build', full), {
+    linhThach: full.linhThach - Math.min(Math.floor(full.linhThach * cut), 10),
+    linhThao: full.linhThao - 10,
+    linhKhoang: full.linhKhoang - 10,
+  })
+})
+
+test('Luyện Binh Phù Hội: phút tăng tốc dùng cho việc tuyển ra điểm (việc khác không tính), có bảng xếp hạng', () => {
+  assert.ok((FEST_RANKED as readonly string[]).includes('luyenBinhPhu'))
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 8, dienVoTruong: 8, tuLinhTran: 5 } }
+  while (!festOpen(advance(base, t), 'luyenBinhPhu', t)) t += DAY
+  let s: State = {
+    ...advance(base, t),
+    res: { linhThach: 1e6, linhThao: 1e6, linhKhoang: 1e6 },
+    items: { ...base.items, luyenBinh60: 2, loBan60: 1 },
+  }
+  s = run(s, { type: 'train', unit: 'kiem1', n: 50 })
+  s = run(s, { type: 'use', item: 'luyenBinh60', n: 1, job: 'train' })
+  assert.equal(festPoints(s, 'luyenBinhPhu'), 60, 'một Luyện Binh Phù 60 phút')
+  s = run(s, { type: 'upgrade', building: 'tuLinhTran' })
+  s = run(s, { type: 'use', item: 'loBan60', n: 1, job: 'build' })
+  assert.equal(festPoints(s, 'luyenBinhPhu'), 60, 'tăng tốc xây không tính')
+  assert.equal(s.stats.sped, 120, 'tổng phút tăng tốc vẫn đếm cả hai')
+})
+
+test('Áp Tiêu Hộ Hàng: sao sau mở khi lượt tốt nhất qua sao trước, mỗi lượt tốn hành lực, đội ảo không mất quân; điểm = sao × 100 + % hàng còn (giữ lượt tốt nhất)', () => {
+  const d = FESTS.apTieu
+  assert.equal(d.kind, 'escort')
+  if (d.kind !== 'escort') return
+  assert.ok((FEST_RANKED as readonly string[]).includes('apTieu'))
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 8 } }
+  while (!festOpen(advance(base, t), 'apTieu', t)) t += DAY
+  const go = (lv: number) => ({ type: 'escort', id: 'apTieu', lv, elder: 'thanhPhong', army: { kiem3: 5000 } })
+  let s: State = {
+    ...advance(base, t),
+    seed: 777,
+    troops: { ...base.troops, kiem3: 5000 },
+    elders: { thanhPhong: expAt(30) },
+  }
+  assert.throws(() => run(s, go(2)), /locked/, 'sao 2 chưa mở')
+  assert.deepEqual(
+    apply({ ...s, seed: 0 }, go(1) as never, t),
+    { ok: true, state: { ...s, seed: 0 } },
+    'client chờ server',
+  )
+  const troops = s.troops
+  s = run(s, go(1))
+  assert.equal(apOf(s, t), AP_MAX - d.cost, 'tốn hành lực')
+  assert.deepEqual(s.troops, troops, 'đội ảo: quân thật không mất')
+  const r = s.reports.at(-1)!
+  assert.equal(r.kind, 'escort')
+  assert.ok(r.fights?.length, 'có trận để xem lại')
+  const [best, hp, lv] = s.fest.apTieu!.sp!
+  assert.equal(lv, 1)
+  assert.equal(best, hp > 0 ? 100 + hp : 0)
+  assert.equal(r.win, hp > 0)
+  assert.equal(festPoints(s, 'apTieu'), best)
+  assert.throws(() => run({ ...s, ap: { n: d.cost - 1, at: t } }, go(1)), /limit/, 'thiếu hành lực')
+  // qua sao n mới mở sao n + 1 (1 sao trọn hàng = 200 điểm vẫn chỉ mở tới sao 2)
+  const at = (n: number): State => ({ ...s, fest: { ...s.fest, apTieu: { ...s.fest.apTieu!, sp: [n, 100, 1] } } })
+  assert.deepEqual(
+    [0, 101, 200, 201].map(b => escortTop(at(b), 'apTieu')),
+    [1, 2, 2, 3],
+  )
+  assert.throws(() => run(at(200), go(3)), /locked/)
+  // lượt tốt nhất 450 → mở tới sao 5; lượt sau tệ hơn không hạ điểm
+  const top: State = { ...s, fest: { ...s.fest, apTieu: { ...s.fest.apTieu!, sp: [450, 50, 4] } } }
+  assert.throws(() => run(top, go(6)), /bad|locked/, 'không quá số sao của lễ')
+  assert.ok(run(top, go(5)).fest.apTieu!.sp![0] >= 450)
+})
+
+test('Vây Công Yêu Vương: mỗi lần góp sức hạ yêu vương giới trong lễ được 10 Bảo Hạp Phiếu, đổi quà ở cửa hàng lễ', () => {
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 10 } }
+  while (!festOpen(advance(base, t), 'vayCong', t)) t += DAY
+  let s: State = advance(base, t)
+  assert.equal(festTokens(s, 'vayCong'), 0)
+  s = { ...s, stats: { ...s.stats, forts: (s.stats.forts ?? 0) + 7 } }
+  assert.equal(festTokens(s, 'vayCong'), 70)
+  s = run(s, { type: 'fest', id: 'vayCong', i: 0 })
+  assert.equal(s.items.vanNang4, 3)
+  assert.equal(festTokens(s, 'vayCong'), 10)
 })

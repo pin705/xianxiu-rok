@@ -1,7 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { PARTY_WAIT, PARTY_WAVES, expAt, newGame, type PartyRole, type State } from './index.ts'
-import { freshWorld, partyRun, partyStep, worldAct, type Players, type World } from './world.ts'
+import {
+  CONVOY_COST,
+  CONVOY_WAIT,
+  PARTY_WAIT,
+  PARTY_WAVES,
+  expAt,
+  newGame,
+  type PartyRole,
+  type State,
+} from './index.ts'
+import { convoyStep, convoyTop, freshWorld, partyRun, partyStep, worldAct, type Players, type World } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 21, 3)
 const DAY = 86_400_000
@@ -74,4 +83,55 @@ test('Man Hoang Cổ Tộc: đội mạnh qua nhiều đợt hơn, ải cao khó
   assert.ok(partyRun(team(5), room(1, four), 7) < strong)
   assert.ok(partyRun(team(30), room(5, four), 7) < strong)
   assert.equal(partyRun(new Map(), room(1, four), 7), 0)
+})
+
+test('Linh Thương Hộ Tống: trưởng lão tốn Minh khố khởi hành, người trong minh ghi danh hộ tống; tới giờ server giải — thư quà theo % hàng, minh giữ điểm cao nhất mở độ khó', () => {
+  const ps: Players = new Map([1, 2, 3, 4].map(p => [p, sect(`T${p}`)]))
+  ps.set(5, sect('Ngoai'))
+  let w: World = {
+    ...freshWorld(),
+    allies: {
+      1: {
+        id: 1,
+        name: 'VK',
+        tag: 'VK',
+        members: { 1: 2, 2: 0, 3: 0, 4: 0 },
+        notice: '',
+        at: T0,
+        helps: [],
+        fund: 900,
+      },
+    },
+  }
+  const act = (pid: number, raw: object, at = T0) => {
+    const r = worldAct(ps, pid, raw as never, at, 1, undefined, w)
+    if (!r.ok) return r.error
+    w = r.world
+    for (const [p, s] of r.changed) ps.set(p, s)
+    return null
+  }
+  const go = (lv = 1) => ({ type: 'convoyGo', lv })
+  assert.equal(act(2, go()), 'locked', 'chỉ trưởng lão / minh chủ')
+  assert.equal(act(1, go(2)), 'locked', 'độ khó 2 chưa mở')
+  assert.equal(act(3, { type: 'convoyGuard' }), 'gone', 'chưa có đoàn')
+  assert.equal(act(1, go()), null)
+  assert.equal(w.allies[1].fund, 900 - CONVOY_COST[0])
+  assert.deepEqual(w.allies[1].convoy, { by: 1, lv: 1, at: T0 + CONVOY_WAIT, guards: [1] })
+  assert.equal(act(1, go()), 'busy')
+  assert.equal(act(2, { type: 'convoyGuard' }), null)
+  assert.equal(act(2, { type: 'convoyGuard' }), 'full', 'đã ghi danh')
+  assert.equal(act(5, { type: 'convoyGuard' }), 'gone', 'không cùng minh')
+  assert.equal(convoyStep(ps, w, T0 + 1000, 1).world, w, 'chưa tới giờ khởi hành')
+  const r = convoyStep(ps, w, T0 + CONVOY_WAIT, 1)
+  const [lv, hp, n] = r.changed.get(1)!.mail.at(-1)!.a as number[]
+  assert.deepEqual([lv, n], [1, 2])
+  assert.deepEqual(r.changed.get(2)!.mail.at(-1)!.a, [1, hp, 2])
+  assert.equal(r.changed.has(3), false, 'không hộ tống thì không có quà')
+  assert.equal(r.world.allies[1].convoy, undefined)
+  assert.equal(r.world.allies[1].convoyBest, hp > 0 ? 100 + hp : 0)
+  assert.equal(convoyTop(r.world.allies[1]), hp > 0 ? 2 : 1, 'qua độ khó 1 thì mở độ khó 2')
+  w = r.world
+  for (const [p, s] of r.changed) ps.set(p, s)
+  assert.equal(act(1, go()), 'claimed', 'mỗi ngày một chuyến')
+  assert.equal(act(1, go(), T0 + DAY), 'not_enough', 'hết Minh khố')
 })

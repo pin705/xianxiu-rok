@@ -18,7 +18,12 @@ import {
   DIG_LOOT,
   DIG_MAX,
   DIG_R,
+  FESTS,
   FRENZY_TIME,
+  GOODS_CYCLE,
+  GOODS_GIFTS,
+  GOODS_ODDS,
+  GOODS_R,
   RUNE_HOURS,
   RUNE_KINDS,
   RUNE_TIERS,
@@ -44,7 +49,9 @@ import {
   type WorldActions,
 } from './base.ts'
 import { addArmy, flipRounds, split } from './fight.ts'
-import { runeCycle, runesLeft } from './points.ts'
+import { festWindow } from '../core/fest.ts'
+import type { Atlas } from '../atlas.ts'
+import { nearTile, occupied, runeCycle, runesLeft } from './points.ts'
 
 export type EncampAction =
   | { type: 'camp'; x: number; y: number; elder: ElderId; army: Army }
@@ -52,8 +59,31 @@ export type EncampAction =
   | { type: 'digMap' } // ghép Tàng Bảo Đồ: DIG_FRAGS tàn phiến → một điểm đào
   | { type: 'dig'; x: number; y: number; elder: ElderId; army: Army }
   | { type: 'rune'; x: number; y: number; elder: ElderId; army: Army } // nhặt phù văn ở ô (x, y)
+  | { type: 'caravan'; x: number; y: number; elder: ElderId; army: Army } // nhặt kiện hàng rơi ở ô (x, y)
 
 export const campTile = (x: number, y: number) => y * MAP_W + x
+// Thương Đội Gặp Nạn: kỳ lễ thuongDoi đang mở (lịch chung cả giới); hàng rơi của chu kỳ cyc — quanh mỗi thôn trang 1/GOODS_ODDS rơi
+// một kiện (phẩm 0 thường 60 %, 1 tốt 30 %, 2 quý 10 %); kiện còn (chưa ai nhặt) lúc t
+export const goodsOn = (t: number) => !!festWindow({}, FESTS.thuongDoi, t)
+export const goodsCycle = (t: number) => Math.floor(t / GOODS_CYCLE)
+export type Goods = { i: number; x: number; y: number; t: number }
+export function goodsAt(a: Atlas, cyc: number): Goods[] {
+  const taken = occupied(a)
+  const out: Goods[] = []
+  for (const st of sitesOf(a)) {
+    const at = st.kind === 'village' ? nearTile(a, st, cyc, 0x51ed270b, GOODS_R, taken) : null
+    if (!at || at.next() % GOODS_ODDS) continue
+    const r = at.next() % 10
+    out.push({ i: out.length, x: at.x, y: at.y, t: r < 6 ? 0 : r < 9 ? 1 : 2 })
+  }
+  return out
+}
+export function goodsLeft(w: World, a: Atlas, t: number): Goods[] {
+  if (!goodsOn(t)) return []
+  const cyc = goodsCycle(t)
+  const got = w.goods?.cyc === cyc ? w.goods.got : []
+  return goodsAt(a, cyc).filter(g => !got.includes(g.i))
+}
 const tilePos = (i: number) => ({ x: i % MAP_W, y: Math.floor(i / MAP_W) })
 // trại đang đứng: đội đã tới ô, đứng lại
 export const campMarch = (s: State, id: number) =>
@@ -204,6 +234,38 @@ export const encampActions: WorldActions<EncampAction> = {
       return { ok: true, world: w, changed: new Map([[pid, launch(s, army, m)]]) }
     },
   },
+  caravan: {
+    pick: a => {
+      const e = pickSend(a)
+      return e && int(0, MAP_W - 1)(a.x) && int(0, MAP_W - 1)(a.y) ? { type: 'caravan', x: a.x, y: a.y, ...e } : null
+    },
+    run: ({ w, pid, s, map, seed }, a) => {
+      if (!map || !s.seat) return no('gone')
+      const r = goodsLeft(w, map.atlas, s.time).find(q => q.x === a.x && q.y === a.y)
+      if (!r) return no('gone')
+      const i = campTile(a.x, a.y)
+      if (s.marches.some(m => m.goods && m.target.i === i)) return no('busy')
+      const e = fieldError(s, a.elder, a.army)
+      if (e) return no(e)
+      const rt = route(map.atlas, s.seat, { x: a.x, y: a.y }, map.phase, map.shut)
+      if (!rt) return no(farErr(map, s.seat, { x: a.x, y: a.y }))
+      const army = compact(a.army),
+        t = s.time
+      const m: March = {
+        id: s.nextId,
+        elder: a.elder,
+        army,
+        target: { kind: 'camp', i },
+        goods: { i: r.i, cyc: goodsCycle(t), t: r.t },
+        seed,
+        startAt: t,
+        arriveAt: t + routeMs(s, rt.len, army),
+        returnAt: 0,
+        path: rt.path,
+      }
+      return { ok: true, world: w, changed: new Map([[pid, launch(s, army, m)]]) }
+    },
+  },
   hitCamp: {
     pick: a => {
       const e = pickSend(a)
@@ -249,6 +311,7 @@ export const encampActions: WorldActions<EncampAction> = {
 export function campArrive(ps: Players, w: World, [pid, att, m]: Party[number], at: number) {
   if (m.dig) return digArrive(w, [pid, att, m], at)
   if (m.rune) return runeArrive(w, [pid, att, m], at)
+  if (m.goods) return goodsArrive(w, [pid, att, m], at)
   if (!m.prey) return { changed: new Map([[pid, withMarch(att, { ...m, stay: true })]]) as Players, world: w }
   const d = ps.get(m.prey.pid)
   const vm = d && campMarch(d, m.prey.id)
@@ -318,4 +381,18 @@ function runeArrive(w: World, [pid, att, m]: Party[number], at: number) {
     stats: { ...back.stats, runes: (back.stats.runes ?? 0) + 1 },
   }
   return { changed: new Map([[pid, st]]) as Players, world: { ...w, runes: { cyc: r.cyc, got: [...got, r.i] } } }
+}
+
+// Đội nhặt hàng tới nơi: kiện còn (cùng chu kỳ, chưa ai nhặt) thì nhận quà theo phẩm qua thư, đánh dấu đã nhặt; đội về ngay
+function goodsArrive(w: World, [pid, att, m]: Party[number], at: number) {
+  const g = m.goods!
+  const back = turnBack(att, m, at)
+  const got = w.goods?.cyc === g.cyc ? w.goods.got : []
+  if (goodsCycle(at) !== g.cyc || got.includes(g.i)) return { changed: new Map([[pid, back]]) as Players, world: w }
+  const { x, y } = tilePos(m.target.i)
+  const st = mail(
+    { ...back, stats: { ...back.stats, goods: (back.stats.goods ?? 0) + 1 } },
+    { at, k: 'goods', a: [x, y, g.t], gift: GOODS_GIFTS[g.t] },
+  )
+  return { changed: new Map([[pid, st]]) as Players, world: { ...w, goods: { cyc: g.cyc, got: [...got, g.i] } } }
 }

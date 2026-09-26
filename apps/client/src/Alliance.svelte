@@ -76,6 +76,8 @@
   import AllyPot from './AllyPot.svelte'
   import ArkCard from './ArkCard.svelte'
   import AllyParty from './AllyParty.svelte'
+  import AllyConvoy from './AllyConvoy.svelte'
+  import AllyBadge from './AllyBadge.svelte'
   import AllyPlans from './AllyPlans.svelte'
   import { social } from './social.svelte'
 
@@ -124,7 +126,7 @@
     mailed = true
   }
   let pick = $state<number | null>(null)
-  let sheet = $state<'tech' | 'shop' | 'mob' | null>(null)
+  let sheet = $state<'tech' | 'shop' | 'mob' | 'badge' | null>(null)
   // nút ở danh sách minh: nhận lời mời · đã gửi đơn · xin vào (minh đóng) · gia nhập
   function joinLabel(r: AllyRow) {
     if (r.invited) return L.ally.accept
@@ -227,7 +229,7 @@
           <li>
             <Card>
               <span class="row">
-                <Pennant tag={r.tag} mini />
+                <Pennant tag={r.tag} badge={r.badge} mini />
                 <span class="grow stack" style:--gap="1px"
                   ><b>{r.name} [{r.tag}]</b><small class="t-small t-soft"
                     >{L.ally.members(r.n, r.max)} · {L.power} {num(r.power)}</small
@@ -270,7 +272,7 @@
   {:else}
     <!-- sảnh minh: cờ minh treo (hiệu minh trong đĩa trắng), tên và ba tấm biển số liệu trên nền núi -->
     <Banner title={ally.name} note="[{ally.tag}]" picLeft picSize={72}>
-      {#snippet pic()}<Pennant tag={ally.tag} />{/snippet}
+      {#snippet pic()}<Pennant tag={ally.tag} badge={ally.badge} />{/snippet}
       {#snippet lead()}
         <small class="t-small t-soft"
           >{L.ally.members(ally.people.length, seatsOf(ally))} · {myRole === -9 ? '' : L.ally.role(myRole)}</small
@@ -323,6 +325,7 @@
         onclick={() => (sheet = 'shop')}
       />
     </div>
+    <AllyBadge open={sheet === 'badge'} onclose={() => (sheet = null)} {ally} {go} />
     <AllyTech open={sheet === 'tech'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
     <AllyShop open={sheet === 'shop'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
     <AllyMob open={sheet === 'mob'} onclose={() => (sheet = null)} {ally} {me} {send} />
@@ -391,8 +394,10 @@
           >
         {:else}
           <Note tilt={-0.6}><p class="t-small t-lore">{ally.notice || L.ally.noNotice}</p></Note>
-          {#if myRole >= 1}<Button size="sm" variant="ghost" onclick={() => (editing = ally?.notice ?? '')}
-              >{L.ally.edit}</Button
+          {#if myRole >= 1}<span class="row" style:--gap="6px"
+              ><Button size="sm" variant="ghost" onclick={() => (editing = ally?.notice ?? '')}>{L.ally.edit}</Button
+              ><Button size="sm" variant="ghost" icon="flag" onclick={() => (sheet = 'badge')}>{L.guild.badge}</Button
+              ></span
             >{/if}
         {/if}
       </Section>
@@ -601,6 +606,7 @@
 
       {#if me !== null}<ArkCard row={ally.ark} {me} aid={ally.id} officer={myRole >= 1} {go} />{/if}
       {#if me !== null}<AllyParty {ally} {me} {go} />{/if}
+      {#if me !== null}<AllyConvoy {ally} {me} {go} />{/if}
 
       <Section title={L.legion.title}>
         <p class="t-small t-soft">{L.legion.lore}</p>

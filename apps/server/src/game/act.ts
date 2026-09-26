@@ -15,6 +15,7 @@ function publicText(a: WorldAction) {
   if (a.type === 'groupNew') return [a.name]
   if (a.type === 'boardPost') return [a.title, a.text] // Luận Đạo Bảng
   if (a.type === 'boardReply') return [a.text]
+  if (a.type === 'decree') return [a.text] // Chiếu Giới Chủ
   return a.type === 'allyNotice' || a.type === 'allyMark' || a.type === 'allyMail' || a.type === 'planAdd'
     ? [a.text]
     : []

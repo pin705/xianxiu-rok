@@ -1,6 +1,13 @@
 <script module lang="ts">
   // Số ngăn kéo desktop đang mở — còn thì <html> giữ --dockw để cảnh núi/bản đồ dịch sang trái
   let docks = 0
+  // Ngăn kéo desktop đang mở (bảng + hàm đóng). Mỗi lúc chỉ một ngăn kéo: mở bảng mới thì đóng bảng cũ — trừ khi bảng mới
+  // được mở từ bên trong bảng cũ (Tăng tốc mở từ Chủ điện): khi đó giữ bảng cha.
+  const openDocks = new Set<{ el: () => HTMLElement | undefined; close: () => void }>()
+  // chỗ người chơi vừa chạm (bắt ở pha capture, trước khi nút mở bảng chạy) — để biết bảng mới mở từ đâu
+  let lastDown: Node | null = null
+  if (typeof document !== 'undefined')
+    document.addEventListener('pointerdown', e => (lastDown = e.target as Node), { capture: true })
 </script>
 
 <script lang="ts">
@@ -52,6 +59,38 @@
     if (docks++ === 0) root.style.setProperty('--dockw', getComputedStyle(root).getPropertyValue('--dock'))
     return () => {
       if (--docks === 0) root.style.removeProperty('--dockw')
+    }
+  })
+  // Ngăn kéo: một cái một lúc; chạm ra ngoài (cảnh, HUD) là đóng như bảng modal — trừ chạm vào hộp thoại khác đang mở
+  // (bảng con, hộp xác nhận) và dải thông báo
+  $effect(() => {
+    if (!open || !dock) return
+    const me = { el: () => dlg, close: () => dismiss() }
+    for (const d of openDocks) if (!(lastDown && d.el()?.contains(lastDown))) d.close()
+    openDocks.add(me)
+    // chạm ngoài → đợi cú bấm chạy xong: bảng vẫn mở và vẫn là nội dung cũ thì đóng. Chạm sang công trình khác đổi nội
+    // dung bảng (không đóng); kéo cảnh không thành cú bấm (không đóng).
+    let was: string | undefined | null = null
+    const outside = (e: PointerEvent) => {
+      const t = e.target as Element
+      was = !dlg || dlg.contains(t) || t.closest?.('dialog[open], .toasts') ? null : (title ?? label ?? '')
+    }
+    const click = () => {
+      if (was === null) return
+      const before = was
+      was = null
+      setTimeout(() => open && (title ?? label ?? '') === before && dismiss())
+    }
+    // đợi hết cú chạm đã mở bảng này, rồi mới nghe chạm ngoài
+    const id = setTimeout(() => {
+      document.addEventListener('pointerdown', outside, { capture: true })
+      document.addEventListener('click', click)
+    })
+    return () => {
+      clearTimeout(id)
+      openDocks.delete(me)
+      document.removeEventListener('pointerdown', outside, { capture: true })
+      document.removeEventListener('click', click)
     }
   })
   // dialog không modal không tự đóng bằng Esc

@@ -102,6 +102,9 @@ export type Query =
   | { k: 'paper' } // Giới Báo: các số báo gần đây
   | { k: 'board' } // Luận Đạo Bảng: các chủ đề
   | { k: 'topic'; id: number } // một chủ đề đủ lời
+  | { k: 'search'; q: string } // Tìm đạo hữu theo tên (không phân biệt hoa thường, dấu)
+// Người tìm được theo tên: tên, tầng Chủ điện, hiệu tiên minh (nếu có)
+export type FoundView = { pid: number; name: string; hall: number; tag?: string }
 // Đạo hữu đã kết giao: tên, cảnh giới, đang chơi không
 // away: số ngày chưa vào game · called: mình đã gọi về (Cố Nhân Tương Phùng)
 export type FriendView = { pid: number; name: string; hall: number; online: boolean; away: number; called: boolean }
@@ -192,6 +195,7 @@ export type Answer = {
   paper: PaperView
   board: BoardRow[]
   topic: Topic | null // chủ đề đã bị xoá / rơi khỏi bảng
+  search: FoundView[]
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }

@@ -10,6 +10,7 @@ import {
   RATE_HIGH,
   RESOURCES,
   TECHS,
+  TYPES,
   UNITS,
   type Bag,
   type BuildingId,
@@ -38,6 +39,12 @@ export const GEAR_IDS = Object.keys(GEAR) as GearId[]
 export const bag = (f: (r: Res) => number) => Object.fromEntries(RESOURCES.map(r => [r, f(r)])) as Bag
 export const troops = (f: (u: UnitId) => number) => Object.fromEntries(UNITS.map(u => [u, f(u)])) as Troops
 export const count = (a: Army) => UNITS.reduce((sum, u) => sum + (a[u] ?? 0), 0)
+// hệ chính của đội: hệ đông đệ tử nhất
+export const mainType = (a: Army) =>
+  TYPES.reduce((best, t) => {
+    const n = (x: string) => UNITS.filter(u => u.startsWith(x)).reduce((k, u) => k + (a[u] ?? 0), 0)
+    return n(t) > n(best) ? t : best
+  })
 export const plus = (a: Troops, b: Army) => troops(u => a[u] + (b[u] ?? 0))
 export const minus = (a: Troops, b: Army) => troops(u => a[u] - (b[u] ?? 0))
 export const addBag = (a: Bag, b: Partial<Bag>) => bag(r => a[r] + (b[r] ?? 0))

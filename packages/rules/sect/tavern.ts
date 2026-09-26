@@ -7,8 +7,9 @@ import { int, isElder, oneOf } from '../core/parse.ts'
 import { festOpen } from '../core/fest.ts'
 import { elderLevel, isMarching, skillLv } from '../core/stats.ts'
 import { type Err, type State, type Tavern } from '../core/types.ts'
-import { addBag, addItems, bag, nextSeed } from '../core/util.ts'
+import { addBag, addItems, bag, BAG_IDS, nextSeed } from '../core/util.ts'
 import {
+  BAG,
   ELDERS,
   GOLD_PITY,
   RARITY,
@@ -23,6 +24,7 @@ import {
   TOKEN_SUMMON,
   TRUYEN_MIN,
   TRUYEN_PER,
+  type BagId,
   type ElderId,
   type Reward,
   type TavernKind,
@@ -34,6 +36,8 @@ export type TavernAction =
   | { type: 'star'; elder: ElderId }
   | { type: 'ngo'; elder: ElderId } // ngộ công pháp
   | { type: 'truyen'; a: ElderId; b: ElderId } // truyền công: đổi tầng công pháp của a và b
+  | { type: 'uni'; item: BagId; elder: ElderId; n: number } // Vạn Năng Tín Vật → n tín vật của trưởng lão cùng phẩm
+  | { type: 'unngo'; elder: ElderId } // Hoàn Nguyên Phù: đặt lại công pháp đã ngộ, trả đủ tín vật
 
 const KINDS = Object.keys(TAVERN) as TavernKind[]
 // Lần miễn phí đang có không (để dành tối đa một lượt): lúc lượt kế <= bây giờ
@@ -56,6 +60,14 @@ export function ngoError(s: State, e: ElderId): Err | null {
 export const truyenPair = (a: ElderId, b: ElderId) =>
   a !== b && RARITY[a] === RARITY[b] && ELDERS[a].passives.length === ELDERS[b].passives.length
 const ngoCount = (s: State, e: ElderId) => skillLv(s, e).reduce((n, x) => n + x - 1, 0)
+// Hoàn nguyên (Skill Reset của RoK): mọi môn về tầng 1, trả lại tín vật của từng lần ngộ đã làm
+export const unngoRefund = (s: State, e: ElderId) => SKILL_COST.slice(0, ngoCount(s, e)).reduce((a, b) => a + b, 0)
+export function unngoError(s: State, e: ElderId): Err | null {
+  if (s.elders[e] === undefined) return 'locked'
+  if (!ngoCount(s, e)) return 'empty'
+  if (isMarching(s, e)) return 'busy'
+  return s.items.hoanNguyen ? null : 'no_item'
+}
 export const truyenCost = (s: State, a: ElderId, b: ElderId) =>
   TRUYEN_MIN + TRUYEN_PER * Math.abs(ngoCount(s, a) - ngoCount(s, b))
 export function truyenError(s: State, a: ElderId, b: ElderId): Err | null {
@@ -124,7 +136,40 @@ function draw(s: State, k: TavernKind, last: Tavern['last']): State {
   return { ...st, seed, tokens, tavern: { ...st.tavern, pity, last: { at: s.time, got, tokens: shown } } }
 }
 
+// Vạn Năng Tín Vật (tượng vạn năng của RoK): đổi 1 : 1 thành tín vật của trưởng lão cùng phẩm đã thu nhận (không dùng để thu nhận)
+export function uniError(s: State, item: BagId, elder: ElderId, n: number): Err | null {
+  const d = BAG[item]
+  if (d.use !== 'token' || RARITY[elder] !== d.rarity) return 'bad'
+  if (s.elders[elder] === undefined) return 'locked'
+  return (s.items[item] ?? 0) >= n ? null : 'not_enough'
+}
+
 export const tavernActions: Actions<TavernAction> = {
+  unngo: {
+    pick: a => (isElder(a.elder) ? { type: 'unngo', elder: a.elder } : null),
+    run: (s, a) => {
+      const e = unngoError(s, a.elder)
+      if (e) return no(e)
+      const { [a.elder]: _, ...skl } = s.skl ?? {}
+      const tokens = { ...s.tokens, [a.elder]: (s.tokens[a.elder] ?? 0) + unngoRefund(s, a.elder) }
+      return ok({ ...s, items: use(s, 'hoanNguyen'), skl, tokens })
+    },
+  },
+  uni: {
+    pick: a =>
+      oneOf(BAG_IDS)(a.item) && isElder(a.elder) && int(1, 100_000)(a.n)
+        ? { type: 'uni', item: a.item, elder: a.elder, n: a.n as number }
+        : null,
+    run: (s, a) => {
+      const e = uniError(s, a.item, a.elder, a.n)
+      if (e) return no(e)
+      return ok({
+        ...s,
+        items: use(s, a.item, a.n),
+        tokens: { ...s.tokens, [a.elder]: (s.tokens[a.elder] ?? 0) + a.n },
+      })
+    },
+  },
   draw: {
     pick: a => (oneOf(KINDS)(a.kind) && int(1, 10)(a.n) ? { type: 'draw', kind: a.kind, n: a.n } : null),
     run: (s, a) => {

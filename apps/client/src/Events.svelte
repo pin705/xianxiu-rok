@@ -51,6 +51,7 @@
   import Offer from './Offer.svelte'
   import Omen from './Omen.svelte'
   import Stall from './Stall.svelte'
+  import Escort from './Escort.svelte'
   import Race from './Race.svelte'
   import Maze from './Maze.svelte'
   import Pass from './Pass.svelte'
@@ -64,6 +65,7 @@
     opened,
     onfight,
     onmaze,
+    onescort,
     onreplay,
   }: {
     open: boolean
@@ -72,6 +74,7 @@
     opened?: number // lúc mở mùa của giới (Lịch giới)
     onfight?: (elder: ElderId, army: Army, thief?: boolean) => Promise<Report | null> // trận Thí Luyện / Đạo Tặc: server giải, client xem lại
     onmaze?: (i: number, team: number) => Promise<Report | null> // Hoàng Kim Mê Cảnh: mở ô (có thể là trận)
+    onescort?: (id: FestId, lv: number, elder: ElderId, army: Army) => Promise<Report | null> // Áp Tiêu Hộ Hàng
     onreplay?: (r: Report) => void
   } = $props()
   const g = useGame()
@@ -102,6 +105,9 @@
     hoaKien: 'swords',
     boQue: 'scroll',
     catTuong: 'star',
+    luyenBinhPhu: 'bolt',
+    thuongDoi: 'globe',
+    apTieu: 'shield',
     vanDang: 'star',
     truyenCong: 'scroll',
     gioiChu: 'swords',
@@ -119,6 +125,7 @@
     thatTich: 'heal',
     quyTiet: 'skull',
     thonTrang: 'shield',
+    vayCong: 'swords',
     thienCo: 'star',
     vanHoa: 'nganDuyen',
     linhNoan: 'kimDuyen',
@@ -164,6 +171,9 @@
     hoaKien: 'train',
     boQue: 'scroll',
     catTuong: 'treasure',
+    luyenBinhPhu: 'train',
+    thuongDoi: 'explore',
+    apTieu: 'battle',
     vanDang: 'moon',
     truyenCong: 'scroll',
     gioiChu: 'battle',
@@ -181,6 +191,7 @@
     thatTich: 'love',
     quyTiet: 'demon',
     thonTrang: 'shield',
+    vayCong: 'battle',
     thienCo: 'moon',
     vanHoa: 'treasure',
     linhNoan: 'love',
@@ -457,6 +468,8 @@
             <Omen id={cur} />
           {:else if def.kind === 'stall'}
             <Stall id={cur} />
+          {:else if def.kind === 'escort'}
+            <Escort id={cur} {s} onfight={onescort && ((lv, e, a) => onescort(cur, lv, e, a))} {onreplay} />
           {:else if def.kind === 'wish'}
             <Wish id={cur} />
           {:else if def.kind === 'thief'}

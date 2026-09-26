@@ -178,7 +178,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* tab Kỹ năng có 4–5 ô với cấp 1–5; nút "Nâng kỹ năng (x tượng)"; hoạt ảnh vòng quay chọn kỹ năng.
 - *Giữ chân:* nơi tiêu tài nguyên dài hạn; yếu tố ngẫu nhiên tạo hồi hộp; "5-5-5-5" là mốc để khoe.
 - **Tu tiên hoá:** **Hồn ấn** (tàn hồn, tín vật của trưởng lão) dùng để "ngộ công pháp", mỗi lần ngẫu nhiên đốn ngộ một môn; mỗi công pháp 5 tầng: Sơ Khuy → Tiểu Thành → Đại Thành → Viên Mãn → Hoá Cảnh.
-- **Game mình:** ✅ — tín vật riêng từng trưởng lão (như tượng tướng, từ Chiêu Hiền Đài / Thiên Cơ Luân): đủ 10 thu nhận, dư thì nâng sao (mỗi sao công pháp +5 %) hoặc **ngộ công pháp** (`ngo` ở `sect/tavern.ts`, `SKILL_COST` ở `data.ts`): giá theo số lần đã ngộ (10 → 50, 12 lần, tổng 380 — như chuỗi tượng huyền thoại RoK), mầm server chọn ngẫu nhiên một môn đã mở chưa tầng 5 (công pháp luôn mở, tâm pháp mở theo cấp) lên một tầng Sơ Khuy → Hoá Cảnh — công pháp mỗi tầng +8 % sức công pháp, tâm pháp ×(1 + 25 % × (tầng − 1)); nút Ngộ ở Môn hạ (`Disciples.svelte`). Chưa có đặt lại công pháp.
+- **Game mình:** ✅ — tín vật riêng từng trưởng lão (như tượng tướng, từ Chiêu Hiền Đài / Thiên Cơ Luân): đủ 10 thu nhận, dư thì nâng sao (mỗi sao công pháp +5 %) hoặc **ngộ công pháp** (`ngo` ở `sect/tavern.ts`, `SKILL_COST` ở `data.ts`): giá theo số lần đã ngộ (10 → 50, 12 lần, tổng 380 — như chuỗi tượng huyền thoại RoK), mầm server chọn ngẫu nhiên một môn đã mở chưa tầng 5 (công pháp luôn mở, tâm pháp mở theo cấp) lên một tầng Sơ Khuy → Hoá Cảnh — công pháp mỗi tầng +8 % sức công pháp, tâm pháp ×(1 + 25 % × (tầng − 1)); nút Ngộ ở Môn hạ (`Disciples.svelte`). Chưa có đặt lại công pháp. **Hoàn Nguyên Phù** (26/09, Skill Reset của RoK — lệnh `unngo`, `unngoRefund` ở `sect/tavern.ts`): mọi môn về tầng 1, trả đủ tín vật của từng lần ngộ; bán ở Hương Hỏa Các. **Vạn Năng Tín Vật** theo phẩm đổi thành tín vật của người cùng phẩm đã thu nhận (lệnh `uni`).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### 2.8 Kỹ năng: chủ động (nộ) và bị động
@@ -226,7 +226,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* 3 cây nhánh; chạm nút xem hiệu ứng, bấm "+" để cộng điểm; nút đặt lại; lưu và tải bộ. Công cụ ngoài (Talent Tree Planner, MetaRoK với bộ 74 điểm) rất phổ biến.
 - *Giữ chân:* theorycraft không hồi kết; chia sẻ build.
 - **Tu tiên hoá:** **Linh căn ba mạch** theo 3 "đạo" của trưởng lão; Tẩy Tủy Đan để đặt lại; "đồ phổ" là bộ thiên phú đã lưu.
-- **Game mình:** ✅ — **Linh căn ba mạch** (`TALENT_TREES`, `talentError` ở `sect/elders.ts`): 3 cây Công mạch (công, công hệ mình, chiến lợi phẩm, trận dung → Phá Trận) / Thủ mạch (thủ, sinh lực, sinh lực hệ mình → Bất Động Như Sơn) / Đạo mạch (sức công pháp, kinh nghiệm, khai mỏ, độ kiếp → Thiên Nhân Hợp Nhất), mỗi cây 3 tầng × 2 nút (tối đa 3) + nút cuối, tầng mở khi đã cộng 5 / 10 / 16 điểm trong cây; điểm = cấp − 1 + 2 mỗi sao (tối đa 49, mỗi cây cần 19 → phải chọn); nút 'hệ mình' theo hệ của trưởng lão; chỉ đội người đó dẫn; Tẩy Tủy Đan trả lại; save cũ trả điểm. Chưa có lưu nhiều bộ.
+- **Game mình:** ✅ — **Linh căn ba mạch** (`TALENT_TREES`, `talentError` ở `sect/elders.ts`): 3 cây Công mạch (công, công hệ mình, chiến lợi phẩm, trận dung → Phá Trận) / Thủ mạch (thủ, sinh lực, sinh lực hệ mình → Bất Động Như Sơn) / Đạo mạch (sức công pháp, kinh nghiệm, khai mỏ, độ kiếp → Thiên Nhân Hợp Nhất), mỗi cây 3 tầng × 2 nút (tối đa 3) + nút cuối, tầng mở khi đã cộng 5 / 10 / 16 điểm trong cây; điểm = cấp − 1 + 2 mỗi sao (tối đa 49, mỗi cây cần 19 → phải chọn); nút 'hệ mình' theo hệ của trưởng lão; chỉ đội người đó dẫn; Tẩy Tủy Đan trả lại (bộ đang dùng); save cũ trả điểm. **Lưu bộ** (26/09): mỗi trưởng lão 3 bộ thiên phú (`TALENT_PAGES`, lệnh `tpage`, `State.tpage`), mỗi bộ cộng điểm riêng, đổi miễn phí khi không xuất quân — như talent pages của RoK.
 - **Ưu tiên:** P1 · **Công sức:** L (nội dung cây và UI cây).
 
 #### 2.11 Cặp tướng chính và phụ
@@ -302,7 +302,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* Blacksmith có tab chế tạo lọc theo ô, phẩm, bộ; nguyên liệu thiếu hiện đỏ; tướng có hình nhân 8 ô; công cụ ngoài so sánh 2 bộ trang bị.
 - *Giữ chân:* săn nguyên liệu cho việc đánh man tộc một mục tiêu; thưởng bộ gắn với build.
 - **Tu tiên hoá:** **Luyện Khí Phòng** — linh tài (Huyền Thiết, Yêu Bì, Linh Mộc, Yêu Cốt), đồ phổ luyện khí; 8 ô: kiếm hay pháp khí, quan, đạo bào, hộ uyển, hộ tất, vân hài, 2 ngọc bội / giới chỉ; bộ pháp bảo (ví dụ "Chu Tước bộ" cho pháp tu, "Huyền Vũ bộ" cho thể tu).
-- **Game mình:** 🟡 — Luyện Khí Phòng (tầng 8): 9 pháp bảo tất định, mỗi món 1 bonus, cấp tối đa ⌈tầng / 2⌉ và không quá 10; mỗi trưởng lão đeo 1 món; chỉ tốn tài nguyên và thời gian (cố ý không rơi đồ).
+- **Game mình:** 🟡 — Luyện Khí Phòng (tầng 8): 9 pháp bảo tất định, mỗi món 1 bonus, cấp tối đa ⌈tầng / 2⌉ và không quá 10; chỉ tốn tài nguyên và thời gian (cố ý không rơi đồ). **Pháp bảo theo bộ** (26/09): mỗi trưởng lão đeo 3 ô — binh khí, hộ thân, linh bảo (`GEAR[g].slot`, đeo món cùng ô thì thay); 9 món chia 3 bộ theo hệ, mỗi bộ đủ 3 ô (`GEAR[g].set`): bộ Thanh Sương (Kiếm: Thanh Sương Kiếm, Huyền Vũ Giáp, Ngộ Đạo Ngọc Giản), bộ Xích Viêm (Pháp: Xích Viêm Phiến, Hộ Tâm Kính, Tị Lôi Châu), bộ Kim Cang (Thể: Thiên Lôi Chùy, Kim Cang Trạc, Tụ Bảo Bồn); 2 món cùng bộ: công hệ đó +3 %, đủ bộ: công pháp +10 % (`GEAR_SETS`, cộng trong `lead`). Trang trưởng lão hiện 3 ô + dòng thưởng bộ; kệ Luyện Khí Phòng xếp hàng = bộ, cột = ô. Khác RoK: 3 ô thay 8, không nguyên liệu / bản vẽ / độ hiếm.
 - **Ưu tiên:** P1 · **Công sức:** L.
 
 #### 2.17 Tinh luyện, Thức tỉnh, Iconic
@@ -628,7 +628,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* cây nút nối nhau theo hàng; nút khoá hiện điều kiện (cấp Academy, công nghệ trước); đang nghiên cứu hiện thanh tiến độ; liên minh giúp.
 - *Giữ chân:* mục tiêu dài hạn; mở bậc quân mới là mốc lớn.
 - **Tu tiên hoá:** nhánh **Binh Thư** trong Tàng Kinh Các; mở bậc đệ tử bằng "truyền thừa" (một công pháp mở bậc).
-- **Game mình:** 🟡 — Tàng Kinh Các 28 công pháp, 7 hàng (mở ở tầng 1 / 3 / 6 / 9 / 12 / 16 / 21), mỗi môn 3–5 cấp. Nhóm quân sự: Kiếm Tâm, Pháp Tâm, Thiết Quyền Công (+5% công theo hệ mỗi cấp); Kim Cương Quyết, Kiếm Thể Quyết, Pháp Thân Quyết (+6% máu theo hệ); Trận Cơ Đại Pháp, Hộ Sơn Quyết (+5% thủ); Vạn Kiếm Trận, Thiên Ma Chiến Pháp (+4% công); Trường Sinh Quyết (+4% máu); Thần Hành Thuật (+8% tốc hành quân); Luyện Binh Pháp (+6% tốc tuyển); Hồi Xuân Quyết (+8% tốc chữa); Hộ Mạch Thuật (+15% chỗ Đan phòng, 3 cấp); Độ Kiếp Tâm Pháp. Thiếu: mở bậc quân bằng nghiên cứu (hiện mở theo tầng Diễn võ trường), điều kiện tiên quyết dạng cây, 10 cấp mỗi môn, trinh sát.
+- **Game mình:** 🟡 — Tàng Kinh Các 32 công pháp, 8 hàng (mở ở tầng 1 / 3 / 6 / 9 / 12 / 16 / 21 / 25), mỗi môn 3–5 cấp; hàng cuối (26/09) là nhánh quân sự cuối game: Thống Soái Chân Kinh (trận dung +3 %/cấp), Tầm Long Quyết (khai mỏ +6 %), Vạn Pháp Quy Tông (sức công pháp +4 %), Bất Diệt Kim Thân (sinh lực +4 %). Nhóm quân sự: Kiếm Tâm, Pháp Tâm, Thiết Quyền Công (+5% công theo hệ mỗi cấp); Kim Cương Quyết, Kiếm Thể Quyết, Pháp Thân Quyết (+6% máu theo hệ); Trận Cơ Đại Pháp, Hộ Sơn Quyết (+5% thủ); Vạn Kiếm Trận, Thiên Ma Chiến Pháp (+4% công); Trường Sinh Quyết (+4% máu); Thần Hành Thuật (+8% tốc hành quân); Luyện Binh Pháp (+6% tốc tuyển); Hồi Xuân Quyết (+8% tốc chữa); Hộ Mạch Thuật (+15% chỗ Đan phòng, 3 cấp); Độ Kiếp Tâm Pháp. Thiếu: mở bậc quân bằng nghiên cứu (hiện mở theo tầng Diễn võ trường), điều kiện tiên quyết dạng cây, 10 cấp mỗi môn, trinh sát.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### 2.43 Academy — cây Kinh tế (liệt kê ngắn)
@@ -683,16 +683,16 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.4 | Tavern (rương tướng, bảo hiểm) | ✅ Chiêu Hiền Đài (thiếp miễn phí, bảo hiểm thiếp vàng; không bán) | P1 (free) / P2 (bán) | M |
 | 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan, Tâm Đắc Kinh Thư | P2 | S |
 | 2.6 | Sao 1–6, tượng sao, may mắn | ✅ sao 1–6 bằng tín vật (tất định, không may rủi) | P1 | M |
-| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | ✅/🟡 tín vật: thu nhận, nâng sao, nâng tầng từng công pháp (tầng 1–5, tinh thông khi đủ); chưa có reset kỹ năng | P1 | M |
+| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | ✅ tín vật: thu nhận, nâng sao, nâng tầng từng công pháp (tầng 1–5, tinh thông khi đủ); Hoàn Nguyên Phù đặt lại công pháp, trả đủ tín vật | P1 | M |
 | 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | ✅ chân nguyên (tụ theo lượt + khi mất máu) | P0 | M |
 | 2.9 | Expertise | ✅ công pháp đủ cấp mở Tinh thông (`expertOf`) | P2 | M |
-| 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | ✅/🟡 3 cây riêng từng trưởng lão (Công / Thủ / Đạo mạch, mở tầng theo điểm đã cộng), điểm = cấp − 1 + 2 mỗi sao, Tẩy Tủy Đan; chưa lưu bộ | P1 | L |
+| 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | ✅ 3 cây riêng từng trưởng lão (Công / Thủ / Đạo mạch, mở tầng theo điểm đã cộng), điểm = cấp − 1 + 2 mỗi sao, Tẩy Tủy Đan; lưu 3 bộ, đổi miễn phí | P1 | L |
 | 2.11 | Cặp tướng chính / phụ | ✅ phó trưởng lão (tâm pháp + công pháp nửa sức) | P0 | M |
 | 2.12 | Truyện tướng, Trust, giao diện danh sách | ✅/🟡 Liệt truyện: mỗi trưởng lão ba chương mở theo cấp 10 / 20 / 30 (hai thứ tiếng), tên, danh hiệu, lời dẫn, chân dung; chưa có hảo cảm / đổi y phục | P2 | S–M |
 | 2.13 | Museum (buff tướng theo mùa) | ✅ Anh Linh Điện: di vật 3 bậc cho tối đa 3 trưởng lão mỗi mùa (Phi Thăng Tệ) | P2 | M |
 | 2.14 | Đổi tướng (Commander Swap) | ✅ Truyền công trong Truyền Công Đại Hội | P2 | S |
 | 2.15 | Tướng Prime, Artifact | ❌ | P2 | M |
-| 2.16 | Lò rèn: 8 ô, nguyên liệu, bản vẽ, bộ | 🟡 9 pháp bảo tất định, 1 món mỗi trưởng lão | P1 | L |
+| 2.16 | Lò rèn: 8 ô, nguyên liệu, bản vẽ, bộ | 🟡 9 pháp bảo tất định, 3 ô mỗi trưởng lão, 3 bộ theo hệ có thưởng bộ; không nguyên liệu / bản vẽ (cố ý) | P1 | L |
 | 2.17 | Tinh luyện, thức tỉnh, Iconic I–V | ❌ | P2 | M |
 | 2.18 | Đội hình, Armament, Inscription | ❌ (PLAN §4 để sau) | P2 | L |
 | 2.19 | Lưu cấu hình đội | ✅ Trận đồ (3 ô lưu trưởng lão + đệ tử) | P2 | S |
@@ -721,7 +721,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.39 | Danh dự (KvK) | ✅ Công Huân (điểm cá nhân trong mùa) | P2 | S |
 | 2.40 | Zeroing | ❌ cố ý, khuyên giữ | P2 | M |
 | 2.41 | Man tộc, pháo đài, AP | ✅ yêu thú giới, yêu trại, hành lực | P2 | S |
-| 2.42 | Academy — cây Quân sự | 🟡 Tàng Kinh Các 28 môn | P1 | M |
+| 2.42 | Academy — cây Quân sự | 🟡 Tàng Kinh Các 32 môn, hàng cuối (tầng 25) quân sự cuối game | P1 | M |
 | 2.43 | Academy — cây Kinh tế | 🟡 | P2 | M |
 | 2.44 | Crystal Tech, công nghệ liên minh | 🟡 Hộ Minh Đại Trận (công nghệ minh); chưa có Crystal Tech | P2 | M |
 | 2.45 | Trải nghiệm chiến đấu (thấy trận, điều khiển, bảng điểm) | 🟡 có trình diễn, thiếu điều khiển | P0 | theo mục |

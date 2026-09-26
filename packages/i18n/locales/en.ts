@@ -59,6 +59,8 @@ import {
   EVENT_TOP,
   NEWBIE_SHIELD,
   PROTECT,
+  PROTECT_STEP,
+  GEAR_SETS,
   PVP_HALL,
   RAID_SHARE,
   REVENGE_TIME,
@@ -180,7 +182,10 @@ export const en: Text = {
     tuLinhTran: { name: 'Spirit Array', lore: 'An array that gathers the qi of heaven and earth into spirit stones.' },
     linhDien: { name: 'Spirit Field', lore: 'Terraces of spirit herbs, watered by mountain springs.' },
     khoangMach: { name: 'Ore Vein', lore: 'A vein deep in the cliff, yielding spirit ore.' },
-    tangBaoCac: { name: 'Treasure Pavilion', lore: 'The sect treasury. The higher it rises, the more it holds.' },
+    tangBaoCac: {
+      name: 'Treasure Pavilion',
+      lore: 'The sect treasury. The higher it rises, the more it holds — and the more it keeps safe from raiders.',
+    },
     dienVoTruong: {
       name: 'Training Grounds',
       lore: 'Where disciples drill at dawn. Higher levels recruit more per batch.',
@@ -189,7 +194,7 @@ export const en: Text = {
     tangKinhCac: { name: 'Scripture Pavilion', lore: 'Keeper of the techniques of every sect master before you.' },
     hoSonDaiTran: {
       name: 'Mountain Guard Array',
-      lore: 'A great array ringing the mountain. Raiders must break it first — the higher it rises, the firmer your home guard.',
+      lore: "A great array ringing the mountain. Raiders must break it first — the higher it rises, the firmer your home guard, the more Heaven's Eye sees of incoming armies, and the harder its sword volley strikes before battle.",
     },
     luyenKhiPhong: {
       name: 'Artifact Forge',
@@ -200,6 +205,15 @@ export const en: Text = {
 
   quest: {
     title: 'Quest',
+    chapters: [
+      'Rebuilding the Sect',
+      'Demons and Beasts',
+      'Foundation Seekers',
+      'The Golden Core',
+      'Nascent Soul Rising',
+      'Deity Ascension',
+    ],
+    chapter: (k: number, name: string) => `Chapter ${k + 1} · ${name}`,
     text(q: Quest) {
       const id = Number(q.id)
       switch (q.k) {
@@ -457,6 +471,10 @@ export const en: Text = {
     thienMa: 'Heavenly Demon War Art',
     hoSon: 'Mountain Guard',
     bachChien: 'Hundred Battles Canon',
+    thongSoai: 'Marshal Scripture',
+    tamLong: 'Dragon-Vein Seeking',
+    vanPhap: 'All Arts Return',
+    batDiet: 'Undying Golden Body',
   } satisfies Record<TechId, string>,
   pills: {
     tuKhi: { name: 'Qi Pill', desc: 'Cuts 15 minutes off one timer: building, recruiting, healing or research.' },
@@ -686,7 +704,10 @@ export const en: Text = {
     gift: 'Gift by correct answers',
     q: [
       ['Sword cultivators counter which type?', ['Spell cultivators', 'Body cultivators', 'Sword cultivators', 'None']],
-      ['When raided, how much of your storage capacity is always safe?', ['25%', '30%', '45%', '60%']],
+      [
+        'When raided, how much of its capacity does a level-10 Treasure Pavilion keep safe?',
+        ['25%', '35%', '45%', '60%'],
+      ],
       ['After losing a defense, how long is your peace shield?', ['4 hours', '8 hours', '12 hours', '24 hours']],
       ['At the Recruitment Hall, a free silver invitation comes every…', ['1 hour', '3 hours', '12 hours', '6 hours']],
       ['Five elements: Metal overcomes…', ['Wood', 'Water', 'Fire', 'Earth']],
@@ -1253,6 +1274,13 @@ export const en: Text = {
       go: 'Collect',
       going: 'Heading to collect a rune',
     },
+    goods: {
+      title: (tier: string) => `Caravan goods · ${tier}`,
+      tiers: ['Common goods', 'Fine goods', 'Rare goods'],
+      hint: 'Stranded Caravans: mortal caravan goods scatter around villages every 3 hours during the event — whoever marches there first picks them up.',
+      go: 'Collect goods',
+      going: 'Heading to collect goods',
+    },
     dig: {
       title: 'Treasure',
       hint: 'The spot marked on your treasure map: send a team to dig — on arrival the treasure chest comes by mail and the team heads home.',
@@ -1470,10 +1498,20 @@ export const en: Text = {
     guardAway: 'Away on a march — not counted now',
     wall: (n: number) => `Mountain Guard Array lv ${n}`,
     wallBonus: (v: string) => `Home defenders' defense and HP +${v}`,
+    volley: 'Array volley before battle',
+    volleyPct: (v: number) => `${(v * 100).toLocaleString('en', { maximumFractionDigits: 1 })}%`,
+    wallCut: 'Cut down by the Mountain Guard Array',
+    eye: "Heaven's Eye",
+    eyeSees: ['elder', 'troops', 'main type'],
+    eyeNone: 'only that an army is coming',
+    eyeNext: (lv: number, what: string) => `lv ${lv}: ${what}`,
+    eyeLine: (parts: string[]) => `Heaven's Eye: ${parts.join(' · ')}`,
+    eyeTroops: (n: string) => `${n} troops`,
+    eyeMain: (type: string) => `mostly ${type}`,
     attack: 'Send a raid',
     pts: (n: number) => `${n} raid points`,
     record: (w: number, l: number) => `${w} won · ${l} lost`,
-    hint: `You can only raid sects with at least half your power (no limit for revenge, within ${REVENGE_TIME / 3_600_000} hours). A raid takes ${pct(RAID_SHARE)} of what exceeds the protected store (${pct(PROTECT)} of capacity), up to what your army can carry. Healing is costly, so raiding a well-guarded sect often loses.`,
+    hint: `You can only raid sects with at least half your power (no limit for revenge, within ${REVENGE_TIME / 3_600_000} hours). A raid takes ${pct(RAID_SHARE)} of what exceeds the protected store (${pct(PROTECT)} of capacity, plus ${pct(PROTECT_STEP)} per Treasure Pavilion level), up to what your army can carry. Healing is costly, so raiding a well-guarded sect often loses.`,
     raided: (name: string) => `${name} just raided your sect!`,
     incoming: (name: string) => `${name} is marching on your sect!`,
     incomingRally: (name: string, n: number) => `${name} leads a ${n}-army rally on your sect!`,
@@ -1509,7 +1547,7 @@ export const en: Text = {
     offline: 'In seclusion',
     crown: (n: number) => `Honor champion · season ${n}`,
     honor: (k: number, n: number) =>
-      `${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King', 'League champion'][k] ?? '?'} · season ${n}`,
+      `${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King', 'League champion', 'Honor runner-up', 'Honor third place'][k] ?? '?'} · season ${n}`,
     ascended: (n: number) => `Ascended ${n} seasons`,
     pvp: 'Raids won / lost',
     wl: (w: number, l: number) => `${w} / ${l}`,
@@ -1646,6 +1684,9 @@ export const en: Text = {
     bad: 'Curses',
     strip: 'Revoke',
     banish: 'Banish',
+    decree: (by: string, text: string) => `Realm Lord ${by} decrees: “${text}”`,
+    decreeHint: 'Issue a decree to the whole realm…',
+    decreeGo: 'Decree',
     banishAsk: (name: string) => `Tap again to banish ${name} to the outer lands`,
     banished: (name: string) => `${name} was banished to the outer lands.`,
     banishHint:
@@ -1799,6 +1840,10 @@ export const en: Text = {
     reset: (t: string) => `Renews in ${t}`,
   },
   guild: {
+    badge: 'Alliance flag',
+    badgeBeast: 'Beast on the flag',
+    badgeTone: 'Disc colour',
+    badgeSave: 'Raise the new flag',
     credit: 'Merit',
     creditHint:
       'Earned by donating to the Great Formation and helping allies; spend it at the Merit Pavilion. Kept if you change alliance.',
@@ -1902,6 +1947,9 @@ export const en: Text = {
     groupHint: 'Custom group chats (up to 20 people): add people from their profile — Profile → Add to group.',
     groupLeave: 'Leave group',
     friends: 'Friends:',
+    find: 'Find a player by name',
+    findGo: 'Find',
+    findNone: 'No one by that name.',
     befriend: 'Add friend',
     unfriend: 'Remove friend',
     groupAdd: (name: string) => `Add to ${name}`,
@@ -1974,6 +2022,10 @@ export const en: Text = {
           ],
           ['An old friend returns', `${name} came back thanks to your call. Your thank-you gift is below.`],
         ][k] as [string, string],
+      goods: (x: number, y: number, tier: number): [string, string] => [
+        `Caravan goods (${x},${y})`,
+        `Your team got there first and picked up ${['common', 'fine', 'rare'][tier] ?? ''} goods from a stranded caravan at (${x},${y}). The contents are attached.`,
+      ],
       dig: (x: number, y: number): [string, string] => [
         `Treasure (${x},${y})`,
         `Your team reached the spot marked on the treasure map at (${x},${y}) and dug up a treasure chest. The contents are attached.`,
@@ -2073,6 +2125,10 @@ export const en: Text = {
       party: (lv: number, waves: number, n: number): [string, string] => [
         `Primal Tribes · difficulty ${lv}`,
         `Your party of ${n} ${waves >= 5 ? 'cleared all five waves of beasts' : waves ? `cleared ${waves}/5 waves of beasts` : 'did not clear a wave'}. A reward for every member is below.`,
+      ],
+      convoy: (lv: number, hp: number, n: number): [string, string] => [
+        `Spirit Caravan Escort · difficulty ${lv}`,
+        `The caravan, guarded by ${n}, ${hp >= 100 ? 'arrived untouched' : hp > 0 ? `arrived with ${hp}% of its cargo` : 'was stripped bare by raiders'}. Your reward is below.`,
       ],
       hero: (kind: number, votes: number): [string, string] => [
         `Annals of Fame · ${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King'][kind] ?? '?'}`,
@@ -2365,7 +2421,7 @@ export const en: Text = {
   },
   forge: {
     tab: 'Forging',
-    hint: 'Each elder wears one artifact; its bonus applies only to the army that elder leads. Artifacts level up by forging — no luck involved.',
+    hint: `Each elder wears three slots — weapon, armor, treasure — and the bonuses apply only to the army that elder leads. 2 pieces of a set: +${pct(GEAR_SETS.kiem.two.v)} attack for that set's type; the full set: +${pct(GEAR_SETS.kiem.three.v)} technique power. Artifacts level up by forging — no luck involved.`,
     go: 'Forge',
     doing: (name: string, n: number) => `Forging ${name} level ${n}`,
     cap: (n: number) => `Artifact Forge lv ${n}`,
@@ -2374,8 +2430,14 @@ export const en: Text = {
     free: 'Not worn',
     equip: 'Give to an elder',
     unequip: 'Take off',
-    slot: 'Artifact',
-    none: 'No artifact',
+    slot: 'Artifacts',
+    slots: ['Weapon', 'Armor', 'Treasure'],
+    sets: { kiem: 'Frostgleam set', phap: 'Crimson Flame set', the: 'Vajra set' } satisfies Record<UnitType, string>,
+    setLine: (name: string, n: number, of: number) => `${name} ${n}/${of}`,
+    swap: 'Giving it to an elder who already wears something in that slot takes the old piece off.',
+    wear: 'Wear',
+    change: 'Swap',
+    none: 'Empty slot',
     pick: 'Which artifact?',
     empty: 'No artifacts yet. Forge them at the Artifact Forge.',
   },
@@ -2394,6 +2456,10 @@ export const en: Text = {
     spent: (n: number) => `${n} pts`,
     add: 'Add',
     wash: (n: number) => `Marrow Cleansing Pill (${n})`,
+    auto: (n: number, tree: string) => `Spend all ${n} points in ${tree}`,
+    page: 'Talent page',
+    pageName: (n: number) => `Page ${n}`,
+    pageHint: 'Each page has its own points; switching is free (not while the elder is on a march).',
   },
 
   library: {
@@ -2470,6 +2536,7 @@ export const en: Text = {
     ngoHint:
       "Each comprehension costs this elder's own tokens; one unlocked technique or passive rises a tier at random. Technique: +8% power per tier; passives: +25% effect per tier.",
     ngoMax: 'Every unlocked skill is at the top tier — level up to unlock the remaining passive.',
+    unngo: (n: number, refund: number) => `Restoration Talisman (${n}) · refund ${refund} tokens`,
     expert: 'Innate Divine Art',
     expertHint: 'Every skill Transcendent — armies this elder leads:',
     feed: (n: number) => `Give an Origin Pill (${n})`,
@@ -2590,7 +2657,7 @@ export const en: Text = {
       ],
       [
         'Artifacts and talents',
-        'The Artifact Forge makes artifacts; each elder wears one. Every elder level grants a talent point for three trees — Offense, Defense and Dao — whose upper tiers open as you invest; a Marrow Cleansing Pill lets you spend them again.',
+        'The Artifact Forge makes artifacts; each elder wears three slots (weapon, armor, treasure), with set bonuses for matching pieces. Every elder level grants a talent point for three trees — Offense, Defense and Dao — whose upper tiers open as you invest; a Marrow Cleansing Pill lets you spend them again.',
       ],
       [
         'Full or lopsided storage',
@@ -2606,7 +2673,7 @@ export const en: Text = {
       ],
       [
         'Raids',
-        `From Main Hall level ${PVP_HALL}: find rivals from the map bar, scout them, then send a raid for their resources. Storage always keeps ${pct(PROTECT)} of its capacity safe; losing a defense grants a ${SHIELD_TIME / 3_600_000}-hour shield; raiding drops your own. The Mountain Guard Array and a guarding elder make your home guard sturdier. If you are raided you can take revenge within ${REVENGE_TIME / 3_600_000} hours. Tap your portrait for the rankings.`,
+        `From Main Hall level ${PVP_HALL}: find rivals from the map bar, scout them, then send a raid for their resources. The Treasure Pavilion always keeps ${pct(PROTECT)} of its capacity safe, plus ${pct(PROTECT_STEP)} per level; losing a defense grants a ${SHIELD_TIME / 3_600_000}-hour shield; raiding drops your own. The Mountain Guard Array and a guarding elder make your home guard sturdier. If you are raided you can take revenge within ${REVENGE_TIME / 3_600_000} hours. Tap your portrait for the rankings.`,
       ],
       [
         'Progress',
@@ -2753,9 +2820,12 @@ export const en: Text = {
     tokens: (e: string, n: number) => `${n} ${e} tokens`,
     token: 'Tokens',
     recruit: 'Recruit',
-    star: (n: number) => `Promote (${n})`,
+    star: (n: number) => `Promote · ${n} tokens`,
     stars: (n: number) => `${n}★`,
     starHint: 'Each star above one: +3% attack, +3% health, +5% technique power for armies this elder leads.',
+    uni: (name: string, n: number) => `${name}: ${n} owned`,
+    uniOne: 'Convert 1',
+    uniAll: (n: number) => `Convert all ${n}`,
     waiting: 'Opening…',
   },
   vip: {
@@ -2932,6 +3002,26 @@ export const en: Text = {
     by: (name: string) => `Issued by ${name}`,
     none: 'No directive this Tide yet — waiting for an officer or the leader.',
   },
+  opening: {
+    title: 'The Gate in Peril',
+    text: 'The sect has barely risen from its old ruins when the Blood Slaughter Sect arrives to finish it off. Mu Qingfeng — the one who stayed when the sect fell — leads the few remaining disciples out to meet them at the gate.',
+    fight: 'Meet them',
+    skip: 'Skip',
+  },
+  convoy: {
+    title: 'Spirit Caravan Escort',
+    hint: 'An officer spends alliance funds to send a caravan; for 20 minutes members sign up to guard it with their first Arena team (no troops lost). Then the whole escort fights three waves of raiders — the more cargo survives, the bigger every guard’s reward. One escort per member per day.',
+    best: (score: number, top: number) => `Alliance best: ${score} points · difficulty ${top} unlocked`,
+    locked: (hall: number) => `Escorts open at Main Hall ${hall}`,
+    lv: (lv: number, might: string) => `Difficulty ${lv} · raiders ${might} power`,
+    left: (t: string, n: number, of: number) => `Departs in ${t} · ${n}/${of} guards`,
+    star: (n: number) => `${n}★`,
+    cost: (cost: string, have: string) => `${cost} / ${have} alliance funds`,
+    go: 'Send the caravan',
+    guard: 'Guard the caravan',
+    done: 'Already escorted today',
+    wait: 'Waiting for an officer to send the caravan.',
+  },
   first: {
     title: { world: 'World Map', ally: 'Alliance', pvp: 'Plunder', trib: 'Tribulation' },
     cards: {
@@ -2974,7 +3064,8 @@ export const en: Text = {
     none: "No rule this season yet — in the season's last three days the realm votes on next season's rule.",
     hint: "In the season's last three days everyone in the realm votes on next season's rule; the winner becomes a realm-wide buff all season.",
     open: "Voting on next season's rule — tap another rule to change your vote; it locks when the season ends.",
-    names: ['Bountiful Harvest', 'Warpath', 'Prosperity'],
+    names: ['Bountiful Harvest', 'Warpath', 'Prosperity', 'Strife of the Eight'],
+    ffa: 'Coalitions are void all season',
     votes: (n: number) => `${n} votes`,
   },
   bet: {
@@ -3043,7 +3134,7 @@ export const en: Text = {
   },
   stall: {
     pick: 'Pick the job to discount (changeable until your first wish)',
-    jobs: ['Building / upgrades', 'Studying techniques', 'Recruiting disciples'],
+    jobs: ['Building', 'Studying', 'Recruiting'],
     wish: 'Wish for a discount (free)',
     rewish: (n: number) => `Wish again · ${n} coins`,
     cut: (p: number) => `Current cut ${p}%`,
@@ -3147,6 +3238,17 @@ export const en: Text = {
     got: 'You wished for',
     bloom: 'All 4 specials — the rest is yours and the tree blooms again!',
     wishing: 'Wishing…',
+  },
+  escort: {
+    pick: 'Pick a difficulty (clear a level to unlock the next)',
+    stars: (n: number) => `${n}★`,
+    waves: (list: string) => `Three ambushes, main type: ${list} — raiders scale with the leading elder's full army`,
+    go: (ap: number) => `Escort · ${ap} AP`,
+    best: (score: number) => `Best run: ${score} points`,
+    last: (ok: boolean, hp: number) =>
+      ok ? `Last run: reached the village with ${hp}% cargo` : 'Last run: the cart was plundered',
+    name: (n: number) => `Escort ${n}★`,
+    ap: (n: number) => `Action points: ${n}`,
   },
   thief: {
     left: (n: number, of: number) => `${n}/${of} attacks left today`,
@@ -3265,6 +3367,8 @@ export const en: Text = {
       chain: 'beast slain on a hunting chain',
       rescue: 'village rescued',
       runes: 'rune collected',
+      goods: 'caravan goods collected',
+      bought: 'Wandering Merchant purchases',
       guards: 'holy-site guardian defeated',
       trial: 'Trial point',
       kiem2: 'Sword cultivator (tier 2+) trained',
@@ -3273,6 +3377,7 @@ export const en: Text = {
       train2: 'disciple (tier 2+) trained',
       drain: 'mine depleted',
       forts: 'demon king kill joined',
+      speedTrain: 'min of training speedups',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Reach ${n} power`,
@@ -3303,6 +3408,8 @@ export const en: Text = {
       chain: (n: string) => `Chain-hunt ${n} world beasts`,
       rescue: (n: string) => `Rescue ${n} villages`,
       runes: (n: string) => `Collect ${n} runes around holy sites`,
+      goods: (n: string) => `Collect ${n} caravan goods`,
+      bought: (n: string) => `Buy ${n} times from the Wandering Merchant`,
       guards: (n: string) => `Defeat holy-site guardians ${n} times`,
       trial: (n: string) => `Earn ${n} Demon King Trial points`,
       kiem2: (n: string) => `Train (or upgrade) ${n} tier 2+ Sword cultivators`,
@@ -3311,6 +3418,7 @@ export const en: Text = {
       train2: (n: string) => `Train (or upgrade) ${n} tier 2+ disciples`,
       drain: (n: string) => `Deplete ${n} mines on the realm map`,
       forts: (n: string) => `Help defeat ${n} realm demon kings (attack or rally)`,
+      speedTrain: (n: string) => `Use ${n} minutes of speedups on recruiting`,
     } satisfies Record<Metric, (n: string) => string>,
     gain: {
       power: (n: string) => `Gain ${n} power`,
@@ -3374,6 +3482,18 @@ export const en: Text = {
       tangKinh: {
         name: 'Boundless Insight',
         desc: 'The Scripture Pavilion opens wide for two days: mastering techniques scores big.',
+      },
+      apTieu: {
+        name: 'Protect the Supplies',
+        desc: 'Three days of escorts: each run costs 10 action points; pick a difficulty of 1–5 stars (clear one to unlock the next) and a phantom squad escorts the cart through three ambushes — no real troops are lost. Raiders scale with the full army of the leading elder, so bring a full, balanced army for high stars. Losing a wave lets the surviving raiders take up to half the cargo; any cargo left means you reach the village. Score = stars × 100 + % cargo left, best run counts; milestones and a ranking.',
+      },
+      thuongDoi: {
+        name: 'Stranded Caravans',
+        desc: 'Three days of stranded mortal caravans: every 3 hours goods scatter around villages on the realm map — march there first to pick them up (common / fine / rare). Collect 3 / 8 / 15 / 25 to open chests.',
+      },
+      luyenBinhPhu: {
+        name: 'Training Day',
+        desc: 'Four days of training speedups: every minute of Training Talismans, Time Talismans or pills used on recruiting is a point; milestones at 100 / 700 / 2,000 / 5,400 minutes and a realm-wide ranking.',
       },
       thuLuc: {
         name: 'Surge of Power',
@@ -3547,6 +3667,10 @@ export const en: Text = {
         name: 'Ghost Festival',
         desc: 'Full moon of the seventh month, the ghost gate opens: slay beasts (chains score more), win battles and earn kill points — open the ghost-warding chests at each milestone.',
       },
+      vayCong: {
+        name: 'Demon King Siege',
+        desc: 'Three days of siege: every time you help your alliance bring down a demon king on the world map you earn 10 Treasure Vouchers — trade them for rare caskets (Legendary Universal Tokens, Gold Invitations, speedups…) in the event shop.',
+      },
       thonTrang: {
         name: 'Villages in Peril',
         desc: 'Rogue cultivators are burning mortal villages. Find a burning village on the world map, take a rescue task, finish it in time and report back — each task pays Warden Tokens and a Stamina Pill.',
@@ -3569,6 +3693,7 @@ export const en: Text = {
       thucSon: 'Shushan Tokens',
       ngaMi: 'Emei Tokens',
       thonTrang: 'Warden Tokens',
+      vayCong: 'Treasure Vouchers',
       vanHoa: 'Silver Dice',
       linhNoan: 'Spirit Hammer',
       khaoCo: 'Spirit Pick',
@@ -3690,6 +3815,14 @@ export const en: Text = {
       hongBao: {
         name: 'Red Envelope',
         desc: 'Send it in World or Alliance chat: the first 5 players to open it each get a random share of spirit stone — it costs the sender nothing else.',
+      },
+      hoanNguyen: {
+        name: 'Restoration Talisman',
+        desc: 'Resets every comprehended skill of one elder to tier 1 and refunds all the tokens spent — comprehend again in the order you want. Use it on the elder page (Disciples).',
+      },
+      vanNang: {
+        name: 'Universal Token',
+        desc: 'Counts as a token of any recruited elder of the same rarity: convert it on the elder page (Disciples) to promote stars or upgrade techniques — it cannot recruit new elders.',
       },
       diSon: {
         name: 'Mountain-Shift Talisman',

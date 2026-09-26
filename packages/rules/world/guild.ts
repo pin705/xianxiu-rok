@@ -5,8 +5,11 @@ import { MAP_W } from '../atlas.ts'
 import { dayOf } from '../core/calendar.ts'
 import { cleanText, int, isId, oneOf } from '../core/parse.ts'
 import type { State } from '../core/types.ts'
+import { power } from '../core/stats.ts'
 import {
   OFFICE_IDS,
+  ALLY_BADGE,
+  RULE_FFA,
   ALLY_IDLE,
   ALLY_SKILL_COOL,
   ALLY_SKILL_IDS,
@@ -35,8 +38,10 @@ import {
   allyOf,
   contribOf,
   put,
+  seatsOf,
   techLevel,
   type Alliance,
+  type AllyRow,
   type Players,
   type World,
   type WorldActions,
@@ -60,6 +65,7 @@ export type GuildAction =
   | { type: 'allyMark'; x: number; y: number; text: string }
   | { type: 'allyUnmark'; x: number; y: number }
   | { type: 'allyMail'; text: string } // thư tới hộp thư mọi người trong minh
+  | { type: 'allyBadge'; e: number; c: number } // cờ minh: linh thú e, màu c
   | { type: 'allyClaim' } // đường chủ nhận minh chủ khi minh chủ vắng ALLY_IDLE ngày
   | { type: 'allyOffice'; pid: number; office: OfficeId } // minh chủ phong / bãi chức vị cho người R4
   | { type: 'napAsk'; id: number }
@@ -186,6 +192,17 @@ export const guildActions: WorldActions<GuildAction> = {
     },
   },
   // Thư minh (R4 / minh chủ): vào hộp thư mọi người trong minh, kể cả người đang offline; mỗi minh một thư mỗi ALLY_MAIL_COOL
+  // Cờ minh (flag của RoK): trưởng lão / minh chủ chọn linh thú và màu cho huy hiệu minh (bảng minh, sảnh minh)
+  allyBadge: {
+    pick: a =>
+      int(0, ALLY_BADGE[0] - 1)(a.e) && int(0, ALLY_BADGE[1] - 1)(a.c)
+        ? { type: 'allyBadge', e: a.e as number, c: a.c as number }
+        : null,
+    run: ({ w, pid }, a) => {
+      const al = officer(w, pid)
+      return al ? { ok: true, world: put(w, { ...al, badge: [a.e, a.c] }), changed: new Map() } : no('locked')
+    },
+  },
   allyMail: {
     pick: a => {
       const text = cleanText(a.text)
@@ -242,6 +259,7 @@ export const guildActions: WorldActions<GuildAction> = {
         to = w.allies[a.id]
       if (!al) return no('locked')
       if (!to || to.id === al.id) return no('gone')
+      if (w.rule === RULE_FFA) return no('locked') // mùa Bát Phương Hỗn Chiến: không lập minh ước
       if (al.naps?.includes(to.id) || to.napIn?.includes(al.id)) return no('claimed')
       return { ok: true, changed: new Map(), world: put(w, { ...to, napIn: [...(to.napIn ?? []), al.id] }) }
     },
@@ -280,3 +298,23 @@ export const guildActions: WorldActions<GuildAction> = {
     },
   },
 }
+
+// Danh sách tiên minh trong giới (bảng Tiên minh): số người, thế lực cộng, cờ minh, đơn / lời mời của người hỏi
+export const allyRows = (w: World, ps: Players, me = 0): AllyRow[] =>
+  Object.values(w.allies)
+    .map(al => ({
+      id: al.id,
+      name: al.name,
+      tag: al.tag,
+      ...(al.badge && { badge: al.badge }),
+      n: Object.keys(al.members).length,
+      max: seatsOf(al),
+      closed: !!al.closed,
+      asked: !!al.apps?.includes(me),
+      invited: !!al.invites?.includes(me),
+      power: Object.keys(al.members).reduce((sum, p) => {
+        const s = ps.get(Number(p))
+        return sum + (s ? Math.round(power(s)) : 0)
+      }, 0),
+    }))
+    .sort((a, b) => b.power - a.power || a.id - b.id)

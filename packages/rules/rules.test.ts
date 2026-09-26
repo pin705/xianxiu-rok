@@ -67,6 +67,16 @@ import {
   parseAction,
   rate,
   gearTime,
+  gearsOf,
+  talentSpent,
+  questChapter,
+  QUEST_CHAPTERS,
+  metric,
+  TALENT_PAGES,
+  gearSets,
+  GEAR,
+  GEAR_SETS,
+  type GearId,
   talentPoints,
   ELDER_IDS,
   GEAR_IDS,
@@ -229,6 +239,7 @@ test('Thương nhân vân du: 6 món khác nhau tất định theo lượt 8 gi�
   assert.equal(t.items[a[0].item], (s.items[a[0].item] ?? 0) + a[0].n)
   assert.equal(t.res[a[0].res], s.res[a[0].res] - a[0].cost)
   assert.equal(err(t, { type: 'buy', i: 0 }), 'claimed', 'mỗi món một lần')
+  assert.equal(metric(t, 'bought') - metric(s, 'bought'), 1, 'việc Nhật Khóa "mua ở Thương nhân vân du"')
   const next = advance(t, s.time + MERCHANT_EVERY)
   assert.deepEqual(merchantBought(next, next.time), [], 'lượt mới: mua lại được')
   assert.equal(err(rich(8, 3), { type: 'buy', i: 0 }), 'locked')
@@ -1075,6 +1086,29 @@ test('Luyện Khí Phòng: luyện pháp bảo theo tầng, đeo cho một trư�
   assert.equal(migrate(JSON.parse(JSON.stringify(s)))!.gear.thanhSuong!.on, 'thachKien')
 })
 
+test('pháp bảo theo bộ: ba ô mỗi trưởng lão (đeo món cùng ô thì thay), đủ 2 / 3 món cùng bộ có thưởng bộ', () => {
+  const lv1 = { lv: 1 }
+  let s: State = {
+    ...rich(8, 3),
+    elders: { thanhPhong: 0, thachKien: 0 },
+    gear: { thanhSuong: lv1, huyenVu: lv1, ngocGian: lv1, thienLoi: lv1 },
+  }
+  const wear = (st: State, gear: GearId) => run(st, { type: 'equip', gear, elder: 'thanhPhong' })
+  s = wear(wear(s, 'thanhSuong'), 'huyenVu')
+  assert.deepEqual(gearsOf(s, 'thanhPhong'), ['thanhSuong', 'huyenVu', undefined], 'binh khí + hộ thân cùng đeo')
+  const one = wear(s, 'thienLoi')
+  assert.deepEqual(gearsOf(one, 'thanhPhong'), ['thienLoi', 'huyenVu', undefined], 'cùng ô binh khí: thay món')
+  assert.equal(one.gear.thanhSuong!.on, undefined)
+  // bộ Thanh Sương (kiếm): 2 món công kiếm tu +3 %, đủ 3 món thêm công pháp +10 %
+  const d = GEAR_SETS[GEAR.thanhSuong.set]
+  const own = (st: State) => lead(st, 'thanhPhong', 'atk.kiem') - GEAR.thanhSuong.v * (st.gear.thanhSuong?.on ? 1 : 0)
+  assert.ok(Math.abs(own(s) - d.two.v) < 1e-9)
+  assert.equal(lead(s, 'thanhPhong', 'skill'), lead({ ...s, gear: {} }, 'thanhPhong', 'skill'), 'chưa đủ bộ')
+  const full = wear(s, 'ngocGian')
+  assert.deepEqual(gearSets(full, 'thanhPhong'), [['kiem', 3]])
+  assert.ok(Math.abs(lead(full, 'thanhPhong', 'skill') - lead(s, 'thanhPhong', 'skill') - d.three.v) < 1e-9)
+})
+
 test('thiên phú — Linh căn ba mạch: mỗi cấp một điểm (+2 mỗi sao), tầng trên mở theo điểm trong cây; Tẩy Tủy Đan trả lại; save cũ trả điểm', () => {
   let s: State = { ...rich(16), elders: { thanhPhong: expAt(12) }, items: { taiTuy: 1 } }
   const tal = (st: State, node: number) => run(st, { type: 'talent', elder: 'thanhPhong', node })
@@ -1103,6 +1137,30 @@ test('thiên phú — Linh căn ba mạch: mỗi cấp một điểm (+2 mỗi s
   // save cũ (3 nhánh): trả điểm để cộng vào cây mới
   const old = migrate({ ...JSON.parse(JSON.stringify(s)), talents: { thanhPhong: [5, 3, 0] } })
   assert.deepEqual(old?.talents, {})
+})
+
+test('lưu bộ thiên phú: đổi bộ cất bộ đang dùng, nạp bộ kia (bộ trống: chưa cộng điểm); không đổi khi xuất quân; save giữ được', () => {
+  let s: State = { ...rich(16), elders: { thanhPhong: expAt(12) } }
+  const tal = (st: State, node: number) => run(st, { type: 'talent', elder: 'thanhPhong', node })
+  const page = (st: State, n: number) => run(st, { type: 'tpage', elder: 'thanhPhong', page: n })
+  for (const k of [0, 0, 1]) s = tal(s, k)
+  const one = s.talents.thanhPhong
+  s = page(s, 1)
+  assert.equal(s.talents.thanhPhong, undefined, 'bộ 2 còn trống: cộng lại từ đầu, đủ điểm')
+  assert.equal(talentUsed(s, 'thanhPhong'), 0)
+  s = tal(s, 2 * TALENT_TREE_SIZE)
+  const two = s.talents.thanhPhong
+  s = page(s, 0)
+  assert.deepEqual(s.talents.thanhPhong, one, 'về bộ 1: điểm cũ còn nguyên')
+  assert.deepEqual(page(s, 1).talents.thanhPhong, two)
+  assert.equal(err(s, { type: 'tpage', elder: 'thanhPhong', page: 0 }), 'claimed', 'đang dùng bộ này')
+  assert.equal(err(s, { type: 'tpage', elder: 'thanhPhong', page: TALENT_PAGES }), 'bad')
+  const out = run(
+    { ...s, troops: { ...s.troops, kiem1: 50 } },
+    { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: { kiem1: 50 } },
+  )
+  assert.equal(err(out, { type: 'tpage', elder: 'thanhPhong', page: 1 }), 'busy')
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(s)))!.tpage, s.tpage)
 })
 
 test('đan mới: công thức cần đan khác, Hồi Xuân chữa ngay, Ngưng Thần tăng công có hạn, Đại Tụ Khí bớt 2 giờ, Phá Cảnh cho độ kiếp', () => {
@@ -1195,4 +1253,18 @@ test('chiến báo tách sát thương theo nguồn: mỗi lượt ghi đòn th�
     f.rounds.every(r => r.src![1][1] === 0),
     'công pháp hồi phục không gây sát thương',
   )
+})
+
+test('chương nhiệm vụ: mốc tăng dần trong danh sách nhiệm vụ, nhiệm vụ nào cũng thuộc một chương', () => {
+  assert.equal(QUEST_CHAPTERS[0], 0)
+  assert.ok(QUEST_CHAPTERS.every((x, k) => x < QUESTS.length && (k === 0 || x > QUEST_CHAPTERS[k - 1])))
+  assert.deepEqual([0, 10, 11, QUESTS.length - 1].map(questChapter), [0, 0, 1, QUEST_CHAPTERS.length - 1])
+})
+
+test('thiên phú — cộng theo gợi ý: dồn hết điểm còn lại vào một cây theo thứ tự nút, tầng trên mở dần; hết điểm thì báo', () => {
+  let s: State = { ...rich(16), elders: { thanhPhong: expAt(12) } }
+  s = run(s, { type: 'talentAuto', elder: 'thanhPhong', tree: 2 })
+  assert.equal(talentUsed(s, 'thanhPhong'), talentPoints(s, 'thanhPhong'), 'hết điểm')
+  assert.equal(talentSpent(s, 'thanhPhong', 2), talentPoints(s, 'thanhPhong'), 'chỉ cây Đạo mạch')
+  assert.equal(err(s, { type: 'talentAuto', elder: 'thanhPhong', tree: 0 }), 'not_enough')
 })

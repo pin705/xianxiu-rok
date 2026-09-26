@@ -1,8 +1,9 @@
 // Trận lực Hộ Sơn Đại Trận và linh hỏa thiêu sơn (độ bền tường + thành cháy của RoK), tính lười theo thời gian: lưu trận lực lúc
 // at; lúc t thì suy ra — đang cháy (tới fire) tụt FIRE_DRAIN phần mỗi phút, hết cháy hồi WALL_REGEN phần mỗi giờ. Chưa từng bị
 // đánh (không có wall): đầy. Luật và số ở data.ts (WALL_*, FIRE_*).
-import { FIRE_DRAIN, FIRE_TIME, WALL_HIT, WALL_HP, WALL_REGEN } from '../data.ts'
-import type { State } from './types.ts'
+import { EYE, FIRE_DRAIN, FIRE_TIME, WALL_HIT, WALL_HP, WALL_REGEN, WALL_VOLLEY, type ElderId } from '../data.ts'
+import type { Army, Incoming, State } from './types.ts'
+import { count, mainType } from './util.ts'
 
 const MIN = 60_000
 const HOUR = 3_600_000
@@ -41,3 +42,17 @@ export const wallAt = (s: State, t: number) => ({
   fire: burning(s, t) ? s.wall!.fire : 0,
   ...(s.wall?.mend !== undefined && { mend: s.wall.mend }),
 })
+
+// Thiên Nhãn (Tháp canh của RoK): tầng Hộ Sơn Đại Trận càng cao, thẻ báo đội đang kéo tới càng lộ nhiều — trưởng lão dẫn, quân số,
+// hệ chính (EYE)
+export function eyeOf(s: State, elder: ElderId, army: Army): Pick<Incoming, 'elder' | 'n' | 'main'> {
+  const lv = s.levels.hoSonDaiTran
+  return {
+    ...(lv >= EYE[0] && { elder }),
+    ...(lv >= EYE[1] && { n: count(army) }),
+    ...(lv >= EYE[2] && { main: mainType(army) }),
+  }
+}
+
+// Kiếm trận Hộ Sơn (tháp canh bắn kẻ tới đánh): trận lực còn thì chém trước trận chừng ấy phần mỗi nhóm quân bên đánh
+export const volleyOf = (s: State, t: number) => (wallHp(s, t) > 0 ? WALL_VOLLEY * s.levels.hoSonDaiTran : 0)

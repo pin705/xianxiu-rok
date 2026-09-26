@@ -8,6 +8,8 @@ import { isId, oneOf } from '../core/parse.ts'
 import { advance } from '../core/time.ts'
 import {
   BANISH_COOL,
+  DECREE_COOL,
+  DECREE_MAX,
   BLESSINGS,
   BLESS_TIME,
   GIFT_WEEK,
@@ -48,6 +50,7 @@ export type LordAction =
   | { type: 'bless'; key: BlessKey } // ban phúc cả giới, mỗi ngày một lần
   | { type: 'boon'; pid: number } // ban Thiên Ân lễ cho một người
   | { type: 'banish'; pid: number } // Phóng Trục: đẩy tông môn người đó ra vùng ngoài
+  | { type: 'decree'; text: string } // ban chiếu cho cả giới
 // Thiên Ân lễ còn ban được trong tuần của lúc t
 export const boonLeft = (w: World, t: number) => (w.boon?.week === weekOf(t) ? w.boon.left : GIFT_WEEK)
 const isTitle = oneOf(TITLE_IDS)
@@ -103,6 +106,18 @@ export const lordActions: WorldActions<LordAction> = {
         world: { ...w, boon: { week: weekOf(now), left: left - 1 } },
         changed: new Map([[a.pid, got]]),
       }
+    },
+  },
+  // Chiếu Giới Chủ: lời chiếu cho cả giới (server lọc chữ tục trước khi tới đây), ban lại phải chờ DECREE_COOL
+  decree: {
+    pick: a => {
+      const text = typeof a.text === 'string' ? a.text.trim().replace(/\s+/g, ' ') : ''
+      return text && [...text].length <= DECREE_MAX ? { type: 'decree', text } : null
+    },
+    run: ({ ps, w, pid, s, map, now }, a) => {
+      if (!map || lordOf(w, ps, map, now) !== pid) return no('locked')
+      if ((w.decree?.at ?? -Infinity) + DECREE_COOL > now) return no('cooldown')
+      return { ok: true, world: { ...w, decree: { text: a.text, at: now, by: s.name } }, changed: new Map() }
     },
   },
   // Phóng Trục: tông môn không cùng minh Giới Chủ, không đang bế quan, mọi đội ở nhà → chỗ trống ngẫu nhiên ở vùng ngoài (như lúc lập

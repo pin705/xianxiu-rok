@@ -138,6 +138,10 @@ const optNum = (v: unknown) => v === undefined || num(v)
 const isBag = (x: unknown) => obj(x) && RESOURCES.every(r => num(x[r]))
 const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >= 0)
 const isTimed = (j: unknown) => j === null || (obj(j) && num(j.startAt) && num(j.finishAt))
+// bảng theo trưởng lão: khoá là trưởng lão có thật, giá trị qua f
+const byElder = (o: any, f: (v: any, e: keyof typeof ELDERS) => boolean) =>
+  obj(o) && Object.entries(o).every(([e, v]) => Object.hasOwn(ELDERS, e) && f(v, e as keyof typeof ELDERS))
+const nums = (x: any) => Array.isArray(x) && x.every(num)
 const validMarch = (m: any) =>
   obj(m) &&
   Object.hasOwn(ELDERS, m.elder) &&
@@ -169,12 +173,8 @@ function valid(s: any): s is State {
     (!s.forge || (Object.hasOwn(GEAR, s.forge.gear) && num(s.forge.level))) &&
     obj(s.tech) &&
     obj(s.items) &&
-    obj(s.elders) &&
-    Object.keys(s.elders).every(e => Object.hasOwn(ELDERS, e) && num(s.elders[e])) &&
-    obj(s.talents) &&
-    Object.entries(s.talents).every(
-      ([e, t]) => Object.hasOwn(ELDERS, e) && Array.isArray(t) && t.length === TALENT_NODES.length && t.every(num),
-    ) &&
+    byElder(s.elders, num) &&
+    byElder(s.talents, t => nums(t) && t.length === TALENT_NODES.length) &&
     obj(s.gear) &&
     Object.entries(s.gear).every(
       ([g, x]: [string, any]) =>
@@ -242,16 +242,10 @@ function valid(s: any): s is State {
 // Trận lực (linh hỏa thiêu sơn), việc cứu nạn (Thôn Trang Gặp Nạn)
 const validLate = (s: any) =>
   (s.frame === undefined || FRAMES.includes(s.frame)) &&
-  (s.skl === undefined ||
-    (obj(s.skl) &&
-      Object.entries(s.skl).every(
-        ([e, v]) =>
-          Object.hasOwn(ELDERS, e) &&
-          Array.isArray(v) &&
-          v.length === 1 + ELDERS[e as keyof typeof ELDERS].passives.length &&
-          v.every(num),
-      ))) &&
+  (s.skl === undefined || byElder(s.skl, (v, e) => nums(v) && v.length === 1 + ELDERS[e].passives.length)) &&
   (s.trial === undefined || (obj(s.trial) && [s.trial.key, s.trial.d, s.trial.gate].every(num))) &&
+  (s.tpage === undefined ||
+    byElder(s.tpage, p => obj(p) && num(p.at) && Array.isArray(p.pages) && p.pages.every(nums))) &&
   (s.digs === undefined || (Array.isArray(s.digs) && s.digs.every((d: any) => obj(d) && num(d.x) && num(d.y)))) &&
   (s.tshop === undefined ||
     (obj(s.tshop) &&
@@ -261,8 +255,7 @@ const validLate = (s: any) =>
   (s.pass === undefined ||
     (obj(s.pass) && num(s.pass.xp) && [s.pass.got, s.pass.gold].every(a => Array.isArray(a) && a.every(num)))) &&
   (s.face === undefined || Object.hasOwn(ELDERS, s.face)) &&
-  (s.relics === undefined ||
-    (obj(s.relics) && Object.entries(s.relics).every(([e, v]) => Object.hasOwn(ELDERS, e) && num(v)))) &&
+  (s.relics === undefined || byElder(s.relics, num)) &&
   (s.fallen === undefined || (obj(s.fallen) && obj(s.fallen.army) && num(s.fallen.until))) &&
   (s.wall === undefined ||
     (obj(s.wall) &&
@@ -299,10 +292,8 @@ const validFest = (s: any) =>
   obj(s.tavern) &&
   [s.tavern.silver, s.tavern.gold, s.tavern.pity].every(num) &&
   (s.maze === undefined || validMaze(s.maze)) &&
-  obj(s.tokens) &&
-  Object.entries(s.tokens).every(([e, n]) => Object.hasOwn(ELDERS, e) && num(n)) &&
-  obj(s.stars) &&
-  Object.entries(s.stars).every(([e, n]) => Object.hasOwn(ELDERS, e) && num(n)) &&
+  byElder(s.tokens, num) &&
+  byElder(s.stars, num) &&
   obj(s.ach) &&
   Object.entries(s.ach).every(([k, n]) => Object.hasOwn(ACHS, k) && num(n)) &&
   (s.incoming === undefined ||
@@ -311,7 +302,7 @@ const validFest = (s: any) =>
   // trường số thêm sau (save cũ thiếu là không có)
   [s.frenzy, s.moved, s.builder2, s.joined, s.towerDay, s.honor].every(optNum) &&
   [s.honorGot, s.guestAt, s.frag, s.bones, s.honorAll, s.partyDay, s.seasonAt].every(optNum) &&
-  [s.veil, s.mirage, s.born, s.coinSpent, s.secludeAt, s.guests].every(optNum) &&
+  [s.veil, s.mirage, s.born, s.coinSpent, s.secludeAt, s.guests, s.convoyDay].every(optNum) &&
   (s.friends === undefined || (Array.isArray(s.friends) && s.friends.every(num))) &&
   validLate(s) &&
   (s.potOpened === undefined || (obj(s.potOpened) && num(s.potOpened.week) && num(s.potOpened.n))) &&
@@ -340,9 +331,7 @@ const validFest = (s: any) =>
   (s.presets === undefined ||
     (Array.isArray(s.presets) &&
       s.presets.every((p: any) => p === null || (obj(p) && Object.hasOwn(ELDERS, p.elder) && obj(p.army))))) &&
-  (s.pairs === undefined ||
-    (obj(s.pairs) &&
-      Object.entries(s.pairs).every(([e, d]) => Object.hasOwn(ELDERS, e) && Object.hasOwn(ELDERS, String(d))))) &&
+  (s.pairs === undefined || byElder(s.pairs, d => Object.hasOwn(ELDERS, String(d)))) &&
   (s.pins === undefined ||
     (Array.isArray(s.pins) &&
       s.pins.every((p: any) => obj(p) && num(p.x) && num(p.y) && typeof p.text === 'string'))) &&

@@ -24,6 +24,7 @@
     DIG_FRAGS,
     DIG_MAX,
     BLESSINGS,
+    DECREE_MAX,
     BOOK,
     BOOK_TOP,
     EVE_CHEST_N,
@@ -345,6 +346,7 @@
   // Tìm (như kính lúp của RoK): điểm gần nhất theo loại + cấp, còn sống, có đường đi — bay tới và mở bảng của điểm đó
   type Find = 'mine' | 'vein' | 'boss' | 'wild'
   let finding = $state(false)
+  let decree = $state('') // Giới Chủ soạn chiếu
   let want = $state<{ kind: Find; lv: number }>({ kind: 'mine', lv: 1 })
   let miss = $state(false)
   function find() {
@@ -551,6 +553,29 @@
         {#if !slim && snap?.bless && snap.bless.until > now}<small class="t-tiny t-gold"
             >{L.lord.blessed(L.lord.blessKeys[snap.bless.key], clock(snap.bless.until - now))}</small
           >{/if}
+        <!-- Chiếu Giới Chủ (Kingdom Announcement của RoK): cả giới thấy tới hết hạn -->
+        {#if !slim && snap?.decree}<small class="t-small t-lore"
+            >{L.lord.decree(snap.decree.by, snap.decree.text)}</small
+          >{/if}
+        {#if !slim && send && snap?.lord === me}
+          <form
+            class="row"
+            style:--gap="4px"
+            onsubmit={e => {
+              e.preventDefault()
+              if (decree.trim()) void send({ type: 'decree', text: decree }).then(r => r.ok && (decree = ''))
+            }}
+          >
+            <input
+              class="field grow"
+              bind:value={decree}
+              maxlength={DECREE_MAX}
+              placeholder={L.lord.decreeHint}
+              aria-label={L.lord.decreeHint}
+            />
+            <Button size="sm" type="submit" disabled={!decree.trim()}>{L.lord.decreeGo}</Button>
+          </form>
+        {/if}
         {#if !slim && send && snap?.lord === me && snap?.bless?.day !== dayOf(now)}
           <!-- mình là Giới Chủ, hôm nay chưa ban phúc -->
           <span class="row wrap" style:--gap="4px">

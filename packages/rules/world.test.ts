@@ -1,6 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  DECREE_TTL,
+  EYE,
+  WALL_VOLLEY,
+  eyeOf,
   ALLY_COST,
   ALLY_HALL,
   RECALL_GIFT,
@@ -8,6 +12,8 @@ import {
   RECALL_THANKS,
   MIRAGE_LOOT,
   MIRAGE_SHOW,
+  GOODS_CYCLE,
+  GOODS_GIFTS,
   BOOK,
   AQUIZ_N,
   AQUIZ_Q,
@@ -70,7 +76,7 @@ import {
   MARKET_TAX,
   MARKET_TTL,
   NEWBIE_SHIELD,
-  PROTECT,
+  protectOf,
   FRENZY_TIME,
   GIFT_PTS,
   PVP_START,
@@ -108,7 +114,6 @@ import {
   newGame,
   power,
   rebirthLevels,
-  storage,
   tribError,
   weekOf,
   type Action,
@@ -224,6 +229,11 @@ import {
   recallBack,
   boardView,
   topicView,
+  goodsAt,
+  goodsCycle,
+  goodsLeft,
+  goodsOn,
+  worldSnap,
 } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -273,7 +283,7 @@ test('cướp: đội mạnh thắng, lấy 30 % phần vượt kho bảo hộ, 
   const back = att.marches[0]
   assert.ok(back.returnAt > m.arriveAt && back.back)
   const got = back.gain!.res.linhThach!
-  const keep = PROTECT * storage(def)
+  const keep = protectOf(def)
   assert.equal(got, Math.floor((before - keep) * 0.3 * (1 + 0))) // thanhPhong không có bonus chiến lợi phẩm
   assert.equal(def.res.linhThach, before - got)
   assert.equal(def.shield, m.arriveAt + SHIELD_TIME)
@@ -306,7 +316,12 @@ test('cướp: bên thủ thấy đội đang kéo tới (Tháp canh) tới khi 
   const ps = world(sect('Công', 10, { kiem3: 1100 }), sect('Thủ', 10, { the1: 200 }))
   const m = send(ps, 1, 2, { kiem3: 1100 })
   const def = ps.get(2)!
-  assert.deepEqual(def.incoming, [{ id: m.id, pid: 1, foe: 'Công', at: m.arriveAt }])
+  // Thiên Nhãn: Hộ Sơn Đại Trận tầng 10 lộ trưởng lão dẫn và quân số, chưa lộ hệ chính
+  assert.deepEqual(def.incoming, [{ id: m.id, pid: 1, foe: 'Công', at: m.arriveAt, elder: m.elder, n: 1100 }])
+  const eye = (lv: number) =>
+    eyeOf({ ...def, levels: { ...def.levels, hoSonDaiTran: lv } }, 'thanhPhong', { kiem3: 5, the1: 9 })
+  assert.deepEqual(eye(EYE[0] - 1), {}, 'tầng thấp: chỉ biết có đội tới')
+  assert.deepEqual(eye(EYE[2]), { elder: 'thanhPhong', n: 14, main: 'the' })
   // bên đánh: vừa xuất quân cướp thì chưa dùng Hộ Sơn Phù được (không cướp xong rồi trốn sau khiên)
   const att = { ...ps.get(1)!, items: { ...ps.get(1)!.items, hoSon8: 1 } }
   assert.deepEqual(apply(att, { type: 'use', item: 'hoSon8', n: 1 }, att.time), { ok: false, error: 'frenzy' })
@@ -315,6 +330,11 @@ test('cướp: bên thủ thấy đội đang kéo tới (Tháp canh) tới khi 
   assert.equal(apply({ ...def, items: { hoSon8: 1 } }, { type: 'use', item: 'hoSon8', n: 1 }, def.time).ok, true)
   resolve(ps, m.arriveAt)
   assert.deepEqual(ps.get(2)!.incoming, [], 'trận đã giải: hết cảnh báo')
+  // kiếm trận Hộ Sơn chém trước trận (trận lực còn): hai bên cùng thấy trong chiến báo
+  const cut = Math.floor(1100 * WALL_VOLLEY * 10)
+  assert.ok(cut > 0)
+  assert.equal(ps.get(1)!.reports.at(-1)!.wall, cut)
+  assert.equal(ps.get(2)!.reports.at(-1)!.wall, cut)
 })
 
 test('cướp: khiên, chênh lực chiến, chưa tới tầng, không tự đánh mình; báo thù bỏ giới hạn lực chiến trong 24 giờ', () => {
@@ -567,6 +587,10 @@ test('tiên minh: lập (từ tầng ALLY_HALL, tốn phí, tên/tag không trù
   const gone = new Map(ps)
   gone.delete(2)
   assert.equal(allyRows(w, gone)[0].power, pw(1), 'thành viên không còn state: cộng 0, không cộng nhầm người khác')
+  // cờ minh: trưởng lão / minh chủ chọn linh thú + màu, bảng minh thấy
+  assert.equal(act(1, { type: 'allyBadge', e: 3, c: 99 }), 'bad')
+  assert.equal(act(2, { type: 'allyBadge', e: 3, c: 2 }), null, 'trưởng lão đổi được')
+  assert.deepEqual(allyRows(w, ps)[0].badge, [3, 2])
   // minh chủ rời: trưởng lão lên thay; người cuối rời: giải tán
   assert.equal(act(1, { type: 'allyLeave' }), null)
   assert.equal(allyOf(w, 2)!.members[2], 2)
@@ -3315,4 +3339,56 @@ test('Phóng Trục: Giới Chủ đẩy tông môn không cùng minh (không b�
   assert.equal(map.atlas.regions[regionOf(map.atlas, moved.seat!)].ring, 0, 'tới vùng ngoài')
   assert.deepEqual(moved.mail.at(-1)!.a, ['A', moved.seat!.x, moved.seat!.y])
   assert.equal(act(1, { type: 'banish', pid: 3 }, T0 + HOUR), 'cooldown', '24 giờ một lần')
+  // Chiếu Giới Chủ: chỉ Giới Chủ ban, cả giới thấy trong ảnh bản đồ tới hết hạn; ban lại phải chờ
+  assert.equal(act(2, { type: 'decree', text: 'Cấm đánh mỏ' }), 'locked', 'chỉ Giới Chủ')
+  assert.equal(act(1, { type: 'decree', text: '   ' }), 'bad')
+  assert.equal(act(1, { type: 'decree', text: ' Cấm   đánh mỏ trong lãnh thổ ' }), null)
+  assert.deepEqual(w.decree, { text: 'Cấm đánh mỏ trong lãnh thổ', at: T0, by: 'A' })
+  assert.equal(act(1, { type: 'decree', text: 'Đổi chiếu' }, T0 + 60_000), 'cooldown')
+  assert.deepEqual(worldSnap(ps, w, map, T0 + HOUR, new Set(), []).decree?.text, 'Cấm đánh mỏ trong lãnh thổ')
+  assert.equal(worldSnap(ps, w, map, T0 + DECREE_TTL + 1, new Set(), []).decree, undefined, 'hết hạn')
+})
+
+test('Thương Đội Gặp Nạn: trong kỳ lễ mỗi giờ hàng rơi quanh thôn trang (tất định); xuất quân tới trước nhặt được quà theo phẩm, người sau về tay không', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  let t = Math.ceil(T0 / GOODS_CYCLE) * GOODS_CYCLE // đầu một chu kỳ: đủ giờ đi tới
+  while (!goodsOn(t)) t += GOODS_CYCLE
+  const list = goodsAt(a, goodsCycle(t))
+  assert.ok(list.length > 3, 'có hàng rơi')
+  assert.deepEqual(goodsAt(a, goodsCycle(t)), list, 'tất định')
+  assert.notDeepEqual(goodsAt(a, goodsCycle(t) + 1), list, 'giờ sau rơi chỗ khác')
+  let off = t
+  while (goodsOn(off)) off += 86_400_000
+  assert.deepEqual(goodsLeft(freshWorld(), a, off), [], 'ngoài kỳ lễ không có hàng')
+  const g = list.find(x => a.regions[regionOf(a, x)].ring === 0)!
+  assert.ok(g, 'có kiện ở vùng ngoài')
+  const reg = a.regions[regionOf(a, g)]
+  const home = { x: reg.cx, y: reg.cy }
+  const ps = world(
+    { ...sect('Nhanh', 10, { kiem3: 300 }), seat: home },
+    { ...sect('Chậm', 10, { kiem3: 300 }), seat: { x: home.x + 1, y: home.y + 1 } },
+  )
+  let w = freshWorld()
+  const go = (pid: number, at = t) =>
+    worldAct(ps, pid, { type: 'caravan', x: g.x, y: g.y, elder: 'thanhPhong', army: { kiem3: 100 } }, at, 7, map, w)
+  const r1 = go(1)
+  assert.ok(r1.ok, JSON.stringify(r1))
+  for (const [k, v] of r1.changed) ps.set(k, v)
+  const m = ps.get(1)!.marches.at(-1)!
+  assert.deepEqual(m.goods, { i: g.i, cyc: goodsCycle(t), t: g.t })
+  const r2 = go(2)
+  assert.ok(r2.ok, 'người kia cũng xuất quân được (ai tới trước được)')
+  for (const [k, v] of r2.changed) ps.set(k, v)
+  const d = advanceAll(ps, w, m.arriveAt, map)
+  for (const [k, v] of d.changed) ps.set(k, v)
+  w = d.world
+  const s1 = ps.get(1)!
+  assert.equal(s1.stats.goods, 1)
+  assert.deepEqual([s1.mail.at(-1)!.k, s1.mail.at(-1)!.gift], ['goods', GOODS_GIFTS[g.t]])
+  assert.ok(!goodsLeft(w, a, m.arriveAt).some(x => x.i === g.i), 'đã nhặt: biến khỏi bản đồ')
+  const m2 = ps.get(2)!.marches.at(-1)!
+  const d2 = advanceAll(ps, w, Math.max(m2.arriveAt, m.arriveAt), map)
+  for (const [k, v] of d2.changed) ps.set(k, v)
+  if (m2.arriveAt >= m.arriveAt) assert.equal(ps.get(2)!.stats.goods ?? 0, 0, 'tới sau: về tay không')
 })

@@ -78,7 +78,11 @@ export const buildingActions: Actions<BuildingAction> = {
       if (!jobOf(s, a.job)) return no('empty')
       const ms = (pill === 'daiTuKhi' ? SPEEDUP_BIG : SPEEDUP) * a.n
       const next = shorten(s, a.job, ms)
-      const stats = { ...next.stats, sped: (next.stats.sped ?? 0) + ms / 60_000 }
+      const stats = {
+        ...next.stats,
+        sped: (next.stats.sped ?? 0) + ms / 60_000,
+        ...(a.job === 'train' && { spedTrain: (next.stats.spedTrain ?? 0) + ms / 60_000 }),
+      }
       return ok(advance({ ...next, stats, items: use(s, pill, a.n) }, s.time))
     },
   },

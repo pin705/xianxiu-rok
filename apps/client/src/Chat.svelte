@@ -5,7 +5,7 @@
   // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo, trả lời (trích dẫn "#q<mã>"); tin của mình thu hồi được trong
   // 2 phút. Hàng biểu cảm chèn emoji vào ô gõ. Truyền âm: nhóm chat tự tạo + cuộc gần đây → từng cuộc.
   // Tin là bong bóng lời nói (như cố vấn ở Advisor): người khác bên trái, mình bên phải tô son nhạt.
-  import type { Ack, Channel, ChatMsg, Dm, FriendView, GroupView } from '@rok/protocol'
+  import type { Ack, Channel, ChatMsg, Dm, FoundView, FriendView, GroupView } from '@rok/protocol'
   import type { WorldAction } from '@rok/rules/world'
   import { ELDERS, RARITY, RECALL_DAYS, type ElderId, type Report } from '@rok/rules'
   import type { Net } from './net'
@@ -53,6 +53,8 @@
   let dms = $state<Dm[]>([]) // các cuộc truyền âm, mới nhất trước
   let groups = $state<GroupView[]>([]) // nhóm chat tự tạo của mình
   let friends = $state<FriendView[]>([]) // đạo hữu đã kết giao (tải khi mở thẻ Truyền âm)
+  let query = $state('') // Tìm đạo hữu theo tên
+  let found = $state<FoundView[] | null>(null)
   let unread = $state<string[]>([]) // kênh truyền âm / nhóm có tin chưa đọc
   let groupName = $state('')
   const loadGroups = () => api?.ask({ k: 'groups' }).then(list => list && (groups = list))
@@ -102,6 +104,11 @@
     if (!act2 || !(await act2({ type: 'friendRecall', pid })).ok) return
     toast(L.chat.callSent)
     void api?.ask({ k: 'friends' }).then(list => list && (friends = list))
+  }
+  async function find(e: SubmitEvent) {
+    e.preventDefault()
+    const q = query.trim()
+    found = q ? ((await api?.ask({ k: 'search', q })) ?? []) : null
   }
   async function newGroup(e: SubmitEvent) {
     e.preventDefault()
@@ -218,6 +225,28 @@
   />
   {#if tab === 'dm' && !peer}
     <ul class="ledger scroll-box" style:--max-h={inline ? '320px' : undefined}>
+      <!-- Tìm đạo hữu theo tên (như tìm thống đốc của RoK): chạm người tìm được để xem hồ sơ — kết giao, truyền âm từ đó -->
+      <li class="stack" style:--gap="4px">
+        <form class="row" onsubmit={find}>
+          <input
+            class="field grow"
+            type="search"
+            bind:value={query}
+            maxlength="20"
+            placeholder={L.chat.find}
+            aria-label={L.chat.find}
+          />
+          <Button size="sm" type="submit" disabled={!query.trim()}>{L.chat.findGo}</Button>
+        </form>
+        {#if found}
+          <span class="wrap" style:--gap="4px">
+            {#each found as p (p.pid)}<Capsule onclick={() => (social.profile = p.pid)}
+                >{p.tag ? `[${p.tag}] ` : ''}{p.name} · {L.level(p.hall)}</Capsule
+              >{/each}
+            {#if !found.length}<small class="t-tiny t-soft">{L.chat.findNone}</small>{/if}
+          </span>
+        {/if}
+      </li>
       <!-- đạo hữu (đang chơi trước), nhóm chat tự tạo, rồi các cuộc truyền âm -->
       {#if friends.length}
         <li class="wrap" style:--gap="4px">

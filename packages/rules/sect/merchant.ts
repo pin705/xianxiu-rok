@@ -38,6 +38,7 @@ export const merchantActions: Actions<MerchantAction> = {
         res: { ...s.res, [x.res]: s.res[x.res] - x.cost },
         items: { ...s.items, [x.item]: (s.items[x.item] ?? 0) + x.n },
         merchant: { slot: merchantSlot(t), bought: [...bought, a.i] },
+        stats: { ...s.stats, bought: (s.stats.bought ?? 0) + 1 },
       })
     },
   },
