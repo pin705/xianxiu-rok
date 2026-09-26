@@ -394,6 +394,10 @@ export function createNet(h: Handlers, lang: string) {
       new Promise<boolean>(ok =>
         socket?.connected ? socket.timeout(10_000).emit('report', { id }, (err, r) => ok(!err && r)) : ok(false),
       ),
+    unsay: (id: number) =>
+      new Promise<boolean>(ok =>
+        socket?.connected ? socket.timeout(10_000).emit('unsay', { id }, (err, r) => ok(!err && r)) : ok(false),
+      ),
     onChat: (f: (ch: Channel, ms: ChatMsg[]) => void) => listen(chatWatch, f),
     onAlly: (f: () => void) => listen(allyWatch, f),
     // Bảng xếp hạng của giới mình (HTTP, server cache 30 giây)

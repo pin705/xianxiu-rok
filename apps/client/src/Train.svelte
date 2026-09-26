@@ -23,7 +23,8 @@
   import { Bag, Button, Card, FirstTap, Medal, Section, Slider, Stat, Tag } from './ui'
   import { paintedUrl, soldier } from '@rok/art'
   import JobRow from './JobRow.svelte'
-  import { EMBLEM, L, clock, num, sfx, unitName } from './lib'
+  import Refill from './Refill.svelte'
+  import { EMBLEM, L, LANG, clock, num, sfx, unitName } from './lib'
   import { useGame } from './game'
 
   const g = useGame()
@@ -138,12 +139,19 @@
   {#snippet aside()}<Button variant="ghost" size="sm" onclick={() => (n = most)}>{L.train.max}</Button>{/snippet}
   <Slider value={count} min={1} max={cap} label={L.train.count} onchange={v => (n = v)} />
   <Bag res={trainCost(u, count)} have={game.res} />
+  <!-- thiếu tài nguyên: mở nang / đổi ở Thương hội ngay tại đây (như Quick Replenish của RoK) -->
+  {#if err === 'not_enough'}<Refill cost={trainCost(u, count)} />{/if}
   <FirstTap key="train">
     <Button wide size="lg" trail={clock(trainTime(game, u, count))} trailIcon="clock" disabled={!!err} onclick={go}
       >{L.train.go} {num(count)}</Button
     >
   </FirstTap>
-  {#if err === 'busy'}<p class="center t-small t-soft">{L.err.busy}</p>{/if}
+  {#if err === 'busy'}<p class="center t-small t-soft">{L.err.busy}</p>
+  {:else if !err}<p class="center t-tiny t-soft">
+      {L.train.doneAt(
+        new Date(g.now + trainTime(game, u, count)).toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' }),
+      )}
+    </p>{/if}
 </Section>
 
 {#if from && game.troops[from] > 0 && tierOpen(game, tier)}

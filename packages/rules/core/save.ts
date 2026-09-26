@@ -19,6 +19,7 @@ import {
   EVENT_GOALS,
   FESTS,
   FIRST_ELDER,
+  FRAMES,
   GEAR,
   MAX_LEVEL,
   METRICS,
@@ -29,6 +30,7 @@ import {
   RESOURCES,
   SECTS,
   START,
+  TALENT_NODES,
   TRIBS,
   UNITS,
   WEEKLY,
@@ -133,6 +135,7 @@ export function migrate(raw: unknown): State | null {
 // Save từ ngoài vào (nhập tay, file, bản sửa tay) có thể thiếu hay sai trường. Kiểm đủ khuôn trước khi chơi:
 // thiếu là từ chối (người chơi được báo "save không hợp lệ"), không để game vỡ lúc vẽ rồi kẹt vòng lặp lỗi.
 const num = (x: unknown) => typeof x === 'number' && Number.isFinite(x)
+const optNum = (v: unknown) => v === undefined || num(v)
 const isBag = (x: unknown) => obj(x) && RESOURCES.every(r => num(x[r]))
 const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >= 0)
 const isTimed = (j: unknown) => j === null || (obj(j) && num(j.startAt) && num(j.finishAt))
@@ -170,7 +173,7 @@ function valid(s: any): s is State {
     Object.keys(s.elders).every(e => Object.hasOwn(ELDERS, e) && num(s.elders[e])) &&
     obj(s.talents) &&
     Object.entries(s.talents).every(
-      ([e, t]) => Object.hasOwn(ELDERS, e) && Array.isArray(t) && t.length === 3 && t.every(num),
+      ([e, t]) => Object.hasOwn(ELDERS, e) && Array.isArray(t) && t.length === TALENT_NODES.length && t.every(num),
     ) &&
     obj(s.gear) &&
     Object.entries(s.gear).every(
@@ -238,6 +241,29 @@ function valid(s: any): s is State {
 }
 // Trận lực (linh hỏa thiêu sơn), việc cứu nạn (Thôn Trang Gặp Nạn)
 const validLate = (s: any) =>
+  (s.frame === undefined || FRAMES.includes(s.frame)) &&
+  (s.skl === undefined ||
+    (obj(s.skl) &&
+      Object.entries(s.skl).every(
+        ([e, v]) =>
+          Object.hasOwn(ELDERS, e) &&
+          Array.isArray(v) &&
+          v.length === 1 + ELDERS[e as keyof typeof ELDERS].passives.length &&
+          v.every(num),
+      ))) &&
+  (s.trial === undefined || (obj(s.trial) && [s.trial.key, s.trial.d, s.trial.gate].every(num))) &&
+  (s.digs === undefined || (Array.isArray(s.digs) && s.digs.every((d: any) => obj(d) && num(d.x) && num(d.y)))) &&
+  (s.tshop === undefined ||
+    (obj(s.tshop) &&
+      [s.tshop.earn, s.tshop.spent, s.tshop.week].every(num) &&
+      Array.isArray(s.tshop.n) &&
+      s.tshop.n.every(num))) &&
+  (s.pass === undefined ||
+    (obj(s.pass) && num(s.pass.xp) && [s.pass.got, s.pass.gold].every(a => Array.isArray(a) && a.every(num)))) &&
+  (s.face === undefined || Object.hasOwn(ELDERS, s.face)) &&
+  (s.vip?.shop === undefined ||
+    (obj(s.vip.shop) && num(s.vip.shop.week) && obj(s.vip.shop.got) && Object.values(s.vip.shop.got).every(num))) &&
+  (s.fallen === undefined || (obj(s.fallen) && obj(s.fallen.army) && num(s.fallen.until))) &&
   (s.wall === undefined ||
     (obj(s.wall) &&
       [s.wall.hp, s.wall.at, s.wall.fire].every(num) &&
@@ -256,13 +282,11 @@ const validFest = (s: any) =>
     ([id, f]: [string, any]) =>
       Object.hasOwn(FESTS, id) &&
       obj(f) &&
-      num(f.key) &&
-      num(f.stage) &&
+      [f.key, f.stage, f.bank].every(num) &&
       obj(f.base) &&
-      num(f.bank) &&
-      Array.isArray(f.got),
+      Array.isArray(f.got) &&
+      (f.sp === undefined || (Array.isArray(f.sp) && f.sp.every(num))),
   ) &&
-  (s.born === undefined || num(s.born)) &&
   obj(s.vip) &&
   num(s.vip.pts) &&
   num(s.vip.streak) &&
@@ -281,31 +305,20 @@ const validFest = (s: any) =>
   (s.incoming === undefined ||
     (Array.isArray(s.incoming) &&
       s.incoming.every((x: any) => obj(x) && num(x.id) && num(x.pid) && typeof x.foe === 'string' && num(x.at)))) &&
-  (s.frenzy === undefined || num(s.frenzy)) &&
-  (s.moved === undefined || num(s.moved)) &&
-  (s.builder2 === undefined || num(s.builder2)) &&
-  (s.joined === undefined || num(s.joined)) &&
-  (s.towerDay === undefined || num(s.towerDay)) &&
-  (s.honor === undefined || num(s.honor)) &&
-  (s.honorGot === undefined || num(s.honorGot)) &&
-  (s.guestAt === undefined || num(s.guestAt)) &&
+  // trường số thêm sau (save cũ thiếu là không có)
+  [s.frenzy, s.moved, s.builder2, s.joined, s.towerDay, s.honor].every(optNum) &&
+  [s.honorGot, s.guestAt, s.frag, s.bones, s.honorAll, s.partyDay, s.seasonAt].every(optNum) &&
+  [s.veil, s.born, s.coinSpent, s.secludeAt, s.guests].every(optNum) &&
   (s.friends === undefined || (Array.isArray(s.friends) && s.friends.every(num))) &&
-  (s.frag === undefined || num(s.frag)) &&
-  (s.bones === undefined || num(s.bones)) &&
-  (s.honorAll === undefined || num(s.honorAll)) &&
-  (s.partyDay === undefined || num(s.partyDay)) &&
   validLate(s) &&
   (s.potOpened === undefined || (obj(s.potOpened) && num(s.potOpened.week) && num(s.potOpened.n))) &&
   (s.crowns === undefined || (Array.isArray(s.crowns) && s.crowns.every(num))) &&
   (s.yb === undefined || (obj(s.yb) && num(s.yb.kp) && num(s.yb.hunted) && num(s.yb.raided) && num(s.yb.gathered))) &&
-  (s.coinSpent === undefined || num(s.coinSpent)) &&
   (s.seclude === undefined || (obj(s.seclude) && num(s.seclude.until) && num(s.seclude.shield))) &&
-  (s.secludeAt === undefined || num(s.secludeAt)) &&
   (s.thoi === undefined || (obj(s.thoi) && num(s.thoi.n) && num(s.thoi.pick))) &&
   (s.side === undefined || (Array.isArray(s.side) && s.side.length <= 4 && s.side.every(num))) &&
   (s.quiz === undefined || (obj(s.quiz) && num(s.quiz.day) && num(s.quiz.n) && num(s.quiz.right))) &&
   (s.strat === undefined || Object.hasOwn(STRATS, s.strat)) &&
-  (s.guests === undefined || num(s.guests)) &&
   (s.drill === undefined ||
     (obj(s.drill) &&
       num(s.drill.day) &&
@@ -381,6 +394,10 @@ function upgradeSave(raw: unknown) {
   }
   if (s.v !== SAVE_VERSION || typeof s.time !== 'number') return null
   // Trường thêm sau (trong cùng bản): thiếu thì lấy mặc định
+  // thiên phú kiểu cũ (3 nhánh): trả lại điểm để cộng vào cây mới
+  const fit = ([, t]: [string, any]) => t?.length === TALENT_NODES.length
+  if (s.talents && !Object.entries(s.talents).every(fit))
+    s = { ...s, talents: Object.fromEntries(Object.entries(s.talents).filter(fit)) }
   if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save làm trước khi có nhiệm vụ ngày
   if (!s.weekly) s = { ...s, weekly: freshWeekly(s.time) } // … nhiệm vụ tuần
   if (s.tower === undefined) s = { ...s, tower: 0 } // … Thông Thiên Tháp

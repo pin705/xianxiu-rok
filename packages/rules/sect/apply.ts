@@ -9,6 +9,8 @@ import { alchemyActions, type AlchemyAction } from './alchemy.ts'
 import { armyActions, type ArmyAction } from './army.ts'
 import { bagActions, type BagAction } from './bag.ts'
 import { festActions, type FestAction } from './fest.ts'
+import { passActions, type PassAction } from './pass.ts'
+import { trialActions, type TrialAction } from './trial.ts'
 import { vipActions, type VipAction } from './vip.ts'
 import { tavernActions, type TavernAction } from './tavern.ts'
 import { achActions, type AchAction } from './ach.ts'
@@ -22,6 +24,7 @@ import { quizActions, type QuizAction } from './quiz.ts'
 import { sideActions, type SideAction } from './side.ts'
 import { nanActions, type NanAction } from './nan.ts'
 import { wallActions, type WallAction } from './wall.ts'
+import { heroActions, type HeroAction } from './hero.ts'
 import { eveActions, type EveAction } from './eve.ts'
 import { secluded, secludeActions, type SecludeAction } from './seclude.ts'
 import { buildingActions, type BuildingAction } from './buildings.ts'
@@ -48,6 +51,8 @@ export type Action =
   | InboxAction
   | BagAction
   | FestAction
+  | PassAction
+  | TrialAction
   | VipAction
   | TavernAction
   | AchAction
@@ -61,6 +66,7 @@ export type Action =
   | SideAction
   | NanAction
   | WallAction
+  | HeroAction
   | EveAction
   | SecludeAction
 
@@ -78,6 +84,8 @@ const ACTIONS: Actions<Action> = {
   ...inboxActions,
   ...bagActions,
   ...festActions,
+  ...passActions,
+  ...trialActions,
   ...vipActions,
   ...tavernActions,
   ...achActions,
@@ -91,6 +99,7 @@ const ACTIONS: Actions<Action> = {
   ...sideActions,
   ...nanActions,
   ...wallActions,
+  ...heroActions,
   ...eveActions,
   ...secludeActions,
 }

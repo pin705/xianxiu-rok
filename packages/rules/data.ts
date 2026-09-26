@@ -18,6 +18,9 @@ export const BASE_CAP = 2000 // sức chứa mỗi loại khi chưa có Tàng B�
 // Linh khí tự nhiên của núi: mỗi loại 60/giờ dù chưa có công trình nào. Không có nó, người dồn hết tài nguyên nâng
 // Chủ điện trước khi xây Linh điền/Khoáng mạch sẽ kẹt vĩnh viễn (xây hai nhà đó cần chính thảo/khoáng đã cạn).
 export const BASE_RATE = 60
+// Sản lượng công trình (phần trên linh khí tự nhiên) nằm ở công trình chờ chạm thu như RoK — tối đa YARD_HOURS giờ, cướp không lấy được;
+// thu vào kho tới sức chứa, phần thừa nằm lại
+export const YARD_HOURS = 12
 export const CAP_GROWTH = 1.3 // mỗi tầng Tàng Bảo Các
 export const COST_GROWTH = 1.6 // mỗi tầng công trình
 export const TIME_GROWTH = 1.7
@@ -92,6 +95,10 @@ export const BATCH_STEP = 20
 export const HOSPITAL_BASE = 80 // chỗ nằm thương binh: HOSPITAL_BASE + HOSPITAL_STEP × tầng Đan phòng
 export const HOSPITAL_STEP = 120
 export const HEAL_COST = 0.4 // chữa 1 thương binh tốn 40% chi phí tuyển
+// Anh Linh Điện (Hall of Heroes của RoK): đệ tử tử trận vì Đan phòng đầy được giữ hồn FALLEN_KEEP (tử trận thêm thì tính lại từ lúc
+// đó); trong hạn hồi sinh được ngay, tốn REVIVE_COST chi phí tuyển (đắt hơn chữa thương, rẻ hơn tuyển mới), về thẳng hàng ngũ
+export const FALLEN_KEEP = 72 * 3_600_000
+export const REVIVE_COST = 0.6
 export const HEAL_TIME = 0.3
 
 // ---------- Trận đánh ----------
@@ -338,16 +345,50 @@ export const RARITY: Record<ElderId, 1 | 2 | 3 | 4> = {
   diepCoThanh: 4,
 }
 export const FIRST_ELDER: ElderId = 'thanhPhong'
+// Khung chân dung (Avatar Frames của RoK): mở theo thành tích (sect/elders.ts frameOpen), chọn ở hồ sơ của mình
+export const FRAMES = ['basic', 'vip', 'ascend', 'crown', 'arena', 'rebirth'] as const
+export type FrameId = (typeof FRAMES)[number]
+export const FRAME_VIP = 6 // Hương Hỏa tối thiểu
+export const FRAME_DUELS = 50 // trận Luận Kiếm Đài thắng tối thiểu
 
-// Thiên phú: mỗi 5 cấp trưởng lão một điểm, chia vào 3 nhánh (công · thể · đạo), mỗi nhánh tối đa TALENT_MAX.
-// Tẩy Tủy Đan trả lại hết điểm. Nhánh đạo tăng sức công pháp chủ động.
-export const TALENT_EVERY = 5
-export const TALENT_MAX = 5
-export const TALENTS: { key: Bonus; v: number }[] = [
-  { key: 'atk', v: 0.03 },
-  { key: 'hp', v: 0.04 },
-  { key: 'skill', v: 0.06 },
+// Thiên phú — Linh căn ba mạch (Talent Trees của RoK): 3 cây Công mạch / Thủ mạch / Đạo mạch, mỗi cây 3 tầng × 2 nút (mỗi nút tối
+// đa max điểm) + nút cuối 1 điểm; nút tầng k mở khi đã cộng TALENT_TIER[k] điểm trong cây đó. Điểm: cấp trưởng lão − 1, thêm
+// TALENT_STAR mỗi sao trên 1 — không đủ lấp cả ba cây, phải chọn. Chỉ đội người đó dẫn dùng. Tẩy Tủy Đan trả lại hết điểm.
+// key 'atk.own' / 'hp.own': theo hệ của chính trưởng lão. Nút i = cây × TALENT_TREE_SIZE + vị trí.
+export type TalentNode = { key: Bonus | 'atk.own' | 'hp.own'; v: number; max: number; tier: number }
+export const TALENT_TIER = [0, 5, 10, 16]
+export const TALENT_STAR = 2
+export const TALENT_TREES: TalentNode[][] = [
+  [
+    { key: 'atk', v: 0.008, max: 3, tier: 0 }, // Công mạch: công
+    { key: 'atk.own', v: 0.01, max: 3, tier: 0 }, // công đệ tử hệ mình
+    { key: 'loot', v: 0.03, max: 3, tier: 1 }, // chiến lợi phẩm
+    { key: 'cap', v: 0.015, max: 3, tier: 1 }, // trận dung
+    { key: 'atk', v: 0.01, max: 3, tier: 2 },
+    { key: 'atk.own', v: 0.012, max: 3, tier: 2 },
+    { key: 'atk', v: 0.04, max: 1, tier: 3 }, // Phá Trận
+  ],
+  [
+    { key: 'def', v: 0.008, max: 3, tier: 0 }, // Thủ mạch: thủ
+    { key: 'hp', v: 0.01, max: 3, tier: 0 }, // sinh lực
+    { key: 'hp.own', v: 0.01, max: 3, tier: 1 }, // sinh lực đệ tử hệ mình
+    { key: 'def', v: 0.008, max: 3, tier: 1 },
+    { key: 'def', v: 0.01, max: 3, tier: 2 },
+    { key: 'hp', v: 0.012, max: 3, tier: 2 },
+    { key: 'def', v: 0.04, max: 1, tier: 3 }, // Bất Động Như Sơn
+  ],
+  [
+    { key: 'skill', v: 0.02, max: 3, tier: 0 }, // Đạo mạch: sức công pháp
+    { key: 'exp', v: 0.03, max: 3, tier: 0 }, // kinh nghiệm
+    { key: 'skill', v: 0.02, max: 3, tier: 1 },
+    { key: 'gather', v: 0.03, max: 3, tier: 1 }, // khai mỏ
+    { key: 'skill', v: 0.03, max: 3, tier: 2 },
+    { key: 'trib', v: 0.02, max: 3, tier: 2 }, // độ kiếp
+    { key: 'skill', v: 0.1, max: 1, tier: 3 }, // Thiên Nhân Hợp Nhất
+  ],
 ]
+export const TALENT_TREE_SIZE = TALENT_TREES[0].length
+export const TALENT_NODES = TALENT_TREES.flat()
 
 // ---------- Tàng Kinh Các ----------
 
@@ -479,6 +520,8 @@ export type BagDef =
   | { use: 'douse' } // Tức Hỏa Phù: dập linh hỏa đang thiêu núi (trận lực thôi tụt)
   | { use: 'move'; pick: boolean } // Di Sơn Phù (ngẫu nhiên) / Càn Khôn Phù (chọn chỗ): dời núi ở bản đồ giới, không dùng thẳng từ túi
   | { use: 'rename' } // Cải Danh Lệnh: đổi tên tông môn (Cài đặt → Tài khoản; server chặn tên trùng)
+  | { use: 'veil'; hours: number } // Ẩn Tung Phù: tông môn bị do thám thì linh điểu không dò được gì (Anti-Scouting của RoK)
+  | { use: 'frag' } // Tàng Bảo Đồ tàn phiến: không dùng thẳng — gom DIG_FRAGS mảnh ghép bản đồ ở bản đồ giới
 const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
 const speeds = <P extends string>(prefix: P, job?: SpeedJob) =>
@@ -527,6 +570,9 @@ const bag = {
   diSon: { use: 'move', pick: false }, // Di Sơn Phù: dời tông môn tới chỗ trống ngẫu nhiên vùng ngoài (Random Teleport)
   canKhon: { use: 'move', pick: true }, // Càn Khôn Phù: dời tới ô chọn ở vùng đã mở (Advanced Teleport)
   caiDanh: { use: 'rename' }, // Cải Danh Lệnh: đổi tên tông môn (Rename của RoK)
+  anTung8: { use: 'veil', hours: 8 }, // Ẩn Tung Phù: do thám không thấy gì (dùng thêm thì kéo dài)
+  anTung24: { use: 'veil', hours: 24 },
+  baoDo: { use: 'frag' }, // Tàng Bảo Đồ tàn phiến
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -560,6 +606,8 @@ export const BAG_FAMILIES = [
   'diSon',
   'canKhon',
   'caiDanh',
+  'anTung',
+  'baoDo',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -572,6 +620,7 @@ export type Reward = {
   elder?: ElderId
   exp?: number
   hallRes?: number
+  tokens?: Partial<Record<ElderId, number>> // tín vật trưởng lão (quà hạng Tông Môn Tranh Bá)
 }
 
 // Yêu thú cấp 1–15 (chỉ số = cấp − 1). Hạ cấp n mới đánh được cấp n + 1. Hạ xong thì hang trống một lúc rồi có con mới.
@@ -923,6 +972,51 @@ export const TOWER_GROW = 1.1
 export const TOWER_RES = 1500 // thưởng tầng 1, mỗi loại tài nguyên
 export const TOWER_RES_GROW = 1.06
 export const TOWER_ELDERS: Partial<Record<number, ElderId>> = { 30: 'macSau', 45: 'diepCoThanh' } // qua tầng n lần đầu: thu nhận
+// Trấn Tháp Các (Expedition Store của RoK): Tháp Lệnh — TOWER_COIN mỗi tầng tháp đã qua (kỷ lục, giữ qua luân hồi) và TOWER_CHEST_COIN
+// × phần rương mỗi lần mở Tĩnh tọa ngộ đạo; đổi vật phẩm, mỗi món có hạn mỗi tuần. star: tín vật trưởng lão của tuần (TOWER_STARS xoay)
+export const TOWER_COIN = 10
+export const TOWER_CHEST_COIN = 5
+export const TOWER_STARS: ElderId[] = ['macSau', 'diepCoThanh', 'bachVoNhai', 'hanBang', 'hoacThienCuong']
+export const TOWER_SHOP: { r?: Reward; star?: number; price: number; week: number }[] = [
+  { r: { items: { kinhThu2k: 1 } }, price: 40, week: 7 },
+  { r: { items: { thoiQuang60: 1 } }, price: 60, week: 5 },
+  { r: { items: { nganDuyen: 1 } }, price: 80, week: 3 },
+  { star: 2, price: 150, week: 5 },
+  { r: { items: { hoThe: 1, kimCuong: 1 } }, price: 160, week: 2 },
+  { r: { items: { kimDuyen: 1 } }, price: 300, week: 1 },
+]
+// Thí Luyện Yêu Hoàng (Karuak Ceremony của RoK): trong lễ yeuHoang chọn độ khó (TRIAL_DIFF: Dễ → Địa ngục, chọn rồi không đổi
+// trong lượt), TRIAL_GATES cửa đánh lần lượt bằng quân thật (thương binh về Đan phòng), mỗi trận tốn TRIAL_AP hành lực; sức cửa g =
+// TOWER_STR × TRIAL_DIFF[d] × TRIAL_GROW^g, cửa thứ 10, 20… là yêu tướng tinh anh (×TRIAL_ELITE). Thắng: trưởng lão được kinh nghiệm,
+// qua cửa, được 1 + d điểm Thí Luyện (chỉ số `trial`); mốc quà của lễ theo điểm trong lượt — khó hơn thì ít trận hơn cho cùng mốc
+export const TRIAL_DIFF = [1, 2, 4, 8, 16]
+export const TRIAL_GATES = 50
+export const TRIAL_GROW = 1.06
+export const TRIAL_ELITE = 1.5
+export const TRIAL_AP = 10
+export const TRIAL_EXP = 400
+// Phù văn (Runes của RoK): mỗi RUNE_CYCLE (theo giờ thế giới) quanh mỗi linh mạch / trận nhãn / Thiên Môn sinh một phù văn ở ô trống
+// cách tối đa RUNE_R ô — vị trí, loại (RUNE_KINDS), phẩm (RUNE_TIERS: Bạch / Lục / Lam / Tử / Cam, vòng trong phẩm cao hơn) theo mầm bản
+// đồ + chu kỳ. Xuất quân tới nhặt: tăng ích RUNE_HOURS giờ, mỗi lúc chỉ một phù văn (nhặt cái mới thay cái cũ); ai tới trước được.
+export const RUNE_CYCLE = 12 * 3_600_000
+export const RUNE_R = 2
+export const RUNE_HOURS = 1
+export const RUNE_KINDS: Bonus[] = ['atk', 'def', 'hp', 'gather', 'march', 'train']
+export const RUNE_TIERS = [0.03, 0.07, 0.1, 0.15, 0.2]
+// Tàng Bảo Đồ (Treasure Hunt của RoK): DIG_FRAGS tàn phiến ghép một bản đồ → một điểm đào ở ô trống trong DIG_R ô quanh tông môn (mầm
+// server; ai cũng thấy trên bản đồ giới nhưng chỉ chủ bản đồ đào được), giữ tối đa DIG_MAX điểm; xuất quân tới đào → quà (DIG_LOOT theo
+// trọng số, mầm của đội) qua thư, đội về ngay
+export const DIG_FRAGS = 7
+export const DIG_MAX = 3
+export const DIG_R = 6
+export const DIG_LOOT: { w: number; r: Reward }[] = [
+  { w: 30, r: { items: { thoiQuang60: 2, thachNang5k: 1 } } },
+  { w: 25, r: { items: { kinhThu2k: 2, thaoNang5k: 1 } } },
+  { w: 20, r: { items: { thoiQuang180: 1, khoangNang5k: 1 } } },
+  { w: 12, r: { items: { nganDuyen: 2 } } },
+  { w: 8, r: { items: { thoiQuang480: 1, kinhThu8k: 1 } } },
+  { w: 5, r: { items: { kimDuyen: 1, huongHoa200: 1 } } },
+]
 // Tĩnh tọa ngộ đạo (rương ngày Expedition của RoK): mỗi ngày một rương theo tầng tháp đã qua — mỗi TOWER_CHEST_STEP tầng thêm
 // một phần (nang, kinh thư, phù tăng tốc); chưa qua tầng nào thì chưa có
 export const TOWER_CHEST_STEP = 5
@@ -1020,33 +1114,51 @@ export const WAR_WIN: Reward = { items: { thoiQuang60: 2, kimDuyen: 1, kinhThu2k
 export const WAR_LOSE: Reward = { items: { thoiQuang60: 1, nganDuyen: 1 } }
 // Tranh Đoạt Linh Châu (Ark of Osiris giản lược — doc 6 mục 3.2 bước 2): 20h Chủ nhật giờ VN (ARK_DAY: 0 = thứ Hai), các tiên minh đã
 // ghi danh ghép cặp theo điểm minh chiến; mỗi chiến binh một đội (đội đầu đội hình Luận Kiếm Đài, đệ tử ảo — không mất gì). Chiến
-// trường 5 ô: 0 Linh Đài minh A · 1 Tiểu Trận Bắc · 2 Trung Điện · 3 Tiểu Trận Nam · 4 Linh Đài minh B. ARK_ROUNDS hiệp, mỗi hiệp
+// trường 11 ô (ARK_ADJ). ARK_ROUNDS hiệp, mỗi hiệp
 // ARK_ROUND: đội đi một ô về ô muốn tới, ô có hai bên thì đánh (bên giữ ô +ARK_HOLD_DEF thủ), bên thua về Linh Đài nghỉ một hiệp.
 // Chiếm lần đầu / giữ mỗi hiệp ra điểm; hết hiệp ARK_ORB_AT Linh Châu hiện ở Trung Điện — mang về Tiểu Trận mình giữ (chưa nạp lần nào)
 // thì nạp: +ARK_CHARGE (lần sau ×1,5), Châu về Trung Điện sau một hiệp. Hết hiệp cuối: minh nhiều điểm thắng.
 export const ARK_DAY = 6
 export const ARK_HOUR = 20
 export const ARK_ROUND = 10 * 60_000
-export const ARK_ROUNDS = 6
+export const ARK_ROUNDS = 8 // chiến trường 11 ô: thêm hai hiệp cho đường dài hơn
 export const ARK_ORB_AT = 2
 export const ARK_MIN = 3
 export const ARK_MAX = 15
 export const ARK_HOLD_DEF = 0.1
+// Chiến trường 11 ô (như bản đồ Ark of Osiris), minh A bên trái, minh B bên phải, đối xứng qua tâm (ô x ↔ ô 10 − x):
+// 0 Linh Đài A · 1 Tụ Linh Nhãn Tây Bắc · 2 Linh Tháp Tây · 3 Tụ Linh Nhãn Tây Nam · 4 Tiểu Trận Bắc · 5 Trung Điện · 6 Tiểu Trận Nam ·
+// 7 Tụ Linh Nhãn Đông Bắc · 8 Linh Tháp Đông · 9 Tụ Linh Nhãn Đông Nam · 10 Linh Đài B
 export const ARK_ADJ = [
-  [1, 3],
+  [1, 2, 3],
   [0, 2, 4],
-  [1, 3],
-  [0, 2, 4],
-  [1, 3],
+  [0, 1, 3, 5],
+  [0, 2, 6],
+  [1, 5, 7],
+  [2, 4, 6, 8],
+  [3, 5, 9],
+  [4, 8, 10],
+  [5, 7, 9, 10],
+  [6, 8, 10],
+  [7, 8, 9],
 ]
-export const ARK_TAKE = [0, 100, 200, 100, 0]
-export const ARK_HOLD = [0, 20, 40, 20, 0]
+export const ARK_HOME = [0, 10] as const // Linh Đài của minh A / B
+export const ARK_CENTER = 5 // Trung Điện: Linh Châu hiện ở đây
+export const ARK_OUTPOSTS = [4, 6] // Tiểu Trận: nạp Linh Châu
+export const ARK_OBELISKS = [1, 3, 7, 9] // Tụ Linh Nhãn: đội phe giữ đi thẳng giữa các Tụ Linh Nhãn phe mình trong một hiệp
+export const ARK_SHRINES = [2, 8] // Linh Tháp: phe giữ mỗi tháp +ARK_SHRINE công ở mọi trận
+export const ARK_SHRINE = 0.1
+export const ARK_TAKE = [0, 60, 80, 60, 100, 200, 100, 60, 80, 60, 0]
+export const ARK_HOLD = [0, 10, 15, 10, 20, 40, 20, 10, 15, 10, 0]
 export const ARK_CHARGE = 400
 export const ARK_WIN: Reward = { items: { thoiQuang180: 1, kimDuyen: 1, kinhThu2k: 2 } }
 export const ARK_LOSE: Reward = { items: { thoiQuang60: 2, nganDuyen: 1 } }
 // Cửu Thiên Luận Đạo Hội (Osiris League giản lược): cả mùa mỗi trận Linh Châu cộng điểm giải (thắng LEAGUE_WIN, thua LEAGUE_LOSE);
 // hết mùa LEAGUE_PRIZES.length minh đầu — mọi người trong minh nhận quà theo hạng
 export const LEAGUE_WIN = 3
+// Vòng playoff (như Osiris League): trận Linh Châu áp chót của mùa là bán kết của LEAGUE_PLAYOFF minh đầu bảng giải (1–4, 2–3, không
+// cần ghi danh); trận cuối mùa là chung kết (hai minh thắng) và tranh hạng ba (hai minh thua). Hết mùa quà giải theo hạng playoff.
+export const LEAGUE_PLAYOFF = 4
 export const LEAGUE_LOSE = 1
 export const LEAGUE_PRIZES: Reward[] = [
   { items: { kimDuyen: 3, thoiQuang480: 2, huongHoa200: 1 } },
@@ -1194,6 +1306,7 @@ export const MERCHANT_POOL: { item: BagId; n: number; res: Res; price: number; w
   { item: 'hanhLuc50', n: 1, res: 'linhKhoang', price: 600, w: 6 },
   { item: 'khuechTran8', n: 1, res: 'linhThach', price: 900, w: 3 },
   { item: 'sonHa12', n: 1, res: 'linhThao', price: 700, w: 4 },
+  { item: 'anTung8', n: 1, res: 'linhKhoang', price: 800, w: 3 },
 ]
 
 // ---------- Thiên Đạo Biên Niên (Monument của RoK) ----------
@@ -1318,6 +1431,22 @@ export const NPC_RES = 20_000
 // Giúp đỡ: mỗi việc nhờ được giúp tối đa ALLY_HELPS lần, mỗi lần bớt max(HELP_MIN, HELP_SHARE × thời gian việc).
 export const ALLY_HALL = 10
 export const ALLY_COST = 20_000
+// Minh chủ đổi tên / hiệu tiên minh (như RoK): tốn ALLY_RENAME Minh khố, cách nhau ít nhất ALLY_RENAME_COOL
+// Minh trận thần thông (Alliance Skills của RoK): trưởng lão / minh chủ bật bằng Minh khố — cả minh được tăng ích trong hours giờ; hết hiệu
+// lực thêm ALLY_SKILL_COOL mới bật lại được
+export const ALLY_SKILLS = {
+  tuLinh: { key: 'gather', v: 0.25, cost: 3000, hours: 8 }, // Đại Tụ Linh: khai mỏ nhanh
+  loBan: { key: 'build', v: 0.1, cost: 3000, hours: 8 }, // Lỗ Ban Trận: xây nhanh
+  luyenBinh: { key: 'train', v: 0.15, cost: 3000, hours: 8 }, // Luyện Binh Trận: tuyển nhanh
+  thanHanh: { key: 'march', v: 0.1, cost: 3000, hours: 8 }, // Thần Hành Trận: hành quân nhanh
+  kiemTran: { key: 'atk', v: 0.05, cost: 5000, hours: 2 }, // Kiếm Trận Sát Phạt: công
+  hoSon: { key: 'def', v: 0.05, cost: 5000, hours: 2 }, // Hộ Sơn Kim Trận: thủ
+} satisfies Record<string, { key: Bonus; v: number; cost: number; hours: number }>
+export type AllySkillId = keyof typeof ALLY_SKILLS
+export const ALLY_SKILL_IDS = Object.keys(ALLY_SKILLS) as AllySkillId[]
+export const ALLY_SKILL_COOL = 24 * 3_600_000
+export const ALLY_RENAME = 500
+export const ALLY_RENAME_COOL = 7 * 86_400_000
 export const ALLY_MAX = 30
 export const ALLY_ELDERS = 4 // số trưởng lão tối đa
 export const ALLY_HELPS = 10
@@ -1511,6 +1640,25 @@ export const VEIN_BUFF = [0.03, 0.05, 0.08] // theo cấp điểm 1..3 (vòng ng
 export const VEIN_CAP = 0.3
 // Chiếm lần đầu trong mùa (first-capture của Lost Kingdom): linh mạch / trận nhãn / Thiên Môn lần đầu có tiên minh giữ thì mọi người
 // trong minh nhận quà qua thư (mỗi điểm một lần mỗi mùa), theo cấp điểm 1..3
+// Hộ trận linh thú (holy-site guardians của RoK): linh mạch / trận nhãn / Thiên Môn chưa ai thuần phục có đội linh thú giữ —
+// đánh bại (một đội hay kết trận) mới chiếm được lần đầu trong mùa; bại thì linh thú không hồi (tới mùa sau). [sức, bậc] theo cấp
+export const GUARDIANS: Partial<Record<'vein' | 'gate' | 'heaven', [str: number, tier: 1 | 2 | 3 | 4 | 5][]>> = {
+  vein: [
+    [600, 2],
+    [3000, 3],
+    [10_000, 4],
+  ],
+  gate: [
+    [1200, 2],
+    [5000, 3],
+    [14_000, 4],
+  ],
+  heaven: [
+    [40_000, 5],
+    [40_000, 5],
+    [40_000, 5],
+  ],
+}
 export const FIRST_TAKE: Partial<Record<'vein' | 'gate' | 'heaven', Reward[]>> = {
   vein: [
     { items: { thoiQuang15: 2, thachNang5k: 1 } },
@@ -1665,6 +1813,10 @@ export const FORT_BUFFS: { key: Bonus; v: number }[] = [
   { key: 'hp', v: 0.03 },
   { key: 'march', v: 0.05 },
 ]
+// Phân đà (Alliance Fortress thứ hai trở đi của RoK): minh đông người dựng thêm — mỗi FORT_PER người thêm một (trần FORT_MAX,
+// tính cả Tổng đà), cái thứ n tốn FORT_COST × n Minh khố; nới lãnh thổ như Tổng đà, tăng ích không cộng dồn.
+export const FORT_PER = 10
+export const FORT_MAX = 3
 export const FLAG_COST = 1000
 export const FLAG_BUILD = 3_600_000
 export const FLAG_BASE = 2
@@ -1675,6 +1827,19 @@ export const FLAG_GAP = 2
 export const FLAG_HP = 30_000
 export const FLAG_REPAIR = 12 * 3_600_000
 export const FLAG_GUARD_MAX = 3 // đội đóng quân giữ mỗi trận kỳ: lực chiến của họ chặn bớt sức phá
+// Minh khoáng (Alliance Resource Center của RoK): trưởng lão / minh chủ dựng ở ô trống trong lãnh thổ minh mình (như trận kỳ,
+// không nới lãnh thổ), mỗi minh một cái, chọn loại tài nguyên; tốn ALLY_MINE_COST Minh khố, dựng ALLY_MINE_BUILD. Xong thì kho
+// ALLY_MINE_STOCK, người trong minh khai ALLY_MINE_RATE mỗi giờ mỗi đội (hơn mỏ thường), không ai cướp được; cạn hay quá
+// ALLY_MINE_LIFE sau khi dựng xong thì tự tháo.
+export const ALLY_MINE_COST = 2000
+export const ALLY_MINE_BUILD = 2 * 3_600_000
+export const ALLY_MINE_STOCK = 3_000_000
+export const ALLY_MINE_RATE = 30_000
+export const ALLY_MINE_LIFE = 3 * 86_400_000
+// Góp quân xây: đội đóng ở trận kỳ / Tổng đà đang dựng làm dựng nhanh hơn — mỗi BUILD_PER đệ tử thêm một lần tốc, trần
+// ×BUILD_MAX; đội gọi về thì chậm lại. Dựng xong thì đội ở lại giữ.
+export const BUILD_PER = 1000
+export const BUILD_MAX = 4
 // Linh triều: mỗi TIDE_EVERY một vùng có triều trong TIDE_LEN: sản lượng +TIDE_PROD cho tông môn trong vùng, khai mỏ +TIDE_MINE
 export const TIDE_EVERY = 8 * 3_600_000
 export const TIDE_LEN = 2 * 3_600_000
@@ -1712,6 +1877,38 @@ export const EVENT_PRIZES: Reward[] = [
   { res: b(60000, 60000, 60000), items: { daiTuKhi: 2, phaCanh: 1 } },
   { res: b(40000, 40000, 40000), items: { daiTuKhi: 1 } },
   { res: b(20000, 20000, 20000), items: { tuKhi: 5 } },
+]
+// Lễ có xếp hạng (Tông Môn Tranh Bá — Mightiest Governor, Trảm Yêu Lệnh — Clarion Call): hết lượt lễ, top FEST_TOP điểm lễ của giới
+// nhận thư quà theo hạng (1 · 2–3 · 4–10)
+export const FEST_RANKED = ['tranhBa', 'tramYeu', 'tichCoc', 'gioiChu'] as const
+// Trưởng lão của đợt (MGE: mỗi tướng thưởng 4 lượt liền rồi đổi): top FEST_STAR_TOKENS.length của lượt lễ nhận tín vật người đó theo hạng
+export const FEST_STAR: Partial<Record<FestId, ElderId[]>> = {
+  tranhBa: ['hanBang', 'bachVoNhai', 'macSau', 'hoacThienCuong', 'diepCoThanh'],
+}
+export const FEST_STAR_TOKENS = [30, 20, 20, 10, 10, 10, 10, 10, 10, 10]
+// Điểm tuyển mỗi đệ tử theo bậc 1…5 (MGE: 5 / 10 / 20 / 40 / 100, chia 5)
+export const TRAIN_PTS = [1, 2, 4, 8, 20]
+// Bảng tiên minh (Clarion Call): tổng điểm lễ người trong minh; hết lượt, mọi người có điểm trong FEST_ALLY_PRIZES.length minh đầu nhận
+// quà theo hạng minh
+export const FEST_ALLY = ['tramYeu'] as const
+export const FEST_ALLY_PRIZES: Reward[] = [
+  { items: { kinhThu8k: 1, chienY: 1, kimCuong: 1 } },
+  { items: { kinhThu2k: 2, chienY: 1 } },
+  { items: { kinhThu2k: 1, kimCuong: 1 } },
+]
+export const FEST_TOP = 10
+export const FEST_PRIZES: Reward[] = [
+  { items: { kimDuyen: 2, thoiQuang480: 2, hoSon24: 1 } },
+  { items: { kimDuyen: 1, thoiQuang480: 1, thoiQuang180: 2 } },
+  { items: { nganDuyen: 2, thoiQuang180: 1, thoiQuang60: 2 } },
+]
+// Xếp hạng từng ải (Stage Rankings của MGE): lễ FEST_STAGED — hết mỗi ải (qua 0h), top FEST_TOP điểm của riêng ải đó nhận quà ải qua
+// thư theo hạng (1 · 2–3 · 4–10); quà cả lượt vẫn theo FEST_PRIZES
+export const FEST_STAGED = ['tranhBa'] as const
+export const FEST_STAGE_PRIZES: Reward[] = [
+  { items: { nganDuyen: 1, thoiQuang180: 1, thoiQuang60: 1 } },
+  { items: { thoiQuang60: 2, thoiQuang15: 2 } },
+  { items: { thoiQuang60: 1, thoiQuang15: 1 } },
 ]
 
 // ---------- Thành tựu (như Achievements của RoK) ----------
@@ -1762,6 +1959,14 @@ export const TOKEN_SUMMON = 10
 export const STAR_MAX = 6
 export const STAR_COST = [10, 20, 30, 40, 50] // tín vật lên sao 2, 3, 4, 5, 6 (thu nhận là 1 sao)
 export const STAR_BONUS: Partial<Record<Bonus, number>> = { atk: 0.03, hp: 0.03, skill: 0.05 } // mỗi sao trên 1, đội người đó dẫn
+// Ngộ công pháp (Skill Upgrade của RoK): tín vật của trưởng lão, lần ngộ thứ k tốn SKILL_COST[k] (chuỗi tượng tướng huyền thoại, 16 lần cho
+// người 3 tâm pháp); mầm server chọn ngẫu nhiên một môn đã mở (công pháp luôn mở, tâm pháp mở theo cấp) chưa tới tầng SKILL_MAX lên một tầng. Công pháp mỗi tầng trên 1: sức công pháp +SKILL_LV_POWER;
+// tâm pháp: hiệu lực ×(1 + PASSIVE_LV × (tầng − 1)). Mọi môn đều tầng cuối: Bản Mệnh Thần Thông (EXPERTISE, đội người đó dẫn).
+export const SKILL_MAX = 5
+export const SKILL_COST = [10, 10, 15, 15, 30, 30, 40, 40, 45, 45, 50, 50, 75, 75, 80, 80]
+export const SKILL_LV_POWER = 0.08
+export const PASSIVE_LV = 0.25
+export const EXPERTISE: Partial<Record<Bonus, number>> = { atk: 0.05, def: 0.05, hp: 0.05, skill: 0.1 }
 // Trưởng lão có tín vật trong Chiêu Hiền Đài (người của sự kiện / mùa giải thì không)
 export const TAVERN_ELDERS: Record<TavernKind, ElderId[]> = {
   silver: ['thanhPhong', 'thachKien', 'nhuYen', 'loiChan', 'vanHac'],
@@ -1809,6 +2014,64 @@ export const TAVERN_POOL: Record<TavernKind, Prize[]> = {
     { w: 2, r: { items: { chienY: 1 } } },
   ],
 }
+
+// ---------- Tu Tiên Lệnh (Lucerne Scroll — thẻ mùa, doc 6 F1) ----------
+
+// Cả mùa giới: mỗi rương Nhật Khóa +PASS_CHEST điểm lệnh, mỗi việc nhiệm vụ tuần +PASS_WEEK; mỗi PASS_STEP điểm lên một cấp (tối đa
+// PASS_LEVELS), mỗi cấp một quà nhánh thường. Kim Lệnh (Hương Hỏa từ PASS_VIP — không bán) thêm một quà mỗi cấp, nhận bù cả những cấp
+// đã qua. Hết mùa (luân hồi / phi thăng) lệnh làm lại từ đầu, quà chưa nhận mất.
+export const PASS_HALL = 3
+export const PASS_STEP = 100
+export const PASS_LEVELS = 50
+export const PASS_CHEST = 20
+export const PASS_WEEK = 30
+export const PASS_VIP = 5
+// quà cấp lv (1…PASS_LEVELS): mỗi 10 cấp rương lớn, mỗi 5 cấp rương vừa, còn lại xoay vòng; tài nguyên là nang (xoay ba loại)
+const NANG = ['thachNang5k', 'thaoNang5k', 'khoangNang5k'] as const
+const NANG_BIG = ['thachNang20k', 'thaoNang20k', 'khoangNang20k'] as const
+export const PASS_FREE: Reward[] = Array.from({ length: PASS_LEVELS }, (_, i) => {
+  const lv = i + 1
+  if (lv % 10 === 0) return { items: { kimDuyen: 1, thoiQuang180: 1, [NANG_BIG[(lv / 10) % 3]]: 1 } }
+  if (lv % 5 === 0) return { items: { nganDuyen: 1, kinhThu2k: 1 } }
+  const small: Reward[] = [
+    { items: { thoiQuang15: 2 } },
+    { items: { [NANG[lv % 3]]: 1 } },
+    { items: { kinhThu500: 2 } },
+    { items: { luyenBinh60: 1 } },
+  ]
+  return small[lv % 4]
+})
+export const PASS_GOLD: Reward[] = Array.from({ length: PASS_LEVELS }, (_, i) => {
+  const lv = i + 1
+  if (lv === PASS_LEVELS) return { items: { kimDuyen: 3, huongHoa200: 1 } }
+  if (lv % 10 === 0) return { items: { kimDuyen: 1, tuLinh24: 1 } }
+  if (lv % 5 === 0) return { items: { thoiQuang60: 2, chienY: 1 } }
+  const small: Reward[] = [
+    { items: { loBan60: 1 } },
+    { items: { thoiQuang15: 3 } },
+    { items: { kinhThu2k: 1 } },
+    { items: { [NANG[(lv + 1) % 3]]: 2 } },
+  ]
+  return small[lv % 4]
+})
+
+// Quà mừng Chủ điện lên tầng (City Hall rewards của RoK): mỗi tầng một phần qua thư; tầng đột phá cảnh giới (sau độ kiếp, TRIBS) thêm lễ
+// đột phá (Kim Duyên, Thời Quang 8 giờ)
+export const hallGift = (lv: number): Reward => {
+  const big = TRIBS.some(t => t.hall + 1 === lv)
+  const nang = lv >= 15 ? 'thachNang20k' : 'thachNang5k'
+  return {
+    items: {
+      thoiQuang60: 1 + Math.floor(lv / 5),
+      [nang]: 1,
+      ...(lv >= 8 && { kinhThu2k: 1 }),
+      ...(big && { kimDuyen: 1, thoiQuang480: 1 }),
+    },
+  }
+}
+// Hồi Quy Lễ (quà người chơi cũ quay lại): vắng từ RETURN_AWAY trở lên, lần vào game đầu tiên nhận thư quà (theo tầng Chủ điện)
+export const RETURN_AWAY = 7 * 24 * 3_600_000
+export const RETURN_GIFT: Reward = { hallRes: 300, items: { thoiQuang180: 2, kinhThu2k: 2, nganDuyen: 1, hoSon24: 1 } }
 
 // ---------- Hương Hỏa (như VIP của RoK — không bán, chỉ đến từ việc chơi) ----------
 
@@ -1860,6 +2123,29 @@ export const VIP_CHEST: Reward[] = VIP_LEVELS.map((_, i) => ({
   },
 }))
 
+// Hương Hỏa Các (VIP Store của RoK, mua bằng tài nguyên — không bán tiền thật): món mở từ cấp Hương Hỏa `lv`, mỗi tuần mua tối
+// đa `week` lần (thứ Hai làm mới như RoK), giá = price × tầng Chủ điện bằng một loại tài nguyên — rẻ hơn Thương nhân vân du,
+// vài món chỉ bán ở đây (Tạp Dịch Lệnh, Di Sơn / Càn Khôn Phù, Kim Duyên Phù)
+export const VIP_SHOP: { item: BagId; n: number; res: Res; price: number; lv: number; week: number }[] = [
+  { item: 'thoiQuang15', n: 2, res: 'linhThach', price: 250, lv: 1, week: 10 },
+  { item: 'hanhLuc50', n: 1, res: 'linhKhoang', price: 400, lv: 1, week: 10 },
+  { item: 'loBan60', n: 1, res: 'linhThao', price: 450, lv: 2, week: 5 },
+  { item: 'luyenBinh60', n: 1, res: 'linhThach', price: 400, lv: 3, week: 5 },
+  { item: 'tuLinh8', n: 1, res: 'linhThao', price: 500, lv: 3, week: 3 },
+  { item: 'kinhThu2k', n: 1, res: 'linhKhoang', price: 350, lv: 4, week: 5 },
+  { item: 'anTung8', n: 1, res: 'linhKhoang', price: 600, lv: 4, week: 2 },
+  { item: 'thoiQuang60', n: 1, res: 'linhKhoang', price: 550, lv: 5, week: 5 },
+  { item: 'hoSon8', n: 1, res: 'linhThach', price: 1000, lv: 5, week: 2 },
+  { item: 'nganDuyen', n: 1, res: 'linhThach', price: 700, lv: 6, week: 3 },
+  { item: 'diSon', n: 1, res: 'linhThao', price: 1500, lv: 6, week: 2 },
+  { item: 'tapDich48', n: 1, res: 'linhKhoang', price: 3000, lv: 7, week: 2 },
+  { item: 'hoSon24', n: 1, res: 'linhThach', price: 2500, lv: 8, week: 1 },
+  { item: 'thoiQuang180', n: 1, res: 'linhKhoang', price: 1500, lv: 9, week: 3 },
+  { item: 'canKhon', n: 1, res: 'linhThao', price: 4000, lv: 10, week: 1 },
+  { item: 'kimDuyen', n: 1, res: 'linhThach', price: 5000, lv: 11, week: 1 },
+  { item: 'tuLinh24', n: 1, res: 'linhThao', price: 1500, lv: 12, week: 2 },
+]
+
 // ---------- Trung tâm sự kiện (như Events của RoK) ----------
 
 // Chỉ số đo tiến độ: tổng tích luỹ suy từ state (thế lực, tổng tầng công trình…) hoặc bộ đếm trong stats. Tiến độ của một
@@ -1872,10 +2158,12 @@ export const METRICS = [
   'forge', // tổng cấp pháp bảo
   'elder', // tổng cấp trưởng lão
   'train', // đệ tử tuyển xong
+  'trainPts', // điểm tuyển theo bậc (TRAIN_PTS; nâng bậc: phần chênh — Tông Môn Tranh Bá như MGE)
   'heal', // thương binh chữa xong
   'brew', // đan luyện xong
   'win', // trận thắng
   'hunt', // yêu thú hạ được
+  'huntLv', // tổng cấp yêu thú hạ được (sơn môn lẫn bản đồ giới — Trảm Yêu Lệnh chấm theo cấp)
   'realm', // tầng bí cảnh đã qua
   'tower', // tầng Thông Thiên Tháp
   'speed', // phút tăng tốc đã dùng (phù, đan)
@@ -1890,6 +2178,9 @@ export const METRICS = [
   'sites', // thôn trang / động phủ đã ghé
   'chain', // yêu thú giới hạ bằng săn liên hoàn (không về núi giữa các trận)
   'rescue', // việc cứu nạn Thôn Trang Gặp Nạn đã báo công
+  'runes', // phù văn đã nhặt
+  'guards', // trận thắng hộ trận linh thú
+  'trial', // cửa Thí Luyện Yêu Hoàng đã qua
 ] as const
 export type Metric = (typeof METRICS)[number]
 // Khung giờ: newbie — ngày thứ from..to (0 = ngày lập tông môn) · week — các thứ trong tuần giờ VN (0 = thứ Hai … 6 = Chủ nhật)
@@ -1899,19 +2190,38 @@ export type FestWindow =
   | { kind: 'week'; days: number[] }
   | { kind: 'cycle'; every: number; len: number; offset: number }
   | { kind: 'dates'; from: number[]; len: number } // lễ theo lịch: mở len ngày từ mỗi ngày trong from (ngày giờ VN, xem vnDay)
+  | { kind: 'season'; from: number; to: number } // ngày thứ from..to của mùa giới (từ lúc mở mùa, seasonAt — người trong giới)
 // login — mỗi ngày đăng nhập mở thêm một quà · tasks — mỗi việc một quà · points — làm việc ra điểm, đủ mốc nhận quà;
 // stages: điểm mỗi việc theo từng ngày của khung (như Mightiest Governor: hôm xây, hôm nghiên cứu, hôm tuyển…), một phần tử = cả khung
 // activity — mỗi việc xong cộng pts điểm hoạt lực, đủ mốc mở rương (như Daily Objectives của RoK)
 // shop — làm việc ra lệnh bài (như points), đổi lấy quà trong kho, mỗi món tối đa max lần (như Hero Returns của RoK)
+// wheel — làm việc ra lệnh (như shop), quay vòng quà (Wheel of Fortune của RoK): mỗi ngày một lượt miễn phí, lượt thêm tốn lệnh
 // panel: 'daily' — hiện ở bảng Nhiệm vụ ngày thay vì trung tâm sự kiện
 // Ngày giờ VN của ngày dương y-m-d (số ngày kể từ 1/1/1970, như dayOf) — cho lễ theo lịch âm đổi ngày mỗi năm
 export const vnDay = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d) / 86_400_000
+// Lễ rơi đồ (Strategic Reserve): việc nền có xác suất rơi Linh Nang qua thư — săn yêu thú thắng (sơn môn, bản đồ giới), đội khai mỏ về
+export type DropSrc = 'hunt' | 'gather'
 export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
   | { kind: 'login'; rewards: Reward[] }
-  | { kind: 'tasks'; abs?: boolean; tasks: { m: Metric; n: number; reward: Reward }[] } // abs: so chỉ số tuyệt đối (đạt tầng n…)
+  // tasks — abs: so chỉ số tuyệt đối (đạt tầng n…); day: việc mở từ giai đoạn (ngày) này; chests: rương theo số việc đã nhận quà
+  | {
+      kind: 'tasks'
+      abs?: boolean
+      tasks: { m: Metric; n: number; reward: Reward; day?: number }[]
+      chests?: { need: number; reward: Reward }[]
+    }
   | { kind: 'points'; stages: Partial<Record<Metric, number>>[]; goals: number[]; rewards: Reward[] }
   | { kind: 'activity'; tasks: { m: Metric; n: number; pts: number }[]; goals: number[]; rewards: Reward[] }
   | { kind: 'shop'; stages: Partial<Record<Metric, number>>[]; shop: { reward: Reward; price: number; max: number }[] }
+  | { kind: 'drop'; chance: Partial<Record<DropSrc, number>>; gift: Reward; goals: number[]; rewards: Reward[] } // lễ rơi đồ
+  | {
+      kind: 'wheel'
+      stages: Partial<Record<Metric, number>>[]
+      cost: number // lệnh mỗi lượt quay thêm
+      pity: number // lượt thứ pity, 2·pity… chắc trúng ô đầu (tín vật nhiều nhất)
+      elders: ElderId[] // trưởng lão chủ lễ, đổi mỗi lượt lễ
+      slots: { w: number; r?: Reward; token?: number }[] // token: số tín vật của trưởng lão chủ lễ
+    }
 )
 const fests = {
   // Nhật Khóa (Daily Objectives của RoK): làm mới 0h giờ VN mỗi ngày; mỗi việc xong cộng điểm hoạt lực, 5 rương theo mốc.
@@ -1959,22 +2269,49 @@ const fests = {
     ],
   },
   // Tân Thủ Chi Lộ: chuỗi mục tiêu 7 ngày đầu — mỗi mục tiêu một phần quà
+  // Khai Sơn Thất Nhật (Create Your Own History): 8 ngày đầu của tông môn, mỗi ngày mở một nhánh (Nhập Sơn → Chiêu Hiền → Tụ Linh →
+  // Khai Mạch → Bế Quan), việc nào xong nhận quà việc đó; rương cuối theo số việc đã nhận — bỏ một ngày là tiếc
   tanThu: {
-    window: { kind: 'newbie', from: 0, to: 6 },
+    window: { kind: 'newbie', from: 0, to: 7 },
     kind: 'tasks',
     abs: true,
     tasks: [
-      { m: 'hall', n: 2, reward: { items: { loBan15: 2 } } },
-      { m: 'build', n: 10, reward: { items: { thoiQuang15: 2 } } },
-      { m: 'hall', n: 4, reward: { res: b(3000, 3000, 3000) } },
-      { m: 'train', n: 100, reward: { items: { luyenBinh60: 1 } } },
-      { m: 'win', n: 3, reward: { items: { kinhThu500: 2 } } },
-      { m: 'hall', n: 6, reward: { items: { loBan60: 2, thoiQuang60: 1 } } },
-      { m: 'tech', n: 3, reward: { items: { ngoDao60: 2 } } },
-      { m: 'train', n: 600, reward: { items: { luyenBinh180: 1 } } },
-      { m: 'hunt', n: 8, reward: { items: { kinhThu2k: 1, chienY: 1 } } },
-      { m: 'hall', n: 8, reward: { res: b(15000, 15000, 15000), items: { tuLinh24: 1 } } },
-      { m: 'power', n: 20000, reward: { items: { thoiQuang480: 1, hoSon24: 1 } } },
+      { m: 'hall', n: 2, day: 0, reward: { items: { loBan15: 2 } } },
+      { m: 'hall', n: 4, day: 0, reward: { res: b(3000, 3000, 3000) } },
+      { m: 'build', n: 15, day: 0, reward: { items: { thoiQuang15: 2 } } },
+      { m: 'build', n: 30, day: 0, reward: { items: { loBan60: 1 } } },
+      { m: 'win', n: 3, day: 0, reward: { items: { kinhThu500: 2 } } },
+      { m: 'win', n: 10, day: 0, reward: { items: { thoiQuang60: 1 } } },
+      { m: 'elder', n: 15, day: 1, reward: { items: { kinhThu500: 3 } } },
+      { m: 'elder', n: 30, day: 1, reward: { items: { kinhThu2k: 1 } } },
+      { m: 'draw', n: 3, day: 1, reward: { items: { nganDuyen: 1 } } },
+      { m: 'draw', n: 8, day: 1, reward: { items: { kimDuyen: 1 } } },
+      { m: 'hall', n: 6, day: 1, reward: { items: { loBan60: 2, thoiQuang60: 1 } } },
+      { m: 'ally', n: 5, day: 1, reward: { items: { thoiQuang15: 3 } } },
+      { m: 'tech', n: 3, day: 2, reward: { items: { ngoDao60: 2 } } },
+      { m: 'tech', n: 8, day: 2, reward: { items: { ngoDao180: 1 } } },
+      { m: 'hunt', n: 5, day: 2, reward: { items: { kinhThu2k: 1 } } },
+      { m: 'hunt', n: 15, day: 2, reward: { items: { kinhThu2k: 1, chienY: 1 } } },
+      { m: 'train', n: 300, day: 2, reward: { items: { luyenBinh60: 1 } } },
+      { m: 'train', n: 1000, day: 2, reward: { items: { luyenBinh180: 1 } } },
+      { m: 'hall', n: 8, day: 3, reward: { res: b(15000, 15000, 15000), items: { tuLinh24: 1 } } },
+      { m: 'gather', n: 20000, day: 3, reward: { items: { khaiLinh8: 1 } } },
+      { m: 'forge', n: 2, day: 3, reward: { items: { thoiQuang60: 1 } } },
+      { m: 'forge', n: 6, day: 3, reward: { items: { thoiQuang180: 1 } } },
+      { m: 'elder', n: 60, day: 3, reward: { items: { kinhThu2k: 2 } } },
+      { m: 'sites', n: 3, day: 3, reward: { items: { sonHa12: 1 } } },
+      { m: 'speed', n: 120, day: 4, reward: { items: { thoiQuang60: 2 } } },
+      { m: 'speed', n: 600, day: 4, reward: { items: { thoiQuang180: 1 } } },
+      { m: 'realm', n: 3, day: 4, reward: { items: { kinhThu2k: 1 } } },
+      { m: 'realm', n: 8, day: 4, reward: { items: { kinhThu8k: 1 } } },
+      { m: 'power', n: 20000, day: 4, reward: { items: { thoiQuang480: 1, hoSon24: 1 } } },
+      { m: 'power', n: 50000, day: 4, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+    ],
+    chests: [
+      { need: 8, reward: { items: { thoiQuang60: 2, nganDuyen: 1 } } },
+      { need: 16, reward: { items: { thoiQuang180: 1, kinhThu2k: 2 } } },
+      { need: 24, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+      { need: 30, reward: { items: { kimDuyen: 2, tuLinh24: 1, huongHoa200: 1 } } },
     ],
   },
   // Tông Lệnh Bảo Khố (Hero Returns): 8 ngày đầu — xây, tuyển, săn yêu, nghiên cứu ra Tông Môn Lệnh; đổi quà, mỗi món có hạn
@@ -2010,16 +2347,17 @@ const fests = {
   },
   // Tông Môn Tranh Bá (như Mightiest Governor): thứ Hai → thứ Bảy, mỗi ngày một việc được điểm cao
   tranhBa: {
+    // Tông Môn Tranh Bá (Mightiest Governor): 6 ải như RoK, mỗi ải một ngày; trưởng lão của đợt (FEST_STAR) — top 10 nhận tín vật
     window: { kind: 'week', days: [0, 1, 2, 3, 4, 5] },
     hall: 5,
     kind: 'points',
     stages: [
-      { build: 60, speed: 1 }, // hôm 1: xây
-      { tech: 120, speed: 1 }, // hôm 2: nghiên cứu công pháp
-      { train: 1, speed: 1 }, // hôm 3: tuyển đệ tử
-      { hunt: 60, win: 20, realm: 60 }, // hôm 4: săn yêu, bí cảnh
-      { power: 1 }, // hôm 5: tăng thế lực
-      { build: 60, tech: 120, train: 1, hunt: 60, forge: 80, speed: 1 }, // hôm 6: tổng lực
+      { trainPts: 1, speed: 1 }, // ải 1 luyện binh: điểm theo bậc đệ tử (nâng bậc: phần chênh), phút tăng tốc
+      { huntLv: 20, realm: 60 }, // ải 2 trảm yêu: theo cấp yêu thú, tầng bí cảnh
+      { gather: 0.01, build: 40 }, // ải 3 khai mỏ: mỗi 100 tài nguyên mang về 1 điểm; tầng công trình
+      { power: 1 }, // ải 4 thế lực: mỗi điểm thế lực tăng thêm
+      { kp: 0.5, raid: 200 }, // ải 5 tranh đoạt (diệt địch): chiến công, lần cướp thắng
+      { trainPts: 0.8, huntLv: 16, gather: 0.008, build: 32, tech: 100, kp: 0.4, speed: 0.8 }, // ải 6 nước rút: mọi việc ×0,8
     ],
     goals: [500, 1500, 3500, 7000, 12000],
     rewards: [
@@ -2111,16 +2449,107 @@ const fests = {
     ],
   },
   tramYeu: {
-    // Trảm Yêu Lệnh (Clarion Call): thứ Năm – thứ Sáu tuần B, săn yêu thú, qua bí cảnh
+    // Trảm Yêu Lệnh (Clarion Call): thứ Năm – thứ Sáu tuần B — mỗi yêu thú hạ được (sơn môn lẫn bản đồ giới) điểm theo cấp, qua bí
+    // cảnh; có bảng xếp hạng cá nhân (FEST_RANKED) và tiên minh (FEST_ALLY)
     window: { kind: 'cycle', every: 14, len: 2, offset: 14 },
     hall: 3,
     kind: 'points',
-    stages: [{ hunt: 15, realm: 15, win: 3 }],
-    goals: [45, 150, 300],
+    stages: [{ huntLv: 10, realm: 30 }],
+    goals: [300, 1000, 2500, 5000],
     rewards: [
       { items: { kinhThu500: 2, dieuThu15: 2 } },
       { items: { kinhThu2k: 1, kimCuong: 1 } },
       { items: { kinhThu8k: 1, kimDuyen: 1 } },
+      { items: { kinhThu8k: 1, chienY: 1, thoiQuang180: 1 } },
+    ],
+  },
+  tichCoc: {
+    // Tích Cốc Phòng Cơ (Strategic Reserve): 4 ngày tuần A (thứ Năm → Chủ nhật) — săn yêu thú thắng, đội khai mỏ về có thể nhặt Linh
+    // Nang (tới qua thư, mở ra phù); mỗi nang +1 điểm, bảng xếp hạng theo số nang (FEST_RANKED)
+    window: { kind: 'cycle', every: 14, len: 4, offset: 7 },
+    hall: 3,
+    kind: 'drop',
+    chance: { hunt: 0.3, gather: 0.5 },
+    gift: { items: { thoiQuang15: 1, thachNang1k: 1 } },
+    goals: [3, 8, 15, 25],
+    rewards: [
+      { items: { thoiQuang60: 1, kinhThu500: 2 } },
+      { items: { thoiQuang60: 2, khaiLinh8: 1 } },
+      { items: { thoiQuang180: 1, kinhThu2k: 1 } },
+      { items: { thoiQuang480: 1, nganDuyen: 1 } },
+    ],
+  },
+  gioiChu: {
+    // Giới Chủ Tranh Phong (Who Will Reign Supreme): 7 ngày đầu mỗi mùa giới — đua thế lực tăng thêm, mốc quà; bảng xếp hạng (FEST_RANKED)
+    window: { kind: 'season', from: 0, to: 6 },
+    kind: 'points',
+    stages: [{ power: 1 }],
+    goals: [5000, 12000, 25000, 50000, 100000, 200000],
+    rewards: [
+      { items: { thoiQuang60: 2, thachNang5k: 1 } },
+      { items: { thoiQuang60: 3, kinhThu2k: 1 } },
+      { items: { thoiQuang180: 1, nganDuyen: 1 } },
+      { items: { thoiQuang180: 2, kinhThu8k: 1 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+      { items: { thoiQuang480: 2, kimDuyen: 1, hoSon24: 1 } },
+    ],
+  },
+  yeuHoang: {
+    // Thí Luyện Yêu Hoàng (Karuak Ceremony): 4 ngày — chọn độ khó, 50 cửa đánh bằng quân thật; quà theo điểm Thí Luyện (sect/trial.ts)
+    window: { kind: 'cycle', every: 14, len: 4, offset: 3 },
+    hall: 8,
+    kind: 'tasks',
+    tasks: [
+      { m: 'trial', n: 5, reward: { items: { kinhThu2k: 1, thoiQuang60: 1 } } },
+      { m: 'trial', n: 10, reward: { items: { kinhThu2k: 2, dieuThu60: 1 } } },
+      { m: 'trial', n: 20, reward: { items: { kinhThu8k: 1, thoiQuang180: 1 } } },
+      { m: 'trial', n: 30, reward: { items: { nganDuyen: 2, chienY: 1 } } },
+      { m: 'trial', n: 40, reward: { items: { kinhThu8k: 2, thoiQuang480: 1 } } },
+      { m: 'trial', n: 50, reward: { items: { kimDuyen: 2, hoThe: 1 } } },
+    ],
+  },
+  linhDia: {
+    // Linh Địa Chinh Phạt (Holy Conqueror): 4 ngày — đánh bại hộ trận linh thú giữ linh mạch / trận nhãn, nhặt phù văn quanh linh địa
+    window: { kind: 'cycle', every: 14, len: 4, offset: 10 },
+    hall: 8,
+    kind: 'tasks',
+    tasks: [
+      { m: 'guards', n: 1, reward: { items: { kinhThu2k: 1, thoiQuang60: 1 } } },
+      { m: 'guards', n: 3, reward: { items: { kinhThu2k: 2, chienY: 1 } } },
+      { m: 'guards', n: 5, reward: { items: { kinhThu8k: 1, thoiQuang180: 1 } } },
+      { m: 'runes', n: 2, reward: { items: { thoiQuang60: 2 } } },
+      { m: 'runes', n: 5, reward: { items: { nganDuyen: 1, kimCuong: 1 } } },
+      { m: 'runes', n: 10, reward: { items: { kimDuyen: 1 } } },
+    ],
+  },
+  khaiDien: {
+    // Khánh Điển Khai Tông (Sign-In Spoils): 14 ngày đầu mỗi mùa giới, mọi người trong giới — mỗi ngày vào game mở thêm một phần lễ
+    window: { kind: 'season', from: 0, to: 13 },
+    kind: 'login',
+    rewards: [
+      { items: { thoiQuang60: 2, thachNang5k: 1 } },
+      { items: { kinhThu2k: 2, thaoNang5k: 1 } },
+      { items: { nganDuyen: 2, khoangNang5k: 1 } },
+      { items: { thoiQuang180: 1, tuLinh8: 1 } },
+      { items: { kinhThu8k: 1, chienY: 1 } },
+      { items: { thoiQuang480: 1, hoSon8: 1 } },
+      { items: { kimDuyen: 2, huongHoa200: 1 } },
+    ],
+  },
+  tamBao: {
+    // Tầm Bảo Kỳ Ngộ (Treasure Hunt): 5 ngày — săn yêu thú thắng, đội khai mỏ về có thể nhặt Tàng Bảo Đồ tàn phiến (qua thư); đủ 7 mảnh
+    // ghép bản đồ ở bản đồ giới, xuất quân tới điểm đào nhận quà. Mỗi mảnh +1 điểm, 4 mốc
+    window: { kind: 'cycle', every: 14, len: 5, offset: 2 },
+    hall: 6,
+    kind: 'drop',
+    chance: { hunt: 0.35, gather: 0.5 },
+    gift: { items: { baoDo: 1 } },
+    goals: [4, 10, 18, 28],
+    rewards: [
+      { items: { baoDo: 2, thoiQuang60: 1 } },
+      { items: { baoDo: 3, kinhThu2k: 1 } },
+      { items: { baoDo: 4, thoiQuang180: 1 } },
+      { items: { baoDo: 7, nganDuyen: 1 } },
     ],
   },
   lienTram: {
@@ -2298,6 +2727,32 @@ const fests = {
       { reward: { items: { hanhLuc50: 1 } }, price: 10, max: 10 },
       { reward: { items: { thoiQuang60: 1 } }, price: 5, max: 10 },
       { reward: { items: { khaiLinh8: 1 } }, price: 15, max: 3 },
+    ],
+  },
+  // Thiên Cơ Luân (Wheel of Fortune của RoK, không bán): 3 ngày, hai tuần một lần — quay vòng 12 ô theo trọng số (mầm của
+  // server). Ô tín vật là của trưởng lão chủ lễ (một trong bốn Tiên phẩm, đổi mỗi lượt lễ). Mỗi ngày một lượt miễn phí; lượt thêm
+  // tốn Thiên Cơ Lệnh kiếm từ săn yêu, thắng trận, tăng tốc, khai mỏ, mở thiếp; cứ 30 lượt thì lượt đó chắc trúng ô lớn nhất.
+  thienCo: {
+    window: { kind: 'cycle', every: 14, len: 3, offset: 10 },
+    hall: 7,
+    kind: 'wheel',
+    stages: [{ hunt: 2, win: 2, speed: 0.05, gather: 0.0005, draw: 5 }],
+    cost: 10,
+    pity: 30,
+    elders: ['bachVoNhai', 'hoacThienCuong', 'huyenMinh', 'diepCoThanh'],
+    slots: [
+      { w: 3, token: 5 },
+      { w: 8, token: 2 },
+      { w: 14, token: 1 },
+      { w: 12, r: { items: { thoiQuang60: 2 } } },
+      { w: 5, r: { items: { thoiQuang180: 1 } } },
+      { w: 12, r: { items: { thachNang5k: 1, thaoNang5k: 1, khoangNang5k: 1 } } },
+      { w: 2, r: { items: { kimDuyen: 1 } } },
+      { w: 8, r: { items: { nganDuyen: 2 } } },
+      { w: 10, r: { items: { hanhLuc50: 1 } } },
+      { w: 9, r: { items: { kinhThu2k: 2 } } },
+      { w: 9, r: { items: { tuLinh8: 1 } } },
+      { w: 8, r: { items: { khuechTran8: 1 } } },
     ],
   },
   // Nga Mi: luyện đan, chữa thương, khai mỏ, giúp đồng minh

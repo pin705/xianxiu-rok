@@ -38,6 +38,7 @@ import { partyActions, type PartyAction } from './party.ts'
 import { rescueActions, type RescueAction } from './rescue.ts'
 import { planActions, type PlanAction } from './plans.ts'
 import { spyActions, type SpyAction } from './spy.ts'
+import { encampActions, type EncampAction } from './encamp.ts'
 import { shutGates } from './points.ts'
 
 export type WorldAction =
@@ -66,6 +67,7 @@ export type WorldAction =
   | RescueAction
   | PlanAction
   | SpyAction
+  | EncampAction
 
 const WORLD: WorldActions<WorldAction> = {
   ...raidActions,
@@ -93,6 +95,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...rescueActions,
   ...planActions,
   ...spyActions,
+  ...encampActions,
 }
 export const WORLD_ACTIONS = Object.keys(WORLD) as WorldAction['type'][]
 

@@ -146,7 +146,14 @@ export function atlas(seed: number): Atlas {
 
 export const regionOf = (a: Atlas, p: Pos) => a.tiles[Math.round(p.y) * MAP_W + Math.round(p.x)]
 export const dayIn = (openedAt: number, now: number) => Math.max(0, Math.floor((now - openedAt) / 86_400_000))
-export const phaseOf = (day: number) => PHASES.filter(d => day >= d).length - 1
+// Pha bản đồ: theo ngày (PHASES), hoặc sớm hơn khi cả giới hoàn thành chương Thiên Đạo Biên Niên PHASE_CH[k] (như Kingdom Monument mở
+// đèo) — done: các chương đã hoàn thành (không tính chương hụt hạn)
+export const PHASE_CH = [-1, 1, 4, 8]
+export const phaseOf = (day: number, done: readonly number[] = []) =>
+  Math.max(
+    PHASES.filter(d => day >= d).length - 1,
+    PHASE_CH.reduce((p, c, k) => (done.includes(c) ? k : p), 0),
+  )
 
 // Đường đi qua các cổng đang mở (Dijkstra trên cổng — ≤ 40 nút). Trong một vùng đi thẳng (vùng lồi). shut: cổng bị chặn
 // (cửa ải phe khác giữ). Trả về các điểm dừng [đi, …cổng, tới] và độ dài (ô); null nếu chưa có đường (cổng chưa mở / bị chặn).

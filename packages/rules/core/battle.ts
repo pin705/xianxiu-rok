@@ -1,6 +1,7 @@
 // Trận PvE: mục tiêu, đội địch, đội mình, thương binh, phần thưởng, chiến báo; lôi kiếp; tỉ lệ thắng ước lượng.
 import { fight, type Side } from '../combat.ts'
 import { bump, eventMul } from './calendar.ts'
+import { festDrop } from './fest.ts'
 import {
   HIGH_FIRST,
   bonus,
@@ -57,6 +58,7 @@ import {
   TYPES,
   UNIT_BASE,
   UNITS,
+  FALLEN_KEEP,
   type Bonus,
   type ElderId,
   type PillId,
@@ -221,7 +223,13 @@ export function admit(s: State, hurt: Army): { state: State; dead: Army } {
     wounded[u] += inn
     if (n > inn) dead[u] = n - inn
   }
-  return { state: { ...s, wounded }, dead }
+  if (!count(dead)) return { state: { ...s, wounded }, dead }
+  // Anh Linh Điện: hồn đệ tử tử trận ở lại FALLEN_KEEP (còn hạn thì cộng dồn, hạn tính lại từ bây giờ)
+  const kept = s.fallen && s.fallen.until > s.time ? s.fallen.army : {}
+  const army = Object.fromEntries(
+    UNITS.flatMap(u => ((kept[u] ?? 0) + (dead[u] ?? 0) ? [[u, (kept[u] ?? 0) + (dead[u] ?? 0)]] : [])),
+  )
+  return { state: { ...s, wounded, fallen: { army, until: s.time + FALLEN_KEEP } }, dead }
 }
 
 export function giveExp(s: State, elder: ElderId, exp: number): State {
@@ -242,7 +250,9 @@ export function grant(s: State, r: Reward): State {
         bag(x => (r.res?.[x] ?? 0) + extra),
       )
     : addBag(s.res, r.res ?? {})
-  const st: State = { ...s, res, items: addItems(s.items, r.items ?? {}) }
+  const tokens = { ...s.tokens }
+  for (const [e, n] of Object.entries(r.tokens ?? {})) tokens[e as ElderId] = (tokens[e as ElderId] ?? 0) + (n ?? 0)
+  const st: State = { ...s, res, items: addItems(s.items, r.items ?? {}), ...(r.tokens && { tokens }) }
   if (!r.elder) return st
   return st.elders[r.elder] === undefined
     ? { ...st, elders: { ...st.elders, [r.elder]: 0 } }
@@ -265,6 +275,8 @@ export const pushReport = (s: State, r: Omit<Report, 'id'>): State => ({
     won: s.stats.won + (r.win ? 1 : 0),
     lost: s.stats.lost + (r.win ? 0 : 1),
     hunted: (s.stats.hunted ?? 0) + (r.win && r.kind === 'beast' ? 1 : 0),
+    huntLv: (s.stats.huntLv ?? 0) + (r.win && r.kind === 'beast' ? r.i + 1 : 0), // yêu thú sơn môn: cấp = chỉ số + 1
+    guards: (s.stats.guards ?? 0) + (r.win && r.kind === 'spot' && r.foe === '' && !r.def ? 1 : 0), // thắng hộ trận linh thú
   },
 })
 
@@ -336,7 +348,9 @@ export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: nu
       { a: snap(me, elder, elderLevel(s.elders[elder]), deputy), b: snap(foe, undefined, foeLevel), rounds: f.rounds },
     ],
   })
-  return { state: st, back, hurt, gain: g, report: st.nextId - 1 }
+  const report = st.nextId - 1
+  if (f.win && t.kind === 'beast') st = festDrop(st, 'hunt', seed, at) // Tích Cốc Phòng Cơ: có thể nhặt Linh Nang
+  return { state: st, back, hurt, gain: g, report }
 }
 
 // Đan độ kiếp được dùng khi bật "dùng đan": viên mạnh nhất đang có

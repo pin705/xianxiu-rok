@@ -17,7 +17,7 @@ import {
   REALMS,
   REBIRTH_HALL,
   SECTS,
-  TALENT_MAX,
+  TALENT_NODES,
   TECH_IDS,
   TIERS,
   TRIBS,
@@ -36,6 +36,7 @@ import {
   sideOf,
   storage,
   PROTECT,
+  talentError,
   talentPoints,
   talentUsed,
   tierOpen,
@@ -61,7 +62,16 @@ import {
   REVENGE_TIME,
   SURE_WIN,
 } from './index.ts'
-import { raidChance, regionOf, scout, type Atlas, type Players, type World, type WorldAction } from './world.ts'
+import {
+  guardSide,
+  raidChance,
+  regionOf,
+  scout,
+  type Atlas,
+  type Players,
+  type World,
+  type WorldAction,
+} from './world.ts'
 
 export type BotOpts = {
   casual?: boolean // người chơi thường: chỉ đánh khi giao diện báo ≥ 80% thắng
@@ -227,9 +237,10 @@ export function turn(start: State, o: BotOpts = {}): State {
       acted = true
     // thiên phú: công trước, rồi thể, rồi đạo
     for (const e of idleElders(s))
+      // thiên phú: lấp Công mạch rồi Thủ mạch rồi Đạo mạch, nút tầng thấp trước (tầng trên mở dần theo điểm đã cộng)
       while (talentUsed(s, e) < talentPoints(s, e)) {
-        const b = ([0, 1, 2] as const).find(k => (s.talents[e]?.[k] ?? 0) < TALENT_MAX)
-        if (b === undefined || !tryDo({ type: 'talent', elder: e, branch: b })) break
+        const b = TALENT_NODES.findIndex((_, i) => !talentError(s, e, i))
+        if (b < 0 || !tryDo({ type: 'talent', elder: e, node: b })) break
         acted = true
       }
     return acted
@@ -361,16 +372,22 @@ export function npcState(now: number, name: string, seat: { x: number; y: number
 // Trưởng lão rảnh đầu tiên (theo thứ tự thu nhận)
 export const firstIdle = (s: State) => (Object.keys(s.elders) as ElderId[]).find(x => !isMarching(s, x))
 
-// Giữ linh mạch trong vùng mình: chưa đóng quân ở đâu mà vùng còn mạch trống thì đem nửa quân tới đóng
+// Giữ linh mạch trong vùng mình: chưa đóng quân ở đâu mà vùng còn mạch trống thì đem nửa quân tới đóng — mạch còn hộ trận
+// linh thú thì chỉ đánh khi chắc thắng (không lao vào chịu chết mỗi lượt)
 export function npcHold(s: State, a: Atlas, w: World): WorldAction | null {
-  if (!s.seat || s.marches.some(m => m.target.kind === 'spot')) return null
-  const region = regionOf(a, s.seat)
-  const vein = a.points.find(p => p.kind === 'vein' && p.region === region && w.spots[p.i]?.own === undefined)
   const e = firstIdle(s)
-  if (!vein || !e) return null
+  if (!s.seat || !e || s.marches.some(m => m.target.kind === 'spot')) return null
+  const region = regionOf(a, s.seat)
   const half = Object.fromEntries(UNITS.filter(u => s.troops[u] >= 2).map(u => [u, Math.floor(s.troops[u] / 2)]))
   const army = capArmy(s, e, half) // vừa trận dung
-  return Object.keys(army).length ? { type: 'go', i: vein.i, task: 'take', elder: e, army } : null
+  const ok = (i: number) => {
+    const g = w.spots[i]?.tamed ? null : guardSide(a, i)
+    return !g || raidChance(s, e, army, g) >= 0.7
+  }
+  const vein = a.points.find(
+    p => p.kind === 'vein' && p.region === region && w.spots[p.i]?.own === undefined && ok(p.i),
+  )
+  return vein && Object.keys(army).length ? { type: 'go', i: vein.i, task: 'take', elder: e, army } : null
 }
 
 // Phản kích kẻ vừa cướp mình nếu chắc thắng. NPC không bao giờ tự khởi đầu PvP.

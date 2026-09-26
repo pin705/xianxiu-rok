@@ -40,12 +40,12 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | Chủ đề | RoK | Game mình |
 |---|---|---|
 | Giải trận | Thời gian thực trên bản đồ, mỗi lượt 1 giây, kéo dài tới khi một bên hết quân hoặc rút | Tự động tối đa 10 lượt, giải ngay khi quân tới nơi, tất định theo seed; client phát lại bằng WebGL (PLAN §1 đưa trận kéo dài vào "Không làm") |
-| Kỹ năng | Nộ tích tới 1.000 thì tung chủ động; 2 tướng mỗi đội | Công pháp chủ động nổ cố định ở lượt 3/6/9; 1 trưởng lão mỗi đội |
+| Kỹ năng | Nộ tích tới 1.000 thì tung chủ động; 2 tướng mỗi đội | Chân nguyên tụ mỗi lượt và khi mất máu, đầy 1.000 thì thi triển công pháp chủ động; chủ tướng + phó trưởng lão mỗi đội |
 | Quân số và sát thương | Cộng đồng suy ra sát thương xấp xỉ √(quân số) (chưa có xác nhận chính thức) | Tuyến tính theo số đệ tử (kiểu Lanchester) |
 | Chênh lệch bậc quân | T5 so với T1: công ×3,5, thủ và máu ×1,8, sức mạnh ×10 | Bậc 5 = 14× chỉ số bậc 1; thế lực ×36 |
-| Nguồn tướng | Gacha ở Tavern + sự kiện + VIP | Cột mốc nội dung (không gacha, theo PLAN §1) |
-| Điểm PvP | KP theo bậc quân, danh dự, số quân chết | Elo khi cướp tông môn, điểm mùa theo giờ giữ điểm |
-| Quy mô một đội | Có trần theo cấp tướng chính (cộng thiên phú, kỹ năng, VIP, vật phẩm) | Không có trần: một đội mang được mọi đệ tử đang có |
+| Nguồn tướng | Gacha ở Tavern + sự kiện + VIP | Cột mốc nội dung + tín vật từ Chiêu Hiền Đài (thiếp bạc / vàng miễn phí) và Thiên Cơ Luân; không bán (PLAN §1) |
+| Điểm PvP | KP theo bậc quân, danh dự, số quân chết | Elo khi cướp tông môn, điểm mùa theo giờ giữ điểm, chiến công (theo thế lực quân hạ được), Công Huân cá nhân trong mùa |
+| Quy mô một đội | Có trần theo cấp tướng chính (cộng thiên phú, kỹ năng, VIP, vật phẩm) | Trận dung khi ra bản đồ giới: 500 + 80 mỗi cấp chủ tướng trên 1 (+10 % mỗi sao, Khuếch Trận Kỳ); PvE ở núi không giới hạn |
 
 ---
 
@@ -65,7 +65,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* khung chân dung đổi màu theo bậc; danh sách lọc và sắp xếp theo độ hiếm; từ bản 1.0.87 có đánh dấu "yêu thích" để ghim tướng lên đầu, lưới 3 cột.
 - *Giữ chân:* màu khung báo giá trị ngay lập tức; tướng vàng là mục tiêu dài hạn và là lý do nạp.
 - **Tu tiên hoá:** phẩm cấp **Thiên – Địa – Huyền – Hoàng** (vàng / tím / lam / lục) cho trưởng lão; phẩm Thiên và Địa có thêm "bản mệnh thần thông" (tương đương Expertise).
-- **Game mình:** ❌ — 12 trưởng lão ngang phẩm, khác nhau ở hệ, ngũ hành và công pháp. Độ "quý" đến từ độ khó cột mốc (bí cảnh 4–5, tháp tầng 30/45, yêu vương).
+- **Game mình:** ✅ Phẩm trưởng lão (`RARITY` ở `data.ts`, 4 bậc Phàm · Tinh · Huyền · Tiên theo độ khó thu nhận; 12 trưởng lão hiện là Tinh (lam) / Huyền (tím) / Tiên (vàng)): màu khung trên thẻ ở Môn hạ (`Disciples.svelte`), đầu bảng chi tiết và màn thu nhận (`ElderReveal.svelte`). Phẩm chỉ để hiện — không đổi chi phí sao hay số kỹ năng.
 - **Ưu tiên:** P1 · **Công sức:** S (thêm trường phẩm cấp vào `ElderDef`, khung chân dung theo phẩm, chi phí nâng theo phẩm).
 
 #### 2.2 Chuyên môn và vai trò của tướng
@@ -116,7 +116,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* trang tướng chưa có hiện video kỹ năng (bản 1.0.91) và dẫn tới nơi có thể lấy.
 - *Giữ chân:* lịch sự kiện xoay vòng tạo các "mùa săn" tướng; sợ lỡ cơ hội (FOMO).
 - **Tu tiên hoá:** "cơ duyên thu đồ": Chiêu Hiền Đài (Tavern), Luận Đạo Đại Hội (MGE — thi điểm tu luyện 6 ngày, thưởng hồn ấn), Thiên Cơ Bàn (Wheel), bí cảnh, đăng nhập, sự kiện tông môn. Tượng vạn năng = "Vạn Hồn Ấn".
-- **Game mình:** 🟡 — trưởng lão nhận qua cột mốc cố định: đầu game Mộc Thanh Phong; Hắc Phong Trại → Thạch Kiên; Thanh Mộc bí cảnh tầng 5 → Liễu Như Yên; Vạn Độc Cốc → Lôi Chấn; Xích Viêm tầng 5 → Vân Hạc; Huyền Băng tầng 5 → Hàn Băng; Lôi Trì tầng 5 → Bạch Vô Nhai; tháp tầng 30 → Mạc Sầu; Hỗn Độn tầng 5 → Hoắc Thiên Cương; sự kiện tuần mốc 5 → Tô Mị Nương; tháp tầng 45 → Diệp Cô Thành; yêu vương giữa giới → Huyền Minh. Không có mảnh hay tượng, không có trùng lặp.
+- **Game mình:** ✅ Cột mốc cố định (đầu game, trại, bí cảnh tầng 5, tháp tầng 30 / 45, sự kiện tuần, yêu vương giữa giới) cộng tín vật (hồn ấn): Chiêu Hiền Đài (`sect/tavern.ts`: thiếp bạc / vàng miễn phí, thiếp từ sự kiện, cửa hàng, rương mốc) và Thiên Cơ Luân (`Wheel.svelte`: tín vật một trong bốn trưởng lão Tiên phẩm chủ lễ, lượt thứ 30 chắc trúng). Đủ 10 tín vật thì thu nhận, dư thì nâng sao; trưởng lão trùng từ cột mốc đổi 5.000 kinh nghiệm (`ELDER_DUP_EXP`).
 - **Ưu tiên:** P1 · **Công sức:** M (thêm "hồn ấn" làm tiền tệ nâng, nguồn qua sự kiện tuần, mùa, xếp hạng).
 
 #### 2.4 Tavern (rương tướng)
@@ -132,7 +132,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* quán rượu trong thành hiện bong bóng khi có rương miễn phí; màn hình 2 rương lớn kèm đồng hồ miễn phí, nút "Mở ×1 / ×10", hoạt ảnh lật 4 thẻ, bảng tỉ lệ.
 - *Giữ chân:* nghi thức hằng ngày (quay lại lấy rương free), cảm giác "trúng vàng", bảo hiểm (pity) chống nản.
 - **Tu tiên hoá:** **Vấn Duyên Đài / Chiêu Hiền Đài** — Ngân Duyên Phù (rương bạc), Kim Duyên Phù (rương vàng), Luyện Khí Phù (rương trang bị); **Thiên Cơ Các** (Legendary Tavern) chỉ mở trong mùa giới.
-- **Game mình:** ❌ — cố ý (PLAN §1: không gacha lớn, không bán sức mạnh PvP). Gần nhất là rương nhiệm vụ ngày và tuần (đan dược).
+- **Game mình:** ✅ Chiêu Hiền Đài (`sect/tavern.ts`, `Tavern.svelte`, trong Môn hạ, từ Chủ điện tầng 2): thiếp bạc miễn phí mỗi 6 giờ (2 phần quà), thiếp vàng mỗi 48 giờ (4 phần quà), thiếp trong túi mở thêm, mở ×1 / ×10; quà là tài nguyên, phù, kinh thư, tín vật trưởng lão; bảo hiểm: cứ 10 lần mở thiếp vàng chắc có 10 tín vật (`GOLD_PITY`). Mầm rút ở server; cố ý không bán thiếp.
 - **Ưu tiên:** P1 cho phần rương miễn phí hằng ngày có bảo hiểm; bán chìa là P2 và cần quyết định kinh doanh, pháp lý, công khai tỉ lệ · **Công sức:** M.
 
 #### 2.5 Cấp tướng và EXP
@@ -148,7 +148,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* thanh EXP dưới chân dung; nút "Dùng sách" chọn số lượng, tự đề xuất đủ để chạm trần.
 - *Giữ chân:* lên nhanh lúc đầu rồi chậm dần; sách EXP là phần thưởng sự kiện dễ hiểu.
 - **Tu tiên hoá:** cảnh giới trưởng lão (60 tầng chia 6 đại cảnh, trùng với 6 sao); sách EXP = Bồi Nguyên Đan, ngọc giản truyền công.
-- **Game mình:** ✅ — cấp 1–40 (EXP cần = 50·n·(n−1), cấp 40 là 78.000); EXP chỉ có khi thắng trận PvE, độ kiếp hoặc làm hộ pháp; Bồi Nguyên Đan +400 EXP mỗi viên; mỗi cấp +4% công và máu cả đội (cấp 40: +156%).
+- **Game mình:** ✅ — cấp 1–40 (EXP cần = 50·n·(n−1), cấp 40 là 78.000); EXP từ thắng trận PvE, độ kiếp, làm hộ pháp, trưởng lão trùng (+5.000); Bồi Nguyên Đan +400 EXP mỗi viên, Tâm Đắc Kinh Thư 500 / 2.000 / 8.000 (`BAG.kinhThu*`); mỗi cấp +4% công và máu cả đội (cấp 40: +156%).
 - **Ưu tiên:** P2 · **Công sức:** S (nâng trần hoặc đổi đường cong khi thêm sao).
 
 #### 2.6 Sao và thăng sao
@@ -163,7 +163,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* màn "Thăng sao" có thanh EXP sao, ô đặt nguyên liệu, % may mắn; hoạt ảnh sao sáng dần.
 - *Giữ chân:* trò canh chí mạng (mini-gamble); mốc mở kỹ năng mới.
 - **Tu tiên hoá:** **Đạo Cơ phẩm 1–6** — "Tinh Thần Thạch" (thường / phúc / đại), ngộ tính (may mắn); chí mạng là "đốn ngộ" khi phá bình cảnh.
-- **Game mình:** ❌ — trưởng lão chỉ có cấp; bị động mở ở cấp 5 và 12.
+- **Game mình:** ✅ Sao 1–6 (action `star` ở `sect/tavern.ts`, `STAR_MAX`, `STAR_COST`): thu nhận là 1 sao, lên sao 2–6 tốn 10 / 20 / 30 / 40 / 50 tín vật, tất định (không may rủi); mỗi sao trên 1 cho đội người đó dẫn công / máu +3 %, công pháp +5 % (`STAR_BONUS`) và trận dung +10 %. Sao không đổi trần cấp (vẫn 40) hay mốc mở bị động (cấp 5 và 12).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### 2.7 Tượng tướng và nâng kỹ năng
@@ -178,7 +178,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* tab Kỹ năng có 4–5 ô với cấp 1–5; nút "Nâng kỹ năng (x tượng)"; hoạt ảnh vòng quay chọn kỹ năng.
 - *Giữ chân:* nơi tiêu tài nguyên dài hạn; yếu tố ngẫu nhiên tạo hồi hộp; "5-5-5-5" là mốc để khoe.
 - **Tu tiên hoá:** **Hồn ấn** (tàn hồn, tín vật của trưởng lão) dùng để "ngộ công pháp", mỗi lần ngẫu nhiên đốn ngộ một môn; mỗi công pháp 5 tầng: Sơ Khuy → Tiểu Thành → Đại Thành → Viên Mãn → Hoá Cảnh.
-- **Game mình:** ❌ — công pháp cố định; sức công pháp chỉ tăng qua nhánh thiên phú "đạo" (+6% mỗi điểm) và cấp trưởng lão.
+- **Game mình:** ✅ — tín vật riêng từng trưởng lão (như tượng tướng, từ Chiêu Hiền Đài / Thiên Cơ Luân): đủ 10 thu nhận, dư thì nâng sao (mỗi sao công pháp +5 %) hoặc **ngộ công pháp** (`ngo` ở `sect/tavern.ts`, `SKILL_COST` ở `data.ts`): giá theo số lần đã ngộ (10 → 50, 12 lần, tổng 380 — như chuỗi tượng huyền thoại RoK), mầm server chọn ngẫu nhiên một môn đã mở chưa tầng 5 (công pháp luôn mở, tâm pháp mở theo cấp) lên một tầng Sơ Khuy → Hoá Cảnh — công pháp mỗi tầng +8 % sức công pháp, tâm pháp ×(1 + 25 % × (tầng − 1)); nút Ngộ ở Môn hạ (`Disciples.svelte`). Chưa có đặt lại công pháp.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### 2.8 Kỹ năng: chủ động (nộ) và bị động
@@ -200,7 +200,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* chân dung và tên kỹ năng hiện trên bản đồ khi nổ; mô tả đầy đủ hoặc rút gọn (bản 1.0.91); video xem trước kỹ năng.
 - *Giữ chân:* khoảnh khắc "nổ chiêu" là cao trào của mỗi giao tranh; nhiều build xoay quanh việc tăng nộ.
 - **Tu tiên hoá:** **Chân nguyên (1.000)** tụ qua mỗi chiêu thường và mỗi lần đỡ đòn, đầy thì phát "thần thông"; bị động là "tâm pháp"; câm lặng là phong ấn linh lực; combo là liên kích; smite là thiên phạt.
-- **Game mình:** 🟡 — 1 công pháp chủ động (burst / shield / heal / weaken) nổ cố định ở lượt 3, 6, 9 và 2 bị động mở ở cấp 5 và 12. Không có thanh nộ, câm lặng, sát thương theo thời gian, hay AoE theo số mục tiêu (burst đánh toàn quân địch, chia theo máu).
+- **Game mình:** ✅ Chân nguyên (`RAGE_MAX` / `RAGE_TURN` / `RAGE_HURT` ở `combat.ts`): mỗi lượt +350, mất máu tụ thêm 600 × phần máu mất, đầy 1.000 thì thi triển công pháp chủ động (burst / shield / heal / weaken) ngay lượt đó, công pháp phó trưởng lão nổ ngay sau; 2 bị động mở ở cấp 5 và 12. Chưa có câm lặng, sát thương theo thời gian, AoE theo số mục tiêu (burst đánh toàn quân địch, chia theo máu).
 - **Ưu tiên:** P0 (nộ là nhịp chiến đấu của RoK) · **Công sức:** M (thay `SKILL_EVERY` bằng nộ tích theo đòn trong `fight()`, vẫn tất định, chỉnh bằng sim).
 
 #### 2.9 Expertise (thức tỉnh)
@@ -211,7 +211,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* ô kỹ năng thứ 5 sáng lên khi đủ điều kiện; chân dung có dấu "đã expertise".
 - *Giữ chân:* mốc "tốt nghiệp" của một tướng.
 - **Tu tiên hoá:** **Bản mệnh thần thông** — khi 4 công pháp đều Viên Mãn, trưởng lão ngộ ra thần thông riêng.
-- **Game mình:** ❌
+- **Game mình:** 🟡 **Bản Mệnh Thần Thông** (`EXPERTISE`, `expertOf` ở `core/stats.ts`): ngộ cả ba môn (công pháp + hai tâm pháp) tới Hoá Cảnh thì đội người đó dẫn công / thủ / sinh lực +5 %, sức công pháp +10 %; thẻ vàng ở Môn hạ. Thiếu: thần thông riêng từng trưởng lão (hiện mọi người cùng một bộ tăng ích), không đổi dạng công pháp.
 - **Ưu tiên:** P2 · **Công sức:** M (cần nội dung cho 12 trưởng lão).
 
 #### 2.10 Thiên phú
@@ -226,7 +226,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* 3 cây nhánh; chạm nút xem hiệu ứng, bấm "+" để cộng điểm; nút đặt lại; lưu và tải bộ. Công cụ ngoài (Talent Tree Planner, MetaRoK với bộ 74 điểm) rất phổ biến.
 - *Giữ chân:* theorycraft không hồi kết; chia sẻ build.
 - **Tu tiên hoá:** **Linh căn ba mạch** theo 3 "đạo" của trưởng lão; Tẩy Tủy Đan để đặt lại; "đồ phổ" là bộ thiên phú đã lưu.
-- **Game mình:** 🟡 — 1 điểm mỗi 5 cấp (cấp 40 có 8 điểm), 3 nhánh chung: công (+3% công mỗi điểm), thể (+4% máu), đạo (+6% sức công pháp); tối đa 5 điểm mỗi nhánh; Tẩy Tủy Đan (mở ở tầng 16) đặt lại. Không có cây riêng, nút đặc biệt, hay lưu bộ.
+- **Game mình:** ✅ — **Linh căn ba mạch** (`TALENT_TREES`, `talentError` ở `sect/elders.ts`): 3 cây Công mạch (công, công hệ mình, chiến lợi phẩm, trận dung → Phá Trận) / Thủ mạch (thủ, sinh lực, sinh lực hệ mình → Bất Động Như Sơn) / Đạo mạch (sức công pháp, kinh nghiệm, khai mỏ, độ kiếp → Thiên Nhân Hợp Nhất), mỗi cây 3 tầng × 2 nút (tối đa 3) + nút cuối, tầng mở khi đã cộng 5 / 10 / 16 điểm trong cây; điểm = cấp − 1 + 2 mỗi sao (tối đa 49, mỗi cây cần 19 → phải chọn); nút 'hệ mình' theo hệ của trưởng lão; chỉ đội người đó dẫn; Tẩy Tủy Đan trả lại; save cũ trả điểm. Chưa có lưu nhiều bộ.
 - **Ưu tiên:** P1 · **Công sức:** L (nội dung cây và UI cây).
 
 #### 2.11 Cặp tướng chính và phụ
@@ -240,7 +240,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* màn tạo đội có 2 ô chân dung (chính to, phụ nhỏ), nút đổi chỗ, gợi ý cặp.
 - *Giữ chân:* số tổ hợp bùng nổ; mỗi tướng mới làm mới meta.
 - **Tu tiên hoá:** **Chủ trận nhãn + Phó trận nhãn** (song tu trận); PLAN đã có ý "P3 thêm phó".
-- **Game mình:** ❌ — mỗi đội 1 trưởng lão; phó trưởng lão có trong kế hoạch P3 nhưng chưa làm.
+- **Game mình:** ✅ Phó trưởng lão (`pair` ở `sect/elders.ts`, `skill2` ở `combat.ts`): từ Chủ điện tầng 8 (`DEPUTY_HALL`), mỗi chủ tướng ghép một phó (chọn trong bảng xuất quân), phó đi cùng đội ở mọi trận; bị động đã mở của phó cộng vào đội, công pháp của phó nổ ngay sau chủ tướng với nửa sức (`DEPUTY_SKILL`); thiên phú, pháp bảo, sao, ngũ hành chỉ của chủ tướng.
 - **Ưu tiên:** P0 · **Công sức:** M (`Side` có 2 công pháp và bị động của phó; UI 2 ô; chỉnh bằng sim).
 
 #### 2.12 Truyện tướng, Trust, giao diện danh sách
@@ -250,7 +250,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - Trong các nguồn đã đọc không thấy hệ "Commander Chronicle" riêng; gần nhất là Stories / Trust và Museum (mục 2.13).
 - *Giữ chân:* gắn cảm xúc với nhân vật; tướng cũ được "làm mới".
 - **Tu tiên hoá:** "Liệt truyện trưởng lão" kèm "hảo cảm / tâm cảnh" (mở truyện, đổi y phục).
-- **Game mình:** 🟡 — mỗi trưởng lão có tên, danh hiệu, tên công pháp, chân dung vẽ tay và dòng "cách thu nhận"; chưa có truyện hay hảo cảm.
+- **Game mình:** 🟡 — mỗi trưởng lão có tên, danh hiệu, phẩm, một câu lời dẫn, tên công pháp, chân dung vẽ tay (chọn làm chân dung chưởng môn được, `face`) và dòng "cách thu nhận"; có màn thu nhận (`ElderReveal.svelte`). Danh sách Môn hạ sắp được theo cấp / phẩm / sao, đã thu nhận lên trước. Chưa có truyện, hảo cảm, lọc / yêu thích.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### 2.13 Museum (Season of Conquest)
@@ -272,7 +272,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* sự kiện dùng "vé đổi" để chuyển tiến độ kỹ năng từ tướng này sang tướng khác. Giá 2–120 vé tuỳ chênh lệch kỹ năng; shop gem bán 120 vé mỗi sự kiện với giá 12.000 gem; gói Fresh Faces 12 vé giá 5 USD, mua tối đa 10 lần (codexhelper, 1 nguồn).
 - *Giữ chân:* giảm hối tiếc khi đầu tư nhầm tướng; người chơi dám nuôi tướng mới.
 - **Tu tiên hoá:** **Truyền công** — chuyển tu vi công pháp từ trưởng lão này sang trưởng lão khác.
-- **Game mình:** ❌ (chỉ cần khi đã có hồn ấn và nâng công pháp).
+- **Game mình:** ❌ — tín vật (hồn ấn), sao và tầng công pháp đã ngộ (`skl`) gắn riêng từng trưởng lão, không chuyển được; nay đã có ngộ công pháp theo tầng (2.7) nên truyền công bắt đầu có ích.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### 2.15 Tướng Prime và Artifact
@@ -339,7 +339,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* lưu tối đa 45 cấu hình đội, gồm tướng, armament và trang bị (bản 1.0.81).
 - *Giữ chân:* bớt thao tác lặp khi có nhiều tướng, đội hình và việc.
 - **Tu tiên hoá:** "Trận đồ lưu sẵn".
-- **Game mình:** ❌ — mỗi lần xuất quân chọn trưởng lão và kéo số đệ tử (có tỉ lệ thắng ước lượng ngay dưới).
+- **Game mình:** ✅ Trận đồ (`preset` ở `sect/pins.ts`, `Army.svelte`): 3 ô lưu trưởng lão + đệ tử trong bảng chọn đội ở mọi nơi xuất quân, chạm để dùng lại (tự cắt theo số đang có); tỉ lệ thắng ước lượng ngay dưới.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ### C. Quân
@@ -354,7 +354,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   - Có thể trộn quân; nhiều tướng buff riêng cho quân hỗn hợp (Integration, Leadership).
 - *UI/UX:* icon loại quân; màn tạo đội hiện tốc, tải, sức mạnh.
 - **Tu tiên hoá:** Thể tu = bộ binh, Kiếm tu = kỵ binh, Pháp tu = cung thủ — khớp đúng vòng khắc đang có (Kiếm > Pháp > Thể > Kiếm tương ứng Kỵ > Cung > Bộ > Kỵ). Công thành = **Khôi Lỗi / Trận Khí sư** (phá Hộ Sơn Đại Trận).
-- **Game mình:** ✅ 3 hệ, khắc ×1,3 / ×0,8, bảng mục tiêu ghi rõ hệ nên dùng. ❌ loại thứ 4. ❌ tốc độ và tải theo hệ (sức mang chỉ theo bậc).
+- **Game mình:** ✅ 3 hệ, khắc ×1,3 / ×0,8, bảng mục tiêu ghi rõ hệ nên dùng. ✅ tốc độ và sức mang theo hệ trên bản đồ giới (`UNIT_SPEED`, `UNIT_CARRY`, `armySpeed`): kiếm ×1,15 · pháp ×1 · thể ×0,85, đội đi theo hệ chậm nhất; sức mang kiếm ×1 · pháp ×0,8 · thể ×1,25. ❌ loại thứ 4.
 - **Ưu tiên:** loại công thành P2 · M; tốc và tải theo hệ P1 · S.
 
 #### 2.21 Năm bậc quân và chỉ số
@@ -374,7 +374,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   - Quân đặc thù theo văn minh ở T4–T5 (Legionary La Mã, Samurai Nhật, Chu-Ko-Nu Trung Hoa…), chỉ số lệch về một hướng (2 nguồn). Tên cung T5 chung là Royal Crossbowman.
 - *UI/UX:* màn huấn luyện có thẻ từng bậc kèm chỉ số và chi phí.
 - **Tu tiên hoá:** Ngoại môn / Nội môn / Chân truyền / Hạch tâm / Thánh tử (đã có); đệ tử đặc thù theo đạo thống ở bậc 4–5.
-- **Game mình:** ✅ 5 bậc, mở ở Diễn võ trường tầng 1 / 5 / 10 / 16 / 21; chỉ số ×1 / 2,2 / 4,4 / 8 / 14; chi phí ×1 / 2,6 / 5,8 / 11 / 20; thế lực 1 / 3 / 8 / 18 / 36. ❌ đệ tử đặc thù theo đạo thống. Lưu ý cân bằng: chênh bậc của mình lớn hơn RoK nhiều (×14 so với ×3,5).
+- **Game mình:** ✅ 5 bậc, mở ở Diễn võ trường tầng 1 / 5 / 10 / 16 / 21; chỉ số ×1 / 2,2 / 4,4 / 8 / 14; chi phí ×1 / 2,6 / 5,8 / 11 / 20; thế lực 1 / 3 / 8 / 18 / 36. ✅ đệ tử đặc trưng theo đạo thống (`DAO_UNITS`): mỗi đạo thay một hệ ở mọi bậc bằng bản riêng (tên, dáng vẽ, chỉ số gốc +2–10 %, vài bản đi nhanh hơn). Lưu ý cân bằng: chênh bậc của mình lớn hơn RoK nhiều (×14 so với ×3,5).
 - **Ưu tiên:** giữ nguyên; đệ tử đặc thù P2 · **Công sức:** M.
 
 #### 2.22 Huấn luyện
@@ -397,7 +397,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* đổi lính bậc thấp lên bậc cao, trả phần chênh lệch chi phí và thời gian. Nâng T4 lên T5 là cách hiệu quả nhất để lấy điểm trong sự kiện tăng sức mạnh (1 nguồn; chi tiết "trả chênh lệch" theo hiểu biết chung, chưa xác minh).
 - *Giữ chân:* quân cũ không thành đồ bỏ; bậc mới mở có ngay đội hình.
 - **Tu tiên hoá:** **Thăng môn** (ngoại môn qua khảo hạch lên nội môn).
-- **Game mình:** ❌
+- **Game mình:** ✅ Nâng bậc đệ tử (`promote` ở `sect/army.ts`, `Train.svelte`): đệ tử đang ở nhà lên bậc kế cùng hệ, trả phần chênh chi phí, thời gian là phần chênh (ít nhất 30 % thời gian tuyển thẳng), dùng lượt tuyển của Diễn võ trường.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### 2.24 Hàng đợi hành quân
@@ -418,7 +418,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* thanh "x / trần" ở màn tạo đội; nút tự điền.
 - *Vì sao quan trọng:* buộc chọn quân bậc cao, cho cấp tướng giá trị, và làm kết trận có nghĩa (một người không mang hết quân).
 - **Tu tiên hoá:** **Trận dung** — số trận cơ (đệ tử) một trận nhãn khống chế được, theo cảnh giới trưởng lão; vật phẩm mở rộng là "Khuếch Trận Kỳ".
-- **Game mình:** ❌ — một đội mang được mọi đệ tử đang có (`armyError` chỉ kiểm có đủ quân hay không).
+- **Game mình:** ✅ Trận dung (`capOf` ở `core/stats.ts`, `MARCH_CAP*`; `fieldError` / `capArmy` ở `core/battle.ts`): mỗi đội ra bản đồ giới mang tối đa 500 + 80 mỗi cấp chủ tướng trên 1 (+10 % mỗi sao; cấp 40 ~3.600), Khuếch Trận Kỳ +10 %, Kiếm Tông +5 %; màn chọn đội ghi "x / trần" và tự cắt vừa. Xuất chinh ở núi và độ kiếp không giới hạn; chưa có thiên phú / bị động tăng trận dung.
 - **Ưu tiên:** P0 · **Công sức:** M (trần theo cấp trưởng lão và công pháp; phải chỉnh lại sim, PvP và bot).
 
 #### 2.26 Sức mạnh và chi phí duy trì
@@ -466,7 +466,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   - KvK: Hall of Heroes trả lại một phần quân chết — 30% ở KvK 1, 30–60% tuỳ mùa (2 nguồn); ở SoC còn hoàn một phần tài nguyên đã chữa (bản 1.0.89).
 - *Giữ chân:* rủi ro phân tầng — người chơi dám đánh nhỏ, cân nhắc khi đánh thành.
 - **Tu tiên hoá:** khí huyết hao tổn (tự hồi) / trọng thương (Đan phòng) / vẫn lạc; **Chiêu Hồn Điện** (Hall of Heroes) gọi về một phần hồn đệ tử khi mùa giới khép lại.
-- **Game mình:** 🟡 — 2 mức: thương binh (mọi thương vong PvE) và tử trận (khi Đan phòng đầy). Không có "thương nhẹ tự hồi", không có hồi sinh cuối mùa.
+- **Game mình:** 🟡 — 2 mức: thương binh (vào Đan phòng) và tử trận (khi Đan phòng đầy); Anh Linh Điện (`sect/hero.ts`, `FALLEN_KEEP`, `REVIVE_COST`) giữ hồn đệ tử tử trận 3 ngày (tử trận thêm thì cộng dồn, tính lại hạn), ở Đan phòng hồi sinh ngay tất cả với 60 % chi phí tuyển. Chưa có mức "thương nhẹ tự hồi".
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 ### E. Chiến đấu
@@ -502,7 +502,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* lệnh về thành hoặc rút lui để thoát giao tranh khi bệnh viện sắp đầy hay bị khắc; đội bị đánh bại (hết quân khoẻ) tự quay về (hiểu biết chung; chi tiết như bị đuổi đánh khi rút chưa xác minh).
 - *Giữ chân:* quyết định "đánh tiếp hay rút" là kỹ năng người chơi.
 - **Tu tiên hoá:** "Độn thuật" — rút lui là độn thổ hoặc ngự kiếm về núi.
-- **Game mình:** 🟡 — hết 10 lượt chưa phân thắng bại thì bên đánh tự rút; gọi về được đội đang đóng quân, khai mỏ, viện binh; không rút được giữa trận.
+- **Game mình:** 🟡 — hết 10 lượt chưa phân thắng bại thì bên đánh tự rút; gọi về được đội đang đóng quân, khai mỏ, viện binh và cả đội đang trên đường (`recallable` / `turnAround` ở `world/spots.ts`, trừ đội kết trận); không rút được giữa trận (trận giải ngay khi tới).
 - **Ưu tiên:** P1 · **Công sức:** M (phụ thuộc mục 2.30).
 
 #### 2.33 Kết trận
@@ -516,7 +516,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* nút "Kết trận" trên mục tiêu → chọn thời gian → báo cho liên minh; tab War liệt kê kết trận đang mở với nút "Tham gia" và chọn đội; đồng hồ đếm ngược.
 - *Giữ chân:* hẹn giờ đánh cùng nhau, cảm giác "raid".
 - **Tu tiên hoá:** **Kết trận** (đã có); Castle là **Điểm Tướng Đài**, quyết định trận dung khi kết trận.
-- **Game mình:** ✅ 8 đội, chờ 5 / 10 / 30 phút, dùng công pháp và hành của đội mở trận; dùng để chiếm điểm và đánh yêu vương (không đánh tông môn người chơi). Thiếu: trần quân theo công trình, mốc 60 phút, kết trận đánh tông môn.
+- **Game mình:** ✅ 8 đội, chờ 5 / 10 / 30 phút, dùng công pháp và hành của đội mở trận; dùng để chiếm điểm, đánh yêu vương và đánh tông môn người chơi (kết trận công sơn: `raidRally` / `raidJoin` ở `world/raid.ts`). Thiếu: trần quân theo công trình (mỗi đội chỉ theo trận dung riêng), mốc 60 phút.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### 2.34 Đồn trú và tiếp viện
@@ -538,7 +538,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* thành cháy có lửa khói trên bản đồ; nút "Dập lửa"; thông báo "Thành bị tấn công".
 - *Giữ chân:* thua có hậu quả nhìn thấy được; sợ bị dời thành thì lo phòng thủ.
 - **Tu tiên hoá:** Hộ Sơn Đại Trận có **trận lực** (độ bền); thua thì "trận vỡ, linh khí rò" (trận lực giảm dần); trận lực về 0 thì sơn môn "phi độn" tới nơi khác; tháp canh là **Vọng Khí Tháp** bắn tên phù.
-- **Game mình:** 🟡 — Hộ Sơn Đại Trận chỉ là bonus thủ và máu; thua thì mất tài nguyên (ngoài phần kho bảo hộ 30%) và nhận khiên 8 giờ; tân thủ có khiên 72 giờ. Không có độ bền, cháy, dời núi.
+- **Game mình:** ✅ Linh hỏa thiêu sơn (`core/wall.ts`, `sect/wall.ts`, `world/wall.ts`): trận lực Hộ Sơn Đại Trận 500 × (1 + tầng), thủ thua mất 15 % và núi cháy 30 phút (tụt 1 %/phút), Tu bổ trận cơ / Tức Hỏa Phù; trận lực về 0 lúc cháy thì sơn môn thất thủ — bị đánh bật sang chỗ trống ngẫu nhiên vùng ngoài. Khiên: thua được 8 giờ, tân thủ 72 giờ, Hộ Sơn Phù 8 / 24 / 72 giờ.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### 2.36 Trinh sát
@@ -546,7 +546,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 **Tên gốc (EN):** Scouting (Scout Camp, Tracking / Camouflage)
 - *Cơ chế:* Scout Camp cử trinh sát tới mục tiêu, nhận báo cáo quân, tướng, tài nguyên. Công nghệ Tracking và Camouflage (mỗi cái 5 cấp) nâng cấp trinh sát (gamesguideinfo). Chống trinh sát: chưa xác minh.
 - **Tu tiên hoá:** "Thần thức dò xét", "Thiên Nhãn phù".
-- **Game mình:** ✅ dò thám: danh sách đối thủ kèm phòng thủ làm tròn (từ 50 trở lên làm tròn tới hàng chục), trưởng lão trấn thủ, tầng Hộ Sơn Đại Trận; đủ để tính tỉ lệ thắng. Không tốn lượt, bên bị dò không được báo.
+- **Game mình:** ✅ dò thám: danh sách đối thủ kèm phòng thủ làm tròn (từ 50 trở lên làm tròn tới hàng chục), trưởng lão trấn thủ, tầng Hộ Sơn Đại Trận; đủ để tính tỉ lệ thắng, không tốn lượt, bên kia không biết. Do thám bằng linh điểu (`world/spy.ts`, 200 × tầng Chủ điện bên kia linh thạch) báo đủ tài nguyên ước cướp, quân, viện binh, trận lực, khiên — bên kia nhận thư "bị do thám".
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### 2.37 Chiến báo
@@ -555,7 +555,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* lưu tối đa 100 báo cáo (1 nguồn). Nội dung: thắng / thua, tướng hai bên (cấp, kỹ năng), quân từng loại (tổng, tử, trọng thương, thương nhẹ, còn lại), KP nhận được, sức mạnh mất, chi tiết sát thương theo nguồn (đánh thường / kỹ năng / phản đòn / hồi máu) — theo hiểu biết chung, chi tiết chưa xác minh. Gộp nhiều trận thành một báo cáo và đánh dấu yêu thích (bản 1.0.85); chia sẻ lên chat.
 - *Giữ chân:* phân tích trận để chỉnh build; khoe trận hay.
 - **Tu tiên hoá:** chiến báo (đã có).
-- **Game mình:** 🟡 — chiến báo (30 gần nhất) có số đệ tử mỗi lượt, lượt nào thi triển công pháp, thương binh, tử trận, thu được; có **phát lại** WebGL (RoK không có). Thiếu: tách sát thương theo nguồn, KP, chia sẻ lên chat, yêu thích.
+- **Game mình:** 🟡 — chiến báo (30 gần nhất) có số đệ tử mỗi lượt, lượt nào thi triển công pháp, chân nguyên, thương binh, tử trận, thu được; có **phát lại** WebGL (RoK không có), "Chi tiết trận" (vào trận → còn lại từng loại, số lần thi triển), câu đánh giá + nút lối đi (`verdict.ts`), chia sẻ vào chat. Thiếu: tách sát thương theo nguồn, chiến công trong chiến báo, yêu thích.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### 2.38 Điểm tiêu diệt
@@ -565,7 +565,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* hồ sơ thống đốc → Kill Statistics (bảng T1–T5).
 - *Giữ chân:* bảng điểm biến giao tranh thành thành tích; KP là "tiền tệ uy tín" trong liên minh.
 - **Tu tiên hoá:** **Chiến công** (sát nghiệp) — hạ một đệ tử Thánh tử được 20 chiến công.
-- **Game mình:** ❌ — có Elo tranh đoạt và các bảng xếp hạng lực chiến, tháp, sự kiện tuần.
+- **Game mình:** ✅ Chiến công (`stats.kp`, cột `players.kills`, `Ranks.svelte`): thế lực đệ tử bên kia hạ được khi cướp tông môn, cướp khoáng, tranh điểm (cả bên thủ, chia theo thế lực đội); bảng xếp hạng "Chiến công", hiện trên hồ sơ, cứ 100 chiến công thành 1 Công Huân. Chưa tách theo bậc hay đếm quân chết như Kill Statistics.
 - **Ưu tiên:** P0 · **Công sức:** S (đếm trong `fight()` hoặc chiến báo, thêm bảng xếp hạng).
 
 #### 2.39 Danh dự (KvK)
@@ -574,7 +574,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* điểm cá nhân trong KvK. Ví dụ KvK 1: thu xong mỏ 3; man tộc cấp 26–30 được 5, 31–35 được 8, 36–40 được 10; pháo đài cấp 6 / 7 / 8 / 9 / 10 được 15 / 25 / 35 / 45 / 60; giữ Ancient Ruin 15 mỗi giờ; Dark Altar 75 mỗi 2 giờ; top 1.000 có thưởng (onechilledgamer; số liệu KvK 1, có thể đã cũ). Có công cụ tính danh dự theo AP.
 - *Giữ chân:* người không thích PvP vẫn có đường đóng góp (man tộc, chiếm điểm).
 - **Tu tiên hoá:** **Danh vọng giới**.
-- **Game mình:** 🟡 — điểm mùa theo phe (giờ giữ linh mạch, trận nhãn, Thiên Môn; hạ yêu vương); chưa có điểm cá nhân kiểu danh dự.
+- **Game mình:** ✅ Công Huân (`HONOR_*` ở `data.ts`, `sect/honor.ts`, `Honor.svelte`): điểm cá nhân trong mùa từ hạ đệ tử địch, săn yêu thú giới, đánh yêu vương, khai mỏ, phá trận kỳ, giữ Cổ Di Tích / Huyết Tế Đàn, giữ núi đợt ma triều; 6 mốc Chinh Chiến Công Tích, top 10 hết mùa nhận quà, đổi ra Phi Thăng Tệ. Điểm mùa theo phe vẫn giữ.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### 2.40 "Zeroing"
@@ -583,7 +583,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* dồn kết trận và nhiều đội vào thành một người tới khi quân chết sạch, viện đầy, sức mạnh tụt, tường về 0 rồi bị dời thành. Là công cụ ép hoặc trừng phạt giữa các liên minh (hiểu biết chung).
 - *Giữ chân (hai mặt):* tạo drama và thù hằn thúc đẩy chơi tiếp, nhưng cũng là lý do lớn khiến người chơi bỏ game.
 - **Tu tiên hoá:** "Diệt môn".
-- **Game mình:** ❌ — cố ý: PvP là cướp (kho bảo hộ 30%, cướp 30% phần vượt, khiên sau khi thua, chỉ đánh người có lực chiến từ 50% mình trở lên). Nên giữ không làm.
+- **Game mình:** ❌ — cố ý: PvP là cướp (kho bảo hộ 45%, cướp 30% phần vượt, khiên sau khi thua, chỉ đánh người có lực chiến từ 50% mình trở lên). Nên giữ không làm.
 - **Ưu tiên:** P2 (khuyên không làm) · **Công sức:** M.
 
 #### 2.41 Man tộc, pháo đài, AP
@@ -595,7 +595,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   - Thưởng: EXP tướng, tài nguyên, tốc lực, gem, nguyên liệu trang bị; pháo đài cho Books of Covenant.
 - *Giữ chân:* "xả AP" là việc đều đặn mỗi phiên; nuôi tướng và trang bị.
 - **Tu tiên hoá:** yêu thú, yêu động (đã có); AP là **Tinh lực**.
-- **Game mình:** 🟡 — 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, bí cảnh, Thông Thiên Tháp, yêu vương đánh theo lát; không có AP (giới hạn bằng thời gian hồi hang và hành quân).
+- **Game mình:** ✅ Bản đồ vùng: 15 yêu thú (hạ cấp n mới mở n+1, hang hồi sau 45 phút), 5 tông môn NPC, bí cảnh, Thông Thiên Tháp. Bản đồ giới: yêu thú giới cấp 1–15 (`atlas.ts` kind `wild`, hồi 20 phút, săn liên hoàn `huntChain`), yêu trại / yêu vương đánh theo lát, một đội hay kết trận (`BOSSES`); hành lực (`AP_MAX` 100, hồi 1 mỗi 3 phút, mỗi lần săn 10, Hành Lực Đan).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ### F. Nghiên cứu
@@ -650,7 +650,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* cây nghiên cứu riêng trong Lost Kingdom mùa SoC, tiền là Crystal (từ man tộc tuần tra, pháo đài, Kahar the Hidden, Trial of Kau Karuak). Ví dụ: Plunder (thêm crystal), Karaku's Gift, Surprise Strike (quân trên bản đồ gây thêm sát thương vào đồn trú và đoàn kết trận); First Aid đã bị bỏ; lượng crystal theo công nghệ Barbarian Bounties (2 nguồn). Công nghệ liên minh ví dụ Territory Guardian (tăng công khi đánh trong lãnh thổ liên minh).
 - *Giữ chân:* mỗi mùa có thứ để nghiên cứu lại từ đầu, người mới không bị bỏ xa.
 - **Tu tiên hoá:** **Giới Tinh Thuật** — nghiên cứu theo mùa giới, đặt lại mỗi mùa; hợp với mùa 49 ngày đang có.
-- **Game mình:** ❌ — P3 có buff linh mạch cho cả minh (gần với "lãnh thổ"), chưa có cây nghiên cứu theo mùa.
+- **Game mình:** 🟡 — công nghệ tiên minh: Hộ Minh Đại Trận (`world/guild.ts`), 9 trận × 5 tầng (sản lượng, xây, tuyển, chữa, hành quân, công, thủ, lượt giúp, chỗ trong minh), góp bằng cung phụng; linh mạch cho phe giữ tăng ích. Chưa có cây nghiên cứu theo mùa kiểu Crystal Tech (Chiến lược mùa, chỉ lệnh Thiên Thời chỉ là lựa chọn theo mùa).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 ### G. Điều làm chiến đấu RoK hấp dẫn
@@ -668,7 +668,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   7. **Liên minh** (kết trận, đồn trú, tiếp viện) — đã có.
   8. **Vòng khép kín:** thưởng giao tranh quy ra tướng và tượng — cần có "hồn ấn" (mục 2.3, 2.7).
 - **Tu tiên hoá:** như từng mục ở trên.
-- **Game mình:** 🟡 — có phần trình diễn (phát lại WebGL, hiệu ứng từng công pháp, tỉ lệ thắng ước lượng) nhưng thiếu phần điều khiển và bảng điểm.
+- **Game mình:** 🟡 — có phần trình diễn (phát lại WebGL, thanh chân nguyên, hiệu ứng từng công pháp, tỉ lệ thắng ước lượng), cặp chủ / phó trưởng lão, bảng điểm (chiến công, Công Huân) và vòng tín vật; còn thiếu trận diễn trên bản đồ giới cho người khác thấy và quyết định giữa trận (rút, đổi mục tiêu).
 - **Ưu tiên:** P0 · **Công sức:** chia theo từng mục.
 
 ---
@@ -679,16 +679,16 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 |---|---|---|---|---|
 | 2.1 | Độ hiếm tướng (4 bậc màu) | ✅ phẩm trưởng lão (`RARITY`) | P1 | S |
 | 2.2 | Chuyên môn / vai trò tướng (15+ nhánh) | 🟡 1 hệ + 1 hành, bị động có vai trò | P1 | M |
-| 2.3 | Nguồn tướng đa dạng (sự kiện, VIP, shop) | ✅ cột mốc + tín vật Chiêu Hiền Đài (thiếp từ sự kiện, cửa hàng) | P1 | M |
+| 2.3 | Nguồn tướng đa dạng (sự kiện, VIP, shop) | ✅ cột mốc + tín vật Chiêu Hiền Đài (thiếp miễn phí / sự kiện / cửa hàng) + Thiên Cơ Luân | P1 | M |
 | 2.4 | Tavern (rương tướng, bảo hiểm) | ✅ Chiêu Hiền Đài (thiếp miễn phí, bảo hiểm thiếp vàng; không bán) | P1 (free) / P2 (bán) | M |
-| 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan | P2 | S |
+| 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan, Tâm Đắc Kinh Thư | P2 | S |
 | 2.6 | Sao 1–6, tượng sao, may mắn | ✅ sao 1–6 bằng tín vật (tất định, không may rủi) | P1 | M |
-| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | ✅ tín vật: thu nhận + nâng sao (mỗi sao: công pháp +5 %, công / máu +3 %); chưa có nâng ngẫu nhiên / reset kỹ năng | P1 | M |
+| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | 🟡 tín vật: thu nhận + nâng sao (mỗi sao: công pháp +5 %, công / máu +3 %); chưa có tầng công pháp nâng bằng tín vật (ngẫu nhiên) / reset kỹ năng | P1 | M |
 | 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | ✅ chân nguyên (tụ theo lượt + khi mất máu) | P0 | M |
 | 2.9 | Expertise | ❌ | P2 | M |
 | 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | 🟡 8 điểm, 3 nhánh chung, Tẩy Tủy Đan | P1 | L |
 | 2.11 | Cặp tướng chính / phụ | ✅ phó trưởng lão (tâm pháp + công pháp nửa sức) | P0 | M |
-| 2.12 | Truyện tướng, Trust, giao diện danh sách | 🟡 tên, danh hiệu, chân dung | P2 | S–M |
+| 2.12 | Truyện tướng, Trust, giao diện danh sách | 🟡 tên, danh hiệu, lời dẫn, chân dung; chưa có truyện / hảo cảm | P2 | S–M |
 | 2.13 | Museum (buff tướng theo mùa) | ❌ | P2 | M |
 | 2.14 | Đổi tướng (Commander Swap) | ❌ | P2 | S |
 | 2.15 | Tướng Prime, Artifact | ❌ | P2 | M |
@@ -700,7 +700,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.20 | Khắc chế giữa các loại quân | ✅ 3 hệ ×1,3 / ×0,8 | — | — |
 | 2.20 | Tốc độ và tải theo loại quân | ✅ tốc độ + sức mang theo hệ (bản đồ giới) | P1 | S |
 | 2.21 | 5 bậc quân và chỉ số | ✅ (chênh bậc lớn hơn RoK) | — | — |
-| 2.21 | Quân đặc thù theo văn minh | ❌ | P2 | M |
+| 2.21 | Quân đặc thù theo văn minh | ✅ đệ tử đặc trưng theo đạo thống (`DAO_UNITS`) | P2 | M |
 | 2.22 | Huấn luyện (4 nhà, 4 hàng song song) | 🟡 1 nhà, 1 hàng | P2 | S |
 | 2.23 | Nâng bậc quân | ✅ nâng bậc đệ tử (Diễn võ trường) | P1 | S |
 | 2.24 | Hàng đợi hành quân 1–5 | ✅ theo cảnh giới | — | — |
@@ -708,16 +708,16 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.26 | Sức mạnh, không upkeep | ✅ | — | — |
 | 2.27 | Quân theo mùa, đánh xa | ❌ | P2 | L |
 | 2.28 | Bệnh viện (sức chứa, chữa, liên minh giúp) | ✅ Đan phòng | P2 (chọn số chữa) | S |
-| 2.29 | 3 mức thương vong, Hall of Heroes | 🟡 2 mức | P1 | S |
+| 2.29 | 3 mức thương vong, Hall of Heroes | 🟡 thương binh / tử trận + Anh Linh Điện hồi sinh tử trận trong 3 ngày (`sect/hero.ts`); chưa có thương nhẹ tự hồi | P1 | S |
 | 2.30 | Giao tranh thời gian thực trên bản đồ | ❌ cố ý (PLAN §1) | P0 | L |
 | 2.31 | Giao tranh nhiều bên, AoE, swarm | 🟡 gộp đội khi kết trận / đồn trú, yêu vương theo lát | P1 | M |
-| 2.32 | Rút lui, điều khiển giữa trận | 🟡 tự rút sau 10 lượt, gọi về đội đóng quân | P1 | M |
-| 2.33 | Kết trận (sức chứa theo Castle, 4 mốc giờ) | ✅ 8 đội, 5/10/30 phút | P1 | S |
+| 2.32 | Rút lui, điều khiển giữa trận | 🟡 tự rút sau 10 lượt, gọi về đội đóng quân / đang đi; chưa rút giữa trận | P1 | M |
+| 2.33 | Kết trận (sức chứa theo Castle, 4 mốc giờ) | ✅ 8 đội, 5/10/30 phút, cả kết trận công sơn | P1 | S |
 | 2.34 | Đồn trú và tiếp viện | ✅ | P2 | S |
 | 2.35 | Công thành: độ bền tường, cháy, dời thành, khiên | ✅ trận lực + linh hỏa thiêu sơn + sơn môn thất thủ (dời chỗ); khiên sau thua + Hộ Sơn Phù | P1 | M |
-| 2.36 | Trinh sát | ✅ dò thám làm tròn | P2 | S |
+| 2.36 | Trinh sát | ✅ dò thám làm tròn + Do thám bằng linh điểu | P2 | S |
 | 2.37 | Chiến báo chi tiết (tách nguồn sát thương, chia sẻ) | 🟡 phát lại, chi tiết trận, chia sẻ vào chat; chưa tách sát thương theo nguồn | P1 | S |
-| 2.38 | Điểm tiêu diệt (KP) | ✅ sát địch + bảng xếp hạng | P0 | S |
+| 2.38 | Điểm tiêu diệt (KP) | ✅ chiến công + bảng xếp hạng | P0 | S |
 | 2.39 | Danh dự (KvK) | ✅ Công Huân (điểm cá nhân trong mùa) | P2 | S |
 | 2.40 | Zeroing | ❌ cố ý, khuyên giữ | P2 | M |
 | 2.41 | Man tộc, pháo đài, AP | ✅ yêu thú giới, yêu trại, hành lực | P2 | S |

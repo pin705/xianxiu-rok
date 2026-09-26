@@ -87,7 +87,7 @@
     else if (r !== 'on') fail('server')
   }
   // chọn loại thông báo đẩy: tắt / bật từng loại (server lọc trước khi gửi)
-  const TAGS = ['done', 'raid', 'dm', 'trib', 'ark', 'plan'] as const
+  const TAGS = ['done', 'remind', 'raid', 'dm', 'trib', 'ark', 'plan'] as const
   async function toggle(tag: string, on: boolean) {
     if (!info) return
     const off = on ? info.off.filter(t => t !== tag) : [...info.off, tag]

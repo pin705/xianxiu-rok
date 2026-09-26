@@ -123,9 +123,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Chân dung chưởng môn trong đĩa khung vàng vẽ tay (đã có), vòng lục khoáng khi đang có khiên (đã có).
   - Chạm → **Hồ sơ chưởng môn** (cuộn tranh). Nội dung: tên, cảnh giới, thế lực và nguồn thế lực, thành tích (đang nằm trong Bảo khố), kiếp luân hồi, xếp hạng, và lối sang Cài đặt / Cẩm nang.
-- **Game mình:** 🟡
-  - Có chân dung, tên tông môn, cảnh giới · tầng, vòng khiên và icon khiên có đồng hồ (`Hud.svelte`).
-  - Chạm chân dung lại nhảy thẳng vào **Xếp hạng**, không có hồ sơ. Số liệu cá nhân (thắng, thua, đã tuyển, đã chữa…) nằm tận Bảo khố.
+- **Game mình:** ✅ chạm chân dung mở Hồ sơ chưởng môn (`Profile.svelte`): cảnh giới, lực chiến, chiến công, tranh đoạt, tháp, trưởng lão, luân hồi, thành tựu, đổi chân dung, nút Xếp hạng (chưa vào giới thì mở Xếp hạng); vòng + icon khiên, Hương Hỏa dưới tên (`Hud.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S (ghép lại Ranks + phần thành tích của Vault)
 
 #### A2 · Power: con số sức mạnh
@@ -137,9 +135,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Ô "Thế lực" (đã có). Khi tăng thì một nét "+128" màu vàng lá viền mực bay lên từ ô, kèm tiếng gõ nhẹ.
   - Chạm → bảng nhỏ tách nguồn: công trình / đệ tử / công pháp / trưởng lão / pháp bảo, và một dòng "tăng nhanh nhất: nâng Linh điền (+40)" có nút *Đi tới*.
-- **Game mình:** 🟡
-  - Số chạy mượt khi đổi (Tween 700 ms).
-  - Không chạm được (chỉ là `span`), không tách nguồn, không có "+N" bay.
+- **Game mình:** ✅ chạm chip Thế lực mở bảng chia 5 nguồn (công trình, đệ tử, công pháp, pháp bảo, trưởng lão), vạch tỉ lệ, nút "Tăng" tới đúng chỗ nâng (`PowerSheet.svelte`); số chạy mượt, "+N" bay lên dưới con số khi tăng (`Hud.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### A3 · VIP Badge và rương hằng ngày
@@ -160,7 +156,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Thanh xanh dưới tên. Dùng để đánh mục tiêu trung lập (man rợ), trần 1000, nâng được theo VIP, hồi theo thời gian ✔[3][5].
   - *Vì sao hiệu quả:* giới hạn PvE được hiện ra ngay, người chơi biết còn đánh được bao nhiêu.
 - **Tu tiên hoá:** "Chân nguyên", nếu sau này muốn giới hạn số trận PvE bằng điểm. Hiện game mình giới hạn bằng thời gian hồi của mục tiêu ("có lại sau") và số đội, nên chưa cần.
-- **Game mình:** —. Không áp dụng với thiết kế hiện tại.
+- **Game mình:** 🟡 Hành lực (`apOf` / `spendAp` ở `core/stats.ts`, `AP_*` ở `data.ts`): tối đa 100, hồi 1 mỗi 3 phút, mỗi lần săn yêu thú giới tốn 10; Hành Lực Đan +50 (được vượt trần). Số còn lại / giá chỉ hiện trong bảng săn (`TileSheet.svelte`, chữ đỏ khi thiếu). Chưa có thanh hành lực trên HUD.
 - **Ưu tiên:** P2 (chỉ khi thêm cơ chế) · **Công sức:** S
 
 #### A5 · City Buffs: dải hiệu ứng đang hưởng
@@ -172,10 +168,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Một hàng huy hiệu nhỏ (18–22 px) sát dưới chân dung: khiên bảo hộ, Ngưng Thần Đan đang có hiệu lực, sự kiện cuối tuần…
   - Chạm → bảng "Đang hưởng" có đồng hồ từng dòng.
-- **Game mình:** ✅ dải tăng ích dưới cụm nút HUD (khiên, phù, đan, linh mạch, trận minh, sắc phong), chạm mở bảng (`Buffs.svelte`).
-  - Khiên có (vòng xanh + icon, đồng hồ trong `title`).
-  - Buff đan chỉ thấy ở Bảo khố. Nhãn "Cuối tuần" nằm dưới nút nhiệm vụ ngày.
-  - `title` không hiện trên điện thoại, nên người chơi di động không đọc được thời gian khiên.
+- **Game mình:** ✅ dải tăng ích dưới cụm nút HUD (khiên, phù, đan, linh mạch, trận minh, sắc phong, Tạp Dịch Lệnh…): chip icon + giờ còn lại đọc được trên điện thoại, nhiều thì "+N"; chạm mở bảng từng nguồn, hạn, dùng phù ngay (`Buffs.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### A6 · Resource Bar: thanh tài nguyên
@@ -193,9 +186,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
     - có / sức chứa, và bao lâu nữa thì đầy kho;
     - sản lượng mỗi giờ theo từng công trình, có nút *Đi tới*;
     - nguồn thêm: đổi ở Thương hội (1 chạm), nhiệm vụ đang cho loại này, sự kiện.
-- **Game mình:** 🟡
-  - Hiển thị tốt: số chạy, thanh sức chứa, số đỏ kèm nhãn "Đầy", "+N" bay khi nhận, icon bay vào đúng ô (`ui/fly.ts`).
-  - Nhưng **chạm vào không làm gì**. Sản lượng mỗi giờ và sức chứa chỉ nằm trong `title`, tức chỉ desktop rê chuột mới thấy.
+- **Game mình:** ✅ số chạy, thanh sức chứa, "Đầy", "+N" và icon bay vào ô; chạm viên mở bảng tài nguyên (`ResSheet.svelte`): có / sức chứa, sản lượng mỗi giờ, bao lâu đầy, công trình làm ra, % tăng, phần kho bảo hộ, mở nang trong túi, nút Thương hội / nâng công trình.
 - **Ưu tiên:** P0 · **Công sức:** S
 
 #### A7 · Gems: tiền cao cấp và nút "+"
@@ -206,7 +197,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Nếu có tiền cao cấp (ví dụ "Tiên ngọc") thì đặt cuối hàng tài nguyên, nhỏ hơn, **không nhấp nháy, không chen vào luồng chính**.
   - Cửa hàng vào từ cột phải hoặc từ hồ sơ.
-- **Game mình:** ❌. Chưa có kinh tế trả phí, tuỳ kế hoạch kinh doanh.
+- **Game mình:** ❌ cố ý — không có tiền premium, game không bán gì (README: gói nạp, gem ❌ cố ý), nên không có nút "+" nạp.
 - **Ưu tiên:** P2 · **Công sức:** M–L
 
 #### A8 · Event và Offer Column: cột sự kiện bên phải
@@ -224,9 +215,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
     - **Quà**: thư có quà, điểm danh.
   - Giọt son báo có thưởng. Chữ đồng hồ nhỏ chỉ hiện khi còn dưới 24 giờ.
   - Không bao giờ quá 3 đĩa. Thêm thứ mới thì gộp vào trang Sự kiện.
-- **Game mình:** 🟡
-  - Chỉ có nút Nhiệm vụ ngày. Bảng của nó gộp cả ngày, tuần, sự kiện tuần với các mốc, cộng nhãn "Cuối tuần" (`Daily.svelte`).
-  - Không có lịch, không biết tuần sau có gì.
+- **Game mình:** ✅ cột phải có đĩa Sự kiện (chấm đỏ khi có quà), Luận Kiếm Đài (từ tầng Tranh đoạt), Nhiệm vụ ngày & tuần kèm nhãn "Cuối tuần" (`Hud.svelte`); trung tâm sự kiện có lịch 7 ngày tới (`Events.svelte`, `festCalendar`).
 - **Ưu tiên:** P1 · **Công sức:** M
 
 #### A9 · Troop Dispatch Queue: hàng đội quân ở mép phải
@@ -241,9 +230,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Trên điện thoại: mỗi đội là một "chip" trong dải *Đang diễn ra* bên trái (xem A11). Chip gồm chân dung trưởng lão, cờ nhỏ chỉ trạng thái (đi / đánh / khai thác / về), đồng hồ.
   - Chạm chip → sang bản đồ, camera tới đội.
   - Đội về tới nơi → cờ cắm xuống kèm "+chiến lợi phẩm".
-- **Game mình:** 🟡
-  - Danh sách đội chỉ có ở tab Bản đồ: thẻ lụa, chân dung, trạng thái, đồng hồ, nút gọi về (`MapView.svelte`).
-  - Desktop có trong mục "Đang diễn ra". Điện thoại ở tab Tông môn thì **không thấy đội**.
+- **Game mình:** ✅ mỗi đội đang đi là một chip cờ + đồng hồ trong dải "Đang diễn ra" (cả điện thoại, tab Tông môn), chạm sang bản đồ (`Hud.svelte`); danh sách đội đủ (chân dung, trạng thái, đồng hồ, gọi về) ở bản đồ Vùng (`MapView.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S (làm chung với A11)
 
 #### A10 · Quest Tracker: nhiệm vụ đề xuất
@@ -255,10 +242,9 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Thẻ giấy nhiệm vụ (đã có). Thêm tên chương cho có mạch truyện ("Chương 1: Dựng lại sơn môn", "Chương 2: Mở cửa núi"…).
   - Cho thu gọn còn một dòng khi người chơi đã quen (ví dụ sau Chủ điện tầng 6).
-- **Game mình:** ✅
-  - Thẻ nhiệm vụ có tiến độ x/y, phần thưởng, mũi tên *đi*. `goQuest` dẫn tới công trình / thẻ chức năng / mục tiêu bản đồ.
-  - Xong thì thẻ ánh vàng với nhãn "Nhận thưởng". Nhận thì dấu son đóng, icon bay, nhiệm vụ mới trượt vào.
-  - Chỉ hiện ở tab Tông môn. Chưa có chương.
+- **Game mình:** 🟡
+  - Có: thẻ nhiệm vụ có tiến độ x/y, phần thưởng, mũi tên *đi* (`goQuest` dẫn tới công trình / thẻ chức năng / mục tiêu bản đồ); xong thì ánh vàng "Nhận thưởng", nhận thì dấu son đóng, icon bay, nhiệm vụ mới trượt vào.
+  - Thiếu: tên chương, thu gọn thẻ còn một dòng. Trên điện thoại thẻ chỉ hiện ở tab Tông môn.
 - **Ưu tiên:** P2 (chương, thu gọn) · **Công sức:** S
 
 #### A11 · Task Queues: hàng đợi việc đang chạy
@@ -274,10 +260,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Chạm chip → `focus(công trình, thẻ)` như cột trái desktop đang làm.
   - Việc xây đã có nút Tạp dịch lớn nên không lặp trong dải.
   - Màn thấp: dải gộp thành một chip "3 việc · 1 rảnh ▾".
-- **Game mình:** 🟡
-  - Desktop có đủ: mục "Đang diễn ra" liệt kê mọi việc kèm đồng hồ, bấm là mở đúng công trình (`Hud.svelte`, `runs`).
-  - **Điện thoại thì CSS ẩn mục này** (`.runs { display: none }`). Chỉ còn nút Tạp dịch (việc xây) và bong bóng trên từng công trình, phải cuộn núi mới thấy.
-  - Người chơi dọc không biết Diễn võ trường đã tuyển xong hay Tàng Kinh Các đang rảnh nếu công trình nằm ngoài khung.
+- **Game mình:** ✅ dải "Đang diễn ra" có cả trên điện thoại (dưới thẻ nhiệm vụ, tab Tông môn): chip icon + đồng hồ cho xây, tuyển, chữa, luyện đan, luyện khí, lĩnh ngộ, đội; Diễn võ trường / Tàng Kinh Các / Đan phòng rảnh thì chip viền son nhún; chạm là mở đúng bảng (`Hud.svelte`, `runs`). Desktop là danh sách đủ chữ ở cột trái.
 - **Ưu tiên:** **P0** · **Công sức:** M
 
 #### A12 · Main Menu: cụm nút hệ thống ở dưới
@@ -316,7 +299,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Chuyển tab kèm vết mực loang (đã có).
   - Về sau: chụm hai ngón thu nhỏ trên núi → mây cuộn che → bản đồ vùng hiện ra, như thu một bức tranh cuộn.
   - Bản đồ Giới đã có nút "Về mình".
-- **Game mình:** 🟡. Chuyển bằng tab với hiệu ứng mực. Không zoom liền mạch. Bản đồ Giới có "Về mình", bản đồ Vùng không cần.
+- **Game mình:** 🟡. Chuyển bằng tab với vết mực loang, không zoom liền mạch núi ↔ bản đồ. Bản đồ Giới có nút "Tông môn của bạn" (bay về nhà) và Toàn giới / Phóng gần; bản đồ Vùng không cần.
 - **Ưu tiên:** P2 · **Công sức:** L
 
 #### A15 · Chat Bar: dải chat nổi
@@ -347,7 +330,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - "Biên niên" (đã có trên bản đồ Giới). Thêm: tin lớn (ai đột phá Kim Đan, ai chiếm linh mạch, minh nào hạ yêu vương) chạy **một lần** như một nét mực quét ngang phía trên núi.
   - Tối đa 1 tin mỗi phút, tắt được trong Cài đặt. Chạm → mở Biên niên.
-- **Game mình:** 🟡. Biên niên (dòng mới nhất, mở rộng 8 dòng) chỉ ở dải trên bản đồ Giới (`WorldView.svelte`).
+- **Game mình:** 🟡. Biên niên (dòng mới nhất, mở rộng 8 dòng) chỉ nằm trong thẻ mùa bản đồ Giới, ẩn khi thẻ thu gọn (`WorldView.svelte`). Chưa có tin lớn quét ngang trên núi.
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### A17 · Quick Help: nút giúp nhanh
@@ -374,7 +357,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Nút **"?" hình dấu triện nhỏ** ở góc mỗi Sheet → mở đúng mục trong Cẩm nang (Cẩm nang đã lấy số từ `rules`, nên luôn đúng).
   - Công pháp: hai dòng mô tả gọn + "Xem đầy đủ".
-- **Game mình:** 🟡. Có Cẩm nang 8 mục trong Cài đặt, lời dẫn nghiêng ở đầu mỗi bảng, "Nên dùng …" ở bảng mục tiêu. Chưa có "?" theo ngữ cảnh.
+- **Game mình:** ✅ nút "?" cạnh tiêu đề mục mở đúng mục Cẩm nang tại chỗ (`Help.svelte`): hệ khắc ở bảng chọn quân, trưởng lão và thương binh ở Môn hạ, độ kiếp ở Chủ điện, tranh đoạt, nhiệm vụ tuần. Cẩm nang 12 mục trong Cài đặt, lời dẫn nghiêng đầu mỗi bảng, "Nên dùng …" ở bảng mục tiêu.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 ### B. Tương tác với công trình
@@ -449,14 +432,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:** như bảng hiện có, thêm hai thứ:
   1. Ở Chủ điện: hàng **"Lên tầng N mở ra:"** gồm các huy hiệu công trình / tab / mục tiêu sẽ mở (dùng lại `unlocked()` trong `notices.ts`), cùng phần thưởng lên tầng nếu có.
   2. Dòng "Nâng cấp xong lúc 21:40" (giờ thật) cạnh thời gian.
-- **Game mình:** ✅ gần như đủ:
-  - hình, tên, tầng, lời dẫn;
-  - chỉ số hiện tại → sau, thế lực +;
-  - yêu cầu ✓/✗ kèm nút *Đi tới*;
-  - chi phí thiếu tô đỏ và ghi "có X";
-  - cảnh báo chi phí vượt sức chứa kho, có đường sang Tàng Bảo Các;
-  - nút Nâng cấp kèm thời gian (`Panel.svelte`).
-  - Thiếu: xem trước những gì mở khoá.
+- **Game mình:** ✅ hình, tên, tầng, lời dẫn; chỉ số hiện tại → sau, thế lực +; yêu cầu ✓/✗ kèm *Đi tới*; chi phí thiếu tô đỏ + bù một chạm (`Refill.svelte`); cảnh báo vượt sức chứa kho; nút Nâng cấp kèm thời gian và "Xong lúc hh:mm"; Chủ điện ghi tầng sau mở ra gì (`Panel.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### C2 · Quick Replenish: bù tài nguyên thiếu một chạm
@@ -505,7 +481,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Chạm trại lính → Huấn luyện → chọn bậc, kéo số lượng, xem chi phí và thời gian, bấm huấn luyện. Có nâng bậc quân (chưa xác minh chi tiết màn).
   - Bù tài nguyên nhanh áp dụng cả ở đây ✔[19].
 - **Tu tiên hoá:** như `Train.svelte`. Thêm C2 (bù tài nguyên) và dòng "Tuyển xong lúc…".
-- **Game mình:** ✅. Chọn hệ, bậc, kéo số; nút "Tối đa"; mặc định chọn hệ tuyển được nhiều nhất với kho hiện có. Tuyển xong có thông báo.
+- **Game mình:** ✅ Chọn hệ, bậc, kéo số; nút "Tối đa"; nút Tuyển ghi thời gian, lần đầu có mũi tên chỉ; nâng bậc đệ tử; thiếu tài nguyên thì bù ngay (`Refill.svelte`: mở nang / đổi ở Thương hội) và dòng "Tuyển xong lúc hh:mm" (`Train.svelte`).
 - **Ưu tiên:** P2 (thêm C2) · **Công sức:** S
 
 #### C6 · Research: cây công nghệ
@@ -518,18 +494,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Tàng Kinh Các như **một bức cuộn dài**: 5 hàng công pháp nối bằng nét mực.
   - Công pháp đang lĩnh ngộ có vòng linh khí. Hàng chưa mở phủ sương ghi "Tàng Kinh Các tầng N".
   - Có một dấu son "Nên học" cho người mới.
-- **Game mình:** 🟡. 20 công pháp 5 hàng, mở theo tầng, mỗi lúc một môn (`Library.svelte`). Nên kiểm lại xem đã có nối cây trực quan và gợi ý "nên học" chưa (chưa đọc kỹ file).
+- **Game mình:** 🟡. 28 công pháp chia 7 hàng, hàng sau mở theo tầng Tàng Kinh Các (hàng khoá mờ đi), mỗi lúc lĩnh ngộ một môn (`Library.svelte`). Chỉ là danh sách thẻ theo hàng: chưa có nét nối cây, chưa có dấu "Nên học".
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C7 · Hospital: chữa thương
 
 - **Hospital**: thương binh vào viện, chữa theo đợt, dùng tăng tốc chữa. Viện đầy thì quân chết. Giao diện cụ thể chưa xác minh.
 - **Tu tiên hoá:** Đan phòng (đã có). Khi Đan phòng sắp đầy thì cảnh báo ngay ở bảng mục tiêu trước lúc xuất quân.
-- **Game mình:** ✅
-  - Chữa cả lô, luyện đan 1–5 viên (`Alchemy.svelte`).
-  - Tab Môn hạ có chấm son khi có thương binh chưa chữa.
-  - Kết quả trận ghi "tử trận (Đan phòng hết chỗ)".
-  - Chưa rõ có cảnh báo trước khi xuất quân lúc Đan phòng sắp đầy hay không.
+- **Game mình:** ✅ Chữa cả lô, luyện đan 1–5 viên, bảng Đan phòng báo khi hết chỗ, Anh Linh Điện hồi sinh đệ tử tử trận vì Đan phòng đầy (`Alchemy.svelte`); tab Môn hạ có chấm son khi còn thương binh. Màn chọn đội cảnh báo khi chỗ trống Đan phòng ít hơn nửa đội (`Army.svelte`).
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### C8 · Commander Roster: danh sách tướng
@@ -583,13 +555,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Hệ thống tự gợi ý tướng, và từ 1.0.88 ít gợi ý tướng chuyên thu thập cho trận đánh man rợ hơn ✔[20].
   - *Vì sao hiệu quả:* mọi quyết định trên một màn, có số liệu so sánh.
 - **Tu tiên hoá:** như `Army.svelte`, **và game mình hơn RoK ở một điểm**: có **tỉ lệ thắng ước lượng** (đánh thử 9 lần, tính hệ khắc, công pháp) với nhận định Áp đảo / Ngang ngửa / Yếu thế. Giữ và làm nổi bật.
-- **Game mình:** ✅
-  - tự chọn trưởng lão mạnh nhất đang rảnh;
-  - mặc định mang hết quân, có Tất cả / Không;
-  - thanh trượt từng loại quân;
-  - lực chiến Ta / Địch, thanh tỉ lệ thắng;
-  - nút Tuyển thêm khi yếu thế.
-  - Thiếu: thời gian đi / về hiện ngay trên màn, và "mang hệ khắc" (tự chọn loại quân khắc địch).
+- **Game mình:** ✅ tự chọn trưởng lão mạnh nhất đang rảnh, chọn phó; mặc định mang hết quân (cắt vừa trận dung), Tất cả / Không, thanh trượt từng loại, nút "Theo hệ khắc"; lực chiến Ta / Địch, thanh tỉ lệ thắng, nút Tuyển thêm khi yếu thế; trận đồ; nút Xuất quân ghi thời gian đi (`Army.svelte`).
 - **Ưu tiên:** P1 (thêm thời gian đi, nút "Hệ khắc") · **Công sức:** S
 
 #### C13 · Presets / Troop Loadouts: lưu đội
@@ -622,7 +588,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
     - **Trung**: thấy tên tông môn;
     - **Viễn**: thấy vùng / pha mùa.
   - Ở Viễn: chấm son nhấp nháy nơi đang đánh.
-- **Game mình:** 🟡. Bản đồ Giới có kéo quán tính, chụm, con lăn, phím +/−, "Về mình". Bản đồ Vùng cuộn dọc có zoom. Chưa có mức zoom định sẵn, chưa có lớp tình hình.
+- **Game mình:** 🟡. Bản đồ Giới có kéo quán tính, chụm, con lăn, phím mũi tên / +/−, nút "Tông môn của bạn", nút Toàn giới / Phóng gần (xa thì hiện hiệu tiên minh giữa lãnh thổ), nút Lớp tắt / bật yêu thú, mỏ, hành quân, lãnh thổ (`WorldView.svelte`). Bản đồ Vùng cuộn dọc có zoom. Chưa có ba mức zoom có tên, chưa đánh dấu nơi đang đánh.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C15 · Tile Tap: chạm ô bản đồ → bong bóng thao tác
@@ -705,7 +671,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Chiến báo giấy: dòng đầu là **đánh giá một câu** ("Thắng nhờ hệ khắc", "Thua: Thể tu bị Kiếm tu khắc"), kèm các nút lối đi (Tuyển thêm Pháp tu / Đổi trưởng lão / Chữa thương) như màn Độ kiếp thất bại đang làm.
   - Chia sẻ vào chat Minh (khi chat có thẻ).
-- **Game mình:** 🟡. Có thư và chiến báo, Phát lại, kết quả chi tiết (thương binh, tử trận, thu được, kinh nghiệm), nút Báo thù (`Reports.svelte`, `Replay.svelte`). Chưa có đánh giá một câu + lối đi cho trận thường, chưa có sao, chưa chia sẻ.
+- **Game mình:** ✅ chiến báo có Phát lại, kết quả + "Chi tiết trận", Báo thù, một câu đánh giá (hệ khắc, áp đảo, sát nút…), thua thì có nút lối đi Tuyển hệ khắc / Chữa thương / Học công pháp (`verdict.ts`, `Replay.svelte`); chia sẻ vào chat (kênh minh nếu có minh) thành nút "Xem trận" (`Reports.svelte`).
 - **Ưu tiên:** P1 (đánh giá + lối đi) · **Công sức:** S
 
 #### C22 · Events Center và lịch sự kiện
@@ -717,14 +683,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:** trang **"Sự kiện"** (cuộn tranh), vào từ đĩa ở cột phải:
   - thanh bên trái dọc là **Hoàng lịch** 7 ngày (hôm nay tô son), các sự kiện ngày / tuần / cuối tuần / mùa;
   - mỗi sự kiện có huy hiệu, đồng hồ còn lại, mốc thưởng (thanh tiến độ nét bút), nút *Đi tới* việc cho điểm.
-- **Game mình:** 🟡. Bảng Nhiệm vụ ngày chứa: sự kiện tuần theo chủ đề (mốc điểm, thưởng, top giới nhận thư), nhiệm vụ ngày 4 việc + rương, nhiệm vụ tuần + rương, thẻ cuối tuần. Chưa có lịch, chưa có "tuần sau".
+- **Game mình:** ✅ Trung tâm sự kiện (`Events.svelte`, nút Sự kiện có chấm đỏ trên HUD): thẻ các sự kiện đang mở (tân thủ, tuần, chu kỳ, lễ), đồng hồ, mốc thưởng, Nhận tất cả, lịch 7 ngày tới (`festCalendar`). Bảng Nhiệm vụ ngày & tuần giữ Nhật Khóa, nhiệm vụ tuần, Tông vụ, sự kiện tuần theo chủ đề.
 - **Ưu tiên:** P1 · **Công sức:** M
 
 #### C23 · Daily Objectives: mục tiêu ngày
 
 - **Daily Objectives**: mỗi mục tiêu xong cho điểm hoạt động, có 5 rương mốc trong thẻ mục tiêu ngày ✔[34]. Người chơi được khuyên đăng nhập mỗi ngày để lấy tăng tốc, vật phẩm ✔[7].
 - **Tu tiên hoá:** như hiện có. Nếu thêm việc thì chuyển sang "điểm công đức" + 3–5 rương mốc, đỡ bắt nhận từng việc.
-- **Game mình:** ✅. 4 việc, rương khi xong hết, huy hiệu số việc chờ nhận trên nút, nút phát sáng.
+- **Game mình:** ✅ Nhật Khóa: 12 việc hằng ngày cộng hoạt lực, 5 rương mốc (20 → 100), làm mới 0h (`Daily.svelte`); huy hiệu số việc chờ nhận trên nút.
 - **Ưu tiên:** — · **Công sức:** —
 
 #### C24 · Campaign Hub: gom các chế độ PvE
@@ -733,7 +699,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Menu *Campaign* chứa Expedition (màn tuyến tính, 3 sao theo mục tiêu, cửa hàng huân chương, làm mới hằng ngày) ✔[28], Sunset Canyon ✔[34]…
   - Từ 1.0.88 mỗi chế độ trong Campaign hiện điều kiện mở, thưởng chính, tiến độ ✔[20]. Không để khoảng trống cho chế độ chưa mở ✔[22].
 - **Tu tiên hoá:** một thẻ **"Thí luyện"** trên bản đồ Vùng gom: bí cảnh (x/5), Thông Thiên Tháp (tầng kỷ lục), yêu thú (cấp tiếp theo). Mỗi mục có điều kiện mở và thưởng lần đầu.
-- **Game mình:** 🟡. Mọi thứ nằm rải trên bản đồ Vùng dưới dạng huy hiệu, có cấp / tiến độ / đồng hồ hồi. Đã rõ, nhưng thiếu một chỗ nhìn tổng.
+- **Game mình:** 🟡. Yêu thú, bí cảnh, Thông Thiên Tháp là huy hiệu trên bản đồ Vùng (cấp / tiến độ / đồng hồ hồi); Luận Võ Liên Hoàn ở Diễn võ trường, Luận Kiếm Đài có nút trên HUD. Đã rõ, nhưng chưa có thẻ "Thí luyện" nhìn tổng.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C25 · Alliance Hub: trang liên minh
@@ -742,7 +708,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Bảng liên minh có 8 mục ở phần dưới phải: Chiến tranh, Thánh địa, Lãnh thổ, Giúp đỡ, Kho, Công nghệ, Quà, Cửa hàng ✔[35].
   - Tìm thành viên ✔[23]. Thông báo duyệt đơn nhanh, không gây phiền ✔[23]. Mời vào minh qua kênh vương quốc ✔[23]. Danh sách chờ tự nhận khi có chỗ ✔[11]. Quyền hạn các cấp ghi rõ ✔[14].
 - **Tu tiên hoá:** trang Tiên minh (đã có) chia thẻ: Tương trợ · Đồng môn · Bố cáo · Truyền âm · (sau) Minh khố / Công pháp minh.
-- **Game mình:** 🟡. Có danh sách minh (vào ngay), lập minh, bố cáo, giúp đỡ, người trong minh (chức vị, đang chơi), chat kênh minh. Chưa có quà minh, công nghệ minh, cửa hàng minh, lãnh thổ.
+- **Game mình:** ✅ trang Tiên minh 4 thẻ: Tổng quan, Thành viên, Chiến sự, Trò chuyện (`Alliance.svelte`); có Minh lễ, Hộ Minh Đại Trận (công nghệ), Cống Hiến Các (cửa hàng), Minh vụ đường, Tụ Bảo Minh Đỉnh, Minh khố thu từ lãnh thổ, minh chiến, Ma Triều, minh ước, kết trận.
 - **Ưu tiên:** P2 (thêm tính năng) · **Công sức:** L
 
 #### C26 · Alliance Gifts: quà liên minh
@@ -786,7 +752,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Túi đồ có thống kê tài nguyên và tăng tốc đang giữ ✔[21]. Cảnh báo vượt kho khi dùng gói tài nguyên ✔[26].
   - Thẻ phân loại, nút dùng kèm số lượng: chưa xác minh.
 - **Tu tiên hoá:** "Bảo khố" (đã có), đan dược dùng ngay. Thêm dòng tổng "Tụ khí đang có: 4:30:00".
-- **Game mình:** ✅. Đan dược mỗi loại một cách dùng (chọn việc / chọn trưởng lão / dùng ngay / tự dùng khi độ kiếp), sản lượng mỗi giờ, thành tích (`Vault.svelte`). Thiếu tổng thời gian tụ khí.
+- **Game mình:** ✅ Bảo khố có túi đồ (thẻ loại, lưới ô, chọn số lượng rồi dùng: `Items.svelte`), đan dược mỗi loại một cách dùng (chọn việc / chọn trưởng lão / dùng ngay / tự dùng khi độ kiếp), sản lượng mỗi giờ, thành tựu, thống kê (`Vault.svelte`). Thẻ Tăng tốc có dòng tổng thời gian phù đang giữ và phần riêng từng loại việc.
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### C31 · Shops: các cửa hàng
@@ -803,14 +769,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Hộp thư tự lọc nội dung nhạy cảm ✔[26].
   - Các thẻ (cá nhân / báo cáo / liên minh / hệ thống…) và nút *Claim all*: chưa xác minh.
 - **Tu tiên hoá:** "Hạc thư": thẻ Thư / Chiến báo (đã có). Thêm nút **"Nhận tất cả"** khi có từ 2 thư có quà trở lên, và "Đánh dấu đã đọc hết".
-- **Game mình:** 🟡. Hai thẻ; nhận quà từng thư ngay tại chỗ, icon bay; tự mở thẻ Thư khi có quà chưa nhận; huy hiệu số trên nút thư. Chưa có nhận tất cả.
+- **Game mình:** ✅ hai thẻ Thư / Chiến báo; nhận quà từng thư tại chỗ, icon bay; "Nhận tất cả" khi có từ 2 thư có quà; tự mở thẻ Thư khi còn quà; huy hiệu số trên nút thư (`Reports.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### C33 · Chat: cửa sổ trò chuyện
 
 - **Chat**: xem A15. Thêm: lobby chat cho giai đoạn lập đội của một số chế độ ✔[22]. Kênh Lost Kingdom thành dạng chủ đề trả lời theo luồng ✔[14]. Dịch tự động: chưa xác minh.
 - **Tu tiên hoá:** Sheet chat (đã có), thêm: gửi thẻ chiến báo / thẻ vị trí / thẻ trưởng lão, ghim bố cáo của trưởng minh.
-- **Game mình:** ✅ kênh Giới / Minh / Truyền âm 1-1, chia sẻ chiến báo và toạ độ, chặn, báo cáo.
+- **Game mình:** 🟡. Kênh Giới / Minh / Truyền âm (1-1, nhóm chat, đạo hữu), chia sẻ chiến báo (nút "Xem trận") và toạ độ (nút Tới), thẻ trưởng lão (chia sẻ từ Môn hạ, chat vẽ thẻ chân dung), chặn, báo cáo (`Chat.svelte`). Chưa ghim bố cáo trong kênh minh.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C34 · Governor Profile: hồ sơ thống đốc
@@ -828,7 +794,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Rankings**: 9 loại bảng, mở ở Toà thị chính cấp 8 ✔[3]. Bảng thời gian hoàn thành theo đội ở một số chế độ ✔[22].
 - **Tu tiên hoá:** như `Ranks.svelte`. Thêm dòng "Bạn: hạng 57 · cần 1.240 thế lực để lên hạng 50".
-- **Game mình:** ✅. Lực chiến, cảnh giới, tháp, tranh đoạt, sự kiện tuần; điểm mùa theo phe; phong thần các mùa; mình tô đậm.
+- **Game mình:** ✅ Lực chiến, cảnh giới, chiến công, tranh đoạt, tháp, sự kiện tuần; điểm mùa theo phe (Chính Tà, chặng thi đua); phong thần các mùa; dòng "Tông môn của bạn: #hạng" kèm "Cần thêm N để lên hạng X" (hay để vào top), mình tô đậm, chạm dòng mở hồ sơ (`Ranks.svelte`).
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### C36 · Settings: cài đặt
@@ -843,14 +809,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - **Thông báo đẩy theo loại** (xây xong / đội về / bị cướp / sự kiện);
   - "Ẩn tin lớn";
   - "Giảm chuyển động" ngay trong game, không chỉ theo cài đặt hệ điều hành.
-- **Game mình:** 🟡. Âm thanh, nhạc, ngôn ngữ, Cẩm nang, tài khoản (gắn email, mã chuyển máy, bật đẩy, đăng xuất, xoá), phiên bản. Giảm chuyển động theo `prefers-reduced-motion`. Chưa có chế độ nhẹ, chưa chọn loại thông báo.
+- **Game mình:** ✅ âm thanh, nhạc, công tắc "Giảm chuyển động · tiết kiệm pin" (theo máy, hệ điều hành đã bật thì theo sẵn: `calm()` trong `lib.ts`), Bế quan, ngôn ngữ, Cẩm nang, tài khoản (gắn email, mã chuyển máy, đổi tên, mã quà tặng, thông báo đẩy từng loại, đăng xuất, xoá), phiên bản (`Settings.svelte`, `Account.svelte`).
 - **Ưu tiên:** P1 (chế độ nhẹ) · **Công sức:** S
 
 #### C37 · Tavern / Chest Opening: mở rương
 
 - **Tavern / Chest Opening**: chạm Quán rượu → Tìm (kính lúp) → mở rương. Góc phải trên có "i" xem tỉ lệ rơi ✔[30]. Hiệu ứng nhận tướng mới được làm đẹp ✔[9]. Kết quả mở rương chia sẻ được vào chat minh ✔[19].
 - **Tu tiên hoá:** game mình không quay thưởng. Trưởng lão thu nhận theo tiến độ. Khoảnh khắc "thu nhận trưởng lão" (sau khi phá tông môn / qua tầng 5 bí cảnh) nên là một màn riêng: cuộn tranh mở, chân dung hiện dần bằng mực, tên viết lớn.
-- **Game mình:** 🟡. Kết quả trận ghi "Trưởng lão mới", chưa có màn riêng.
+- **Game mình:** ✅ Màn Thu nhận trưởng lão (`ElderReveal.svelte`): chân dung lớn giữa quầng hào quang màu phẩm, tên, phẩm · danh hiệu · hệ · hành, lời dẫn, tuyệt kỹ; nút Xem ở Môn hạ / Tiếp tục. Hiện mỗi khi có trưởng lão mới (tín vật đủ, quà phá bí cảnh, lễ), chờ trận / độ kiếp đang diễn xong.
 - **Ưu tiên:** P2 · **Công sức:** S
 
 ### D. Phản hồi thị giác và âm thanh
@@ -873,7 +839,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Construction Complete**: công trình xong có hiệu ứng và âm thanh (chưa xác minh).
 - **Tu tiên hoá:** vòng sóng vàng, 12 tia, "Tầng N" bay lên, chuông, rung nhẹ (đã có).
-- **Game mình:** ✅. Đang ở tab khác thì chỉ có thông báo. Nên cân nhắc giữ lại hiệu ứng để diễn khi quay về núi (hiện `bursts` hết hạn sau 2 giây).
+- **Game mình:** 🟡. Lên tầng có cột sáng vàng, sóng vòng, tia vàng rơi, chữ "Tầng N" bay lên (`world/home/bursts.ts`, `Home.svelte`). Đang ở tab khác thì chỉ có thông báo: `bursts` hết hạn sau 2 giây, chưa giữ lại để diễn khi quay về núi.
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### D4 · Milestone Moment: khoảnh khắc mốc lớn
@@ -910,7 +876,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Red Dots & Badges**: chấm đỏ báo có việc còn làm được. Bản 1.0.90 sửa lỗi thiếu chấm đỏ cho hai chế độ ✔[22]. Việc sửa riêng lỗi này cho thấy người chơi dựa vào chấm đỏ để biết còn lượt.
 - **Tu tiên hoá:** giọt son viền vàng (số), chấm son (việc cần làm), "!" giọt vàng (mới mở) (đã có). Quy tắc: **mọi chấm phải xoá được bằng một hành động rõ ràng**, không để chấm "treo".
-- **Game mình:** ✅. Tab Bản đồ, tab Môn hạ, nút Thư, nút Nhiệm vụ ngày, "!" tab mới, chiến báo trong MapView. Thiếu chấm cho: Tiên minh (có người xin giúp), chat chưa đọc, sự kiện có mốc nhận.
+- **Game mình:** ✅ số / chấm trên tab Bản đồ (chiến báo chưa đọc), Môn hạ (thương binh, lượt Chiêu Hiền miễn phí), Tiên minh (việc nhờ giúp, đơn / minh ước chờ duyệt), Bảo khố (thành tựu); nút Thư, Sự kiện, Luận Kiếm Đài, Nhiệm vụ ngày, Hương Hỏa; dải chat có chấm khi truyền âm chưa đọc; "!" tab mới (`Hud.svelte`, `Chat.svelte`).
 - **Ưu tiên:** P1 (bổ sung chấm) · **Công sức:** S
 
 #### E2 · Toasts / Banners: thông báo ngắn
@@ -934,7 +900,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Push Notifications**: bật / tắt theo loại (tin riêng, liên minh, chiến đấu…) ✔[42]. Bản PC có thông báo Windows ✔[10].
 - **Tu tiên hoá:** hỏi đúng lúc (đã có). Thêm lựa chọn theo loại. Chữ theo giọng tu tiên ("Tàng Kinh Các đã lĩnh ngộ xong Thanh Phong Kiếm Quyết").
-- **Game mình:** 🟡. Hỏi bật đẩy khi vừa giao việc dài từ 30 phút, bằng một thông báo có nút "Bật", mỗi máy một lần. Bật trong Tài khoản. Chưa chọn loại được.
+- **Game mình:** ✅ hỏi bật đẩy khi vừa giao việc dài từ 30 phút (thông báo có nút "Bật", mỗi máy một lần); Cài đặt › Tài khoản có công tắc 6 loại: việc dài xong, địch kéo tới / bị cướp, truyền âm, kiếp vân, trận Linh Châu, Minh sự lịch; server bỏ qua loại đã tắt (`/push/off`, `Account.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** M
 
 #### E5 · Confirmations: hộp xác nhận
@@ -957,14 +923,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
     - chữa thương;
     - độ kiếp đầu.
   - Chạm để đi tiếp, có "Bỏ qua".
-- **Game mình:** 🟡. Tiêu đề → lời dẫn 3 dòng → đặt tên → huy hiệu đập xuống → núi có mũi tên vàng. Chuỗi nhiệm vụ dẫn 30 phút đầu. Không có nhân vật nói chuyện.
+- **Game mình:** ✅ tiêu đề → lời dẫn → chọn đạo thống → đặt tên → huy hiệu đập xuống → núi có mũi tên vàng, chuỗi nhiệm vụ dẫn 30 phút đầu. Trưởng lão dẫn đường Mộc Thanh Phong (`Advisor.svelte`): tính năng vừa mở (sự kiện, đạo thống, Chiêu Hiền Đài, Nhật Khóa, bản đồ, Tiên minh, Luận Kiếm Đài, Thương nhân) thì giới thiệu một câu + nút "Đi tới", mỗi mẹo một lần.
 - **Ưu tiên:** P1 · **Công sức:** M
 
 #### F2 · Finger Pointer và Highlight: ngón tay chỉ, làm nổi
 
 - **Finger Pointer & Highlight**: ngón tay chỉ nút cần bấm, phần còn lại tối đi (chưa xác minh).
 - **Tu tiên hoá:** mũi tên vàng vẽ tay (đã có trên công trình). Mở rộng ra **trong bảng**: lần đầu mở Diễn võ trường thì mũi tên chỉ nút Tuyển; lần đầu mở bảng mục tiêu thì chỉ nút Xuất quân. Không làm tối màn, chỉ chỉ.
-- **Game mình:** 🟡. Mũi tên chỉ công trình của nhiệm vụ khi thợ rảnh. Trong bảng thì không có.
+- **Game mình:** ✅ mũi tên chỉ công trình của nhiệm vụ khi thợ rảnh; lần đầu mở bảng tuyển / bảng xuất quân thì mũi tên vàng chỉ nút Tuyển / Xuất quân tới khi bấm, không làm tối màn (`ui/FirstTap.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### F3 · Feature Gating: khoá tính năng, mở khoá dần
@@ -973,21 +939,21 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Toà thị chính quyết định cấp tối đa công trình ✔[31]. Xếp hạng mở ở cấp 8 ✔[3]. Lost Kingdom từ cấp 16 ✔[riseofkingdomsguides map guide, xem 5].
   - Mở khoá theo tiến độ để người chơi nào cũng theo kịp nhịp ✔[2]. Kênh chat Lost Kingdom khoá theo cấp ✔[21].
 - **Tu tiên hoá:** mây che tầng chưa mở + khoá "Tầng N", tab khoá "Tầng N", "!" khi vừa mở (đã có).
-- **Game mình:** ✅ (UX.md mục 4). Thêm D4 (màn mở khoá) là trọn.
+- **Game mình:** ✅ (UX.md mục 4), thêm màn Mở khoá khi Chủ điện lên tầng có tính năng mới (D4, `Unlocks.svelte`).
 - **Ưu tiên:** — · **Công sức:** —
 
 #### F4 · Newbie Protection: bảo vệ người mới
 
 - **Newbie Protection**: sương mù bảo vệ người mới ✔[2]. Vật phẩm dịch chuyển tân thủ hiển thị rõ hơn ✔[26]. Dịch chuyển báo rõ khi không đặt được ✔[26].
 - **Tu tiên hoá:** khiên tân thủ (đã có). Hiện rõ trên chân dung kèm đồng hồ **đọc được trên điện thoại** (xem A5).
-- **Game mình:** ✅ (khiên tân thủ theo `NEWBIE_SHIELD`, gợi ý trong Guard). 🟡 hiển thị thời gian trên điện thoại.
+- **Game mình:** ✅ (khiên tân thủ theo `NEWBIE_SHIELD`, gợi ý trong Guard); khiên + giờ còn lại hiện trong dải tăng ích, đọc được trên điện thoại (`Buffs.svelte`).
 - **Ưu tiên:** P1 (gộp A5) · **Công sức:** S
 
 #### F5 · Later Tutorials: hướng dẫn cho tính năng mở sau
 
 - **Later Tutorials**: hướng dẫn cách chơi vào từ hồ sơ ✔[21]. Hướng dẫn hoạt hình cho sự kiện khó ✔[14]. Hướng dẫn cửa hàng công trạng ✔[12].
 - **Tu tiên hoá:** lần đầu mở một tính năng (Tranh đoạt, Tiên minh, Bản đồ Giới, Độ kiếp) → 3 thẻ giấy lật ngang, mỗi thẻ một hình và một câu. Xem lại được trong Cẩm nang.
-- **Game mình:** 🟡. Cẩm nang 8 mục. Chưa có thẻ "lần đầu".
+- **Game mình:** 🟡. Tính năng vừa mở có Mộc Thanh Phong giới thiệu một câu + "Đi tới" (`Advisor.svelte`) và màn Mở khoá (`Unlocks.svelte`); nút "?" mở đúng mục Cẩm nang 12 mục (`Help.svelte`). Chưa có bộ thẻ "lần đầu" có hình cho Tranh đoạt, Tiên minh, bản đồ Giới.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 ### G. Tiện lợi (QoL)
@@ -1012,7 +978,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 #### G4 · Smart Speedup: dùng tăng tốc thông minh
 
 - **Smart Speedup**: xem C3. Có nút tự chọn hay không: chưa xác minh ở RoK. Dù vậy đây là mẫu phổ biến trong dòng game.
-- **Game mình:** 🟡 · **Ưu tiên:** P1 · **Công sức:** S
+- **Game mình:** ✅ bảng Tăng tốc có "Dùng vừa đủ" (`SpeedUp.svelte`, `speedPlan`) · **Ưu tiên:** P1 · **Công sức:** S
 
 #### G5 · Presets: lưu đội
 
@@ -1022,13 +988,13 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 #### G6 · Idle Visibility: thấy hàng / đội đang rảnh
 
 - **Idle Visibility**: hàng đội mép phải ✔[15]. Hàng đợi rảnh báo rõ (chưa xác minh).
-- **Game mình:** 🟡 (xem A9, A11) · **Ưu tiên:** P0 · **Công sức:** M
+- **Game mình:** ✅ dải "Đang diễn ra" có việc, đội và chip rảnh cả trên điện thoại (xem A9, A11) · **Ưu tiên:** P0 · **Công sức:** M
 
 #### G7 · Go Everywhere: đi tới ở mọi nơi
 
 - **Go Everywhere**: nút *Go* ở nhiệm vụ ✔[5]. Chạm thẻ đánh dấu trong chat để bay tới ✔[16].
 - **Tu tiên hoá:** mọi thông báo, yêu cầu thiếu, việc rảnh đều có *Đi tới* (đã có nhiều chỗ).
-- **Game mình:** ✅ (Đi tới Chủ điện / Tàng Bảo Các, `focus()` từ HUD / nhiệm vụ / Bảo khố / Môn hạ, thông báo có "Xem lại"). Thiếu ở: thanh tài nguyên (A6), cột sự kiện.
+- **Game mình:** ✅ (Đi tới Chủ điện / Tàng Bảo Các, `focus()` từ HUD / nhiệm vụ / Bảo khố / Môn hạ, thông báo có "Xem lại"; bảng tài nguyên có nút Thương hội / nâng công trình, bảng Thế lực có nút "Tăng", chiến báo thua có nút lối đi, màn Mở khoá bấm là tới). Còn thiếu ở trang sự kiện và bảng nhiệm vụ ngày.
 - **Ưu tiên:** P1 (gộp A6) · **Công sức:** S
 
 #### G8 · Automation: tự động hoá
@@ -1044,14 +1010,14 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - thương binh về thì tự vào hàng chữa nếu Đan phòng rảnh (tuỳ chọn);
   - thưởng nhiệm vụ ngày tự nhận lúc qua ngày, gửi vào thư.
   - Không tự động những việc là "quyết định" (nâng gì, đánh ai).
-- **Game mình:** ❌
+- **Game mình:** ❌ Chưa tự chữa thương khi đội về, chưa tự nhận thưởng ngày khi qua ngày. Chỉ có vài việc tự động nhỏ: việc mới tự nhờ minh giúp (`newHelps`), Độ Kiếp Đan tự dùng khi độ kiếp.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### G9 · Bulk Actions: thao tác hàng loạt
 
 - **Bulk Actions**: quay 50 lần một lúc, có tooltip tổng thu ✔[21]; du hành ×10 ✔[23].
 - **Tu tiên hoá:** tuyển / luyện đan đã có số lượng. Thêm "Dùng ×N" cho đan dược trong Bảo khố.
-- **Game mình:** 🟡 · **Ưu tiên:** P2 · **Công sức:** S
+- **Game mình:** ✅ (túi đồ chọn số lượng rồi dùng, "Dùng vừa đủ" ở bảng Tăng tốc, quay ×10 ở Thiên Cơ Luân; đan dược trong Bảo khố chọn ×1 / ×5 / ×10 / tất cả) · **Ưu tiên:** P2 · **Công sức:** S
 
 #### G10 · Favorites và Search: yêu thích, tìm kiếm
 
@@ -1062,7 +1028,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 #### G11 · Low-friction Settings: cài đặt bớt vướng
 
 - **Low-friction Settings**: ẩn bong bóng về thành ✔[11], chế độ nhẹ ✔[21], không hỏi lại hôm nay ✔[10].
-- **Game mình:** 🟡 (xem C36) · **Ưu tiên:** P1 · **Công sức:** S
+- **Game mình:** ✅ công tắc "Giảm chuyển động · tiết kiệm pin" trong Cài đặt (xem C36) · **Ưu tiên:** P1 · **Công sức:** S
 
 #### G12 · Keyboard Shortcuts: phím tắt desktop
 
@@ -1075,7 +1041,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - `M` thư;
   - `Esc` đóng (đã có).
   - Hiện gợi ý phím khi rê chuột (title).
-- **Game mình:** 🟡 (phím 1–5, +/− trên bản đồ Giới) · **Ưu tiên:** P2 · **Công sức:** S
+- **Game mình:** 🟡 (phím 1–5 chuyển tab, Esc đóng bảng, mũi tên và +/− trên bản đồ Giới, +/− trên bản đồ Vùng; chưa có Space, Q, H, B, M) · **Ưu tiên:** P2 · **Công sức:** S
 
 ### H. Phong cách thị giác
 
@@ -1099,7 +1065,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
     - nhãn phụ ≥ 12 px;
     - số quan trọng (tài nguyên, đồng hồ, thế lực) ≥ 16 px đậm 800;
     - nhãn đặt trên tranh luôn có viền giấy 3 px (như nhãn bản đồ đang làm).
-- **Game mình:** 🟡
+- **Game mình:** 🟡. Token chữ điện thoại nhỏ nhất 12 px (`--fs-1`, `ui/theme.css`). HUD mới còn dưới mục tiêu: số thế lực / tài nguyên 15 px, nhãn tab và nhãn ô sự kiện 11 px; vài chỗ khác đặt cứng 10–11 px (dấu trạng thái thẻ trưởng lão, số trên Thiên Cơ Luân, nhãn sơ đồ Linh Châu).
 - **Ưu tiên:** **P0** · **Công sức:** S
 
 #### H3 · Iconography: biểu tượng
@@ -1111,7 +1077,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - mỗi tài nguyên một **hình** (tinh thể / bông lúa / quặng) và một **sắc khoáng**;
   - icon thao tác đơn sắc tô theo màu chữ (đã có).
   - Kiểm bằng cách thu ảnh HUD xuống 50% xem còn nhận ra không.
-- **Game mình:** ✅ (có lab `/lab.html?view=icons` để soát).
+- **Game mình:** 🟡. Icon vẽ tay, có lab `/lab.html?view=icons` để soát; chưa soát hình bóng ở 16 px.
 - **Ưu tiên:** P2 (soát ở 16 px) · **Công sức:** S
 
 #### H4 · Contrast và Layering: tương phản, tách lớp
@@ -1123,7 +1089,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - mực trên giấy ngà ~12:1, son trên giấy ~5:1 (chỉ dùng cho chữ đậm / lớn);
   - **không dùng chữ vàng trên giấy** (tương phản thấp), vàng chỉ để viền, ánh, huy hiệu;
   - ban đêm cảnh tối nhưng HUD vẫn giấy sáng. Ảnh chụp đêm cho thấy cách này đang ổn.
-- **Game mình:** ✅ phần lớn. Cần soát các chỗ chữ `--gold-d` trên giấy (đồng hồ trong "Đang diễn ra" desktop, `+N`).
+- **Game mình:** 🟡. Lớp thông tin phần lớn tách khỏi tranh (HUD mới: viên mực đen chữ trắng cho thế lực, tài nguyên). Còn chữ `--gold-d` trên giấy chưa soát: đồng hồ trong dải "Đang diễn ra" (cả điện thoại), "+N" tài nguyên, nhãn Hương Hỏa.
 - **Ưu tiên:** P1 (soát tương phản) · **Công sức:** S
 
 #### H5 · Color Semantics: màu mang nghĩa
@@ -1148,7 +1114,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
     - thẻ nhiệm vụ một dòng (~48 px), mở rộng khi chạm;
     - thanh tab ~84 px + vùng an toàn.
   - Mọi thứ nổi thêm (dải Đang diễn ra, cột phải) phải hẹp (≤ 44 px) và bám mép.
-- **Game mình:** 🟡
+- **Game mình:** 🟡. HUD mới là cụm đồ vật nổi trên cảnh, dải trên nền mờ dần thay cho thanh kín bề ngang (`.ink` trong `Hud.svelte`); thẻ mùa bản đồ Giới thu gọn được (`WorldView.svelte`). Thẻ nhiệm vụ chưa gọn một dòng, chưa có số đo mới so với mục tiêu ≤ 28%.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 #### H7 · City Themes / Cosmetics: giao diện thành
@@ -1305,7 +1271,7 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | Mục | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|
 | A6 Chạm viên tài nguyên → bảng sản lượng / sức chứa / nguồn thêm (điện thoại hiện không phản hồi) | ✅ | **P0** | S |
-| H2 Cỡ chữ tối thiểu trên điện thoại (10–11 px → ≥12 px; số chính ≥16 px đậm) | ✅ | **P0** | S |
+| H2 Cỡ chữ tối thiểu trên điện thoại (10–11 px → ≥12 px; số chính ≥16 px đậm) | 🟡 token 12 px; HUD mới còn nhãn 11 px, số 15 px | **P0** | S |
 | A11 + A9 + G6 Dải "Đang diễn ra" (việc + đội) trên điện thoại (hiện CSS ẩn, chỉ desktop có) | ✅ | **P0** | M |
 | C2 + G3 Bù tài nguyên thiếu một chạm (Thương hội ngay trong bảng / Đợi ~N phút / Đi tới) | ✅ | **P0** | M |
 | A1 + C34 Hồ sơ chưởng môn (chân dung → hồ sơ; thành tích, thế lực, luân hồi, xếp hạng) | ✅ | P1 | S–M |
@@ -1318,9 +1284,9 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C3 + G4 Tụ khí: dùng nhiều viên, "Dùng vừa đủ", xem trước kết quả | ✅ `SpeedUp.svelte` | P1 | S |
 | C4 Xin tương trợ ngay từ bảng công trình / bong bóng | ✅ việc mới tự nhờ minh (`newHelps`) | P1 | S |
 | C12 Màn xuất quân: thời gian đi / về, nút "Mang hệ khắc" | ✅ | P1 | S |
-| C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | ✅ `verdict.ts` (chưa chia sẻ vào chat minh) | P1 | S |
+| C21 Chiến báo: đánh giá một câu + nút lối đi (như độ kiếp thất bại) | ✅ `verdict.ts`, chia sẻ vào chat | P1 | S |
 | C32 + G2 "Nhận tất cả" (thư có quà, nhiệm vụ ngày, mốc sự kiện) | ✅ | P1 | S |
-| C36 + G11 Chế độ nhẹ / tiết kiệm pin, giảm chuyển động trong game | ✅ công tắc trong Cài đặt (chưa chọn loại thông báo) | P1 | S |
+| C36 + G11 Chế độ nhẹ / tiết kiệm pin, giảm chuyển động trong game | ✅ công tắc trong Cài đặt (`calm()`) | P1 | S |
 | D4 Màn "Mở khoá" khi Chủ điện lên tầng (huy hiệu bấm là tới) | ✅ `Unlocks.svelte` | P1 | S |
 | D5 Dải "Tạ lễ" liệt kê vật phẩm nhận được | ✅ `GiftStrip.svelte` | P1 | S |
 | E1 Bổ sung chấm: Tiên minh có người xin giúp, chat chưa đọc, sự kiện có mốc nhận | ✅ | P1 | S |
@@ -1332,29 +1298,29 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C13 + G5 Trận đồ (preset đội) | ✅ | P1 | M |
 | C16 Tìm mục tiêu trên bản đồ Giới (loại + cấp) | ✅ | P1 | M |
 | E3 Cảnh báo có tông môn kéo quân tới (viền son, thẻ đồng hồ, đẩy) | ✅ | P1 | M |
-| E4 Thông báo đẩy chọn theo loại | ✅ công tắc 5 loại (`/push/off`) | P1 | M |
+| E4 Thông báo đẩy chọn theo loại | ✅ công tắc 6 loại (`/push/off`) | P1 | M |
 | F1 Trưởng lão dẫn đường nói chuyện ở 5–6 mốc đầu | ✅ | P1 | M |
-| A3 Điểm danh sơn môn / chuỗi 7 ngày | ❌ | P2 | S |
+| A3 Điểm danh sơn môn / chuỗi 7 ngày | ✅ Hương Hỏa | P2 | S |
 | A10 Chương nhiệm vụ có tên, thẻ thu gọn | 🟡 | P2 | S |
 | A16 Tin lớn toàn giới quét ngang trên núi (tắt được) | 🟡 | P2 | S |
 | C5 Bù tài nguyên + "xong lúc" ở Diễn võ trường | 🟡 | P2 | S |
 | C7 Cảnh báo Đan phòng sắp đầy ngay ở màn xuất quân (cần kiểm lại) | 🟡 | P2 | S |
 | C30 + G9 Tổng thời gian tụ khí, "Dùng ×N" | 🟡 | P2 | S |
-| C35 Xếp hạng: "cần X để lên hạng Y" | 🟡 | P2 | S |
-| C37 Màn thu nhận trưởng lão | 🟡 | P2 | S |
+| C35 Xếp hạng: "cần X để lên hạng Y" | ✅ `Ranks.svelte` | P2 | S |
+| C37 Màn thu nhận trưởng lão | ✅ `ElderReveal.svelte` | P2 | S |
 | D3 Giữ hiệu ứng lên tầng để diễn khi quay lại núi | 🟡 | P2 | S |
 | G10 Ghim / tìm kiếm trong danh sách dài | ❌ | P2 | S |
 | G12 Phím tắt desktop mở rộng | 🟡 | P2 | S |
 | H3 Soát icon ở 16 px | 🟡 | P2 | S |
 | B1 Chip nhanh trên công trình đang có việc | 🟡 | P2 | M |
-| B5 Khách lạ trên cảnh (thương nhân vân du, hạc đưa thư) | ❌ | P2 | M |
+| B5 Khách lạ trên cảnh (thương nhân vân du, hạc đưa thư) | ✅ Vân Du Khách | P2 | M |
 | C6 Cây công pháp trực quan + dấu "Nên học" (cần kiểm lại) | 🟡 | P2 | M |
 | C9 Công pháp: bản gọn / đầy đủ, nút "Diễn thử" | 🟡 | P2 | M |
 | C10 Thiên phú: "% chưởng môn chọn", điểm theo gợi ý | 🟡 | P2 | S–M |
 | C14 Mức zoom định sẵn (Cận / Trung / Viễn), lớp tình hình | 🟡 | P2 | M |
 | C17 Ghi nhớ vị trí, chia sẻ thẻ vị trí | ✅ | P2 | M |
-| C18 Bản đồ nhỏ góc bản đồ Giới | ❌ | P2 | M |
-| C19 Sương mù / thám tử trên Giới (cần kiểm lại) | 🟡 | P2 | M |
+| C18 Bản đồ nhỏ góc bản đồ Giới | ✅ `world/Minimap.svelte` | P2 | M |
+| C19 Sương mù / thám tử trên Giới (cần kiểm lại) | ✅ mê vụ + linh điểu (`core/fog.ts`), Do thám (`world/spy.ts`) | P2 | M |
 | C24 Thẻ "Thí luyện" gom PvE | 🟡 | P2 | M |
 | C26 Lễ vật minh + nhận tất cả | ✅ | P2 | M |
 | C31 Phường thị (chợ Giới đã có luật, thiếu client) | ✅ | P2 | M |
@@ -1363,7 +1329,7 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | A7 Tiền cao cấp / cửa hàng (tuỳ kế hoạch kinh doanh) | ❌ | P2 | M–L |
 | C27 Minh pháp (công nghệ minh) | ✅ | P2 | M–L |
 | A14 Zoom liền mạch núi ↔ bản đồ | 🟡 | P2 | L |
-| C25 Tiên minh đủ thẻ (kho, công pháp minh, lãnh thổ) | 🟡 | P2 | L |
+| C25 Tiên minh đủ thẻ (kho, công pháp minh, lãnh thổ) | ✅ 4 thẻ (`Alliance.svelte`): Hộ Minh Đại Trận, Minh khố, lãnh thổ | P2 | L |
 | C28 Lãnh thổ minh + lệnh kỳ | ✅ | P2 | L |
 | C29 Hợp kích (tập kết) | ✅ | P2 | L |
 | H7 Sơn môn cảnh sắc (skin theo mùa) | ❌ | P2 | L |

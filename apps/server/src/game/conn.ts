@@ -1,9 +1,9 @@
 // Kết nối của người chơi vào actor: nhận tab mới (đưa state tới giờ, xếp chỗ, welcome), tab rời đi (lưu lát "lúc rời game",
 // hẹn nhắc), đá tab, gửi lại ảnh chụp khi client lệch version.
-import { advance, dayOf, type State } from '@rok/rules'
+import { RETURN_AWAY, RETURN_GIFT, advance, dayOf, mail, type State } from '@rok/rules'
 import { view, type Bye, type Snap } from '@rok/protocol'
 import * as store from '../db/store.ts'
-import { nextRemind } from './notify.ts'
+import { careReminds, nextRemind } from './notify.ts'
 import type { Slot, Sock, World } from './world.ts'
 
 const MAX_TABS = 5
@@ -22,7 +22,12 @@ export async function attach(w: World, sock: Sock) {
   // đưa state tới giờ hiện tại trước khi nhận kết nối mới: patch của bước này chỉ tới các tab cũ, tab mới nhận welcome
   const now = w.now()
   w.tick(now)
-  w.commit(slot, advance(w.ps.get(pid)!, now))
+  const s0 = advance(w.ps.get(pid)!, now)
+  const s1 = s0.seasonAt === w.opened ? s0 : { ...s0, seasonAt: w.opened } // lễ theo ngày mùa (Khánh Điển Khai Tông)
+  // Hồi Quy Lễ: vắng từ RETURN_AWAY (tính từ lúc rời game lần trước) thì có thư quà chào mừng quay lại
+  const away = slot.seen ? now - slot.seen.time : 0
+  const days = Math.floor(away / 86_400_000)
+  w.commit(slot, away >= RETURN_AWAY ? mail(s1, { at: now, k: 'back', a: [days], gift: RETURN_GIFT }) : s1)
   w.seat(slot, now)
   slot.conns.add(sock)
   slot.away++
@@ -67,11 +72,12 @@ export function detach(w: World, sock: Sock) {
   w.persist.schedule()
 }
 
-// Rời game khi còn việc dài: hẹn nhắc qua Web Push lúc việc xong sớm nhất (game/notify.ts)
+// Rời game: hẹn nhắc qua Web Push lúc việc dài xong sớm nhất, và các nhắc chăm núi (khiên, kho, chuỗi Hương Hỏa — game/notify.ts)
 function remind(w: World, slot: Slot, s: State) {
   if (!w.env.push || w.npc.has(slot.id)) return
-  const next = nextRemind(s, w.now())
-  if (next) w.alarm.add({ at: next.at, pid: slot.id, gen: slot.gen, remind: { k: next.k, away: slot.away } })
+  const now = w.now()
+  for (const r of [nextRemind(s, now), ...careReminds(s, now)])
+    if (r) w.alarm.add({ at: r.at, pid: slot.id, gen: slot.gen, remind: { k: r.k, away: slot.away } })
 }
 
 export function drop(w: World, sock: Sock, reason: Bye) {

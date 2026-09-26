@@ -2,12 +2,12 @@
   // Hồ sơ chưởng môn (như Governor Profile của RoK): chạm chân dung mình, tên ở chat, người trong minh, tông môn trên bản đồ.
   // Cảnh giới, lực chiến, tiên minh, chỗ ngồi (tới xem trên bản đồ), chiến tích; truyền âm, chặn.
   import type { Ack, GroupView, Profile } from '@rok/protocol'
-  import { TITLES, TITLE_IDS, type TitleId } from '@rok/rules'
-  import { DAO_TONES } from '@rok/art'
+  import { ELDER_IDS, FRAMES, TITLES, TITLE_IDS, frameOpen, type TitleId } from '@rok/rules'
+  import { DAO_TONES, Icon, Portrait, paintedUrl, portraitRing } from '@rok/art'
   import type { WorldAction } from '@rok/rules/world'
   import type { Net } from './net'
   import { Button, Card, Medal, Sheet, Stat, Tag } from './ui'
-  import { L, num } from './lib'
+  import { L, LOOK, MASTER, num } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
   import Supply from './Supply.svelte'
@@ -46,17 +46,28 @@
   async function crown(title: TitleId) {
     if (p && send && (await send({ type: 'crown', title, pid: p.pid })).ok) void reload()
   }
+  // hồ sơ của mình: chân dung theo state đang chơi (vừa đổi thì hiện ngay, không chờ hỏi lại server)
+  const face = $derived(p?.pid === me ? game.face : p?.face)
+  const frame = $derived((p?.pid === me ? game.frame : p?.frame) ?? 'basic')
+  const owned = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined))
   const blocked = $derived(p ? game.blocks.includes(p.pid) : false)
   const friend = $derived(p ? !!game.friends?.includes(p.pid) : false)
 </script>
 
 <Sheet open={social.profile !== null} onclose={close} title={p?.name ?? '…'} sub={p ? L.realm(p.hall) : undefined}>
-  <!-- huy hiệu đạo thống của tông môn đó (chưa theo đạo: ấn tông môn chung) -->
-  {#snippet art()}<Medal
-      emblem={p?.dao ?? 'crest'}
-      tone={p?.dao ? DAO_TONES[p.dao] : p?.pid === me ? 'gold' : 'pvp'}
-      size={62}
-    />{/snippet}
+  <!-- chân dung đã chọn; chưa chọn: huy hiệu đạo thống của tông môn đó (chưa theo đạo: ấn tông môn chung) -->
+  {#snippet art()}{#if face || frame !== 'basic'}<span class="framed"
+        ><Portrait look={face ? LOOK[face] : MASTER} size={62} /><img
+          class="ring"
+          src={paintedUrl(`ring:${frame}`, () => portraitRing(frame), 76)}
+          alt=""
+          draggable="false"
+        /></span
+      >{:else}<Medal
+        emblem={p?.dao ?? 'crest'}
+        tone={p?.dao ? DAO_TONES[p.dao] : p?.pid === me ? 'gold' : 'pvp'}
+        size={62}
+      />{/if}{/snippet}
   {#if p}
     <div class="stack">
       <Card tone="silk">
@@ -74,6 +85,52 @@
             >{/if}
         </div>
       </Card>
+      {#if p.pid === me}
+        <!-- đổi chân dung (Change Avatar của RoK): chưởng môn hoặc trưởng lão đã thu nhận -->
+        <Card>
+          <div class="stack" style:--gap="6px">
+            <b class="t-small">{L.profile.face}</b>
+            <small class="t-tiny t-soft">{L.profile.faceHint}</small>
+            <div class="row wrap" style:--gap="6px">
+              <button
+                class="face"
+                class:on={!game.face}
+                aria-pressed={!game.face}
+                aria-label={L.profile.master}
+                onclick={() => g.act({ type: 'face', elder: null }, 'tap')}><Portrait look={MASTER} size={40} /></button
+              >
+              {#each owned as e (e)}<button
+                  class="face"
+                  class:on={game.face === e}
+                  aria-pressed={game.face === e}
+                  aria-label={L.elders[e].name}
+                  onclick={() => g.act({ type: 'face', elder: e }, 'tap')}><Portrait look={LOOK[e]} size={40} /></button
+                >{/each}
+            </div>
+            <b class="t-small">{L.profile.frame}</b>
+            <div class="row wrap" style:--gap="6px">
+              {#each FRAMES as fr (fr)}
+                {@const open = frameOpen(game, fr)}
+                <button
+                  class="face"
+                  class:on={(game.frame ?? 'basic') === fr}
+                  disabled={!open}
+                  aria-pressed={(game.frame ?? 'basic') === fr}
+                  aria-label={L.profile.frames[fr]}
+                  title={open ? L.profile.frames[fr] : L.profile.frameNeed[fr]}
+                  onclick={() => g.act({ type: 'frame', id: fr }, 'tap')}
+                  ><img
+                    src={paintedUrl(`ring:${fr}`, () => portraitRing(fr), 40)}
+                    alt=""
+                    width="40"
+                    height="40"
+                  />{#if !open}<Icon name="lock" size={14} />{/if}</button
+                >
+              {/each}
+            </div>
+          </div>
+        </Card>
+      {/if}
       <div class="stack" style:--gap="0">
         <Stat label={L.power}>{num(p.power)}</Stat>
         <Stat label={L.rank.boards.kills}>{num(p.kp)}</Stat>
@@ -183,3 +240,39 @@
     <p class="t-small t-soft">…</p>
   {/if}
 </Sheet>
+
+<style>
+  .face {
+    display: grid;
+    place-items: center;
+    padding: 2px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+  }
+  .face:disabled {
+    position: relative;
+    opacity: 0.5;
+    cursor: default;
+  }
+  .face :global(svg),
+  .face :global(.icon) {
+    position: absolute;
+  }
+  .framed {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+  }
+  .ring {
+    position: absolute;
+    width: 76px;
+    height: 76px;
+    pointer-events: none;
+  }
+  .face.on {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgb(var(--shade) / 0.12);
+  }
+</style>

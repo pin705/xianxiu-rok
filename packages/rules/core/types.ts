@@ -20,6 +20,7 @@ import {
   type WeeklyId,
   type EventId,
   type FestId,
+  type FrameId,
   type Metric,
   type AchId,
   type DaoId,
@@ -29,18 +30,21 @@ export type Troops = Record<UnitId, number>
 export type Army = Partial<Troops>
 export type Items = Partial<Record<ItemId, number>>
 export type Job = { building: BuildingId; level: number; startAt: number; finishAt: number }
-export type TrainJob = { unit: UnitId; n: number; startAt: number; finishAt: number }
+export type TrainJob = { unit: UnitId; n: number; startAt: number; finishAt: number; up?: true } // up: nâng bậc
 export type HealJob = { troops: Army; startAt: number; finishAt: number }
 export type StudyJob = { tech: TechId; level: number; startAt: number; finishAt: number }
 export type BrewJob = { pill: PillId; n: number; startAt: number; finishAt: number }
 export type ForgeJob = { gear: GearId; level: number; startAt: number; finishAt: number }
 export type Gear = { lv: number; on?: ElderId } // on: trưởng lão đang đeo
-export type Talent = [atk: number, hp: number, skill: number]
+export type Talent = number[] // điểm đã cộng mỗi nút thiên phú (TALENT_NODES)
 // until: lúc hết (due() gỡ đúng giờ, nên sản lượng trước/sau tính đúng); 0 = giữ tới khi server gỡ. src: nguồn, mỗi nguồn một buff
 export type Buff = { key: Bonus; v: number; until: number; src: string }
 // pvp: i = mã người chơi bị cướp · spot: i = chỉ số điểm trên bản đồ giới (atlas.points) · trib: kiếp vân, i = lần độ kiếp
 // flag: trận kỳ của minh khác (i: mã trận kỳ) — đội tới phá
-export type Target = { kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp' | 'spot' | 'trib' | 'flag'; i: number }
+export type Target = {
+  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'pvp' | 'spot' | 'trib' | 'flag' | 'camp'
+  i: number
+} // camp: trại ở ô i (y·MAP_W + x)
 export type Gain = { res: Partial<Bag>; items: Items; elder?: ElderId; exp: number }
 export type March = {
   id: number
@@ -56,6 +60,8 @@ export type March = {
   path?: { x: number; y: number }[] // đi trên bản đồ giới: các điểm dừng (đi, …cổng, tới) — theo ô
   task?: 'take' | 'gather' | 'hit' | 'hunt' | 'aid' | 'rob' // điểm trên bản đồ giới: chiếm (đóng quân) · khai mỏ · đánh yêu vương · săn yêu thú · cướp khoáng; aid: viện binh nhà đồng minh
   prey?: { pid: number; id: number } // cướp khoáng: đội khai mỏ bị nhắm
+  dig?: true // đi đào kho báu ở ô target.i (Tàng Bảo Đồ)
+  rune?: { i: number; cyc: number; k: number; t: number } // đi nhặt phù văn thứ i của chu kỳ cyc (loại k, phẩm t)
   rally?: number // thuộc kết trận này (mọi đội cùng tới lúc hẹn, đánh như một bên)
   spot?: string // loại điểm (để hiện tên): vein, mine, boss, gate, heaven
   stay?: boolean // đang đóng quân ở điểm (chỉ về khi bị đánh bật hoặc gọi về)
@@ -91,7 +97,7 @@ export type Drill = {
 export type Report = {
   id: number
   at: number
-  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena' | 'legion' | 'drill' // legion: đợt i Ma triều · drill: trận i Luận Võ
+  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena' | 'legion' | 'drill' | 'camp' | 'trial' // legion: đợt i Ma triều · drill: trận i Luận Võ · camp: trận ở trại ô i · trial: cửa i Thí Luyện
   i: number
   spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
@@ -114,6 +120,11 @@ export type Stats = {
   won: number
   lost: number
   hunted?: number // yêu thú hạ được
+  runes?: number // phù văn đã nhặt
+  guards?: number // trận thắng hộ trận linh thú
+  trial?: number // điểm Thí Luyện Yêu Hoàng: mỗi cửa qua được 1 + bậc độ khó
+  trainPts?: number // điểm tuyển theo bậc (TRAIN_PTS)
+  huntLv?: number // tổng cấp yêu thú hạ được
   chained?: number // yêu thú giới hạ bằng săn liên hoàn
   rescued?: number // việc cứu nạn Thôn Trang Gặp Nạn đã báo công
   sped?: number // phút tăng tốc đã dùng
@@ -135,9 +146,17 @@ export type Fest = {
   got: number[]
   days: number
   last: number
+  sp?: number[] // lễ FEST_STAGED: điểm từng ải đã xong (bảng xếp hạng ải)
+  shut?: boolean // lượt đã đóng: điểm khoá lại, việc làm sau giờ đóng không vào bảng
 }
 // Hương Hỏa: tổng điểm, chuỗi ngày vào game liên tiếp, ngày vào gần nhất, ngày đã mở rương (dayOf; -1 = chưa)
-export type Vip = { pts: number; streak: number; day: number; chest: number }
+export type Vip = {
+  pts: number
+  streak: number
+  day: number
+  chest: number
+  shop?: { week: number; got: Partial<Record<string, number>> } // Hương Hỏa Các: số lần đã mua từng món trong tuần `week`
+}
 // Chiêu Hiền Đài: lúc lượt miễn phí kế tiếp của mỗi loại thiếp, số lần mở thiếp vàng từ lần bảo hiểm trước,
 // và phần quà lần mở gần nhất (server điền — client hiện sau khi nhận patch)
 export type Tavern = {
@@ -180,6 +199,10 @@ export type Incoming = { id: number; pid: number; foe: string; at: number; spot?
 // Thêm loại thư: thêm khoá vào MailArgs — i18n báo thiếu chữ ở mọi ngôn ngữ.
 export type MailArgs = {
   eventTop: [rank: number, theme: EventId]
+  festTop: [rank: number, fest: FestId] // bảng xếp hạng lễ (Tông Môn Tranh Bá): hạng khi hết lễ
+  festStage: [rank: number, fest: FestId, stage: number] // bảng từng ải (Tông Môn Tranh Bá): hạng khi hết ải stage (từ 1)
+  festAlly: [rank: number, fest: FestId, tag: string] // bảng tiên minh của lễ (Trảm Yêu Lệnh): hạng minh khi hết lễ
+  drop: [fest: FestId, n: number] // lễ rơi đồ: nhặt được Linh Nang thứ n của lượt này
   admin: [title: string, body: string]
   gift: []
   comp: []
@@ -209,6 +232,11 @@ export type MailArgs = {
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
   party: [lv: number, waves: number, n: number] // Man Hoang Cổ Tộc: độ khó, số đợt qua, số người trong đội
   wallFall: [x: number, y: number] // sơn môn thất thủ: trận lực về 0, tông môn bị đánh bật tới (x, y)
+  // do thám linh địa: loại điểm, toạ độ, phe giữ, số đội đóng, tổng đệ tử, lực chiến
+  spySpot: [kind: string, x: number, y: number, owner: string, n: number, troops: number, might: number]
+  dig: [x: number, y: number] // Tàng Bảo Đồ: đào xong điểm (x, y), quà đính kèm
+  back: [days: number] // Hồi Quy Lễ: vắng bấy nhiêu ngày rồi quay lại
+  hallUp: [lv: number] // Chủ điện vừa lên tầng lv: quà mừng (tầng đột phá có lễ đột phá)
   // do thám: tên, toạ độ, tài nguyên ước cướp được (thạch, thảo, khoáng), đệ tử giữ nhà, lực chiến giữ nhà, số đội viện binh,
   // trận lực (%), khiên (1/0), trưởng lão trấn thủ ('' nếu không) và cấp
   spy: [
@@ -227,6 +255,7 @@ export type MailArgs = {
     level: number,
   ]
   spied: [foe: string] // bị do thám
+  spyVeil: [foe: string, x: number, y: number] // do thám tông môn đang dùng Ẩn Tung Phù: không dò được gì
   code: [code: string] // quà mã quà tặng
   league: [rank: number] // Cửu Thiên Luận Đạo Hội: minh mình hạng rank cả mùa
   camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
@@ -291,6 +320,14 @@ export type State = {
   ev: Ev // sự kiện tuần
   shield: number // khiên PvP tới lúc này
   guard: ElderId | null // trưởng lão giữ nhà (phải đang ở tông môn mới tính)
+  face?: ElderId // chân dung (Change Avatar của RoK): trưởng lão đã thu nhận; không có — chân dung chưởng môn
+  veil?: number // Ẩn Tung Phù: tới lúc này linh điểu do thám không dò được gì
+  frame?: FrameId // khung chân dung đã chọn (không có: khung thường)
+  digs?: { x: number; y: number }[] // Tàng Bảo Đồ: điểm đào đang có (ô trên bản đồ giới)
+  seasonAt?: number // lúc mở mùa của giới mình (server gán khi vào giới) — lễ theo ngày mùa
+  trial?: { key: number; d: number; gate: number } // Thí Luyện Yêu Hoàng: lượt lễ, độ khó đã chọn, cửa đang đánh
+  pass?: { xp: number; got: number[]; gold: number[] } // Tu Tiên Lệnh của mùa: điểm lệnh, cấp đã nhận quà thường / Kim Lệnh
+  tshop?: { earn: number; spent: number; week: number; n: number[] } // Trấn Tháp Các: Tháp Lệnh từ rương ngày, đã tiêu, đã mua tuần này
   pvp: { pts: number; win: number; loss: number }
   foes: Foe[]
   mail: Mail[]
@@ -303,6 +340,7 @@ export type State = {
   bones?: number // Yêu Vương Tuần Sơn: yêu cốt đang có (đủ LOHAR_BONES triệu hồi)
   yb?: { kp: number; hunted: number; raided: number; gathered: number } // bộ đếm lúc đầu mùa (Tổng kết mùa tính phần tăng)
   partyDay?: number // Man Hoang Cổ Tộc: ngày (dayOf) đã vào tổ đội — mỗi ngày một lần
+  fallen?: { army: Army; until: number } // Anh Linh Điện: đệ tử tử trận (Đan phòng đầy) còn hồi sinh được tới until
   wall?: { hp: number; at: number; fire: number; mend?: number } // trận lực lúc at, linh hỏa cháy tới fire, lần tu bổ trận cơ gần nhất
   nan?: { day: number; n: number; q?: NanQuest } // Thôn Trang Gặp Nạn: số việc đã nhận hôm nay (day), việc đang làm
   potOpened?: { week: number; n: number } // Tụ Bảo Minh Đỉnh: rương đã mở tuần này (mọi minh cộng lại — chống nhảy minh)
@@ -318,6 +356,7 @@ export type State = {
   tavern: Tavern // Chiêu Hiền Đài
   tokens: Partial<Record<ElderId, number>> // tín vật (hồn ấn) từng trưởng lão
   stars: Partial<Record<ElderId, number>> // sao trưởng lão (không có = 1 sao)
+  skl?: Partial<Record<ElderId, number[]>> // tầng [công pháp, tâm pháp 1, 2…] đã ngộ (không có = tầng 1)
   ach: Partial<Record<AchId, number>> // thành tựu: số bậc đã nhận quà
   incoming?: Incoming[] // đội đang kéo tới cướp mình (như Tháp canh của RoK) — server ghi lúc bên kia xuất quân
   contrib?: Contrib // cống hiến tiên minh (chưa từng góp / giúp: chưa có)

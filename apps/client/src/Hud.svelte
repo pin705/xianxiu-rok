@@ -16,6 +16,7 @@
     sideReady,
     dayOf,
     festReady,
+    passReady,
     tavernFree,
     burning,
     mendReady,
@@ -42,19 +43,22 @@
   import { useGame } from './game'
   import { social } from './social.svelte'
   import { helpsOf, legionAt, type AllyInfo } from '@rok/rules/world'
-  import {
-    Icon,
-    Portrait,
-    artOf,
-    emblemArt,
-    type IconName,
-    paintedUrl,
-    portraitRing,
-    tabIcon,
-    type Look,
-  } from '@rok/art'
+  import { Icon, Portrait, artOf, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon } from '@rok/art'
   import { Badge, Bag, IconButton, Meter, Tag } from './ui'
-  import { L, TABS, clock, num, progress, sfx, visitTab, visitedTabs, type Tab, type PanelTab } from './lib'
+  import {
+    L,
+    LOOK,
+    MASTER,
+    TABS,
+    clock,
+    num,
+    progress,
+    sfx,
+    visitTab,
+    visitedTabs,
+    type Tab,
+    type PanelTab,
+  } from './lib'
 
   let {
     game,
@@ -103,17 +107,8 @@
   const ui = (n: string) => artOf(`ui:${n}`)?.src
   const ink = !!ui('nav-tongMon')
   const uiVars = ink ? `--ui-ribbon:url(${ui('ribbon')});--ui-seal:url(${ui('seal')})` : undefined
-  const MASTER: Look = {
-    id: 'master',
-    robe: '#1b4566',
-    trim: '#c9a14a',
-    hair: '#211c17',
-    style: 'bun',
-    bg: '#78a6c2',
-    mark: '#b8382a',
-  }
   const ready = $derived(dailyReady(game) + festReady(game, now, 'daily') + sideReady(game))
-  const fests = $derived(festReady(game, now))
+  const fests = $derived(festReady(game, now) + passReady(game).length) // chấm đỏ Sự kiện: cả quà Tu Tiên Lệnh
   // chấm trên tab: Bảo khố = thành tựu chờ nhận; Môn hạ còn chấm khi Chiêu Hiền Đài có lượt miễn phí
   const tavernReady = $derived(
     (['silver', 'gold'] as const).some(k => tavernFree({ ...game, time: now }, k)) && !!game.tavern,
@@ -303,9 +298,11 @@
         onclick={() => (me !== null ? (social.profile = me) : onranks())}
         aria-label={me !== null ? L.profile.mine : L.rank.open}
       >
-        <Portrait look={MASTER} size={50} /><img
+        <Portrait look={game.face ? LOOK[game.face] : MASTER} size={50} /><img
           class="frame"
-          src={ui('frame-portrait') ?? paintedUrl('ring', portraitRing, 62)}
+          src={game.frame && game.frame !== 'basic'
+            ? paintedUrl(`ring:${game.frame}`, () => portraitRing(game.frame), 62)
+            : (ui('frame-portrait') ?? paintedUrl('ring', portraitRing, 62))}
           alt=""
           draggable="false"
         />
@@ -556,7 +553,7 @@
           : L.builder.idle
         : L.builder.rent}"
     >
-      <Icon name={rent2 ? 'hammer' : 'lock'} size={16} />
+      <Icon name={rent2 ? 'hammer' : 'lock'} size={14} />
       <span class="b2t"
         >{rent2 ? (game.queue[1] ? clock(game.queue[1].finishAt - now) : L.builder.idle) : L.builder.rent}</span
       >
@@ -976,15 +973,15 @@
   .builder:active {
     transform: scale(0.94);
   }
-  /* tạp dịch thứ hai: đĩa nhỏ bên trái nút tạp dịch; chưa thuê thì mờ, có khoá */
+  /* tạp dịch thứ hai: đĩa nhỏ gắn góc trên-trái nút tạp dịch (không đè dải chat); chưa thuê thì mờ, có khoá */
   .builder2 {
     position: absolute;
-    right: calc(var(--sp-3) + 72px);
-    bottom: calc(118px + var(--safe-b));
+    right: calc(var(--sp-3) + 50px);
+    bottom: calc(166px + var(--safe-b));
     display: grid;
     place-items: center;
-    width: 50px;
-    height: 50px;
+    width: 44px;
+    height: 44px;
     color: var(--text);
     background: var(--img-disc-silk) center / 100% 100% no-repeat;
   }
@@ -1002,7 +999,7 @@
   .b2hint {
     position: absolute;
     right: var(--sp-3);
-    bottom: calc(182px + var(--safe-b));
+    bottom: calc(216px + var(--safe-b));
     max-width: 240px;
     padding: 6px 10px;
     border-radius: 8px;
@@ -1409,7 +1406,7 @@
     color: #f5f5f1;
     background: rgb(31 27 23 / 0.8);
     border: 1px solid rgb(255 255 255 / 0.18);
-    border-image: none;
+    border-image-source: none; /* không viết border-image: none — bộ nén CSS biến thành `border-image:;` */
     border-radius: 999px;
     box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
   }
@@ -1530,7 +1527,7 @@
     bottom: -2px;
     color: #f5f5f1;
     background: rgb(31 27 23 / 0.82);
-    border-image: none;
+    border-image-source: none; /* không viết border-image: none — bộ nén CSS biến thành `border-image:;` */
     border-radius: 999px;
   }
   .ink .idle .btime {

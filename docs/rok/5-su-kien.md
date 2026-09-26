@@ -216,8 +216,8 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - N5 *Bế Quan* (dùng phù tăng tốc, bí cảnh, phân đà NPC, cống hiến minh).
   - Rương cuối cho "Tông Môn Lệnh".
 - **Game mình:** 🟡.
-  - Có: **Tân Thủ Chi Lộ** (11 mục tiêu, 7 ngày) và **Thất Nhật Lễ** (điểm danh) theo đồng hồ riêng từng tông môn; 71 nhiệm vụ chính tuyến.
-  - Thiếu: mở nhánh theo ngày, rương cuối theo số việc, token để đổi, và bản gắn ngày mở giới (mỗi mùa có giới mới).
+  - Có: **Khai Sơn Thất Nhật** (`tanThu`, 8 ngày theo đồng hồ riêng từng tông môn): 5 nhánh mở theo ngày — Nhập Sơn (Chủ điện, xây, thắng trận) → Chiêu Hiền (cấp trưởng lão, mở thiếp, giúp minh) → Tụ Linh (công pháp, săn yêu, tuyển) → Khai Mạch (khai mỏ giới, pháp bảo, thôn trang) → Bế Quan (tăng tốc, bí cảnh, thế lực), 30 việc có quà, **4 rương cuối theo số việc đã nhận** (8 / 16 / 24 / 30); UI thanh ngày (khoá + giờ mở, chấm đỏ theo ngày). Cùng **Khai Vụ Tứ Phương**, **Thất Nhật Lễ**, **Tông Lệnh Bảo Khố**; 71 nhiệm vụ chính tuyến.
+  - Thiếu: bản gắn ngày mở giới (mỗi mùa có giới mới), rương đổi Tông Môn Lệnh.
 - **Ưu tiên:** P0 · **Công sức:** M. Cùng khuôn K6 với mọi sự kiện lễ, làm một lần dùng nhiều lần.
 
 #### A2. Hero Returns — đổi Emblem of Loyalty
@@ -228,7 +228,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - 1 emblem → 50k lương / 50k gỗ / 37,5k đá (mỗi loại 10 lần).
 - **Vì sao hấp dẫn:** món đầu bảng là một tướng, số lượng có hạn nên người chơi phải tính.
 - **Tu tiên hoá:** **"Tông Lệnh Bảo Khố"**: đổi Tông Môn Lệnh lấy mệnh bài trưởng lão khởi đầu, phù, nang.
-- **Game mình:** ❌ — chưa có token sự kiện và cửa hàng đổi.
+- **Game mình:** ✅ Tông Lệnh Bảo Khố (`tongLenh`, kiểu `shop`; `festTokens` ở `core/fest.ts`): 8 ngày đầu, xây / tuyển / săn yêu / nghiên cứu / thắng trận ra Tông Môn Lệnh, đổi Kim Duyên Phù, Tạp Dịch Lệnh, phù, kinh thư, nang — mỗi món có hạn mức, lệnh bài không đủ đổi hết.
 - **Ưu tiên:** P0 (đi kèm A1; cửa hàng đổi dùng lại cho lễ hội) · **Công sức:** S.
 
 #### A3. Who Will Reign Supreme — đua lực chiến 7 ngày đầu
@@ -249,7 +249,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 
 - **Phàn nàn:** top gần như chắc chắn thuộc người nạp tiền ngày đầu. rok.guide khuyên người không nạp chỉ nhắm mốc.
 - **Tu tiên hoá:** **"Giới Chủ Tranh Phong"**: 7 ngày đầu mỗi giới. Mốc thế lực chia theo cảnh giới. Top 20 cho vừa giới 100–300 người.
-- **Game mình:** 🟡 — có bảng lực chiến giới và chỉ số `power` trong khung sự kiện; chưa có mốc giới hạn thời gian và thưởng hạng.
+- **Game mình:** ✅ **Giới Chủ Tranh Phong** (`gioiChu`, khung `season` ngày 1–7 mỗi mùa giới): điểm = thế lực tăng thêm, 6 mốc (5k → 200k), bảng xếp hạng top 10 của giới theo lượt của mùa (`festKey/festEnded` nhận lúc mở mùa), quà hạng trao lúc lật tuần. Mốc chưa chia theo cảnh giới.
 - **Ưu tiên:** P1 · **Công sức:** S khi đã có xếp hạng cho sự kiện.
 
 #### A4. Path of Wisdom — tân thủ vào muộn
@@ -296,7 +296,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - K tông môn độ kiếp Trúc Cơ → yêu vương cấp 2 xuất hiện;
   - tiên minh giữ Thiên Môn khi mùa khép.
   - Nếu giới vắng thì hết thời gian tối đa vẫn tự mở.
-- **Game mình:** 🟡 — 4 pha mở cổng theo ngày cứng (0/5/14/35) + biên niên giới; chưa có mục tiêu chung và thưởng mốc.
+- **Game mình:** 🟡 — Thiên Đạo Biên Niên (`world/book.ts`, `BOOK` ở `data.ts`): 13 chương mục tiêu chung cả giới có hạn theo ngày mùa, xong thì mọi tông môn nhận quà thư, hụt thì sang chương sau; chưa mở nội dung theo chương (cổng vẫn mở theo ngày cứng 0/5/14/35).
 - **Ưu tiên:** P1 · **Công sức:** M (xem file 3, file 7 mục B6).
 
 ### B. Cạnh tranh lớn
@@ -344,8 +344,8 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Thưởng hạng: **mệnh bài trưởng lão của đợt** (xoay 4 đợt một trưởng lão), phù tăng tốc, danh hiệu.
   - Chống cảnh đua tiền: thưởng mốc chiếm phần lớn giá trị; xếp hạng chia **nhóm theo cảnh giới** (Luyện Khí / Trúc Cơ / Kim Đan /
     Nguyên Anh+); không bán điểm.
-- **Game mình:** 🟡 — `tranhBa` đã có 6 ải + 5 mốc + chỉ số tăng tốc.
-  - Thiếu **xếp hạng ải và tổng** (server gom như `eventTop` của sự kiện tuần cũ), thưởng hạng qua thư, trưởng lão của đợt, ải PvP.
+- **Game mình:** ✅ — `tranhBa` có 6 ải theo thứ tự RoK: luyện binh (điểm theo bậc đệ tử `trainPts` 1 / 2 / 4 / 8 / 20, nâng bậc tính phần chênh) → trảm yêu (theo cấp `huntLv`) → khai mỏ → thế lực → tranh đoạt (chiến công `kp`, cướp thắng — ải diệt địch) → nước rút (mọi việc ×0,8); 5 mốc; bảng xếp hạng tổng + thư quà top 10; **trưởng lão của đợt** (`FEST_STAR`, mỗi người 4 lượt liền) — top 10 nhận tín vật người đó (30 / 20 / 20 / 10…); **bảng từng ải** (`FEST_STAGED`, `festStagePts`, `stageCheck` ở server rollover): qua 0h top 10 điểm riêng của ải hôm trước nhận quà ải qua thư, màn sự kiện có thẻ "Ải n (hôm nay) · Cả lượt"; hết lượt điểm khoá lại (`shut`), việc làm sau giờ đóng không vào bảng. Chưa có: gộp sự kiện tuần cũ (`EVENTS`).
+  - Thiếu xếp hạng từng ải, trưởng lão của đợt, ải PvP.
   - Điểm tuyển (1 mỗi đệ tử) chưa theo bậc. Cần gộp với sự kiện tuần cũ.
 - **Ưu tiên:** P0 · **Công sức:** M (xếp hạng + gộp).
 
@@ -374,7 +374,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Nhịp:** 4 ngày, reset ngày.
 - **Việc:** luyện 4.000 / 6.000 / 10.000 lính; đánh man 5 / 10 / 15 / 30 lần (mốc 30: tài nguyên + chìa vàng).
 - **Tu tiên hoá:** "Luyện Binh Trảm Yêu".
-- **Game mình:** 🟡 (chỉ số `train`, `hunt` có sẵn; chưa có sự kiện này).
+- **Game mình:** ✅ Luyện Binh Trảm Yêu (`luyenBinh` ở `FESTS`, thứ Tư – thứ Năm tuần A): tuyển đệ tử 1 điểm / người, săn yêu 20 điểm / con, 3 mốc.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### C2. Warpath
@@ -408,14 +408,14 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Nhịp:** 1 ngày.
 - **Việc:** lực chiến công trình +1.100 / 9.000 / 23.000 / 45.000 (mốc cuối 600 gem); nâng bệnh viện 1 / 3 / 5 lần.
 - **Tu tiên hoá:** "Thổ Mộc Hưng Công".
-- **Game mình:** 🟡 — ải 1 của Tranh Bá (`build`).
+- **Game mình:** ✅ Thổ Mộc Hưng Công (`thoMoc`, thứ Hai – thứ Ba tuần A): mỗi tầng công trình 100 điểm, mỗi phút tăng tốc 1 điểm, 3 mốc; ải 1 của Tranh Bá cũng chấm xây.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### C7. Boundless Wisdom
 - **Nhịp:** 2 ngày, reset ngày.
 - **Việc:** dùng tăng tốc nghiên cứu 100 / 800 / 2.800 / 9.400 phút.
 - **Tu tiên hoá:** "Tàng Kinh Ngộ Đạo" (Ngộ Đạo Phù, tầng công pháp).
-- **Game mình:** 🟡 — ải 2 của Tranh Bá (`tech`). Sự kiện tuần cũ **không có** chủ đề công pháp.
+- **Game mình:** ✅ Tàng Kinh Ngộ Đạo (`tangKinh`, thứ Ba – thứ Tư tuần B): mỗi tầng công pháp 200 điểm, mỗi phút tăng tốc 1 điểm, 3 mốc; ải 2 của Tranh Bá cũng chấm `tech`.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### C8. Overwhelming Strength / Game of Power
@@ -431,21 +431,21 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Việc:** lực chiến quân +10.000 / 53.000 / 122.800 / 259.000.
 - **Hạng 1:** 3.000 gem + 20 tượng huyền thoại + 20 sử thi + 5 tăng tốc 8 giờ + 10 tăng tốc 3 giờ.
 - **Tu tiên hoá:** "Binh Thế Tranh Hùng".
-- **Game mình:** ❌ (cần chỉ số lực chiến riêng của đệ tử).
+- **Game mình:** ✅ Binh Thế Tranh Hùng (`binhThe`, thứ Bảy – Chủ nhật tuần A): chấm chiến công (`kp`) khi cướp, giữ nhà, tranh điểm thay cho lực chiến quân; 3 mốc rương phù chiến, chưa có xếp hạng.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### C10. Now or Never
 - **Nhịp:** 2 ngày.
 - **Việc:** dùng **mọi loại** tăng tốc 600 / 7.000 / … phút; top 100.
 - **Tu tiên hoá:** "Tụ Khí Tranh Thời".
-- **Game mình:** 🟡 (chỉ số `speed`).
+- **Game mình:** ✅ Tụ Khí Tranh Thời (`tuKhiTranh`, thứ Sáu – thứ Bảy tuần A): mỗi phút tăng tốc (phù, đan) 2 điểm, 3 mốc; chưa có xếp hạng.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### C11. Daily Gathering
 - **Nhịp:** 3 ngày, reset ngày.
 - **Việc:** thu 500k / 1,5M lương; 500k / 1,5M gỗ; 400k / 1M đá; 5M tổng (mốc tổng cho chìa vàng + tăng tốc).
 - **Tu tiên hoá:** "Thu Linh Nhật Khóa" (khai mỏ giới).
-- **Game mình:** 🟡 — chỉ số `gather` đã có, chưa sự kiện nào dùng.
+- **Game mình:** ✅ Thu Linh Nhật Khóa (`thuLinh`, thứ Hai – thứ Tư tuần B, Chủ điện ≥ 6): khai mỏ trên bản đồ giới, 2 điểm mỗi 100 tài nguyên mang về, 3 mốc.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### C12. Fill the Storehouse
@@ -461,21 +461,22 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Thưởng:** rương 500 / 1.000 / 2.000 / 4.000 điểm. Top 100 cá nhân (hạng 1: 1.000 gem + 20 chìa vàng + tăng tốc + mở rộng quân).
   **Top 20 liên minh** theo tổng điểm thành viên (hạng 1: 2 sách cấp 7 + 50 rương tài nguyên + 40 rương tăng tốc + buff công, thủ).
 - **Tu tiên hoá:** **"Trảm Yêu Lệnh"**: điểm theo cấp yêu thú 1–15, bí cảnh, tháp; có hạng tiên minh.
-- **Game mình:** 🟡 — **Săn Yêu Lệnh** (Chủ nhật) chấm săn yêu 10 / bí cảnh 12 / tháp 15 / thắng 2, nhưng phẳng theo cấp và không có
-  hạng tiên minh.
+- **Game mình:** ✅ — **Trảm Yêu Lệnh** (`tramYeu`, thứ Năm – thứ Sáu tuần B): mỗi yêu thú hạ được (sơn môn lẫn bản đồ giới) +10 điểm
+  mỗi cấp (`huntLv`), bí cảnh +30, 4 mốc; bảng tông môn (top 10 quà hạng) và bảng tiên minh (3 minh đầu — ai có điểm nhận quà hạng minh),
+  trao khi lượt lễ kết thúc. **Săn Yêu Lệnh** (Chủ nhật: săn yêu 10 / bí cảnh 12 / tháp 15 / thắng 2) vẫn điểm phẳng.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### C14. War Forever
 - **Nhịp:** reset ngày.
 - **Việc:** đánh man 5 / 10 / 15 / … lần, thưởng nhỏ; có nhắc "đi cùng bạn để hạ man cấp cao".
 - **Tu tiên hoá:** "Chinh Chiến Bất Hưu".
-- **Game mình:** 🟡 (nhiệm vụ ngày "thắng 3 trận").
+- **Game mình:** 🟡 — Nhật Khóa (`nhatKhoa`) có việc thắng 3 trận, săn 3 yêu thú mỗi ngày; chưa có sự kiện riêng nhiều mốc.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### C15. Holy Conqueror
 - **Việc:** hạ vệ binh thánh địa 1 / 3 / 5 lần; nhặt rune 5 lần. Rune cho buff tạm thời.
 - **Tu tiên hoá:** "Linh Địa Chinh Phạt": hạ thủ vệ linh mạch, nhặt phù văn buff.
-- **Game mình:** ❌ — có linh mạch, chưa có vệ binh và rune.
+- **Game mình:** ✅ **Linh Địa Chinh Phạt** (`linhDia`, 4 ngày / 14 ngày, Chủ điện ≥ 8): đánh bại hộ trận linh thú 1 / 3 / 5 lần (chỉ số `guards`), nhặt phù văn 2 / 5 / 10 lần (`runes`), mỗi mốc một phần quà; phù văn cho tăng ích 1 giờ, 5 phẩm.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### C16. King of the Tribes
@@ -483,7 +484,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   nhiều điểm. Đạt mốc thì mọi thành viên có mặt lúc đó nhận quà.
 - **Top 20 liên minh:** hạng 1 nhận 20 tượng sử thi + 2 sách cấp 7 + 50 rương tài nguyên + 5 buff công 12 giờ + 10 × 5.000 Alliance Credits.
 - **Tu tiên hoá:** **"Phá Yêu Trại"** (tên "yêu trại" như file 4): kết trận hạ yêu trại hoặc phân đà NPC, cả minh nhận minh lễ.
-- **Game mình:** ❌ — có yêu vương (kết trận) và phân đà NPC; chưa có sự kiện điểm minh.
+- **Game mình:** ✅ Phá Yêu Trại (`world/tribe.ts`, `tribeBank` ở `base.ts`): thứ Ba – thứ Tư, mỗi yêu vương / yêu trại hạ được ra điểm minh (20 / 60 / 150 theo cấp) chia theo sát thương; hết khung top 3 minh — mọi người trong minh — nhận thư quà theo hạng.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### C17. Strategic Reserve
@@ -491,7 +492,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Cơ chế:** **hộp tiếp tế** rơi ngẫu nhiên khi thu trong thành, thu trên bản đồ, đánh man; gửi qua thư. Xếp hạng theo **số hộp**.
 - **Thưởng hạng:** hạng 1: 1.500 gem + 100 tượng Cleopatra + 20 + 20 tăng tốc xây, luyện. Hạng 51–100: 100 gem + 10 tượng.
 - **Tu tiên hoá:** "Tích Cốc Phòng Cơ": tìm "Linh Nang" khi nhận sản lượng, khai mỏ, săn yêu. Nang mở ra phù, nang tài nguyên.
-- **Game mình:** ❌ — chưa có rơi đồ theo hành động (K3). Khuôn K3 cũng là nền của mọi lễ hội.
+- **Game mình:** ✅ Tích Cốc Phòng Cơ (`tichCoc`, kiểu lễ `drop`, `festDrop` ở `core/fest.ts`): 4 ngày tuần A; săn yêu thú thắng (sơn môn, bản đồ giới) 30 %, đội khai mỏ về 50 % nhặt Linh Nang qua thư (phù + nang), mỗi nang +1 điểm, 4 mốc, bảng xếp hạng theo số nang. Sản lượng tự chảy (không có thao tác thu) nên không rơi khi "nhận sản lượng". Khuôn K3 (`drop`) dùng lại được cho lễ hội.
 - **Ưu tiên:** P1 · **Công sức:** M (lần đầu), S (các lần sau).
 
 #### C18. Sự kiện quốc gia — Rome / Germany / Statue Exchange / The Pioneer
@@ -501,13 +502,13 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Ưu tiên đổi** (theo hướng dẫn): chìa vàng → tăng tốc 1 giờ → tượng Joan of Arc.
 - **Tu tiên hoá:** **"Danh Môn Tuần Lễ"**: mỗi lần một đại phái (Côn Lôn, Thục Sơn, Nga Mi, Vạn Kiếm…) mang token riêng và một cửa hàng
   đổi. Làm được cả phần truyện về các phái.
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** S khi đã có token + cửa hàng (A2).
+- **Game mình:** ✅ Danh Môn Tuần Lễ (`FESTS.conLon/thucSon/ngaMi`, kiểu `shop`): ba đại phái thay nhau (thứ Sáu → thứ Hai, chu kỳ 21 ngày), mỗi phái một loại lệnh bài từ việc riêng và một kho đổi riêng, lệnh bài không đủ đổi hết · **Ưu tiên:** P1 · **Công sức:** S khi đã có token + cửa hàng (A2).
 
 #### C19. Complete Plan
 - **Nhịp:** 2 ngày, reset ngày.
 - **Việc:** đăng nhập; mở 5 chìa bạc; thu cạn 1 / 2 / 5 điểm; mua 10 món ở Courier Station (được Crystal Key); đánh Sunset Canyon 1 / 3 lần.
 - **Tu tiên hoá:** "Nhật Khóa Tu Hành" (đăng nhập, mở rương, khai cạn mỏ, mua ở Vân Du Thương Nhân, leo tháp).
-- **Game mình:** 🟡 (giống nhiệm vụ ngày).
+- **Game mình:** 🟡 — Nhật Khóa (`nhatKhoa`, kiểu `activity`): 12 việc mỗi ngày cộng hoạt lực, 5 rương mốc — có mở thiếp, khai mỏ; chưa có việc mua ở Thương nhân vân du, đánh Luận Kiếm Đài.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### C20. Artisan's Forge — sự kiện rèn trang bị
@@ -559,8 +560,9 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Khi Lohar đã đủ kỹ năng, đánh tiếp kém hiệu quả (riseofkingdomsguides).
 - **Tu tiên hoá:** **"Yêu Tướng Thử Luyện"**. Săn yêu rơi "Yêu Cốt". Mở Yêu Cốt có thể ra *Yêu Cung* / *Yêu Thuẫn* để gọi Yêu tướng tới
   cạnh núi trong 2 giờ. Tiên minh kết trận hạ, thưởng theo sát thương; trưởng lão PvE làm phần thưởng hiếm.
-- **Game mình:** 🟡 — yêu vương dùng máu chung chia lát, kết trận 8 đội, thưởng theo sát thương. Thiếu phần **người chơi tự gọi trùm
-  từ đồ rơi** và cửa sổ sự kiện.
+- **Game mình:** ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`): yêu thú giới cấp 6+ rơi yêu cốt (cấp 11+ rơi 2), đủ 10 thì triệu hồi một
+  yêu vương đang sống thành bản Tuần Sơn (máu ×2, 2 giờ); hạ được thì thêm quà chia theo sát thương, người triệu hồi thêm một phần. Chạy
+  quanh năm, chưa có cửa sổ sự kiện.
 - **Ưu tiên:** P1 · **Công sức:** M (dùng lại logic yêu vương).
 
 #### D2. Arms Training — một đạo quân, trùm mạnh dần
@@ -599,8 +601,9 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Phàn nàn:** tốn AP rất nặng (tự suy ra từ chi phí).
 - **Tu tiên hoá:** **"Thí Luyện Yêu Hoàng"** (tên file 4). Chọn độ khó, 50 cửa, "Hiệu Triệu Lệnh" để gọi minh kết trận. Tiên minh đủ
   N người qua cửa X thì gọi được Yêu hoàng chung.
-- **Game mình:** 🟡 — Thông Thiên Tháp (thang vô hạn, một mình) + yêu vương (chung). Thiếu chọn độ khó, giới hạn thời gian, cơ chế nhờ
-  minh, trùm mở theo số thành viên.
+- **Game mình:** ✅ — Thí Luyện Yêu Hoàng (`sect/trial.ts`, lễ `yeuHoang` 4 ngày mỗi 14 ngày, `Trial.svelte`): chọn độ khó một lần
+  (khoá cả lượt), 50 cửa đánh bằng quân thật (10 hành lực mỗi trận, thương binh về Đan phòng), tinh anh ở cửa 10 / 20…, điểm mỗi
+  cửa = bậc độ khó, mốc quà theo điểm. Thiếu: Hiệu Triệu Lệnh gọi minh kết trận, Yêu hoàng chung mở theo số người qua cửa.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### D4. Trial of Kau Karuak
@@ -638,7 +641,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Vì sao hay:** co-op có vai trò, gặp người lạ, kỹ năng tay.
 - **Tu tiên hoá:** **"Tổ Đội Bí Cảnh"** (file 4). Bản bất đồng bộ: mỗi người góp 1 trưởng lão + đệ tử + chọn vai (Thể tu chống đỡ,
   Kiếm tu công, Pháp tu hỗ trợ). Trận tự động nhiều pha với trùm.
-- **Game mình:** ❌. Bản thời gian thực trái PLAN ("Không làm: trận kéo dài nhiều phút").
+- **Game mình:** ✅ Man Hoang Cổ Tộc (`world/party.ts`, `AllyParty.svelte`), bản bất đồng bộ trong tiên minh: Chủ điện ≥ 8, mở phòng 5 độ khó, chọn vai Hộ Pháp / Chủ Công / Trị Liệu, tối đa 4 người, mỗi ngày một lần; server giải 5 đợt hung thú mạnh dần, quà theo độ khó × số đợt qua thư.
 - **Ưu tiên:** P2 · **Công sức:** L.
 
 #### D7. Ceroli Assault — trùm 12 người
@@ -647,7 +650,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   Cả đợt chỉ một trùm do server chọn. Buff tấn công, phòng thủ và mở rộng quân không có tác dụng. Thắng được voucher để mở Bejeweled
   Chest (có quà chính và quà phụ).
 - **Tu tiên hoá:** "Vây Công Yêu Vương" (đợt).
-- **Game mình:** 🟡 — yêu vương đã là trùm chung kết trận; thiếu cửa sổ sự kiện, "lượt khiêu chiến" và rương voucher.
+- **Game mình:** 🟡 — yêu vương là trùm chung kết trận, có khung Phá Yêu Trại (thứ Ba – thứ Tư) chấm điểm minh; thiếu "lượt khiêu chiến" và rương voucher.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### D8. Ian's Ballads — đột kích 4 người, bản đồ lớn
@@ -734,7 +737,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   "khai 50k linh khoáng", "hạ 5 yêu thú cấp ≥ 8". **Bỏ loại mua gói.**
   - Giải trong **một giới**: hạng giữa các minh; hoặc bậc theo thành tích quá khứ — Phàm / Linh / Huyền / Địa / Thiên.
   - Minh tối đa 30 người, nên 40 nhiệm vụ → khoảng 20.
-- **Game mình:** ❌ — tiên minh có giúp đỡ, kết trận, viện binh, buff linh mạch; không có sự kiện minh nào.
+- **Game mình:** ✅ Minh vụ đường (`world/mob.ts`, `AllyMob.svelte`): bảng 8 việc chung mỗi tuần, nhận 1 việc/lúc, 10 lượt/ngày, hạn 4 giờ; 5 mốc quà cho ai góp ≥ 20 điểm, hết tuần 3 minh điểm cao nhất giới thêm quà hạng (`mobTop`).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### E2. Silk Road Speculators — hộ tống đoàn buôn của minh
@@ -765,7 +768,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Vì sao hay:** không mất lính, không tốn AP; ai cũng góp được; "nhảy thành" cứu nhau.
 - **Tu tiên hoá:** **"Ma Triều Công Sơn"** (file 4): ma tu đánh từng ngọn núi. Thủ bằng Hộ Sơn Đại Trận + trưởng lão trấn thủ + viện binh.
   - Tỉ lệ cho minh 30 người: ≥ 10 thành viên mới mở; "sống qua" tính theo nửa số người.
-- **Game mình:** ❌, nhưng **rẻ**: đã có viện binh (tối đa 3 đội đóng ở nhà đồng minh), trận thủ, NPC phân đà.
+- **Game mình:** ✅ Ma Triều Công Sơn (`world/legion.ts`): minh ghi danh cả tuần; tối thứ Tư 20h, 5 đợt cách 5 phút đánh vào núi từng người trong minh, sức theo lực phòng thủ của chính người đó, viện binh đồng minh cùng thủ; giữ đợt k được k điểm, quân ngã chỉ bị thương, quà theo điểm + quà ba minh đầu.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### E4. Rương liên minh ngày lễ (khuôn K7)
@@ -778,7 +781,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Thưởng hạng gửi trễ, dặn đừng rời minh.
 - **Vì sao hay:** đóng góp cá nhân thành phần thưởng cho cả minh; người nạp nuôi người không nạp; bảng đóng góp là áp lực xã hội nhẹ.
 - **Tu tiên hoá:** "Tụ Bảo Minh Đỉnh": góp lễ vật vào đỉnh hương của minh.
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** S–M (cần tiền tệ sự kiện trước).
+- **Game mình:** ✅ Tụ Bảo Minh Đỉnh (`world/pot.ts`, `AllyPot.svelte`): cả minh góp tài nguyên vào đỉnh hương mỗi tuần (1.000 = 1 điểm); mỗi lần đỉnh đầy 600 điểm, ai đã góp từ 30 điểm mở một rương, tối đa 10/tuần — góp tài nguyên, chưa gắn tiền tệ lễ · **Ưu tiên:** P1 · **Công sức:** S–M (cần tiền tệ sự kiện trước).
 
 #### E5. Alliance Quiz — đố vui liên minh
 - **Cơ chế:**
@@ -789,7 +792,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Chủ đề: thần thoại Hy Lạp, lịch sử, địa lý, sinh học, luật RoK.
   - Bản 2025: chạy 7 ngày, điểm mở buff cho cả minh (LDPlayer).
 - **Tu tiên hoá:** **"Luận Đạo Vấn Đáp"** (file 4): câu hỏi về điển tích tu tiên và luật game (hệ khắc, ngũ hành, cảnh giới).
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** M (ngân hàng câu hỏi 2 thứ tiếng mới là phần tốn).
+- **Game mình:** ❌ — mới có Vấn Đạo Đài đố một mình (`sect/quiz.ts`, 15 câu luật chơi, hai thứ tiếng); chưa có đố cả minh cùng lúc, điểm minh · **Ưu tiên:** P2 · **Công sức:** M (ngân hàng câu hỏi 2 thứ tiếng mới là phần tốn).
 
 ### F. Tiêu gem, may rủi, quay tướng (K9)
 
@@ -804,7 +807,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Phàn nàn, lưu ý:** không biết đợt sau khi nào; hướng dẫn cảnh báo chỉ đáng khi vốn định tiêu. Muốn tượng thì Wheel lời hơn (70 lượt
   ≈ 50.400 gem ≈ 37 tượng).
 - **Tu tiên hoá:** "Tiên Ngọc Hồi Lễ" (sau P4).
-- **Game mình:** ❌ — chưa có Tiên ngọc.
+- **Game mình:** ❌ cố ý — không có tiền premium, game không bán gì (README: gói nạp, gem ❌ cố ý); sự kiện theo mốc tiêu tiền trái "không P2W".
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### F2. Wheel of Fortune
@@ -817,7 +820,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
     tăng tốc 8–24 giờ.
 - **Vì sao hay:** tướng chỉ có ở Wheel; bảo hiểm theo mốc; lịch biết trước để tích gem.
 - **Tu tiên hoá:** "Thiên Cơ Luân".
-- **Game mình:** ⛔ gacha (file 7 cùng kết luận). Nếu có thì quay cosmetic bằng tiền tệ lễ.
+- **Game mình:** ✅ Thiên Cơ Luân (`thienCo` ở `data.ts`, `spin` ở `sect/fest.ts`, `Wheel.svelte`): bánh xe 12 ô, 3 ngày hai tuần một lần, mỗi ngày một lượt miễn phí, lượt thêm bằng Thiên Cơ Lệnh kiếm từ chơi (không bán); ô lớn là tín vật trưởng lão Tiên phẩm chủ lễ, lượt thứ 30 chắc trúng ô lớn.
 - **Ưu tiên:** — · **Công sức:** —.
 
 #### F3. Esmeralda's House — bói toán ra nguyên liệu trang bị
@@ -904,7 +907,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Rất nhiều sự kiện có việc "mua X món ở Courier Station" (A1, C18, C19; lễ hội đòi 80 món).
 - **Tu tiên hoá:** **"Vân Du Thương Nhân"** ở "Dịch trạm" (file 1). Giá bằng linh thạch, linh thảo, linh khoáng. **Cảnh báo:** đổi tài
   nguyên ra nang là lách kho bảo hộ 30 % của PvP — cần trần hoặc thuế.
-- **Game mình:** 🟡 — Thương hội đổi tỉ lệ cố định + chợ người chơi; code đã ghi "thương nhân" là nguồn vật phẩm tương lai.
+- **Game mình:** ✅ Thương nhân vân du (`sect/merchant.ts`, `Merchant.svelte`): ở Thương hội từ Tàng Bảo Các tầng 4, 6 món mỗi 8 giờ (tất định theo tông môn + lượt), giá bằng tài nguyên nhân tầng Chủ điện, mỗi món mua một lần; chưa có ghé thêm sau việc hay làm mới hàng.
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### G2. Đăng nhập — rương VIP ngày, Sign-in Spoils
@@ -916,7 +919,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Create Your Own History có nhánh "đăng nhập 1→5 ngày".
 - **Tu tiên hoá:** "Điểm Danh Bảy Ngày" cho **mọi người** mỗi đầu mùa hoặc mỗi lễ, quà ngày 7 là mệnh bài trưởng lão (file 7: "Khánh điển
   khai tông").
-- **Game mình:** 🟡 — **Thất Nhật Lễ** (7 quà trong 14 ngày đầu, ngày 7 có trưởng lão Như Yên) chỉ cho tông môn mới.
+- **Game mình:** 🟡 — **Thất Nhật Lễ** (7 quà trong 14 ngày đầu, ngày 7 có trưởng lão Như Yên) chỉ cho tông môn mới; **Tân Xuân Khai Sơn** (`tanXuan`) là 7 ngày lì xì đăng nhập cho mọi người nhưng chỉ dịp Tết; lễ vật Hương Hỏa mỗi ngày thay rương VIP. **Khánh Điển Khai Tông** (`khaiDien`): 7 quà điểm danh trong 14 ngày đầu mỗi mùa giới cho mọi người (khung `season` theo lúc mở mùa — sim không có mùa nên không lệch sim).
 - **Ưu tiên:** P1 · **Công sức:** S (thêm khung "ngày thứ N của mùa").
 
 #### G3. Lyceum of Wisdom — Peerless Scholar (thi đố hằng tháng)
@@ -924,7 +927,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Cơ chế:** 3 vòng Sơ khảo → Giữa kỳ → Chung khảo (file 7: cần ≥ 6 câu đúng ở Sơ khảo). Người tới cuối **chia quỹ gem lớn**. Câu hỏi về
   lịch sử, địa lý, khoa học, luật game. Lyceum còn bán "Kingdom Newspaper" (1.000 vàng, đôi khi có buff).
 - **Tu tiên hoá:** **"Vấn Đạo Đài"** (file 7): khảo thí ở Tàng Kinh Các về điển tích, ngũ hành, hệ khắc.
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** M.
+- **Game mình:** ✅ Vấn Đạo Đài (`sect/quiz.ts`, `Quiz.svelte`): thẻ đầu tab Tàng Kinh Các từ Chủ điện tầng 3, mỗi ngày 5 câu rút tất định từ 15 câu về luật chơi, sai thì hiện đáp án đúng, quà theo số câu đúng; chưa có kỳ thi tháng nhiều vòng · **Ưu tiên:** P2 · **Công sức:** M.
 
 ### H. Lễ hội (Global events)
 
@@ -981,12 +984,12 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
   - *Lantern City* — rương minh: Copper Token; Festive Cake 50 gem; 10 rương/người; minh 20.000 điểm + cá nhân 500.
   - Kèm Strange Incidents, Arms Training, Protect Supplies.
 - **Tu tiên hoá:** **"Tân Xuân Khai Sơn"**: Hoa Đăng 25 cấp, **Hồng Bao Tiên Minh**, Thôn Trang Gặp Nạn, Luận Võ Liên Hoàn.
-- **Game mình:** ❌ · **Ưu tiên:** P1 (lễ lớn nhất của thị trường VN) · **Công sức:** S khi đã có khuôn H0.
+- **Game mình:** ✅ Tân Xuân Khai Sơn (`tanXuan`): 7 ngày từ mùng Một, mỗi ngày vào núi mở một bao lì xì, bao sau dày hơn (kiểu `login`); chưa có Hoa Đăng 25 cấp, Hồng Bao Tiên Minh · **Ưu tiên:** P1 (lễ lớn nhất của thị trường VN) · **Công sức:** S khi đã có khuôn H0.
 
 #### H2. Valentine's — "Sweet Valentines" (patch 1.0.30)
 - Chỉ có tên bản cập nhật; chi tiết chưa xác minh.
 - **Tu tiên hoá:** thay bằng **Thất Tịch** (H8), hợp văn hoá hơn.
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** —.
+- **Game mình:** ✅ thay bằng Ô Thước Kiều (Thất Tịch, fest `thatTich` — xem H8) · **Ưu tiên:** P2 · **Công sức:** —.
 
 #### H3. Spring's Return / Spring Symphony (mùa xuân)
 - **Spring's Return:**
@@ -1030,7 +1033,7 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
 - **Cơ chế:** 7 ngày. Language of Lanterns (việc ngày ra Small Flower Lantern + tượng), Magpie Bridge Rendezvous (trang trí cầu Ô Thước để
   lên cấp, cầu huyền ảo có thể ra theme vĩnh viễn), Lantern's Shadow (rơi đèn + theme 3 ngày), Lotus War (liên trảm, C23).
 - **Tu tiên hoá:** **"Ô Thước Kiều"** — Ngưu Lang Chức Nữ rất hợp bối cảnh.
-- **Game mình:** ❌ · **Ưu tiên:** P1 (rẻ, hợp văn hoá VN/Hoa) · **Công sức:** S.
+- **Game mình:** ✅ Ô Thước Kiều (`thatTich`, 7 ngày quanh mùng 7 tháng Bảy âm): giúp đồng minh, thắng trận, săn liên hoàn, luận kiếm ra Hỷ Thước, đổi Kim Duyên Phù / Thần Hành Phù / phù tăng tốc · **Ưu tiên:** P1 (rẻ, hợp văn hoá VN/Hoa) · **Công sức:** S.
 
 #### H9. Anniversary — kỷ niệm ra mắt
 - **Bản 2021 (rok.guide):** Yearbook (tổng kết cá nhân, gắn nhãn thành tích lên thành, +200 gem), Sign-in Spoils (8 ngày ra Matilda),
@@ -1046,7 +1049,7 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
   Alliance Quiz, Arms Training, Riddles of the Sphinx, Desert Tracks, Circus of Wonders, Lucky Red Packet, Yearbook.
 - **Tu tiên hoá:** **"Khánh Điển Khai Tông"** (file 7): "Tông Môn Chí" (tổng kết mùa để khoe), điểm danh 7 ngày, "Cố Nhân Tương Phùng"
   (mời người cũ), bánh thọ 25 cấp.
-- **Game mình:** ❌ · **Ưu tiên:** P1 (tổng kết + điểm danh) / P2 (phần còn lại) · **Công sức:** S / M.
+- **Game mình:** 🟡 — có tổng kết mùa: hết mùa ai cũng nhận thư `yearbook` (`endSeason` ở `world/season.ts`) ghi tầng Chủ điện, Công Huân và hạng, chiến công, yêu thú hạ, cướp thắng, tài nguyên khai mỏ trong mùa; chưa có điểm danh 7 ngày cho mọi người, mời người cũ, bánh thọ 25 cấp · **Ưu tiên:** P1 (tổng kết + điểm danh) / P2 (phần còn lại) · **Công sức:** S / M.
 
 #### H10. Halloween
 - **Cơ chế:**
@@ -1058,7 +1061,7 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
   - *Ghost Parade* — liên trảm.
   - *Hallow's Eve* — đổi, tượng 25 bí ngô + 10 kẹo; skin 200 + 100.
 - **Tu tiên hoá:** **"Trung Nguyên Quỷ Tiết"** (Rằm tháng Bảy): oán hồn, đèn lồng, đỉnh hương minh.
-- **Game mình:** ❌ · **Ưu tiên:** P1 (dùng bản Trung Nguyên) · **Công sức:** S.
+- **Game mình:** ✅ Trung Nguyên Quỷ Tiết (`quyTiet`, 5 ngày quanh rằm tháng Bảy): hạ yêu thú (săn liên hoàn nhiều điểm hơn), thắng trận, chiến công ra điểm, 3 rương trấn quỷ · **Ưu tiên:** P1 (dùng bản Trung Nguyên) · **Công sức:** S.
 
 #### H11. Thanksgiving — Lễ Tạ ơn
 - **Cơ chế:**
@@ -1086,7 +1089,7 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
   10 USD "ít giá trị"), Christmas Letter Saga (xem 6 hồi truyện mỗi ngày → khung avatar), Zenith. Kèm Thief in the Night (D10).
 - **Tu tiên hoá:** **"Đông Chí Tuyết Dạ"** (bản EN có thể giữ Giáng sinh). **"Tàng Bảo Đồ"** tách ra thành sự kiện riêng: 7 mảnh → vị
   trí trên bản đồ giới → xuất quân đào → người khác nhìn thấy. Hợp P3.
-- **Game mình:** ❌ · **Ưu tiên:** P1 (Tàng Bảo Đồ) / P2 (lễ) · **Công sức:** M / S.
+- **Game mình:** ✅ — Đông Chí Tuyết Dạ (`dongChi`, 21–25/12 hằng năm): thắng trận, săn yêu (săn liên hoàn nhiều điểm hơn), chữa thương, giúp đồng minh ra điểm, 3 rương mốc. **Tàng Bảo Đồ** thành sự kiện riêng **Tầm Bảo Kỳ Ngộ** (`tamBao`, 5 ngày / 14 ngày): săn yêu thắng 35 %, đội khai mỏ về 50 % rơi tàn phiến qua thư; đủ 7 mảnh ghép ở bản đồ giới (`digMap`) → điểm đào trong cùng vùng gần tông môn (mầm server, giữ tối đa 3), ai cũng thấy (bảo châu vàng trên bản đồ) nhưng chỉ chủ đào được; xuất quân tới đào (`dig`) → rương kho báu qua thư theo trọng số, đội về ngay · **Ưu tiên:** P1 (Tàng Bảo Đồ) / P2 (lễ) · **Công sức:** M / S.
 
 #### H13. New Year — Fireworks
 - **Cơ chế:** *Fireworks Display* (5 ngày): mỗi pháo hoa đốt ra một quà ngẫu nhiên; top theo số pháo đã đốt. *Light up the Night* (4
@@ -1221,43 +1224,43 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 |---|---|---|---|---|---|
 | — | Event Center (màn sự kiện, chấm đỏ) | Trung tâm Sự kiện | 🟡 có chip + chấm đỏ + đếm ngược; thiếu nhãn "Mới", lịch sử, ảnh bìa | P0 | S |
 | — | Event Calendar (lưới 7 ngày, báo trước ~3 ngày) | Lịch giới | ✅ lịch 7 ngày | P0 | M |
-| A1 | Create Your Own History | Khai Sơn Thất Nhật | 🟡 Tân Thủ Chi Lộ + Thất Nhật Lễ | P0 | M |
+| A1 | Create Your Own History | Khai Sơn Thất Nhật | 🟡 Khai Sơn Thất Nhật 5 nhánh mở theo ngày + rương; chưa gắn ngày mở giới | P0 | M |
 | A2 | Hero Returns | Tông Lệnh Bảo Khố | ✅ | P0 | S |
-| A3 | Who Will Reign Supreme | Giới Chủ Tranh Phong | 🟡 | P1 | S |
+| A3 | Who Will Reign Supreme | Giới Chủ Tranh Phong | ✅ `gioiChu` (khung mùa) | P1 | S |
 | A4 | Path of Wisdom | Nhập Môn Ngộ Đạo | ✅/🟡 | P2 | S |
 | A5 | Era Breakthrough | Cảnh Giới Đột Phá Lễ | ✅ | P2 | S |
-| A6 | Monument | Thiên Đạo Bia | 🟡 | P1 | M |
-| B1 | Mightiest Governor | Tông Môn Tranh Bá | 🟡 không xếp hạng | **P0** | M |
+| A6 | Monument | Thiên Đạo Bia | 🟡 Thiên Đạo Biên Niên 13 chương; chưa mở cổng theo chương | P1 | M |
+| B1 | Mightiest Governor | Tông Môn Tranh Bá | ✅ 6 ải, bảng từng ải + bảng tổng, quà ải và quà lượt, trưởng lão của đợt | **P0** | M |
 | B2 | Zenith of Power | Đăng Phong Bảng | 🟡 | P2 | S |
-| C1 | Mighty Army | Luyện Binh Trảm Yêu | 🟡 | P1 | S |
+| C1 | Mighty Army | Luyện Binh Trảm Yêu | ✅ fest `luyenBinh` | P1 | S |
 | C2 | Warpath | Tam Hệ Luyện Binh | ❌ | P2 | S |
 | C3 | Victorious Heart | (gộp C2) | ❌ | P2 | S |
 | C4 | Training Day | Luyện Binh Phù Hội | 🟡 | P2 | S |
 | C5 | Spreading Civilization | Truyền Đạo Tứ Phương | ❌ | P2 | S |
-| C6 | Tiles & Bricks | Thổ Mộc Hưng Công | 🟡 | P1 | S |
-| C7 | Boundless Wisdom | Tàng Kinh Ngộ Đạo | 🟡 | P1 | S |
+| C6 | Tiles & Bricks | Thổ Mộc Hưng Công | ✅ fest `thoMoc` | P1 | S |
+| C7 | Boundless Wisdom | Tàng Kinh Ngộ Đạo | ✅ fest `tangKinh` | P1 | S |
 | C8 | Overwhelming Strength / Game of Power | Thế Lực Bạo Tăng | 🟡 | P2 | S |
 | C9 | Lord of War | Binh Thế Tranh Hùng | ✅ | P2 | S |
-| C10 | Now or Never | Tụ Khí Tranh Thời | 🟡 | P1 | S |
-| C11 | Daily Gathering | Thu Linh Nhật Khóa | 🟡 | P1 | S |
+| C10 | Now or Never | Tụ Khí Tranh Thời | ✅ fest `tuKhiTranh` | P1 | S |
+| C11 | Daily Gathering | Thu Linh Nhật Khóa | ✅ fest `thuLinh` | P1 | S |
 | C12 | Fill the Storehouse | Tàng Bảo Mãn Thương | ❌ | P2 | S |
-| C13 | Clarion Call | Trảm Yêu Lệnh | 🟡 Săn Yêu Lệnh | P1 | S |
+| C13 | Clarion Call | Trảm Yêu Lệnh | ✅ điểm theo cấp yêu thú + hạng minh | P1 | S |
 | C14 | War Forever | Chinh Chiến Bất Hưu | 🟡 | P2 | S |
-| C15 | Holy Conqueror | Linh Địa Chinh Phạt | ❌ | P2 | M |
+| C15 | Holy Conqueror | Linh Địa Chinh Phạt | ✅ `linhDia` | P2 | M |
 | C16 | King of the Tribes | Phá Yêu Trại | ✅ (25/09) thứ Ba – thứ Tư, điểm minh theo sát thương, top 3 minh | P1 | M |
-| C17 | Strategic Reserve | Tích Cốc Phòng Cơ | ❌ | P1 | M |
+| C17 | Strategic Reserve | Tích Cốc Phòng Cơ | ✅ `tichCoc` (rơi Linh Nang) | P1 | M |
 | C18 | Sự kiện quốc gia / The Pioneer | Danh Môn Tuần Lễ | ✅ Côn Lôn / Thục Sơn / Nga Mi (25/09) | P1 | S |
 | C19 | Complete Plan | Nhật Khóa Tu Hành | 🟡 | P2 | S |
 | C20 | Artisan's Forge | Khai Lò Luyện Khí | 🟡 | P2 | S |
 | C21 | Lucky Stall + Lucky Spin | Cát Tường Hạ Giá | ❌ | P2 | S–M |
 | C22 | War and Peace | Hoá Kiến Vi Binh | ❌ | P2 | S |
 | C23 | Cornucopia / Ghost Parade / Lotus War | Liên Trảm Bất Hồi | ✅ fest `lienTram` (điểm cao cho săn liên hoàn — chỉ số `chain`) | P1 | S–M |
-| D1 | Lohar's Trial | Yêu Tướng Thử Luyện | 🟡 yêu vương | P1 | M |
+| D1 | Lohar's Trial | Yêu Tướng Thử Luyện | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
 | D2 | Arms Training | Luận Võ Liên Hoàn | ✅ (25/09) mỗi ngày một phiên, công pháp cho giáo đầu mỗi 3 thắng | P1 | M |
-| D3 | Karuak Ceremony | Thí Luyện Yêu Hoàng | 🟡 tháp + yêu vương | P1 | M |
+| D3 | Karuak Ceremony | Thí Luyện Yêu Hoàng | ✅ 5 độ khó × 50 cửa; thiếu gọi minh, trùm chung | P1 | M |
 | D4 | Trial of Kau Karuak | (gắn mùa) | ❌ | P2 | M |
 | D5 | Golden Kingdom | Hoàng Kim Mê Cảnh | 🟡 bí cảnh | P2 | L |
-| D6 | Ceroli Crisis | Tổ Đội Bí Cảnh | ❌ | P2 | L |
+| D6 | Ceroli Crisis | Tổ Đội Bí Cảnh | ✅ Man Hoang Cổ Tộc (`world/party.ts`), bất đồng bộ | P2 | L |
 | D7 | Ceroli Assault | Vây Công Yêu Vương | 🟡 | P2 | S |
 | D8 | Ian's Ballads | Tứ Nhân Thám Bí | ❌ | P2 | L |
 | D9 | Strange Incidents / Ghoulish Graveyard | Thôn Trang Gặp Nạn / Mộ Địa Âm Hồn | ✅ Thôn Trang Gặp Nạn (`world/rescue.ts`); chưa có gọi thổ phỉ, bản Mộ Địa | P1 | M |
@@ -1272,7 +1275,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | E4 | Rương liên minh ngày lễ | Tụ Bảo Minh Đỉnh | ✅ đỉnh tuần, góp tài nguyên (`world/pot.ts`) | P1 | S–M |
 | E5 | Alliance Quiz | Luận Đạo Vấn Đáp | ❌ | P2 | M |
 | F1 | More Than Gems | Tiên Ngọc Hồi Lễ | ❌ | P2 | S |
-| F2 | Wheel of Fortune | Thiên Cơ Luân | ⛔ | — | — |
+| F2 | Wheel of Fortune | Thiên Cơ Luân | ✅ Thiên Cơ Luân (`thienCo`), lượt thêm bằng lệnh kiếm được | — | — |
 | F3 | Esmeralda's House | Bói Quẻ Thiên Cơ | ❌ | P2 | S |
 | F4 | Esmeralda's Prayer / Collection / Treasures | Nguyện Thụ Cầu Duyên | ❌ | P2 | S–M |
 | F5 | Card King | Phiên Bài Kỳ Ngộ | ❌ | P2 | S |
@@ -1283,22 +1286,22 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | F10 | Legendary Tavern | Tiên Duyên Tửu Quán | ⛔ | — | — |
 | F11 | Heart's Desire | Tâm Nguyện Trưởng Lão | ⛔ | — | — |
 | F12 | League Bets | Luận Kiếm Đặt Cược | ❌ | P2 | M |
-| G1 | Mysterious Merchant | Vân Du Thương Nhân | 🟡 thương hội, chợ | P1 | S–M |
-| G2 | Đăng nhập / Sign-in Spoils | Điểm Danh Bảy Ngày | 🟡 Thất Nhật Lễ (chỉ tân thủ) | P1 | S |
-| G3 | Peerless Scholar | Vấn Đạo Đài | ❌ | P2 | M |
-| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | 🟡 khung `dates` + kho đổi (Trung Thu); chưa có 25 cấp / lì xì | **P1** | M |
+| G1 | Mysterious Merchant | Vân Du Thương Nhân | ✅ Thương nhân vân du (`sect/merchant.ts`) | P1 | S–M |
+| G2 | Đăng nhập / Sign-in Spoils | Điểm Danh Bảy Ngày | ✅ Thất Nhật Lễ (tân thủ), Khánh Điển Khai Tông (đầu mùa), lì xì Tết | P1 | S |
+| G3 | Peerless Scholar | Vấn Đạo Đài | ✅ Vấn Đạo Đài (`sect/quiz.ts`) | P2 | M |
+| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | 🟡 khung `dates` + kho đổi / tích điểm / đăng nhập (5 lễ); chưa có 7+1, rơi đồ lễ, 25 cấp, lì xì tặng nhau | **P1** | M |
 | H1 | Tết Âm lịch | Tân Xuân Khai Sơn | ✅ lì xì 7 ngày (fest `tanXuan`) | P1 | S (sau H0) |
-| H2 | Valentine's | (thay bằng Thất Tịch) | ❌ | P2 | — |
+| H2 | Valentine's | (thay bằng Thất Tịch) | ✅ thay bằng Ô Thước Kiều (H8) | P2 | — |
 | H3 | Spring's Return / Spring Symphony | Xuân Hồi Vạn Vật | ❌ | P2 | S |
 | H4 | Easter | Linh Thú Noãn (EN) | ❌ | P2 | S |
 | H5 | Grand Museum Day | Tàng Bảo Các Triển Lãm | ❌ | P2 | S |
 | H6 | Dragon Boat (Zongzi) | Đoan Ngọ Tống Tử | ❌ | P2 | S |
 | H7 | Summer Festival / Summer of Passion | Hạ Chí Thịnh Hội | ❌ | P2 | S |
 | H8 | Qixi Rendezvous | Ô Thước Kiều | ✅ fest `thatTich` | P1 | S |
-| H9 | Anniversary (Yearbook, Sign-in, Reunion…) | Khánh Điển Khai Tông | ❌ | P1 / P2 | S / M |
+| H9 | Anniversary (Yearbook, Sign-in, Reunion…) | Khánh Điển Khai Tông | 🟡 tổng kết mùa (thư `yearbook`); chưa điểm danh, mời người cũ | P1 / P2 | S / M |
 | H10 | Halloween | Trung Nguyên Quỷ Tiết | ✅ fest `quyTiet` | P1 | S |
 | H11 | Thanksgiving | Bách Vị Tiên Yến | ❌ | P2 | S–M |
-| H12 | Christmas (+ Treasure Hunt) | Đông Chí Tuyết Dạ + Tàng Bảo Đồ | 🟡 Đông Chí Tuyết Dạ (fest `dongChi`), chưa có Tàng Bảo Đồ | P1 / P2 | M / S |
+| H12 | Christmas (+ Treasure Hunt) | Đông Chí Tuyết Dạ + Tàng Bảo Đồ | ✅ `dongChi` + Tàng Bảo Đồ (`tamBao`, đào kho báu) | P1 / P2 | M / S |
 | H13 | New Year Fireworks | Nguyên Tiêu Hoa Đăng | ❌ | P2 | S |
 | H14 | Crossover | Hợp tác truyện tu tiên | ❌ | P2 | — |
 

@@ -71,6 +71,7 @@ export const armyActions: Actions<ArmyAction> = {
         n: a.n,
         startAt: s.time,
         finishAt: s.time + promoteTime(s, a.unit, a.n),
+        up: true as const,
       }
       const troops = minus(s.troops, { [a.unit]: a.n })
       return ok(bump({ ...s, troops, res: pay(s, promoteCost(a.unit, a.n)), train }, 'train', a.n))

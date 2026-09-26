@@ -1,6 +1,28 @@
 // Lật mùa và lật tuần của cả giới. Chạy trong actor như mọi việc khác (worldStep gọi trước mọi thao tác), ghi trong một commit.
 import { randomInt } from 'node:crypto'
-import { BOOK, MOB_MIN, MOB_PRIZES, eventOf, mail, weekOf } from '@rok/rules'
+import {
+  BOOK,
+  FEST_ALLY,
+  FEST_ALLY_PRIZES,
+  FEST_RANKED,
+  FEST_STAGED,
+  FEST_STAGE_PRIZES,
+  FEST_STAR_TOKENS,
+  FEST_TOP,
+  MOB_MIN,
+  MOB_PRIZES,
+  DAY,
+  DAY_OFFSET,
+  dayOf,
+  eventOf,
+  festAt,
+  festEnded,
+  festStar,
+  mail,
+  weekOf,
+  weekStart,
+  type FestId,
+} from '@rok/rules'
 import {
   arenaPrize,
   arenaTop,
@@ -10,6 +32,10 @@ import {
   endSeason,
   eventPrize,
   eventTop,
+  festAllyBoard,
+  festBoard,
+  festPrize,
+  allyOf,
   legionStep,
   mobTop,
   spawn,
@@ -19,6 +45,7 @@ import {
   arkAt,
   arkOf,
   arkStep,
+  SEASON_DAYS,
   partyStep,
   wallStep,
   planStep,
@@ -59,13 +86,63 @@ export function seasonEnd(w: World, now: number) {
   }, true)
 }
 
+// Quà bảng xếp hạng một lượt lễ: top FEST_TOP người; lễ có bảng tiên minh (FEST_ALLY) — người có điểm trong các minh đầu thêm quà
+// hạng minh
+function festPay(w: World, now: number, id: FestId, key: number) {
+  const give = (pid: number, m: Parameters<typeof mail>[1]) => {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, mail(w.ps.get(pid)!, m))
+  }
+  const board = festBoard(w.ps, id, key, w.npc)
+  const star = festStar(id, key) // trưởng lão của đợt: top hạng thêm tín vật người đó
+  board.slice(0, FEST_TOP).forEach(([pid], i) => {
+    const n = star ? (FEST_STAR_TOKENS[i] ?? 0) : 0
+    const gift = n ? { ...festPrize(i), tokens: { [star!]: n } } : festPrize(i)
+    give(pid, { at: now, k: 'festTop', a: [i + 1, id], gift })
+  })
+  if (!(FEST_ALLY as readonly FestId[]).includes(id)) return
+  festAllyBoard(w.ps, w.shared, id, key, w.npc)
+    .slice(0, FEST_ALLY_PRIZES.length)
+    .forEach(([aid], i) => {
+      const tag = w.shared.allies[aid]?.tag ?? '?'
+      for (const [pid] of board)
+        if (allyOf(w.shared, pid)?.id === aid)
+          give(pid, { at: now, k: 'festAlly', a: [i + 1, id, tag], gift: FEST_ALLY_PRIZES[i] })
+    })
+}
+// Tông Môn Tranh Bá (Stage Rankings của MGE): qua 0h thì ải hôm trước xong — top FEST_TOP điểm riêng của ải đó nhận quà ải qua thư.
+// Ngày đã trao ghi ở phần chung (stageDay): mỗi ải đúng một lần, server tắt vài ngày thì trao bù (tối đa 7 ngày)
+function stageCheck(w: World, now: number) {
+  const day = dayOf(now),
+    last = w.shared.stageDay
+  if (last === day) return
+  for (let d = Math.max((last ?? day) + 1, day - 6); d <= day; d++) {
+    const t = d * DAY - DAY_OFFSET - 1 // phút chót của hôm trước
+    for (const id of FEST_STAGED) {
+      const at = festAt(id, t, w.opened)
+      if (!at) continue
+      festBoard(w.ps, id, at.key, w.npc, at.stage)
+        .slice(0, FEST_TOP)
+        .forEach(([pid], i) => {
+          const slot = w.slots.get(pid)
+          const gift = FEST_STAGE_PRIZES[i === 0 ? 0 : i < 3 ? 1 : 2]
+          if (slot)
+            w.commit(slot, mail(w.ps.get(pid)!, { at: now, k: 'festStage', a: [i + 1, id, at.stage + 1], gift }))
+        })
+    }
+  }
+  w.share({ ...w.shared, stageDay: day })
+}
 // Hết tuần: top sự kiện của tuần cũ nhận quà qua thư (điểm vẫn còn trong state vì worldStep chạy trước mọi advance của tuần mới)
 export function rollWeek(w: World, now: number) {
   const week = w.week
-  eventTop(w.ps, week).forEach((pid, i) => {
+  eventTop(w.ps, week, w.npc).forEach((pid, i) => {
     const gift = eventPrize(i)
     w.commit(w.slots.get(pid)!, mail(w.ps.get(pid)!, { at: now, k: 'eventTop', a: [i + 1, eventOf(week)], gift }))
   })
+  // Lễ có xếp hạng: mỗi lượt kết thúc từ đầu tuần cũ tới giờ — top FEST_TOP điểm nhận quà hạng
+  for (const id of FEST_RANKED)
+    for (const key of festEnded(id, weekStart(week), now, w.opened)) festPay(w, now, id, key)
   // Minh vụ: 3 minh điểm cao nhất tuần cũ, người đã góp đủ nhận quà hạng
   mobTop(w.shared, week).forEach((al, i) => {
     for (const [pid, n] of Object.entries(al.mob!.by)) {
@@ -100,8 +177,9 @@ export function bookCheck(w: World, now: number) {
 }
 
 // Luận Kiếm Minh Chiến: tới 20h thứ Bảy mà tuần này chưa giải thì giải (một lần mỗi tuần), ghi biên niên từng cặp
-// Sự kiện tiên minh có giờ: Luận Kiếm Minh Chiến (tối thứ Bảy), Ma Triều Công Sơn (tối thứ Tư) — mỗi nhịp xem tới giờ chưa
+// Sự kiện có giờ: quà ải Tranh Bá (0h), Luận Kiếm Minh Chiến (tối thứ Bảy), Ma Triều Công Sơn (tối thứ Tư)… — mỗi nhịp xem tới giờ chưa
 export function allyEvents(w: World, now: number) {
+  stageCheck(w, now)
   legionCheck(w, now)
   warCheck(w, now)
   arkCheck(w, now)
@@ -156,8 +234,10 @@ function arkCheck(w: World, now: number) {
       for (const pid of Object.keys(w.shared.allies[id]?.members ?? {}).map(Number))
         if (!w.npc.has(pid)) w.env.push?.(pid, L => ({ title: L.push.title, body: L.push.arkSoon, tag: 'ark' }))
   }
-  const r = arkStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
+  const r = arkStep(w.ps, w.shared, now, randomInt(1, 2 ** 31), w.opened + SEASON_DAYS * 86_400_000)
   if (r.world === w.shared) return
+  const champ = r.world.ark?.cup?.final?.[0]
+  if (champ !== undefined && !ark.cup?.final) w.record({ at: now, k: 'cup', a: [r.world.allies[champ]?.tag ?? '?'] })
   w.share(r.world)
   for (const [pid, s] of r.changed) {
     const slot = w.slots.get(pid)

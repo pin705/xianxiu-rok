@@ -482,7 +482,13 @@
       onselect={id => select(id)}
     />
     {#if tab === 'monHa'}
-      <Disciples onfocus={focus} />
+      <Disciples
+        onfocus={focus}
+        share={t =>
+          net
+            ?.say(ally ? 'ally' : 'world', t)
+            .then(r => toast(r.ok ? L.world.shared : (L.chat.err[r.err] ?? L.chat.err.bad)))}
+      />
     {:else if tab === 'banDo'}
       <MapTab
         {info}
@@ -539,7 +545,7 @@
     <Honor api={net ?? null} />
     <Drill onfight={() => fightNow({ type: 'drillFight' })} onreplay={r => (replay = r)} />
     <Quiz />
-    <Unlocks onfocus={id => focus(id)} ontab={switchTab} />
+    <Unlocks onfocus={id => focus(id)} ontab={switchTab} hold={!!replay || !!outcome || !!storm} />
     {#if tab === 'tongMon' && !selected && !storm}<Advisor
         game={shown}
         ontab={t => (tab = t)}
@@ -569,7 +575,14 @@
       onrecall={id => sendWorld({ type: 'recall', id })}
     />
     <Daily open={dailyOpen} onclose={() => (dailyOpen = false)} />
-    <Events open={festsOpen} onclose={() => (festsOpen = false)} />
+    <Events
+      open={festsOpen}
+      onclose={() => (festsOpen = false)}
+      api={net ?? null}
+      opened={info?.opened}
+      onfight={(elder, army) => fightNow({ type: 'trialFight', elder, army })}
+      onreplay={r => (replay = r)}
+    />
     <Panel
       id={selected}
       {view}

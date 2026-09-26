@@ -1,6 +1,7 @@
 // Nhiệm vụ chính (hướng dẫn), nhiệm vụ ngày / tuần, quà mốc sự kiện tuần.
 import { no, ok, type Actions } from '../core/action.ts'
 import { grant } from '../core/battle.ts'
+import { passXp } from '../core/fest.ts'
 import { weeklyDone, weeklyReward } from '../core/calendar.ts'
 import { int } from '../core/parse.ts'
 import { cost, gearSum, storeNeed, techSum, totalTroops } from '../core/stats.ts'
@@ -12,6 +13,7 @@ import {
   EVENT_GOALS,
   EVENT_REWARDS,
   MAX_LEVEL,
+  PASS_WEEK,
   QUESTS,
   WEEKLY,
   WEEKLY_BONUS,
@@ -86,11 +88,10 @@ export const taskActions: Actions<TaskAction> = {
       if (s.weekly.got[a.i]) return no('claimed')
       if (!weeklyDone(s, a.i)) return no('not_done')
       const n = weeklyReward(s)
-      return ok({
-        ...s,
-        res: bag(r => s.res[r] + n),
-        weekly: { ...s.weekly, got: mark(s.weekly.got, a.i) },
-      })
+      // mỗi việc tuần: điểm Tu Tiên Lệnh
+      return ok(
+        passXp({ ...s, res: bag(r => s.res[r] + n), weekly: { ...s.weekly, got: mark(s.weekly.got, a.i) } }, PASS_WEEK),
+      )
     },
   },
   weeklyBonus: {

@@ -92,6 +92,12 @@ import {
   type Side,
   type State,
   rng,
+  TALENT_STAR,
+  TALENT_TREE_SIZE,
+  TALENT_TREES,
+  lead,
+  talentUsed,
+  hallGift,
 } from './index.ts'
 
 const T0 = 1_000_000
@@ -1036,26 +1042,34 @@ test('Luyện Khí Phòng: luyện pháp bảo theo tầng, đeo cho một trư�
   assert.equal(migrate(JSON.parse(JSON.stringify(s)))!.gear.thanhSuong!.on, 'thachKien')
 })
 
-test('thiên phú: mỗi 5 cấp một điểm, mỗi nhánh tối đa 5, Tẩy Tủy Đan trả lại; nhánh đạo mạnh công pháp', () => {
+test('thiên phú — Linh căn ba mạch: mỗi cấp một điểm (+2 mỗi sao), tầng trên mở theo điểm trong cây; Tẩy Tủy Đan trả lại; save cũ trả điểm', () => {
   let s: State = { ...rich(16), elders: { thanhPhong: expAt(12) }, items: { taiTuy: 1 } }
-  assert.equal(talentPoints(s, 'thanhPhong'), 2)
-  s = run(s, { type: 'talent', elder: 'thanhPhong', branch: 2 })
-  s = run(s, { type: 'talent', elder: 'thanhPhong', branch: 0 })
-  assert.equal(err(s, { type: 'talent', elder: 'thanhPhong', branch: 1 }), 'not_enough')
-  assert.deepEqual(s.talents.thanhPhong, [1, 0, 1])
-  const sk = sideOf(s, 'thanhPhong', { kiem1: 1 }).skill!
-  assert.ok(sk.v > sideOf(rich(16), 'thanhPhong', { kiem1: 1 }).skill!.v)
-  assert.equal(
-    err(
-      { ...s, elders: { thanhPhong: expAt(40) }, talents: { thanhPhong: [5, 0, 0] } },
-      { type: 'talent', elder: 'thanhPhong', branch: 0 },
-    ),
-    'max_level',
-  )
+  const tal = (st: State, node: number) => run(st, { type: 'talent', elder: 'thanhPhong', node })
+  assert.equal(talentPoints(s, 'thanhPhong'), 11)
+  assert.equal(talentPoints({ ...s, stars: { thanhPhong: 3 } }, 'thanhPhong'), 11 + 2 * TALENT_STAR)
+  // Đạo mạch: tầng 2 chưa mở tới khi đủ điểm trong cây; mỗi nút tối đa max
+  const dao = 2 * TALENT_TREE_SIZE
+  assert.equal(err(s, { type: 'talent', elder: 'thanhPhong', node: dao + 2 }), 'locked')
+  for (const k of [0, 0, 0, 1, 1]) s = tal(s, dao + k)
+  assert.equal(err(s, { type: 'talent', elder: 'thanhPhong', node: dao }), 'max_level')
+  s = tal(s, dao + 2)
+  assert.ok(sideOf(s, 'thanhPhong', { kiem1: 1 }).skill!.v > sideOf(rich(16), 'thanhPhong', { kiem1: 1 }).skill!.v)
+  // nút theo hệ của chính trưởng lão: Thanh Phong kiếm tu — công kiếm tu
+  const before = lead(s, 'thanhPhong', 'atk.kiem')
+  s = tal(s, 1)
+  assert.ok(Math.abs(lead(s, 'thanhPhong', 'atk.kiem') - before - TALENT_TREES[0][1].v) < 1e-9)
+  // hết điểm thì thôi
+  for (const k of [0, 0, 0, 1]) s = tal(s, k)
+  assert.equal(talentUsed(s, 'thanhPhong'), 11)
+  assert.equal(err(s, { type: 'talent', elder: 'thanhPhong', node: 1 }), 'not_enough')
+  // Tẩy Tủy Đan: trả lại hết
   s = run(s, { type: 'wash', elder: 'thanhPhong' })
   assert.equal(s.talents.thanhPhong, undefined)
   assert.equal(s.items.taiTuy, 0)
   assert.equal(err(s, { type: 'wash', elder: 'thanhPhong' }), 'no_item')
+  // save cũ (3 nhánh): trả điểm để cộng vào cây mới
+  const old = migrate({ ...JSON.parse(JSON.stringify(s)), talents: { thanhPhong: [5, 3, 0] } })
+  assert.deepEqual(old?.talents, {})
 })
 
 test('đan mới: công thức cần đan khác, Hồi Xuân chữa ngay, Ngưng Thần tăng công có hạn, Đại Tụ Khí bớt 2 giờ, Phá Cảnh cho độ kiếp', () => {
@@ -1115,4 +1129,16 @@ test('bí cảnh mới và tháp thu nhận trưởng lão mới; save bản 3 n
   assert.deepEqual(m.realms, [5, 2, 0, 0, 0])
   assert.equal(m.levels.luyenKhiPhong, 0)
   assert.equal(m.forge, null)
+})
+
+test('Chủ điện lên tầng: thư quà mừng mỗi tầng; tầng đột phá cảnh giới có thêm lễ đột phá', () => {
+  let s = newGame(T0)
+  s = run(s, { type: 'upgrade', building: 'chuDien' })
+  s = advance(s, s.queue[0].finishAt + 1)
+  const m = s.mail.find(x => x.k === 'hallUp')!
+  assert.deepEqual(m.a, [2])
+  assert.deepEqual(m.gift, hallGift(2))
+  const boundary = TRIBS[0].hall + 1
+  assert.ok(hallGift(boundary).items?.kimDuyen, 'đột phá có Kim Duyên')
+  assert.equal(hallGift(boundary + 1).items?.kimDuyen, undefined)
 })

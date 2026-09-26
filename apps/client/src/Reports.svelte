@@ -1,10 +1,10 @@
 <script lang="ts">
   // Hộp thư: thư (quà nhận ngay tại đây) và chiến báo (chạm để xem lại trận; chia sẻ vào chat), mới nhất trên cùng.
   import { mailText } from '@rok/i18n'
-  import { RESOURCES, count, type Mail, type Report, type Res } from '@rok/rules'
-  import { Icon } from '@rok/art'
+  import { RESOURCES, count, type ElderId, type Mail, type Report, type Res } from '@rok/rules'
+  import { Icon, Portrait } from '@rok/art'
   import { Bag, Button, Card, IconButton, Medal, Sheet, Tabs, fly } from './ui'
-  import { L, defended, num, reportName, sfx } from './lib'
+  import { L, LOOK, defended, num, reportName, sfx } from './lib'
   import { useGame } from './game'
 
   let {
@@ -32,14 +32,23 @@
   const mails = $derived([...game.mail].reverse())
   const text = (m: Mail) => mailText(L, m)
   const total = (b?: Partial<Record<Res, number>>) => RESOURCES.reduce((n, x) => n + (b?.[x] ?? 0), 0)
-  // Dòng phụ: thắng / thua (PvP: đẩy lui hay bị cướp), tài nguyên mất, bao lâu trước, thương vong, chiến lợi phẩm
+  // Đệ tử địch hạ được (mọi cặp giao tranh): quân địch lúc vào trận trừ quân còn sau lượt cuối
+  const kills = (r: Report) =>
+    r.fights.reduce((n, f) => {
+      const start = f.b.troops.reduce((k, t) => k + t.n, 0)
+      const end = f.rounds.at(-1)?.n[1].reduce((k, x) => k + x, 0) ?? start
+      return n + Math.max(0, start - end)
+    }, 0)
+  // Dòng phụ: thắng / thua (PvP: đẩy lui hay bị cướp), tài nguyên mất, bao lâu trước, hạ địch, thương vong, chiến lợi phẩm
   function line(r: Report) {
     const parts = [r.def ? defended(r) : r.win ? L.report.win : L.report.lose]
     const lost = total(r.lost),
       hurt = count(r.hurt),
-      loot = total(r.gain.res)
+      loot = total(r.gain.res),
+      k = kills(r)
     if (lost) parts.push(`${L.pvp.lost} −${num(lost)}`)
     parts.push(L.ago(Math.max(60_000, game.time - r.at)))
+    if (k) parts.push(L.report.kills(num(k)))
     if (hurt) parts.push(`${L.report.hurt} ${num(hurt)}`)
     if (loot) parts.push(`+${num(loot)}`)
     return parts.join(' · ')
@@ -84,7 +93,20 @@
               <p class="t-small t-lore" style:white-space="pre-line">{body}</p>
               {#if m.gift}
                 <div class="row between">
-                  <Bag res={m.gift.res} items={m.gift.items} size="sm" />
+                  <span class="row wrap" style:--gap="6px"
+                    ><Bag
+                      res={m.gift.res}
+                      items={m.gift.items}
+                      size="sm"
+                    />{#each Object.entries(m.gift.tokens ?? {}) as [e, n] (e)}<span
+                        class="row t-small"
+                        style:--gap="3px"
+                        ><Portrait look={LOOK[e as ElderId]} size={22} />{L.tavern.tokens(
+                          L.elders[e as ElderId].name,
+                          n ?? 0,
+                        )}</span
+                      >{/each}</span
+                  >
                   {#if m.got}
                     <span class="t-small t-good">{L.mail.got}</span>
                   {:else}

@@ -1,7 +1,7 @@
 <script lang="ts">
-  // Tranh Đoạt Linh Châu (Ark of Osiris giản lược): ghi danh; trong trận — sơ đồ 5 ô (phe giữ, số đội hai bên, Linh Châu), điểm hai
-  // minh, đồng hồ hiệp, đội của mình và lệnh đứng (chạm ô rồi "Tới đây"), nhật ký hiệp; sau trận — kết quả
-  import { ARK_ROUND, ARK_ROUNDS } from '@rok/rules'
+  // Tranh Đoạt Linh Châu (Ark of Osiris giản lược): ghi danh; trong trận — sơ đồ 11 ô (phe giữ, số đội hai bên, Linh Châu, Tụ Linh
+  // Nhãn phe mình đã nối), điểm hai minh, đồng hồ hiệp, đội của mình và lệnh đứng (chạm ô rồi "Tới đây"), nhật ký hiệp; sau trận — kết quả
+  import { ARK_ADJ, ARK_CENTER, ARK_HOME, ARK_OBELISKS, ARK_ROUND, ARK_ROUNDS } from '@rok/rules'
   import { arkAt, type ArkRow, type WorldAction } from '@rok/rules/world'
   import { weekOf } from '@rok/rules'
   import { Button, Section, Tag } from './ui'
@@ -25,23 +25,27 @@
   const f = $derived(row?.live ?? null)
   const mine = $derived(f?.units.find(u => u.pid === me))
   const side = $derived(f?.b === aid ? 1 : 0)
-  // sơ đồ: Linh Đài hai đầu, hai Tiểu Trận trên / dưới, Trung Điện giữa — minh mình luôn bên trái
+  // sơ đồ 3 cột giữa hai Linh Đài: Tụ Linh Nhãn ở bốn góc, Linh Tháp hai bên, Tiểu Trận trên / dưới, Trung Điện giữa — minh mình
+  // luôn bên trái (bên B xem thì lật qua tâm: ô x ở chỗ ô 10 − x)
   const POS = [
-    [40, 100],
-    [150, 40],
-    [150, 100],
-    [150, 160],
-    [260, 100],
+    [24, 110],
+    [97, 45],
+    [97, 110],
+    [97, 175],
+    [170, 45],
+    [170, 110],
+    [170, 175],
+    [243, 45],
+    [243, 110],
+    [243, 175],
+    [316, 110],
   ]
-  const at = (node: number) => (side === 1 ? POS[4 - node] : POS[node])
-  const EDGES = [
-    [0, 1],
-    [0, 3],
-    [1, 2],
-    [2, 3],
-    [1, 4],
-    [3, 4],
-  ]
+  const at = (node: number) => (side === 1 ? POS[POS.length - 1 - node] : POS[node])
+  const EDGES = ARK_ADJ.flatMap((ys, x) => ys.filter(y => y > x).map(y => [x, y]))
+  const radius = (node: number) => (node === ARK_CENTER ? 24 : node === ARK_HOME[0] || node === ARK_HOME[1] ? 21 : 18)
+  // Tụ Linh Nhãn phe mình giữ (từ hai nhãn): nối thẳng với nhau — vòng vàng quanh ô
+  const linked = (node: number) =>
+    ARK_OBELISKS.includes(node) && f?.own[node] === side && ARK_OBELISKS.filter(x => f?.own[x] === side).length > 1
   let pick = $state<number | null>(null)
   const start = $derived(arkAt(weekOf(g.now)))
   const next = $derived(f ? start + (f.round + 1) * ARK_ROUND - g.now : 0)
@@ -60,16 +64,24 @@
   }
 </script>
 
+{#snippet vs(tags: Record<number, string>, a: number, b: number, won: number[] = [])}
+  <span
+    ><b class:t-gold={won.includes(a)}>[{tags[a] ?? '?'}]</b> –
+    <b class:t-gold={won.includes(b)}>[{tags[b] ?? '?'}]</b></span
+  >
+{/snippet}
+
 <Section title={L.ark.title}>
   <p class="t-small t-soft">{L.ark.hint}</p>
   {#if f}
+    {#if f.cup}<Tag tone="gold">{L.ark.cup.title} · {L.ark.cup[f.cup]}</Tag>{/if}
     <p class="row between t-small">
       <b class="t-num">[{tag(side as 0 | 1)}] {f.pts[side]} – {f.pts[side ? 0 : 1]} [{tag(side ? 0 : 1)}]</b>
       <span class="t-soft"
         >{f.round < ARK_ROUNDS ? L.ark.round(f.round + 1, ARK_ROUNDS, clock(Math.max(0, next))) : L.ark.ended}</span
       >
     </p>
-    <svg viewBox="0 0 300 200" class="field" role="img" aria-label={L.ark.title}>
+    <svg viewBox="0 0 340 220" class="field" role="img" aria-label={L.ark.title}>
       {#each EDGES as [x, y] (`${x}-${y}`)}
         <line x1={at(x)[0]} y1={at(x)[1]} x2={at(y)[0]} y2={at(y)[1]} class="road" />
       {/each}
@@ -84,9 +96,10 @@
           onclick={() => (pick = node)}
           onkeydown={e => e.key === 'Enter' && (pick = node)}
         >
-          <circle {cx} {cy} r={node === 2 ? 24 : 20} />
+          <circle {cx} {cy} r={radius(node)} />
+          {#if linked(node)}<circle {cx} {cy} r={radius(node) + 4} class="ring" />{/if}
           <text x={cx} y={cy + 4} class="n">{count(node, side as 0 | 1)}·{count(node, side ? 0 : 1)}</text>
-          <text x={cx} y={cy + (node === 1 ? -28 : 36)} class="lbl">{L.ark.nodes[node]}</text>
+          <text x={cx} y={cy < 100 ? cy - 25 : cy + radius(node) + 12} class="lbl">{L.ark.nodes[node]}</text>
           {#if f.orb && f.orb.at === node}<circle cx={cx + 16} cy={cy - 16} r="7" class="orb" />{/if}
         </g>
       {/each}
@@ -130,6 +143,28 @@
       <small class="t-small t-strong">{L.ark.last(r.an, r.bn, r.wa, r.wb)}</small>
     {/each}
   {/if}
+  {#if row?.cup}
+    <!-- vòng playoff: bán kết 1–4, 2–3; chung kết và tranh hạng ba khi bán kết xong; bên thắng tô vàng -->
+    {@const c = row.cup}
+    <small class="t-tiny t-soft mt-2">{L.ark.cup.title}</small>
+    <ul class="stack league" style:--gap="1px">
+      <li class="row between t-small">
+        <span>{L.ark.cup.semi}</span>
+        <span class="row" style:--gap="10px"
+          >{@render vs(c.tags, c.seeds[0], c.seeds[3], c.win)}{@render vs(c.tags, c.seeds[1], c.seeds[2], c.win)}</span
+        >
+      </li>
+      {#if c.win.length === 2}
+        <li class="row between t-small">
+          <span>{L.ark.cup.final}</span>{@render vs(c.tags, c.win[0], c.win[1], c.final?.slice(0, 1))}
+        </li>
+        <li class="row between t-small">
+          <span>{L.ark.cup.third}</span>{@render vs(c.tags, c.lose[0], c.lose[1], c.third?.slice(0, 1))}
+        </li>
+      {/if}
+      {#if c.final}<li class="t-small t-gold"><b>{L.ark.cup.champ(c.tags[c.final[0]] ?? '?')}</b></li>{/if}
+    </ul>
+  {/if}
   {#if row?.league?.length}
     <!-- Cửu Thiên Luận Đạo Hội: bảng giải cả mùa, minh mình tô vàng -->
     <small class="t-tiny t-soft mt-2">{L.ark.league}</small>
@@ -154,6 +189,12 @@
     stroke: rgb(var(--shade) / 0.35);
     stroke-width: 3;
     stroke-dasharray: 5 4;
+  }
+  .ring {
+    fill: none;
+    stroke: #c9a13a;
+    stroke-width: 2;
+    stroke-dasharray: 3 3;
   }
   .node {
     cursor: pointer;
@@ -181,9 +222,14 @@
     fill: #2a241a;
   }
   .lbl {
-    font-size: 10px;
+    font-size: 9px;
     text-anchor: middle;
     fill: #5a4a30;
+    /* viền màu giấy: chữ đọc được cả khi nằm trên đường */
+    paint-order: stroke;
+    stroke: var(--paper);
+    stroke-width: 3px;
+    stroke-linejoin: round;
   }
   .orb {
     fill: #e8c24a;

@@ -20,7 +20,8 @@ import { unsold } from './market.ts'
 import { raid } from './raid.ts'
 import { spotArrive } from './arrive.ts'
 import { robArrive } from './rob.ts'
-import { razeArrive } from './flags.ts'
+import { mineExpire, razeArrive } from './flags.ts'
+import { campArrive } from './encamp.ts'
 import { ruinClose } from './ruins.ts'
 import { storeStep } from './storehouse.ts'
 import { tribeStep } from './tribe.ts'
@@ -30,7 +31,7 @@ import { campStep } from './camp.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
-const WAIT = ['pvp', 'spot', 'trib', 'flag']
+const WAIT = ['pvp', 'spot', 'trib', 'flag', 'camp']
 const waiting = (m: March) => WAIT.includes(m.target.kind) && !m.returnAt && !m.stay && !m.back
 export function nextRaid(ps: Players) {
   let at = Infinity
@@ -86,8 +87,10 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
       for (const [hp, hm] of guards) changed.set(hp, giveExp(advance(cur(hp)!, at), hm.elder, exp))
       continue
     }
-    if (m.target.kind === 'flag') {
-      const r = razeArrive(view(), w, [pid, att, m], at)
+    // trận kỳ (giữ / phá / khai Minh khoáng) · trại ở ô trống (dựng / đánh): mỗi đội giải riêng
+    const one = m.target.kind === 'flag' ? razeArrive : m.target.kind === 'camp' ? campArrive : null
+    if (one) {
+      const r = one(view(), w, [pid, att, m], at)
       for (const [k, v] of r.changed) changed.set(k, v)
       w = r.world
       continue
@@ -140,7 +143,8 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
   return { changed, world: w }
 }
 // Việc theo giờ của giới, lần lượt (mỗi bước đọc cả giới như lúc đó): Cổ Di Tích / Huyết Tế Đàn hết giờ mở (chốt, trả quân) ·
-// kho minh (lãnh thổ sinh Minh khố) · Khai Giới Trảm Tà (cổng mở: chốt giới vận) · Phá Yêu Trại hết khung (quà top minh)
+// kho minh (lãnh thổ sinh Minh khố) · Khai Giới Trảm Tà (cổng mở: chốt giới vận) · Phá Yêu Trại hết khung (quà top minh) ·
+// Minh khoáng quá hạn
 type Step = (x: World) => { changed: Players; world: World }
 const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
   ...(map
@@ -152,6 +156,7 @@ const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
         (x: World) => campStep(view(), x, map, now),
       ]
     : []),
+  x => mineExpire(view(), x, now),
   x => tribeStep(view(), x, now),
 ]
 // Chỉ trận cướp, không bản đồ (sim, test P2)

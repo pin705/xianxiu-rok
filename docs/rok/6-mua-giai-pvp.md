@@ -169,7 +169,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Phàn nàn:** ghép lệch là lời chê kéo dài nhiều năm — bằng chứng là RoK liên tục thêm công cụ: bỏ phiếu, bỏ lượt, Vacation Permit, Rest Mode [17][P87][16].
 - **Tu tiên hoá:** **Thiên Mệnh Chọn Luật** — không ghép liên server; thay bằng **bỏ phiếu luật mùa**: 3 ngày cuối mùa, người chơi (hoặc 3 minh đứng đầu)
   chọn 1 trong 2–3 biến thể luật (nhóm B) cho mùa sau. Truyện có phe thì tự xếp phe cân lực như Heroic Anthem.
-- **Game mình:** ❌ (một luật duy nhất). Ghép liên server ⛔.
+- **Game mình:** ❌ (chưa bỏ phiếu — các luật mùa Thiên Thời, Chính Tà, Cổ Di Tích bật cố định mọi mùa). Ghép liên server ⛔.
 - **Ưu tiên:** P2 (cần có ít nhất 2 biến thể luật trước) · **Công sức:** S.
 
 #### A4. Lost Kingdom map: zones, passes, holy sites, Great Ziggurat — bản đồ KvK
@@ -187,8 +187,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Vì sao hấp dẫn:** địa lý là chiến lược — đèo là nút cổ chai, thánh địa là mục tiêu tập thể; vùng nhà được bảo hộ cho người yếu chỗ lùi.
 - **Tu tiên hoá:** **Giới Chiến Đồ** — chính là bản đồ giới: 3 vòng, trận nhãn (= đèo), Thiên Môn (= Ziggurat). "Vùng khởi đầu được bảo hộ" ≈ pha Khai
   giới cổng đóng.
-- **Game mình:** 🟡 — khung đủ (25 vùng, 40 cổng mở theo pha, Thiên Môn). Thiếu: buff khác nhau theo loại điểm (linh mạch chỉ tăng sản lượng; trận nhãn,
-  Thiên Môn chỉ cho điểm mùa), thưởng chiếm lần đầu, nhãn "điểm nóng" và danh sách giao tranh trên bản đồ (file 8).
+- **Game mình:** ✅ khung đủ (25 vùng, 40 cổng mở theo pha, Thiên Môn ra Giới Chủ — `world/lord.ts`); linh mạch cho phe giữ tăng ích theo cấp (`veinBuffs`), trận nhãn phe khác giữ chặn đường qua cổng (`shutGates`), chiếm lần đầu có quà cả minh (`firstTake`). Chưa có nhãn "điểm nóng" và danh sách giao tranh trên bản đồ (file 8).
 - **Ưu tiên:** P1 · **Công sức:** S–M (buff theo loại điểm + thưởng chiếm lần đầu).
 
 #### A5. Lost Kingdom Chronicles — biên niên theo chương
@@ -205,7 +204,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **UI/UX:** màn chương: chương hiện tại (mục tiêu, thanh tiến độ, đồng hồ), chương trước/sau.
 - **Vì sao hấp dẫn:** nhịp "mở hộp" đều; ai cũng biết "tuần sau đèo mở"; giờ mở cố định giúp tập hợp người.
 - **Tu tiên hoá:** **Thiên Đạo Biên Niên** khắc trên **Thiên Đạo Bia** — thiết kế ở mục 3.3.
-- **Game mình:** 🟡 — 4 pha mở theo ngày cứng; biên niên chỉ là nhật ký.
+- **Game mình:** 🟡 — Thiên Đạo Biên Niên (`world/book.ts`, `bookCheck`): 13 chương mục tiêu chung của cả giới, hạn theo ngày mùa; xong thì mọi tông môn nhận quà thư, hụt thì sang chương sau. Chương mở khoá như Kingdom Monument mở đèo: hoàn thành chương 2 / 5 / 9 (`PHASE_CH`) thì pha Tranh mạch / Trận nhãn / Phi thăng mở ngay (`phaseOf(day, done)`, server và client cùng luật), không kịp thì vẫn mở theo ngày cứng; danh sách chương ghi chương nào mở pha nào. Thiếu: đóng góp cá nhân / thưởng top.
 - **Ưu tiên:** **P0** · **Công sức:** M.
 
 #### A6. Honor Points, Kill Points, Acclaim — điểm cá nhân, minh, vương quốc
@@ -233,7 +232,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Vì sao hấp dẫn:** hành động nào cũng thành con số; nhiều đường đóng góp.
 - **Tu tiên hoá:** **Công Huân** (cá nhân): hạ đệ tử địch theo bậc, yêu thú cấp cao, giờ đóng quân ở điểm, hộ pháp/phá kiếp, trận Linh Châu · **Danh Vọng**
   (minh) = điểm mùa hiện có · **Giới Vận** (cả giới) cho biên niên.
-- **Game mình:** 🟡 — điểm mùa theo phe ✅, Elo tranh đoạt ✅; ❌ điểm cá nhân trong mùa; ❌ đếm đệ tử địch hạ theo bậc.
+- **Game mình:** ✅ Công Huân (`HONOR_*`, `sect/honor.ts`): điểm cá nhân trong mùa từ hạ đệ tử địch, săn yêu thú giới, đánh yêu vương, khai mỏ, phá trận kỳ, giữ núi khi ma triều, giữ di tích. Chiến công (`players.kills`) tính theo thế lực đệ tử địch hạ nên bậc cao nặng hơn; cùng điểm mùa theo phe, Elo tranh đoạt.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### A7. Ancient Ruins & Altars of Darkness — điểm mở theo lịch
@@ -258,7 +257,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **UI/UX:** màn thành tựu theo nhánh; cửa hàng mùa.
 - **Vì sao hấp dẫn:** mục tiêu dài cho cả mùa; tiền mang sang nên không phí công.
 - **Tu tiên hoá:** **Chinh Chiến Công Tích** (thành tựu mùa) + **Phi Thăng Tệ** (mang sang mùa sau như điểm luân hồi) + **Thiên Môn Thương Điếm**.
-- **Game mình:** ❌. Thành tựu thường đang làm ở `sect/ach.ts` (chưa commit) — dùng lại khung.
+- **Game mình:** ✅ Chinh Chiến Công Tích (`HONOR_TIERS`: 6 mốc Công Huân 50 → 6.000, nhận ngay trong mùa) + Phi Thăng Tệ (`coins` / `coinBuy` ở `sect/honor.ts`: mỗi 20 Công Huân một đồng, mang sang mùa sau) + Thiên Môn Thương Điếm ở cuối bảng Công Huân (`Honor.svelte`).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### A9. Hall of Heroes — trả quân chết
@@ -268,8 +267,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Vì sao hấp dẫn:** bớt nỗi sợ mất trắng, khuyến khích đánh.
 - **Tu tiên hoá:** **Anh Linh Điện** — đệ tử tử trận vì tranh đoạt trên giới (không tính yêu thú) được ghi lại; cuối mỗi tuần trả 30% thành thương binh
   chờ chữa.
-- **Game mình:** ❌. Hết mùa đệ tử reset (luân hồi) nên chỉ có nghĩa **trong** mùa. Chữa vốn đắt (40% chi phí tuyển) để PvP là "cướp người vắng" — trả
-  quân phải nhỏ để không phá ý đồ này.
+- **Game mình:** ✅ Anh Linh Điện giản lược (`sect/hero.ts`, `admit` ở `core/battle.ts`): đệ tử tử trận vì Đan phòng đầy (mọi trận) giữ hồn 3 ngày; ở Đan phòng hồi sinh ngay tất cả, tốn 60 % chi phí tuyển (chữa thương 40 %).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### A10. Past Glory — chặng cuối, quyên góp 3 chặng
@@ -292,7 +290,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Vì sao hấp dẫn:** minh nhỏ có chỗ đứng; chính trị giữa các minh.
 - **Tu tiên hoá:** **Minh Ước** (2–3 tiên minh kết ước: chung kết trận và viện binh; điểm mùa vẫn tính riêng từng minh) + **Hiệp Ước Thiên Môn** (minh giữ
   Thiên Môn cam kết chia phần thưởng phi thăng).
-- **Game mình:** ❌ — tiên minh ≤ 30 người, chưa có liên minh của các minh; file 4 xếp minh ước (NAP) ở đợt C.
+- **Game mình:** 🟡 Minh ước bất xâm phạm (`nap*` ở `world/guild.ts`, `napBetween`): hai minh không cướp nhau, không đánh điểm / phá cờ bên kia giữ, cửa ải minh ước giữ vẫn qua. Chưa có chung kết trận / viện binh, Hiệp Ước Thiên Môn.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### A12. Crystal Tech, Crystal Mine, Bastions — tiến trình chỉ có trong mùa
@@ -318,8 +316,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Vì sao hấp dẫn:** kết mùa có "lễ" và để lại dấu vết.
 - **Tu tiên hoá:** **Phong Thần Bảng** (đã có) + **Lưu Danh Sử Sách** (người chơi bình chọn anh kiệt mùa: minh chủ, người hộ pháp nhiều nhất, người nạp Linh
   Châu nhiều nhất…) + danh hiệu 1 mùa theo hạng.
-- **Game mình:** 🟡 — bảng phong thần top 3 × 10 mùa, thư kết mùa có hạng phe, danh hiệu phi thăng. Thiếu: thưởng hạng **cá nhân**, bình chọn, danh hiệu
-  theo hạng.
+- **Game mình:** 🟡 — bảng phong thần top 3 × 10 mùa, thư kết mùa + tổng kết mùa (`yearbook`), thưởng hạng Công Huân top 10 (`honorPrize`), danh hiệu "Đệ nhất Công Huân · mùa N" (`State.crowns`), quà top 3 Cửu Thiên Luận Đạo Hội và phái thắng Chính Tà. Thiếu: bình chọn (Lưu Danh Sử Sách), danh hiệu cho các hạng khác.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### A14. Migration — di cư giữa các mùa
@@ -338,7 +335,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Vì sao có:** đáp lại lời chê kiệt sức (A1).
 - **Tu tiên hoá:** **Bế Quan Lệnh** — tông môn chọn "bế quan cả mùa": không bị cướp trên giới, không nhận điểm mùa, không phi thăng theo minh (vẫn luân hồi
   bình thường).
-- **Game mình:** 🟡 — có Hộ Sơn Phù 8–72 giờ, khiên tân thủ 72 giờ, sàn lực chiến 50%.
+- **Game mình:** ✅ Bế Quan Lệnh (`sect/seclude.ts`): bế quan 3 / 7 / 14 ngày (không còn đội ở ngoài, không đang sát khí) — khiên tới hết hạn, chỉ nhận thư / điểm danh; xuất quan lúc nào cũng được, 3 ngày sau mới bế quan lại.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ### B. Các "truyện" KvK / Season of Conquest
@@ -360,7 +357,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **Hấp dẫn:** 2 phe rõ ràng, chặng thi đua ngắn đổi liên tục.
 - **Tu tiên hoá:** đầu mùa chia các tiên minh + tông môn lẻ thành **Chính phái / Tà phái**, cân lực tự động (như 1.1.12 tự xếp phe); điểm mùa cộng theo phe;
   chặng thi đua 2–4 ngày xoay vòng; "Linh Nguyên" góp chung mở buff phe.
-- **Game mình:** ❌ · **Ưu tiên:** P1 (luật 2 phe hợp với giới ít người) · **Công sức:** M.
+- **Game mình:** ✅ Chính Tà Phân Tranh (`campOf` / `campPts` ở `world/points.ts`, `world/camp.ts`): mọi phe chia Chính / Tà theo mã phe, điểm mùa cộng theo phái, chặng thi đua 3 ngày xoay vòng (khai mỏ, tăng tốc, săn yêu, tuyển, chiến công), hết mùa phái thắng có quà. Chưa cân lực tự động, chưa có Linh Nguyên · **Ưu tiên:** P1 (luật 2 phe hợp với giới ít người) · **Công sức:** M.
 
 #### B3. King of All Britain (Season 3 mới / SoC) — "Nhân Yêu Tranh Bá"
 - **RoK** (1.0.87, 10/2024): 2 phe Viking – Anh; 4 tỉnh khởi đầu Mercia, Wessex, East Anglia, Northumbria; **Holmgang** — đấu đội tay đôi giữa hai phe, thắng
@@ -392,7 +389,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **Hấp dẫn:** hậu cần thành chiến lược, không thể dịch chuyển tuỳ ý.
 - **Tu tiên hoá:** **Cổ Tháp Hành Quân** — chỉ dời tông môn tới quanh "cổ tháp" minh giữ; "tiền đồn" đóng quân; **linh vực cung ứng**: đánh càng xa tông môn
   / tiền đồn càng yếu (một hệ số theo khoảng cách — rẻ).
-- **Game mình:** ❌ (chưa có dời tông môn tự do) · **Ưu tiên:** P2 · **Công sức:** M.
+- **Game mình:** ❌ (dời tông môn tự do đã có — Càn Khôn / Di Sơn Phù ở `world/territory.ts`; chưa có cổ tháp, tiền đồn, linh vực cung ứng) · **Ưu tiên:** P2 · **Công sức:** M.
 
 #### B7. Desert Conquest — "Tử Hải Hoang Mạc"
 - **RoK:** 4 phe ở 4 góc; "Sea of Death" giữa bản đồ: không mỏ, không pháo đài man, không dịch chuyển, không xây; gần như cả bản đồ sa mạc cấm dịch chuyển;
@@ -494,7 +491,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
   thích [42].
 - **Phàn nàn:** bệnh viện đầy trong KvK làm nhiều người không dự được (Dev Feedback 10/2022) [43]; trận thiếu người hoạt động (phải thêm Offset Mode) [P85].
 - **Tu tiên hoá:** **Tranh Đoạt Linh Châu** — thiết kế ở mục 3.2.
-- **Game mình:** ❌ — chưa có trận minh đấu minh; tranh linh mạch trên giới là dạng "mất thật".
+- **Game mình:** ✅ (`world/ark.ts`, `ArkCard.svelte`, `arkCheck`): ghi danh trong tuần, 20h Chủ nhật ghép theo điểm minh chiến, chiến trường 11 ô (2 Linh Đài, 4 Tụ Linh Nhãn, 2 Linh Tháp, 2 Tiểu Trận, Trung Điện), 8 hiệp × 10 phút giải tất định bằng đội đầu Luận Kiếm Đài (không mất quân), lệnh đứng, hộ tống Linh Châu. Tụ Linh Nhãn phe mình giữ nối thẳng với nhau (thay 8 lượt phi độn của bản thiết kế: lệnh đứng không có lượt), mỗi Linh Tháp giữ được +10 % công. Còn thiếu: Hồi Tháp, điều phối + chiến pháp, công huân cá nhân.
 - **Ưu tiên:** P1 · **Công sức:** L (bản giản lược M).
 
 #### C2. Ark of Osiris — Silver Battlefield
@@ -524,7 +521,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **UI/UX:** bảng nhánh đấu, lịch trận, màn xem trực tiếp có trễ và tua, màn cược.
 - **Tu tiên hoá:** **Cửu Thiên Luận Đạo Hội** — trong một giới: các minh đấu vòng tròn Tranh Đoạt Linh Châu suốt mùa, 2 tuần cuối là playoff top 4; cả giới
   xem lại trận (tất định nên phát lại được) và cược bằng "linh tệ" không quy ra tiền (PLAN mục 9). Chung kết liên giới ⛔.
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** M (sau C1).
+- **Game mình:** 🟡 bảng giải + playoff (`leagueBoard`, `cupSetup`, `leagueRank` ở `world/ark.ts`): cả mùa mỗi trận Linh Châu cộng điểm giải (thắng 3, thua 1), bảng 8 minh đầu trên thẻ Linh Châu; 2 trận cuối mùa là playoff top 4 (bán kết 1–4 / 2–3, rồi chung kết + tranh hạng ba; thiếu chiến binh xử thua), nhánh đấu trên thẻ, quán quân lên biên niên; hết mùa 3 hạng playoff nhận quà. Chưa có cược, cả giới xem trận · **Ưu tiên:** P2 · **Công sức:** M (sau C1).
 
 #### C4. Canyon Clash — minh đấu minh bằng đội hình thủ
 - **RoK:**
@@ -540,7 +537,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **Tu tiên hoá:** **Luận Kiếm Minh Chiến** — mỗi thành viên có sẵn đội hình thủ Luận Kiếm Đài = một "trại"; trong 24 giờ mỗi người được 2 lượt đánh trại
   minh địch; mỗi trại có tối đa 3 "kiếm ấn" (thắng xa luân với 1, 2 hay 3 đội còn đứng); minh nhiều kiếm ấn hơn thắng. Giống "Clan War" của Clash of Clans:
   bất đồng bộ hoàn toàn.
-- **Game mình:** ❌ · **Ưu tiên:** **P1** (rẻ khi đã có D1; là bước đệm trước C1) · **Công sức:** S–M.
+- **Game mình:** ✅ Luận Kiếm Minh Chiến (`world/war.ts`, `warCheck`): minh ghi danh trong tuần (≥ 3 người tầng 6), 20h thứ Bảy ghép cặp theo điểm minh chiến (Elo), người thứ k đấu người thứ k bằng đội hình Luận Kiếm Đài; thư quà thắng / thua, chiến báo xem lại. Ghép tự động, không có lượt đánh trại / kiếm ấn như thiết kế · **Ưu tiên:** **P1** (rẻ khi đã có D1; là bước đệm trước C1) · **Công sức:** S–M.
 
 ### D. Đấu trường cá nhân và đội nhỏ
 
@@ -561,8 +558,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **Vì sao hấp dẫn:** 5 phút mỗi ngày, không mất gì; thử tướng và kỹ năng; F2P vẫn leo được nhờ cặp tướng sử thi hợp (Sun Tzu + Joan of Arc…) [31].
 - **Phàn nàn:** phải tự cập nhật đội hình thủ [31]; top bị người nạp nhiều chiếm — [chưa xác minh bằng nguồn].
 - **Tu tiên hoá:** **Luận Kiếm Đài** — thiết kế ở mục 3.1.
-- **Game mình:** 🟡 — Tranh đoạt đã có danh sách 3 đối thủ, báo thù, Elo, bảng xếp hạng; nhưng đánh vào quân thật (mất quân, mất tài nguyên), không có đội
-  hình thủ riêng, không có lượt/ngày, mùa tuần, thưởng theo hạng.
+- **Game mình:** ✅ Luận Kiếm Đài (`sect/arena.ts`, `world/arena.ts`, `Arena.svelte`): đội hình thủ riêng với đệ tử ảo bậc 3 (không mất quân, không mất tài nguyên), trận xa luân, 5 lượt/ngày + Luận Kiếm Lệnh (`arenaTicket`), Elo cả hai bên, rương ngày theo bậc, bảng tuần + thư quà top 10, Kiếm Ý + Thương Điếm (`arenaBuy`), phục thù (`canRevenge`).
 - **Ưu tiên:** **P0** (nền cho C4, D2, D3 và đội hình của C1) · **Công sức:** M.
 
 #### D2. Sunset Canyon Tournament
@@ -647,7 +643,7 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **RoK:** bảng thưởng theo cấp (cấp 50 có rương chọn bản vẽ, 1.0.77), cũng là nguồn armaments (1.0.71) [P77][P71]. Giá, nhánh miễn phí/trả phí: chưa xác
   minh (file 7 cũng ghi chưa xác minh).
 - **Tu tiên hoá:** **Tu Tiên Lệnh** (PLAN mục 7) — 49 ngày, nhánh miễn phí + nhánh trả phí chỉ cosmetic và tiện lợi có trần.
-- **Game mình:** ❌ (việc của P4) · **Ưu tiên:** P1 · **Công sức:** M.
+- **Game mình:** ✅ Tu Tiên Lệnh (`sect/pass.ts`, `Pass.svelte`): cả mùa giới, điểm lệnh từ rương Nhật Khóa (+20) và nhiệm vụ tuần (+30), 50 cấp × 100 điểm, nhánh thường + nhánh Kim Lệnh (mở ở Hương Hỏa 5 — không bán, nhận bù), hết mùa làm lại. Chưa có: armaments / bản vẽ (chưa có hệ đó) · **Ưu tiên:** P1 · **Công sức:** M.
 
 ---
 
@@ -778,7 +774,7 @@ nên chỉ đổi một chỗ. Thêm `ChronKind` `chapter` (+ chữ i18n). Một
 | 4 (21–27) | Bế Giới (ngày 21); Tu Bổ Thiên Môn bắt đầu | tuần 4 | **trận 2** | |
 | 5 (28–34) | Tu Bổ Thiên Môn → Thiên Môn mở (ngày 30–35) | tuần 5 | — | |
 | 6 (35–41) | Thiên Môn Tranh Đoạt | tuần 6 | **trận 3** | |
-| 7 (42–48) | nước rút phi thăng | **Luận Kiếm Đại Hội** (top 16) | (chung kết Cửu Thiên Luận Đạo Hội, khi có) | |
+| 7 (42–48) | nước rút phi thăng | **Luận Kiếm Đại Hội** (top 16) | chung kết + tranh hạng ba Cửu Thiên Luận Đạo Hội (tuần 6: bán kết) | |
 | ngày 49 | Phi Thăng, Lưu Danh Sử Sách | chốt | — | Bảng phong thần |
 
 Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không trùng đúng ngày của mùa; bảng chỉ để thấy mật độ: mỗi tuần luôn có một mốc biên niên, một mùa
@@ -794,17 +790,17 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A2 | Eve of the Crusade | Khai Giới Trảm Tà | ✅ tàn quyển + giới vận (`world/eve.ts`) | P1 | M |
 | A3 | Matchmaking, story registration, bỏ phiếu | Thiên Mệnh Chọn Luật (bỏ phiếu luật mùa) | ❌ (liên server ⛔) | P2 | S |
 | A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | ✅ buff theo loại linh mạch + thưởng chiếm lần đầu (25/09) | P1 | S–M |
-| A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 Thiên Đạo Biên Niên 12 chương (hạn theo ngày mùa); chưa mở khoá theo chương | **P0** | M |
+| A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 Thiên Đạo Biên Niên 13 chương (hạn theo ngày mùa); chưa mở khoá theo chương | **P0** | M |
 | A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | ✅ Công Huân cá nhân (25/09) + điểm mùa theo phe + chiến công | P1 | S |
 | A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ✅ (25/09) | P1 | S–M |
 | A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | ✅ mốc Công Huân + Phi Thăng Tệ + cửa hàng | P1 | M |
-| A9 | Hall of Heroes | Anh Linh Điện | ❌ | P2 | S |
+| A9 | Hall of Heroes | Anh Linh Điện | ✅ Anh Linh Điện giản lược (`sect/hero.ts`) | P2 | S |
 | A10 | Past Glory | Tu Bổ Thiên Môn | ✅ chương biên niên `repair` | P1 (trong A5) | S |
 | A11 | Coalition, Camp, Camp Treaty | Minh Ước, Hiệp Ước Thiên Môn | 🟡 minh ước bất xâm phạm (hai minh); chưa chung kết trận / viện binh | P2 | M |
 | A12 | Crystal Tech, Crystal Mine, Bastions | Linh Tinh Trận Pháp, Ẩn Sĩ Động Phủ | ❌ | P2 | M |
-| A13 | Xếp hạng cuối mùa, Hall of Fame, danh hiệu mùa | Phong Thần Bảng + Lưu Danh Sử Sách | 🟡 top 3 phe × 10 mùa + thưởng hạng Công Huân top 10; chưa có danh hiệu mùa | P1 | S |
+| A13 | Xếp hạng cuối mùa, Hall of Fame, danh hiệu mùa | Phong Thần Bảng + Lưu Danh Sử Sách | 🟡 top 3 phe × 10 mùa + thưởng hạng Công Huân top 10 + danh hiệu Đệ nhất Công Huân (`State.crowns`); chưa có bình chọn | P1 | S |
 | A14 | Migration | — | ⛔ | — | — |
-| A15 | Vacation Permit, Rest Mode | Bế Quan Lệnh | 🟡 Hộ Sơn Phù, khiên | P2 | S |
+| A15 | Vacation Permit, Rest Mode | Bế Quan Lệnh | ✅ Bế Quan Lệnh 3 / 7 / 14 ngày (`sect/seclude.ts`) | P2 | S |
 | B1 | The Lost Kingdom (Season 1–2) | Tranh Mạch Luật (mặc định) | ✅ | P0 (có) | — |
 | B2 | Light and Darkness | Chính Tà Phân Tranh | ✅ hai phái + điểm mùa theo phái + chặng thi đua 3 ngày xoay vòng (`world/camp.ts`) + quà phái thắng; chưa có Linh Nguyên | P1 | M |
 | B3 | King of All Britain (+ Holmgang) | Nhân Yêu Tranh Bá + Sinh Tử Đài | ❌ | P2 | M |
@@ -823,7 +819,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | B16 | Blood Moon Rising, Sea of Strife, Mighty Assembly, Song of Troy | — | ❌ | P2 | — |
 | C1 | Ark of Osiris (Golden) | Tranh Đoạt Linh Châu (theo hiệp) | 🟡 bản giản lược 5 ô / 6 hiệp (`world/ark.ts`) | P1 | L (giản lược M) |
 | C2 | Ark of Osiris (Silver) | Tán Tu Tranh Châu | ❌ | P2 | S |
-| C3 | Osiris League + Bets + xem trực tiếp | Cửu Thiên Luận Đạo Hội | ❌ | P2 | M |
+| C3 | Osiris League + Bets + xem trực tiếp | Cửu Thiên Luận Đạo Hội | 🟡 bảng giải cả mùa (`leagueBoard`); chưa có playoff / cược | P2 | M |
 | C4 | Canyon Clash | Luận Kiếm Minh Chiến | ✅ Luận Kiếm Minh Chiến | P1 | S–M |
 | D1 | Sunset Canyon | Luận Kiếm Đài (xa luân chiến) | ✅ Luận Kiếm Đài | **P0** | M |
 | D2 | Sunset Canyon Tournament | Luận Kiếm Đại Hội | ❌ | P2 | S |

@@ -14,8 +14,6 @@ import {
   REBIRTH_BUILD,
   REBIRTH_HALL,
   REBIRTH_PROD,
-  TALENT_EVERY,
-  TALENT_MAX,
   TOWER,
   TRADE_KEEP,
   TRADE_KEEP_MAX,
@@ -40,7 +38,12 @@ import {
   LEGION_HOUR,
   LEGION_GIFTS,
   NEWBIE_MOVE_HALL,
+  BUILD_MAX,
+  BUILD_PER,
   FLAG_R,
+  FRAME_DUELS,
+  FRAME_VIP,
+  FORT_R,
   MARKET_TTL,
   ALLY_COST,
   ALLY_HALL,
@@ -68,6 +71,7 @@ import {
   type StratId,
   type DaoId,
   type Metric,
+  type DropSrc,
   type AchId,
   type AllyTechId,
   type TitleId,
@@ -93,7 +97,7 @@ import type { ChronTexts, MailTexts, Text } from './vi.ts'
 // English text. Same shape as vi.ts (type Text) — TypeScript flags any missing key.
 // Glossary (PLAN.md §4): Luyện Khí = Qi Refining, Trúc Cơ = Foundation Establishment, Kim Đan = Golden Core,
 // Nguyên Anh = Nascent Soul, Hóa Thần = Deity Transformation.
-const pct = (v: number) => `${Math.round(v * 100)}%`
+const pct = (v: number) => `${(Math.round(v * 1000) / 10).toLocaleString('en')}%` // one decimal when needed (talents 2.4%)
 // hàng trên chợ: tài nguyên hoặc đan (khoá lạ vẫn hiện được)
 const goodName = (g: string): string =>
   (en.res as Record<string, string>)[g] ?? (en.pills as Record<string, { name: string }>)[g]?.name ?? g
@@ -531,6 +535,7 @@ export const en: Text = {
     if (t.kind === 'spot') return en.world.point.vein
     if (t.kind === 'trib') return en.trib.cloud
     if (t.kind === 'flag') return 'Banner'
+    if (t.kind === 'camp') return en.world.camp.name
     return en.realms[t.i].name
   },
   weekend: {
@@ -814,14 +819,85 @@ export const en: Text = {
     alarm: (p: number, t: string) => `Your mountain is on fire! Array ${p}% · ${t} left`,
     alarmHint: 'At 0 your sect is overrun — douse the fire and mend now.',
   },
+  pass: {
+    title: 'Ascension Scroll',
+    desc: (chest: number, week: number) =>
+      `Season pass: each Daily Objectives chest +${chest} scroll points, each weekly task +${week}. One reward per level; the Gold Scroll adds another.`,
+    level: (lv: number, max: number) => `Level ${lv}/${max}`,
+    next: (have: number, need: number) => `Next level: ${have}/${need} points`,
+    max: 'Max level reached',
+    free: 'Free',
+    gold: 'Gold',
+    goldOn: 'Gold Scroll unlocked',
+    goldOff: (vip: number) => `Gold Scroll unlocks at Incense level ${vip} (earlier levels can be claimed too)`,
+    reset: 'The scroll resets to level 0 each season — claim your rewards before it ends.',
+  },
+  scal: {
+    title: 'Season Calendar',
+    hint: "The realm's 49-day season: map phases opening, Chronicle chapter deadlines, the Spirit Orb battle every Sunday evening, and the season's end.",
+    week: (n: number) => `Week ${n}`,
+    day: (n: number) => `Day ${n}`,
+    none: 'Today',
+    phase: (name: string, ch: number) => `The ${name} phase opens (earlier if the realm finishes chapter ${ch})`,
+    chapter: (n: number, name: string) => `Chapter ${n} deadline · ${name}`,
+    ark: 'Spirit Orb battle 20:00',
+    semi: 'Nine Heavens League semifinal 20:00',
+    final: 'Nine Heavens League final 20:00',
+    end: 'Season ends: ascension / rebirth, ranking rewards',
+  },
+  trial: {
+    diffs: ['Easy', 'Normal', 'Hard', 'Nightmare', 'Hell'],
+    pick: 'Pick a difficulty (locked in for this round)',
+    diff: (name: string) => `Difficulty: ${name}`,
+    gate: (n: number, of: number) => `Gate ${n}/${of}`,
+    elite: 'Elite demon general',
+    per: (k: number, pts: number) => `Power ×${k} · ${pts} pts/gate`,
+    foe: (might: string) => `Demon power ~${might}`,
+    ap: (n: number, have: number) => `${n} action points per fight · ${have} left`,
+    go: 'Challenge',
+    done: 'All 50 gates cleared!',
+    last: (win: boolean, n: number) =>
+      win ? `Just cleared gate ${n}` : `Lost at gate ${n} — bring more troops and retry`,
+    name: (n: number) => `Trial · gate ${n}`,
+  },
+  askill: {
+    title: 'Alliance Skills',
+    hint: (cool: number) =>
+      `Officers spend alliance funds to give every member a buff for a few hours — use them before battles or gathering. After one ends it needs ${cool} hours before it can be used again.`,
+    names: {
+      tuLinh: 'Great Gathering',
+      loBan: 'Master Builder Array',
+      luyenBinh: 'Drill Array',
+      thanHanh: 'Swift March Array',
+      kiemTran: 'Killing Sword Array',
+      hoSon: 'Golden Guard Array',
+    },
+    hours: (h: number) => `${h} h`,
+    on: (t: string) => `Active · ${t} left`,
+    cool: (t: string) => `Cooldown · ${t}`,
+    use: (n: string) => `Use (${n})`,
+    cost: (n: string) => `${n} funds`,
+  },
   ark: {
     title: 'Spirit Orb Battle',
-    hint: 'Sunday 20:00: alliance vs alliance on a 5-node battlefield, 6 rounds × 10 minutes. Each warrior fields one team (the first Arena lineup team, no troops lost). Take the outposts and the Central Hall for points; escort the Spirit Orb to an outpost you hold for a big score.',
+    hint: 'Sunday 20:00: alliance vs alliance on an 11-node battlefield, 8 rounds × 10 minutes. Each warrior fields one team (the first Arena lineup team, no troops lost). Buildings score points; obelisks you hold link to each other, each shrine you hold gives +10% attack; escort the Spirit Orb to an outpost you hold for a big score.',
     sign: 'Sign up for the Orb battle',
     unsign: 'Withdraw',
     signed: 'Signed up — battle on Sunday 20:00',
     when: (t: string) => `Battle starts in ${t}`,
-    nodes: ['Base', 'North Outpost', 'Central Hall', 'South Outpost', 'Base'],
+    nodes: [
+      'Base',
+      'NW Obelisk',
+      'West Shrine',
+      'SW Obelisk',
+      'North Outpost',
+      'Central Hall',
+      'South Outpost',
+      'NE Obelisk',
+      'East Shrine',
+      'SE Obelisk',
+      'Base',
+    ],
     round: (r: number, of: number, t: string) => `Round ${r}/${of} · next in ${t}`,
     ended: 'All rounds done — tallying',
     me: (at: string, to: string) => `Your team: at ${at} → heading to ${to}`,
@@ -838,7 +914,15 @@ export const en: Text = {
       drop: (who: string, node: string) => `${who} dropped the Orb at ${node}`,
     },
     last: (a: string, b: string, pa: number, pb: number) => `[${a}] ${pa} – ${pb} [${b}]`,
-    league: 'Nine Heavens League — this season (win 3, loss 1 point; the top 3 alliances get season rewards)',
+    league:
+      "Nine Heavens League — this season's table (win 3, loss 1 point). The last two battles of the season are playoffs for the top 4: semifinals, then the final and the third-place match — the top three get prizes.",
+    cup: {
+      title: 'Playoffs',
+      semi: 'Semifinal',
+      final: 'Final',
+      third: 'Third place',
+      champ: (tag: string) => `Champion: [${tag}]`,
+    },
     leagueRow: (w: number, l: number, pts: number) => `${w} W · ${l} L · ${pts} pts`,
   },
   pot: {
@@ -864,6 +948,7 @@ export const en: Text = {
     what: { gather: 'gathering', speed: 'speedups', hunt: 'beast hunting', train: 'recruiting', kp: 'kill points' },
     stage: (n: number, what: string, t: string) => `Stage ${n}: ${what} · ${t} left`,
     mine: (n: string) => `Your share ${n}`,
+    wins: (n: number) => `${n} stage${n === 1 ? '' : 's'} won`,
     last: (n: number, camp: string) => `Stage ${n}: ${camp} won`,
     stageHint: (pts: number) =>
       `Each 3-day stage scores one activity; everyone's gain counts for their camp. The stage winner earns ${pts} season points and contributors get a reward.`,
@@ -939,6 +1024,11 @@ export const en: Text = {
     chestDone: 'Claimed today',
     chestHint:
       'A daily chest based on the tower floors you have cleared — climb higher for a richer chest (one more share every 5 floors).',
+    shop: 'Tower Store',
+    coins: (n: string) => `${n} Tower Seals`,
+    price: (n: string) => `${n} Tower Seals`,
+    shopHint: (floor: number, chest: number) =>
+      `Each tower floor cleared gives ${floor} Tower Seals (your record, kept through rebirth); each meditation chest adds ${chest} × its parts. Each item has a weekly limit; the featured elder's tokens change weekly.`,
   },
   map: {
     title: 'Map',
@@ -989,6 +1079,8 @@ export const en: Text = {
       "The deputy marches along: their unlocked passives boost the army, and their technique fires right after the leader's (at half power). Each elder remembers their deputy.",
     deputyOut: 'With another army',
     over: (n: string) => `Over capacity: this elder can lead at most ${n} disciples on the realm map`,
+    beds: (n: string) =>
+      `Only ${n} beds left in the Infirmary — wounded beyond that die (the Hall of Heroes keeps them 3 days)`,
     traits:
       'On the world map: sword cultivators march fast · body cultivators march slow but carry more · spell cultivators carry less. An army moves at its slowest type.',
     duo: (lead: string, deputy: string) => `${lead} + ${deputy}`,
@@ -1018,6 +1110,7 @@ export const en: Text = {
     rage: 'Rage: the technique fires when full',
     hurt: 'Wounded',
     dead: 'Fallen',
+    kills: (n: string) => `Enemies downed ${n}`,
     gain: 'Gained',
     exp: 'Experience',
     newElder: 'New elder',
@@ -1037,6 +1130,7 @@ export const en: Text = {
 
   // ---------- Function buildings ----------
   train: {
+    doneAt: (t: string) => `Done at ${t}`,
     tab: 'Recruit',
     pick: 'Path',
     tier: 'Rank',
@@ -1065,6 +1159,11 @@ export const en: Text = {
     have: (n: number) => `Have ${n}`,
     go: 'Brew',
     overflow: 'No beds left: new wounded will die. Heal some or upgrade the Alchemy Room.',
+    heroes: 'Hall of Heroes',
+    heroesLeft: (t: string) => `Souls linger ${t}`,
+    heroesHint:
+      'Disciples who died because the Alchemy Room was full linger for 3 days — revive them at once, straight back to the ranks (costs more than healing, less than recruiting).',
+    revive: (n: string) => `Revive ${n} disciples`,
   },
   world: {
     toggle: { world: 'World', region: 'Region' },
@@ -1120,7 +1219,44 @@ export const en: Text = {
     wildLv: (a: number, b: number) => `Lv ${a}–${b}`,
     might: 'Power',
     gateOpens: (phase: string) => `Opens in the ${phase} phase`,
+    spySpot: (cost: string) => `Scout (${cost} spirit stone)`,
+    rune: {
+      title: (tier: string, kind: string) => `${kind} rune · ${tier}`,
+      kinds: ['War', 'Guard', 'Vital', 'Harvest', 'Swift', 'Drill'],
+      tiers: ['White', 'Green', 'Blue', 'Purple', 'Orange'],
+      fx: (bonus: string, h: number) => `${bonus} for ${h} h (one rune at a time)`,
+      hint: 'Runes appear around veins, gates and the Heaven Gate every 12 hours — first come, first served. A new rune replaces the one you hold.',
+      go: 'Collect',
+      going: 'Heading to collect a rune',
+    },
+    dig: {
+      title: 'Treasure',
+      hint: 'The spot marked on your treasure map: send a team to dig — on arrival the treasure chest comes by mail and the team heads home.',
+      go: 'Dig',
+      going: 'Heading to dig up treasure',
+      theirs: (name: string) => `${name}'s treasure — only the map's owner can dig it`,
+      frags: (n: number, need: number, sites: number) =>
+        `Treasure map ${n}/${need}${sites ? ` · ${sites} dig sites` : ''}`,
+      make: 'Assemble map',
+    },
     you: 'Your sect',
+    camp: {
+      name: 'Field camp',
+      title: 'Encamp',
+      go: 'Encamp here',
+      hint: 'Your army holds this tile (stage near a target, block a road). Camps are in the open: other factions can attack — if yours loses, the camp breaks and the survivors march home.',
+      mine: 'Your camp stands here',
+      of: (name: string) => `${name}'s camp`,
+      hit: 'Attack camp',
+      hitHint:
+        'Like a raid: you lose your shield and go into war frenzy. Winning breaks the camp — no loot, but kill points.',
+    },
+    guardians: (m: string) =>
+      `Spirit-beast guardians hold this site (power ${m}) — defeat them to capture it; once beaten they don't return this season.`,
+    whole: 'Whole realm',
+    near: 'Zoom in',
+    layers: 'Layers',
+    layer: { wild: 'Beasts', mine: 'Mines', march: 'Marches', terr: 'Territory' },
     coord: (x: number, y: number) => `(${x},${y})`,
     find: 'Search',
     pin: 'Bookmark',
@@ -1159,6 +1295,10 @@ export const en: Text = {
       diSon: (n: number) => `Mountain-Shift: random move (${n} left)`,
       canKhon: (n: number) => `Heaven-Earth: move here (${n} left)`,
       fortPlant: (cost: string) => `Build the stronghold · ${cost} alliance funds`,
+      branch: (tag: string) => `Branch fort [${tag}]`,
+      branchPlant: (cost: string) => `Build a branch fort · ${cost} alliance funds`,
+      branchHint: (per: number, max: number) =>
+        `Big alliances can add branch forts: one more per ${per} members (up to ${max}, counting the stronghold), each costing more; they spread territory like the stronghold, buffs don't stack.`,
       fortHint: (min: number, r: number, h: number) =>
         `Stronghold: one per alliance, needs ${min}+ members. Builds in ${h} h; then territory spreads ${r} tiles around it and the whole alliance gets DEF +3%, HP +3%, march speed +5%.`,
       building: (t: string) => `Under construction · done in ${t}`,
@@ -1166,6 +1306,8 @@ export const en: Text = {
       plantHint: (n: number, of: number, fund: string) =>
         `A finished banner extends the territory ${FLAG_R} tiles around it. Banners ${n}/${of} · alliance funds ${fund}.`,
       pull: 'Remove banner',
+      pullFort: 'Dismantle stronghold',
+      pullMine: 'Dismantle mine',
       hp: (n: number) => `Durability ${n}%`,
       raze: 'Raze banner',
       razeHint:
@@ -1173,7 +1315,20 @@ export const en: Text = {
       guards: (n: number, m: string) => `Guards: ${n} armies · might ${m}`,
       guard: 'Guard this banner',
       guarding: 'Your army is guarding this banner',
+      ore: (tag: string) => `Alliance mine [${tag}]`,
+      mineLeft: (n: string, t: string) => `${n} left · dismantles in ${t}`,
+      mineGo: 'Gather here',
+      mineHere: 'Gather in place',
+      mineHint:
+        "The alliance's own deposit: faster than a normal mine, each army brings back as much as it can carry, and nobody can rob it.",
+      minePlant: (cost: string) => `Build an alliance mine · ${cost} alliance funds`,
+      mineHint2: (h: number, stock: string, days: number) =>
+        `Pick a resource. Builds in ${h} h (troops helping build speed it up), holds ${stock}, dismantles after ${days} days or when empty; one per alliance, no extra territory.`,
       guardHint: "Guards' might blocks part of every raze; if the banner falls or is removed, they march home.",
+      build: 'Help build',
+      builders: 'Your army is helping build',
+      buildHint: `Troops stationed at a building under construction speed it up: every ${BUILD_PER.toLocaleString('en')} troops add +100% build speed (up to ×${BUILD_MAX}); recalling them slows it down. When it's done they stay on as guards.`,
+      speed: (x: string) => `build speed ×${x}`,
     },
     pins: 'Bookmarks',
     findGo: 'Nearest',
@@ -1252,6 +1407,7 @@ export const en: Text = {
           ? `Chronicle of Heaven: the realm completed "${en.book.names[ch] ?? ch + 1}"`
           : `Chronicle of Heaven: "${en.book.names[ch] ?? ch + 1}" ran out of time`,
       war: (a: string, b: string, wa: number, wb: number) => `Alliance Sword War: [${a}] ${wa} – ${wb} [${b}]`,
+      cup: (tag: string) => `[${tag}] are this season's Nine Heavens League champions`,
       unknown: () => 'Something stirred in the world',
     } satisfies ChronTexts,
   },
@@ -1297,6 +1453,23 @@ export const en: Text = {
     kind: 'Sect in this world',
   },
   profile: {
+    frame: 'Portrait frame',
+    frames: {
+      basic: 'Plain frame',
+      vip: 'Incense frame',
+      ascend: 'Ascension frame',
+      crown: 'Champion frame',
+      arena: 'Duel frame',
+      rebirth: 'Rebirth frame',
+    },
+    frameNeed: {
+      basic: '',
+      vip: `Unlocks at Incense level ${FRAME_VIP}`,
+      ascend: 'Unlocks after ascending one season',
+      crown: 'Unlocks after topping the season honor board',
+      arena: `Unlocks after winning ${FRAME_DUELS} arena duels`,
+      rebirth: 'Unlocks after one rebirth',
+    },
     open: 'Profile',
     mine: 'Sect master profile',
     noAlly: 'No alliance',
@@ -1310,8 +1483,17 @@ export const en: Text = {
     ach: 'Achievement tiers',
     seat: 'View sect',
     dm: 'Message',
+    face: 'Portrait',
+    faceHint:
+      'Pick the portrait shown in the corner and on your profile: the sect master or any elder you have recruited.',
+    master: 'Sect master',
   },
   ally: {
+    rename: 'Rename the alliance',
+    renameHint: (cost: string, days: number) =>
+      `The leader can change the alliance name and tag for ${cost} alliance funds, once every ${days} days. Neither may match another alliance.`,
+    renameWait: (t: string) => `Can rename again in ${t}`,
+    renameGo: 'Change name / tag',
     title: 'Alliance',
     intro: `Band together with other sects: help each other finish timers, hold spirit veins together, rally against demon kings. Up to ${ALLY_MAX} sects per alliance.`,
     list: 'Alliances in this world',
@@ -1372,6 +1554,7 @@ export const en: Text = {
     title: 'Chronicle of Heaven',
     lore: 'Heaven records every great deed of the realm. Each chapter is a shared goal for all sects — finish it in time and the whole realm is rewarded.',
     chapter: (n: number, of: number) => `Chapter ${n}/${of}`,
+    opens: (phase: string) => `finish it early to open the ${phase} phase at once`,
     names: [
       'First Sects',
       'Founding',
@@ -1629,6 +1812,13 @@ export const en: Text = {
   },
   chat: {
     world: 'World',
+    reply: 'Reply',
+    replyTo: (name: string) => `Replying to ${name}`,
+    cancel: 'Cancel',
+    recall: 'Recall',
+    recalled: 'Message recalled',
+    recallLate: 'You can only recall your own messages within 2 minutes',
+    emoji: 'Emoji',
     ally: 'Alliance',
     say: 'Say something…',
     send: 'Send',
@@ -1673,6 +1863,46 @@ export const en: Text = {
         `Your sect placed ${rank} in this world's "${en.event.theme[theme] ?? theme}" event. Your prize is attached.`,
       ],
       admin: (title: string, body: string) => [title, body],
+      festTop: (rank: number, fest: FestId): [string, string] => [
+        `Rank ${rank} · ${en.fest.names[fest]?.name ?? fest}`,
+        `Your sect finished rank ${rank} in the realm's ${en.fest.names[fest]?.name ?? fest} ranking. Your reward is attached.`,
+      ],
+      festStage: (rank: number, fest: FestId, stage: number): [string, string] => [
+        `Stage ${stage} · rank ${rank} · ${en.fest.names[fest]?.name ?? fest}`,
+        `Your sect finished rank ${rank} in stage ${stage} of ${en.fest.names[fest]?.name ?? fest}. Your reward is attached.`,
+      ],
+      spySpot: (
+        kind: string,
+        x: number,
+        y: number,
+        owner: string,
+        n: number,
+        troops: number,
+        might: number,
+      ): [string, string] => [
+        `Scout · ${en.world.point[kind as keyof typeof en.world.point] ?? kind} (${x},${y})`,
+        `Your crane circled the ${en.world.point[kind as keyof typeof en.world.point] ?? kind} at (${x},${y}) held by ${owner}:\n• ${n} garrisoned teams · ${troops.toLocaleString('en')} disciples\n• Power ${might.toLocaleString('en')}`,
+      ],
+      hallUp: (lv: number): [string, string] => [
+        `Main Hall reached level ${lv}`,
+        `The sect celebrates the Main Hall reaching level ${lv} (${en.realmName(lv)}). A small gift for the road ahead — realm breakthroughs come with an extra breakthrough gift.`,
+      ],
+      back: (days: number): [string, string] => [
+        'Welcome Back',
+        `You were away ${days} days — the whole sect celebrates its leader's return. A small gift to get back into the swing (scaled to your Main Hall).`,
+      ],
+      dig: (x: number, y: number): [string, string] => [
+        `Treasure (${x},${y})`,
+        `Your team reached the spot marked on the treasure map at (${x},${y}) and dug up a treasure chest. The contents are attached.`,
+      ],
+      drop: (fest: FestId, n: number): [string, string] => [
+        `Spirit Pouch · ${en.fest.names[fest]?.name ?? fest}`,
+        `You found Spirit Pouch no. ${n} during ${en.fest.names[fest]?.name ?? fest}. The contents are attached.`,
+      ],
+      festAlly: (rank: number, fest: FestId, tag: string): [string, string] => [
+        `[${tag}] rank ${rank} · ${en.fest.names[fest]?.name ?? fest}`,
+        `Alliance [${tag}] finished rank ${rank} in the ${en.fest.names[fest]?.name ?? fest} alliance ranking — every member who scored gets a reward. Attached.`,
+      ],
       gift: () => ['A gift from the world elders', 'A small gift for you, fellow cultivator. Claim it below.'],
       boss: (lv: number, rank: number, share: number) => [
         `Demon king lv ${lv} slain`,
@@ -1744,6 +1974,10 @@ export const en: Text = {
       code: (code: string): [string, string] => [
         `Gift code ${code}`,
         'The reward for the code you entered is below — claim it into your bag.',
+      ],
+      spyVeil: (foe: string, x: number, y: number): [string, string] => [
+        `Scout · ${foe}`,
+        `Your spirit crane circled ${foe} (${x},${y}) and saw nothing — a veiling talisman hides the whole mountain.`,
       ],
       spied: (foe: string): [string, string] => [
         'You were scouted',
@@ -1901,6 +2135,8 @@ export const en: Text = {
       kills: 'Kill points',
     },
     me: 'Your sect',
+    need: (n: string, rank: number) => `${n} more to reach rank ${rank}`,
+    needTop: (n: string, top: number) => `${n} more to enter the top ${top}`,
     none: 'No one yet.',
     open: 'View rankings',
     season: 'Season',
@@ -1981,6 +2217,7 @@ export const en: Text = {
     spied: (name: string) => `A crane from ${name} just scouted your sect`,
     kinds: 'Notify me about:',
     kind: {
+      remind: 'Care reminders (shield ending, storage full, Incense streak, daily chests, events ending)',
       done: 'Long tasks done (building, training, research, returning armies)',
       raid: 'Incoming attacks / raids',
       dm: 'Direct messages',
@@ -1988,6 +2225,13 @@ export const en: Text = {
       ark: 'Alliance battles (Spirit Orb)',
       plan: 'Alliance schedule (events you joined)',
     } as Record<string, string>,
+    care: {
+      shield: 'Your peace shield ends in 30 minutes — renew it before raiders come',
+      store: 'Your storehouse is nearly full — spend some before production goes to waste',
+      streak: "You haven't visited today — drop in to keep your Incense streak",
+      chest: 'You have Daily Objectives chests ready to claim — they reset at midnight',
+      fest: 'An event you are scoring in ends soon — come claim your milestone rewards',
+    },
     done: {
       build: 'Construction finished — your builders are free',
       train: 'New disciples have joined',
@@ -2015,13 +2259,22 @@ export const en: Text = {
     empty: 'No artifacts yet. Forge them at the Artifact Forge.',
   },
   talent: {
-    title: 'Talents',
-    branch: ['Might', 'Body', 'Dao'],
-    points: (n: number) => (n ? `${plural(n, 'point')} to spend` : 'All points spent'),
-    hint: `One point every ${TALENT_EVERY} levels, at most ${TALENT_MAX} per branch.`,
+    title: 'Talents — Three Meridians',
+    trees: ['Offense', 'Defense', 'Dao'],
+    nodes: [
+      ['Keen Edge', 'Native Mastery', 'Plunder', 'Command', 'Blazing Assault', 'Lineage Mastery', 'Array Breaker'],
+      ['Iron Wall', 'Nurtured Qi', 'Life Ward', 'Steadfast', 'Diamond Body', 'Longevity', 'Unmoving Mountain'],
+      ['Insight', 'Clear Mind', 'Mystic Flow', 'Vein Seeker', 'Great Dao', 'Trial Warden', 'Heaven and Man as One'],
+    ],
+    points: (n: number) => (n ? `${n} unspent points` : 'All points spent'),
+    hint: (need: number[], star: number) =>
+      `One point per elder level, plus ${star} per star above one. Each tier opens after spending ${need.slice(1).join(' / ')} points in that tree; the last node is the strongest. There are not enough points for all three trees — pick a main one.`,
+    need: (n: number) => `Opens after ${n} points in this tree`,
+    spent: (n: number) => `${n} pts`,
     add: 'Add',
     wash: (n: number) => `Marrow Cleansing Pill (${n})`,
   },
+
   library: {
     tab: 'Techniques',
     row: (n: number) => `Scripture Pavilion lv ${n}`,
@@ -2075,6 +2328,9 @@ export const en: Text = {
 
   // ---------- Pages ----------
   monHa: {
+    share: 'Share to chat',
+    sortBy: 'Sort by',
+    sort: { lv: 'Level', rar: 'Rarity', star: 'Stars' },
     title: 'Disciples',
     elders: 'Elders',
     disciples: 'Disciples',
@@ -2087,12 +2343,21 @@ export const en: Text = {
     skill: 'Active technique',
     passive: 'Passives',
     passiveAt: (n: number) => `Lv ${n}`,
+    tiers: ['Novice', 'Adept', 'Expert', 'Master', 'Transcendent'],
+    tier: (name: string, n: number, max: number) => `${name} · tier ${n}/${max}`,
+    ngo: (n: number) => `Comprehend (${n} tokens)`,
+    ngoHint:
+      "Each comprehension costs this elder's own tokens; one unlocked technique or passive rises a tier at random. Technique: +8% power per tier; passives: +25% effect per tier.",
+    ngoMax: 'Every unlocked skill is at the top tier — level up to unlock the remaining passive.',
+    expert: 'Innate Divine Art',
+    expertHint: 'Every skill Transcendent — armies this elder leads:',
     feed: (n: number) => `Give an Origin Pill (${n})`,
     maxLevel: 'Max level reached',
     leads: 'Leading: whole army',
     total: 'Total',
   },
   baoKho: {
+    all: (n: number) => `All ×${n}`,
     title: 'Treasury',
     pills: 'Pills',
     empty: 'No pills yet. Brew them in the Alchemy Room.',
@@ -2163,6 +2428,12 @@ export const en: Text = {
   },
   unlocked: (what: string) => `Unlocked: ${what}`,
   gift: { title: 'Received' },
+  reveal: {
+    title: 'New elder recruited',
+    skill: (s: string) => `Signature skill: ${s}`,
+    view: 'View in Disciples',
+    ok: 'Continue',
+  },
   unlock: {
     title: (n: number) => `Main Hall level ${n} · Unlocked`,
     sub: 'Tap one to go there now',
@@ -2197,7 +2468,7 @@ export const en: Text = {
       ],
       [
         'Artifacts and talents',
-        `The Artifact Forge makes artifacts; each elder wears one. Every ${TALENT_EVERY} elder levels grant a talent point: Might, Body or Dao (technique power). A Marrow Cleansing Pill lets you spend them again.`,
+        'The Artifact Forge makes artifacts; each elder wears one. Every elder level grants a talent point for three trees — Offense, Defense and Dao — whose upper tiers open as you invest; a Marrow Cleansing Pill lets you spend them again.',
       ],
       [
         'Full or lopsided storage',
@@ -2218,6 +2489,10 @@ export const en: Text = {
       [
         'Progress',
         'Progress is saved on the server after every action. If the connection drops the game reconnects by itself; anything not yet saved is reported.',
+      ],
+      [
+        'Alliance buildings',
+        `Territory earns alliance funds every hour. Officers spend them to build on empty tiles inside the territory: a banner spreads territory ${FLAG_R} tiles; the stronghold spreads it ${FORT_R} tiles and buffs the whole alliance (big alliances add branch forts); the alliance mine is your own deposit — fast gathering that nobody can rob. Members send armies to a building under construction to help build (every ${BUILD_PER.toLocaleString('en')} troops add +100% speed, up to ×${BUILD_MAX}); once it's done they stay on as guards, and their might blocks part of every enemy raze.`,
       ],
     ] as [string, string][],
   },
@@ -2373,6 +2648,12 @@ export const en: Text = {
     nextLv: (n: number) => `Level ${n} adds`,
     free: (m: number) => `Tasks under ${m} min: finish free`,
     finish: 'Finish free',
+    shop: 'Incense Pavilion',
+    shopLore:
+      'Pilgrims sell goods to sects with thriving incense — cheaper than the travelling merchant, restocked every Monday.',
+    shopNeed: (n: number) => `Incense ${n}`,
+    shopLeft: (n: number, of: number) => `${n}/${of} left this week`,
+    buy: 'Buy',
     perk: {
       prod: 'Production',
       build: 'Build speed',
@@ -2406,11 +2687,14 @@ export const en: Text = {
     shield: 'Mountain shield',
     shieldFx: 'Nobody can raid your sect (breaks when you raid someone)',
     builder2: 'Second builder: construct two buildings at once',
+    veil: "Other sects' scouts learn nothing",
     src: {
       vein: 'Spirit veins held by your side',
       tide: 'Spirit tide in your region',
       ally: 'Alliance Guardian Array',
       fort: 'Alliance stronghold',
+      askill: 'Alliance skill',
+      rune: 'Holy-site rune',
       eve: 'Realm Dawn: leading alliance',
       thoi: 'Heavenly Timing',
       office: 'Alliance office',
@@ -2426,7 +2710,36 @@ export const en: Text = {
           ? `${Math.round(ms / 3_600_000)}h`
           : `${Math.max(1, Math.ceil(ms / 60_000))}m`,
   },
+  wheel: {
+    free: 'Free spin',
+    spin: (cost: number) => `Spin · ${cost} tokens`,
+    spin10: (cost: number) => `Spin ×10 · ${cost} tokens`,
+    pity: (n: number) => `${n} more spins until the top prize is guaranteed`,
+    got: 'You won',
+    host: 'Featured elder',
+    tokens: (n: number, of: number) => `Tokens ${n}/${of}`,
+    recruit: 'Recruit',
+    owned: 'Already recruited — tokens go to stars',
+    spinning: 'The wheel is spinning…',
+  },
   fest: {
+    board: 'Event ranking',
+    boardHint: (n: number) =>
+      `When the event ends, the realm's top ${n} get prizes by mail (sent at the start of next week).`,
+    tabStage: (k: number) => `Stage ${k} (today)`,
+    tabAll: 'Whole event',
+    stageHint: (n: number) => `When the stage ends (midnight), this stage's top ${n} get stage prizes by mail.`,
+    pouches: (n: string) => `${n} Spirit Pouches`,
+    dropFrom: {
+      hunt: (p: number) => `Winning a beast hunt (mountain or world map): ${p}% chance of a Spirit Pouch`,
+      gather: (p: number) => `A gathering team returning home: ${p}% chance of a Spirit Pouch`,
+    } satisfies Record<DropSrc, (p: number) => string>,
+    star: (name: string) => `Featured elder: ${name}`,
+    starHint: (n: number, top: number) => `When the event ends, the top ${n} get this elder's tokens (rank 1: ${top}).`,
+    allyBoard: 'Alliance ranking',
+    allyHint: (n: number) =>
+      `Members' points combined. When the event ends, everyone who scored in the top ${n} alliances gets a prize by alliance rank.`,
+    myAlly: (rank: number, pts: string) => `Your alliance: rank ${rank} · ${pts}`,
     title: 'Events',
     button: 'Events',
     none: 'No events are running right now. Events follow a weekly calendar — check back later.',
@@ -2434,6 +2747,10 @@ export const en: Text = {
     claim: 'Claim',
     claimed: 'Claimed',
     day: (n: number) => `Day ${n}`,
+    branch: ['Arrival', 'Recruitment', 'Gathering Qi', 'Opening Veins', 'Seclusion'],
+    opensIn: (t: string) => `This branch opens in ${t}`,
+    chests: 'Founding chests — by goals claimed',
+    chestNeed: (n: number) => `Claim ${n} goals`,
     days: (n: number, of: number) => `Logged in ${n}/${of} days`,
     points: (n: string) => `${n} points`,
     today: 'Today, earn points by:',
@@ -2447,10 +2764,12 @@ export const en: Text = {
       forge: 'artifact level',
       elder: 'elder level',
       train: 'disciple recruited',
+      trainPts: 'training point (tier 1…5: 1 / 2 / 4 / 8 / 20 per disciple; promotions count the difference)',
       heal: 'disciple healed',
       brew: 'pill brewed',
       win: 'battle won',
       hunt: 'beast slain',
+      huntLv: 'beast level slain',
       realm: 'secret realm floor',
       tower: 'tower floor',
       speed: 'minute of speed-up',
@@ -2465,6 +2784,9 @@ export const en: Text = {
       sites: 'village or cave visited',
       chain: 'beast slain on a hunting chain',
       rescue: 'village rescued',
+      runes: 'rune collected',
+      guards: 'holy-site guardian defeated',
+      trial: 'Trial point',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Reach ${n} power`,
@@ -2474,10 +2796,12 @@ export const en: Text = {
       forge: (n: string) => `Forge ${n} artifact levels`,
       elder: (n: string) => `Reach ${n} total elder levels`,
       train: (n: string) => `Recruit ${n} disciples`,
+      trainPts: (n: string) => `Reach ${n} training points`,
       heal: (n: string) => `Heal ${n} wounded`,
       brew: (n: string) => `Brew ${n} pills`,
       win: (n: string) => `Win ${n} battles`,
       hunt: (n: string) => `Slay ${n} beasts`,
+      huntLv: (n: string) => `Slay beasts totalling ${n} levels`,
       realm: (n: string) => `Clear ${n} secret realm floors`,
       tower: (n: string) => `Clear ${n} tower floors`,
       speed: (n: string) => `Use ${n} minutes of speed-ups`,
@@ -2492,6 +2816,9 @@ export const en: Text = {
       sites: (n: string) => `Visit ${n} villages or caves`,
       chain: (n: string) => `Chain-hunt ${n} world beasts`,
       rescue: (n: string) => `Rescue ${n} villages`,
+      runes: (n: string) => `Collect ${n} runes around holy sites`,
+      guards: (n: string) => `Defeat holy-site guardians ${n} times`,
+      trial: (n: string) => `Earn ${n} Demon King Trial points`,
     } satisfies Record<Metric, (n: string) => string>,
     gain: {
       power: (n: string) => `Gain ${n} power`,
@@ -2509,8 +2836,8 @@ export const en: Text = {
         desc: 'For your newly founded sect: claim a gift for each day you visit. On day seven, Elder Ru Yan comes to pay her respects.',
       },
       tanThu: {
-        name: "Novice's Path",
-        desc: 'Your first seven days: walk the novice path, with a reward for every goal.',
+        name: 'Seven Days of Founding',
+        desc: "Your sect's first eight days: a new branch of goals opens each day (Arrival → Recruitment → Gathering Qi → Opening Veins → Seclusion), every goal has a reward, and the final chests count how many goals you claimed.",
       },
       khaiVu: {
         name: 'Lifting the Mist',
@@ -2526,7 +2853,7 @@ export const en: Text = {
       },
       tranhBa: {
         name: 'Clash of Sects',
-        desc: 'Monday to Saturday, a new trial each day: building, research, recruiting… Points add up across days to open chests.',
+        desc: "Monday to Saturday, 6 stages: training (points by disciple tier) → beast slaying (by level) → gathering → power growth → conquest (kill points, raids won) → final sprint (everything). Points open chests; when it ends the realm's top 10 get prizes and the featured elder's tokens.",
       },
       sanYeu: {
         name: 'Beast Hunt Decree',
@@ -2552,9 +2879,33 @@ export const en: Text = {
         name: 'Boundless Insight',
         desc: 'The Scripture Pavilion opens wide for two days: mastering techniques scores big.',
       },
+      yeuHoang: {
+        name: 'Demon King Trial',
+        desc: 'Four days of trials: pick a difficulty once (Easy → Hell, locked in), then fight through 50 gates with your real troops — each fight costs action points, every 10th gate is an elite demon general. Each cleared gate is worth points equal to the difficulty tier (Easy 1 … Hell 5): harder means fewer fights for the same milestones.',
+      },
+      linhDia: {
+        name: 'Holy Conqueror',
+        desc: 'Four days of holy-site conquest: defeat the guardian beasts holding untamed veins and gates, and collect the runes that appear around holy sites every 12 hours — a reward at each goal.',
+      },
+      gioiChu: {
+        name: 'Who Will Reign Supreme',
+        desc: "The season's first seven days: the whole realm races for power — every point of power gained scores, milestones open chests, and the realm's top 10 get ranking prizes.",
+      },
+      khaiDien: {
+        name: 'Season Sign-In',
+        desc: "Celebrating the realm's new season: in its first 14 days, each day you log in opens one more gift — for everyone in the realm; the seventh holds two Gold Fate Talismans.",
+      },
+      tamBao: {
+        name: 'Treasure Hunt',
+        desc: 'Five days of treasure hunting: winning beast hunts and gathering teams returning home may turn up treasure map fragments (by mail). Assemble 7 on the world map — a dig site appears near your sect, visible to all but only yours to dig.',
+      },
+      tichCoc: {
+        name: 'Strategic Reserve',
+        desc: 'Four days of stockpiling: winning a beast hunt or a gathering team returning home may turn up a Spirit Pouch (sent by mail, holds speedups and a resource pack). Each pouch is a point; ranked by pouches found.',
+      },
       tramYeu: {
         name: 'Demon Slaying Decree',
-        desc: 'Beasts gather at the mountain gate: hunting, clearing realms and winning battles all score.',
+        desc: 'Beasts gather at the mountain gate: every beast slain (at the mountain or on the world map) scores by its level — the higher the more — and clearing realm floors scores too. Sect and alliance rankings.',
       },
       dongTam: {
         name: 'One Heart',
@@ -2604,10 +2955,15 @@ export const en: Text = {
         name: 'Villages in Peril',
         desc: 'Rogue cultivators are burning mortal villages. Find a burning village on the world map, take a rescue task, finish it in time and report back — each task pays Warden Tokens and a Stamina Pill.',
       },
+      thienCo: {
+        name: 'Wheel of Fate',
+        desc: 'A three-day wheel of fortune: one free spin a day, more spins with Fate Tokens (hunting, winning battles, speedups, gathering, opening invitations). The big prize is tokens of the featured legendary elder — 10 recruits them.',
+      },
     } satisfies Record<FestId, { name: string; desc: string }>,
     calendar: '7-day calendar',
     tokens: (n: string, name = 'Sect Tokens') => `${name}: ${n}`,
     tokenName: {
+      thienCo: 'Fate Token',
       trungThu: 'Mooncakes',
       thatTich: 'Magpies',
       conLon: 'Kunlun Tokens',
@@ -2623,6 +2979,15 @@ export const en: Text = {
     weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   },
   bag: {
+    speedTotal: (t: string) => `Speedups held: ${t}`,
+    speedJob: {
+      build: 'building',
+      train: 'training',
+      study: 'research',
+      heal: 'healing',
+      forge: 'forging',
+      brew: 'brewing',
+    },
     title: 'Items',
     tabs: { speed: 'Speed-ups', res: 'Resources', buff: 'Boosts', other: 'Other' },
     empty: 'No items of this kind yet. Earn them from quests, events and chests.',
@@ -2694,6 +3059,14 @@ export const en: Text = {
       caiDanh: {
         name: 'Renaming Decree',
         desc: 'Rename your sect once (Settings → Account). The new name must not match another sect in the realm.',
+      },
+      anTung: {
+        name: 'Veiling Talisman',
+        desc: 'Mist hides your mountain: scouts from other sects learn nothing. Using more extends it.',
+      },
+      baoDo: {
+        name: 'Treasure Map Fragment',
+        desc: 'A piece of a treasure map. Collect 7 and assemble them on the world map: a dig site appears near your sect — send a team to dig it up.',
       },
       diSon: {
         name: 'Mountain-Shift Talisman',

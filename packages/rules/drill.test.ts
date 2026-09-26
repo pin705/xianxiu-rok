@@ -16,9 +16,14 @@ import {
   SECLUDE_COOL,
   STRATS,
   STRAT_HALL,
+  TRIAL_AP,
+  TRIAL_GATES,
+  advance,
+  apOf,
   apply,
   drillFoe,
   expAt,
+  festOpen,
   guestAt,
   guestGift,
   newGame,
@@ -29,6 +34,8 @@ import {
   sideReady,
   seasonEnd,
   storage,
+  trialElite,
+  trialFoe,
   type State,
 } from './index.ts'
 import { might } from './combat.ts'
@@ -224,4 +231,43 @@ test('Luận Kiếm Lệnh: hết lượt Luận Kiếm Đài thì dùng lệnh 
   assert.equal(r.state.items.luanKiem, 1)
   const none = run({ ...s0, items: {} }, { type: 'arenaTicket' })
   assert.deepEqual(none, { ok: false, error: 'no_item' })
+})
+
+test('Thí Luyện Yêu Hoàng: chọn độ khó một lần mỗi lượt; đánh từng cửa bằng quân thật, tốn hành lực; thắng qua cửa, điểm theo độ khó', () => {
+  const at = (t: number) => ({ ...advance(sect(), t), seed: 777 })
+  let t = T0
+  while (!festOpen(at(t), 'yeuHoang', t)) t += DAY
+  let s = at(t)
+  const go = { type: 'trialFight', elder: 'thanhPhong', army: { kiem3: 1000 } }
+  assert.deepEqual(run(s, go), { ok: false, error: 'locked' }, 'chưa chọn độ khó')
+  assert.deepEqual(run(s, { type: 'trialStart', d: 5 }), { ok: false, error: 'bad' })
+  const r0 = run(s, { type: 'trialStart', d: 1 })
+  assert.ok(r0.ok)
+  s = r0.state
+  assert.deepEqual(run(s, { type: 'trialStart', d: 4 }), { ok: false, error: 'claimed' }, 'chọn rồi không đổi')
+  // client (mầm 0): chưa đổi gì, chờ server
+  const c = run({ ...s, seed: 0 }, go)
+  assert.ok(c.ok)
+  assert.equal(c.state.reports.length, s.reports.length)
+  const ap = apOf(s, s.time)
+  const r1 = run(s, go)
+  assert.ok(r1.ok)
+  const s1 = r1.state
+  const rep = s1.reports.at(-1)!
+  assert.equal(rep.kind, 'trial')
+  assert.equal(apOf(s1, s1.time), ap - TRIAL_AP)
+  assert.ok(rep.win, 'cửa đầu độ khó Thường: đội 1000 đệ tử bậc 3 thắng')
+  assert.equal(s1.trial!.gate, 1)
+  assert.equal(s1.stats.trial, 2, 'độ khó Thường: 2 điểm mỗi cửa')
+  assert.ok((s1.troops.kiem3 ?? 0) < 1000 || s1.reports.at(-1)!.dead, 'quân thật: có thương vong')
+  assert.deepEqual(run({ ...s1, ap: { n: 0, at: s1.time } }, go), { ok: false, error: 'not_enough' })
+  assert.deepEqual(run({ ...s1, trial: { ...s1.trial!, gate: TRIAL_GATES } }, go), { ok: false, error: 'max_level' })
+  // cửa thứ 10 là yêu tướng tinh anh; độ khó cao mạnh gấp bội
+  assert.ok(trialElite(9) && !trialElite(8))
+  assert.ok(might(trialFoe(s, 0, 9)) > might(trialFoe(s, 0, 8)) * 1.4)
+  assert.ok(might(trialFoe(s, 4, 0)) > might(trialFoe(s, 0, 0)) * 10)
+  // lượt lễ sau: chọn lại độ khó
+  let u = t + 5 * DAY
+  while (!festOpen(advance(s1, u), 'yeuHoang', u)) u += DAY
+  assert.ok(run(advance(s1, u), { type: 'trialStart', d: 4 }).ok)
 })

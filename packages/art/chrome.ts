@@ -638,18 +638,29 @@ export function discSkin(s: number, tone: DiscTone, seed = 33): Skin {
   return { cv, w: W, h: H, slice: [0, 0, 0, 0] }
 }
 
-// Khung chân dung: vòng vàng đôi viền mực, lòng trong suốt (đặt chồng lên ảnh chân dung tròn)
-export const portraitRing = (): Asset => ({
+// Khung chân dung: vòng đôi viền mực, lòng trong suốt (đặt chồng lên ảnh chân dung tròn). Màu theo khung người chơi chọn
+// (Avatar Frames): vàng (mặc định) · Hương Hỏa · phi thăng (ngọc) · đệ nhất Công Huân (son) · Luận Kiếm (lam) · luân hồi (chàm);
+// khung quý có 8 hạt thay vì 4
+const FRAME_TONES: Record<string, [ring: string, light: string, bead: string, beads: number]> = {
+  basic: [C.gold, C.goldL, C.cinnabar, 4],
+  vip: [C.goldD, C.gamboge, C.goldL, 8],
+  ascend: [C.malachite, C.malachiteL, C.goldL, 8],
+  crown: [C.cinnabar, C.cinnabarL, C.goldL, 8],
+  arena: [C.azurite, C.azuriteL, C.silk, 8],
+  rebirth: [C.indigo, C.spirit, C.goldL, 8],
+}
+export const portraitRing = (frame = 'basic'): Asset => ({
   x: -24, y: -24, w: 48, h: 48,
   draw(g) {
-    ring(g, 0, 0, 21.6, 3.4, C.gold, 3, 1, 0)
-    ring(g, 0, 0, 21.6, 1.4, C.goldL, 4, 0.9, 0.2)
+    const [main, light, bead, beads] = FRAME_TONES[frame] ?? FRAME_TONES.basic
+    ring(g, 0, 0, 21.6, 3.4, main, 3, 1, 0)
+    ring(g, 0, 0, 21.6, 1.4, light, 4, 0.9, 0.2)
     ring(g, 0, 0, 23.2, 0.9, C.ink, 5, 0.9, 0)
     ring(g, 0, 0, 19.9, 0.8, C.ink, 6, 0.8, 0)
-    for (let i = 0; i < 4; i++) {
-      const a = Math.PI / 4 + (i * Math.PI) / 2
-      blot(g, Math.cos(a) * 21.6, Math.sin(a) * 21.6, 1.5, C.goldL, 1, 7 + i, 1)
-      blot(g, Math.cos(a) * 21.6, Math.sin(a) * 21.6, 0.6, C.cinnabar, 1, 11 + i, 1)
+    for (let i = 0; i < beads; i++) {
+      const a = Math.PI / 4 + (i * 2 * Math.PI) / beads
+      blot(g, Math.cos(a) * 21.6, Math.sin(a) * 21.6, 1.5, light, 1, 7 + i, 1)
+      blot(g, Math.cos(a) * 21.6, Math.sin(a) * 21.6, 0.6, bead, 1, 11 + i, 1)
     }
   },
 })

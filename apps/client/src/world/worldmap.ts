@@ -22,15 +22,13 @@ import {
   BEAST_EMBLEMS,
   SECT_EMBLEMS,
   WORLD_TILE,
-  bake,
   marchToken,
   medal,
   vortexTex,
-  worldPiece,
   type Emblem,
   type MedalTone,
 } from '@rok/art'
-import type { BakeJob } from './bake.worker'
+import { Bakery } from './bakery'
 import { DPR, painted, texOf } from './stage'
 import { flagTex, paintTerritory, terrColor } from './territory'
 import { FogLayer, nextLand } from './fog'
@@ -45,71 +43,21 @@ const OVERVIEW_PX = 1536
 const KEEP = 9
 const MARK = 28 // px CSS một huy hiệu
 export type Cam = { x: number; y: number; z: number } // tâm nhìn (DU) và px CSS mỗi DU
+export type Layer = 'wild' | 'mine' | 'march' | 'terr' // lớp lọc tình hình người chơi tắt được (yêu thú, mỏ, hành quân, lãnh thổ)
 export type Rel = 'me' | 'ally' | 'npc' | 'other'
 // màu huy hiệu theo quan hệ với mình
 const TONE: Record<Rel, MedalTone> = { me: 'gold', ally: 'jade', npc: 'ink', other: 'red' }
+// Minh khoáng: hình chạm theo loại tài nguyên
+const ORE = { linhThach: 'water', linhThao: 'wood', linhKhoang: 'metal' } as const satisfies Record<string, Emblem>
+// phù văn: loại (RUNE_KINDS: công, thủ, sinh lực, khai mỏ, hành quân, tuyển) → hình; phẩm → đĩa
+const RUNE_EMBLEM: Emblem[] = ['sword', 'earth', 'lotus', 'wood', 'wind', 'fist']
+const RUNE_TONE: MedalTone[] = ['ink', 'jade', 'phap', 'realm', 'gold']
 export type Pick =
   | { kind: 'seat'; pid: number }
   | { kind: 'point'; i: number }
   | { kind: 'site'; i: number } // thôn trang / động phủ (sitesOf)
   | { kind: 'march'; pid: number; id: number }
   | { kind: 'tile'; x: number; y: number }
-
-// Nướng mảnh: worker nếu có (OffscreenCanvas), không thì trên luồng chính (Safari cũ) — chậm hơn nhưng vẫn ra hình
-class Bakery {
-  private worker: Worker | null = null
-  private n = 0
-  private wait = new Map<
-    number,
-    { job: Omit<BakeJob, 'id'>; ok: (b: ImageBitmap | HTMLCanvasElement | null) => void }
-  >()
-  constructor() {
-    try {
-      if (typeof OffscreenCanvas !== 'undefined') {
-        this.worker = new Worker(new URL('./bake.worker.ts', import.meta.url), { type: 'module' })
-        this.worker.onmessage = (e: MessageEvent<{ id: number; bmp: ImageBitmap }>) => {
-          this.wait.get(e.data.id)?.ok(e.data.bmp)
-          this.wait.delete(e.data.id)
-        }
-        // worker hỏng (trình duyệt không cho canvas trong worker…): nướng các việc đang chờ trên luồng chính
-        this.worker.onerror = e => {
-          console.warn('bake worker failed, baking on main thread', e.message)
-          this.worker?.terminate()
-          this.worker = null
-          for (const [id, w] of this.wait) {
-            this.wait.delete(id)
-            w.ok(this.here(w.job))
-          }
-        }
-      }
-    } catch {
-      this.worker = null
-    }
-  }
-  private here(j: Omit<BakeJob, 'id'>) {
-    const a = atlas(j.seed)
-    const piece = worldPiece(
-      { seed: j.seed, tiles: a.tiles, rings: a.regions.map(r => r.ring), w: MAP_W },
-      j.x0,
-      j.y0,
-      j.n,
-      j.fine,
-    )
-    return bake(piece, j.px / (j.n * T)).canvas as HTMLCanvasElement
-  }
-  bake(j: Omit<BakeJob, 'id'>): Promise<ImageBitmap | HTMLCanvasElement | null> {
-    if (!this.worker) return Promise.resolve(this.here(j))
-    const id = ++this.n
-    return new Promise(ok => {
-      this.wait.set(id, { job: j, ok })
-      this.worker!.postMessage({ ...j, id })
-    })
-  }
-  destroy() {
-    this.worker?.terminate()
-    for (const w of this.wait.values()) w.ok(null)
-  }
-}
 
 // Texture huy hiệu (nướng một lần theo cỡ hiện trên màn)
 const markTex = (emblem: Emblem, tone: MedalTone) =>
@@ -139,6 +87,7 @@ export class WorldScene {
   private terr = new Graphics() // lãnh thổ tiên minh: nền màu nhạt + viền
   private terrData: { snap: MapSnap; mine?: number; next: number } | null = null // vẽ lại khi trận kỳ dựng xong
   private flagMarks: [Sprite, number][] = [] // trận kỳ, lúc dựng xong (đang dựng: mờ)
+  private tileMarks: Pos[] = [] // phù văn, điểm đào đang vẽ
   private ruinMarks: [Sprite, Point][] = [] // di tích: đang mở thì nhịp sáng, đóng thì mờ
   private fogL = new FogLayer() // mê vụ: trên cùng (che huy hiệu, đường và cờ hành quân bên dưới)
   private explore: { fog: Fog; next: number } | null = null
@@ -151,6 +100,7 @@ export class WorldScene {
   private roadZ = 0
   private overviewTex: Texture | null = null
   private dead = false
+  private hide: ReadonlySet<Layer> = new Set()
   readonly ready: Promise<void> // ảnh tổng quan đã lên
 
   constructor(seed: number) {
@@ -164,6 +114,14 @@ export class WorldScene {
       this.land.addChildAt(s, 0)
     })
   }
+
+  // Lớp tắt: hành quân và lãnh thổ ẩn ngay; yêu thú / mỏ bỏ qua từ lần dựng huy hiệu kế tiếp (setData)
+  setHide(h: ReadonlySet<Layer>) {
+    this.hide = h
+    this.tokens.visible = this.roads.visible = !h.has('march')
+    this.terr.visible = !h.has('terr')
+  }
+  private hidden = (p: Point) => (p.kind === 'wild' || p.kind === 'mine') && this.hide.has(p.kind)
 
   // Dữ liệu đổi (ảnh chụp mới, pha mùa, quan hệ): dựng lại huy hiệu. rel: quan hệ của từng tông môn với mình.
   // ex: mê vụ + thôn trang / động phủ đã ghé của mình (chưa vào giới: không có — cả giới hiện rõ)
@@ -190,6 +148,7 @@ export class WorldScene {
     const spots = new Map(snap.spots.map(s => [s.i, s]))
     for (const p of this.atlas.points) {
       const sp = spots.get(p.i)
+      if (this.hidden(p)) continue
       if (p.kind === 'gate') add(p, 'tower', p.lv <= phase ? 'jade' : 'ink', 0.7, p.lv <= phase ? 1 : 0.6, 0.3)
       else if (p.kind === 'vein') add(p, 'lotus', sp?.own ? 'jade' : 'realm', 0.8, 1, 0.22)
       else if (p.kind === 'mine') add(p, 'earth', 'gold', 0.7, sp?.until && sp.until > now ? 0.4 : 1, 0.34)
@@ -247,10 +206,15 @@ export class WorldScene {
       s.anchor.set(0.35, 0.9)
       s.position.set((f.x + 0.5) * T, (f.y + 0.5) * T)
       if (f.fort) add(f, 'tower', 'gold', 1.2) // Tổng đà: đài vàng dưới lá cờ lớn, thấy ở mọi độ phóng
+      if (f.mine) add(f, ORE[f.mine.res], 'jade', 1, 1, 0.2) // Minh khoáng: huy hiệu loại tài nguyên dưới lá cờ
       this.sized.push([s, (MARK * (f.fort ? 2 : 1.2)) / 64, f.fort ? 0 : 0.2])
       this.flagMarks.push([s, f.done])
       this.marks.addChild(s)
     }
+    for (const d of snap.digs ?? []) add(d, 'orb', 'gold', 0.8, 1, 0.2) // Tàng Bảo Đồ: điểm đào (ai cũng thấy) — bảo châu vàng
+    this.tileMarks = [...(snap.digs ?? []), ...(snap.runes ?? [])] // chọn được trước điểm bên cạnh
+    // phù văn quanh linh địa: hình theo loại, đĩa theo phẩm (Bạch mực → Cam vàng)
+    for (const r of snap.runes ?? []) add(r, RUNE_EMBLEM[r.k], RUNE_TONE[r.t], 0.55, 1, 0.3)
     this.terrData = {
       snap,
       mine,
@@ -279,11 +243,20 @@ export class WorldScene {
       )[0]
     // dưới mê vụ không chọn được gì (chỉ ô trống: thả linh điểu)
     const seen = (p: Pos) => !this.explore || clear(this.explore.fog, cellOf(p).cx, cellOf(p).cy, now)
-    const m = nearest(this.marches, x2 => marchAt(x2, now), 0.8)
+    // đội đứng yên (đóng giữ, đang khai) không che chỗ nó đứng: chạm mở bảng của điểm / trận kỳ, ở đó có đội mình + Gọi về
+    const still = (x2: MapMarch) => now >= x2.arriveAt && (!x2.returnAt || (x2.dig ?? 0) > now)
+    const m = nearest(this.hide.has('march') ? [] : this.marches.filter(x2 => !still(x2)), x2 => marchAt(x2, now), 0.8)
     if (m && seen(marchAt(m, now))) return { kind: 'march', pid: m.pid, id: m.id }
     const s = nearest(seats.filter(seen), x2 => x2)
     if (s) return { kind: 'seat', pid: s.pid }
-    const p = nearest(this.atlas.points.filter(seen), x2 => x2, 1.2)
+    // phù văn, điểm đào: vật nhỏ trên ô trống sát linh địa — chạm trúng thì chọn ô đó trước điểm bên cạnh
+    const tm = nearest(this.tileMarks.filter(seen), x2 => x2, 0.6)
+    if (tm) return { kind: 'tile', x: tm.x, y: tm.y }
+    const p = nearest(
+      this.atlas.points.filter(x2 => seen(x2) && !this.hidden(x2)),
+      x2 => x2,
+      1.2,
+    )
     if (p) return { kind: 'point', i: p.i }
     const st = this.explore ? nearest(sitesOf(this.atlas).filter(seen), x2 => x2) : null
     if (st) return { kind: 'site', i: st.i }

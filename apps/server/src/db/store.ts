@@ -1,6 +1,6 @@
 // Truy vấn của giới: lease, người chơi, commit gộp, chat, hộp lệnh, xếp hạng, việc hằng đêm. Logic game đọc state trong RAM
 // (world actor); DB chỉ là nơi lưu bền. Phiên và tài khoản ở accounts.ts.
-import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 import { type State } from '@rok/rules'
 import type { Seen } from '@rok/protocol'
 import type { Database } from './index.ts'
@@ -196,7 +196,7 @@ export async function flushWorld(db: Database, b: Batch) {
           insert into ${chat} (world_id, id, ch, player_id, name, text, at)
           select ${b.world}, c.id, c.ch, c.pid, c.name, c.text, to_timestamp(c.at / 1000.0)
           from jsonb_to_recordset(${JSON.stringify(b.chat)}::jsonb) as c(id int, ch text, pid int, name text, text text, at float8)
-          on conflict do nothing`),
+          on conflict (world_id, id) do update set text = excluded.text`), // tin thu hồi: ghi lại chữ rỗng
       )
     if (b.gone?.length)
       q.push(
@@ -284,8 +284,9 @@ const boardValue = {
   week: players.weekPts,
   kills: players.kills,
 }
+// chỉ người chơi thật: tông môn NPC (phân đà, không tài khoản) không lên bảng
 const boardScope = (world: number, board: Board, week: number) =>
-  and(eq(players.worldId, world), board === 'week' ? eq(players.weekNo, week) : undefined)
+  and(eq(players.worldId, world), isNotNull(players.accountId), board === 'week' ? eq(players.weekNo, week) : undefined)
 const boardOrder = (board: Board) =>
   board === 'hall' ? [desc(players.hall), desc(players.power)] : [desc(boardValue[board])]
 // Top 50 của giới. ponytail: quét cả giới (≤ vài trăm dòng, API cache 30 giây); index khi giới to.

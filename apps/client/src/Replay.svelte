@@ -180,6 +180,7 @@
     arena: 'pvp',
     legion: 'thunder',
     drill: 'tower',
+    trial: 'red',
   }
   const tone = $derived<MedalTone>(report ? (TONE[report.kind] ?? (report.kind as MedalTone)) : 'pvp')
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
@@ -187,7 +188,8 @@
     if (!report || report.kind === 'trib') return 'thunder'
     if (report.kind === 'legion') return 'ghost'
     if (report.kind === 'drill') return 'fist'
-    if (report.kind === 'pvp' || report.kind === 'arena') return 'crest'
+    if (report.kind === 'trial') return 'demon'
+    if (report.kind === 'pvp' || report.kind === 'arena' || report.kind === 'camp') return 'crest'
     if (report.kind === 'spot') return EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus'
     return EMBLEM[report.kind][report.i]
   })

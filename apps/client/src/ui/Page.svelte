@@ -29,7 +29,7 @@
     z-index: var(--z-page);
     max-width: var(--col);
     margin: 0 auto;
-    padding: calc(132px + var(--safe-t)) 26px calc(104px + var(--safe-b));
+    padding: calc(132px + var(--safe-t)) 26px calc(max(104px, var(--nav-h, 0px) + 20px) + var(--safe-b));
     overflow-y: auto;
     overscroll-behavior: contain;
     border: 0 solid transparent;
@@ -46,9 +46,19 @@
       --cols: 3;
     }
   }
+  /* tiêu đề trang: chữ to, nét cọ son quét dưới */
   h2 {
     --gap: var(--sp-2);
-    font-size: var(--fs-6);
+    padding: 0 24px 9px 0;
+    font-size: var(--fs-7);
     font-weight: 800;
+    background: var(--stroke-red) no-repeat left bottom / 100% 11px;
+  }
+  /* nền giấy sương + dãy núi mờ ở đáy (theme.ts --img-mountains) */
+  .page {
+    background:
+      var(--img-mountains, linear-gradient(transparent, transparent)) center bottom / 240% auto no-repeat fixed,
+      var(--paper-tex) 0 0 / 128px,
+      var(--paper);
   }
 </style>

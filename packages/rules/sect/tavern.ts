@@ -1,13 +1,17 @@
 // Chiêu Hiền Đài (như Tavern của RoK, không bán): mở thiếp bạc / vàng (miễn phí theo giờ hoặc bằng thiếp trong túi),
-// thu nhận trưởng lão bằng tín vật, nâng sao trưởng lão.
+// thu nhận trưởng lão bằng tín vật, nâng sao trưởng lão, ngộ công pháp (tầng ngẫu nhiên, mầm server).
 // Phần quà rút bằng mầm của server; client có mầm 0 (ẩn) nên chỉ trừ thiếp — quà tới cùng patch của server.
 import { no, ok, use, type Actions } from '../core/action.ts'
 import { grant } from '../core/battle.ts'
 import { int, isElder, oneOf } from '../core/parse.ts'
+import { elderLevel, skillLv } from '../core/stats.ts'
 import { type Err, type State, type Tavern } from '../core/types.ts'
 import { addBag, addItems, bag, nextSeed } from '../core/util.ts'
 import {
+  ELDERS,
   GOLD_PITY,
+  SKILL_COST,
+  SKILL_MAX,
   STAR_COST,
   STAR_MAX,
   TAVERN,
@@ -24,12 +28,24 @@ export type TavernAction =
   | { type: 'draw'; kind: TavernKind; n: number } // n lần (1 hoặc 10)
   | { type: 'recruit'; elder: ElderId }
   | { type: 'star'; elder: ElderId }
+  | { type: 'ngo'; elder: ElderId } // ngộ công pháp
 
 const KINDS = Object.keys(TAVERN) as TavernKind[]
 // Lần miễn phí đang có không (để dành tối đa một lượt): lúc lượt kế <= bây giờ
 export const tavernFree = (s: State, k: TavernKind) => s.levels.chuDien >= TAVERN_HALL && s.tavern[k] <= s.time
 export const starOf = (s: State, e: ElderId) => s.stars[e] ?? 1
 export const starCost = (s: State, e: ElderId) => STAR_COST[starOf(s, e) - 1] ?? 0
+// Ngộ công pháp: giá lần ngộ tới (theo số lần đã ngộ), các môn ngộ được (đã mở, chưa tầng cuối)
+export const ngoCost = (s: State, e: ElderId) => SKILL_COST[skillLv(s, e).reduce((n, x) => n + x - 1, 0)] ?? 0
+export const ngoOpen = (s: State, e: ElderId) =>
+  skillLv(s, e).flatMap((x, i) =>
+    x < SKILL_MAX && (i === 0 || elderLevel(s.elders[e]) >= ELDERS[e].passives[i - 1].at) ? [i] : [],
+  )
+export function ngoError(s: State, e: ElderId): Err | null {
+  if (s.elders[e] === undefined) return 'locked'
+  if (!ngoOpen(s, e).length) return 'max_level'
+  return (s.tokens[e] ?? 0) < ngoCost(s, e) ? 'not_enough' : null
+}
 
 export function drawError(s: State, k: TavernKind, n: number): Err | null {
   if (s.levels.chuDien < TAVERN_HALL) return 'locked'
@@ -110,6 +126,24 @@ export const tavernActions: Actions<TavernAction> = {
         ...s,
         elders: { ...s.elders, [a.elder]: 0 },
         tokens: { ...s.tokens, [a.elder]: s.tokens[a.elder]! - TOKEN_SUMMON },
+      })
+    },
+  },
+  // Ngộ công pháp: mầm server chọn một môn trong ngoOpen lên một tầng (client mầm 0: chờ patch của server)
+  ngo: {
+    pick: a => (isElder(a.elder) ? { type: 'ngo', elder: a.elder } : null),
+    run: (s, a) => {
+      const e = ngoError(s, a.elder)
+      if (e) return no(e)
+      if (!s.seed) return ok(s)
+      const open = ngoOpen(s, a.elder)
+      const i = open[Math.floor(((s.seed >>> 0) / 2 ** 32) * open.length)]
+      const lv = skillLv(s, a.elder).map((x, k) => (k === i ? x + 1 : x))
+      return ok({
+        ...s,
+        seed: nextSeed(s.seed),
+        skl: { ...s.skl, [a.elder]: lv },
+        tokens: { ...s.tokens, [a.elder]: s.tokens[a.elder]! - ngoCost(s, a.elder) },
       })
     },
   },

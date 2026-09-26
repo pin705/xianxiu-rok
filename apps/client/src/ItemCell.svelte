@@ -34,10 +34,10 @@
     width: 64px;
     height: 64px;
     padding: 0;
-    border: 1.5px solid var(--paper3);
+    /* vật phẩm đứng trên kệ: không hộp nền, chỉ bóng đổ xuống ván */
+    border: 0;
     border-radius: 10px;
-    background: var(--paper2);
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, white 40%, transparent);
+    background: radial-gradient(ellipse at 50% 92%, rgb(0 0 0 / 0.22), transparent 55%);
     cursor: pointer;
     transition:
       transform 0.12s,

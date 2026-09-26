@@ -73,7 +73,9 @@
             <Meter value={tot ? st.score[0] / tot : 0.5} tone="azure" size="sm" label={L.camp.names[0]} />
             <p class="row between t-tiny">
               {#each [0, 1] as const as c (c)}
-                <span class:t-gold={sea.camp === c}>{L.camp.names[c]} · {num(st.score[c])} · {st.wins[c]}✓</span>
+                <span class:t-gold={sea.camp === c}
+                  >{L.camp.names[c]} · {num(st.score[c])} · {L.camp.wins(st.wins[c])}</span
+                >
               {/each}
             </p>
             <small class="t-tiny"
@@ -114,7 +116,16 @@
       </ul>
     {/if}
   {:else if data}
-    {#if data.me}<p class="t-small t-gold t-strong mt-2">{L.rank.me}: #{data.me.rank} · {value(data.me.v)}</p>{/if}
+    {#if data.me}<p class="t-small t-gold t-strong mt-2">{L.rank.me}: #{data.me.rank} · {value(data.me.v)}</p>
+      <!-- còn bao nhiêu để lên một hạng (hạng trên có trong bảng), hay để vào bảng (như RoK) -->
+      {@const my = data.me}
+      {@const up = board === 'hall' ? undefined : data.rows.find(r => r.rank === my.rank - 1)}
+      {@const last = data.rows.at(-1)}
+      {#if up}<p class="t-tiny t-soft">{L.rank.need(num(up.v - my.v + 1), up.rank)}</p>
+      {:else if board !== 'hall' && last && my.rank > last.rank}<p class="t-tiny t-soft">
+          {L.rank.needTop(num(last.v - my.v + 1), last.rank)}
+        </p>{/if}
+    {/if}
     {#if !data.rows.length}<p class="center t-lore mt-4">{L.rank.none}</p>{/if}
     <ol class="stack mt-2" style:--gap="4px">
       {#each data.rows as r (r.pid)}

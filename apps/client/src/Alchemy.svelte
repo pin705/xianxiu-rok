@@ -10,6 +10,8 @@
     brewNeed,
     brewTime,
     count,
+    fallenOf,
+    reviveCost,
     healCost,
     healError,
     healTime,
@@ -33,6 +35,9 @@
   const beds = $derived(hospital(game))
   const healErr = $derived(healError(game))
   const brewErr = $derived(brewError(game, pill, n))
+  // Anh Linh Điện: đệ tử tử trận còn hồi sinh được
+  const fallen = $derived(fallenOf(game, g.now))
+  const reviveBag = $derived(reviveCost(fallen))
 </script>
 
 <Section title={L.alchemy.heal}>
@@ -66,6 +71,33 @@
     <p class="t-small t-soft t-lore">{L.alchemy.noWounded}</p>
   {/if}
 </Section>
+
+{#if count(fallen)}
+  <Section title={L.alchemy.heroes}>
+    {#snippet aside()}{L.alchemy.heroesLeft(clock((game.fallen?.until ?? g.now) - g.now))}{/snippet}
+    <p class="t-small t-soft">{L.alchemy.heroesHint}</p>
+    <ul class="row wrap">
+      {#each UNITS as u (u)}
+        {#if fallen[u]}
+          {@const t = unitOf(u)}
+          <li class="row" style:--gap="4px">
+            <Medal emblem={EMBLEM.unit[t.type]} tone={t.type} size={28} pips={t.tier} /><b class="t-num"
+              >{num(fallen[u] ?? 0)}</b
+            >
+          </li>
+        {/if}
+      {/each}
+    </ul>
+    <Bag res={reviveBag} have={game.res} />
+    <Button
+      wide
+      variant="gold"
+      icon="heal"
+      disabled={(['linhThach', 'linhThao', 'linhKhoang'] as const).some(r => game.res[r] < reviveBag[r])}
+      onclick={() => act({ type: 'revive' }, 'reward')}>{L.alchemy.revive(num(count(fallen)))}</Button
+    >
+  </Section>
+{/if}
 
 <Section title={L.alchemy.brew}>
   {#if game.brew}<JobRow kind="brew" label={L.alchemy.brewing(game.brew.n, L.pills[game.brew.pill].name)} />{/if}

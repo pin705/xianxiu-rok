@@ -1,10 +1,10 @@
 // Hẹn giờ của actor: vé xếp theo giờ trong heap, một setTimeout cho vé sớm nhất (tối đa 1 giờ, dậy rồi hẹn tiếp).
-import type { JobKind } from '@rok/rules'
+import type { Remind } from './notify.ts'
 import { Heap } from './heap.ts'
 
 // pid 0: vé giải trận giới (advanceWorld). remind: nhắc qua Web Push lúc việc dài xong (người chơi đang offline);
 // không có remind thì là vé đẩy kết quả trận cho người đang xem. Vé có gen cũ hơn slot thì bỏ.
-export type Wake = { at: number; n: number; pid: number; gen: number; remind?: { k: JobKind | 'march'; away: number } }
+export type Wake = { at: number; n: number; pid: number; gen: number; remind?: { k: Remind['k']; away: number } }
 
 export class Alarm {
   private readonly wakes = new Heap<Wake>()

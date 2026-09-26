@@ -21,7 +21,7 @@ export function bookValue(w: World, ps: Players, map: MapCtx, now: number, m: Bo
     hall20: hall(20),
     explore: () => real.reduce((sum, s) => sum + metric(s, 'explore'), 0),
     gates: () => held('gate'),
-    flags: () => Object.values(w.flags ?? {}).filter(f => f.done <= now).length,
+    flags: () => Object.values(w.flags ?? {}).filter(f => f.done <= now && !f.mine).length,
     kp: () => real.reduce((sum, s) => sum + (s.stats.kp ?? 0), 0),
     allies5: () => Object.values(w.allies).filter(al => Object.keys(al.members).length >= 5).length,
     veins: () => held('vein'),

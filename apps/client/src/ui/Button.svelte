@@ -88,10 +88,11 @@
   .label {
     text-shadow: var(--shade);
   }
+  /* nút chính: sơn son, chữ trắng (trắng sương 27/9) */
   .gold {
     --sk: var(--sk-btn-gold);
-    --fg: var(--text);
-    --shade: 0 1px 0 rgb(255 255 255 / 0.45);
+    --fg: #fff;
+    --shade: 0 1px 2px rgb(0 0 0 / 0.45);
   }
   .danger {
     --sk: var(--sk-btn-danger);

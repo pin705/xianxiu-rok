@@ -43,7 +43,7 @@ function reborn(s: State, t: number, n: number): State {
     ...(s.frag !== undefined && { frag: s.frag }),
     ...(s.bones !== undefined && { bones: s.bones }),
     // không mang tính mùa (xoá là nhận lại được quà, hay mất thứ đã bỏ công / tiền mua): thành tựu, sự kiện (cả tân thủ — theo `born`),
-    // Hương Hỏa, Chiêu Hiền Đài, sao / tín vật trưởng lão, bạn bè, cống hiến, Minh vụ, Luận Kiếm Đài, thương nhân, đội hình lưu, cặp phó,
+    // Hương Hỏa, Chiêu Hiền Đài, sao / tín vật / tầng công pháp trưởng lão, bạn bè, cống hiến, Minh vụ, Luận Kiếm Đài, thương nhân, đội hình lưu, cặp phó,
     // tạp dịch thuê, lễ nhập minh, đạo thống, việc trong ngày (Vấn Đạo, Luận Võ, tháp), Vân Du Khách, phù tăng ích đã dùng
     ...(s.ach && { ach: s.ach }),
     fest: s.fest,
@@ -51,6 +51,7 @@ function reborn(s: State, t: number, n: number): State {
     tavern: s.tavern,
     tokens: s.tokens,
     ...(s.stars && { stars: s.stars }),
+    ...(s.skl && { skl: s.skl }),
     ...(s.friends && { friends: s.friends }),
     ...(s.contrib && { contrib: s.contrib }),
     ...(s.mob && { mob: s.mob }),
@@ -72,9 +73,9 @@ function reborn(s: State, t: number, n: number): State {
 }
 
 // Hết mùa (server, cho mọi người trong giới): luân hồi n kiếp (phi thăng: n = ASCEND, ghi danh hiệu mùa `season`); hành quân huỷ,
-// chỗ trên bản đồ bỏ trống (server xếp lại trên bản đồ mùa mới), khiên tân thủ mới
+// chỗ trên bản đồ bỏ trống (server xếp lại trên bản đồ mùa mới), khiên tân thủ mới, Tu Tiên Lệnh mới
 export function seasonEnd(s: State, t: number, n: number, season?: number): State {
-  const st = reborn(advance(s, t), t, n)
+  const st = { ...reborn(advance(s, t), t, n), pass: undefined } // Tu Tiên Lệnh làm lại từ đầu mùa
   return season === undefined ? st : { ...st, ascended: [...st.ascended, season] }
 }
 

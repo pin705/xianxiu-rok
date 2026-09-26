@@ -174,7 +174,7 @@ const closeAll = `document.querySelectorAll('dialog[open]').forEach(d => [...d.q
 // Trong hộp thoại trên cùng: bấm nút hành động chính (không phải nút phụ, không phải chữa thương)
 const act = `(() => {
   const d = [...document.querySelectorAll('dialog[open]')].pop(); if (!d) return ''
-  const b = [...d.querySelectorAll('button.btn:not([disabled]):not(.ghost):not(.quiet)')].find(b => ![${q(T.panel.close)}, ${q(T.alchemy.heal)}, ${q(T.report.replay)}].some(t => b.innerText.includes(t)))
+  const b = [...d.querySelectorAll('button.btn:not([disabled]):not(.ghost):not(.quiet), button.seal:not([disabled])')].find(b => ![${q(T.panel.close)}, ${q(T.alchemy.heal)}, ${q(T.report.replay)}].some(t => b.innerText.includes(t)))
   b?.click(); return b?.innerText.trim() ?? ''
 })()`
 // Công cụ dev của server (ALLOW_WARP), gọi từ trong trang để cookie phiên đi kèm

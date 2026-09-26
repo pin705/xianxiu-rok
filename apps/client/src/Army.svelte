@@ -20,6 +20,7 @@
     PRESETS,
     capArmy,
     capOf,
+    hospital,
   } from '@rok/rules'
   import { Portrait } from '@rok/art'
   import { Button, Card, FirstTap, Medal, Meter, Section, Slider } from './ui'
@@ -70,6 +71,7 @@
   )
   const army = $derived(!touched && field && lead ? capArmy(game, lead, picked) : picked)
   const over = $derived(count(army) > cap)
+  const beds = $derived(hospital(game) - count(game.wounded)) // chỗ trống Đan phòng
   const deputy = $derived(lead ? deputyOf(game, lead) : undefined)
   const ours = $derived(lead ? might(sideOf(game, lead, army, deputy)) : 0)
   const pair = (d: ElderId | null) => lead && g.act({ type: 'pair', elder: lead, deputy: d }, 'tap')
@@ -233,6 +235,10 @@
 {/if}
 <!-- yếu thế mà vẫn còn quân: chỉ đường đi tuyển thêm (không quân thì nút đã có ở trên) -->
 {#if over}<p class="center t-small t-bad mt-2">{L.army.over(num(cap))}</p>{/if}
+<!-- Đan phòng không đủ chỗ cho nửa đội bị thương: thương binh vượt quá sẽ tử trận (Anh Linh Điện giữ lại vài ngày) -->
+{#if count(army) && beds < count(army) / 2}<p class="center t-small t-bad mt-2">
+    {L.army.beds(num(Math.max(0, beds)))}
+  </p>{/if}
 {#if field}<p class="t-tiny t-soft mt-2">{L.army.traits}</p>{/if}
 {#if chance && verdict === 'weak' && home.length && onrecruit}
   <div class="row center mt-2">

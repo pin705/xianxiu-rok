@@ -2,18 +2,19 @@
   // Dải chat (chỉ ở tab Bản đồ và Tiên minh): một dòng tin mới nhất, chạm để mở kênh giới / tiên minh / truyền âm.
   // Chữ đã lọc ở server; người mình chặn thì ẩn ở đây (danh sách chặn nằm trong state của mình).
   // Toạ độ "(x,y)" trong tin (chia sẻ từ bản đồ giới) thành nút nhảy tới ô đó, như link toạ độ xanh của RoK.
-  // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo. Truyền âm: nhóm chat tự tạo + cuộc gần đây → từng cuộc.
+  // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo, trả lời (trích dẫn "#q<mã>"); tin của mình thu hồi được trong
+  // 2 phút. Hàng biểu cảm chèn emoji vào ô gõ. Truyền âm: nhóm chat tự tạo + cuộc gần đây → từng cuộc.
   import type { Ack, Channel, ChatMsg, Dm, FriendView, GroupView } from '@rok/protocol'
   import type { WorldAction } from '@rok/rules/world'
-  import type { Report } from '@rok/rules'
+  import { ELDERS, RARITY, type ElderId, type Report } from '@rok/rules'
   import type { Net } from './net'
-  import { Icon } from '@rok/art'
+  import { Icon, Portrait } from '@rok/art'
   import { Button, Sheet, Tabs } from './ui'
-  import { L, clock, coords } from './lib'
+  import { L, LOOK, clock, coords } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
 
-  type Api = Pick<Net, 'ask' | 'say' | 'report' | 'onChat'>
+  type Api = Pick<Net, 'ask' | 'say' | 'report' | 'onChat' | 'unsay'>
   type Tab = 'world' | 'ally' | 'dm'
   let {
     me,
@@ -55,7 +56,16 @@
   const loadGroups = () => api?.ask({ k: 'groups' }).then(list => list && (groups = list))
   const group = $derived(peer?.ch[0] === 'g' ? groups.find(x => `g${x.id}` === peer?.ch) : undefined)
   let pick = $state<ChatMsg | null>(null)
+  let reply = $state<ChatMsg | null>(null) // đang trả lời tin này
+  let emoji = $state(false)
+  const EMOJI = ['😀', '😂', '😍', '👍', '🙏', '🔥', '⚔️', '🛡️', '💰', '🎉', '😢', '😡']
+  const RECALL = 120_000 // như server: thu hồi trong 2 phút
   const put = (c: string, list: ChatMsg[]) => (logs = { ...logs, [c]: list.slice(-50) })
+  // tin tới cùng mã (tin vừa thu hồi) thay tin cũ, tin mới nối vào cuối
+  const merge = (old: ChatMsg[], ms: ChatMsg[]) => [
+    ...old.map(m => ms.find(x => x.id === m.id) ?? m),
+    ...ms.filter(x => !old.some(m => m.id === x.id)),
+  ]
   const viewing = (c: string) => (open || inline) && tab === 'dm' && peer?.ch === c
   $effect(() => {
     if (!api) return
@@ -65,7 +75,7 @@
     void loadGroups()
     void api.ask({ k: 'friends' }).then(list => list && (friends = list))
     return api.onChat((c, ms) => {
-      put(c, [...(logs[c] ?? []), ...ms])
+      put(c, merge(logs[c] ?? [], ms))
       if (c[0] !== 'p' && c[0] !== 'g') return
       const last = ms.at(-1)!
       if (c[0] === 'p') {
@@ -119,11 +129,36 @@
     e.preventDefault()
     const t = text.trim()
     if (!t || !api || !ch) return
-    const r = await api.say(ch, t)
-    if (r.ok) text = ''
-    else toast(L.chat.err[r.err] ?? L.chat.err.bad)
+    const r = await api.say(ch, `${reply ? `#q${reply.id} ` : ''}${t}`)
+    if (r.ok) {
+      text = ''
+      reply = null
+    } else toast(L.chat.err[r.err] ?? L.chat.err.bad)
+  }
+  async function recall(m: ChatMsg) {
+    pick = null
+    if (!(await api?.unsay(m.id))) toast(L.chat.recallLate)
+  }
+  // tin được trả lời ("#q<mã>" đầu tin): tìm trong kênh đang xem
+  const quoteOf = (t: string) => {
+    const id = Number(/^#q(\d{1,9}) /.exec(t)?.[1])
+    return id ? (logs[ch ?? ''] ?? []).find(m => m.id === id) : undefined
   }
   const ago = (at: number) => clock(Math.max(0, game.time - at)).replace(/:\d\d$/, '')
+  // thẻ trưởng lão chia sẻ trong tin: "#tl:<trưởng lão>:<cấp>:<sao>" — chat vẽ thẻ; mã (cả mã chiến báo) bỏ khỏi chữ
+  const TL = /#tl:(\w+):(\d{1,3}):([1-6])/g
+  const cards = (t: string) =>
+    [...t.matchAll(TL)]
+      .filter(m => Object.hasOwn(ELDERS, m[1]))
+      .map(m => ({ e: m[1] as ElderId, lv: Number(m[2]), star: Number(m[3]) }))
+  const plain = (t: string) =>
+    t
+      ? t
+          .replace(TL, '')
+          .replace(/#r\d{1,9}\b/g, '')
+          .replace(/^#q\d{1,9} /, '')
+          .trim() // mã chiến báo có nút Xem trận riêng, mã trả lời vẽ thành trích dẫn
+      : L.chat.recalled
   // chiến báo chia sẻ trong tin: "#r<id>" (của chính người gửi)
   const shared = (t: string) => [...t.matchAll(/#r(\d{1,9})\b/g)].map(m => Number(m[1]))
   async function watch(m: ChatMsg, id: number) {
@@ -170,7 +205,7 @@
                 aria-hidden="true"
               ></span>{/if}
             <span class="t-small t-soft"
-              >{x.last ? `${x.last.name}: ${x.last.text}` : L.chat.members(x.members.length)}</span
+              >{x.last ? `${x.last.name}: ${plain(x.last.text)}` : L.chat.members(x.members.length)}</span
             >
           </button>
         </li>
@@ -180,7 +215,7 @@
           <button class="msg" onclick={() => openDm(d)}>
             <b class="t-small">{d.name}</b>{#if unread.includes(`p${d.pid}`)}<span class="new" aria-hidden="true"
               ></span>{/if}
-            <span class="t-small t-soft">{d.last.text}</span>
+            <span class="t-small t-soft">{plain(d.last.text)}</span>
             <small class="t-tiny t-faint">{ago(d.last.at)}</small>
           </button>
         </li>
@@ -220,7 +255,10 @@
       {#each shown as m (m.id)}
         <li>
           <button class="msg" class:mine={m.pid === me} onclick={() => (pick = pick?.id === m.id ? null : m)}>
-            <b class="t-small">{m.name}</b> <span class="t-small">{m.text}</span>
+            {#if quoteOf(m.text)}{@const q = quoteOf(m.text)!}<span class="quote t-tiny"
+                ><Icon name="back" size={10} /> {q.name}: {plain(q.text)}</span
+              >{/if}
+            <b class="t-small">{m.name}</b> <span class="t-small" class:gone={!m.text}>{plain(m.text)}</span>
             <small class="t-tiny t-faint">{ago(m.at)}</small>
           </button>
           {#if onmap}
@@ -234,12 +272,34 @@
               >
             {/each}
           {/if}
+          {#each cards(m.text) as c, k (k)}
+            <span class="elder rar{RARITY[c.e]}"
+              ><Portrait look={LOOK[c.e]} size={28} /><b class="t-small">{L.elders[c.e].name}</b><small class="t-tiny"
+                >{L.lv(c.lv)} {'★'.repeat(c.star)}</small
+              ></span
+            >
+          {/each}
           {#if onreplay}
             {#each shared(m.text) as id (id)}
               <button class="coord" onclick={() => watch(m, id)}
                 ><Icon name="swords" size={12} />{L.report.watch}</button
               >
             {/each}
+          {/if}
+          {#if pick?.id === m.id && m.text}
+            <div class="row wrap" style:--gap="6px">
+              <Button
+                size="sm"
+                variant="ghost"
+                onclick={() => {
+                  reply = m
+                  pick = null
+                }}>{L.chat.reply}</Button
+              >
+              {#if m.pid === me && game.time - m.at < RECALL}<Button size="sm" variant="quiet" onclick={() => recall(m)}
+                  >{L.chat.recall}</Button
+                >{/if}
+            </div>
           {/if}
           {#if pick?.id === m.id && m.pid !== me}
             <div class="row wrap" style:--gap="6px">
@@ -269,7 +329,23 @@
       {/each}
       {#if !shown.length}<li class="t-small t-soft">{L.chat.empty}</li>{/if}
     </ol>
+    {#if reply}
+      <p class="row replying t-tiny">
+        <Icon name="back" size={10} /><span class="grow t-ellipsis"
+          >{L.chat.replyTo(reply.name)}: {plain(reply.text)}</span
+        >
+        <button class="x" aria-label={L.chat.cancel} onclick={() => (reply = null)}>×</button>
+      </p>
+    {/if}
+    {#if emoji}
+      <div class="row wrap emojis" style:--gap="2px">
+        {#each EMOJI as e (e)}<button class="emo" onclick={() => (text += e)}>{e}</button>{/each}
+      </div>
+    {/if}
     <form class="row" onsubmit={send}>
+      <button type="button" class="emo" aria-label={L.chat.emoji} aria-pressed={emoji} onclick={() => (emoji = !emoji)}
+        >😀</button
+      >
       <input class="grow" bind:value={text} maxlength="200" placeholder={L.chat.say} aria-label={L.chat.say} />
       <Button size="sm" type="submit" disabled={!text.trim()}>{L.chat.send}</Button>
     </form>
@@ -281,7 +357,7 @@
 {:else}
   <button class="strip" class:narrow onclick={() => (open = true)} aria-label={L.chat.world}>
     <Icon name="mail" size={14} />{#if unread.length}<span class="new" aria-hidden="true"></span>{/if}
-    {#if last}<b>{last.name}:</b> <span class="t-ellipsis">{last.text}</span>{:else}<span class="t-soft"
+    {#if last}<b>{last.name}:</b> <span class="t-ellipsis">{plain(last.text)}</span>{:else}<span class="t-soft"
         >{L.chat.empty}</span
       >{/if}
   </button>
@@ -289,6 +365,54 @@
 {/if}
 
 <style>
+  .quote {
+    display: block;
+    margin-bottom: 2px;
+    padding-left: 6px;
+    border-left: 2px solid var(--paper3);
+    color: var(--text-soft);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .gone {
+    font-style: italic;
+    color: var(--text-faint);
+  }
+  .replying {
+    padding: 2px 6px;
+    border-left: 2px solid var(--gold);
+    background: var(--paper2);
+  }
+  .x {
+    padding: 0 6px;
+    font-size: var(--fs-3);
+  }
+  .emo {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .elder {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 0 6px;
+    padding: 2px 8px 2px 2px;
+    border: 1.5px solid var(--paper3);
+    border-radius: 999px;
+    background: var(--paper2);
+  }
+  .rar2 {
+    border-color: var(--azurite);
+  }
+  .rar3 {
+    border-color: #9b73c4;
+  }
+  .rar4 {
+    border-color: var(--gold-d, #9a6b16);
+  }
   .friend {
     padding: 2px 8px;
     font: inherit;

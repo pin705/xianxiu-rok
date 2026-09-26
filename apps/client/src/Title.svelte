@@ -279,6 +279,7 @@
   .tap {
     margin-top: var(--sp-5);
     padding: 13px 40px 14px;
+    color: var(--ink); /* khung giấy sáng (--sk-toast): chữ mực, không để chữ sáng của màn bìa */
     font-weight: 700;
     letter-spacing: 0.06em;
     border: 0 solid transparent;

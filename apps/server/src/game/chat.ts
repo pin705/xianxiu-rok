@@ -10,6 +10,7 @@ const CHAT_EVERY = 3_000
 const CHAT_DUP = 30_000
 const CHAT_KEEP = 50 // tin mỗi phòng giữ trong RAM (lịch sử khi mở kênh)
 const CHAT_LEN = 200 // ký tự, sau khi chuẩn hoá
+const CHAT_RECALL = 120_000 // thu hồi tin của mình trong chừng này (tin thu hồi: chữ rỗng)
 
 export class Chat {
   private readonly rooms = new Map<string, ChatMsg[]>()
@@ -52,6 +53,18 @@ export class Chat {
       if (msg) return { room, msg }
     }
     return null
+  }
+
+  // Thu hồi tin id của pid (còn trong CHAT_RECALL, chưa thu hồi): tin mới (chữ rỗng) và phòng; null: không được
+  recall(id: number, pid: number, now: number) {
+    const hit = this.find(id)
+    if (!hit || hit.msg.pid !== pid || !hit.msg.text || now - hit.msg.at > CHAT_RECALL) return null
+    const msg = { ...hit.msg, text: '' }
+    this.rooms.set(
+      hit.room,
+      this.history(hit.room).map(m => (m.id === id ? msg : m)),
+    )
+    return { room: hit.room, msg }
   }
 
   // Nhận một tin vào phòng: tin đã lọc (đã giữ, người gọi gửi đi và ghi DB), hoặc lý do từ chối

@@ -1,11 +1,12 @@
 // Thời gian trôi: sản lượng, việc hẹn giờ xong, hành quân tới nơi / về nhà — đúng thứ tự thời gian.
 import { addGain, admit, battle, coolKey } from './battle.ts'
 import { rollDay } from './calendar.ts'
-import { rollFest } from './fest.ts'
-import { rate, storage } from './stats.ts'
-import { type Job, type JobKind, type State } from './types.ts'
+import { festDrop, rollFest } from './fest.ts'
+import { rate, storage, unitOf } from './stats.ts'
+import { type Job, type JobKind, type State, type TrainJob } from './types.ts'
 import { addItems, count, HOUR, minus, plus, noGain } from './util.ts'
-import { RESOURCES } from '../data.ts'
+import { RESOURCES, TRAIN_PTS, hallGift } from '../data.ts'
+import { mail } from './mail.ts'
 
 function accrue(s: State, t: number): State {
   const dt = t - s.time
@@ -25,6 +26,12 @@ function accrue(s: State, t: number): State {
     }
   }
   return { ...s, time: t, res, carry }
+}
+
+// Điểm tuyển của một lượt: theo bậc; nâng bậc chỉ tính phần chênh với bậc cũ
+const trainPts = (t: TrainJob) => {
+  const k = unitOf(t.unit).tier - 1
+  return t.n * (TRAIN_PTS[k] - (t.up ? (TRAIN_PTS[k - 1] ?? 0) : 0))
 }
 
 function arrive(s: State, id: number): State {
@@ -47,6 +54,7 @@ function comeHome(s: State, id: number): State {
   if (m.task === 'gather' && m.gain) {
     const got = Object.values(m.gain.res).reduce((a, b) => a + (b ?? 0), 0)
     st = { ...st, stats: { ...st.stats, gathered: (st.stats.gathered ?? 0) + got } }
+    if (got > 0) st = festDrop(st, 'gather', m.seed, m.returnAt) // Tích Cốc Phòng Cơ: có thể nhặt Linh Nang
   }
   // Báo cho chiến báo của chuyến này biết bao nhiêu người không qua khỏi
   if (count(dead)) st = { ...st, reports: st.reports.map(r => (r.id === m.report ? { ...r, dead } : r)) }
@@ -60,11 +68,17 @@ export function due(s: State, now: number): Due[] {
     if (j.finishAt <= now)
       ev.push([
         j.finishAt,
-        st => ({
-          ...st,
-          levels: { ...st.levels, [j.building]: j.level },
-          queue: st.queue.filter(q => q.building !== j.building),
-        }),
+        st => {
+          const done = {
+            ...st,
+            levels: { ...st.levels, [j.building]: j.level },
+            queue: st.queue.filter(q => q.building !== j.building),
+          }
+          // Chủ điện lên tầng: quà mừng qua thư
+          return j.building === 'chuDien'
+            ? mail(done, { at: j.finishAt, k: 'hallUp', a: [j.level], gift: hallGift(j.level) })
+            : done
+        },
       ])
   const t = s.train
   if (t && t.finishAt <= now)
@@ -74,7 +88,7 @@ export function due(s: State, now: number): Due[] {
         ...st,
         train: null,
         troops: plus(st.troops, { [t.unit]: t.n }),
-        stats: { ...st.stats, trained: st.stats.trained + t.n },
+        stats: { ...st.stats, trained: st.stats.trained + t.n, trainPts: (st.stats.trainPts ?? 0) + trainPts(t) },
       }),
     ])
   const h = s.heal

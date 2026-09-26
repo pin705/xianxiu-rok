@@ -34,6 +34,12 @@
   const act = g.act
 
   let using = $state<PillId | null>(null)
+  // dùng nhiều viên một lần (Tụ Khí Đan, Bồi Nguyên Đan): chọn số rồi chọn việc / trưởng lão
+  let qty = $state(1)
+  $effect(() => {
+    if (using) qty = 1
+  })
+  const qtys = (have: number) => [...new Set([1, 5, 10, have])].filter(k => k >= 1 && k <= have)
   const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge'] // luyện đan không rút ngắn bằng đan được
   const jobs = $derived(JOBS.filter(k => jobOf(game, k)))
   const has = (e: (typeof ELDER_IDS)[number]) => game.elders[e] !== undefined
@@ -104,6 +110,15 @@
                 <p class="t-small t-strong t-gold">
                   {mode === 'job' ? L.baoKho.pickJob : mode === 'wash' ? L.baoKho.pickWash : L.baoKho.pickElder}
                 </p>
+                {#if mode !== 'wash' && n > 1}
+                  <div class="row wrap" style:--gap="4px">
+                    {#each qtys(n) as k (k)}<Button
+                        size="sm"
+                        variant={qty === k ? 'gold' : 'ghost'}
+                        onclick={() => (qty = k)}>{k === n && k > 10 ? L.baoKho.all(k) : `×${k}`}</Button
+                      >{/each}
+                  </div>
+                {/if}
                 {#if mode === 'job'}
                   {#if !jobs.length}<p class="t-small t-soft">{L.baoKho.noJob}</p>{/if}
                   {#each jobs as k (k)}
@@ -113,16 +128,21 @@
                       wide
                       trail={clock(j.finishAt - now)}
                       onclick={() =>
-                        act({ type: 'speed', job: k, n: 1, ...(p === 'daiTuKhi' && { pill: p }) }, 'reward')}
-                      >{L.jobs[k]}</Button
+                        act(
+                          { type: 'speed', job: k, n: Math.min(qty, n), ...(p === 'daiTuKhi' && { pill: p }) },
+                          'reward',
+                        )}>{L.jobs[k]}</Button
                     >
                   {/each}
                 {:else}
                   {#each pickFrom[mode as 'feed' | 'wash'] as e (e)}
                     <Card
                       onclick={() =>
-                        act(mode === 'wash' ? { type: 'wash', elder: e } : { type: 'feed', elder: e, n: 1 }) &&
-                        sfx('reward')}
+                        act(
+                          mode === 'wash'
+                            ? { type: 'wash', elder: e }
+                            : { type: 'feed', elder: e, n: Math.min(qty, n) },
+                        ) && sfx('reward')}
                     >
                       <span class="row"
                         ><Portrait look={LOOK[e]} size={28} /><span class="grow t-strong">{L.elders[e].name}</span><b

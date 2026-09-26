@@ -33,10 +33,12 @@ import {
   type TitleId,
   type AllyTechId,
   type BlessKey,
+  type AllySkillId,
   type Bonus,
   type ItemId,
   type OfficeId,
   type PillId,
+  type Res,
 } from '../data.ts'
 import { DAY, noGain } from '../core/util.ts'
 import { mail } from '../sect/inbox.ts'
@@ -114,6 +116,8 @@ export type Alliance = {
   pot?: Pot // Tụ Bảo Minh Đỉnh tuần này
   party?: PartyRoom // Man Hoang Cổ Tộc: phòng tổ đội đang chờ (mỗi minh một phòng)
   plans?: Plan[] // Minh sự lịch: việc chung đã hẹn giờ
+  skills?: Partial<Record<AllySkillId, number>> // Minh trận thần thông: hiệu lực tới lúc này
+  named?: number // lần đổi tên / hiệu gần nhất
 }
 // Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
 export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
@@ -138,6 +142,7 @@ export type Spot = {
   hp?: number
   dmg?: Record<number, number>
   lohar?: { by: number; until: number } // Yêu Vương Tuần Sơn: ai triệu hồi, tới lúc nào
+  tamed?: 1 // hộ trận linh thú đã bị đánh bại (mùa này chiếm không phải đánh nữa)
 }
 // Kết trận: người trong minh góp đội, mọi đội tới cùng lúc `at` rồi đánh như một bên — điểm i (chiếm / đánh yêu vương),
 // hay tông môn người chơi i (công sơn, foe: tên lúc mở)
@@ -210,6 +215,8 @@ export type World = {
   eveWin?: { ids: number[]; until: number } // minh đứng đầu giới vận lúc cổng mở: tăng ích tới until
   repair?: number // Tu Bổ Thiên Môn: tài nguyên cả giới đã góp
   ark?: Ark // Tranh Đoạt Linh Châu tuần này (on: tuần đã dựng trận)
+  runes?: { cyc: number; got: number[] } // phù văn đã bị nhặt trong chu kỳ cyc
+  stageDay?: number // ngày (dayOf) đã trao quà ải Tông Môn Tranh Bá tới
 }
 // Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
 export type Legion = {
@@ -230,6 +237,7 @@ export type Flag = {
   hp?: number
   hit?: number
   fort?: boolean
+  mine?: { res: Res; left: number; until: number } // Minh khoáng: loại, còn trong kho, lúc tự tháo
 } // fort: Tổng đà
 // Minh chiến: tuần đã giải gần nhất, các minh ghi danh tuần này, điểm minh chiến (Elo) từng minh, kết quả lần giải gần nhất
 export type WarResult = { a: number; b: number; an: string; bn: string; wa: number; wb: number }
@@ -258,6 +266,7 @@ export type ArkFight = {
   charged: [number[], number[]]
   orb: { at: number; by?: number; back?: number; n: number } | null
   log: ArkLog[]
+  cup?: 'semi' | 'final' | 'third' // trận playoff Cửu Thiên Luận Đạo Hội
 }
 // warned: tuần đã nhắc · league: Cửu Thiên Luận Đạo Hội của mùa — mỗi minh [thắng, thua, điểm giải]
 export type Ark = {
@@ -268,6 +277,8 @@ export type Ark = {
   last: WarResult[]
   warned?: number
   league?: Record<number, [w: number, l: number, pts: number]>
+  // vòng playoff: bốn minh hạt giống (theo bảng giải), minh thắng / thua bán kết, [thắng, thua] của chung kết và tranh hạng ba
+  cup?: { seeds: number[]; win: number[]; lose: number[]; final?: number[]; third?: number[] }
 }
 // Một tước: ai giữ, phong lúc nào, tới lúc nào
 export type Title = { pid: number; at: number; until: number }
@@ -411,16 +422,6 @@ export const officeBuffs = (al: Alliance | undefined, pid: number): Buff[] =>
         until: 0,
         src: 'office',
       }))
-    : []
-export const allyBuffs = (al: Alliance | undefined): Buff[] =>
-  al
-    ? ALLY_TECH_IDS.flatMap(id => {
-        const d = ALLY_TECHS[id],
-          lv = techLevel(al, id)
-        return lv && d.key !== 'helps' && d.key !== 'seats'
-          ? [{ key: d.key as Bonus, v: Math.round(d.v * lv * 1000) / 1000, until: 0, src: 'ally' }]
-          : []
-      })
     : []
 
 export const contribOf = (s: State): Contrib => s.contrib ?? { credit: 0, full: 0, day: 0, helped: 0 }

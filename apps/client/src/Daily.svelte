@@ -69,7 +69,7 @@
           >
         </span>
         {#if got}
-          <span class="t-good"><Icon name="check" size={22} /></span>
+          <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
         {:else}
           <Button
             variant="gold"
@@ -100,7 +100,7 @@
         <Icon name="star" size={30} />
         <span class="grow stack" style:--gap="4px"><b>{title}</b><Bag {items} size="sm" named /></span>
         {#if opened}
-          <span class="t-good"><Icon name="check" size={22} /></span>
+          <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
         {:else}
           <Button
             variant="gold"
@@ -127,7 +127,7 @@
       {@const max = d.goals[d.goals.length - 1]}
       <Section title="{L.fest.names.nhatKhoa.name} · {L.daily.activity(Math.min(pts, max), max)}">
         <Meter value={Math.min(1, pts / max)} tone="gold" size="md" />
-        <ul class="stack mt-2">
+        <ul class="stack mt-2 board">
           {#each d.goals as goal, i (goal)}
             {@const r = d.rewards[i]}
             {@const got = !!s.fest.nhatKhoa?.got.includes(i)}
@@ -144,7 +144,7 @@
                     /></span
                   >
                   {#if got}
-                    <span class="t-good"><Icon name="check" size={22} /></span>
+                    <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
                   {:else}
                     <Button
                       variant="gold"
@@ -158,7 +158,7 @@
             </li>
           {/each}
         </ul>
-        <ul class="stack mt-2">
+        <ul class="stack mt-2 board">
           {#each d.tasks as t (t.m)}
             {@const v = festProgress(s, 'nhatKhoa', t.m)}
             <li class="row between t-small" class:done={v >= t.n}>
@@ -196,7 +196,7 @@
   <!-- Tông vụ (Side Quests của RoK): 4 dòng song song, mỗi dòng một việc; nhận xong hiện việc kế -->
   <Section title={L.side.title}>
     <p class="t-small t-soft">{L.side.hint}</p>
-    <ul class="stack mt-2">
+    <ul class="stack mt-2 board">
       {#each SIDE_LINES as line, i (line)}
         {@const q = sideAt(s, i)}
         {@const have = q ? sideProgress(s, q) : 0}
@@ -236,7 +236,7 @@
     <Section title="{L.event.title} · {L.event.theme[theme]}">
       {#snippet aside()}{L.event.pts(game.ev.pts)}{/snippet}
       <p class="t-small t-soft">{L.event.how[theme]} · {L.weekly.reset(nextWeek(now) - now)}</p>
-      <ul class="stack">
+      <ul class="stack board">
         {#each EVENT_GOALS as goal, i (goal)}
           {@const r = EVENT_REWARDS[i]}
           {@const got = game.ev.got[i]}
@@ -253,7 +253,7 @@
                     >{/if}
                 </span>
                 {#if got}
-                  <span class="t-good"><Icon name="check" size={22} /></span>
+                  <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
                 {:else}
                   <Button
                     variant="gold"
@@ -276,7 +276,7 @@
   <Section title={L.weekly.title}>
     {#snippet aside()}<Help k={9} />{/snippet}
     <p class="t-small t-soft">{L.weekly.reset(nextWeek(now) - now)}</p>
-    <ul class="stack mt-2">
+    <ul class="stack mt-2 board">
       {#each WEEKLY as w, i (w.id)}
         {@render task(
           L.weekly.task[w.id](w.n),
@@ -294,3 +294,53 @@
     )}
   </Section>
 </Sheet>
+
+<style>
+  /* ---------- Bảng bùa: mỗi việc một lá bùa ghim trên bảng gỗ, nhận xong đóng dấu son ---------- */
+  .board {
+    --gap: 14px;
+    padding: 16px 12px 14px;
+    background:
+      repeating-linear-gradient(90deg, rgb(0 0 0 / 0.05) 0 2px, transparent 2px 38px), linear-gradient(#9a6a42, #7a5030);
+    border: 6px solid #5c3a1f;
+    border-radius: 6px;
+    box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.3);
+  }
+  .board > li {
+    position: relative;
+  }
+  .board > li:nth-child(odd) {
+    rotate: -0.7deg;
+  }
+  .board > li:nth-child(even) {
+    rotate: 0.6deg;
+  }
+  .board > li::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    z-index: 1;
+    width: 11px;
+    height: 11px;
+    translate: -50% 0;
+    background: radial-gradient(circle at 35% 35%, #f5a08c, #b3372a 55%, #6a1a12);
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+  .board :global(.card) {
+    background: linear-gradient(#fbf7e8, #f3ecd4);
+    box-shadow: 0 3px 6px rgb(0 0 0 / 0.28);
+  }
+  .sealed {
+    flex: none;
+    padding: 3px 7px;
+    font-size: var(--fs-1);
+    font-weight: 900;
+    color: var(--cinnabar);
+    border: 2px solid currentColor;
+    border-radius: 5px;
+    rotate: -10deg;
+    opacity: 0.9;
+  }
+</style>

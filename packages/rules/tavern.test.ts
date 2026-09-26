@@ -1,8 +1,23 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  EXPERTISE,
   GOLD_PITY,
+  PASSIVE_LV,
+  SKILL_COST,
+  SKILL_LV_POWER,
+  SKILL_MAX,
   STAR_BONUS,
+  ELDERS,
+  expAt,
+  expertOf,
+  migrate,
+  ngoCost,
+  ngoError,
+  ngoOpen,
+  passive,
+  sideOf,
+  skillLv,
   TAVERN,
   TOKEN_SUMMON,
   addItems,
@@ -87,4 +102,53 @@ test('thành tựu: đạt bậc thì nhận quà bậc đó, lần lượt từ
   assert.deepEqual(apply(s, { type: 'ach', id: 'hall' }, s.time), { ok: false, error: 'not_done' }) // bậc 3 cần tầng 15
   const done: State = { ...s, ach: { ...s.ach, hall: ACHS.hall.tiers.length } }
   assert.deepEqual(apply(done, { type: 'ach', id: 'hall' }, s.time), { ok: false, error: 'max_level' })
+})
+
+test('Ngộ công pháp: tín vật riêng, giá theo số lần đã ngộ, mầm server chọn một môn đã mở lên tầng; ba môn tầng cuối có Bản Mệnh Thần Thông', () => {
+  // Thanh Phong cấp 1: chỉ công pháp mở (tâm pháp mở ở cấp 5, 12)
+  let s: State = { ...hall2(), elders: { thanhPhong: 0 }, tokens: { thanhPhong: 500 } }
+  assert.deepEqual(ngoOpen(s, 'thanhPhong'), [0])
+  assert.equal(ngoError(s, 'thachKien'), 'locked', 'chưa thu nhận')
+  assert.equal(ngoCost(s, 'thanhPhong'), SKILL_COST[0])
+  const skill0 = lead(s, 'thanhPhong', 'skill')
+  // client (mầm 0): không đoán, không trừ tín vật — chờ server
+  assert.equal(run({ ...s, seed: 0 }, { type: 'ngo', elder: 'thanhPhong' }).tokens.thanhPhong, 500)
+  s = run(s, { type: 'ngo', elder: 'thanhPhong' })
+  assert.deepEqual(skillLv(s, 'thanhPhong'), [2, 1, 1])
+  assert.equal(s.tokens.thanhPhong, 500 - SKILL_COST[0])
+  assert.equal(ngoCost(s, 'thanhPhong'), SKILL_COST[1])
+  assert.ok(Math.abs(lead(s, 'thanhPhong', 'skill') - skill0 - SKILL_LV_POWER) < 1e-9, 'công pháp tầng 2: sức +8%')
+  // lên tầng cuối: hết môn ngộ được (tâm pháp còn khoá)
+  for (let k = 0; k < SKILL_MAX - 2; k++) s = run(s, { type: 'ngo', elder: 'thanhPhong' })
+  assert.deepEqual(skillLv(s, 'thanhPhong'), [5, 1, 1])
+  assert.equal(ngoError(s, 'thanhPhong'), 'max_level')
+  // cấp 12: hai tâm pháp mở — mầm khác nhau chọn môn khác nhau, tâm pháp mạnh theo tầng
+  s = { ...s, elders: { thanhPhong: expAt(12) } }
+  assert.deepEqual(ngoOpen(s, 'thanhPhong'), [1, 2])
+  const picks = new Set(
+    [1, 2, 3, 4, 5, 6].map(k =>
+      skillLv(run({ ...s, seed: k * 0x2fffffff }, { type: 'ngo', elder: 'thanhPhong' }), 'thanhPhong').join(),
+    ),
+  )
+  assert.deepEqual([...picks].sort(), ['5,1,2', '5,2,1'])
+  const p0 = passive(s, 'thanhPhong', ELDERS.thanhPhong.passives[0].key)
+  const x = { ...s, skl: { thanhPhong: [5, 3, 1] } }
+  assert.ok(Math.abs(passive(x, 'thanhPhong', ELDERS.thanhPhong.passives[0].key) - p0 * (1 + 2 * PASSIVE_LV)) < 1e-9)
+  // ba môn tầng cuối: Bản Mệnh Thần Thông cộng vào đội người đó dẫn; hết đường ngộ
+  const max = { ...s, skl: { thanhPhong: [5, 5, 5] } }
+  assert.ok(expertOf(max, 'thanhPhong') && !expertOf(x, 'thanhPhong'))
+  assert.equal(ngoError(max, 'thanhPhong'), 'max_level')
+  assert.ok(Math.abs(lead(max, 'thanhPhong', 'def') - lead(x, 'thanhPhong', 'def') - (EXPERTISE.def ?? 0)) < 1e-9)
+  assert.ok(
+    (sideOf(max, 'thanhPhong', { kiem1: 100 }).skill?.v ?? 0) > (sideOf(x, 'thanhPhong', { kiem1: 100 }).skill?.v ?? 0),
+  )
+  // người có ba tâm pháp (Vân Hạc): bốn môn như RoK, 16 lần ngộ (giá cuối SKILL_COST[15]); thần thông cần đủ bốn môn
+  const van: State = { ...s, elders: { vanHac: expAt(40) }, skl: { vanHac: [5, 5, 5, 4] } }
+  assert.equal(skillLv({ ...s, elders: { vanHac: 0 } }, 'vanHac').length, 4)
+  assert.equal(ngoCost(van, 'vanHac'), SKILL_COST[15])
+  assert.ok(!expertOf(van, 'vanHac') && expertOf({ ...van, skl: { vanHac: [5, 5, 5, 5] } }, 'vanHac'))
+  assert.ok(Number.isFinite(lead({ ...van, elders: { vanHac: expAt(40) } }, 'vanHac', 'gather')))
+  // lưu / nạp giữ tầng; save hỏng bị từ chối
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(max)))?.skl, { thanhPhong: [5, 5, 5] })
+  assert.equal(migrate({ ...JSON.parse(JSON.stringify(max)), skl: { thanhPhong: [5, 5] } }), null)
 })

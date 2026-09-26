@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import postgres from 'postgres'
 import { io, type Socket } from 'socket.io-client'
-import { expAt, type Action, type State } from '@rok/rules'
+import { DAY, DAY_OFFSET, dayOf, expAt, type Action, type State } from '@rok/rules'
 import { atlas, regionOf } from '@rok/rules/world'
 import type { Ack, Answer, ClientToServer, Push, Query, QueryOf, Refuse, ServerToClient, Welcome } from '@rok/protocol'
 import { buildServer } from './src/app.ts'
@@ -275,6 +275,64 @@ test(
   },
 )
 
+test('Hồi Quy Lễ: vắng từ 7 ngày, lần vào lại có thư quà chào mừng; vắng ngắn thì không', { skip }, async () => {
+  const g = await guest(a)
+  const c1 = client(a, g.token)
+  await c1.welcome
+  c1.close()
+  await sleep(300) // server lưu lát "lúc rời game"
+  await api(a, '/dev/warp', { min: 8 * 24 * 60 }, g.token)
+  const c2 = client(a, g.token)
+  const w2 = await c2.welcome
+  const back = w2.state.mail.filter(m => m.k === 'back')
+  assert.equal(back.length, 1, 'có thư Hồi Quy Lễ')
+  assert.ok(back[0].gift?.items?.thoiQuang180)
+  c2.close()
+  await sleep(300)
+  const c3 = client(a, g.token)
+  const w3 = await c3.welcome
+  assert.equal(w3.state.mail.filter(m => m.k === 'back').length, 1, 'vắng ngắn: không thêm')
+  c3.close()
+})
+
+test(
+  'Tông Môn Tranh Bá: qua 0h, top điểm riêng của ải hôm trước nhận quà ải qua thư (mỗi ải một lần); bảng có thêm bảng ải',
+  { skip },
+  async () => {
+    const g = await guest(a, undefined, await newWorld(a))
+    const c = client(a, g.token)
+    await c.welcome
+    // tua tới 10h thứ Hai kế tiếp (giờ VN): ải 1 — luyện binh
+    const { now } = await getState(a, g.token)
+    const day = dayOf(now)
+    const mon = (day + ((7 - ((day - 4) % 7)) % 7 || 7)) * DAY - DAY_OFFSET + 10 * 3_600_000
+    await api(a, '/dev/warp', { min: Math.ceil((mon - now) / 60_000) }, g.token)
+    assert.ok((await c.act({ type: 'login' })).ok) // state tới thứ Hai: mở lượt Tranh Bá mới
+    const { state } = await getState(a, g.token)
+    const st = { ...state, stats: { ...state.stats, trainPts: (state.stats.trainPts ?? 0) + 40 } }
+    assert.equal((await api(a, '/dev/state', { state: st }, g.token)).status, 200)
+    const live = await c.ask({ k: 'fest', id: 'tranhBa' })
+    assert.deepEqual([live.stage?.k, live.stage?.me], [0, { rank: 1, pts: 40 }])
+    await api(a, '/dev/warp', { min: 24 * 60 }, g.token)
+    const stage = (await getState(a, g.token)).state.mail.filter(m => m.k === 'festStage')
+    assert.deepEqual(
+      stage.map(m => m.a),
+      [[1, 'tranhBa', 1]],
+      'hạng 1 ải 1, đúng một thư',
+    )
+    assert.ok(stage[0].gift?.items)
+    const next = await c.ask({ k: 'fest', id: 'tranhBa' })
+    assert.deepEqual(
+      [next.stage?.k, next.stage?.me, next.me?.pts],
+      [1, null, 40],
+      'ải 2 chưa có điểm; bảng cả lượt giữ điểm',
+    )
+    await api(a, '/dev/warp', { min: 1 }, g.token)
+    assert.equal((await getState(a, g.token)).state.mail.filter(m => m.k === 'festStage').length, 1, 'không trao lại')
+    c.close()
+  },
+)
+
 test('node khởi động lại (cùng đường node): nhận lại giới ngay, thao tác đã ack vẫn còn', { skip }, async () => {
   const b = await boot('b')
   const g = await guest(b, undefined, await newWorld(b))
@@ -410,6 +468,12 @@ test(
     const m = ack.p!.marches!.at(-1)!
     assert.equal(m.returnAt, 0)
     assert.equal(m.path?.length, 2, 'cùng vùng: đi thẳng')
+    const fest = await ca.ask({ k: 'fest', id: 'tranhBa' })
+    assert.ok(fest && Array.isArray(fest.top) && !fest.allies, 'bảng Tông Môn Tranh Bá trả lời được')
+    const clarion = await ca.ask({ k: 'fest', id: 'tramYeu' })
+    assert.ok(Array.isArray(clarion.allies), 'Trảm Yêu Lệnh có thêm bảng tiên minh')
+    const reign = await ca.ask({ k: 'fest', id: 'gioiChu' })
+    assert.ok(Array.isArray(reign.top) && !reign.allies, 'Giới Chủ Tranh Phong: bảng theo lượt của mùa')
     const map = await ca.ask({ k: 'map' })
     assert.ok(
       map.seats.some(x => x.pid === B.pid) && map.seats.filter(x => x.npc).length === 32,
@@ -449,6 +513,8 @@ test(
       me: { rank: number }
     }
     assert.ok(rk.rows.some(r => r.pid === A.pid) && rk.me.rank >= 1)
+    const npcs = new Set(map.seats.filter(x => x.npc).map(x => x.pid))
+    assert.ok(npcs.size && !rk.rows.some(r => npcs.has(r.pid)), 'tông môn NPC không lên bảng xếp hạng')
     assert.equal((await api(n, '/ranks/nope', undefined, A.token)).status, 400)
     // admin: số liệu có token mới xem được; thư có quà tới người chơi qua inbox, nhận đúng một lần
     const admin = (path: string, body?: object) =>
@@ -583,6 +649,15 @@ test(
     await until(() => heard.some(h => h.ch === `g${grp.id}`), 1500)
     assert.equal(heard.find(h => h.ch === `g${grp.id}`)?.text, 'Tối nay 8h')
     assert.equal((await cb.ask({ k: 'chat', ch: `g${grp.id}` })).length, 1)
+    // thu hồi: chỉ người gửi (trong 2 phút); người nghe nhận lại tin cùng mã với chữ rỗng, lịch sử và DB cũng vậy
+    const [gm] = await cb.ask({ k: 'chat', ch: `g${grp.id}` })
+    assert.equal(await cb.s.timeout(5000).emitWithAck('unsay', { id: gm.id }), false, 'không thu hồi tin người khác')
+    const heardN = heard.length
+    assert.equal(await ca.s.timeout(5000).emitWithAck('unsay', { id: gm.id }), true)
+    await until(() => heard.length > heardN, 1500)
+    assert.deepEqual(heard.at(-1), { ch: `g${grp.id}`, text: '' })
+    assert.equal((await cb.ask({ k: 'chat', ch: `g${grp.id}` }))[0].text, '')
+    assert.equal(await ca.s.timeout(5000).emitWithAck('unsay', { id: gm.id }), false, 'đã thu hồi rồi')
     const prof = await cb.ask({ k: 'profile', pid: A.pid })
     assert.deepEqual([prof?.name, prof?.hall, prof?.ally?.tag, prof?.online], [state.name, 10, 'TVM', true])
     assert.ok(prof?.supply && prof.supply.get > 0, 'cùng minh: hồ sơ có Vận Linh Trận')
@@ -604,6 +679,8 @@ test(
     assert.ok(muted, 'cấm chat có hiệu lực qua inbox')
     const stored = await n.db.client`select count(*)::int as n from chat where world_id = ${w}`
     assert.ok(stored[0].n >= 3, 'tin chat đã ghi DB')
+    const gone = await n.db.client`select text from chat where world_id = ${w} and id = ${gm.id}`
+    assert.equal(gone[0]?.text, '', 'tin thu hồi ghi lại chữ rỗng')
     assert.ok(allyEvents.length > 0, 'người trong minh được báo khi minh đổi')
     ca.close()
     cb.close()
@@ -621,6 +698,7 @@ test(
     const welcome = await c.welcome
     const geo = atlas(welcome.world.map)
     const { state } = await getState(n, A.token)
+    assert.equal(state.seasonAt, welcome.world.opened, 'vào giới: gán lúc mở mùa (lễ theo ngày mùa)')
     // linh mạch trống trong vùng của mình (NPC cùng vùng có thể đã giữ một mạch — chọn mạch chưa ai giữ)
     const map0 = await c.ask({ k: 'map' })
     const vein = geo.points.find(

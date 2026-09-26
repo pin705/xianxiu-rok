@@ -3,6 +3,10 @@
   // khai / đánh; gọi đội về), đội hành quân, ô trống (vùng, vòng, thời tiết). Luật ở rules/world.ts, server kiểm lại.
   // Mọi chỗ có toạ độ: chia sẻ vào chat (kênh minh / giới), trưởng lão / minh chủ đặt dấu cho cả minh.
   import {
+    RUNE_HOURS,
+    RUNE_KINDS,
+    RUNE_TIERS,
+    SPY_COST,
     AP_HUNT,
     AP_MAX,
     BEATS,
@@ -21,8 +25,14 @@
     FLAG_COST,
     FLAG_GUARD_MAX,
     FORT_BUILD,
+    ALLY_MINE_BUILD,
+    ALLY_MINE_COST,
+    ALLY_MINE_LIFE,
+    ALLY_MINE_STOCK,
     FORT_COST,
+    FORT_MAX,
     FORT_MIN,
+    FORT_PER,
     FORT_R,
     PVP_HALL,
     BOSSES,
@@ -36,16 +46,18 @@
     type Army,
     type ElderId,
   } from '@rok/rules'
-  import { RALLY_WAIT } from '@rok/rules'
+  import { RALLY_WAIT, RESOURCES } from '@rok/rules'
   import {
     TILE_TIME,
     bossSlice,
+    guardSide,
     wildSide,
     dayIn,
     craneTime,
     frontier,
     sitesOf,
     flagCap,
+    fortCap,
     flagHp,
     flagMax,
     newbieMove,
@@ -53,6 +65,8 @@
     ownerAt,
     phaseOf,
     snapClaims,
+    campTile,
+    buildRate,
     raidChance,
     regionOf,
     route,
@@ -73,6 +87,7 @@
   import type { Net } from './net'
   import { landAt } from '@rok/art'
   import ArmyPick from './Army.svelte'
+  import Help from './Help.svelte'
   import { Bag, Button, Card, Medal, Meter, Section, Sheet, Tag } from './ui'
   import { EMBLEM, L, clock, marchDoing, num, sfx, spotName } from './lib'
   import type { Pick } from './world/worldmap'
@@ -108,7 +123,7 @@
   const now = $derived(g.now)
   const busy = $derived(g.busy)
 
-  const phase = $derived(phaseOf(dayIn(info.opened, now)))
+  const phase = $derived(phaseOf(dayIn(info.opened, now), snap?.book?.done))
   const regionName = (r: number) => `${L.world.regions[r] ?? r} · ${L.world.ring[atlas.regions[r].ring]}`
   // cửa ải: trận nhãn phe khác đang giữ (không minh ước) chặn đường
   const shut = $derived(
@@ -231,8 +246,16 @@
   const claims = $derived(snap ? snapClaims(snap, atlas, now) : [])
   // trận kỳ ở ô đang xem; trưởng lão / minh chủ cắm được ở ô trống trong lãnh thổ minh mình
   const flag = $derived(pos ? snap?.flags?.find(f => f.x === pos.x && f.y === pos.y) : undefined)
-  const flagCount = $derived(ally ? (snap?.flags ?? []).filter(f => f.aid === ally.id && !f.fort).length : 0)
-  const hasFort = $derived(!!ally && (snap?.flags ?? []).some(f => f.aid === ally.id && f.fort))
+  const flagCount = $derived(ally ? (snap?.flags ?? []).filter(f => f.aid === ally.id && !f.fort && !f.mine).length : 0)
+  // tên công trình minh: Minh khoáng, trận kỳ, Tổng đà (cái dựng đầu tiên của minh đó — mã nhỏ nhất) hay Phân đà
+  function flagName(f: { id: number; aid: number; fort?: boolean; mine?: unknown }) {
+    if (f.mine) return L.world.terr.ore
+    if (!f.fort) return L.world.terr.flag
+    const later = (snap?.flags ?? []).some(x => x.fort && x.aid === f.aid && x.id < f.id)
+    return later ? L.world.terr.branch : L.world.terr.fort
+  }
+  const forts = $derived(ally ? (snap?.flags ?? []).filter(f => f.aid === ally.id && f.fort).length : 0)
+  const hasMine = $derived(!!ally && (snap?.flags ?? []).some(f => f.aid === ally.id && f.mine))
   // phá trận kỳ minh khác (không minh ước), từ tầng mở Tranh đoạt
   const canRaze = $derived(
     !!flag && game.levels.chuDien >= PVP_HALL && flag.aid !== ally?.id && !ally?.naps?.includes(flag.aid),
@@ -261,6 +284,8 @@
   }
   let aiding = $state(false)
   let guarding = $state(false) // đang chọn đội giữ trận kỳ
+  let camping = $state(false) // đang chọn đội đóng trại ở ô trống
+  let hitting = $state<MapMarch | null>(null) // trại phe khác đang chọn đánh
   async function aid(pid: number, elder: ElderId, army: Army) {
     const r = await send({ type: 'aid', pid, elder, army })
     if (r.ok) sent()
@@ -375,6 +400,18 @@
         {#if task === 'take'}<small class="t-small"
             >{spot?.own ? `${L.world.held}: ${spot.own} · ${spot.n ?? 0}` : L.world.free}</small
           >{/if}
+        {#if task === 'take' && spot?.side !== undefined && (spot.n ?? 0) > 0 && spot.side !== (ally?.id ?? -(me ?? 0)) && game.levels.chuDien >= PVP_HALL}
+          <!-- do thám linh địa phe khác: thư báo số đội, đệ tử, lực chiến đang đóng -->
+          <Button
+            size="sm"
+            variant="ghost"
+            icon="globe"
+            onclick={async () => {
+              const r = await send({ type: 'spySpot', i: point.i })
+              if (r.ok) sfx('tap')
+            }}>{L.world.spySpot(num(SPY_COST * (point.lv + 5)))}</Button
+          >
+        {/if}
         {#if point.kind === 'vein'}<small class="t-small t-good"
             >{L.world.veinBuff(
               veinBuffs(point)
@@ -469,7 +506,9 @@
         </Card>
       </div>
     {:else if r && !dead && win.open && (point.kind !== 'heaven' || phase >= 3)}
-      {@const slice = task === 'hit' ? bossSlice(atlas, point.i) : task === 'hunt' ? wildSide(atlas, point.i) : null}
+      {@const guard = task === 'take' && spot?.side === undefined && !spot?.tamed ? guardSide(atlas, point.i) : null}
+      {@const slice = task === 'hit' ? bossSlice(atlas, point.i) : task === 'hunt' ? wildSide(atlas, point.i) : guard}
+      {#if guard}<p class="t-small t-bad mt-2">{L.world.guardians(num(Math.round(might(guard))))}</p>{/if}
       {#if ally && task !== 'gather' && task !== 'hunt'}
         <Section title={L.world.rally}>
           <div class="row wrap">
@@ -517,7 +556,7 @@
         timeOf={a => time(r.len, a)}
         disabled={busy || (task === 'hunt' && apOf(game, now) < AP_HUNT)}
         onsubmit={(e, a) => go(task, e, a)}
-        counter={slice ? TYPES.find(x => BEATS[x] === TYPES[point.i % TYPES.length]) : undefined}
+        counter={slice ? TYPES.find(x => BEATS[x] === slice.troops[0].type) : undefined}
       />
     {/if}
   {:else if march}
@@ -595,15 +634,16 @@
               ? L.world.terr.of(snap.allies?.find(a => a.id === owner)?.tag ?? '?')
               : L.world.terr.none}</Tag
         >{#if point?.kind === 'mine' && owner && owner === ally?.id}<Tag tone="gold">{L.world.terr.gather}</Tag
-          >{/if}</span
+          >{/if}{#if ally && (flag || owner === ally.id)}<Help k={12} />{/if}</span
       >
       {#if flag}
         <span class="row wrap" style:--gap="4px"
-          ><Tag icon="flag" tone={flag.fort ? 'gold' : undefined}
-            >{(flag.fort ? L.world.terr.fort : L.world.terr.flag)(
-              snap.allies?.find(a => a.id === flag.aid)?.tag ?? '?',
-            )}</Tag
-          >{#if flag.done > now}<small class="t-tiny t-soft">{L.world.terr.building(clock(flag.done - now))}</small
+          ><Tag icon={flag.mine ? flag.mine.res : 'flag'} tone={flag.fort || flag.mine ? 'gold' : undefined}
+            >{flagName(flag)(snap.allies?.find(a => a.id === flag.aid)?.tag ?? '?')}</Tag
+          >{#if flag.done > now}<small class="t-tiny t-soft"
+              >{L.world.terr.building(clock(flag.done - now))}{#if flag.guard}{` · ${L.world.terr.speed(
+                  buildRate(flag.guard[2]).toFixed(1),
+                )}`}{/if}</small
             >{/if}</span
         >
         {@const hp = flagHp(flag, now)}
@@ -614,41 +654,78 @@
         >
         {#if flag.guard}<small class="t-tiny t-soft">{L.world.terr.guards(flag.guard[0], num(flag.guard[1]))}</small
           >{/if}
+        {#if flag.mine}
+          <!-- Minh khoáng: kho còn bao nhiêu, bao giờ tự tháo -->
+          <span class="row" style:--gap="6px"
+            ><span class="grow"><Meter value={flag.mine.left / ALLY_MINE_STOCK} size="sm" /></span><small
+              class="t-tiny t-num"
+              >{L.world.terr.mineLeft(num(flag.mine.left), clock(Math.max(0, flag.mine.until - now)))}</small
+            ></span
+          >
+        {/if}
         {#if ally && flag.aid === ally.id}
           <!-- cờ minh mình: đóng quân giữ (lực chiến chặn bớt sức phá), trưởng / minh chủ nhổ được -->
           {@const mineG = game.marches.find(m => m.target.kind === 'flag' && m.target.i === flag.id)}
           {#if mineG}
             <div class="row">
-              <small class="grow t-small">{mineG.stay ? L.world.terr.guarding : marchDoing(mineG, now)}</small>
-              {#if mineG.stay}<Button
+              <small class="grow t-small"
+                >{mineG.stay
+                  ? flag.done > now
+                    ? L.world.terr.builders
+                    : L.world.terr.guarding
+                  : marchDoing(mineG, now)}</small
+              >
+              {#if mineG.stay && flag.mine && flag.done <= now}<Button
+                  size="sm"
+                  variant="gold"
+                  disabled={busy}
+                  onclick={() => send({ type: 'allyGather', id: flag.id, elder: mineG.elder, army: mineG.army })}
+                  >{L.world.terr.mineHere}</Button
+                >{/if}
+              {#if mineG.stay || recallable(mineG, now)}<Button
                   size="sm"
                   variant="ghost"
                   disabled={busy}
                   onclick={() => send({ type: 'recall', id: mineG.id })}>{L.world.recall}</Button
                 >{/if}
             </div>
-          {:else if flag.done <= now && (flag.guard?.[0] ?? 0) < FLAG_GUARD_MAX}
+          {:else if flag.mine && flag.done <= now}
+            <!-- Minh khoáng đã dựng: người trong minh gửi đội tới khai (không ai cướp được) -->
             {@const fr = road(flag)}
+            <small class="t-tiny t-soft">{L.world.terr.mineHint}</small>
+            <ArmyPick
+              field
+              cta={L.world.terr.mineGo}
+              time={fr ? time(fr.len) : undefined}
+              timeOf={a => (fr ? time(fr.len, a) : '')}
+              disabled={busy || !fr}
+              onsubmit={async (e, a) =>
+                (await send({ type: 'allyGather', id: flag.id, elder: e, army: a })).ok && sent()}
+            />
+          {:else if (flag.guard?.[0] ?? 0) < FLAG_GUARD_MAX}
+            <!-- cờ đang dựng: góp quân xây (dựng nhanh hơn), dựng xong thì đội ở lại giữ -->
+            {@const fr = road(flag)}
+            {@const up = flag.done > now}
             {#if guarding}
-              <small class="t-tiny t-soft">{L.world.terr.guardHint}</small>
+              <small class="t-tiny t-soft">{up ? L.world.terr.buildHint : L.world.terr.guardHint}</small>
               <ArmyPick
                 field
-                cta={L.world.terr.guard}
+                cta={up ? L.world.terr.build : L.world.terr.guard}
                 time={fr ? time(fr.len) : undefined}
                 timeOf={a => (fr ? time(fr.len, a) : '')}
                 disabled={busy || !fr}
                 onsubmit={async (e, a) =>
                   (await send({ type: 'flagGuard', id: flag.id, elder: e, army: a })).ok && sent()}
               />
-            {:else}<Button size="sm" variant="gold" icon="shield" onclick={() => (guarding = true)}
-                >{L.world.terr.guard}</Button
+            {:else}<Button size="sm" variant="gold" icon={up ? 'hammer' : 'shield'} onclick={() => (guarding = true)}
+                >{up ? L.world.terr.build : L.world.terr.guard}</Button
               >{/if}
           {/if}
           {#if officer}<Button
               size="sm"
               variant="quiet"
               onclick={async () => (await send({ type: 'unflag', id: flag.id })).ok && onclose()}
-              >{L.world.terr.pull}</Button
+              >{flag.mine ? L.world.terr.pullMine : flag.fort ? L.world.terr.pullFort : L.world.terr.pull}</Button
             >{/if}
         {:else if canRaze}
           {@const fr = road(flag)}
@@ -672,17 +749,45 @@
           >{L.world.terr.plant(num(FLAG_COST))}</Button
         >
         <small class="t-tiny t-soft">{L.world.terr.plantHint(flagCount, flagCap(ally), num(ally.fund ?? 0))}</small>
-        {#if !hasFort}
-          <!-- Tổng đà: mỗi minh một, cần đủ người; nới lãnh thổ rộng, tăng ích cho cả minh -->
+        {#if forts < fortCap(ally)}
+          <!-- Tổng đà: cần đủ người; nới lãnh thổ rộng, tăng ích cho cả minh. Minh đông người dựng thêm Phân đà (giá tăng dần) -->
+          {@const cost = FORT_COST * (forts + 1)}
           <Button
             size="sm"
             variant="gold"
             icon="flag"
-            disabled={ally.people.length < FORT_MIN || (ally.fund ?? 0) < FORT_COST}
+            disabled={ally.people.length < FORT_MIN || (ally.fund ?? 0) < cost}
             onclick={async () => pos && (await send({ type: 'fort', x: pos.x, y: pos.y })).ok && sent()}
-            >{L.world.terr.fortPlant(num(FORT_COST))}</Button
+            >{(forts ? L.world.terr.branchPlant : L.world.terr.fortPlant)(num(cost))}</Button
           >
-          <small class="t-tiny t-soft">{L.world.terr.fortHint(FORT_MIN, FORT_R, FORT_BUILD / 3_600_000)}</small>
+          <small class="t-tiny t-soft"
+            >{forts
+              ? L.world.terr.branchHint(FORT_PER, FORT_MAX)
+              : L.world.terr.fortHint(FORT_MIN, FORT_R, FORT_BUILD / 3_600_000)}</small
+          >
+        {/if}
+        {#if !hasMine}
+          <!-- Minh khoáng: mỗi minh một, chọn loại tài nguyên -->
+          <small class="t-tiny t-strong">{L.world.terr.minePlant(num(ALLY_MINE_COST))}</small>
+          <span class="row wrap" style:--gap="4px">
+            {#each RESOURCES as r (r)}
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={r}
+                disabled={(ally.fund ?? 0) < ALLY_MINE_COST}
+                onclick={async () => pos && (await send({ type: 'allyMine', x: pos.x, y: pos.y, res: r })).ok && sent()}
+                >{L.res[r]}</Button
+              >
+            {/each}
+          </span>
+          <small class="t-tiny t-soft"
+            >{L.world.terr.mineHint2(
+              ALLY_MINE_BUILD / 3_600_000,
+              num(ALLY_MINE_STOCK),
+              ALLY_MINE_LIFE / 86_400_000,
+            )}</small
+          >
         {/if}
       {/if}
       {#if pick?.kind === 'tile' && !flag && game.seat && (newbie || (ally && owner === ally.id))}
@@ -705,6 +810,106 @@
         >
       {/if}
     </div>
+  {/if}
+  {#if pick?.kind === 'tile' && pos && snap?.runes?.some(r => r.x === pos.x && r.y === pos.y)}
+    <!-- phù văn quanh linh địa: loại, phẩm, tăng ích; xuất quân tới nhặt (ai tới trước được) -->
+    {@const r = snap.runes.find(x => x.x === pos.x && x.y === pos.y)!}
+    {@const going = game.marches.find(m => m.rune && m.target.i === campTile(pos.x, pos.y))}
+    {@const rr = road(pos)}
+    <Section title={L.world.rune.title(L.world.rune.tiers[r.t], L.world.rune.kinds[r.k])}>
+      <small class="t-small t-good">{L.world.rune.fx(L.bonus(RUNE_KINDS[r.k], RUNE_TIERS[r.t]), RUNE_HOURS)}</small>
+      {#if going}<small class="t-small">{marchDoing(going, now)}</small>
+      {:else}
+        <small class="t-tiny t-soft">{L.world.rune.hint}</small>
+        <ArmyPick
+          field
+          cta={L.world.rune.go}
+          time={rr ? time(rr.len) : undefined}
+          timeOf={a => (rr ? time(rr.len, a) : '')}
+          disabled={busy || !rr}
+          onsubmit={async (e, a) => (await send({ type: 'rune', x: pos.x, y: pos.y, elder: e, army: a })).ok && sent()}
+        />
+      {/if}
+    </Section>
+  {/if}
+  {#if pick?.kind === 'tile' && pos && snap?.digs?.some(d => d.x === pos.x && d.y === pos.y)}
+    <!-- Tàng Bảo Đồ: điểm đào — của mình thì xuất quân tới đào, của người khác chỉ xem -->
+    {@const d = snap.digs.find(x => x.x === pos.x && x.y === pos.y)!}
+    {@const going = game.marches.find(m => m.dig && m.target.i === campTile(pos.x, pos.y))}
+    {@const dr = road(pos)}
+    <Section title={L.world.dig.title}>
+      {#if d.pid !== me}<small class="t-small t-soft">{L.world.dig.theirs(d.name)}</small>
+      {:else if going}<small class="t-small">{marchDoing(going, now)}</small>
+      {:else}
+        <small class="t-tiny t-soft">{L.world.dig.hint}</small>
+        <ArmyPick
+          field
+          cta={L.world.dig.go}
+          time={dr ? time(dr.len) : undefined}
+          timeOf={a => (dr ? time(dr.len, a) : '')}
+          disabled={busy || !dr}
+          onsubmit={async (e, a) => (await send({ type: 'dig', x: pos.x, y: pos.y, elder: e, army: a })).ok && sent()}
+        />
+      {/if}
+    </Section>
+  {/if}
+  {#if pick?.kind === 'tile' && pos && !flag && game.seat && clear(fog, cellOf(pos).cx, cellOf(pos).cy, now)}
+    <!-- Đóng trại ở ô trống (Encamp): trại của mình (gọi về), trại phe khác trên ô (đánh), hay dựng trại mới -->
+    {@const tile = campTile(pos.x, pos.y)}
+    {@const myCamp = game.marches.find(
+      m => m.target.kind === 'camp' && m.target.i === tile && !m.prey && !m.dig && !m.rune,
+    )}
+    {@const others = (snap?.marches ?? []).filter(
+      m => m.pid !== me && now >= m.arriveAt && !m.returnAt && m.path.at(-1)?.x === pos.x && m.path.at(-1)?.y === pos.y,
+    )}
+    {@const cr = road(pos)}
+    <Section title={L.world.camp.title}>
+      {#each others as c (`${c.pid}:${c.id}`)}
+        <div class="row">
+          <small class="grow t-small">{L.world.camp.of(snap?.seats.find(x => x.pid === c.pid)?.name ?? '?')}</small>
+          {#if !isAlly(c.pid) && game.levels.chuDien >= PVP_HALL}<Button
+              size="sm"
+              variant="ghost"
+              icon="swords"
+              onclick={() => (hitting = hitting?.id === c.id ? null : c)}>{L.world.camp.hit}</Button
+            >{/if}
+        </div>
+      {/each}
+      {#if hitting && others.some(c => c.id === hitting?.id && c.pid === hitting?.pid)}
+        {@const h = hitting}
+        <small class="t-tiny t-soft">{L.world.camp.hitHint}</small>
+        <ArmyPick
+          field
+          cta={L.world.camp.hit}
+          time={cr ? time(cr.len) : undefined}
+          timeOf={a => (cr ? time(cr.len, a) : '')}
+          disabled={busy || !cr}
+          onsubmit={async (e, a) =>
+            (await send({ type: 'hitCamp', pid: h.pid, id: h.id, elder: e, army: a })).ok && sent()}
+        />
+      {:else if myCamp}
+        <div class="row">
+          <small class="grow t-small">{myCamp.stay ? L.world.camp.mine : marchDoing(myCamp, now)}</small>
+          {#if recallable(myCamp, now)}<Button
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onclick={() => send({ type: 'recall', id: myCamp.id })}>{L.world.recall}</Button
+            >{/if}
+        </div>
+      {:else if camping}
+        <small class="t-tiny t-soft">{L.world.camp.hint}</small>
+        <ArmyPick
+          field
+          cta={L.world.camp.go}
+          time={cr ? time(cr.len) : undefined}
+          timeOf={a => (cr ? time(cr.len, a) : '')}
+          disabled={busy || !cr}
+          onsubmit={async (e, a) => (await send({ type: 'camp', x: pos.x, y: pos.y, elder: e, army: a })).ok && sent()}
+        />
+      {:else}<Button size="sm" variant="ghost" icon="flag" onclick={() => (camping = true)}>{L.world.camp.go}</Button
+        >{/if}
+    </Section>
   {/if}
   {#if pos}
     <Section title={L.world.share}>

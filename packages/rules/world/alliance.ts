@@ -10,15 +10,14 @@ import {
   ALLY_COST,
   ALLY_ELDERS,
   ALLY_HALL,
+  ALLY_RENAME,
+  ALLY_RENAME_COOL,
   HELP_MIN,
   HELP_SHARE,
   PVP_START,
   REINFORCE_MAX,
   RESOURCES,
-  TITLE_IDS,
-  type DaoId,
   type ElderId,
-  type TitleId,
 } from '../data.ts'
 import {
   aidAt,
@@ -140,61 +139,6 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
   }
 }
 
-// Hồ sơ chưởng môn mà người khác xem được (như Governor Profile của RoK): không lộ kho, quân, mầm
-export type Profile = {
-  pid: number
-  name: string
-  hall: number
-  power: number
-  ally: { tag: string; name: string; role: Role } | null
-  seat: { x: number; y: number } | null
-  pvp: { win: number; loss: number; pts: number }
-  rebirths: number
-  ascended: number // số mùa đã phi thăng
-  tower: number
-  elders: number
-  ach: number // tổng bậc thành tựu đã nhận
-  kp: number // chiến công
-  online: boolean
-  title: TitleId | null // tước Giới Chủ phong (còn hạn)
-  lord: boolean // chính là Giới Chủ
-  crown?: boolean // người xem là Giới Chủ: sắc phong được cho người này
-  boon?: number // người xem là Giới Chủ: Thiên Ân lễ còn ban được tuần này
-  invite?: boolean // người xem là trưởng lão / minh chủ, người này chưa vào minh nào: mời được
-  dao?: DaoId // đạo thống đang theo
-}
-export function profileOf(
-  w: World,
-  ps: Players,
-  pid: number,
-  online: boolean,
-  now = 0,
-  lord: number | null = null,
-): Profile | null {
-  const s = ps.get(pid)
-  if (!s) return null
-  const al = allyOf(w, pid)
-  return {
-    pid,
-    name: s.name,
-    hall: s.levels.chuDien,
-    power: Math.round(power(s)),
-    ally: al ? { tag: al.tag, name: al.name, role: al.members[pid] } : null,
-    seat: s.seat,
-    pvp: s.pvp,
-    rebirths: s.rebirths,
-    ...(s.dao && { dao: s.dao.id }),
-    ascended: s.ascended.length,
-    tower: s.tower,
-    elders: Object.keys(s.elders).length,
-    ach: Object.values(s.ach ?? {}).reduce((a, b) => a + (b ?? 0), 0),
-    kp: s.stats.kp ?? 0,
-    online,
-    title: TITLE_IDS.find(id => w.titles?.[id]?.pid === pid && w.titles[id]!.until > now) ?? null,
-    lord: lord === pid,
-  }
-}
-
 export const helpMs = (job: { startAt: number; finishAt: number }) =>
   Math.max(HELP_MIN, Math.round((job.finishAt - job.startAt) * HELP_SHARE))
 
@@ -204,6 +148,7 @@ export const rank = (al: Alliance, pid: number) => al.members[pid] ?? -9
 
 export type AllianceAction =
   | { type: 'allyFound'; name: string; tag: string }
+  | { type: 'allyRename'; name: string; tag: string } // minh chủ đổi tên / hiệu
   | { type: 'allyJoin'; id: number }
   | { type: 'allyLeave' }
   | { type: 'allyKick'; pid: number }
@@ -216,20 +161,22 @@ export type AllianceAction =
   | { type: 'helpAll' }
   | { type: 'aid'; pid: number; elder: ElderId; army: Army } // viện binh: đóng quân ở nhà đồng minh
 
+// Tên 2–20 chữ / số, hiệu 2–4 chữ in hoa / số (đã lọc ký tự lạ)
+function pickName<T extends 'allyFound' | 'allyRename'>(type: T, a: Record<string, unknown>) {
+  const name = cleanText(a.name),
+    tag = cleanText(a.tag).toUpperCase()
+  return /^[\p{L}\p{N} ]{2,20}$/u.test(name) && /^[\p{Lu}\p{N}]{2,4}$/u.test(tag) ? { type, name, tag } : null
+}
+const nameTaken = (w: World, name: string, tag: string, self = 0) =>
+  Object.values(w.allies).some(x => x.id !== self && (x.name.toLowerCase() === name.toLowerCase() || x.tag === tag))
+
 export const allianceActions: WorldActions<AllianceAction> = {
   allyFound: {
-    pick: a => {
-      const name = cleanText(a.name),
-        tag = cleanText(a.tag).toUpperCase()
-      return /^[\p{L}\p{N} ]{2,20}$/u.test(name) && /^[\p{Lu}\p{N}]{2,4}$/u.test(tag)
-        ? { type: 'allyFound', name, tag }
-        : null
-    },
+    pick: a => pickName('allyFound', a),
     run: ({ w, pid, s, now }, a) => {
       if (allyOf(w, pid)) return no('busy')
       if (s.levels.chuDien < ALLY_HALL) return no('locked')
-      if (Object.values(w.allies).some(x => x.name.toLowerCase() === a.name.toLowerCase() || x.tag === a.tag))
-        return no('taken')
+      if (nameTaken(w, a.name, a.tag)) return no('taken')
       if (RESOURCES.some(r => s.res[r] < ALLY_COST)) return no('not_enough')
       const al: Alliance = {
         id: w.nextAlly,
@@ -246,6 +193,18 @@ export const allianceActions: WorldActions<AllianceAction> = {
         world: { ...put(w, al), nextAlly: w.nextAlly + 1 },
         changed: new Map([[pid, welcome(paid, al.name, now)]]),
       }
+    },
+  },
+  allyRename: {
+    pick: a => pickName('allyRename', a),
+    run: ({ w, pid, now }, a) => {
+      const al = allyOf(w, pid)
+      if (!al || al.members[pid] !== 2) return no('locked')
+      if (al.named !== undefined && now - al.named < ALLY_RENAME_COOL) return no('cooldown')
+      if (nameTaken(w, a.name, a.tag, al.id)) return no('taken')
+      if ((al.fund ?? 0) < ALLY_RENAME) return no('not_enough')
+      const next = { ...al, name: a.name, tag: a.tag, fund: (al.fund ?? 0) - ALLY_RENAME, named: now }
+      return { ok: true, changed: new Map(), world: put(w, next) }
     },
   },
   allyJoin: {

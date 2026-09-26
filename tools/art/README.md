@@ -50,6 +50,8 @@ tools/art/.venv/bin/pip install -r tools/art/requirements.txt
 | `troops [S0 S1 S2]` | `sold:<hệ>:<phe>:<bậc 3–5>`, `sold:dao:<đạo>` | Bảng 3×3 theo phe (0 ta, 1 địch); S2 = đệ tử đặc trưng chín đạo thống (một dáng cho mọi bậc, cả khi là địch). | `icons.jpg` |
 | `landmarks` | `lm:<đạo>` | Trấn phái chi bảo cạnh Tụ Linh Trận: bảng 3×3, khớp hộp `LANDMARK_BOX` 52×64 DU (chân chạm đáy) như `daoMark()` trong emblems.ts. Gói `home`. | `icons.jpg` |
 | `beasts` | `beast:<hệ>` → mọi `beast:<hệ>:<màu>` | Một dáng lông xám mỗi hệ; game tô màu loài bằng tint (`world/battle/field.ts`). | `icons.jpg` |
+| `creative [tên]` | (không vào game) | Concept sáng tạo từng màn (`CREATIVE`): ảnh bố cục của mình và ảnh mẫu phong cách (game tham khảo) → giao diện kiểu đồ vật. | ảnh chụp + mẫu |
+| `ui [U1…U3]` | `ui:<tên>` | Đồ vật giao diện theo concept: huy hiệu menu, vật chứa tài nguyên, khung ngọc, dải lụa, cáo thị, chú thợ, mây lùi, dấu son, ô tranh sự kiện; `ui:mountains` là núi mờ đáy bảng (cắt từ núi xa). | concept màn chính |
 | `concept [màn] [hướng]` | (không vào game) | Ảnh concept toàn màn từ ảnh chụp `.work/concept/<màn>-src.png`, mỗi hướng trong `CONCEPT_STYLES`. Chốt hướng trước khi vẽ mảnh giao diện; ảnh 2K giá gấp đôi. | ảnh chụp màn |
 | `chrome [tên…]` | `skin:<tên>` | Khung viền kép, nhãn, viên, rãnh, thanh, công tắc, nút tròn, gạch dưới tiêu đề — vẽ bằng code (`chrome.py`), không tốn tiền. Chạy lại khi đổi màu. | — |
 | `kit [tên…]` | `skin:<tên>` (thẻ, nút, nhãn, thanh) | **Cách đang dùng.** Vẽ 3 mẫu gốc sạch (`KIT_BASES`: giấy, sơn mài, nhãn), rồi suy ra mọi da trong `KIT`: co giãn 9 mảnh đúng thông số từng da (`nine`), đổi màu theo độ sáng (`tint`). Không hoa văn, không loang, nên giao diện yên và tranh nổi. | bản vẽ code |
@@ -99,7 +101,18 @@ Trước màn tiêu đề, phần còn lại chủ yếu là JS (~1,1 MB, phần
 - **Nền hồng rồi tách**: model này không ra nền trong suốt, nên mọi prompt đều yêu cầu nền `#FF00FF` phẳng. `pipeline.key_magenta` ước alpha theo độ hồng rồi tách màu thật (F = (C − (1−a)·M) / a), nét mực loang không bị ám hồng.
 - **Ảnh mẫu (`anchors/`)**: `style.jpg` (công trình) cho công trình và vẽ đè; `icons.jpg` (4 icon sạch) cho mọi bảng 3×3 và da; `face.jpg` cho chân dung. Không dùng `style.jpg` cho bảng icon: model vẽ lẫn đá và mái nhà vào khoảng trống.
 - **Vẽ đè giữ hình** (núi, da, bản đồ, sân trận): gửi bản vẽ code đệm tới tỉ lệ model nhận; lấy alpha của bản vẽ code làm alpha cuối, nên đường bao và phần mờ dần khớp tuyệt đối. Cảnh dùng nền giấy chứ không dùng nền hồng, vì nền hồng lọt vào phần mờ thành vệt hồng.
-- **Hướng giao diện: sơn mài** (chốt 27/9/2026 qua concept `make.py concept`, ảnh `.work/raw/concept-home-lacquer.webp`).
+- **Hướng giao diện hiện tại: đồ vật trắng sương** (27/9/2026, concept `make.py creative`, ảnh `.work/raw/creative-*.webp`).
+  - Giao diện là đồ vật của tông môn, không phải widget web:
+    - chân dung trong khung ngọc, cảnh giới trên dải lụa;
+    - tài nguyên là vật chứa (bát linh thạch, giỏ linh thảo, xe quặng);
+    - ô sự kiện là tranh; nhiệm vụ là cáo thị ghim đinh; tạp dịch là chú thợ;
+    - menu là huy hiệu tranh trên dải mây, có dấu son.
+  - Các bảng:
+    - Nâng cấp là nghi lễ: hai tầng đặt cạnh nhau, lễ vật trên án son, nút ấn son.
+    - Môn hạ là sảnh tranh treo; Bảo khố là tủ kệ gỗ; Nhiệm vụ ngày là bảng bùa.
+  - Tranh đồ vật: `make.py ui` (bảng `UI_SHEETS`, key `ui:<tên>`). Code HUD bật khi có `ui:nav-tongMon`, thiếu tranh thì giữ HUD cũ.
+  - Bảng màu `SUONG` ở `ui/theme.ts` (giấy sương lạnh, mực, son). Không vàng ngà, không lam sẫm.
+- **Hướng cũ: sơn mài** (đã bỏ) (chốt 27/9/2026 qua concept `make.py concept`, ảnh `.work/raw/concept-home-lacquer.webp`).
   - Bề mặt lam sẫm, chữ ngà. Kim loại chỉ là đồng cổ mảnh ở viền và góc chạm.
   - Nút chính dùng son, nút phụ dùng ngọc lam. **Không tô mảng vàng hay giấy ngà**: người chơi thấy "vàng quá, giống giấy, rẻ tiền".
   - Màu giao diện nằm ở `LACQUER` trong `apps/client/src/ui/theme.ts`, ghi đè các màu gốc chỉ cho HTML; cảnh Pixi vẫn dùng `PIGMENT`.

@@ -5,13 +5,14 @@ import type { FastifyBaseLogger } from 'fastify'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { Server } from 'socket.io'
 import { z } from 'zod'
-import type { Action } from '@rok/rules'
+import { FEST_IDS, type Action, type FestId } from '@rok/rules'
 import { GOODS, type Good } from '@rok/rules/world'
 import type { Channel, ClientToServer, Query as Q, Refuse, ServerToClient } from '@rok/protocol'
 import type { Database } from '../db/index.ts'
 import { findSession } from '../db/accounts.ts'
 import type { Host } from '../game/host.ts'
 import { World, type Sock, type SocketData } from '../game/world.ts'
+import { unsay } from '../game/talk.ts'
 import { hashToken, tokenFromCookie } from '../lib/auth.ts'
 import { refused, socketsOpen } from '../lib/metrics.ts'
 
@@ -43,6 +44,7 @@ const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('groups') }),
   z.object({ k: z.literal('friends') }),
   z.object({ k: z.literal('shared'), pid: z.number().int().positive(), id: z.number().int().positive() }),
+  z.object({ k: z.literal('fest'), id: z.enum(FEST_IDS as [FestId, ...FestId[]]) }),
 ]) satisfies z.ZodType<Q>
 const Say = z.object({ ch: Chan, text: z.string().max(400) }) // độ dài thật (200 ký tự) world.say kiểm sau khi chuẩn hoá
 const Report = z.object({ id: z.number().int().positive() })
@@ -159,6 +161,14 @@ function serve(socket: Sock, o: RealtimeOptions, limiter: RateLimiterMemory) {
     const w = world()
     if (!w) return ack({ ok: false, err: 'unavailable' })
     w.say(socket, p.data, ack)
+  })
+  socket.on('unsay', async (m, ack) => {
+    if (typeof ack !== 'function') return
+    const p = Report.safeParse(m) // cùng dạng { id }
+    if (!(await allowed()) || !p.success) return ack(false)
+    const w = world()
+    if (!w) return ack(false)
+    unsay(w, socket, p.data.id, ack)
   })
   socket.on('report', async (m, ack) => {
     if (typeof ack !== 'function') return

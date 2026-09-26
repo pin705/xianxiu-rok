@@ -1,6 +1,6 @@
 // Hương Hỏa (như VIP của RoK, không bán): điểm theo chuỗi ngày vào game, cấp → tăng ích (stats.bonus), rương mỗi ngày,
 // việc còn ít phút thì xong miễn phí.
-import { dayOf } from './calendar.ts'
+import { dayOf, weekOf } from './calendar.ts'
 import { vipLevel } from './stats.ts'
 import { type State, type Vip } from './types.ts'
 import { NEWBIE_FREE, NEWBIE_FREE_HALL, VIP_DAILY, VIP_FREE } from '../data.ts'
@@ -18,3 +18,5 @@ export function vipLogin(s: State, t: number): State {
 export const vipToday = (streak: number) => VIP_DAILY[Math.min(Math.max(1, streak), VIP_DAILY.length) - 1]
 export const vipFree = (s: State) =>
   Math.max(VIP_FREE[vipLevel(s)], s.levels.chuDien < NEWBIE_FREE_HALL ? NEWBIE_FREE : 0) * 60_000
+// Hương Hỏa Các: số lần đã mua từng món tuần này (thứ Hai làm mới)
+export const vipGot = (s: State, t: number) => (s.vip.shop?.week === weekOf(t) ? s.vip.shop.got : {})

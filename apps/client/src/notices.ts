@@ -4,6 +4,7 @@ import {
   ALLY_HALL,
   BUILDINGS,
   CHAT_HALL,
+  ELDER_IDS,
   IDS,
   MAP_HALL,
   PVP_HALL,
@@ -14,6 +15,7 @@ import {
   TOWER,
   jobOf,
   type BuildingId,
+  type ElderId,
   type ItemId,
   type Items,
   type Report,
@@ -72,11 +74,15 @@ export function changes(prev: State, next: State, reports: boolean, skip?: Repor
     Object.entries(next.items).filter(([id, n]) => (n ?? 0) > (prev.items[id as ItemId] ?? 0)),
   ) as Items
   for (const id of Object.keys(items) as ItemId[]) items[id] = next.items[id]! - (prev.items[id] ?? 0)
-  return { up, notes, hall, items }
+  // trưởng lão vừa thu nhận (tín vật đủ, quà lần đầu phá bí cảnh, lễ…): màn Thu nhận
+  const elders = ELDER_IDS.filter(e => next.elders[e] !== undefined && prev.elders[e] === undefined)
+  return { up, notes, hall, items, elders }
 }
-// Màn mừng sau khi đổi state: Mở khoá (Chủ điện lên tầng có tính năng mới), dải Tạ lễ (vật phẩm vừa nhận — dồn nếu đang hiện)
-export function reveal(c: { hall: number; items: Items }) {
+// Màn mừng sau khi đổi state: Mở khoá (Chủ điện lên tầng có tính năng mới), Thu nhận (trưởng lão mới), dải Tạ lễ (vật
+// phẩm vừa nhận — dồn nếu đang hiện)
+export function reveal(c: { hall: number; items: Items; elders?: ElderId[] }) {
   if (c.hall) social.unlock = c.hall
+  if (c.elders?.length) social.elders = [...social.elders, ...c.elders.filter(e => !social.elders.includes(e))]
   const ids = Object.keys(c.items) as ItemId[]
   if (ids.length)
     social.gift = {

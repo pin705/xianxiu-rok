@@ -27,7 +27,8 @@ export const freshDaily = (t: number): Daily => ({
 })
 // Tuần bắt đầu 0h thứ Hai giờ VN (ngày 4 kể từ 1/1/1970 — thứ Năm — là thứ Hai 5/1/1970)
 export const weekOf = (t: number) => Math.floor((dayOf(t) - 4) / 7)
-export const nextWeek = (t: number) => ((weekOf(t) + 1) * 7 + 4) * DAY - DAY_OFFSET
+export const weekStart = (wk: number) => (wk * 7 + 4) * DAY - DAY_OFFSET // 0h thứ Hai giờ VN của tuần wk
+export const nextWeek = (t: number) => weekStart(weekOf(t) + 1)
 export const freshWeekly = (t: number): Weekly => ({
   week: weekOf(t),
   n: { build: 0, train: 0, win: 0, brew: 0, days: 0 },

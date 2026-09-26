@@ -21,6 +21,8 @@
     tide: ['bolt', L.buffs.src.tide],
     ally: ['flag', L.buffs.src.ally],
     fort: ['flag', L.buffs.src.fort],
+    askill: ['bolt', L.buffs.src.askill],
+    rune: ['star', L.buffs.src.rune],
     eve: ['skull', L.buffs.src.eve],
     thoi: ['clock', L.buffs.src.thoi],
     office: ['rank', L.buffs.src.office],
@@ -50,12 +52,14 @@
         fx: [L.buffs.builder2],
         until: game.builder2!,
       })
+    if ((game.veil ?? 0) > now)
+      out.push({ key: 'veil', icon: 'anTung', name: L.bag.family.anTung.name, fx: [L.buffs.veil], until: game.veil! })
     return out.sort((a, b) => (a.until || Infinity) - (b.until || Infinity))
   })
   // vừa bề ngang cụm nút trên HUD điện thoại: tối đa 3 chip, nhiều hơn thì 2 chip + "+N"
   const show = $derived(rows.length > 3 ? 2 : 3)
   const items = $derived(
-    BAG_IDS.filter(id => (BAG[id].use === 'buff' || BAG[id].use === 'shield') && (game.items[id] ?? 0) > 0),
+    BAG_IDS.filter(id => ['buff', 'shield', 'veil'].includes(BAG[id].use) && (game.items[id] ?? 0) > 0),
   )
   let open = $state(false)
   const use = (id: BagId) => g.act({ type: 'use', item: id, n: 1 }, 'reward')

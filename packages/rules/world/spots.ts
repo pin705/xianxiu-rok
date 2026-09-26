@@ -19,13 +19,13 @@ import {
   type ElderId,
 } from '../data.ts'
 import {
-  allyBuffs,
   allyOf,
   farErr,
   dropIncoming,
   officeBuffs,
   blessBuffs,
   titleBuffs,
+  flagGuards,
   garrison,
   setSpot,
   sideKey,
@@ -40,7 +40,20 @@ import {
   type WorldResult,
   routeMs,
 } from './base.ts'
-import { eveBuffs, fortBuffs, hold, marchAt, ruinWindow, TASK_OF, spotOf, thoiBuffs, veinBuffs } from './points.ts'
+import {
+  allyBuffs,
+  skillBuffs,
+  eveBuffs,
+  fortBuffs,
+  hold,
+  marchAt,
+  rebuild,
+  ruinWindow,
+  TASK_OF,
+  spotOf,
+  thoiBuffs,
+  veinBuffs,
+} from './points.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
 const rallyTask = (p: Point) => (TASK_OF[p.kind] === 'gather' ? null : (TASK_OF[p.kind] as 'take' | 'hit'))
@@ -173,7 +186,9 @@ const outbound = (m: March, t: number) =>
   m.rally === undefined
 // Gọi về được lúc t: đang đi (quay đầu giữa đường), đang đóng quân / viện binh, đang khai mỏ
 export const recallable = (m: March, t: number) =>
-  outbound(m, t) || (!!m.stay && (m.target.kind === 'spot' || m.task === 'aid')) || (!!m.mine && m.mine.end > t)
+  outbound(m, t) ||
+  (!!m.stay && (m.target.kind === 'spot' || m.target.kind === 'camp' || m.task === 'aid')) ||
+  (!!m.mine && m.mine.end > t)
 
 // Đường đã đi tới phần f (0..1) của lộ trình: các điểm dừng đã qua + chỗ đang đứng
 function walked(path: { x: number; y: number }[], f: number) {
@@ -214,11 +229,27 @@ function recallAct({ ps, w, pid, s, map }: Ctx, mid: number): WorldResult {
   const t = s.time
   const m = s.marches.find(x => x.id === mid)
   if (m && outbound(m, t)) return turnAround(ps, w, pid, s, m, t)
-  if (!m || !(m.target.kind === 'spot' || m.task === 'aid') || !(m.stay || (m.mine && m.mine.end > t))) return no('bad')
+  const where =
+    m && (m.target.kind === 'spot' || m.target.kind === 'flag' || m.target.kind === 'camp' || m.task === 'aid')
+  if (!m || !where || !(m.stay || (m.mine && m.mine.end > t))) return no('bad')
   const i = m.target.i
   const home = () =>
     withMarch(s, { ...m, stay: false, back: m.army, hurt: m.hurt ?? {}, gain: noGain(), returnAt: t + travel(m) })
-  if (m.task === 'aid') return { ok: true, world: w, changed: new Map([[pid, home()]]) }
+  if (m.target.kind === 'camp') return { ok: true, world: w, changed: new Map([[pid, home()]]) } // nhổ trại
+  if (m.task === 'aid') {
+    // rời trận kỳ / Tổng đà đang dựng: dựng chậm lại theo số quân còn đóng
+    const g = m.target.kind === 'flag' ? flagGuards(ps, i) : []
+    const world = g.length
+      ? rebuild(
+          w,
+          i,
+          t,
+          g,
+          g.filter(([p]) => p !== pid),
+        )
+      : w
+    return { ok: true, world, changed: new Map([[pid, home()]]) }
+  }
   if (m.stay) {
     const next = home()
     const left = garrison(new Map([...ps, [pid, next]]), i).filter(([id]) => sideKey(w, id) === w.spots[i]?.own)
@@ -232,6 +263,12 @@ function recallAct({ ps, w, pid, s, map }: Ctx, mid: number): WorldResult {
     gain: { res: { [mine.res]: got }, items: {}, exp: 0 },
     returnAt: t + travel(m),
   })
+  if (m.target.kind === 'flag') {
+    // Minh khoáng: phần chưa khai trả lại kho (đã tháo thì thôi)
+    const f = w.flags?.[i]
+    const back = f?.mine && { ...f, mine: { ...f.mine, left: f.mine.left + (mine.amount - got) } }
+    return { ok: true, changed: new Map([[pid, next]]), world: back ? { ...w, flags: { ...w.flags, [i]: back } } : w }
+  }
   const sp = map ? spotOf(w, map, i, t) : (w.spots[i] ?? {})
   return {
     ok: true,
@@ -312,6 +349,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     b.src === 'eve' ||
     b.src === 'thoi' ||
     b.src === 'fort' ||
+    b.src === 'askill' ||
     b.src.startsWith('tide')
   for (const [pid, s] of ps) {
     const want: Buff[] = [
@@ -325,6 +363,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
         ? [{ key: 'prod' as const, v: TIDE_PROD, until: t.end, src: `tide${t.cycle}` }]
         : []),
       ...allyBuffs(allyOf(w, pid)), // Hộ Minh Đại Trận
+      ...skillBuffs(allyOf(w, pid), at), // Minh trận thần thông đang bật
       ...officeBuffs(allyOf(w, pid), pid), // chức vị đường chủ
       ...titleBuffs(w, pid, at), // sắc phong của Giới Chủ
       ...blessBuffs(w, at), // Giới Chủ ban phúc cả giới

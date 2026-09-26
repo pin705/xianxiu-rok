@@ -89,6 +89,7 @@ async function load(lang: 'vi' | 'en') {
     'world/MapTab',
     'TileSheet',
     'Events',
+    'Pass',
     'VipSheet',
     'ResSheet',
     'Buffs',
@@ -568,6 +569,14 @@ test('bản đồ, mục tiêu, chiến báo, phát lại, kết quả', async (
       'trận lực lúc núi cháy',
     )
     assert.ok(guard.includes(L.wall.title) && guard.includes(L.wall.burningHint), 'thẻ trận lực')
+    // Anh Linh Điện: đệ tử tử trận còn giữ hồn — mục hồi sinh ở Đan phòng
+    const souls: State = { ...victim, fallen: { army: { kiem1: 40 }, until: victim.time + 3_600_000 } }
+    const heroes = paint(
+      'Panel',
+      { game: souls, now: victim.time, id: 'danPhong', view: 'alchemy', act, onupgrade: noop, onclose: noop },
+      'Anh Linh Điện',
+    )
+    assert.ok(heroes.includes(L.alchemy.heroes) && heroes.includes(L.alchemy.revive('40')), 'hồi sinh ở Đan phòng')
     const quiet = paint(
       'Hud',
       {
@@ -716,6 +725,16 @@ test('sự kiện, túi đồ, tăng tốc, Hương Hỏa, bảng tài nguyên, 
       const events = paint('Events', { game: full, now, open: true, onclose: noop }, label)
       assert.ok(events.includes(L.fest.calendar), `trung tâm sự kiện phải có lịch 7 ngày (${label})`)
       paint('VipSheet', { game: full, now, open: true, onclose: noop }, label)
+      // Tu Tiên Lệnh: cấp 3, đã nhận quà thường cấp 1, Kim Lệnh đã mở (Hương Hỏa đủ) — còn quà chờ nhận
+      const scroll = {
+        ...full,
+        levels: { ...full.levels, chuDien: Math.max(3, full.levels.chuDien) },
+        pass: { xp: 340, got: [1], gold: [] },
+        vip: { ...full.vip!, pts: 99_999 },
+      }
+      const pass = paint('Pass', { game: scroll, now, s: scroll }, label)
+      assert.ok(pass.includes(L.pass.level(3, 50)) && pass.includes(L.pass.goldOn), `Tu Tiên Lệnh (${label})`)
+      assert.ok(pass.includes(L.mail.claimAll(5)), `nhận tất cả: thường 2–3, Kim Lệnh 1–3 (${label})`)
       // Thôn Trang Gặp Nạn: việc cứu nạn đang làm (xong, chờ báo công) ở trung tâm sự kiện
       const quest = { i: 3, m: 'train' as const, n: 60, from: full.stats.trained - 60, until: now + 3_600_000 }
       const rescue = paint('Rescue', { game: { ...full, nan: { day: dayOf(now), n: 1, q: quest } }, now }, label)
@@ -818,7 +837,20 @@ test('tiên minh, chat', async () => {
       const signUp = paint(
         'ArkCard',
         {
-          row: { signed: false, live: null, last: [], league: [{ id: 1, tag: 'VK', w: 2, l: 1, pts: 7 }] },
+          row: {
+            signed: false,
+            live: null,
+            last: [],
+            league: [{ id: 1, tag: 'VK', w: 2, l: 1, pts: 7 }],
+            cup: {
+              seeds: [1, 2, 3, 4],
+              win: [1, 2],
+              lose: [4, 3],
+              final: [1, 2],
+              third: [3, 4],
+              tags: { 1: 'VK', 2: 'HS', 3: 'GI', 4: 'TL' },
+            },
+          },
           me: 1,
           aid: 1,
           officer: true,
@@ -827,6 +859,7 @@ test('tiên minh, chat', async () => {
         `${label}, Linh Châu`,
       )
       assert.ok(signUp.includes(L.ark.sign) && signUp.includes(L.ark.leagueRow(2, 1, 7)), 'nút ghi danh, bảng giải')
+      assert.ok(signUp.includes(L.ark.cup.third) && signUp.includes(L.ark.cup.champ('VK')), 'nhánh playoff, quán quân')
       const live = {
         a: 1,
         b: 2,
@@ -834,17 +867,21 @@ test('tiên minh, chat', async () => {
         bn: 'HS',
         round: 3,
         units: [
-          { pid: 1, side: 0 as const, at: 2, to: 2, n: [] },
-          { pid: 7, side: 1 as const, at: 4, to: 2, n: [], rest: 4 },
+          { pid: 1, side: 0 as const, at: 5, to: 5, n: [] },
+          { pid: 7, side: 1 as const, at: 10, to: 5, n: [], rest: 4 },
         ],
-        own: [0, 0, 0, 1, 1] as (0 | 1 | null)[],
+        own: [0, 0, 0, 0, 0, 0, 1, null, 1, null, 1] as (0 | 1 | null)[],
         pts: [320, 140] as [number, number],
-        taken: [[1, 2], [3]] as [number[], number[]],
+        taken: [
+          [1, 2, 3, 4, 5],
+          [6, 8],
+        ] as [number[], number[]],
         charged: [[], []] as [number[], number[]],
-        orb: { at: 2, by: 1, n: 0 },
+        orb: { at: 5, by: 1, n: 0 },
+        cup: 'final' as const,
         log: [
-          [2, 'orb', 0, 2],
-          [3, 'take', 0, 2, 200],
+          [2, 'orb', 0, 5],
+          [3, 'take', 0, 5, 200],
         ] as never,
       }
       const during = paint(
@@ -856,6 +893,8 @@ test('tiên minh, chat', async () => {
         during.includes('[VK] 320') && during.includes(L.ark.carrying) && during.includes(L.ark.log.orb()),
         'đang trận',
       )
+      assert.equal(during.match(/class="ring/g)?.length, 2, 'hai Tụ Linh Nhãn phe mình giữ: vòng nối')
+      assert.ok(during.includes(L.ark.cup.final), 'trận chung kết có nhãn')
       assert.ok(inside.includes(L.ally.helpAll(1)), 'có người nhờ giúp thì nút giúp tất cả đếm đúng')
       const war = paint('Alliance', { ...mine, start: 'war' }, `${label}, trong minh · chiến sự`)
       assert.ok(war.includes(L.world.siege('Hắc Sơn Tông')), 'kết trận công sơn ghi tên tông môn bị đánh')

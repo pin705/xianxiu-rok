@@ -6,18 +6,21 @@ import {
   CAMP_WIN,
   EVENT_PRIZES,
   EVENT_TOP,
+  FEST_PRIZES,
   HONOR_RANKS,
   LEAGUE_PRIZES,
   MAX_LEVEL,
   honorPrize,
+  type FestId,
 } from '../data.ts'
+import { festPoints, festStagePts } from '../core/fest.ts'
 import type { State } from '../core/types.ts'
 import { advance } from '../core/time.ts'
 import { mail } from '../sect/inbox.ts'
 import { seasonEnd } from '../sect/rebirth.ts'
-import { freshWorld, sideKey, type MapCtx, type Players, type World } from './base.ts'
+import { allyOf, freshWorld, sideKey, type MapCtx, type Players, type World } from './base.ts'
 import { unsold } from './market.ts'
-import { leagueBoard } from './ark.ts'
+import { leagueRank } from './ark.ts'
 import { campOf, campTotal, type SeasonRow, seasonBoard } from './points.ts'
 
 // Hết mùa cho cả giới (trừ skip: NPC, server làm mới riêng): minh đứng đầu (người từ ASCEND_HALL) và ai ở tầng cao nhất phi thăng,
@@ -36,10 +39,10 @@ export function endSeason(
   const honors = honorBoard(ps, skip).slice(0, HONOR_RANKS)
   const camps = campTotal(top, w)
   const league = new Map(
-    leagueBoard(w)
+    leagueRank(w)
       .slice(0, LEAGUE_PRIZES.length)
-      .map((r, k) => [r.id, k]),
-  ) // Cửu Thiên: minh → hạng
+      .map((id, k) => [id, k]),
+  ) // Cửu Thiên: minh → hạng (playoff trước, rồi bảng giải)
   const won = camps[0] === camps[1] ? null : camps[0] > camps[1] ? 0 : 1 // Chính Tà Phân Tranh: phái thắng mùa
   const changed: Players = new Map()
   for (const [pid, s0] of ps) {
@@ -97,10 +100,38 @@ export const honorBoard = (ps: Players, skip = new Set<number>()) =>
 
 // Quà thư hết tuần theo hạng (0: hạng 1): hạng 1 · 2–3 · 4–10
 export const eventPrize = (rank: number) => EVENT_PRIZES[rank === 0 ? 0 : rank < 3 ? 1 : 2]
-// Top EVENT_TOP của tuần week (người có điểm), cao nhất trước
-export const eventTop = (ps: Players, week: number) =>
+// Bảng lễ có xếp hạng (FEST_RANKED, như Mightiest Governor): người có điểm trong lượt lễ `key`, cao trước — [mã, điểm].
+// skip: tông môn NPC (phân đà) không lên bảng; stage: chỉ điểm của ải đó (bảng ải của lễ FEST_STAGED)
+export const festBoard = (
+  ps: Players,
+  id: FestId,
+  key: number,
+  skip: ReadonlySet<number> = new Set(),
+  stage?: number,
+): [number, number][] =>
   [...ps]
-    .filter(([, s]) => s.ev.week === week && s.ev.pts > 0)
+    .filter(([pid]) => !skip.has(pid))
+    .flatMap(([pid, s]) =>
+      s.fest[id]?.key === key
+        ? [[pid, stage === undefined ? festPoints(s, id) : festStagePts(s, id, stage)] as [number, number]]
+        : [],
+    )
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1] || a[0] - b[0])
+export const festPrize = (rank: number) => FEST_PRIZES[rank === 0 ? 0 : rank < 3 ? 1 : 2]
+// Bảng tiên minh của lễ (FEST_ALLY, như Clarion Call): tổng điểm lễ người trong minh ở lượt key, cao trước — [mã minh, điểm]
+export function festAllyBoard(ps: Players, w: World, id: FestId, key: number, skip: ReadonlySet<number> = new Set()) {
+  const sum = new Map<number, number>()
+  for (const [pid, n] of festBoard(ps, id, key, skip)) {
+    const al = allyOf(w, pid)
+    if (al) sum.set(al.id, (sum.get(al.id) ?? 0) + n)
+  }
+  return [...sum].sort((a, b) => b[1] - a[1] || a[0] - b[0])
+}
+// Top EVENT_TOP của tuần week (người có điểm; skip: tông môn NPC không tranh quà), cao nhất trước
+export const eventTop = (ps: Players, week: number, skip: ReadonlySet<number> = new Set()) =>
+  [...ps]
+    .filter(([id, s]) => !skip.has(id) && s.ev.week === week && s.ev.pts > 0)
     .sort((a, b) => b[1].ev.pts - a[1].ev.pts || a[0] - b[0])
     .slice(0, EVENT_TOP)
     .map(([id]) => id)

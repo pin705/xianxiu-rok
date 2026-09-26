@@ -70,6 +70,16 @@ export const EMBLEM = {
   } as Record<string, Emblem>,
 }
 
+// Chân dung chưởng môn (mặc định; đổi được sang trưởng lão đã thu nhận — Profile)
+export const MASTER: Look = {
+  id: 'master',
+  robe: '#1b4566',
+  trim: '#c9a14a',
+  hair: '#211c17',
+  style: 'bun',
+  bg: '#78a6c2',
+  mark: '#b8382a',
+}
 export const LOOK: Record<ElderId, Look> = {
   thanhPhong: {
     robe: '#3f6f8a',
@@ -204,16 +214,23 @@ export function reportName(r: Report) {
   if (r.kind === 'trib') return L.trib.title
   if (r.kind === 'pvp' || r.kind === 'arena') return r.foe ?? L.pvp.kind
   if (r.kind === 'spot') return spotName(r.spot)
+  if (r.kind === 'camp') return L.world.camp.name
   if (r.kind === 'legion') return L.legion.wave(r.i + 1)
   if (r.kind === 'drill') return L.drill.fightN(r.i + 1)
+  if (r.kind === 'trial') return L.trial.name(r.i + 1)
   return L.target({ kind: r.kind, i: r.i })
 }
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE
 // Trận PvP nhìn từ bên thủ: đẩy lui được, hay bị cướp
 export const defended = (r: Report) => (r.win ? L.pvp.repelled(r.foe ?? '') : L.pvp.raided(r.foe ?? ''))
 // Đội đang làm gì: tụ kiếp vân, đóng quân, khai mỏ, đang đi tới, đang về
-export function marchDoing(m: Pick<March, 'target' | 'stay' | 'mine' | 'arriveAt' | 'task'>, now: number) {
+export function marchDoing(
+  m: Pick<March, 'target' | 'stay' | 'mine' | 'arriveAt' | 'task' | 'dig' | 'rune'>,
+  now: number,
+) {
   if (m.target.kind === 'trib') return L.trib.gather
+  if (m.dig && now < m.arriveAt) return L.world.dig.going
+  if (m.rune && now < m.arriveAt) return L.world.rune.going
   if (m.stay) return L.world.stay
   if (m.mine && m.mine.end > now) return L.world.gathering
   if (m.task === 'rob' && now < m.arriveAt) return L.world.robbing

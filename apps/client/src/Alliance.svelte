@@ -9,6 +9,8 @@
     ALLY_IDLE,
     ALLY_MAIL_COOL,
     ALLY_MAIL_LEN,
+    ALLY_RENAME,
+    ALLY_RENAME_COOL,
     OFFICE_IDS,
     DONATE_MAX,
     MOB_GOALS,
@@ -47,6 +49,7 @@
   import { useGame } from './game'
   import AllyTech from './AllyTech.svelte'
   import AllyShop from './AllyShop.svelte'
+  import AllySkills from './AllySkills.svelte'
   import AllyMob from './AllyMob.svelte'
   import AllyPot from './AllyPot.svelte'
   import ArkCard from './ArkCard.svelte'
@@ -82,6 +85,8 @@
   let name = $state('')
   let tag = $state('')
   let editing = $state<string | null>(null)
+  let newName = $state('')
+  let newTag = $state('')
   let atab = $state<ATab>(untrack(() => start))
   const liveRallies = $derived(ally ? ally.rallies.filter(r => r.at > g.now).length : 0)
   // thư minh (R4 / minh chủ): nội dung đang viết, vừa gửi xong, còn bao lâu mới gửi tiếp được
@@ -344,6 +349,8 @@
         {/if}
       </Section>
 
+      <AllySkills {ally} officer={myRole >= 1} {go} />
+
       {#if myRole >= 1}
         <Section title={L.ally.mail}>
           <p class="t-tiny t-soft">{L.ally.mailHint}</p>
@@ -353,6 +360,40 @@
           <Button size="sm" variant="gold" icon="mail" disabled={!letter.trim() || mailWait > 0} onclick={sendMail}
             >{L.ally.mailSend}</Button
           >
+        </Section>
+      {/if}
+
+      {#if myRole === 2}
+        <!-- đổi tên / hiệu tiên minh (minh chủ): tốn Minh khố, mỗi lần cách nhau vài ngày -->
+        {@const wait = (ally.named ?? -Infinity) + ALLY_RENAME_COOL - g.now}
+        <Section title={L.ally.rename}>
+          <p class="t-tiny t-soft">{L.ally.renameHint(num(ALLY_RENAME), ALLY_RENAME_COOL / 86_400_000)}</p>
+          <form
+            class="stack"
+            onsubmit={async e => {
+              e.preventDefault()
+              if (await go({ type: 'allyRename', name: newName, tag: newTag }, 'reward')) newName = newTag = ''
+            }}
+          >
+            <input bind:value={newName} maxlength="20" placeholder={L.ally.name} aria-label={L.ally.name} />
+            <input
+              bind:value={newTag}
+              maxlength="4"
+              placeholder={L.ally.tag}
+              aria-label={L.ally.tag}
+              style:text-transform="uppercase"
+            />
+            {#if wait > 0}<small class="t-tiny t-soft">{L.ally.renameWait(clock(wait))}</small>{/if}
+            <Button
+              size="sm"
+              variant="gold"
+              type="submit"
+              disabled={wait > 0 ||
+                (ally.fund ?? 0) < ALLY_RENAME ||
+                newName.trim().length < 2 ||
+                newTag.trim().length < 2}>{L.ally.renameGo}</Button
+            >
+          </form>
         </Section>
       {/if}
 

@@ -12,12 +12,17 @@
     nanOpen,
     shutFrom,
     phaseOf,
+    PHASE_CH,
     route,
+    snapClaims,
+    territoryGrid,
     type MapSnap,
     type Mark,
     type WorldAction,
   } from '@rok/rules/world'
   import {
+    DIG_FRAGS,
+    DIG_MAX,
     BLESSINGS,
     BOOK,
     EVE_CHEST_N,
@@ -33,12 +38,13 @@
   } from '@rok/rules'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
-  import { Badge, Bag, Button, Card } from '../ui'
+  import { Badge, Bag, Button, Card, IconButton } from '../ui'
   import { L, clock, keyBlocked, num } from '../lib'
   import { mountScene, railPx } from './stage'
-  import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Pick, type Rel } from './worldmap'
+  import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Layer, type Pick, type Rel } from './worldmap'
   import { useGame } from '../game'
   import { social } from '../social.svelte'
+  import { terrColor } from './territory'
   import Minimap from './Minimap.svelte'
   import Holdings from './Holdings.svelte'
 
@@ -110,10 +116,34 @@
       /* chế độ riêng tư: chỉ nhớ trong phiên */
     }
   }
+  // Lớp tình hình (lọc bản đồ): tắt yêu thú / mỏ / hành quân / lãnh thổ cho bản đồ đỡ rối — nhớ theo máy
+  const LAYERS: Layer[] = ['wild', 'mine', 'march', 'terr']
+  const HIDE = 'rok.mapHide'
+  let hide = $state<Layer[]>(
+    (() => {
+      try {
+        return (JSON.parse(localStorage.getItem(HIDE) ?? '[]') as Layer[]).filter(k => LAYERS.includes(k))
+      } catch {
+        return []
+      }
+    })(),
+  )
+  let layering = $state(false)
+  function flip(k: Layer) {
+    hide = hide.includes(k) ? hide.filter(x => x !== k) : [...hide, k]
+    try {
+      localStorage.setItem(HIDE, JSON.stringify(hide))
+    } catch {
+      /* chế độ riêng tư: chỉ nhớ trong phiên */
+    }
+  }
+  $effect(() => scene?.setHide(new Set(hide)))
   let bookOpen = $state(false)
   const day = $derived(dayIn(info.opened, now))
-  const phase = $derived(phaseOf(day))
-  const zMin = () => Math.min(innerWidth - railPx(), innerHeight) / WORLD_DU
+  const phase = $derived(phaseOf(day, snap?.book?.done))
+  // thu nhỏ hết cỡ: cả giới vừa khoảng trống giữa thẻ mùa và tab (như bản đồ vương quốc của RoK)
+  const zMin = () =>
+    Math.max(120, Math.min(innerWidth - railPx() - 2 * PAD.side, innerHeight - padTop() - PAD.bottom)) / WORLD_DU
   const center = () => ({ x: railPx() + (innerWidth - railPx()) / 2, y: innerHeight / 2 })
   // thẻ đổi cỡ (dữ liệu bản đồ tới sau): chưa ai kéo / nhảy khung nhìn thì đưa lại về tông môn, khỏi nằm dưới thẻ
   let steered = false
@@ -126,8 +156,9 @@
     const z = Math.min(1.4, Math.max(zMin(), c.z))
     const hx = (innerWidth - railPx()) / 2 / z,
       hy = innerHeight / 2 / z
+    // giới lọt thỏm trong khung: đặt giữa khoảng trống (trên chừa thẻ mùa, dưới chừa tab), không phải giữa màn
     const fit = (v: number, h: number, lo: number, hi: number) =>
-      h * 2 >= WORLD_DU + lo + hi ? WORLD_DU / 2 : Math.min(WORLD_DU - h + hi, Math.max(h - lo, v))
+      h * 2 >= WORLD_DU + lo + hi ? WORLD_DU / 2 + (hi - lo) / 2 : Math.min(WORLD_DU - h + hi, Math.max(h - lo, v))
     return { z, x: fit(c.x, hx, PAD.side / z, PAD.side / z), y: fit(c.y, hy, padTop() / z, PAD.bottom / z) }
   }
   // Đổi độ phóng mà giữ nguyên điểm dưới (sx, sy)
@@ -343,6 +374,38 @@
       .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))
       .slice(0, 60)
   })
+  // Toàn cảnh giới (Kingdom Map của RoK): thu nhỏ tới lúc không còn ghim tên tông môn thì hiện hiệu mỗi tiên minh giữa lãnh
+  // thổ của họ (ô của minh gần trọng tâm nhất — lãnh thổ rời vẫn nằm trên đất minh). Tính lại khi ảnh chụp đổi / mỗi phút.
+  const minute = $derived(Math.floor(now / 60_000))
+  const far = $derived(cam.z < FINE_Z * 0.8)
+  const terrTags = $derived.by(() => {
+    if (!snap || !far) return []
+    const own = territoryGrid(snapClaims(snap, atlas(info.map), minute * 60_000))
+    const sum = new Map<number, [x: number, y: number, n: number]>()
+    own.forEach((o, k) => {
+      const a = o ? (sum.get(o) ?? [0, 0, 0]) : null
+      if (a) sum.set(o, [a[0] + (k % MAP_W), a[1] + Math.floor(k / MAP_W), a[2] + 1])
+    })
+    return [...sum].map(([aid, [sx, sy, n]]) => {
+      let best = 0,
+        bd = Infinity
+      own.forEach((o, k) => {
+        const d = o === aid ? ((k % MAP_W) - sx / n) ** 2 + (Math.floor(k / MAP_W) - sy / n) ** 2 : Infinity
+        if (d < bd) [best, bd] = [k, d]
+      })
+      const tag = snap.allies?.find(a => a.id === aid)?.tag ?? '?'
+      return { aid, tag, x: best % MAP_W, y: Math.floor(best / MAP_W), color: terrColor(aid, side) }
+    })
+  })
+  // nút Toàn giới: thu nhỏ hết cỡ để nhìn cả giới; bấm lại thì về độ phóng cũ quanh chỗ đang nhìn
+  let before = 0.7
+  function whole() {
+    steered = true
+    if (cam.z > zMin() * 1.05) {
+      before = cam.z
+      cam = clamp({ ...cam, z: zMin() })
+    } else zoomAt(before / cam.z, center().x, center().y)
+  }
 </script>
 
 <div
@@ -358,7 +421,18 @@
 ></div>
 <div class="pins" aria-hidden="true">
   {#each pins as p (p.s.pid)}
-    <span class="pin" class:mine={p.s.pid === me} style="left:{p.x}px;top:{p.y + 18}px">{p.s.name}</span>
+    {@const tag = p.s.aid ? snap?.allies?.find(a => a.id === p.s.aid)?.tag : undefined}
+    <span class="pin" class:mine={p.s.pid === me} style="left:{p.x}px;top:{p.y + 18}px"
+      >{tag ? `[${tag}] ` : ''}{p.s.name}</span
+    >
+  {/each}
+  {#each terrTags as t (t.aid)}
+    {@const p = onScreen(t.x, t.y)}
+    {#if p}<span
+        class="terr"
+        class:ours={t.aid === side}
+        style="left:{p.x}px;top:{p.y}px;--c:#{t.color.toString(16).padStart(6, '0')}">[{t.tag}]</span
+      >{/if}
   {/each}
 </div>
 
@@ -409,6 +483,28 @@
   }}
 />
 
+<!-- công cụ bản đồ (góc phải dưới): lớp tình hình (chấm vàng khi có lớp đang tắt), Toàn giới / Phóng gần -->
+<div class="tools">
+  {#if layering}
+    <Card tone="silk">
+      <div class="row wrap layers" style:--gap="4px">
+        {#each LAYERS as k (k)}
+          <Button
+            size="sm"
+            variant={hide.includes(k) ? 'quiet' : 'gold'}
+            icon={hide.includes(k) ? 'cross' : 'check'}
+            onclick={() => flip(k)}>{L.world.layer[k]}</Button
+          >
+        {/each}
+      </div>
+    </Card>
+  {/if}
+  <IconButton icon="scroll" label={L.world.layers} onclick={() => (layering = !layering)}
+    >{#if hide.length}<Badge dot />{/if}</IconButton
+  >
+  <IconButton icon={far ? 'plus' : 'minus'} label={far ? L.world.near : L.world.whole} onclick={whole} />
+</div>
+
 <div class="top stack" style:--gap="6px" bind:this={topCard}>
   {#if toggle}<div class="row">{@render toggle()}</div>{/if}
   <Card tone="silk">
@@ -419,6 +515,21 @@
         <button class="lord t-tiny" onclick={() => (social.honor = true)}
           ><Icon name="star" size={12} />{L.honor.chip(num(game.honor ?? 0))}{#if honorReady}<Badge dot />{/if}</button
         >
+        {#if send && ((game.items.baoDo ?? 0) > 0 || game.digs?.length)}
+          <!-- Tàng Bảo Đồ: tàn phiến đang có, điểm đào; đủ mảnh thì ghép → điểm đào mới gần tông môn -->
+          <span class="row t-tiny" style:--gap="6px"
+            ><Icon name="baoDo" size={14} />{L.world.dig.frags(
+              game.items.baoDo ?? 0,
+              DIG_FRAGS,
+              game.digs?.length ?? 0,
+            )}
+            {#if (game.items.baoDo ?? 0) >= DIG_FRAGS && (game.digs?.length ?? 0) < DIG_MAX}<Button
+                size="sm"
+                variant="gold"
+                onclick={() => send({ type: 'digMap' })}>{L.world.dig.make}</Button
+              >{/if}</span
+          >
+        {/if}
         {#if lordSeat}<button class="lord t-tiny" onclick={() => (social.profile = lordSeat.pid)}
             ><Icon name="flag" size={12} />{L.lord.now(lordSeat.name)}</button
           >{/if}
@@ -568,7 +679,12 @@
             <li class="row between t-tiny" class:t-soft={k > b.ch}>
               <span
                 >{L.book.chapter(k + 1, BOOK.length)} · <b>{L.book.names[k]}</b> — {L.book.goal[x.m](x.n)} ·
-                {b.done.includes(k) ? L.book.done : k < b.ch ? L.book.missed : L.book.by(x.day)}</span
+                {b.done.includes(k)
+                  ? L.book.done
+                  : k < b.ch
+                    ? L.book.missed
+                    : L.book.by(x.day)}{#if PHASE_CH.includes(k)}
+                  · <b class="t-gold">{L.book.opens(L.world.phase[PHASE_CH.indexOf(k)])}</b>{/if}</span
               >
               <Bag items={x.reward.items} size="sm" />
             </li>
@@ -618,6 +734,21 @@
     white-space: nowrap;
     background: color-mix(in srgb, var(--ink) 62%, transparent);
     border-radius: 6px;
+  }
+  /* hiệu tiên minh giữa lãnh thổ khi thu nhỏ (toàn cảnh giới): chữ màu lãnh thổ viền giấy, minh mình to hơn */
+  .terr {
+    position: absolute;
+    translate: -50% -50%;
+    font-size: var(--fs-2);
+    font-weight: 800;
+    color: var(--c);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    -webkit-text-stroke: 3px rgb(246 238 220 / 0.92);
+    paint-order: stroke fill;
+  }
+  .ours {
+    font-size: var(--fs-3);
   }
   .mine {
     color: var(--ink); /* chữ mực trên nền vàng (màu gốc, không theo chữ ngà của giao diện tối) */
@@ -687,7 +818,28 @@
   .top > :global(*) {
     pointer-events: auto;
   }
+  .tools {
+    position: fixed;
+    right: var(--sp-3);
+    bottom: calc(var(--safe-b) + 150px);
+    z-index: var(--z-page);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .tools > :global(*) {
+    pointer-events: auto;
+  }
+  .layers {
+    justify-content: flex-end;
+    max-width: 230px;
+  }
   @media (min-width: 1024px) and (min-height: 600px) {
+    .tools {
+      bottom: calc(var(--safe-b) + 24px);
+    }
     .top {
       top: calc(var(--top) + var(--sp-4));
       left: calc(var(--rail) + (100% - var(--rail)) / 2);

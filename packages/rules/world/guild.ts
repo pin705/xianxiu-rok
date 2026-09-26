@@ -8,6 +8,9 @@ import type { State } from '../core/types.ts'
 import {
   OFFICE_IDS,
   ALLY_IDLE,
+  ALLY_SKILL_COOL,
+  ALLY_SKILL_IDS,
+  ALLY_SKILLS,
   ALLY_MAIL_COOL,
   ALLY_MAIL_LEN,
   ALLY_MARKS,
@@ -21,6 +24,7 @@ import {
   DONATE_PTS,
   DONATE_STAR,
   RESOURCES,
+  type AllySkillId,
   type AllyTechId,
   type OfficeId,
   type ItemId,
@@ -50,6 +54,7 @@ export const donateCost = (al: Alliance, id: AllyTechId) => DONATE_COST * (techL
 export type GuildAction =
   | { type: 'allyDonate'; tech: AllyTechId; res: Res }
   | { type: 'allyStar'; tech: AllyTechId }
+  | { type: 'allySkill'; id: AllySkillId } // bật Minh trận thần thông bằng Minh khố
   | { type: 'allyStock'; item: ItemId; n: number }
   | { type: 'allyBuy'; item: ItemId; n: number }
   | { type: 'allyMark'; x: number; y: number; text: string }
@@ -102,6 +107,20 @@ export const guildActions: WorldActions<GuildAction> = {
     run: ({ w, pid }, a) => {
       const al = officer(w, pid)
       return al ? { ok: true, changed: new Map(), world: put(w, { ...al, star: a.tech }) } : no('locked')
+    },
+  },
+  // Minh trận thần thông: trưởng lão / minh chủ bật bằng Minh khố; đang hiệu lực hay chưa hết ALLY_SKILL_COOL sau đó thì chưa bật lại
+  allySkill: {
+    pick: a => (oneOf(ALLY_SKILL_IDS)(a.id) ? { type: 'allySkill', id: a.id } : null),
+    run: ({ w, pid, s }, a) => {
+      const al = officer(w, pid)
+      if (!al) return no('locked')
+      const d = ALLY_SKILLS[a.id],
+        until = al.skills?.[a.id] ?? 0
+      if (s.time < until + ALLY_SKILL_COOL) return no('cooldown')
+      if ((al.fund ?? 0) < d.cost) return no('not_enough')
+      const skills = { ...al.skills, [a.id]: s.time + d.hours * 3_600_000 }
+      return { ok: true, changed: new Map(), world: put(w, { ...al, fund: (al.fund ?? 0) - d.cost, skills }) }
     },
   },
   allyStock: {

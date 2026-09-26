@@ -87,7 +87,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** khi chưa có minh, nút Liên minh mở hai tab là Tham gia (danh sách) và Tạo. Tab Tạo gồm ô tên, tag, chọn cờ, mô tả, chế độ, rồi xác nhận trả gem [chưa xác minh bố cục].
 - **Giữ chân:** cảm giác sở hữu. Cờ và tag là "áo đấu" của nhóm.
 - **Tu tiên hoá:** "Khai lập tiên minh". Minh kỳ ghép từ hoa văn vẽ tay (`emblems.ts`); tag 2–4 chữ.
-- **Game mình:** ✅ `allyFound`. Cần Chủ điện tầng 10 (`ALLY_HALL`), tốn 20.000 mỗi loại tài nguyên (`ALLY_COST`), tên 2–20 ký tự, tag 2–4 chữ hoa hoặc số, không trùng. Còn thiếu: cờ/huy hiệu riêng (client dùng chung huy hiệu `crest`), mô tả, ngôn ngữ, chế độ gia nhập.
+- **Game mình:** ✅ `allyFound`. Cần Chủ điện tầng 10 (`ALLY_HALL`), tốn 20.000 mỗi loại tài nguyên (`ALLY_COST`), tên 2–20 ký tự, tag 2–4 chữ hoa hoặc số, không trùng; chế độ gia nhập (tự do / duyệt đơn) đặt sau khi lập (`allyOpen`). Còn thiếu: cờ/huy hiệu riêng (client dùng chung huy hiệu `crest`), mô tả, ngôn ngữ.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### A2. Hồ sơ minh, đổi tên/tag/cờ, giải tán — **Alliance Profile / Rename / Disband**
@@ -97,7 +97,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trong Cài đặt minh có các ô sửa, kèm giá gem.
 - **Giữ chân:** thấp, nhưng thiếu nó thì minh sáp nhập phải giải tán rồi lập lại.
 - **Tu tiên hoá:** "Cải danh minh hiệu".
-- **Game mình:** 🟡 có bố cáo ✅ (`allyNotice` ≤ 200 ký tự, trưởng lão trở lên). ❌ không đổi được tên/tag. Minh chỉ giải tán khi người cuối cùng rời.
+- **Game mình:** 🟡 có bố cáo (`allyNotice` ≤ 200 ký tự, từ R4), thư minh (`allyMail`), minh chủ đổi tên / hiệu (`allyRename`: 500 Minh khố, 7 ngày một lần, không trùng minh khác). Chưa có huy hiệu minh riêng, chưa có nút giải tán: minh chỉ giải tán khi người cuối cùng rời.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### A3. Tìm và gia nhập (tự do / xét duyệt, lời mời, danh sách ưu tiên/chặn) — **Join settings, Invitations, Passlist/Blocklist**
@@ -111,7 +111,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** danh sách minh có cờ, tên, tag, lực chiến, số người, ngôn ngữ và nút "Vào ngay" hoặc "Xin vào"; có ô tìm kiếm; lời mời đến qua thư [chưa xác minh chi tiết].
 - **Giữ chân:** cảm giác "được chọn"; minh lớn giữ được chất lượng; officer có việc để làm.
 - **Tu tiên hoá:** "Bái sơn nhập minh". Đơn bái kiến; "Ưu đãi danh sách" (passlist); "Hắc danh" (blocklist).
-- **Game mình:** 🟡 `allyJoin` cho vào tự do (mã có ghi chú ponytail: "thêm duyệt nếu bị phá"). Danh sách minh sắp theo lực chiến (`allyRows`). Còn thiếu: duyệt đơn, yêu cầu tối thiểu (tầng/lực chiến), lời mời, passlist/blocklist, tìm kiếm.
+- **Game mình:** ✅ Cửa minh (`allyOpen` / `allyAccept` / `allyInvite` ở `world/alliance.ts`): vào tự do hoặc duyệt đơn (R4 / minh chủ nhận, từ chối), mời người chưa có minh từ hồ sơ (được mời thì vào thẳng), vào minh thì đơn ở minh khác bị bỏ; danh sách minh sắp theo lực chiến (`allyRows`). Còn thiếu: yêu cầu tối thiểu (tầng/lực chiến), passlist/blocklist, ô tìm kiếm.
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### A4. Sĩ số tối đa — **Member Capacity**
@@ -121,7 +121,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang minh hiện "x/y thành viên".
 - **Giữ chân:** việc mở rộng gắn với việc làm chung.
 - **Tu tiên hoá:** "Minh trận khuếch trương". Sĩ số tăng theo tầng Minh trận và số trận kỳ.
-- **Game mình:** 🟡 cố định 30 người (`ALLY_MAX`). Với giới 100–300 người thì đủ cho 3–10 minh; con số này hợp lý ở giai đoạn này.
+- **Game mình:** ✅ 30 người (`ALLY_MAX`), Quảng Nạp Trận của Hộ Minh Đại Trận thêm 2 chỗ mỗi tầng, tối đa 40 (`seatsOf`); trang minh hiện "x/y". Chưa tăng theo số trận kỳ.
 - **Ưu tiên:** P2 · **Công sức:** S (nối vào công nghệ minh khi có B3).
 
 #### A5. Cấp bậc R1–R5 và quyền — **Alliance Ranks**
@@ -138,7 +138,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** danh sách thành viên nhóm theo R5→R1. Chạm vào một người để Thăng / Giáng / Đá / Nhắn / Xem hồ sơ [chưa xác minh].
 - **Giữ chân:** có thang thăng tiến xã hội, có trách nhiệm đi kèm.
 - **Tu tiên hoá:** R5 Minh chủ · R4 Đường chủ · R3 Chấp sự · R2 Minh chúng · R1 Khách khanh (thử việc). **Lưu ý:** tránh dùng chữ "Trưởng lão" cho chức trong minh, vì game đã dùng "trưởng lão" cho tướng; "Hộ pháp" cũng đã dùng cho người hộ độ kiếp.
-- **Game mình:** 🟡 có 3 bậc (`Role` 0/1/2: thành viên · trưởng lão · minh chủ), tối đa 4 trưởng lão (`ALLY_ELDERS`). Trưởng lão đá được người bậc thấp hơn; chỉ minh chủ đổi chức và nhường ngôi. Tên "Trưởng lão" đang trùng với tướng.
+- **Game mình:** ✅ 5 bậc (`Role` −2…2 ở `world/base.ts`, `allyRole`): R1 Ngoại môn · R2 Nội môn · R3 Chân truyền (đặt dấu bản đồ) · R4 Đường chủ (đá người, duyệt đơn, mời, cắm cờ, ghi danh, nhập hàng, minh ước; tối đa 4, `ALLY_ELDERS`) · R5 Minh chủ. Minh chủ xếp mọi bậc và nhường ngôi; R4 chỉ xếp R1–R3 cho người dưới mình.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### A6. Chức vị officer có buff — **Alliance Officer Titles**
@@ -148,7 +148,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trong trang thành viên, chạm R4 rồi chọn "Bổ nhiệm chức" [chưa xác minh].
 - **Giữ chân:** có danh phận, có buff nhỏ cá nhân.
 - **Tu tiên hoá:** "Tứ Đường chủ": Chiến Đường (công/thủ), Truyền Công Đường (tốc xây/tu luyện, kiêm quản lý nhân sự), Ngoại Sự Đường (máu/ngoại giao), Bách Thảo Đường (khai mỏ).
-- **Game mình:** ❌.
+- **Game mình:** ✅ chức vị đường chủ (`OFFICES`, `allyOffice`, `officeBuffs`): minh chủ phong cho người R4 — Chấp Pháp (công +5 %), Ngoại Sự (hành quân +10 %), Tổng Quản (sản lượng +5 %), Công Tượng (xây nhanh 5 %); mỗi chức một người, mỗi người một chức, hết R4 thì mất hiệu lực.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### A7. Rời minh, đá người, chuyển giao tự động, giải tán — **Leave / Kick / Auto-transfer**
@@ -158,7 +158,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** nút Rời minh (có xác nhận); nút Đá trong thẻ thành viên.
 - **Giữ chân:** minh không chết theo một người.
 - **Tu tiên hoá:** "Thoát minh", "Trục xuất", "Minh chủ bế quan quá lâu thì truyền ngôi".
-- **Game mình:** 🟡 có `allyLeave`/`allyKick`. Minh chủ rời thì người chức cao nhất lên thay; người cuối rời thì giải tán; xoá tài khoản cũng truyền ngôi (server `inbox.ts`). ❌ chưa tự chuyển khi minh chủ vắng lâu.
+- **Game mình:** ✅ `allyLeave`/`allyKick` (R4 trở lên đá người bậc thấp hơn); minh chủ rời thì bậc cao nhất lên thay, người cuối rời thì giải tán, xoá tài khoản cũng truyền ngôi (server `inbox.ts`). Minh chủ vắng 7 ngày (`ALLY_IDLE`) thì R4 bấm "Nhận minh chủ" (`allyClaim` ở `world/guild.ts`), thẻ thành viên ghi số ngày vắng; chưa tự chuyển / tự giải tán minh chết như RoK.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 ---
@@ -176,7 +176,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** đặt việc xong thì trên công trình có nút nhờ giúp (bắt tay). Người khác thấy biểu tượng bắt tay nổi trên màn hình, chạm "Giúp tất cả" một lần; bảng liệt kê yêu cầu kèm "x/30" [chưa xác minh hình dạng nút].
 - **Giữ chân:** một chạm là lợi cả đôi bên; thấy minh "đang sống"; có lý do mở game ngắn.
 - **Tu tiên hoá:** "Đồng môn trợ lực" (đã dùng chữ "giúp đỡ").
-- **Game mình:** ✅ có `helpAsk`/`helpAll`. Mỗi việc được giúp 10 lần (`ALLY_HELPS`); mỗi lần bớt max(1 phút, 1% *tổng* thời gian việc), chốt lúc nhờ (`HELP_MIN`, `HELP_SHARE`). Áp cho xây, tuyển, chữa, nghiên cứu, luyện khí; không áp cho luyện đan. Khác RoK: tính trên tổng thời gian chứ không phải thời gian còn lại; áp cả cho tuyển; số lần không tăng theo công trình; **người giúp không được thưởng**.
+- **Game mình:** ✅ có `helpAsk`/`helpAll`: việc vừa giao tự nhờ giúp khi đang trong minh, đĩa "giúp đỡ" nổi ở mọi tab (`Hud.svelte`); mỗi việc được giúp 10 lần (`ALLY_HELPS`, Đồng Tâm Trận của Hộ Minh Đại Trận nâng tới 15), mỗi lần bớt max(1 phút, 1% *tổng* thời gian việc) chốt lúc nhờ, áp cho xây, tuyển, chữa, nghiên cứu, luyện khí (không áp cho luyện đan); người giúp được 5 cống hiến mỗi lượt (trần 250/ngày, `HELP_CREDIT`). Khác RoK: tính trên tổng thời gian chứ không phải thời gian còn lại; áp cả cho tuyển.
 - **Gợi ý:** thưởng điểm cống hiến cho người giúp (có trần mỗi ngày); số lần giúp tăng theo một công trình minh hoặc công nghệ minh.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
@@ -190,7 +190,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** nút Quà có chấm đỏ đếm số hộp. Danh sách hộp ghi nguồn ("Hạ pháo đài cấp X", "[Tên] mua gói") với nút Mở / Mở tất cả; kèm thanh cấp quà và thanh key cho rương [chưa xác minh chi tiết].
 - **Giữ chân:** quà từ trên trời; thấy tên người đóng góp nên biết ơn; cảm giác thịnh vượng chung.
 - **Tu tiên hoá:** "Minh lễ". Khi có người hạ yêu vương/yêu trại, hoặc (P4) mở "Tiên Ngọc lễ bao", cả minh nhận linh bao. "Linh Tinh Bảo Khố" có ba bậc.
-- **Game mình:** ❌. Đã có nền là yêu vương chia thưởng theo sát thương qua thư `boss`, nhưng đó mới là thưởng cá nhân. Quà từ nạp phải chờ thanh toán ở P4; quà từ PvE làm được ngay.
+- **Game mình:** ✅ Minh lễ (`allyGifts` ở `world/base.ts`): người trong minh góp sức hạ yêu vương / yêu trại thì cả minh nhận quà qua thư theo cấp quà 1–5 (`ALLY_GIFT_LV`, điểm quà tăng theo cấp yêu vương); rương chung là Tụ Bảo Minh Đỉnh (`world/pot.ts`). Không có quà từ gói nạp (không bán gói).
 - **Ưu tiên:** P0 · **Công sức:** M.
 
 #### B3. Công nghệ liên minh và quyên góp — **Alliance Technology / Donation**
@@ -204,7 +204,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** cây công nghệ, mỗi công nghệ một nút. Chạm vào thì thấy thanh tiến độ, các nút góp theo loại tài nguyên và nút góp gem; công nghệ đề xuất có sao sáng. Có bảng xếp hạng người góp [chưa xác minh].
 - **Giữ chân:** 20 lượt tích bằng 10 giờ nên có lý do quay lại 2–3 lần/ngày; góp nhỏ, buff chung lớn.
 - **Tu tiên hoá:** "Hộ Minh Đại Trận". Góp gọi là "cung phụng linh thạch"; mỗi tầng trận mở buff chung (tốc tu luyện, tốc xây, sức chứa kết trận, sĩ số, số trận kỳ). Đề xuất gọi là "Minh chủ điểm trận".
-- **Game mình:** ❌.
+- **Game mình:** ✅ Hộ Minh Đại Trận (`world/guild.ts`, `AllyTech.svelte`): 9 trận × 5 tầng (sản lượng, xây, tuyển, chữa, hành quân, công, thủ, +lượt giúp, +chỗ trong minh); cung phụng (`allyDonate`) tích 20 lượt, hồi 1 lượt/30 phút, giá theo tầng; R4 / minh chủ điểm trận (`allyStar`) → góp được gấp đôi.
 - **Ưu tiên:** P0 · **Công sức:** L.
 
 #### B4. Điểm cá nhân / quỹ minh và cửa hàng liên minh — **Individual & Alliance Credits / Alliance Shop / Reclaim**
@@ -218,7 +218,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** tab Cửa hàng gồm "Mua" (hiện số tồn) và "Nhập hàng" (chỉ officer thấy).
 - **Giữ chân:** đổi hành vi hợp tác lấy đồ quý (dịch chuyển, passport).
 - **Tu tiên hoá:** "Cống hiến" (điểm cá nhân), "Minh khố" (quỹ chung), "Cống Hiến Các" (cửa hàng). Không bán thứ gì liên quan tới tiền thật.
-- **Game mình:** ❌ chưa có tiền tệ minh. Chợ giữa người chơi phục vụ mục đích khác.
+- **Game mình:** ✅ cống hiến (điểm cá nhân: từ cung phụng và giúp đỡ, trần 250/ngày từ giúp) + Minh khố (quỹ chung: từ cung phụng và lãnh thổ) + Cống Hiến Các (`allyStock` / `allyBuy`, `AllyShop.svelte`): R4 / minh chủ nhập hàng bằng Minh khố, người trong minh đổi bằng cống hiến (phù tăng tốc, Hộ Sơn Phù, Tụ Linh Phù, Ngân Duyên, kinh thư, nang). Chưa có Reclaim.
 - **Ưu tiên:** P0 (làm cùng B3) · **Công sức:** M.
 
 #### B5. Kỹ năng liên minh — **Alliance Skills**
@@ -228,7 +228,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** thẻ kỹ năng có thanh góp và nút Kích hoạt [chưa xác minh].
 - **Giữ chân:** tạo "khoảnh khắc" cho cả minh, ví dụ bật buff trước sự kiện.
 - **Tu tiên hoá:** "Minh trận thần thông", ví dụ "Đại Tụ Linh 8 giờ" hay "Kiếm Trận Sát Phạt 2 giờ".
-- **Game mình:** ❌. Linh triều là buff tự nhiên theo vùng, không phải buff do người kích.
+- **Game mình:** ✅ **Minh trận thần thông** (`allySkill` ở `world/guild.ts`, `skillBuffs`, `AllySkills.svelte`): 6 thần thông (khai mỏ, xây, tuyển, hành quân 8 giờ; công, thủ 2 giờ), trưởng lão / minh chủ bật bằng Minh khố (Minh khố do cả minh góp qua cung phụng, lãnh thổ), cả minh nhận tăng ích có hạn, hồi 24 giờ sau khi hết. Khác RoK: trả bằng quỹ chung thay vì mỗi người góp riêng cho từng đợt.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 ---
@@ -246,7 +246,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chạm ô trống → "Xây pháo đài" → hiện yêu cầu, chi phí và vùng sẽ chiếm → thành viên "Góp quân xây".
 - **Giữ chân:** có "nhà chung" trên bản đồ.
 - **Tu tiên hoá:** "Tổng đà" và "Phân đà" của tiên minh, là trận pháp dựng trên bản đồ giới.
-- **Game mình:** ❌. Lãnh thổ hiện là giữ điểm (linh mạch, trận nhãn, Thiên Môn) bằng đóng quân, không có công trình.
+- **Game mình:** ✅ Tổng đà + Phân đà (`fort`, `fortCap` ở `world/flags.ts`): Tổng đà cần ≥ 5 người, 3.000 Minh khố, dựng 6 giờ; mỗi 10 người thêm một Phân đà (tối đa 3 tính cả Tổng đà, cái thứ n tốn 3.000 × n Minh khố); người trong minh góp quân xây (mỗi 1.000 đệ tử đóng thêm 100 % tốc, tối đa ×4); xong thì nới lãnh thổ 7 ô, độ bền 150.000, cả minh có tăng ích (không cộng dồn). Chưa bị kết trận / cháy như RoK: minh khác chỉ trừ độ bền bằng lực chiến từng đội.
 - **Ưu tiên:** P1 · **Công sức:** L.
 
 #### C2. Cờ liên minh (và tiền đồn, khiên cờ, tháp tên) — **Alliance Flags / Outpost / Flag Shield / Arrow Tower**
@@ -260,7 +260,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chạm ô cạnh biên → "Xây cờ" → hiện chi phí và vùng → mọi người góp quân.
 - **Giữ chân:** bản đồ tô màu minh cho thấy minh đang lớn lên.
 - **Tu tiên hoá:** "Trận kỳ" cắm nối nhau thành "Linh vực"; Outpost là "Trận đài"; tháp tên là "Tiễn lâu" hoặc "Kiếm lâu".
-- **Game mình:** ❌. Bản đồ chia vùng Voronoi và điểm; bản đồ có hiện tên phe giữ mỗi điểm (`own`).
+- **Game mình:** ✅ Trận kỳ (`world/flags.ts`): cắm ở ô trống trong lãnh thổ minh (không cần nối biên), 2 + 1 mỗi 5 người (tối đa 10), 1.000 Minh khố, dựng 1 giờ (góp quân xây như Tổng đà), nới lãnh thổ 4 ô; minh khác phá bằng lực chiến (độ bền 30.000, 12 giờ không bị đánh thì liền lại), người trong minh đóng quân giữ (`flagGuard`, tối đa 3 đội). Chưa có Outpost, khiên cờ, tháp tên.
 - **Ưu tiên:** P1 · **Công sức:** L (cần thêm lớp ô lãnh thổ trên `atlas`, hiện chỉ có điểm).
 
 #### C3. Trung tâm tài nguyên liên minh — **Alliance Resource Center**
@@ -270,7 +270,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** biểu tượng lớn trên bản đồ; chạm vào để gửi quân thu.
 - **Giữ chân:** người yếu vẫn thu được mà không bị cướp.
 - **Tu tiên hoá:** "Minh khoáng" hoặc "Linh điền chung".
-- **Game mình:** 🟡 có mỏ trên bản đồ (`MINE_STOCK` 20–40k, `MINE_RATE` 3–5k/giờ, hồi sau 2 giờ), nhưng ai cũng tranh được; chưa có mỏ riêng của minh.
+- **Game mình:** ✅ Minh khoáng (`allyMine` / `allyGather` ở `world/flags.ts`): trưởng lão dựng trong lãnh thổ, chọn loại, 2.000 Minh khố, dựng 2 giờ (góp quân xây), kho 3 triệu, khai 30.000/giờ mỗi đội, không bị cướp (cướp khoáng chỉ nhắm mỏ trên bản đồ), cạn hay sau 3 ngày thì tháo; mỗi minh một.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### C4. Điểm tài nguyên minh và kho minh — **Alliance Resource Points / Alliance Storehouse**
@@ -283,7 +283,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang Kho minh hiện sản lượng mỗi giờ theo loại [1 nguồn].
 - **Giữ chân:** thấy "của chung" lớn dần.
 - **Tu tiên hoá:** "Minh khố" nhận linh khí từ linh mạch trong linh vực.
-- **Game mình:** ❌. Linh mạch chỉ buff % sản lượng cá nhân cho cả minh (`VEIN_BUFF` 3/5/8%, trần `VEIN_CAP` 30%), chưa có kho chung.
+- **Game mình:** 🟡 Minh khố (`world/storehouse.ts`): mỗi ô lãnh thổ sinh 0,1 Minh khố mỗi giờ (chốt giờ tròn), cộng với phần từ cung phụng, dùng cắm trận kỳ, dựng Tổng đà / Phân đà / Minh khoáng, nhập hàng Cống Hiến Các. Chưa có điểm tài nguyên từng loại sinh tài nguyên vào kho minh (Minh khố là một quỹ chung, không có trần nên cũng không có nâng kho).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### C5. Buff trong lãnh thổ và dịch chuyển lãnh thổ — **Territory Buffs / Territorial Teleport**
@@ -297,7 +297,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** dùng vật phẩm dịch chuyển → chọn ô trong vùng màu minh.
 - **Giữ chân:** "khu phố" của minh.
 - **Tu tiên hoá:** "Linh vực gia trì"; "Truyền tống phù linh vực".
-- **Game mình:** 🟡 có buff linh mạch cho cả minh (tính theo sản lượng, không theo vị trí). ❌ chưa dời được chỗ ngồi (`seat`) về gần đồng minh.
+- **Game mình:** ✅ lãnh thổ tiên minh (`claimsOf` / `ownerAt` ở `world/points.ts`): khai mỏ trong lãnh thổ minh mình +25 % (`TERR_GATHER`) và không bị cướp khoáng; dời tông môn vào ô trống trong lãnh thổ (`move` ở `world/territory.ts`: chỉ vùng ngoài, mọi đội ở nhà, 24 giờ một lần); dời núi tân thủ (`newbieMove`). Chưa có tăng công khi đánh trong lãnh thổ.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### C6. Thánh địa, đèo và thưởng chiếm lần đầu — **Holy Sites / Passes / First Occupation**
@@ -317,7 +317,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** biểu tượng thánh địa có đồng hồ tranh chấp; chạm vào để kết trận hoặc đồn trú.
 - **Giữ chân:** buff to cho cả minh; có "chiến lợi phẩm" để khoe.
 - **Tu tiên hoá:** "Linh địa" (game đã có linh mạch, trận nhãn, Thiên Môn); "Khai quan" nghĩa là mở cổng.
-- **Game mình:** ✅ có linh mạch 3 cấp kèm buff, trận nhãn (cổng giữa các vùng, mở theo pha mùa), Thiên Môn (12 điểm mùa/giờ), đóng quân giữ điểm (tối đa `GARRISON_MAX` 6 đội), điểm mùa theo phe. Còn thiếu: thưởng chiếm lần đầu, buff đa dạng theo loại địa điểm, chuyển quyền giữ điểm giữa các minh.
+- **Game mình:** ✅ có linh mạch 3 cấp, mỗi điểm một loại tăng ích (`veinBuffs`), trận nhãn (cổng giữa các vùng, mở theo pha mùa; phe giữ chặn đường — cửa ải), Thiên Môn (12 điểm mùa/giờ), Cổ Di Tích / Huyết Tế Đàn mở theo giờ, đóng quân giữ điểm (tối đa `GARRISON_MAX` 6 đội), điểm mùa theo phe, quà chiếm lần đầu trong mùa (`firstTake`). Còn thiếu: chuyển quyền giữ điểm giữa các minh.
 - **Ưu tiên:** P1 · **Công sức:** S (thưởng lần đầu) đến M (buff đa dạng).
 
 ---
@@ -335,7 +335,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chạm mục tiêu → "Kết trận" → chọn thời gian chờ, tướng và quân → cả minh thấy chấm đỏ ở tab War → "Tham gia" và chọn đội → đồng hồ đếm ngược → nhận báo cáo gộp.
 - **Giữ chân:** lý do lên đúng giờ; cảm giác đồng đội.
 - **Tu tiên hoá:** "Kết trận" (đã dùng); tab "Chiến sự đường".
-- **Game mình:** 🟡 có `rally`/`rallyJoin`: tối đa 8 đội (`RALLY_MAX`), chờ 5/10/30 phút (`RALLY_WAIT`), nhưng **chỉ để chiếm điểm hoặc đánh yêu vương**; trang Tiên minh có mục kết trận đang mở. Còn thiếu: kết trận đánh tông môn người chơi, sức chứa theo công trình, cảnh báo khi bị kết trận, báo cáo gộp nhiều người.
+- **Game mình:** ✅ kết trận điểm / yêu vương (`rally`/`rallyJoin` ở `world/spots.ts`) và kết trận công sơn đánh tông môn (`raidRally`/`raidJoin` ở `world/raid.ts`): tối đa 8 đội (`RALLY_MAX`), chờ 5/10/30 phút (`RALLY_WAIT`), tới cùng lúc đánh như một bên, chiến lợi phẩm chia theo sức mang, chiến công theo lực chiến góp; bên thủ thấy thẻ cảnh báo; tab Chiến sự của trang Tiên minh liệt kê kết trận đang mở + nút "Góp đội". Còn thiếu: sức chứa kết trận theo công trình, kết trận đánh trận kỳ / Tổng đà.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### D2. Viện binh và đồn trú — **Reinforcement / Garrison**
@@ -355,7 +355,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** nhấn giữ ô → "Đánh dấu minh" → chọn biểu tượng và ghi chú.
 - **Giữ chân:** phối hợp nhanh, bớt cãi nhau trong chat.
 - **Tu tiên hoá:** "Minh ấn" (dấu son trên bản đồ); "Ký hiệu" cá nhân.
-- **Game mình:** ❌.
+- **Game mình:** ✅ dấu của minh (`allyMark`/`allyUnmark` ở `world/guild.ts`): 5 dấu trên bản đồ giới (`ALLY_MARKS`), từ R3 đặt, lời ghi ≤ 20 chữ, cả minh thấy, bấm là bay tới; ghi nhớ riêng ★ tối đa 20 chỗ (`sect/pins.ts`).
 - **Ưu tiên:** P0 · **Công sức:** S. Rất rẻ mà có ích ngay cho kết trận và giữ điểm.
 
 #### D4. Mệnh lệnh liên minh và cửa hàng chiến công (Season of Conquest) — **Alliance Directives / Merit Shop**
@@ -365,7 +365,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng Directive có nút Ban lệnh (officer); thành viên thấy buff đang chạy.
 - **Giữ chân:** lãnh đạo có công cụ; chiến đấu có phần thưởng riêng.
 - **Tu tiên hoá:** "Minh lệnh", ví dụ "Tổng động viên: +x% công khi đánh trận nhãn trong 2 giờ".
-- **Game mình:** ❌.
+- **Game mình:** 🟡 có chỉ lệnh nhưng mỗi tông môn tự chọn: Thiên Thời (`world/thoi.ts`) mỗi 4 ngày cho chọn 1 trong 3 tăng ích tới hết thời; Công Huân (có phần từ chiến công) ra Phi Thăng Tệ đổi ở Thiên Môn Thương Điếm. Chưa có minh lệnh do minh chủ / R4 ban cho cả minh.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 ---
@@ -379,7 +379,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** dải chat ở cạnh màn hình, chạm để mở kênh.
 - **Giữ chân:** có "người sống" quanh mình; drama.
 - **Tu tiên hoá:** "Kênh giới" (đã dùng).
-- **Game mình:** ✅ kênh giới mở từ tầng 3 (`CHAT_HALL`). Có lọc từ trên chữ có dấu, cho 3 tin liền rồi 1 tin mỗi 3 giây, chặn lặp tin trong 30 giây, 200 ký tự, giữ 50 tin lịch sử; báo cáo tin xấu có lưu bằng chứng; admin cấm chat qua hộp lệnh. Dải chat chỉ ở tab Bản đồ và Tiên minh. Còn thiếu: dịch, tooltip thuật ngữ.
+- **Game mình:** ✅ kênh giới mở từ tầng 3 (`CHAT_HALL`). Có lọc từ trên chữ có dấu, cho 3 tin liền rồi 1 tin mỗi 3 giây, chặn lặp tin trong 30 giây, 200 ký tự, giữ 50 tin lịch sử; báo cáo tin xấu có lưu bằng chứng; admin cấm chat qua hộp lệnh. Dải chat ở màn núi và tab Bản đồ, kênh chat nằm trong trang Tiên minh. Còn thiếu: dịch, tooltip thuật ngữ.
 - **Ưu tiên:** P1 (dịch, nếu người Việt và người nói tiếng Anh chung giới) · **Công sức:** M.
 
 #### E2. Chat liên minh và thông báo — **Alliance Chat / Announcement**
@@ -399,7 +399,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** từ hồ sơ người chơi bấm "Nhắn"; trong khung chat có "Tạo nhóm" để chọn người.
 - **Giữ chân:** quan hệ cá nhân giữ người ở lại lâu hơn quan hệ với game.
 - **Tu tiên hoá:** "Truyền âm" (1-1); "Đàm đạo đường" (nhóm).
-- **Game mình:** ❌ chỉ có 2 kênh công khai.
+- **Game mình:** ✅ truyền âm 1-1 (kênh `p<pid>`, `talk.ts`): từ tầng 3, người đã chặn mình thì không nhắn được, offline thì Web Push; nhóm chat tự tạo (`world/groups.ts`, kênh `g<id>`): ai cũng lập, tối đa 20 người mỗi nhóm, mỗi người 5 nhóm, thêm người từ hồ sơ, rời nhóm. Chưa có quyền quản trị nhóm (đá người, ghim tin).
 - **Ưu tiên:** P0 · **Công sức:** M.
 
 #### E4. Kênh liên server và kênh đặc biệt — **Language Channels / Lost Kingdom Threads / Camp Chat**
@@ -409,7 +409,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** thêm tab trong khung chat; bảng threads có danh sách chủ đề.
 - **Giữ chân:** thảo luận có cấu trúc, ít trôi tin.
 - **Tu tiên hoá:** "Luận đạo bảng" (threads trong một giới).
-- **Game mình:** ⛔ liên server. 🟡 có thể làm bảng threads trong giới.
+- **Game mình:** ⛔ liên server. ❌ chưa có bảng threads hay kênh phái (Chính / Tà) trong giới; phần này làm được.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### E5. Công cụ trong chat: chia sẻ, sửa tin — **Share Coordinates / Reports / Commanders; Recall / Edit / Quote**
@@ -419,7 +419,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** nút Chia sẻ trên chiến báo, tướng và ô bản đồ; tin trong chat thành thẻ bấm được (bay tới, mở báo cáo).
 - **Giữ chân:** chat thành công cụ chơi chứ không chỉ để nói.
 - **Tu tiên hoá:** "Ngọc giản truyền tin": thẻ chiến báo, thẻ trưởng lão, thẻ toạ độ.
-- **Game mình:** ❌ chỉ có văn bản. Nền đã có: trận tất định và màn phát lại, nên thẻ chiến báo mở thẳng màn Phát lại được.
+- **Game mình:** ✅ chia sẻ toạ độ (chạm ô bất kỳ → "Gửi kênh minh / giới"; "(x,y)" trong tin thành nút "Tới") và chiến báo (nút ở mỗi chiến báo; "#r<id>" thành nút "Xem trận" mở màn Phát lại) và thẻ trưởng lão ("Chia sẻ vào chat" ở Môn hạ; "#tl:…" thành thẻ chân dung + cấp + sao) — `TileSheet`, `Reports`, `Disciples`, `Chat.svelte`. Chạm một tin → Trả lời (tin mới mang "#q<mã>", vẽ thành dòng trích dẫn tin gốc); tin của mình thu hồi được trong 2 phút (server `unsay` ghi lại chữ rỗng, mọi người nghe thấy "Tin đã được thu hồi"); hàng biểu cảm 12 emoji cạnh ô gõ. Không làm sửa tin (RoK cũng không).
 - **Ưu tiên:** P0 (toạ độ + chiến báo) · **Công sức:** M.
 
 #### E6. Thư — **Mail (System / Player / Alliance / Reports)**
@@ -429,7 +429,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** hộp thư chia tab, có nút Nhận/Xoá/Yêu thích.
 - **Giữ chân:** lưu dấu lịch sử (chiến báo đáng nhớ).
 - **Tu tiên hoá:** "Phi kiếm truyền thư"; thư cả minh là "Minh lệnh thư".
-- **Game mình:** 🟡 có thư hệ thống kèm quà (nhận đúng một lần), 8 loại (top sự kiện, admin, quà, bồi thường, yêu vương, mùa, bán được, không bán được), tối đa 30 thư (`MAIL_MAX`); chiến báo để riêng (`Reports`). Còn thiếu: thư giữa người chơi, thư minh gửi cả minh, báo cáo do thám.
+- **Game mình:** ✅ thư hệ thống kèm quà (nhận đúng một lần, "Nhận tất cả"), gần 40 loại (sự kiện, bồi thường, Minh lễ, mùa, chợ, Vận Linh Trận, sắc phong…), tối đa 30 thư (`MAIL_MAX`); thư minh (`allyMail`: R4 / minh chủ gửi hộp thư cả minh, ≤ 300 chữ, mỗi giờ một thư); báo cáo do thám và thư "bị do thám" (`world/spy.ts`); chiến báo để riêng (`Reports`); thư 1-1 thay bằng truyền âm. Còn thiếu: xoá / đánh dấu yêu thích thư.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 ---
@@ -447,7 +447,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chạm thành đồng minh → "Giao thương" → chọn số từng loại → thấy thuế và thời gian → gửi.
 - **Giữ chân:** tình nghĩa, nhưng cũng mở cửa cho acc phụ.
 - **Tu tiên hoá:** "Truyền tống trận vận linh"; thuế gọi là "hao tổn khi truyền tống".
-- **Game mình:** ❌, và đây là **chủ ý**. Game chỉ có chợ bán lệnh trong biên giá 0,8–1,25× giá gốc, thuế 10% đốt đi, 5 lệnh treo, 5 lần mua/ngày, trần bán theo sức chứa kho. Mục đích là chặn dồn của qua acc phụ (`market.ts`).
+- **Game mình:** ✅ Vận Linh Trận (`world/supply.ts`, `Supply.svelte`): từ Chủ điện tầng 10, trong hồ sơ người cùng minh gửi linh thạch / thảo / khoáng, người nhận nhận qua thư; hao tổn 35 % (Tàng Bảo Các tầng 1) → 8 % (tầng 25) đốt đi; mỗi ngày gửi tối đa 2× sức chứa kho mình, mỗi người nhận tối đa 1× sức chứa kho họ, nên dồn của qua acc phụ không đáng (`MARKET=off` tắt cùng chợ).
 - **Khuyến nghị:** nếu làm thì thêm điều kiện ở cùng minh từ N ngày, thuế cao, trần mỗi ngày theo kho, không gửi linh thạch.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
@@ -466,7 +466,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng hồ sơ có các tab (Thông tin, Thành tích, Tướng, Thống kê sự kiện).
 - **Giữ chân:** mọi nỗ lực đều hiện ra cho người khác thấy.
 - **Tu tiên hoá:** "Danh thiếp chưởng môn": cảnh giới, thế lực, chiến công, số lần độ kiếp, kỷ lục Thông Thiên Tháp, các mùa đã phi thăng, trưởng lão tiêu biểu, tiên minh.
-- **Game mình:** ❌ chưa xem được hồ sơ người khác; danh sách minh và đối thủ chỉ có tên, tầng, lực chiến. Bảo khố có mục "Thành tích" nhưng chỉ của mình.
+- **Game mình:** ✅ hồ sơ chưởng môn (`profileOf` ở `world/profile.ts`, `Profile.svelte`): mở từ tên ở chat, người trong minh, tông môn trên bản đồ, bảng xếp hạng hay chân dung mình; hiện chân dung, cảnh giới, lực chiến, minh + bậc, chiến công, tranh đoạt, tháp, thành tựu, tước Giới Chủ, danh hiệu mùa; nút truyền âm, kết giao, chặn, thêm vào nhóm, mời vào minh, Vận Linh Trận.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### G2. Bảng xếp hạng — **Rankings**
@@ -476,7 +476,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** từ hồ sơ hoặc menu mở "Xếp hạng", chọn từng tab.
 - **Giữ chân:** mục tiêu dài hạn; khoe.
 - **Tu tiên hoá:** "Phong Vân Bảng" (cá nhân), "Tiên Minh Bảng"; "Bảng phong thần" (đã có cho mùa).
-- **Game mình:** ✅ có 5 bảng (lực chiến, cảnh giới, tháp, tranh đoạt/Elo, sự kiện tuần), điểm mùa theo phe (minh hoặc người đi lẻ) và bảng phong thần các mùa trước; danh sách minh sắp theo lực chiến. Còn thiếu: bảng chiến công (số quân hạ), bảng riêng cho minh.
+- **Game mình:** ✅ có 6 bảng (lực chiến, cảnh giới, chiến công, tranh đoạt/Elo, tháp, sự kiện tuần), điểm mùa theo phe (minh hoặc người đi lẻ) kèm điểm hai phái Chính / Tà, bảng phong thần các mùa trước, bảng Công Huân; danh sách minh sắp theo lực chiến. Còn thiếu: bảng xếp hạng riêng cho minh (lực chiến / chiến công).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### G3. Bạn bè và chặn — **Friends / Block List**
@@ -486,7 +486,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** tab Bạn bè; nút Kết bạn trên hồ sơ.
 - **Giữ chân:** quan hệ cá nhân.
 - **Tu tiên hoá:** "Đạo hữu" (kết giao); "Tuyệt giao" (chặn).
-- **Game mình:** 🟡 có chặn (tối đa 100 người, ẩn chat phía client, action `block`). ❌ chưa có bạn bè.
+- **Game mình:** ✅ có chặn (tối đa 100 người, ẩn chat phía client, người bị chặn không truyền âm / thêm mình vào nhóm được; action `block`) và đạo hữu (`friend` ở `sect/inbox.ts`): nút "Kết giao" trong hồ sơ (một chiều, tối đa 50), thẻ Truyền âm có dải đạo hữu (chấm lục: đang chơi). Chưa có lời mời kết bạn, ghi chú, chia nhóm bạn.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### G4. Báo vương quốc — **Kingdom Newspaper**
@@ -496,7 +496,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang báo có các bài và nút thích.
 - **Giữ chân:** tò mò, danh tiếng.
 - **Tu tiên hoá:** "Tiên giới tân văn" hay "Giới báo".
-- **Game mình:** 🟡 có biên niên giới (lập tông môn, cướp thắng/thua, độ kiếp, mùa, yêu vương) hiện trên bản đồ (`ChronArgs`).
+- **Game mình:** 🟡 có biên niên giới (lập tông môn, cướp thắng/thua, độ kiếp, mùa, yêu vương, chương Thiên Đạo Biên Niên, Luận Kiếm Minh Chiến) hiện trên bản đồ (`ChronArgs`), và thư Tổng kết mùa riêng từng người. Chưa có "báo" tổng hợp mỗi ngày (kỷ lục, chuyện các minh).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ---
@@ -514,7 +514,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** biểu tượng đền lớn ở giữa bản đồ; trang "Vương quốc" có quản lý title, buff, nhập cư.
 - **Giữ chân:** mục tiêu tối thượng; quyền lực thật.
 - **Tu tiên hoá:** **"Giới Chủ"**. Minh giữ Thiên Môn (game đã có) khi hết pha hoặc hết tuần thì minh chủ là Giới Chủ.
-- **Game mình:** 🟡 có Thiên Môn (12 điểm mùa/giờ, mở ở pha cuối) nhưng chưa có vai trò Giới Chủ.
+- **Game mình:** ✅ Giới Chủ (`lordOf` ở `world/lord.ts`): minh chủ tiên minh giữ Thiên Môn (chưa ai giữ: minh đứng đầu điểm mùa), hiện trên bản đồ giới; Thiên Môn mở ở pha cuối, 12 điểm mùa/giờ.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### H2. Title vương quốc (buff/debuff) — **Kingdom Titles**
@@ -535,7 +535,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **Tu tiên hoá:** **"Sắc phong"**.
   - Buff: Thần Công (xây), Truyền Đạo Tôn Giả (tu luyện/nghiên cứu), Chiến Thần (công + hành quân), Hộ Quốc Công (thủ + tuyển), Bách Thảo Tiên (khai mỏ).
   - Debuff: Phản Đồ, Khất Cái, Lưu Đày, Nô Bộc, Giải Đãi, Si Nhân.
-- **Game mình:** ❌.
+- **Game mình:** ✅ sắc phong (`crown`/`uncrown` ở `world/lord.ts`, `titleBuffs`): Giới Chủ phong từ hồ sơ người chơi 4 phúc (Chiến Thần, Hộ Quốc Công, Thần Công, Bách Thảo Tiên) và 4 hoạ (Phản Đồ, Khất Cái, Giải Đãi, Si Nhân); mỗi tước một người, mỗi người một tước, giữ 24 giờ, phong lại chờ 10 phút, người nhận có thư.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### H3. Buff vương quốc và quà của vua — **Kingdom Buffs / King's Gifts**
@@ -545,7 +545,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang Vương quốc có nút Bật buff và Phát quà (chọn người nhận).
 - **Giữ chân:** ai cũng hưởng lợi từ việc có vua; chia quà sinh chính trị.
 - **Tu tiên hoá:** "Giới Chủ ban phúc"; "Thiên ân".
-- **Game mình:** ❌.
+- **Game mình:** ✅ Giới Chủ ban phúc cả giới mỗi ngày một lần (`bless`: xây / tuyển / sản lượng +5 % hoặc hành quân +8 % trong 8 giờ, hiện trên thẻ bản đồ giới) và ban Thiên Ân lễ (`boon`: 3 phần mỗi tuần, từ hồ sơ người nhận).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### H4. Kỹ năng vua, giấy nghỉ phép, quản lý nhập cư — **King Skills / Vacation Permit / Immigration Control**
@@ -555,7 +555,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang Vương quốc có mục Kỹ năng vua và Nhập cư.
 - **Giữ chân:** quyền lực có công cụ thật; người bận vẫn "giữ chỗ".
 - **Tu tiên hoá:** "Phóng Trục" (Banish); **"Bế Quan Lệnh"** (Vacation Permit). Chưởng môn bế quan thì không bị đánh và không tính vào ghép; rất hợp với tu tiên.
-- **Game mình:** ❌.
+- **Game mình:** 🟡 có Bế Quan Lệnh (`sect/seclude.ts`): Cài đặt › Bế quan 3 / 7 / 14 ngày, phải gọi hết đội về và không đang sát khí → khiên tới hết hạn, chỉ nhận thư / điểm danh; xuất quan lúc nào cũng được, 3 ngày sau mới bế quan lại. Chưa có kỹ năng Giới Chủ (Phóng Trục…), quản lý nhập cư.
 - **Ưu tiên:** P2 (riêng Bế Quan Lệnh có thể lên P1 vì hợp trụ cột "chờ đợi có nghĩa") · **Công sức:** M.
 
 #### H5. Luật vương quốc, NAP, luật MGE (do cộng đồng đặt) — **Kingdom Rules / NAP**
@@ -565,7 +565,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** không có UI riêng; chạy qua chat, thư, Discord.
 - **Giữ chân:** đây chính là "câu chuyện" của mỗi vương quốc.
 - **Tu tiên hoá:** "Minh ước" / "Bất xâm phạm ước"; có thể thành cơ chế: hai minh ký minh ước thì không cướp nhau và hiện cùng màu trên bản đồ.
-- **Game mình:** ❌ chưa có công cụ ngoại giao; chỉ chặn đánh người cùng minh (`raidError` trả `friend`). Luật PvP cứng (`PVP_FLOOR`, khiên) đã thay một phần cho "luật cộng đồng".
+- **Game mình:** ✅ minh ước (`napAsk`/`napOk`/`napNo`/`napEnd` ở `world/guild.ts`, `napBetween`): R4 / minh chủ đề nghị, minh kia nhận / từ chối, một bên huỷ là huỷ cả hai; đang minh ước thì không cướp tông môn, cướp khoáng, do thám, phá cờ của nhau, không đánh điểm bên kia giữ, qua được cửa ải bên kia giữ. Luật PvP cứng (`PVP_FLOOR`, khiên) đã thay một phần cho "luật cộng đồng".
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### H6. Di cư và tuyển mộ cấp vương quốc — **Migration / Recruitment Plaza**
@@ -613,7 +613,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bong bóng khiên quanh thành; biểu tượng trạng thái có đồng hồ.
 - **Giữ chân:** yên tâm khi đi ngủ; cũng là một nguồn bán hàng.
 - **Tu tiên hoá:** "Hộ Sơn Kết Giới Phù"; "Sát khí" (War Frenzy).
-- **Game mình:** 🟡 khiên tự bật 8 giờ khi thủ thua (`SHIELD_TIME`); đi cướp thì mất khiên; bản đồ hiện khiên (`Seat.shield`). ❌ chưa có khiên chủ động (vật phẩm). Nếu bán ở P4 thì phải cẩn trọng P2W. ❌ chưa có trạng thái sát khí.
+- **Game mình:** ✅ khiên tự bật 8 giờ khi thủ thua (`SHIELD_TIME`); khiên chủ động Hộ Sơn Phù 8 / 24 / 72 giờ (vật phẩm kiếm bằng chơi, không bán bằng tiền thật); đi cướp thì mất khiên và nổi sát khí 30 phút (`FRENZY_TIME`): chưa bật được khiên, chưa dời núi được; bản đồ hiện khiên (`Seat.shield`).
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### I3. Đốt thành và dời thành — **City Burning / Wall Durability / Relocation**
@@ -623,7 +623,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** thành bốc lửa trên bản đồ; nút Dập lửa/Sửa tường.
 - **Giữ chân:** thua có hậu quả thấy được, thắng có "chiến tích" thấy được.
 - **Tu tiên hoá:** "Hộ Sơn Trận vỡ"; sơn môn bị đánh bật đi (đổi chỗ ngồi).
-- **Game mình:** ❌. Hộ Sơn Đại Trận chỉ tăng thủ và máu 4% mỗi tầng (`GUARD_STEP`); không có độ bền, không bị dời chỗ.
+- **Game mình:** ✅ Linh hỏa thiêu sơn (`core/wall.ts`, `sect/wall.ts`, `world/wall.ts`): trận lực Hộ Sơn Đại Trận 500 × (1 + tầng); thủ thua mất 15 % và núi bốc linh hỏa 30 phút (tụt 1 %/phút), hết cháy tự hồi 3 %/giờ; tu bổ miễn phí mỗi 30 phút (+10 %), Tức Hỏa Phù dập lửa; trận lực về 0 lúc đang cháy thì tông môn bị đánh bật sang chỗ trống ngẫu nhiên vùng ngoài.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### I4. Cướp tài nguyên và kho bảo hộ — **Plunder / Storehouse Protection**
@@ -633,7 +633,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chiến báo liệt kê số cướp được.
 - **Giữ chân:** thưởng cho người chủ động; phạt người để kho tràn.
 - **Tu tiên hoá:** "Kho bảo hộ" của Tàng Bảo Các.
-- **Game mình:** ✅ bảo hộ 30% sức chứa (`PROTECT`); cướp 30% phần vượt (`RAID_SHARE`); mỗi đệ tử còn đứng mang tối đa 40 × sức bậc (`CARRY`); trưởng lão có thiên phú tăng chiến lợi phẩm. Khác RoK: bảo hộ theo % kho thay vì số tuyệt đối. Sim: bị cướp 20,7% sản lượng (trần 25%).
+- **Game mình:** ✅ bảo hộ 45% sức chứa (`PROTECT`); cướp 30% phần vượt (`RAID_SHARE`); mỗi đệ tử còn đứng mang tối đa 40 × sức bậc (`CARRY`, thể tu ×1,25, pháp tu ×0,8); trưởng lão có thiên phú tăng chiến lợi phẩm; nang tài nguyên trong túi không bị cướp. Khác RoK: bảo hộ theo % kho thay vì số tuyệt đối. Sim (25/09): bị cướp 19,2% sản lượng (trần 25%).
 - **Ưu tiên:** đã có · **Công sức:** —.
 
 #### I5. Do thám — **Scouting / Scout Camp**
@@ -643,7 +643,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chạm thành → Do thám (tốn tài nguyên hoặc thời gian) → nhận thư báo cáo.
 - **Giữ chân:** chuẩn bị trước khi đánh; đấu trí.
 - **Tu tiên hoá:** "Thần thức thám sơn" / "Khuy Thiên Kính"; chống do thám là "Ẩn Nặc Trận".
-- **Game mình:** 🟡 danh sách đối thủ có sẵn "scout": quân thủ làm tròn tới hàng chục, trưởng lão trấn thủ và cấp, tầng Hộ Sơn Đại Trận (`scout()`). Xem miễn phí, tức thì, người bị xem không biết. Không có tài nguyên, không có viện binh, không có chống do thám.
+- **Game mình:** ✅ do thám (`world/spy.ts`): ở bảng Tranh đoạt thả linh điểu tới tông môn khác phe (hai bên từ tầng 6), tốn 200 × tầng Chủ điện bên kia linh thạch, linh điểu bận tới khi bay về; báo cáo qua thư: tài nguyên ước cướp được, quân giữ nhà + lực chiến, số đội viện binh, trưởng lão trấn thủ, trận lực, khiên; bên kia nhận thư "bị do thám" + Web Push. Còn thiếu: chống do thám.
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### I6. Cảnh báo bị tấn công — **Incoming Attack Warning / Watchtower**
@@ -653,7 +653,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** viền màn hình đỏ hoặc biểu tượng cảnh báo; trong tab War [chưa xác minh hình thức].
 - **Giữ chân:** căng thẳng thật, nhu cầu "có đồng đội".
 - **Tu tiên hoá:** "Cảnh chung" (chuông cảnh báo); "Vọng lâu".
-- **Game mình:** 🟡 hành quân của mọi người hiện trên bản đồ giới, kèm tên địch (`MapMarch.foe`), nhưng không có cảnh báo. Web Push chỉ đến **sau khi** trận xong (bị cướp hoặc đã đẩy lui, `notify.ts`).
+- **Game mình:** ✅ Tháp canh: đội địch vừa xuất quân (cướp, kết trận công sơn, cướp khoáng) là bên bị nhắm thấy thẻ son ở mọi tab (tên, giờ tới) + nút "Bật khiên" / "Gọi về" (`Hud.svelte`); offline thì Web Push (`notify.ts`); hành quân vẫn hiện trên bản đồ giới (`MapMarch.foe`). Chưa báo cho cả minh khi một thành viên bị nhắm.
 - **Ưu tiên:** P0 · **Công sức:** S. Cần: cảnh báo khi có đội nhắm vào mình, push, và cho cả minh thấy.
 
 #### I7. Phản công, báo thù, phản kết trận — **Counterattack / Counter Rally**
@@ -693,7 +693,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chuyển tài khoản trong cài đặt.
 - **Giữ chân:** người chơi nặng đô có thêm việc để làm; người chơi thường thấy bất công.
 - **Tu tiên hoá:** "Tiểu hào".
-- **Game mình:** chủ ý chặn: không gửi tài nguyên thẳng, chợ có biên giá, thuế 10% đốt đi.
+- **Game mình:** chủ ý chặn: Vận Linh Trận chỉ gửi cho người cùng minh, hao tổn 35 → 8 % đốt đi, trần gửi / nhận mỗi ngày theo sức chứa kho hai bên; chợ có biên giá, thuế 10% đốt đi.
 - **Ưu tiên:** không làm · **Công sức:** —.
 
 #### I11. Kill points, honor, lực chiến — **Kill Points / Honor / Power**
@@ -703,7 +703,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** hồ sơ; các bảng xếp hạng.
 - **Giữ chân:** tiến độ lâu dài ngoài lực chiến.
 - **Tu tiên hoá:** "Chiến công" hay "Công huân". Nên tránh chữ "sát nghiệp" vì trong tu tiên đó là điều kiêng.
-- **Game mình:** 🟡 có lực chiến ✅; điểm tranh đoạt kiểu Elo (`PVP_START` 1000, `ELO_K` 32) và số thắng/thua; điểm mùa theo phe (giữ điểm, hạ yêu vương). ❌ chưa có chiến công tính theo quân hạ.
+- **Game mình:** ✅ chiến công (`addKp`, cột `players.kills`): thế lực đệ tử bên kia hạ được (tính theo bậc) trong trận cướp, kết trận, tranh điểm, cả bên thủ; có bảng xếp hạng "Chiến công" và hiện trên hồ sơ. Thêm Công Huân mùa (chiến công / 100, săn yêu, yêu vương, khai mỏ…) có bảng và quà top 10; lực chiến; điểm tranh đoạt kiểu Elo (`PVP_START` 1000, `ELO_K` 32) và số thắng/thua.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### I12. KvK và xếp hạng vương quốc — **Kingdom vs Kingdom (Lost Kingdom)**
@@ -732,7 +732,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng nhiệm vụ có loại, điểm, thời hạn và nút Nhận; thanh điểm minh có các mốc.
 - **Giữ chân:** việc nhỏ, rõ ràng, có nhịp chờ nên phải quay lại.
 - **Tu tiên hoá:** "Minh vụ đường" / "Tiên minh động viên", ví dụ minh vụ "hạ 10 yêu thú", "luyện 3 mẻ đan", "khai 20k linh khoáng".
-- **Game mình:** ❌. Sự kiện tuần và nhiệm vụ ngày/tuần đều là việc cá nhân.
+- **Game mình:** ✅ Minh vụ đường (`world/mob.ts`, `AllyMob.svelte`): bảng 8 việc chung mỗi tuần (tất định theo mã minh + tuần), nhận 1 việc/lúc, 10 lượt/ngày, hạn 4 giờ, việc mới thế chỗ; 5 mốc quà cho ai góp ≥ 20 điểm; hết tuần 3 minh điểm cao nhất giới nhận thêm quà hạng (`mobTop`).
 - **Ưu tiên:** P0 · **Công sức:** M. Tái dùng được bộ đếm của `EVENTS` và nhiệm vụ ngày.
 
 #### J2. Ark of Osiris và Osiris League — **Ark of Osiris / Osiris League**
@@ -747,7 +747,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng đăng ký có khung giờ và danh sách; bản đồ trận riêng; màn xem trực tiếp có cược.
 - **Giữ chân:** lịch cố định; không mất quân nên ai cũng dám đánh; xem và cược tạo cộng đồng khán giả.
 - **Tu tiên hoá:** "Thần Chu tranh đoạt" (hộ tống linh chu); "Cửu Thiên Luận Đạo Hội" (giải có khán giả, cược bằng "linh tệ" không quy ra tiền, PLAN mục 9).
-- **Game mình:** ❌. Nền đã có: trận tất định và màn phát lại, rất hợp làm chế độ khán giả.
+- **Game mình:** ✅ Luận Kiếm Minh Chiến (`world/war.ts`: minh ghi danh, 20h thứ Bảy ghép cặp theo điểm minh chiến, người thứ k đấu người thứ k bằng đội hình Luận Kiếm Đài) + Tranh Đoạt Linh Châu (`world/ark.ts`, `ArkCard.svelte`: 20h Chủ nhật, chiến trường 11 ô như bản đồ Ark — Tụ Linh Nhãn nối nhau, Linh Tháp +10 % công, Linh Châu nạp ở Tiểu Trận — 8 hiệp × 10 phút giải tất định, không mất quân) + Cửu Thiên Luận Đạo Hội (bảng giải cả mùa, playoff bán kết / chung kết / tranh hạng ba cho 4 minh đầu — `leagueBoard` / `cupSetup` / `leagueRank`, quà theo hạng). Còn thiếu: khán giả xem trực tiếp, cược (League Bets).
 - **Ưu tiên:** P1 · **Công sức:** L.
 
 #### J3. Karuak Ceremony / Trial of Kau Karuak — **Karuak Ceremony**
@@ -757,7 +757,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng cấp độ có boss hẹn giờ.
 - **Giữ chân:** thử thách tăng dần.
 - **Tu tiên hoá:** "Thí luyện yêu hoàng".
-- **Game mình:** 🟡 có Thông Thiên Tháp (đơn) và yêu vương (chung).
+- **Game mình:** ✅ Thí Luyện Yêu Hoàng (`sect/trial.ts`): lễ 4 ngày, 5 độ khó × 50 cửa đánh bằng quân thật, tinh anh mỗi 10 cửa, điểm theo độ khó; cùng Thông Thiên Tháp, Luận Võ Liên Hoàn và yêu vương (đánh chung). Còn thiếu: nhờ đồng minh giúp một cửa.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### J4. Ceroli Crisis / Ceroli Assault — **Team PvE**
@@ -767,7 +767,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** phòng chờ tổ đội; chọn độ khó.
 - **Giữ chân:** chơi cùng bạn; vai trò rõ.
 - **Tu tiên hoá:** "Tổ đội bí cảnh".
-- **Game mình:** ❌. Bí cảnh chỉ đánh một mình. Trận tự động không có vai trò thời gian thực nên phải thiết kế lại theo kiểu "mỗi người góp một trưởng lão vào đội hình chung".
+- **Game mình:** ✅ Man Hoang Cổ Tộc (`world/party.ts`, `AllyParty.svelte`): từ Chủ Điện tầng 8, một người mở phòng (5 độ khó) và chọn vai Hộ Pháp / Chủ Công / Trị Liệu, người trong minh vào trong 10 phút (tối đa 4, mỗi người mỗi ngày một lần); server giải 5 đợt hung thú mạnh dần bằng đội đầu Luận Kiếm Đài của cả đội, quà theo độ khó × số đợt. Chưa có bản đội lớn 12 người (Assault), chưa ghép người ngoài minh.
 - **Ưu tiên:** P2 · **Công sức:** L.
 
 #### J5. Shadow Legion — **Shadow Legion**
@@ -777,7 +777,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** lịch các đợt; bản đồ hiện thành nào sắp bị đánh.
 - **Giữ chân:** cảm giác "cùng giữ nhà" mà không có PvP thật.
 - **Tu tiên hoá:** "Ma triều công sơn": ma tu đánh từng ngọn núi, đồng minh đến viện binh.
-- **Game mình:** ❌, nhưng rẻ vì đã có viện binh (`aid`) và NPC phân đà.
+- **Game mình:** ✅ Ma Triều Công Sơn (`world/legion.ts`): R4 / minh chủ ghi danh cả tuần; 20h thứ Tư, 5 đợt cách 5 phút đánh vào núi từng người trong minh (sức theo lực phòng thủ của chính người đó, 0,5× → 1,35×), viện binh đồng minh cùng thủ; giữ được đợt k thì k điểm, quân ngã chỉ bị thương; quà theo điểm (mốc 3/6/10/15), ba minh đầu thêm quà; băng nhắc trên HUD 15 phút trước.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### J6. Canyon Clash / Sunset Canyon (và giải đấu) — **Arena with Defensive Lineups**
@@ -787,7 +787,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** đặt đội hình thủ; danh sách đối thủ; bảng xếp hạng.
 - **Giữ chân:** PvP không mất quân, chơi nhanh.
 - **Tu tiên hoá:** "Luận Kiếm Đài".
-- **Game mình:** 🟡 PvP bất đồng bộ đã có (đánh vào phòng thủ hiện tại). ❌ chưa có đấu trường theo đội hình, ❌ chưa có minh đấu minh.
+- **Game mình:** ✅ Luận Kiếm Đài (`sect/arena.ts`, `world/arena.ts`): đội hình thủ, trận xa luân, 5 lượt/ngày, Elo, rương ngày theo bậc, bảng tuần + thư quà top 10, phục thù, Kiếm Ý + Thương Điếm; minh đấu minh bằng đội hình Luận Kiếm Đài ở Luận Kiếm Minh Chiến (`world/war.ts`). Chưa có giải đấu chia nhóm (Sunset Canyon Tournament).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### J7. Champions of Olympia — **5v5 Arena**
@@ -807,7 +807,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** màn câu hỏi chung; thanh điểm minh.
 - **Giữ chân:** gắn kết, không cần lực chiến.
 - **Tu tiên hoá:** "Luận Đạo Vấn Đáp" (lấy câu hỏi từ Cẩm nang có sẵn); "Tông môn khai yến".
-- **Game mình:** ❌.
+- **Game mình:** 🟡 Vấn Đạo Đài (`sect/quiz.ts`): mỗi ngày 5 câu về luật chơi, quà theo số câu đúng — đố vui cá nhân; sự kiện lễ (Trung Thu, Tân Xuân…) cũng là việc cá nhân. Chưa có đố vui chung cả minh, tiệc minh dịp lễ.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### J9. Kết trận pháo đài man tộc hằng ngày — **Barbarian Fort Rallies**
@@ -817,7 +817,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** chạm pháo đài → Kết trận → tab War.
 - **Giữ chân:** thói quen hằng ngày cùng nhau.
 - **Tu tiên hoá:** "Yêu trại". Kết trận hạ yêu trại thì cả minh nhận minh lễ.
-- **Game mình:** 🟡 có yêu vương (2 cấp, hồi sau 24 hoặc 72 giờ, máu chung chia lát, cần kết trận) và yêu thú PvE cá nhân. Còn thiếu mục tiêu co-op **nhỏ, hằng ngày** có quà cho cả minh.
+- **Game mình:** ✅ yêu trại (`BOSSES[1]`, `atlas.ts`): yêu vương cấp 1 ở mỗi vùng ngoài (12.000 máu, 3 lát, hồi 8 giờ), minh mới kết trận được ngay từ pha đầu; hạ là cả minh nhận Minh lễ (`allyGifts`); yêu vương cấp 2–3 hồi sau 24 / 72 giờ; thứ Ba – thứ Tư có Phá Yêu Trại (`world/tribe.ts`) tính điểm minh, top 3 nhận quà.
 - **Ưu tiên:** P0 (làm cùng B2) · **Công sức:** S–M.
 
 #### J10. Mightiest Governor — **MGE**
@@ -827,7 +827,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang sự kiện có các chặng và bảng xếp hạng.
 - **Giữ chân:** mục tiêu nạp tiền; drama.
 - **Tu tiên hoá:** "Thiên Kiêu Tranh Bá".
-- **Game mình:** 🟡 có sự kiện tuần 6 chủ đề xoay vòng (mỗi tuần một chủ đề), 5 mốc quà, top 10 nhận thư.
+- **Game mình:** ✅ Tông Môn Tranh Bá (`FESTS.tranhBa`): thứ Hai → thứ Bảy, 6 ải như RoK, 5 mốc quà; bảng từng ải (quà ải qua thư lúc 0h) và bảng cả lượt (thư quà top 10 hết tuần — `festBoard`, `FEST_PRIZES`, `FEST_STAGE_PRIZES`), trưởng lão của đợt (xem file 5 B1).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ---
@@ -841,7 +841,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** lịch sự kiện của minh; nút Đăng ký.
 - **Giữ chân:** áp lực xã hội tích cực; thói quen theo lịch.
 - **Tu tiên hoá:** "Minh sự lịch", "Điểm danh".
-- **Game mình:** 🟡 đã có nhịp chung: linh triều 8 giờ một lần kéo dài 2 giờ, yêu vương hồi theo giờ, mùa 49 ngày có pha. Chưa có "lịch minh" và đăng ký.
+- **Game mình:** ✅ Minh sự lịch (`world/plans.ts`, `AllyPlans.svelte`): R4 / minh chủ hẹn giờ việc chung (tối đa 5 việc sắp tới, trước tối đa 7 ngày, lời nhắn ≤ 60 chữ), người trong minh bấm Tham gia / Rút, 10 phút trước giờ Web Push nhắc; ghi danh minh chiến / Linh Châu / ma triều; chức vị đường chủ chia vai.
 - **Ưu tiên:** P1 · **Công sức:** S. Lịch minh đơn giản: officer đặt giờ kết trận hoặc sự kiện, thành viên bấm "Tham gia", Web Push nhắc trước.
 
 #### K2. Địa vị và cảm giác thuộc về — **Identity / Status**
@@ -851,7 +851,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** tag trong chat, trên thành, trên bảng xếp hạng.
 - **Giữ chân:** rời minh là mất "họ".
 - **Tu tiên hoá:** "Danh hiệu" hiện cạnh tên (ví dụ "[TAG] Chiến Đường chủ • Thần Công").
-- **Game mình:** 🟡 tag hiện ở bảng mùa và ở điểm đang giữ; tên minh hiện ở trang Tiên minh; có bảng phong thần. Chưa có danh hiệu, chưa hiện tag trong chat.
+- **Game mình:** 🟡 tag hiện ở bảng mùa, điểm đang giữ và giữa lãnh thổ khi thu nhỏ bản đồ (`terrTags`); thẻ thành viên có bậc R1–R5 và chức vị; hồ sơ có minh + bậc, tước Giới Chủ, danh hiệu mùa (`State.crowns`), chiến công; có bảng phong thần. Tin chat và ghim tên tông môn trên bản đồ Giới ghi "[hiệu] tên" (`talk.ts`, `WorldView.svelte`). Chưa hiện danh hiệu cạnh tên, chưa có cờ minh riêng.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ---
@@ -868,29 +868,29 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | A6 | Chức vị officer có buff | ✅ 4 chức cho R4 (25/09) | P2 | S |
 | A7 | Rời/đá/tự chuyển giao/giải tán | ✅ minh chủ vắng 7 ngày: đường chủ nhận thay (25/09); thẻ thành viên ghi số ngày vắng | P1 | S |
 | B1 | Giúp đỡ (Alliance Help) | ✅ 10 lần/việc, người giúp được cống hiến, đĩa giúp nổi ở mọi tab | P1 | S |
-| B2 | Quà liên minh, rương chung, quà từ gói nạp | ✅ Minh lễ (hạ yêu vương → cả minh nhận quà, cấp quà 1–5); không có gói nạp | **P0** | M |
+| B2 | Quà liên minh, rương chung, quà từ gói nạp | ✅ Minh lễ (hạ yêu vương / yêu trại → cả minh nhận quà, cấp quà 1–5) + Tụ Bảo Minh Đỉnh (rương chung); không có gói nạp | **P0** | M |
 | B3 | Công nghệ liên minh và quyên góp | ✅ Hộ Minh Đại Trận 9 trận × 5 tầng, cung phụng, trận minh chủ điểm | **P0** | L |
 | B4 | Điểm cá nhân/quỹ minh và cửa hàng minh | ✅ cống hiến + Minh khố + Cống Hiến Các | **P0** | M |
-| B5 | Kỹ năng liên minh (buff có thời hạn) | ❌ | P2 | M |
-| C1 | Pháo đài trung tâm/phụ | 🟡 Tổng đà (một mỗi minh, `world/flags.ts`); chưa có pháo đài phụ, góp quân xây | P1 | L |
-| C2 | Cờ, tiền đồn, khiên cờ, tháp tên | ✅ trận kỳ (cắm, nới lãnh thổ, bị phá, tự hồi) + đóng quân giữ cờ (25/09) | P1 | L |
-| C3 | Trung tâm tài nguyên minh (thu an toàn) | 🟡 mỏ chung, ai cũng tranh được | P2 | M |
-| C4 | Điểm tài nguyên minh và kho minh | 🟡 kho minh: lãnh thổ sinh Minh khố theo giờ (25/09); chưa có điểm tài nguyên riêng của minh | P1 | M |
+| B5 | Kỹ năng liên minh (buff có thời hạn) | ✅ Minh trận thần thông (6 thần thông) | P2 | M |
+| C1 | Pháo đài trung tâm/phụ | ✅ Tổng đà + Phân đà (1 + 1 mỗi 10 người, tối đa 3, `world/flags.ts`), góp quân xây, độ bền; chưa bị kết trận / cháy | P1 | L |
+| C2 | Cờ, tiền đồn, khiên cờ, tháp tên | ✅ trận kỳ (cắm, nới lãnh thổ, bị phá, tự hồi) + đóng quân giữ cờ (25/09); chưa có Outpost, khiên cờ, tháp tên | P1 | L |
+| C3 | Trung tâm tài nguyên minh (thu an toàn) | ✅ Minh khoáng (dựng trong lãnh thổ, kho 3 triệu, 30.000/giờ mỗi đội, không bị cướp) | P2 | M |
+| C4 | Điểm tài nguyên minh và kho minh | 🟡 kho minh: lãnh thổ sinh Minh khố theo giờ (25/09); chưa có điểm tài nguyên từng loại sinh vào kho | P1 | M |
 | C5 | Buff lãnh thổ và dịch chuyển vào lãnh thổ | ✅ lãnh thổ tiên minh (khai mỏ +25 %), dời tông môn vào lãnh thổ, dời núi tân thủ | P1 | M |
-| C6 | Thánh địa, đèo, thưởng chiếm lần đầu | ✅ linh mạch/trận nhãn/Thiên Môn; thiếu thưởng lần đầu, buff đa dạng | P1 | S–M |
+| C6 | Thánh địa, đèo, thưởng chiếm lần đầu | ✅ linh mạch (tăng ích theo điểm)/trận nhãn/Thiên Môn/di tích, quà chiếm lần đầu; thiếu chuyển quyền giữ điểm | P1 | S–M |
 | D1 | Kết trận và tab Chiến tranh | ✅ điểm, yêu vương và tông môn (kết trận công sơn, 25/09); danh sách kết trận + nút góp đội ở trang Tiên minh | P1 | M |
 | D2 | Viện binh và đồn trú | ✅ 3 đội nhà đồng minh, hộ pháp độ kiếp | P2 | S |
 | D3 | Đánh dấu bản đồ cho minh | ✅ 5 dấu của minh + ghi nhớ cá nhân | **P0** | S |
-| D4 | Mệnh lệnh minh, cửa hàng chiến công | ❌ | P2 | M |
+| D4 | Mệnh lệnh minh, cửa hàng chiến công | 🟡 chỉ lệnh Thiên Thời (mỗi tông môn tự chọn), Thiên Môn Thương Điếm (Phi Thăng Tệ từ Công Huân); chưa có minh lệnh | P2 | M |
 | E1 | Chat vương quốc | ✅ kênh giới, lọc từ, báo cáo; thiếu dịch | P1 | M |
 | E2 | Chat minh và thông báo | ✅ thiếu ghim, tin hệ thống, @nhắc | P1 | S |
 | E3 | Chat riêng và nhóm tự tạo | ✅ truyền âm 1-1 (Web Push khi offline) + nhóm chat tự tạo tới 20 người (25/09) | **P0** | M |
-| E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; threads trong giới thì 🟡 được | P2 | M |
-| E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | 🟡 chia sẻ toạ độ + chiến báo vào chat (nút tới / xem trận); chưa sửa / thu hồi tin | **P0** | M |
-| E6 | Thư người chơi/thư minh/báo cáo do thám | ✅ thư minh (R4/R5 → hộp thư cả minh, 25/09); truyền âm thay thư 1-1; dò thám trong bảng Tranh đoạt | P1 | M |
+| E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; ❌ threads / kênh phái trong giới (làm được) | P2 | M |
+| E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | 🟡 chia sẻ toạ độ + chiến báo vào chat (nút tới / xem trận); chưa chia sẻ trưởng lão, chưa sửa / thu hồi tin | **P0** | M |
+| E6 | Thư người chơi/thư minh/báo cáo do thám | ✅ thư minh (R4/R5 → hộp thư cả minh, 25/09); truyền âm thay thư 1-1; báo cáo do thám qua thư; chưa xoá / yêu thích thư | P1 | M |
 | F1 | Gửi tài nguyên (Trading Post) | ✅ Vận Linh Trận (25/09): hao tổn 35 → 8 %, trần ngày theo sức chứa kho hai bên | P2 | S–M |
 | G1 | Hồ sơ người chơi | ✅ hồ sơ chưởng môn (từ chat, minh, bản đồ, chân dung): truyền âm, chặn, mời, tiếp tế | P1 | M |
-| G2 | Bảng xếp hạng | ✅ 5 bảng + mùa + phong thần; thiếu bảng chiến công/minh | P2 | S |
+| G2 | Bảng xếp hạng | ✅ 6 bảng (có chiến công) + mùa + Công Huân + phong thần; thiếu bảng riêng cho minh | P2 | S |
 | G3 | Bạn bè và chặn | ✅ chặn + kết giao đạo hữu (25/09) | P2 | S–M |
 | G4 | Báo vương quốc | 🟡 có biên niên giới | P2 | S |
 | H1 | Vua và Lost Temple | ✅ Giới Chủ (minh chủ giữ Thiên Môn) | P1 | M |
@@ -902,7 +902,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | H7 | Bảo vệ và dịch chuyển tân thủ | ✅ khiên 72 giờ, PvP từ tầng 6, sàn lực chiến 50% | — | — |
 | I1 | Điều kiện tấn công thành | ✅ | — | — |
 | I2 | Khiên chủ động, War Frenzy | ✅ Hộ Sơn Phù 8–72 giờ + sát khí 30 phút | P1 | S |
-| I3 | Đốt thành, độ bền tường, dời thành | ❌ | P2 | M |
+| I3 | Đốt thành, độ bền tường, dời thành | ✅ Linh hỏa thiêu sơn: trận lực Hộ Sơn Đại Trận, thua thì núi cháy, về 0 thì bị đánh bật đi | P2 | M |
 | I4 | Cướp tài nguyên và kho bảo hộ | ✅ | — | — |
 | I5 | Do thám, chống do thám | ✅ Do thám bằng linh điểu (`world/spy.ts`): báo cáo tài nguyên / viện binh / trận lực, bên kia được báo; chưa có chống do thám | P1 | S–M |
 | I6 | Cảnh báo bị tấn công | ✅ Tháp canh: thẻ son mọi tab + Web Push khi địch xuất quân | **P0** | S |
@@ -913,17 +913,17 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | I11 | Kill points, honor, lực chiến | ✅ chiến công (bảng xếp hạng), Công Huân, lực chiến, Elo | P1 | S |
 | I12 | KvK, xếp hạng vương quốc | ⛔ thay bằng mùa 49 ngày | — | — |
 | J1 | Động viên liên minh (Mobilization) | ✅ Minh vụ đường | **P0** | M |
-| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu giản lược | P1 | L |
-| J3 | Karuak Ceremony / Trial | 🟡 có Tháp, yêu vương | P2 | S |
-| J4 | Ceroli Crisis/Assault (tổ đội PvE) | ❌ | P2 | L |
-| J5 | Shadow Legion (ma triều công sơn) | ✅ | P1 | M |
+| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu giản lược + bảng giải mùa; chưa có khán giả / cược | P1 | L |
+| J3 | Karuak Ceremony / Trial | ✅ Thí Luyện Yêu Hoàng; thiếu nhờ minh giúp | P2 | S |
+| J4 | Ceroli Crisis/Assault (tổ đội PvE) | ✅ Man Hoang Cổ Tộc (tổ 4 người trong minh, 3 vai, 5 độ khó); chưa có bản 12 người | P2 | L |
+| J5 | Shadow Legion (ma triều công sơn) | ✅ Ma Triều Công Sơn (5 đợt tối thứ Tư) | P1 | M |
 | J6 | Canyon Clash / Sunset Canyon | ✅ Luận Kiếm Minh Chiến + Luận Kiếm Đài | P2 | M |
 | J7 | Champions of Olympia 5v5 | ⛔ thời gian thực | — | — |
 | J8 | Đố vui minh, Ascension, tiệc lễ | 🟡 Vấn Đạo Đài (đố vui cá nhân); chưa có đố vui minh | P2 | S–M |
 | J9 | Kết trận pháo đài hằng ngày (tạo quà minh) | ✅ yêu trại cấp 1 (hồi 8 giờ) → Minh lễ cả minh | **P0** | S–M |
-| J10 | MGE | ✅ Tông Môn Tranh Bá (6 giai đoạn) | P2 | S |
+| J10 | MGE | ✅ Tông Môn Tranh Bá (6 ải, bảng từng ải + cả lượt) | P2 | S |
 | K1 | Lịch minh, đăng ký, phân vai officer | ✅ Minh sự lịch (`world/plans.ts`) + ghi danh minh chiến / ma triều, chức vị đường chủ | P1 | S |
-| K2 | Địa vị, danh hiệu, tag | 🟡 | P2 | S |
+| K2 | Địa vị, danh hiệu, tag | 🟡 tag ở bảng mùa / lãnh thổ, bậc R, chức vị, tước và danh hiệu mùa trên hồ sơ; chưa hiện tag trong chat | P2 | S |
 
 **Gợi ý thứ tự làm (P0, rẻ trước):**
 1. D3 đánh dấu bản đồ + I6 cảnh báo khi có đội nhắm vào mình (S).

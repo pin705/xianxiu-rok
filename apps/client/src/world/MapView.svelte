@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { MedalTone } from '@rok/art'
   // Màn bản đồ: cảnh WebGL (map.ts) + mục tiêu là huy hiệu HTML (chạm được, đọc được) + thanh trên và danh sách đội.
   import type { Snippet } from 'svelte'
   import {
@@ -110,7 +111,7 @@
       {@const dx = Math.max(0, half - n.x * k + 6) - Math.max(0, half - (400 - n.x) * k + 6)}
       <span class="pin node {st}" class:hot style="left:{n.x * k}px;top:{(n.y + MAP.top) * k}px">
         <span class="disc">
-          <Medal emblem={n.emblem} tone={n.t.kind} size={36} dim={st === 'locked' || st === 'cool'} />
+          <Medal emblem={n.emblem} tone={n.t.kind as MedalTone} size={36} dim={st === 'locked' || st === 'cool'} />
           {#if n.lv}<b class="lv">{n.lv}</b>{/if}
           {#if n.t.kind === 'realm'}<b class="lv">{game.realms[n.t.i]}/5</b>{/if}
           {#if n.t.kind === 'tower' && game.tower}<b class="lv">{game.tower}</b>{/if}

@@ -17,7 +17,7 @@ import {
   type Players,
   type World,
 } from './base.ts'
-import { claim, flagClaim, type Claim } from './points.ts'
+import { claim, flagClaim, runesLeft, troopsOf, type Claim, type Rune } from './points.ts'
 
 // Biên niên của giới: chữ dựng ở client theo khoá (@rok/i18n chronText). Thêm loại: thêm khoá ở đây — i18n báo thiếu chữ.
 export type ChronArgs = {
@@ -28,6 +28,7 @@ export type ChronArgs = {
   boss: [lv: number]
   book: [ch: number, ok: 0 | 1] // chương Thiên Đạo Biên Niên: xong / hụt
   war: [a: string, b: string, wa: number, wb: number] // Luận Kiếm Minh Chiến: hiệu hai minh và số cặp thắng
+  cup: [tag: string] // quán quân Cửu Thiên Luận Đạo Hội
 }
 export type ChronKind = keyof ChronArgs
 export type Chron = { [K in ChronKind]: { at: number; k: K; a: ChronArgs[K] } }[ChronKind]
@@ -68,6 +69,7 @@ export type SpotView = {
   until?: number
   lohar?: string // Yêu Vương Tuần Sơn: tên người triệu hồi
   loharUntil?: number
+  tamed?: 1 // hộ trận linh thú đã bị đánh bại (mùa này)
 }
 // lord: Giới Chủ · book: Thiên Đạo Biên Niên (chương đang mở và tiến độ)
 export type MapSnap = {
@@ -79,13 +81,23 @@ export type MapSnap = {
   book?: { ch: number; done: number[]; value: number }
   bless?: { key: BlessKey; until: number; day: number } // phúc Giới Chủ ban cả giới
   allies?: { id: number; tag: string }[] // tiên minh có lãnh thổ (hiệu để ghi trên bản đồ)
-  flags?: (Flag & { guard?: [n: number, might: number] })[] // trận kỳ (đang dựng: done > lúc xem); guard: đội giữ, lực chiến
+  flags?: (Flag & { guard?: [n: number, might: number, troops: number] })[] // trận kỳ (đang dựng: done > lúc xem); guard: đội giữ, lực chiến, số đệ tử
   firsts?: number[] // điểm đã có minh chiếm lần đầu trong mùa
   eve?: { tag: string; pts: number }[] // Khai Giới Trảm Tà: giới vận các minh đầu (pha Khai giới)
   eveWin?: { tags: string[]; until: number } // minh đứng đầu lúc cổng mở, tăng ích tới until
+  digs?: { x: number; y: number; pid: number; name: string }[] // điểm đào Tàng Bảo Đồ (ai cũng thấy, chỉ chủ đào được)
+  runes?: Rune[] // phù văn còn trên bản đồ (chu kỳ này, chưa ai nhặt)
 }
 
-export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[], w: World = freshWorld()): MapSnap {
+// atl: bản đồ của giới (có thì kèm phù văn còn trên bản đồ)
+export function mapOf(
+  ps: Players,
+  now: number,
+  npc: Set<number>,
+  chron: Chron[],
+  w: World = freshWorld(),
+  atl?: Atlas,
+): MapSnap {
   const seats: Seat[] = [],
     marches: MapMarch[] = []
   for (const [pid, s] of ps) {
@@ -125,14 +137,24 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
     const own = sp.own === undefined ? undefined : sideName(w, ps, sp.own)
     const lohar =
       sp.lohar && sp.lohar.until > now ? { lohar: ps.get(sp.lohar.by)?.name ?? '?', loharUntil: sp.lohar.until } : {}
-    spots.push({ i, own, side: sp.own, n: garrison(ps, i).length, left: sp.left, hp: sp.hp, until: sp.until, ...lohar })
+    spots.push({
+      i,
+      own,
+      side: sp.own,
+      n: garrison(ps, i).length,
+      left: sp.left,
+      hp: sp.hp,
+      until: sp.until,
+      ...lohar,
+      ...(sp.tamed && { tamed: 1 as const }),
+    })
   }
   const allies = Object.values(w.allies).map(al => ({ id: al.id, tag: al.tag }))
   const flags = Object.values(w.flags ?? {})
     .filter(f => w.allies[f.aid])
     .map(f => {
       const g = flagGuards(ps, f.id)
-      return g.length ? { ...f, guard: [g.length, guardMight(g)] as [number, number] } : f
+      return g.length ? { ...f, guard: [g.length, guardMight(g), troopsOf(g)] as [number, number, number] } : f
     })
   const eve = Object.entries(w.eve ?? {})
     .filter(([id]) => w.allies[Number(id)])
@@ -143,6 +165,8 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
     tags: w.eveWin.ids.flatMap(id => (w.allies[id] ? [w.allies[id].tag] : [])),
     until: w.eveWin.until,
   }
+  const digs = [...ps].flatMap(([pid, s]) => (s.digs ?? []).map(d => ({ ...d, pid, name: s.name })))
+  const runes = atl ? runesLeft(w, atl, now) : []
   return {
     seats,
     marches,
@@ -150,6 +174,8 @@ export function mapOf(ps: Players, now: number, npc: Set<number>, chron: Chron[]
     spots,
     allies,
     flags,
+    ...(digs.length && { digs }),
+    ...(runes.length && { runes }),
     firsts: w.firsts ?? [],
     ...(eve.length && { eve }),
     ...(eveWin && { eveWin }),
@@ -164,6 +190,6 @@ export function snapClaims(snap: MapSnap, a: Atlas, now: number): Claim[] {
     const c = sp.side !== undefined ? claim(a, sp.i, sp.side) : null
     if (c) out.push(c)
   }
-  for (const f of snap.flags ?? []) if (f.done <= now) out.push(flagClaim(f))
+  for (const f of snap.flags ?? []) if (f.done <= now && !f.mine) out.push(flagClaim(f)) // Minh khoáng không nới lãnh thổ
   return out
 }

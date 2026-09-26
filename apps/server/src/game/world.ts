@@ -241,14 +241,15 @@ export class World {
 
   // Bản đồ giới lúc now: seed của giới + pha mùa (cổng nào đã mở)
   map(now: number): MapCtx {
-    return { atlas: atlas(this.seed), phase: phaseOf(dayIn(this.opened, now)), day: dayIn(this.opened, now) }
+    const day = dayIn(this.opened, now)
+    return { atlas: atlas(this.seed), phase: phaseOf(day, this.shared.book?.done), day }
   }
   // Ảnh chụp bản đồ giới cho client (chỗ ngồi, hành quân trên bản đồ, biên niên, điểm)
   snapshot(now: number) {
     const [w, map] = [this.shared, this.map(now)]
     const lord = lordOf(w, this.ps, map, now)
     const book = bookView(w, this.ps, map, now, this.npc)
-    return { ...mapOf(this.ps, now, this.npc, this.chron, w), lord, book, bless: w.bless }
+    return { ...mapOf(this.ps, now, this.npc, this.chron, w, map.atlas), lord, book, bless: w.bless }
   }
   // Luật giới cho một người (mầm mới mỗi lần, trừ khi truyền seed)
   play(pid: number, a: WorldAction, now: number, seed = newSeed()): WorldResult {

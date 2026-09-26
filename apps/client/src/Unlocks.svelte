@@ -1,14 +1,23 @@
 <script lang="ts">
   // Mở khoá (Milestone Moment của RoK): Chủ điện vừa lên tầng có tính năng mới — cuộn giấy liệt kê huy hiệu vừa mở, bấm
-  // từng cái là tới luôn (công trình: bảng công trình; còn lại: đúng tab)
+  // từng cái là tới luôn (công trình: bảng công trình; còn lại: đúng tab). Kèm màn Thu nhận trưởng lão mới (ElderReveal).
   import { Icon, building, paintedUrl, tabIcon, type Kind } from '@rok/art'
   import type { BuildingId } from '@rok/rules'
   import { Card, Medal, Painting, Sheet } from './ui'
   import { L, type Tab } from './lib'
   import { unlockList, type Unlock } from './notices'
   import { social } from './social.svelte'
+  import ElderReveal from './ElderReveal.svelte'
 
-  let { onfocus, ontab }: { onfocus: (id: BuildingId) => void; ontab: (t: Tab, e: MouseEvent) => void } = $props()
+  let {
+    onfocus,
+    ontab,
+    hold = false,
+  }: {
+    onfocus: (id: BuildingId) => void
+    ontab: (t: Tab, e: MouseEvent) => void
+    hold?: boolean // đang xem trận / độ kiếp: màn Thu nhận trưởng lão chờ xong mới hiện
+  } = $props()
   const list = $derived(social.unlock ? unlockList(social.unlock) : [])
   function go(u: Unlock, e: MouseEvent) {
     social.unlock = 0
@@ -47,6 +56,17 @@
     {/each}
   </ul>
 </Sheet>
+
+<!-- nhiều trưởng lão cùng tới: lần lượt từng màn; Xem ở Môn hạ thì bỏ các màn còn lại -->
+<ElderReveal
+  elder={social.elders[0] ?? null}
+  {hold}
+  onclose={() => (social.elders = social.elders.slice(1))}
+  onview={e => {
+    social.elders = []
+    ontab('monHa', e)
+  }}
+/>
 
 <style>
   .grid {

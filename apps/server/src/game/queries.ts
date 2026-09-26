@@ -1,7 +1,7 @@
 // Truy vấn chỉ đọc của client: mỗi khoá một hàm, trả đúng kiểu Answer[k] (@rok/protocol). Thêm truy vấn: thêm khoá vào
 // Query/Answer ở protocol — thiếu hàm ở đây là lỗi biên dịch.
 import type { Report } from '@rok/rules'
-import { CAMP_STAGE_DAYS, weekOf } from '@rok/rules'
+import { CAMP_STAGE_DAYS, FEST_ALLY, FEST_RANKED, FEST_STAGED, festAt, weekOf, type FestId } from '@rok/rules'
 import {
   allyInfo,
   allyOf,
@@ -21,11 +21,13 @@ import {
   arkRow,
   campOf,
   campTotal,
+  festAllyBoard,
+  festBoard,
   stageGain,
   stageMetric,
   stageScore,
 } from '@rok/rules/world'
-import type { Answer, Query, QueryOf } from '@rok/protocol'
+import type { Answer, FestView, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
 import { channel, dmsOf, groupViews, sharedIn } from './talk.ts'
 import type { Sock, World } from './world.ts'
@@ -46,6 +48,34 @@ function stageView(w: World, pid: number) {
     mine: stageGain(w.ps, w.shared, pid),
     wins: w.shared.stageWins ?? ([0, 0] as [number, number]),
     ...(w.shared.stageLast && { last: { n: w.shared.stageLast.n, won: w.shared.stageLast.won } }),
+  }
+}
+
+const FEST_ROWS = 20 // bảng lễ có xếp hạng: top này
+const ALLY_ROWS = 5 // bảng tiên minh của lễ: top này
+// Bảng lễ có xếp hạng (Tông Môn Tranh Bá, Trảm Yêu Lệnh) của lượt đang mở; lễ có bảng tiên minh thêm top minh và hạng minh mình
+function festView(w: World, pid: number, id: FestId): FestView {
+  const now = w.now()
+  w.tick(now)
+  const at = festAt(id, now, w.opened)
+  const key = at?.key ?? -1
+  const rows = (board: [number, number][]) => {
+    const k = board.findIndex(([p]) => p === pid)
+    return {
+      top: board.slice(0, FEST_ROWS).map(([p, pts]) => ({ pid: p, name: w.ps.get(p)?.name ?? '?', pts })),
+      me: k < 0 ? null : { rank: k + 1, pts: board[k][1] },
+    }
+  }
+  const view: FestView = rows((FEST_RANKED as readonly FestId[]).includes(id) ? festBoard(w.ps, id, key, w.npc) : [])
+  if (at && (FEST_STAGED as readonly FestId[]).includes(id))
+    view.stage = { k: at.stage, ...rows(festBoard(w.ps, id, key, w.npc, at.stage)) }
+  if (!(FEST_ALLY as readonly FestId[]).includes(id)) return view
+  const allies = festAllyBoard(w.ps, w.shared, id, key, w.npc)
+  const a = allies.findIndex(([aid]) => aid === allyOf(w.shared, pid)?.id)
+  return {
+    ...view,
+    allies: allies.slice(0, ALLY_ROWS).map(([aid, pts]) => ({ id: aid, tag: w.shared.allies[aid]?.tag ?? '?', pts })),
+    myAlly: a < 0 ? null : { rank: a + 1, pts: allies[a][1] },
   }
 }
 
@@ -131,6 +161,7 @@ export const answersOf = (w: World): Answers => ({
     w.maps.watch(sock, now)
     return w.snapshot(now)
   },
+  fest: (sock, q) => festView(w, sock.data.pid, q.id),
   // Chiến báo người khác chia sẻ: chỉ khi trong kênh mình nghe được có tin của chính người đó mang mã "#r<id>"
   shared: async (sock, q) => {
     if (!sharedIn(w, sock.data.pid, q.pid, q.id)) return null

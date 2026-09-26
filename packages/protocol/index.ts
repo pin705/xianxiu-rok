@@ -3,7 +3,7 @@
 // Hai bất biến:
 //   1. mầm ngẫu nhiên (seed) không bao giờ rời server — mọi seed gửi đi đều là 0 (rules: mầm 0 = ẩn, không tự giải trận)
 //   2. chiến báo (reports) không nằm trong state gửi đi — đi riêng qua `rep` và truy vấn `reports` (state nhỏ, patch nhỏ)
-import type { Action, Err, March, Report, State } from '@rok/rules'
+import type { Action, Err, FestId, March, Report, State } from '@rok/rules'
 import type {
   AllyInfo,
   AllyRow,
@@ -92,6 +92,7 @@ export type Query =
   | { k: 'groups' }
   | { k: 'friends' }
   | { k: 'shared'; pid: number; id: number }
+  | { k: 'fest'; id: FestId } // bảng xếp hạng lễ (FEST_RANKED) lượt đang mở
 // Đạo hữu đã kết giao: tên, cảnh giới, đang chơi không
 export type FriendView = { pid: number; name: string; hall: number; online: boolean }
 // Nhóm chat của mình: tên, người trong nhóm (tên theo state hiện tại), tin cuối
@@ -101,6 +102,15 @@ export type GroupView = {
   owner: number
   members: { pid: number; name: string }[]
   last?: ChatMsg
+}
+// Bảng lễ có xếp hạng (Tông Môn Tranh Bá) lượt đang mở: top, hạng của mình (null: chưa có điểm)
+// Bảng lễ có xếp hạng: top người, hạng của mình; lễ có bảng tiên minh (Trảm Yêu Lệnh) thêm top minh và hạng minh mình
+export type FestView = {
+  top: { pid: number; name: string; pts: number }[]
+  me: { rank: number; pts: number } | null
+  allies?: { id: number; tag: string; pts: number }[]
+  myAlly?: { rank: number; pts: number } | null
+  stage?: { k: number; top: FestView['top']; me: FestView['me'] } // bảng ải đang chạy (lễ FEST_STAGED), k từ 0
 }
 // Công Huân mùa này: top (người có điểm), hạng của mình (null: chưa có điểm)
 export type HonorView = { top: { pid: number; name: string; n: number }[]; me: { rank: number; n: number } | null }
@@ -151,6 +161,7 @@ export type Answer = {
   groups: GroupView[]
   friends: FriendView[]
   shared: Report | null // chiến báo người khác chia sẻ vào kênh mình nghe được
+  fest: FestView
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }
@@ -173,4 +184,5 @@ export interface ClientToServer {
   time(ack: (now: number) => void): void
   say(m: { ch: Channel; text: string }, ack: (r: { ok: true } | { ok: false; err: SayErr }) => void): void
   report(m: { id: number }, ack: (ok: boolean) => void): void
+  unsay(m: { id: number }, ack: (ok: boolean) => void): void // thu hồi tin của mình (trong CHAT_RECALL)
 }

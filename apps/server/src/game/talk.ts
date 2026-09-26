@@ -79,7 +79,9 @@ export function say(
   if (w.chat.isMuted(pid, now)) return no('muted')
   const room = channel(w, pid, m.ch, true)
   if (!room) return no('locked')
-  const msg = w.chat.post(pid, w.ps.get(pid)!.name, room, m.text, now)
+  // tên kèm hiệu tiên minh như RoK: "[TKM] Thanh Vân Tông" (hiệu lúc gửi)
+  const tag = allyOf(w.shared, pid)?.tag
+  const msg = w.chat.post(pid, `${tag ? `[${tag}] ` : ''}${w.ps.get(pid)!.name}`, room, m.text, now)
   if (typeof msg === 'string') return no(msg)
   w.persist.pending.chat.push({ ...msg, ch: room })
   const to = listeners(w, room)
@@ -90,6 +92,27 @@ export function say(
     for (const slot of to)
       for (const c of slot.conns) if (c.connected) c.emit('chat', { ch: chOf(room, m.ch, slot.id), ms: [msg] })
     ack({ ok: true })
+  }, true)
+  w.persist.schedule()
+}
+
+// Thu hồi tin của mình (trong CHAT_RECALL): ghi lại chữ rỗng, báo người nghe phòng đó (client thay tin cùng mã)
+export function unsay(w: World, sock: Sock, id: number, ack: (ok: boolean) => void) {
+  if (w.closing || w.lost || w.readOnly) return w.persist.deliver(() => ack(false))
+  const pid = sock.data.pid
+  const hit = w.chat.recall(id, pid, w.now())
+  if (!hit) return w.persist.deliver(() => ack(false))
+  // tin còn chờ ghi (vừa gửi, chưa commit): thay dòng đó — một lệnh ghi không được đụng một dòng hai lần
+  const pend = w.persist.pending.chat
+  const k = pend.findIndex(r => r.id === id)
+  if (k >= 0) pend[k] = { ...hit.msg, ch: hit.room }
+  else pend.push({ ...hit.msg, ch: hit.room })
+  const to = listeners(w, hit.room)
+  const ch = (hit.room === 'w' ? 'world' : hit.room[0] === 'a' ? 'ally' : `g${hit.room.slice(1)}`) as Channel
+  w.persist.deliver(() => {
+    for (const slot of to)
+      for (const c of slot.conns) if (c.connected) c.emit('chat', { ch: chOf(hit.room, ch, slot.id), ms: [hit.msg] })
+    ack(true)
   }, true)
   w.persist.schedule()
 }

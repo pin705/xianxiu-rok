@@ -99,7 +99,8 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Tu tiên hoá:** **Chủ điện**, cấp = tầng cảnh giới của chưởng môn (đã làm). Điều kiện phụ mỗi tầng: "Hộ Sơn Đại Trận tầng N−1 + một điện khác xoay vòng" (Đan phòng, Tàng Kinh Các, Tàng Bảo Các…). Thưởng lên tầng là "lễ đột phá": tài nguyên + phù + tiên ngọc ở tầng 16/21/25. Món đặc biệt cho tầng 25: "Tổ Sư Đồ Phổ".
 - **Game mình:** 🟡
   - Có: **Chủ điện** tầng 1–25; công trình khác ≤ tầng Chủ điện (`upgradeError`); mở khoá theo tầng (UX.md mục 4); đội xuất quân 1→5 ở tầng 1/6/11/16/21 (`MARCH_SLOTS`); tầng 5/10/15/20 phải độ kiếp.
-  - Thiếu: **Chủ điện không cần công trình nào khác** (RoK buộc Tường + một nhà xoay vòng). Thưởng lên tầng chỉ đi qua nhiệm vụ chính tuyến. Chưa có "lễ đột phá" có quà riêng.
+  - Có: **quà mừng Chủ điện lên tầng** qua thư mỗi tầng (`hallGift`: Thời Quang Phù, nang, kinh thư), tầng đột phá cảnh giới (sau độ kiếp) thêm **lễ đột phá** (Kim Duyên, Thời Quang 8 giờ).
+  - Thiếu: **Chủ điện không cần công trình nào khác** (RoK buộc Tường + một nhà xoay vòng) — cố ý chưa làm vì đụng nhịp xây của sim.
 - **Ưu tiên:** P1 (chuỗi điều kiện phụ, thưởng lên tầng) · **Công sức:** S (thêm dữ liệu yêu cầu; nút "Đi tới" đã có; chạy lại `npm run sim`).
 
 #### A2. Ages — Thời đại & diện mạo thành
@@ -109,15 +110,15 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Vì sao hấp dẫn:** sau vài chục giờ chơi, người chơi được "thấy" rõ mình đã đi xa. Đây là phần thưởng thị giác rẻ mà mạnh.
 - **Tu tiên hoá:** 5 **cảnh giới** Luyện Khí → Trúc Cơ → Kim Đan → Nguyên Anh → Hóa Thần ứng với 5 thời đại. Mốc chuyển là **độ kiếp** (mạnh hơn RoK vì có thử thách và cảnh sét). Mỗi cảnh giới một bộ mái/sơn môn: ngói → lưu ly → vàng → ngọc → mây.
 - **Game mình:** ✅/🟡
-  - Có: cảnh giới và độ kiếp; công trình đổi hình theo tầng (UX.md 5.3: tầng 1–5 mái ngói, 6–10 lưu ly hai tầng, 11–15 mái vàng, Chủ điện thêm điện phụ).
-  - Thiếu: UX.md chưa ghi diện mạo riêng cho **tầng 16–25**. Chưa có quà riêng khi chuyển cảnh giới (ngoài thưởng nhiệm vụ).
+  - Có: cảnh giới và độ kiếp (màn đột phá riêng, `Result.svelte`); công trình đổi hình theo 5 bậc tầng (`tierOf` ở `packages/art/buildings.ts`): 1–5 mái ngói, 6–10 lưu ly xanh, 11–15 lưu ly vàng, 16–20 lưu ly chàm viền bạc, 21–25 bạch ngọc dát vàng trên vầng mây.
+  - Thiếu: quà riêng khi chuyển cảnh giới (ngoài thưởng nhiệm vụ, xem A1c).
 - **Ưu tiên:** P2 · **Công sức:** S–M (vẽ thêm 2 bộ mái trong `@rok/art`).
 
 #### A3. Civilization — Văn minh (phần liên quan tới thành)
 - **Cơ chế:** chọn văn minh lúc tạo thành (Rome, Đức, Anh, Pháp, Tây Ban Nha, Trung Hoa, Nhật, Hàn, Ả Rập, Ottoman, Byzantine, Viking, Ai Cập, Hy Lạp…). Văn minh cho: kiểu kiến trúc thành, buff kinh tế/quân sự, lính đặc biệt, tướng khởi đầu [2 nguồn về việc tồn tại; danh sách đủ chưa xác minh]. Đổi bằng vật phẩm **Đổi văn minh**: thưởng CH 10, hoặc mua ~2 000 000 điểm cá nhân ở cửa hàng liên minh [1 nguồn].
 - **Vì sao hấp dẫn:** bản sắc ngay từ phút đầu ("thành Nhật của tôi"), và có lựa chọn tối ưu để bàn tán.
 - **Tu tiên hoá:** "Đạo thống" của tông môn (Kiếm tông / Đan đỉnh / Thể tu môn / Trận pháp gia): một buff nhỏ, một màu sơn môn, một biểu tượng. Cho đổi bằng "Chuyển Tông Lệnh".
-- **Game mình:** ❌ (chi tiết buff/lính ở file 2).
+- **Game mình:** ✅ Chín **đạo thống** (`DAOS`, `dao` ở `sect/elders.ts`): chọn lúc lập tông môn, mỗi đạo 3 tiềm năng, đệ tử đặc trưng (`DAO_UNITS`), trấn phái chi bảo trên núi, tổ sư + huy hiệu riêng; cải tu sau 7 ngày (chi tiết buff/lính ở file 2).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 ---
@@ -130,7 +131,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** icon lương/gỗ/đá/vàng nổi trên mái nhà khi có hàng. Chạm là tài nguyên bay về thanh trên, số chạy, có tiếng. Chạm một nhà thì thu mọi nhà cùng loại [chưa xác minh].
 - **Vì sao hấp dẫn:** thói quen chạm có thưởng ngay. Tạo nhịp "vào thu một vòng" mỗi phiên.
 - **Tu tiên hoá:** "Linh khí kết tinh": trên Tụ Linh Trận/Linh điền/Khoáng mạch nổi viên linh châu, chạm là châu bay về ô tài nguyên. Có thể giữ cơ chế tự chảy vào kho (hợp "thời gian lười") và chỉ thêm **phần thưởng chạm**: mỗi 4–8 giờ kết một viên "linh châu thượng phẩm" = 30 phút sản lượng, không chạm thì không tích thêm.
-- **Game mình:** 🟡 Tài nguyên tự cộng vào kho (`advance`). UX chỉ có hiệu ứng "icon tài nguyên nổi lên định kỳ" (UX.md 5.3), chưa có thao tác thu.
+- **Game mình:** 🟡 Tài nguyên tự cộng vào kho (`advance`); kho đầy thì công trình hiện nhãn "Đầy", chạm ô tài nguyên mở bảng nguồn thu (`ResSheet.svelte`). Chưa có thao tác chạm thu; gần nhất là Vân Du Khách mỗi 3 giờ ghé núi, chạm nhận quà (`sect/guest.ts`).
 - **Ưu tiên:** P1 · **Công sức:** M (cần kho riêng từng nhà hoặc phần thưởng chạm; ảnh hưởng PvP và sim).
 
 #### B1. Farm — Nông trại (lương)
@@ -178,7 +179,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** bảng Nhà kho hiện 4 dòng "được bảo hộ", thanh so với số đang có [chưa xác minh].
 - **Tu tiên hoá:** "**Mật khố**" trong Tàng Bảo Các: tầng càng cao giấu được càng nhiều. Lore: kết giới ẩn kho, kẻ cướp không phá được.
 - **Game mình:** 🟡
-  - Có: **Tàng Bảo Các** là kho **có trần** (2 000 khi chưa có, ×1,3 mỗi tầng); đổi tài nguyên (Thương hội). PvP bảo hộ **30 % kho** (`PROTECT`), cướp 30 % phần vượt theo sức mang (`RAID_SHARE`, `CARRY`). Vật phẩm trong túi (nang tài nguyên) không bị cướp (cướp chỉ lấy `res`).
+  - Có: **Tàng Bảo Các** là kho **có trần** (2 000 khi chưa có, ×1,3 mỗi tầng); đổi tài nguyên (Thương hội). PvP bảo hộ **45 % sức chứa kho** (`PROTECT`), cướp 30 % phần vượt theo sức mang (`RAID_SHARE`, `CARRY`). Vật phẩm trong túi (nang tài nguyên) không bị cướp (cướp chỉ lấy `res`).
   - Thiếu: bảo hộ theo **tầng công trình** (lượng tuyệt đối).
 - **Ưu tiên:** P1 · **Công sức:** S (đổi `PROTECT` thành hàm theo tầng Tàng Bảo Các; chạy lại `npm run sim -- 30 4 --pvp 20`).
 
@@ -210,7 +211,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** bảng Tường có thanh độ bền, nút Sửa, nút Dập lửa (gem), ô chọn tướng thủ [chưa xác minh vị trí].
 - **Vì sao hấp dẫn:** thua có hậu quả thấy được (lửa, khói), và có việc để làm ngay (sửa, dập) thay vì chỉ đọc báo cáo.
 - **Tu tiên hoá:** **Hộ Sơn Đại Trận**: "trận lực" = độ bền. Bị phá trận thì "linh hỏa thiêu sơn", trận lực tụt dần, bấm "Tu bổ trận cơ" để dừng. Trận lực về 0 thì sơn môn bị đánh bật, phải **dời núi**.
-- **Game mình:** 🟡 **Hộ Sơn Đại Trận** (tầng 6): bên thủ +4 % thủ và máu mỗi tầng (`GUARD_STEP`), có **trưởng lão trấn thủ**. Thiếu độ bền, cháy, dời thành; Hộ Sơn Đại Trận không phải điều kiện của Chủ điện.
+- **Game mình:** ✅ **Hộ Sơn Đại Trận** (tầng 6): bên thủ +4 % thủ và máu mỗi tầng (`GUARD_STEP`), **trưởng lão trấn thủ**, trận lực 500 × (1 + tầng) với linh hỏa, tu bổ trận cơ, sơn môn thất thủ (`core/wall.ts`, xem J4–J5). Khác RoK: không phải điều kiện của Chủ điện (A1b).
 - **Ưu tiên:** P1 · **Công sức:** M (độ bền + cháy theo thời gian lười: `burnUntil`, `durability` trong state; dời thành thuộc P3, xem J5).
 
 #### C2. Watchtower — Tháp canh
@@ -230,7 +231,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** khi có đội địch nhắm vào thành, HUD có cảnh báo đỏ và đồng hồ đếm tới lúc tới [chưa xác minh chi tiết theo cấp tháp].
 - **Vì sao hấp dẫn:** biết trước để kịp khiên, kịp gọi viện. Ngồi nhà vẫn "đánh trả" được.
 - **Tu tiên hoá:** "**Thiên Nhãn Lâu**" (vọng lâu): tầng càng cao càng báo sớm, lộ càng nhiều (số đội → trưởng lão → quân số). Có "kiếm trận" chém đội đến cướp một lượt trước khi giao chiến.
-- **Game mình:** ❌ Không báo trước đội đến cướp; chỉ có Web Push **sau** khi bị cướp. PvP có thời gian hành quân nên báo trước làm được.
+- **Game mình:** 🟡 **Tháp canh** báo trước (`world/raid.ts`, `Hud.svelte`): đội địch vừa xuất quân (cướp tông môn, kết trận, cướp khoáng) là bên bị nhắm thấy thẻ son ở mọi tab (tên, giờ tới, nút Bật khiên), offline thì Web Push. Chưa có công trình riêng, không bắn đội tới, không lộ thêm theo tầng.
 - **Ưu tiên:** P1 · **Công sức:** S (báo trước) + S (lượt bắn trong `fight`).
 
 #### C3. Barracks — Doanh trại (bộ binh)
@@ -272,7 +273,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Mở khoá:** CH 2 [2 nguồn]. Là yêu cầu CH 6, 15.
 - **Cơ chế:** số trinh sát (tới 3), tốc độ, tầm khám phá tăng theo cấp [1–2 nguồn]. Trinh sát xoá sương mù, tìm **làng bộ lạc** (~1 500/vương quốc: tài nguyên, tăng tốc, lính T1, công nghệ kinh tế cấp thấp) và **hang bí ẩn** (~400/vương quốc, 3 độ khó: gem, tăng tốc) [1 nguồn: riseofkingdomsguides]. Trinh sát thành địch trước khi đánh.
 - **Tu tiên hoá:** "Linh Điểu Các" (thả hạc giấy/linh điểu).
-- **Game mình:** ❌ (bản đồ vùng không có sương mù). Chi tiết ở file 3.
+- **Game mình:** ✅ **Mê vụ** riêng mỗi tông môn trên bản đồ giới (`core/fog.ts`), **linh điểu** (1 + 1 mỗi 8 tầng Chủ điện, tối đa 3) khai sương, thôn trang / động phủ cổ tu ghé một lần nhận quà (`world/explore.ts`); linh điểu cũng dùng để do thám tông môn (`world/spy.ts`). Không có công trình riêng. Chi tiết ở file 3.
 - **Ưu tiên:** P2 (file 3) · **Công sức:** M.
 
 ---
@@ -310,7 +311,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Tương tác:** giúp người khác được **điểm cá nhân** (tối đa 10 000/ngày) để mua ở cửa hàng liên minh [2 nguồn].
 - **UI/UX:** trên nhà đang xây/nghiên cứu nổi icon bàn tay "Nhờ giúp". Thanh bên có nút "Giúp tất cả" kèm số việc chờ giúp. Mỗi lượt được giúp có thông báo nhỏ "X đã giúp bạn" [chưa xác minh].
 - **Tu tiên hoá:** "**Tiên Minh Điện**" (hoặc "Minh Ước Đài") trong tông môn: tầng càng cao càng được giúp nhiều lần, chứa được nhiều viện binh của đồng minh.
-- **Game mình:** 🟡 Giúp đỡ tiên minh có sẵn: tối đa **10 lần/việc cố định** (`ALLY_HELPS`), mỗi lần bớt max(1 phút, 1 %); giúp cả việc tuyển (RoK không). Viện binh tối đa 3 đội. Chưa có công trình nâng số lượt/sức chứa, **giúp chưa được trả gì** (RoK trả điểm cá nhân).
+- **Game mình:** 🟡 Giúp đỡ tiên minh: 10 lượt/việc (`ALLY_HELPS`), +1 mỗi tầng Đồng Tâm Trận của Hộ Minh Đại Trận (tối đa 15, `helpsOf`), mỗi lần bớt max(1 phút, 1 %); giúp cả việc tuyển (RoK không); người giúp nhận cống hiến (5/lượt, trần 250/ngày). Viện binh tối đa 3 đội (`REINFORCE_MAX`). Chưa có công trình nâng số lượt / sức chứa viện binh.
 - **Ưu tiên:** P1 · **Công sức:** S (công trình + bảng số) + S (điểm cống hiến, xem I3).
 
 #### D3. Tavern — Tửu quán (rương bạc/vàng)
@@ -323,7 +324,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** cảnh quầy rượu, hai rương, đồng hồ "miễn phí sau…", nút Mở ×1 / ×10, màn lật thẻ có hiệu ứng theo độ hiếm [chưa xác minh chi tiết].
 - **Vì sao hấp dẫn:** quà miễn phí có hẹn giờ (lý do quay lại) và cảm giác may rủi.
 - **Tu tiên hoá:** "**Tụ Duyên Các**" (hoặc "Chiêu Hiền Đường"): "Duyên bạc" miễn phí 3→10 lượt/ngày theo tầng, "Duyên vàng" 48→24 giờ một lượt. Rơi phù, đan, kinh thư, "hồn ấn" trưởng lão. **Bảo hiểm tất định**: duyên vàng thứ 10 chắc chắn ra hồn ấn. Không bán chìa lấy tiền (PLAN: không gacha lớn).
-- **Game mình:** ❌ (trưởng lão đến từ mốc nội dung: bí cảnh, tháp, sự kiện tuần, yêu vương). Bản trả tiền là ⛔. Bản rương miễn phí theo giờ, có bảo hiểm, là **nguồn rơi đồ** hợp cho túi đồ mới.
+- **Game mình:** ✅ **Chiêu Hiền Đài** (`sect/tavern.ts`, từ Chủ điện tầng 2): thiếp bạc miễn phí mỗi 6 giờ, thiếp vàng mỗi 48 giờ, mở thêm bằng Ngân / Kim Duyên Phù trong túi (×1 / ×10); bảo hiểm 10 lần thiếp vàng chắc đủ tín vật thu nhận một trưởng lão (`GOLD_PITY`). Không bán thiếp.
 - **Ưu tiên:** P1 (bản miễn phí) · **Công sức:** M (bảng rơi tất định theo seed + UI mở rương).
 
 #### D4. Builder's Hut — Nhà thợ xây
@@ -331,7 +332,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Cơ chế:** nơi ở của thợ và là chỗ quản lý hàng đợi xây. **1 thợ** vĩnh viễn. **Thợ thứ 2** thuê tạm bằng vật phẩm **Builder Recruitment** (mỗi lần 2 ngày) hoặc gem, và **vĩnh viễn từ VIP 6** [2 nguồn: allclash (qua đoạn trích tìm kiếm), heaven-guardian; giá gem chưa xác minh].
 - **UI/UX:** ở mép trái HUD có biểu tượng búa kèm đồng hồ của từng thợ. Thợ rảnh thì nhấp nháy, chạm vào gợi ý việc nên làm [chưa xác minh].
 - **Tu tiên hoá:** **Tạp dịch viện**. Tạp dịch thứ 2 thuê bằng "**Thuê Dịch Lệnh**" (48 giờ, rơi từ sự kiện/tụ duyên), hoặc vĩnh viễn khi đạt mốc "Hương Hỏa" (xem G1).
-- **Game mình:** 🟡 Có **Tạp dịch** (1 hàng, `QUEUE_SIZE = 1`, nút góc phải dưới nhấp nháy khi rảnh). Thợ thứ 2 ❌; PLAN dự kiến bán ở P4 và đã cảnh báo rất mạnh (Chủ điện 15: bot từ ngày 11 xuống 9, người thường từ 19 xuống 14).
+- **Game mình:** ✅ **Tạp dịch** 1 hàng gốc (`QUEUE_SIZE = 1`) + tạp dịch thứ hai khi dùng **Tạp Dịch Lệnh** 48 giờ (`queueSize` ở `sect/buildings.ts`, dùng thêm thì kéo dài, việc dở vẫn xong khi hết hạn); ô tạp dịch thứ hai trên HUD. Không có bản vĩnh viễn.
 - **Ưu tiên:** P1 · **Công sức:** M (luật đơn giản; phần khó là cân nhịp mùa 49 ngày bằng `npm run sim`).
 
 #### D5. Blacksmith — Lò rèn (trang bị tướng)
@@ -344,26 +345,26 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 #### D6. Shop — Cửa hàng (tức cửa hàng VIP)
 - **Mở khoá:** CH 5 [2 nguồn]. Là toà nhà của **VIP Shop** (chi tiết I1).
 - **Tu tiên hoá:** "**Vạn Bảo Lâu**".
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** M (xem I1).
+- **Game mình:** ✅ **Hương Hỏa Các** (`VIP_SHOP`, `vipBuy` ở `sect/vip.ts`), mở từ bảng Hương Hỏa, không phải toà nhà riêng — xem I1 · **Ưu tiên:** P1 · **Công sức:** M (xem I1).
 
 #### D7. Courier Station — Trạm chuyển phát (Thương nhân bí ẩn)
 - **Mở khoá:** CH 6 [2 nguồn: heaven-guardian, handbook].
 - **Cơ chế:** nơi **Thương nhân bí ẩn** (Mysterious Merchant) ghé (chi tiết I4). Bán hàng bằng tài nguyên hoặc gem [2 nguồn].
 - **Tu tiên hoá:** "**Dịch trạm**" dưới chân núi, nơi "**Vân Du Thương Nhân**" ghé.
-- **Game mình:** ❌ (`data.ts` đã ghi "thương nhân" là một nguồn vật phẩm tương lai) · **Ưu tiên:** P1 · **Công sức:** S–M.
+- **Game mình:** ✅ **Thương nhân vân du** (`sect/merchant.ts`) ghé Thương hội ở Tàng Bảo Các (từ tầng 4), không có công trình riêng — xem I4 · **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### D8. Monument — Đài kỷ niệm
 - **Mở khoá:** CH 8 [2 nguồn: gamesguideinfo, bảng CH].
 - **Cơ chế:** đọc "lịch sử vương quốc" [1 nguồn]. Chứa chuỗi **sự kiện Monument** của cả vương quốc, có thưởng (một nguồn tăng tốc) [1 nguồn: riseofkingdomsguides]. Theo hiểu biết chung, các mốc chung của cả server mở dần giai đoạn (đèo, thánh địa, KvK) [chưa xác minh]. Chi tiết ở file 3.
 - **Tu tiên hoá:** "**Thiên Bi**" của giới: bia khắc các mốc cả giới cùng đạt (vd "50 tông môn tới Trúc Cơ", "yêu vương đầu tiên bị hạ"), mỗi mốc phát quà cho mọi người và mở pha mới.
-- **Game mình:** 🟡 Có **biên niên giới** (dòng tin cả giới biết) và **mùa 49 ngày với 4 pha mở cổng** theo lịch. Chưa có mốc chung phát quà.
+- **Game mình:** 🟡 **Thiên Đạo Biên Niên** (`world/book.ts`, `BOOK`): 13 chương mục tiêu chung của cả giới (có Tu Bổ Thiên Môn góp tài nguyên), hạn theo ngày mùa; xong thì mọi tông môn nhận quà thư + biên niên, hụt thì sang chương sau. Chưa mở pha theo chương: 4 pha mở cổng vẫn theo lịch (`PHASES`).
 - **Ưu tiên:** P1 (file 3 quyết) · **Công sức:** M.
 
 #### D9. Lyceum of Wisdom — Học đường trí tuệ (câu đố)
 - **Mở khoá:** CH 10 [2 nguồn: gamerempire, handbook].
 - **Cơ chế:** sự kiện **Peerless Scholar**: vòng sơ khảo các ngày trong tuần (10 câu, không giới hạn giờ), giữa kỳ thứ Bảy (2 ca ~02:30 và 12:30 UTC), chung kết 20 câu có giờ [1 nguồn]. Cần ~6 câu đúng để qua sơ khảo [1 nguồn]. Thưởng gem, tăng tốc, rương [2 nguồn]. Có mốc 1 000 điểm cho tượng sử thi [1 nguồn].
 - **Tu tiên hoá:** "**Luận Đạo Đài**": vấn đáp điển tích tu tiên, thơ, ngũ hành.
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** M (ngân hàng câu hỏi hai thứ tiếng).
+- **Game mình:** ✅ **Vấn Đạo Đài** (`sect/quiz.ts`, `Quiz.svelte`, từ Chủ điện tầng 3): mỗi ngày 5 câu rút tất định từ 15 câu về luật chơi, quà theo số câu đúng; không có vòng thi giữa kỳ / chung kết có giờ · **Ưu tiên:** P2 · **Công sức:** M (ngân hàng câu hỏi hai thứ tiếng).
 
 #### D10. Bulletin Board — Bảng tin
 - **Mở khoá:** từ đầu, không nâng cấp.
@@ -418,7 +419,7 @@ Xem 2.L.
 
 #### E7. Kho, bảo hộ và cướp
 - **Cơ chế:** RoK **không giới hạn** tài nguyên mở (các nguồn chỉ nói tới mức bảo hộ, không nói trần chứa) [suy ra]. Tài nguyên an toàn gồm: phần dưới mức Nhà kho [3 nguồn], **vật phẩm trong túi** [2 nguồn], phần đang đọng trong công trình chưa thu [1 nguồn], phần đã trả vào việc đang chạy [1 nguồn]. Phần còn lại mất theo sức mang của đội cướp. Văn hoá "tiêu/nhét vào việc dài trước khi off" [2 nguồn].
-- **Game mình:** 🟡 Kho có trần (Tàng Bảo Các), bảo hộ 30 %, cướp 30 % phần vượt theo sức mang. Vật phẩm an toàn (✅). Khác biệt có chủ đích: trần kho tạo lý do quay lại (UX), nhưng làm "để dành cho sự kiện" khó hơn RoK. Nang tài nguyên trong túi (không tính trần) là van xả.
+- **Game mình:** 🟡 Kho có trần (Tàng Bảo Các), bảo hộ 45 % sức chứa (`PROTECT`), cướp 30 % phần vượt theo sức mang. Vật phẩm an toàn (✅). Khác biệt có chủ đích: trần kho tạo lý do quay lại (UX), nhưng làm "để dành cho sự kiện" khó hơn RoK. Nang tài nguyên trong túi (không tính trần; lễ vật Hương Hỏa cũng trả bằng nang) là van xả.
 - **Ưu tiên:** P1 (xem B5) · **Công sức:** S.
 
 #### E8. Thu thập trên bản đồ (tóm tắt, chi tiết file 3)
@@ -434,7 +435,7 @@ Xem 2.L.
 - **Cơ chế:** 1 thợ vĩnh viễn + thợ 2 thuê theo lượt **2 ngày** (Builder Recruitment/gem) hoặc vĩnh viễn từ **VIP 6** [2 nguồn]. Đây là lý do số một để người F2P cày lên VIP 6 [2 nguồn].
 - **Vì sao hấp dẫn:** hai việc song song làm tiến độ nhanh thấy rõ; hết hạn thuê là "đau", tạo mục tiêu VIP.
 - **Tu tiên hoá:** Tạp dịch thứ 2 ("Thuê Dịch Lệnh" 48 giờ; vĩnh viễn ở mốc Hương Hỏa).
-- **Game mình:** ❌ (xem D4).
+- **Game mình:** ✅ Tạp Dịch Lệnh thuê tạp dịch thứ hai 48 giờ; không có bản vĩnh viễn (xem D4).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### F2. Các hàng đợi khác
@@ -446,7 +447,7 @@ Xem 2.L.
 - **Cơ chế:** số lần theo Trung tâm liên minh (5 → 30). Áp cho xây, nghiên cứu, chữa, không cho huấn luyện. Người giúp được điểm cá nhân (≤ 10 000/ngày) [2 nguồn].
 - **UI/UX:** icon bàn tay trên nhà → nhờ giúp. Nút "Giúp tất cả" ở thanh bên có số đếm [chưa xác minh vị trí].
 - **Tu tiên hoá:** "Đồng môn tương trợ".
-- **Game mình:** 🟡 có (10 lần/việc, max(1 phút, 1 %), cả tuyển), thiếu scaling theo công trình và thiếu phần thưởng cho người giúp (D2, I3).
+- **Game mình:** ✅ 10 → 15 lượt/việc theo Hộ Minh Đại Trận (`helpsOf`), mỗi lần bớt max(1 phút, 1 %), cả việc tuyển; việc vừa giao tự nhờ giúp, nút giúp tất cả nổi ở mọi tab; người giúp nhận cống hiến (5/lượt, trần 250/ngày) tiêu ở Cống Hiến Các. Số lượt tăng theo trận của minh, không theo công trình (D2).
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### F4. Dùng tăng tốc
@@ -462,12 +463,12 @@ Xem 2.L.
 #### F6. "Miễn phí khi còn < N phút"
 - **Cơ chế:** nhiều SLG (Lords Mobile, Whiteout Survival) có nút xong miễn phí khi còn dưới vài phút, VIP kéo dài ngưỡng. **Không thấy trong các hướng dẫn RoK đã đọc** (tăng tốc, VIP, công trình đều không nhắc; bảng buff VIP 0–15 của gamesguideinfo không có dòng này). Riêng một trang lẻ của gamesguideinfo (mã trang VIP 16) lại hiện dòng "Instant Construction Time Extension 1 phút" gắn nhãn VIP 1 — có thể lẫn dữ liệu game khác [chưa xác minh — cần kiểm trong game]. Ở RoK, việc ngắn được giúp đỡ liên minh xoá.
 - **Tu tiên hoá:** "Thuận thủ": việc còn < 3 phút thì Tạp dịch làm nốt ngay. Mốc Hương Hỏa kéo lên 5–10 phút.
-- **Game mình:** ❌ · **Ưu tiên:** P2 (tiện, rẻ, hợp phiên 5–10 phút) · **Công sức:** S (thêm action `finishFree` khi `finishAt − now ≤ N`).
+- **Game mình:** ✅ Nút Miễn phí (`finish` ở `sect/vip.ts`, `vipFree`): việc còn ≤ 1–8 phút theo cấp Hương Hỏa (`VIP_FREE`) thì xong ngay, người mới dưới Chủ điện tầng 4 có 1 phút; không áp cho luyện đan · **Ưu tiên:** P2 (tiện, rẻ, hợp phiên 5–10 phút) · **Công sức:** S (thêm action `finishFree` khi `finishAt − now ≤ N`).
 
 #### F7. Quick Replenish — Bù tài nguyên một chạm
 - **Cơ chế:** bản 1.0.87 (10/2024) thêm nút bù tài nguyên còn thiếu khi xây/nghiên cứu/huấn luyện bằng vật phẩm tài nguyên trong túi [2 nguồn: riseofkingdomsguides, empirebuildacademy].
 - **Tu tiên hoá:** nút "Mở nang bù đủ" ngay trên dòng chi phí đỏ.
-- **Game mình:** ❌ — đã có nang tài nguyên trong túi đồ, bảng công trình đã tô đỏ phần thiếu (UX.md 5.4). Chỉ thiếu nút chọn tổ hợp nang nhỏ nhất đủ bù.
+- **Game mình:** ✅ Bù tài nguyên thiếu một chạm trong bảng công trình (`Refill.svelte`): mỗi loại thiếu một dòng — mở nang vừa đủ (nhỏ trước), đổi phần dư ở Thương hội, hoặc "đợi ~T".
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 ---
@@ -497,20 +498,20 @@ Xem 2.L.
   - Nhảy nhiều cấp một lúc thì quà các cấp bị nhảy gửi qua thư [1 nguồn].
 - **Mốc ai cũng nhắm:** VIP 6 (thợ 2 vĩnh viễn), VIP 10 (1 tượng huyền thoại/ngày), VIP 12 (2 tượng + buff chiến đấu), VIP 14 (3 tượng) [2+ nguồn].
 - **Tu tiên hoá:** "**Hương Hỏa**" (hương khói tín đồ dâng tông môn) hoặc "Đạo Hạnh": điểm tích mỗi ngày đăng nhập, làm nhiệm vụ ngày, giúp đồng môn, và từ Tu Tiên Lệnh. **Không bán điểm lấy tiền trực tiếp** (PLAN mục 7). Buff có trần thấp hơn RoK (sản lượng tối đa +20–25 %, không buff chiến đấu PvP).
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** M (bảng số + màn Hương Hỏa + nguồn điểm; phải qua sim vì buff sản lượng/tốc xây dồn lên nhịp mùa).
+- **Game mình:** ✅ **Hương Hỏa** (`core/vip.ts`, `VIP_LEVELS`, bảng `VipSheet.svelte`): 12 cấp (tới 70.000 điểm), điểm từ chuỗi ngày vào game và Hương Hỏa Lệnh; không bán điểm · **Ưu tiên:** P1 · **Công sức:** M (bảng số + màn Hương Hỏa + nguồn điểm; phải qua sim vì buff sản lượng/tốc xây dồn lên nhịp mùa).
 
 #### G2. Điểm danh VIP (chuỗi đăng nhập)
 - **Cơ chế:** mỗi ngày nhận điểm VIP miễn phí: **40 ngày đầu chuỗi, +20 mỗi ngày liên tiếp, tối đa 200/ngày**. Đứt chuỗi thì về lại [2 nguồn: đoạn trích fandom, gamerempire/topuplive "tối đa 200, liên tiếp được nhiều hơn"].
 - **UI/UX:** nút VIP trên HUD có chấm đỏ khi chưa nhận. Bảng VIP có thanh điểm tới cấp sau [chưa xác minh].
 - **Vì sao hấp dẫn:** mất chuỗi là mất 200 điểm/ngày — lực kéo đăng nhập mạnh nhất, không tốn gì.
 - **Tu tiên hoá:** "Dâng hương mỗi sáng" ở Chủ điện: chuỗi ngày càng dài hương càng nhiều.
-- **Game mình:** 🟡 Có **Thất Nhật Lễ** (7 quà cho 7 ngày đăng nhập đầu trong 14 ngày) và nhiệm vụ tuần "mở rương ngày 5 hôm". Chưa có chuỗi đăng nhập lâu dài.
+- **Game mình:** ✅ Điểm danh Hương Hỏa (`vipLogin`, `VIP_DAILY`): 40 → 200 điểm/ngày theo chuỗi ngày liên tiếp (đủ 200 từ ngày 7), lỡ một ngày là về đầu chuỗi; bên cạnh vẫn có Thất Nhật Lễ cho tân thủ.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### G3. Rương VIP hằng ngày
 - **Cơ chế:** mỗi ngày một rương miễn phí theo cấp VIP. Từ VIP 10: 1 **tượng tướng huyền thoại vạn năng**/ngày, VIP 12: 2, VIP 14 trở lên: 3, kèm sách kinh nghiệm và tài nguyên [2+ nguồn]. Cấp thấp hơn có tượng ưu tú (VIP 4–6) và sử thi (VIP 7–9) [1 nguồn].
 - **Tu tiên hoá:** "Hương hoả hoàn lễ": mỗi ngày một túi quà theo mốc Hương Hỏa (phù, nang, kinh thư, hồn ấn).
-- **Game mình:** 🟡 Rương nhiệm vụ ngày (Tụ Khí + Bồi Nguyên khi xong 4 việc) và rương tuần. Không có rương theo cấp tích luỹ.
+- **Game mình:** ✅ Lễ vật Hương Hỏa mỗi ngày theo cấp (`VIP_CHEST`, `vipChest`): nang tài nguyên (nằm trong túi, không bị cướp), Thời Quang Phù, từ cấp 6 thêm kinh thư. Không có tín vật trưởng lão như tượng của RoK.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### G4. Rương đặc quyền (Special Privilege Chest)
@@ -543,7 +544,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
   VIP 16: sản lượng 55 % [1 nguồn: riseofkingdomsguides]. VIP 17–19, SVIP: buff "đã cập nhật" ở 1.0.87 nhưng không có số [chưa xác minh].
 - **Vì sao hấp dẫn:** buff vĩnh viễn thấy ngay trên mọi đồng hồ; mốc có tên (VIP 6, 10, 14) để khoe và để nhắm.
 - **Tu tiên hoá:** bảng Hương Hỏa 0–10 với trần: sản lượng ≤ +25 %, xây/công pháp ≤ +15 %, sức chứa Đan phòng ≤ +20 %, **không** buff công/thủ/máu (tránh bán sức mạnh PvP).
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** M.
+- **Game mình:** ✅ Tăng ích Hương Hỏa theo cấp (`VIP_PERKS`, mỗi cấp một bộ, không cộng dồn): cấp 12 sản lượng +7 %, chữa +20 %, tuyển +7 %, sức chứa +18 %, hành quân +10 %, xây +5 %, công +3 %, sinh lực +3 % · **Ưu tiên:** P1 · **Công sức:** M.
 
 #### G6. VIP 19 và SVIP
 - **Cơ chế:** 1.0.87 thêm VIP 19, **SVIP** (~9M điểm) và **SVIP Shop** đổi đồ trang trí: hiệu ứng thành, hiệu ứng dịch chuyển, hiệu ứng hành quân, chủ đề hồ sơ (theo chủ đề tinh tú, chiến tranh). Buff, rương riêng và gói đặc biệt các cấp cũng được cập nhật [2 nguồn].
@@ -595,7 +596,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### H5. Enhanced Gathering — Tăng tốc thu thập
 - **Cơ chế:** +50 % tốc độ thu thập, **8 giờ** hoặc **24 giờ** [2 nguồn: riseofkingdomsguides, heaven-guardian]. Bán ở Thương nhân [1 nguồn].
 - **Tu tiên hoá:** "**Khai Mạch Phù**": khai mỏ trên bản đồ giới +50 %.
-- **Game mình:** ❌ (mỏ P3 có, linh triều +50 % khai mỏ có, phù chưa có).
+- **Game mình:** ✅ **Khai Linh Phù** 8 / 24 giờ, khai mỏ +50 % (`BAG.khaiLinh8/24`, khoá `gather`): ở Thiên Môn Thương Điếm, kho lễ Thôn Trang; cộng với tâm pháp khai mỏ của trưởng lão, linh triều, lãnh thổ minh.
 - **Ưu tiên:** P2 · **Công sức:** S (thêm khoá bonus `gather` + một dòng `BAG`).
 
 #### H6. Production boost — Tăng sản lượng thành
@@ -613,7 +614,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### H8. Army Expansion — Mở rộng quân
 - **Cơ chế:** tăng sức chứa quân mỗi đội có thời hạn; "Advanced Army Expansion" 2 500 gem ở VIP 14 [1 nguồn]. Là một nguồn sức chứa quân cùng CH, cấp tướng, sự kiện [2 nguồn].
 - **Tu tiên hoá:** "Quảng Trận Phù" (trận cơ mở rộng: mỗi đội mang thêm đệ tử).
-- **Game mình:** ❌ (đội mình không có trần quân số theo cấp).
+- **Game mình:** ✅ **Trận dung** (`capOf`): mỗi đội ra bản đồ giới mang tối đa 500 + 80 mỗi cấp chủ tướng trên 1 (+10 % mỗi sao); **Khuếch Trận Kỳ** +10 % trong 8 giờ (`BAG.khuechTran8`) ở Thương nhân vân du, Thiên Môn Thương Điếm.
 - **Ưu tiên:** P2 · **Công sức:** S nếu có trần quân số.
 
 #### H9. Peace Shield — Khiên hoà bình
@@ -630,7 +631,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### H10. Anti-scouting — Chống do thám
 - **Cơ chế:** có vật phẩm làm báo cáo trinh sát của địch **sai lệch** (hiện gấp đôi quân) [1 nguồn]. Tên chính xác, thời hạn [chưa xác minh].
 - **Tu tiên hoá:** "**Mê Tung Phù**": trinh sát của đối thủ thấy quân số gấp đôi, trưởng lão ẩn.
-- **Game mình:** ❌ — màn chọn đối thủ PvP đang lộ luôn trưởng lão trấn thủ và tầng Hộ Sơn Đại Trận (`scout()` trong `world/fight.ts`).
+- **Game mình:** 🟡 Ẩn Tung Phù 8/24 giờ (`veil`: `sect/bag.ts`, `world/spy.ts`): linh điểu do thám của người khác về tay không (vẫn tốn, bên kia vẫn nhận thư bị do thám); bán ở Thương nhân vân du và Hương Hỏa Các. Màn chọn đối thủ PvP vẫn lộ quân giữ nhà (làm tròn), trưởng lão trấn thủ, tầng Hộ Sơn Đại Trận (`scout()` trong `world/fight.ts`); chưa có báo cáo giả.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### H11. Teleports — Dịch chuyển
@@ -642,13 +643,13 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 - **Điều kiện chung:** không đang giao chiến, mọi đội đã về, không đang bị kết trận [2 nguồn]; không War Frenzy, không có viện binh trong thành [1 nguồn].
 - **Nguồn:** cửa hàng liên minh (rẻ nhất tính theo điểm), VIP shop, Thương nhân, Ark of Osiris [2 nguồn].
 - **Tu tiên hoá:** "**Na Di Phù**" (dời núi trong vùng), "**Hồi Minh Phù**" (về lãnh thổ tiên minh), "Tân Thủ Na Di" (chọn giới lúc mới vào).
-- **Game mình:** ❌ Chỗ ngồi trên bản đồ giới do server xếp (`seat`), không đổi được.
+- **Game mình:** ✅ Đủ 4 kiểu dời núi (`world/territory.ts`): dời núi tân thủ (`newbieMove`, lần đầu, trước Chủ điện tầng 8), dời vào lãnh thổ minh (`move`, 24 giờ một lần), Di Sơn Phù (ngẫu nhiên vùng ngoài), Càn Khôn Phù (tự chọn ô ở vùng đã mở); mọi đội phải ở nhà, sát khí chặn dời.
 - **Ưu tiên:** P2 (P3 cần nếu có dời thành) · **Công sức:** M (chọn ô trống, kiểm cổng/vùng, đưa đội về).
 
 #### H12. Tavern Keys — Chìa bạc, chìa vàng
 - **Cơ chế:** mở rương Tửu quán. Chìa vàng ~600 gem [1 nguồn]. Có từ sự kiện, gói "Living Legends"… [1 nguồn].
 - **Tu tiên hoá:** "Duyên Lệnh" bạc/vàng.
-- **Game mình:** ❌ (theo D3).
+- **Game mình:** ✅ Ngân Duyên Phù / Kim Duyên Phù (`BAG.nganDuyen/kimDuyen`): mở thêm lượt ở Chiêu Hiền Đài; từ Nhật Khóa, sự kiện, thành tựu, các cửa hàng — không bán.
 - **Ưu tiên:** P1 cùng D3 · **Công sức:** S.
 
 #### H13. Tome of Knowledge — Sách kinh nghiệm tướng
@@ -664,7 +665,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
   - **Starlight Sculpture** (Brand-new / Dazzling…) là tượng hướng về tướng mình chọn [2 nguồn].
   - Nguồn: rương VIP (từ VIP 10), Ark of Osiris (3–5), Wheel of Fortune, MGE, Karuak, cửa hàng viễn chinh (tượng riêng 2 500 huân chương), VIP shop (sử thi 200 gem, huyền thoại 2 000 gem), More Than Gems [2 nguồn]. Chi tiết ở file 2.
 - **Tu tiên hoá:** "**Hồn Ấn**" của trưởng lão (riêng / vạn năng).
-- **Game mình:** ❌ (trưởng lão nhận từ mốc, lên cấp bằng kinh nghiệm; công pháp bị động mở theo cấp).
+- **Game mình:** 🟡 Tín vật riêng từng trưởng lão (Chiêu Hiền Đài, Thiên Cơ Luân): đủ 10 thu nhận, dư thì nâng sao 1–6 (`STAR_COST`; mỗi sao tăng công / sinh lực / công pháp khi dẫn đội) hoặc ngộ công pháp (`ngo`, `SKILL_COST`: một môn ngẫu nhiên lên một tầng, tối đa 5) — `sect/tavern.ts`. Chưa có tín vật vạn năng / Starlight; tâm pháp vẫn mở theo cấp trưởng lão.
 - **Ưu tiên:** P2 (file 2) · **Công sức:** L.
 
 #### H15. Equipment materials & blueprints — Nguyên liệu, bản vẽ trang bị
@@ -686,21 +687,21 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### H17. VIP Points — Vật phẩm điểm VIP
 - **Cơ chế:** nhiều mệnh giá, từ quà liên minh, cửa hàng liên minh (100 điểm/50 000 điểm cá nhân), sự kiện; dư điểm khi đổi hệ VIP được trả lại dạng vật phẩm qua thư (1.0.87) [2 nguồn].
 - **Tu tiên hoá:** "Hương Hỏa Nén".
-- **Game mình:** ❌ (theo G1) · **Ưu tiên:** P1 cùng G1 · **Công sức:** S.
+- **Game mình:** ✅ Hương Hỏa Lệnh 50 / 200 điểm (`BAG.huongHoa*`): ở Thương nhân vân du, Thiên Môn Thương Điếm, quà phái thắng Chính Tà · **Ưu tiên:** P1 cùng G1 · **Công sức:** S.
 
 #### H18. Action Point Recovery — Hồi điểm hành động
 - **Cơ chế:** AP dùng đánh man tộc/pháo đài. Vật phẩm hồi AP nhiều cỡ [1 nguồn: VIP shop "Basic 100 AP" 12 000 lương, 30/tuần; rương pháo đài 50 AP]. VIP cộng tốc hồi AP (xem G5). Chi tiết ở file 3.
-- **Game mình:** ❌ (không có AP; PvE giới hạn bằng thời gian hồi hang/tông môn). ⛔ nếu thêm AP chỉ để bán.
+- **Game mình:** ✅ **Hành lực** (`AP_MAX` 100, hồi 1 mỗi 3 phút, mỗi lần săn yêu thú giới tốn 10) + **Hành Lực Đan** +50 (`BAG.hanhLuc50`, được vượt mức tối đa) ở Thương nhân vân du, Hương Hỏa Các, quà Vân Du Khách — không bán.
 - **Ưu tiên:** — · **Công sức:** —.
 
 #### H19. Builder Recruitment — Thuê thợ
 - **Cơ chế:** mở thợ thứ 2 trong 2 ngày [1 nguồn]. Hết giá trị khi đạt VIP 6.
 - **Tu tiên hoá:** "Thuê Dịch Lệnh" 48 giờ.
-- **Game mình:** ❌ · **Ưu tiên:** P1 cùng F1 · **Công sức:** S.
+- **Game mình:** ✅ Tạp Dịch Lệnh 48 giờ (`BAG.tapDich48`, dùng thêm thì kéo dài): ở Hương Hỏa Các, Thiên Môn Thương Điếm, kho lễ Tông Lệnh Bảo Khố / Côn Lôn, mốc Công Huân 6.000 · **Ưu tiên:** P1 cùng F1 · **Công sức:** S.
 
 #### H20. Kingdom Map — Bản đồ vương quốc
 - **Cơ chế:** xoá sương mù 10 × 10 ô quanh điểm chọn [1 nguồn].
-- **Game mình:** ❌ (không có sương mù) · **Ưu tiên:** P2 (file 3).
+- **Game mình:** ✅ **Sơn Hà Đồ** (`BAG.sonHa12`, `revealNear` ở `core/fog.ts`): tan ngay 12 ô mê vụ chưa khai gần tông môn nhất (không chọn điểm như RoK); ở Thương nhân vân du, kho lễ Thôn Trang · **Ưu tiên:** P2 (file 3).
 
 #### H21. Passport Page — Trang hộ chiếu (di cư)
 - **Cơ chế:** di cư sang vương quốc khác, số trang theo lực chiến: 1 (< 10M) … 6 (25–30M) … 25 (50–55M) … 75 (> 100M). 600 000 điểm cá nhân/trang ở cửa hàng liên minh (lãnh đạo nhập hàng 100 000 điểm liên minh). Hồi 30 ngày giữa hai lần di cư. Tài nguyên mở phải dưới mức bảo hộ [1–2 nguồn]. "Beginner's Immigration" bị ngừng cho acc mới từ 26/03/2025 [1 nguồn].
@@ -708,16 +709,16 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 
 #### H22. Civilization Change — Đổi văn minh
 - **Cơ chế:** thưởng CH 10; ~2M điểm cá nhân ở cửa hàng liên minh [1 nguồn].
-- **Game mình:** ❌ (theo A3) · **Ưu tiên:** P2.
+- **Game mình:** ✅ Cải tu đạo thống ở Chủ điện (cùng màn chọn), miễn phí, 7 ngày một lần (`DAO_COOL`) · **Ưu tiên:** P2.
 
 #### H23. Đổi tên, khung ảnh, đồ hồ sơ
 - **Cơ chế:** vật phẩm đổi tên thống đốc, khung ảnh đại diện, chủ đề hồ sơ (SVIP shop) [SVIP: 2 nguồn; đổi tên chưa xác minh].
 - **Tu tiên hoá:** "Cải Danh Lệnh", khung ấn triện.
-- **Game mình:** ❌ (tên tông môn đặt một lần) · **Ưu tiên:** P2 · **Công sức:** S (cần lọc tên như chat).
+- **Game mình:** 🟡 Cải Danh Lệnh đổi tên tông môn (`BAG.caiDanh`, `/account/rename`, server chặn tên trùng / từ tục) đổi chân dung (`face`: chưởng môn hoặc trưởng lão đã thu nhận) và khung chân dung mở theo thành tích (`frame`: Hương Hỏa, phi thăng, đệ nhất Công Huân, Luận Kiếm, luân hồi); chưa có chủ đề hồ sơ · **Ưu tiên:** P2 · **Công sức:** S (cần lọc tên như chat).
 
 #### H24. Tiền tệ sự kiện, coin đặc thù
 - **Cơ chế:** Lucky Coin (Lucky Stall: giảm chi phí xây/nghiên cứu/huấn luyện, trần 50M lương, 50M gỗ, 37,5M đá, 20M vàng; hết sự kiện thì xoá coin), Exhibit/Relic Coin (Bảo tàng), huân chương viễn chinh, coin Sunset Canyon, điểm cá nhân/liên minh, Soluna Coin (KvK Light & Darkness, góp công nghệ vương quốc) [1 nguồn mỗi món]. Chi tiết ở file 5–6.
-- **Game mình:** 🟡 Lễ hội đang tính **điểm** theo mốc (Tông Môn Tranh Bá, Săn Yêu Lệnh), chưa có coin để tiêu ở cửa hàng sự kiện.
+- **Game mình:** ✅ Lệnh bài riêng của từng sự kiện (`festTokens` ở `core/fest.ts`): Tông Môn Lệnh, Côn Lôn / Thục Sơn / Nga Mi Lệnh, Nguyệt Bính, Hỷ Thước, Hộ Thôn Lệnh đổi ở kho lễ, Thiên Cơ Lệnh quay Thiên Cơ Luân — hết sự kiện là hết; ngoài ra Kiếm Ý, Phi Thăng Tệ, cống hiến.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ---
@@ -747,7 +748,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 - **UI/UX:** lưới ô hàng, mỗi ô ghi giá, số còn lại tuần này; ô khoá ghi "VIP N"; đồng hồ tới lần làm mới [chưa xác minh].
 - **Vì sao hấp dẫn:** mỗi tuần có đồ "giá hời" giới hạn → lý do ghé; ô khoá VIP là lời mời lên cấp.
 - **Tu tiên hoá:** "**Vạn Bảo Lâu**": trả bằng linh thạch (món thường) và **tiên ngọc kiếm được** (món quý), làm mới thứ Hai, mặt hàng mở theo Hương Hỏa.
-- **Game mình:** ❌ · **Ưu tiên:** P1 · **Công sức:** M (bảng hàng tất định theo tuần + giới hạn mua + UI).
+- **Game mình:** ✅ **Hương Hỏa Các** (`VIP_SHOP`, `vipBuy`): 16 món mở theo cấp Hương Hỏa (có Tạp Dịch Lệnh, Di Sơn / Càn Khôn Phù, Kim Duyên Phù), mua bằng tài nguyên × tầng Chủ điện, hạn mức mỗi tuần, thứ Hai làm mới; không có tiền premium · **Ưu tiên:** P1 · **Công sức:** M (bảng hàng tất định theo tuần + giới hạn mua + UI).
 
 #### I2. SVIP Shop
 - **Cơ chế:** chỉ cho SVIP; đổi hiệu ứng thành, hiệu ứng dịch chuyển, hiệu ứng hành quân, chủ đề hồ sơ [2 nguồn]. Tiền tệ [chưa xác minh].
@@ -764,7 +765,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
   - **Alliance Reclaim:** đổi đồ thừa (tượng, Starlight, sách Covenant, mũi tên) lấy điểm cá nhân [1 nguồn].
 - **Vì sao hấp dẫn:** biến việc giúp người khác (vốn vô hình) thành tiền của mình. Lãnh đạo có quyền "nuôi" minh.
 - **Tu tiên hoá:** "**Tiên Minh Bảo Khố**". Điểm cá nhân = "**cống hiến**", điểm chung = "**minh khố**". Trưởng lão minh nhập hàng.
-- **Game mình:** ❌ Giúp đỡ, kết trận, viện binh đang không sinh điểm gì.
+- **Game mình:** ✅ **Cống Hiến Các** (`AllyShop.svelte`, `ALLY_SHOP`): cống hiến cá nhân từ cung phụng Hộ Minh Đại Trận và giúp đỡ (trần 250/ngày từ giúp), đường chủ / minh chủ nhập hàng bằng Minh khố, người trong minh đổi bằng cống hiến. Chưa có Alliance Reclaim; kết trận, viện binh không sinh cống hiến.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### I4. Mysterious Merchant — Thương nhân bí ẩn
@@ -778,28 +779,28 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 - **UI/UX:** xe hàng/thương nhân xuất hiện trong thành kèm chấm đỏ; bảng 4 hàng × 4 ô, tag % giảm giá, nút làm mới kèm giá [chưa xác minh].
 - **Vì sao hấp dẫn:** bất ngờ nhỏ, "món hời hôm nay", biến tài nguyên thừa thành tăng tốc.
 - **Tu tiên hoá:** "**Vân Du Thương Nhân**" ghé Dịch trạm lúc 0h giờ VN và thỉnh thoảng sau khi xong việc. Bán phù/nang/buff lấy **linh thạch hoặc linh thảo/khoáng thừa**, làm mới 1 lần miễn phí mỗi ngày (thêm lần thì tốn linh thạch tăng dần). Hàng chọn bằng seed theo ngày để server và client cùng tính.
-- **Game mình:** ❌ — cũng là **van xả kho lệch** thứ hai bên cạnh Thương hội.
+- **Game mình:** ✅ **Thương nhân vân du** (`sect/merchant.ts`, `Merchant.svelte`) ở Thương hội (Tàng Bảo Các tầng 4): 6 món mỗi 8 giờ, tất định theo tông môn + lượt, giá bằng một loại tài nguyên × tầng Chủ điện, mỗi món mua một lần — **van xả kho lệch** bên cạnh Thương hội. Không có nút làm mới.
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### I5. Expedition Shop — Cửa hàng viễn chinh (Medal Store)
 - **Cơ chế:** chế độ Expedition (chiến dịch một người, 1–3 sao mỗi màn, số đội tăng ở màn 6/16/26/41) cho **Medals of the Conqueror** và rương hằng ngày theo sao [1–2 nguồn]. Cửa hàng bán tượng Aethelflaed (có trần/ngày), Constance (rẻ), một tượng sử thi xoay vòng hằng tuần, tượng riêng ~2 500 huân chương [2 nguồn]. Lần đầu qua các màn còn cho một đống gem và tăng tốc [2 nguồn].
 - **Tu tiên hoá:** "**Công Huân Các**" đổi "huân chương" từ Thông Thiên Tháp/bí cảnh.
-- **Game mình:** 🟡 Có **Thông Thiên Tháp** và **bí cảnh** (thưởng lần đầu), chưa có tiền tệ tích luỹ và cửa hàng.
+- **Game mình:** ✅ **Thông Thiên Tháp** và **bí cảnh** (thưởng lần đầu, thu nhận trưởng lão ở tháp tầng 30 / 45), rương ngày **Tĩnh tọa ngộ đạo** (`towerChest`) và **Trấn Tháp Các** (`towerBuy`, `TOWER_SHOP`): Tháp Lệnh 10 mỗi tầng tháp (kỷ lục, giữ qua luân hồi) + 5 × phần rương mỗi lần mở Tĩnh tọa; đổi kinh thư, phù, duyên phù, phù tăng ích, tín vật trưởng lão của tuần (xoay 5 người), mỗi món có hạn tuần. Chưa có: huân chương theo sao màn bí cảnh.
 - **Ưu tiên:** P1 · **Công sức:** S–M (tháp cho "tháp lệnh" mỗi tầng + cửa hàng nhỏ).
 
 #### I6. Sunset Canyon Shop — Cửa hàng Hẻm Hoàng Hôn
 - **Cơ chế:** Sunset Canyon (PvP phòng thủ bất đồng bộ, 5 lượt miễn phí/ngày, mùa 7 ngày) thưởng coin theo hạng để đổi tượng/đồ [1 nguồn; mặt hàng/giá chưa xác minh]. Chi tiết ở file 6.
 - **Tu tiên hoá:** "Luận Kiếm Đài thương điếm".
-- **Game mình:** ❌ (xếp hạng PvP có điểm Elo, chưa có tiền tệ). · **Ưu tiên:** P2 (file 6).
+- **Game mình:** ✅ **Luận Kiếm Thương Điếm** ở Luận Kiếm Đài (`arenaBuy`, `KY_SHOP`): Kiếm Ý từ mỗi trận (thắng 20, thua 8), rương ngày theo bậc, phục thù; đổi kinh thư, phù, thiếp, Chiến Ý Phù, mỗi món có hạn mỗi tuần. · **Ưu tiên:** P2 (file 6).
 
 #### I7. KvK / Lost Kingdom — cửa hàng và tiền tệ mùa
 - **Cơ chế:** KvK có tiền tệ và điểm riêng theo mùa: Honor Points (xếp hạng cá nhân/minh/vương quốc), Soluna Coins (góp công nghệ cả vương quốc) [1 nguồn]. Có cửa hàng cố định đổi Honor hay không [chưa xác minh]. Chi tiết ở file 6.
-- **Game mình:** 🟡 Có điểm mùa theo phe, bảng phong thần; chưa có cửa hàng mùa. · **Ưu tiên:** P2 (file 6).
+- **Game mình:** ✅ **Công Huân** (điểm cá nhân trong mùa, `sect/honor.ts`) → **Phi Thăng Tệ** (mỗi 20 Công Huân một đồng, giữ qua mùa) tiêu ở **Thiên Môn Thương Điếm** (`coinBuy`, `COIN_SHOP`); bên cạnh là điểm mùa theo phe, Chính Tà. · **Ưu tiên:** P2 (file 6).
 
 #### I8. Event shops — Cửa hàng sự kiện
 - **Cơ chế:** nhiều sự kiện có cửa hàng đổi điểm/coin: Ceroli Crisis shop, Lucky Stall, Wheel of Fortune (mốc 10/25/45/70/100 lượt quay) [1–2 nguồn]. "Cửa hàng sự kiện là nguồn tăng tốc lớn nhất" [1 nguồn]. Chi tiết ở file 5.
 - **Tu tiên hoá:** "Hội chợ tiên phường" mở theo lễ hội.
-- **Game mình:** 🟡 Lễ hội có quà theo mốc điểm, chưa có "đổi điểm lấy hàng tuỳ chọn".
+- **Game mình:** ✅ Kiểu sự kiện `shop` (`festTokens` / `festBought` ở `core/fest.ts`): Tông Lệnh Bảo Khố, Danh Môn Tuần Lễ (Côn Lôn / Thục Sơn / Nga Mi), Trung Thu, Thất Tịch, Thôn Trang Gặp Nạn — việc ra lệnh bài, đổi món tuỳ chọn có hạn mức (không đủ đổi hết). Thiên Cơ Luân có mốc chắc trúng ô lớn mỗi 30 lượt.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### I9. Cash shop — Gói nạp
@@ -809,7 +810,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
   - Gói hằng ngày/tuần/tháng, gói tướng, gói trang bị ("7-Day Material Supply" ~$5 = 1 000 gem + 2 nguyên liệu huyền thoại), gói tài nguyên, gói tăng tốc, gói "Super Value" $0,99/$4,99, gói di cư "New World".
   - Kênh ngoài app: web store PlutoMall [1 nguồn: rok.lilith.com].
 - **Tu tiên hoá:** "Tu Tiên Lệnh" (season pass) + skin (PLAN mục 7).
-- **Game mình:** ❌ — P4 theo PLAN (thanh toán, biên lai server, bảng `purchases`).
+- **Game mình:** ❌ cố ý — game không bán gì (README: gói nạp, Growth Fund, gem ❌ cố ý); Tu Tiên Lệnh có nhánh Kim Lệnh nhưng mở bằng Hương Hỏa 5, không bán (`sect/pass.ts`).
 - **Ưu tiên:** P1 (khi tới P4) · **Công sức:** L (4 cổng thanh toán + pháp lý VN).
 
 #### I10. Mua vật phẩm trực tiếp bằng gem
@@ -823,7 +824,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### J1. Bảng buff thành
 - **Cơ chế:** mọi buff đang chạy (khiên, thu thập, công/thủ, mở rộng quân, danh hiệu, buff vương quốc, buff đất liên minh…) hiện một chỗ, kèm đồng hồ, có nút dùng thêm vật phẩm để kéo dài [chưa xác minh vị trí UI]. Danh hiệu phải nhận **trước** khi bắt đầu việc mới có tác dụng [2 nguồn].
 - **Tu tiên hoá:** "Trận pháp gia trì" (danh sách phù đang cháy trên bàn thờ Chủ điện).
-- **Game mình:** 🟡 Có `buffs` trong state (phù, Ngưng Thần Đan, linh mạch, linh triều) và tab "Tăng ích" trong túi. Chưa có một bảng tổng hợp buff đang chạy.
+- **Game mình:** ✅ Dải tăng ích trên HUD (`Buffs.svelte`): khiên, phù, đan, linh mạch, trận tiên minh, sắc phong / phúc Giới Chủ, tạp dịch thứ hai — icon + giờ còn lại; chạm mở bảng từng nguồn, hiệu quả, hạn, dùng ngay phù tăng ích / hộ sơn trong túi.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### J2. Bảo hộ tân thủ
@@ -833,7 +834,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 
 #### J3. Bị cướp
 - **Cơ chế:** quân thủ (tướng ở Tường + quân trong thành + viện binh đồng minh + Tháp canh) đánh với đội tới. Thua thì mất tài nguyên vượt mức Nhà kho theo sức mang [3 nguồn]. Báo cáo trận cho cả hai bên [chưa xác minh chi tiết].
-- **Game mình:** ✅ cướp bất đồng bộ (tầng 6+, chỉ đánh người ≥ 50 % lực chiến mình, bảo hộ 30 %, cướp 30 % phần vượt theo sức mang, báo thù 24 giờ, điểm kiểu Elo, trưởng lão trấn thủ, viện binh đồng minh ở P3).
+- **Game mình:** ✅ cướp bất đồng bộ (tầng 6+, chỉ đánh người ≥ 50 % lực chiến mình, bảo hộ 45 % sức chứa, cướp 30 % phần vượt theo sức mang, báo thù 24 giờ, điểm kiểu Elo, trưởng lão trấn thủ, viện binh đồng minh ở P3).
 - **Ưu tiên:** — · **Công sức:** —.
 
 #### J4. Độ bền tường & thành cháy
@@ -852,12 +853,12 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### J6. War Frenzy — Cuồng chiến
 - **Cơ chế:** đánh người chơi khác thì thành vào trạng thái War Frenzy một thời gian; trong lúc đó **không dịch chuyển được** [1 nguồn: riseofkingdomsguides teleport]. Không bật khiên được [chưa xác minh]. Thời hạn [chưa xác minh].
 - **Tu tiên hoá:** "Sát khí chưa tan".
-- **Game mình:** 🟡 đi cướp thì mất khiên ngay; chưa có khoá dùng Hộ Sơn Phù sau khi cướp (người chơi có thể cướp xong bật phù ngay).
+- **Game mình:** ✅ **Sát khí** (`FRENZY_TIME`): vừa xuất quân cướp tông môn / cướp khoáng thì mất khiên và 30 phút không bật được Hộ Sơn Phù, không dời núi, không bế quan.
 - **Ưu tiên:** P1 (vá lỗ "cướp xong khiên luôn") · **Công sức:** S.
 
 #### J7. Cảnh báo bị tấn công
 - **Cơ chế:** có đội địch hướng về thành thì HUD báo đỏ, biết thời gian tới [chưa xác minh chi tiết; xem C2].
-- **Game mình:** ❌ (chỉ Web Push sau khi bị cướp).
+- **Game mình:** ✅ **Tháp canh** (`world/raid.ts`, `Hud.svelte`): đội địch đang kéo tới (cướp tông môn, kết trận, cướp khoáng) thì thẻ son ở mọi tab — tên, giờ tới, nút Bật khiên / Gọi về; offline thì Web Push.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 ---
@@ -893,7 +894,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
   - Âm: Traitor (công/thủ −3 %), Beggar (sản lượng −10 %), Exile (thủ −5 %), Slave (máu −5 %), Sluggard (hành quân/huấn luyện −5 %), Fool (xây/nghiên cứu −5 %).
   - Tính ở **lúc bắt đầu việc**; không giới hạn số lần xin [1 nguồn]. Chi tiết ở file 4.
 - **Tu tiên hoá:** "Phong hào" của Giới chủ: "Thiên Công" (xây), "Văn Khúc" (công pháp), "Luyện Binh Sứ"…
-- **Game mình:** 🟡 danh hiệu phi thăng theo mùa (`ascended`). Chưa có danh hiệu có buff do người phong.
+- **Game mình:** ✅ Sắc phong Giới Chủ (`TITLES`, `world/lord.ts`): Giới Chủ phong 4 phúc / 4 hoạ có tăng / giảm ích, mỗi tước giữ 24 giờ, phong lại chờ 10 phút; thêm danh hiệu phi thăng (`ascended`) và danh hiệu mùa (`crowns`).
 - **Ưu tiên:** P2 (file 4) · **Công sức:** S.
 
 ---
@@ -921,7 +922,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 - **More Than Gems:** sự kiện 2 ngày, không lịch cố định. Mốc tiêu gem **mỗi ngày** 300 / 1 000 / 3 000 / 7 000 / 25 000. 7 000 → 5 tượng huyền thoại vạn năng, 25 000 → 13; tối đa 26 tượng/2 ngày. Tiêu vào điểm VIP, sách, quay thưởng, VIP shop, Thương nhân đều được tính [2 nguồn]. Đây là lý do "để dành gem" (chi tiết ở file 5).
 
 - **Tu tiên hoá:** "**Tiên ngọc**" (PLAN mục 3: premium P4). Nguồn miễn phí: nhiệm vụ ngày (mốc cuối), tháp (mỗi 5 tầng lần đầu), bí cảnh lần đầu, sự kiện tuần, "Luận Đạo Đài", mỏ "Ngọc tủy" hiếm trên bản đồ giới. Chỗ tiêu: Vạn Bảo Lâu, làm mới Vân Du Thương Nhân, Duyên vàng (không bán lấy tiền), skin.
-- **Game mình:** ❌ Tiên ngọc chưa có.
+- **Game mình:** ❌ cố ý — không có tiền premium (Tiên ngọc) vì game không bán gì; các chỗ RoK tiêu gem đều kiếm bằng chơi: Hương Hỏa (chuỗi ngày, Hương Hỏa Lệnh), thiếp Chiêu Hiền miễn phí, Hương Hỏa Các / Thương nhân vân du (trả tài nguyên), Thiên Môn Thương Điếm (Phi Thăng Tệ).
 - **Ưu tiên:** P1 · **Công sức:** L (tiền tệ mới + nguồn + chỗ tiêu + cân nhịp + chặn cày acc phụ).
 
 ---
@@ -933,14 +934,14 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | A1 | Tòa thị chính 1–25, trần cấp, mở khoá | ✅ Chủ điện 1–25 (+độ kiếp) | — | — |
 | A1b | Điều kiện phụ mỗi cấp CH (Tường N−1 + 1 nhà xoay vòng) | ❌ đã thử 25/09 rồi bỏ: nhịp hiện tại cân theo lối dồn Chủ điện — lệch 1: tầng 25 không tới trong 60 ngày (22); lệch 3: vẫn 24/25, sim tranh đoạt trung vị tầng 15, người chơi thường MH15 ngày 26. Muốn có thì phải chỉnh lại chi phí / thời gian xây cả chuỗi | P1 | S (+ chỉnh nhịp L) |
 | A1c | Thưởng mỗi cấp CH, "Era Breakthrough" | 🟡 qua nhiệm vụ chính tuyến | P1 | S |
-| A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới; 🟡 chưa có hình tầng 16–25 | P2 | S–M |
+| A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới, 5 bộ mái (cả tầng 16–25); 🟡 chưa có quà chuyển cảnh giới | P2 | S–M |
 | A3 | Văn minh (kiến trúc + buff) | ✅ Chín đạo thống: 3 tiềm năng, đệ tử đặc trưng, trấn phái chi bảo trên núi, tổ sư + huy hiệu riêng, chọn lúc lập tông môn | P2 | M |
-| B0 | Bong bóng chạm thu tài nguyên | 🟡 tự cộng vào kho, chỉ có hiệu ứng | P1 | M |
+| B0 | Bong bóng chạm thu tài nguyên | 🟡 tự cộng vào kho, chưa có chạm thu | P1 | M |
 | B1–B4 | 4 bản mỗi công trình tài nguyên | 🟡 1 bản mỗi loại | P2 | M |
 | B4 | Tài nguyên mở muộn (đá CH 4, vàng CH 10) | ❌ 3 loại có từ đầu | P2 | L |
 | B5 | Nhà kho: bảo hộ lượng tuyệt đối theo cấp | 🟡 bảo hộ 45 % sức chứa, phẳng | P1 | S |
 | B6 | Trạm giao thương (gửi đồng minh, thuế 35→8 %) | ✅ Vận Linh Trận | P1 | M |
-| C1 | Tường: độ bền, tướng thủ | 🟡 Hộ Sơn Đại Trận (+thủ/máu, trấn thủ) | P1 | M |
+| C1 | Tường: độ bền, tướng thủ | ✅ Hộ Sơn Đại Trận: trận lực, linh hỏa, trấn thủ (`core/wall.ts`) | P1 | M |
 | C2 | Tháp canh: bắn địch, báo trước | 🟡 Tháp canh báo trước (thẻ son + Web Push); chưa bắn địch | P1 | S |
 | C3–C6 | 4 trại lính riêng, hàng song song | ✅ gộp 1 Diễn võ trường | P2 | M |
 | C7 | 4 bệnh viện, viện đầy thì chết | ✅ Đan phòng (1 nhà) | — | — |
@@ -951,9 +952,9 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | D3 | Tửu quán: rương miễn phí theo giờ | ✅ Chiêu Hiền Đài (thiếp bạc 6 giờ, vàng 48 giờ; không bán) | P1 | M |
 | D4/F1 | Thợ xây thứ 2 (thuê 2 ngày / VIP 6) | ✅ Tạp Dịch Lệnh (thuê 48 giờ, không vĩnh viễn) | P1 | M |
 | D5 | Lò rèn, nguyên liệu | ✅ Luyện Khí Phòng tất định (chủ đích) | — | — |
-| D6/I1 | Cửa hàng VIP (làm mới tuần) | ❌ | P1 | M |
+| D6/I1 | Cửa hàng VIP (làm mới tuần) | ✅ Hương Hỏa Các (`VIP_SHOP`) | P1 | M |
 | D7/I4 | Thương nhân bí ẩn | ✅ Thương nhân vân du | P1 | S–M |
-| D8 | Đài kỷ niệm: mốc chung cả vương quốc | ✅ Thiên Đạo Biên Niên (12 chương, quà cả giới) | P1 | M |
+| D8 | Đài kỷ niệm: mốc chung cả vương quốc | 🟡 Thiên Đạo Biên Niên (13 chương, quà cả giới); chưa mở pha theo chương | P1 | M |
 | D9 | Lyceum (câu đố) | ✅ Vấn Đạo Đài | P2 | M |
 | D10 | Bảng tin | 🟡 thư admin | P2 | S |
 | D11 | State Forum (armaments) | ❌ (file 2) | P2 | L |
@@ -978,12 +979,12 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H1–H2 | Tăng tốc chung + 4 loại riêng | ✅ (5 phút → 24 giờ) | — | — |
 | H3 | Gói tài nguyên | ✅ nang 1K–100K | — | — |
 | H4 | Rương chọn tài nguyên | ❌ | P2 | S |
-| H5 | Tăng thu thập 50 % | ❌ | P2 | S |
+| H5 | Tăng thu thập 50 % | ✅ Khai Linh Phù 8/24 giờ (`gather`) | P2 | S |
 | H6–H7 | Tăng sản lượng, tăng công/thủ | ✅ Tụ Linh, Chiến Ý, Kim Cương, Hộ Thể Phù | — | — |
-| H8 | Mở rộng quân | ❌ | P2 | S |
+| H8 | Mở rộng quân | ✅ trận dung (`capOf`) + Khuếch Trận Kỳ +10 % | P2 | S |
 | H9 | Khiên 8 giờ/24 giờ/3 ngày | ✅ Hộ Sơn Phù 8/24/72 giờ | — | — |
 | H10 | Chống do thám | ❌ | P2 | S |
-| H11 | 4 loại dịch chuyển | 🟡 dời núi tân thủ + dời vào lãnh thổ minh; chưa có phù dịch chuyển | P2 | M |
+| H11 | 4 loại dịch chuyển | ✅ dời núi tân thủ, dời vào lãnh thổ, Di Sơn Phù, Càn Khôn Phù | P2 | M |
 | H12 | Chìa Tửu quán | ✅ Ngân / Kim Duyên Phù | P1 | S |
 | H13 | Sách kinh nghiệm | ✅ Tâm Đắc Kinh Thư | — | — |
 | H14 | Tượng tướng, Starlight | 🟡 tín vật trưởng lão (thu nhận, nâng sao); chưa có vạn năng | P2 | L |
@@ -992,16 +993,16 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H17 | Vật phẩm điểm VIP | ✅ Hương Hỏa Lệnh | P1 | S |
 | H18 | Hồi AP | ✅ Hành Lực Đan (hành lực săn yêu thú giới) | — | — |
 | H19 | Thuê thợ 2 ngày | ✅ Tạp Dịch Lệnh 48 giờ | P1 | S |
-| H20 | Bản đồ xoá sương | ❌ (file 3) | P2 | — |
+| H20 | Bản đồ xoá sương | ✅ Sơn Hà Đồ (`BAG.sonHa12`) | P2 | — |
 | H21 | Hộ chiếu di cư | ⛔ | — | — |
 | H22 | Đổi văn minh | ✅ cải tu đạo thống (7 ngày một lần) | P2 | — |
-| H23 | Đổi tên, khung hồ sơ | ❌ | P2 | S |
+| H23 | Đổi tên, khung hồ sơ | 🟡 Cải Danh Lệnh, đổi chân dung; chưa có khung hồ sơ | P2 | S |
 | H24 | Coin sự kiện | ✅ Tông Môn Lệnh, lệnh bài Danh Môn Tuần Lễ | P2 | S |
 | I2 | SVIP shop (đồ ngắm) | ❌ | P2 | M |
 | I3 | Cửa hàng liên minh + điểm cá nhân + Reclaim | ✅ Cống Hiến Các (cống hiến + Minh khố); chưa có Reclaim | P1 | M |
 | I5 | Cửa hàng viễn chinh | 🟡 tháp/bí cảnh + rương ngày Tĩnh tọa ngộ đạo; chưa có tiền tệ | P1 | S–M |
 | I6 | Cửa hàng Sunset Canyon | ✅ Luận Kiếm Thương Điếm (Kiếm Ý) | P2 | — |
-| I7 | Cửa hàng/tiền tệ KvK | 🟡 điểm mùa, Công Huân; chưa có cửa hàng mùa | P2 | — |
+| I7 | Cửa hàng/tiền tệ KvK | ✅ Công Huân → Phi Thăng Tệ, Thiên Môn Thương Điếm (`coinBuy`) | P2 | — |
 | I8 | Cửa hàng sự kiện | ✅ Tông Lệnh Bảo Khố, Danh Môn Tuần Lễ (đổi lệnh bài) | P2 | S |
 | I9 | Gói nạp (Growth Fund, gem 30 ngày…) | ❌ (P4) | P1 | L |
 | I10 | Mua vật phẩm bằng gem | ❌ ⛔ nếu bán sức mạnh | — | — |

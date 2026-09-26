@@ -72,7 +72,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** ở mức thu nhỏ hết, ranh giới vùng là dãy núi, zone có màu nền khác nhau (chưa xác minh chi tiết màu).
 - **Vì sao giữ chân:** mục tiêu dài hạn nhìn thấy được ("một ngày sẽ vào tâm"), phân tầng tự nhiên người mạnh/yếu.
 - **Tu tiên hoá:** vòng ngoài *Phàm vực*, vòng giữa *Linh vực*, tâm *Thiên Môn* (đã có tên vòng: Vòng ngoài / Vòng giữa / Tâm giới).
-- **Game mình:** ✅ 16 vùng ngoài + 8 vùng giữa + 1 tâm (vùng lồi Voronoi); vòng trong có linh mạch cấp cao hơn (+3/5/8 % sản lượng), yêu vương cấp 2 (vòng giữa) và cấp 3 (tâm); tông môn mới đặt ở vùng ngoài ít người nhất (`spawn()`). Khác: 25 vùng thay vì 10 — hợp giới nhỏ.
+- **Game mình:** ✅ 16 vùng ngoài + 8 vùng giữa + 1 tâm (vùng lồi Voronoi); vòng trong có linh mạch cấp cao hơn (tăng ích +3/5/8 %, loại theo cấp — `veinBuffs`), yêu thú giới cấp cao hơn (ngoài 1–8, giữa 7–15), yêu vương cấp 2 (vòng giữa) và cấp 3 (tâm); tông môn mới đặt ở vùng ngoài ít người nhất (`spawn()`). Khác: 25 vùng thay vì 10 — hợp giới nhỏ.
 - **Ưu tiên:** P0 (đã có) · **Công sức:** —
 
 #### A3. Passes Lv.1–3 — cửa ải
@@ -84,7 +84,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** biểu tượng pháo đài trên dãy núi, nhãn cấp; đang bảo hộ có đếm ngược; chạm → minh giữ, quân đóng, nút Tấn công / Kết trận / Đồn trú.
 - **Vì sao giữ chân:** tạo "sự kiện mở cửa" cả server chờ; tranh cửa là trận lớn đầu tiên giữa các minh.
 - **Tu tiên hoá:** *Kết giới quan ải*, mắt trận là *trận nhãn* (đã có).
-- **Game mình:** 🟡 40 cổng trận nhãn mở theo **pha mùa** (ngày 5 vòng ngoài, ngày 14 vòng giữa, ngày 35 tâm — `PHASES`), đường đi Dijkstra qua cổng đang mở; cổng là điểm chiếm (tối đa 6 đội mỗi phe) cho 3 điểm mùa/giờ. **Thiếu:** giữ cổng không chặn phe khác đi qua (mất chiều "khoá đường" của RoK); không có quân NPC giữ cổng lúc mới mở; mở theo lịch cố định chứ không theo mốc chung của giới.
+- **Game mình:** ✅ 40 cổng trận nhãn mở theo **pha mùa** (ngày 5 vòng ngoài, ngày 14 vòng giữa, ngày 35 tâm — `PHASES`), đường đi Dijkstra qua cổng đang mở; cổng là điểm chiếm (tối đa 6 đội mỗi phe, 3 điểm mùa/giờ). Cửa ải (`shutGates` / `shutFrom` ở `world/points.ts`): trận nhãn phe khác đang giữ (không minh ước) chặn đường qua cổng đó — đội đi tới phải tìm đường vòng, hết đường thì báo "cửa ải bị chặn". Chưa có quân NPC giữ cổng lúc mới mở; cổng mở theo lịch ngày chứ không theo chương Biên Niên.
 - **Ưu tiên:** P1 · **Công sức:** M (lọc cổng theo phe giữ trong `route()`, NPC giữ cổng khi vừa mở).
 
 #### A4. Alliance Territory (Fortress, Flags) — lãnh thổ minh (phần liên quan bản đồ)
@@ -96,7 +96,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** lãnh thổ tô màu minh, viền; chạm ô trống trong lãnh thổ → "Dựng cờ".
 - **Vì sao giữ chân:** cảm giác sở hữu tập thể, thấy minh lớn dần trên bản đồ.
 - **Tu tiên hoá:** *Linh địa tông minh* — cắm *trận kỳ* (cờ trận) nối từ *tổng đà*; hoặc rẻ hơn: minh giữ ≥ N linh mạch trong một vùng thì "chiếm vùng".
-- **Game mình:** ❌ chưa có lãnh thổ; tiên minh chỉ có buff linh mạch cộng dồn (trần 30 %) và kết trận.
+- **Game mình:** ✅ Lãnh thổ tiên minh (`claimsOf` / `ownerAt` / `territoryGrid` ở `world/points.ts`): mốc là tông môn người trong minh (3 ô) và điểm minh giữ (5 ô), tô màu minh trên bản đồ Giới; trận kỳ (nới 4 ô, phá / đóng giữ được) và Tổng đà (nới 7 ô, tăng ích cả minh) ở `world/flags.ts`; khai mỏ trong lãnh thổ minh mình +25 %, kho minh thu Minh khố theo số ô (`world/storehouse.ts`).
 - **Ưu tiên:** P1 (bản rẻ: sở hữu theo vùng) / P2 (cờ từng ô) · **Công sức:** M (theo vùng) / L (cờ từng ô).
 
 #### A5. Holy Sites — luật chung
@@ -108,7 +108,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** biểu tượng thánh địa có cờ minh giữ, trạng thái "Đang tranh chấp / Bảo hộ còn …"; bảng thánh địa trong minh liệt kê buff đang có.
 - **Vì sao giữ chân:** buff thấy ngay trên chỉ số, lịch 3 ngày tạo nhịp "trận cuối tuần" đều đặn.
 - **Tu tiên hoá:** *Linh địa* các loại: linh mạch (sản lượng), *kiếm trủng* (công), *linh tuyền* (chữa thương), *ngộ đạo thạch* (nghiên cứu)…
-- **Game mình:** 🟡 linh mạch (57 điểm: 2/vùng ngoài, 3/vùng giữa, 1 ở tâm) chiếm bằng đóng quân, buff **một loại** (sản lượng +3/5/8 %) **cộng dồn** tới 30 %; luôn mở, không có kỳ tranh chấp, không cần giữ 4 giờ, không có NPC giữ, không có luật tử trận riêng.
+- **Game mình:** 🟡 linh mạch (57 điểm: 2/vùng ngoài, 3/vùng giữa, 1 ở tâm) chiếm bằng đóng quân, tăng ích nhiều loại theo cấp (`veinBuffs`), cùng loại **cộng dồn** tới 30 %; chiếm lần đầu trong mùa cả minh có quà (`firstTake`). Thiếu: kỳ tranh chấp 3 ngày / giữ 4 giờ (chỉ Cổ Di Tích / Huyết Tế Đàn mở theo giờ — `world/ruins.ts`), luật tử trận riêng. Có hộ trận linh thú giữ điểm chưa thuần phục (`GUARDIANS`, `guardSide`): phải đánh bại mới chiếm lần đầu trong mùa.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### A6. Sanctum — thánh đường (zone 1)
@@ -122,7 +122,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
   - Sanctum of Hope: tốc khai thác **+5 %** [5][10][14] (một nguồn ghi tốc luyện quân — thiểu số [6]).
 - **Tương tác / UI / giữ chân:** như A5; là mục tiêu đầu tiên của minh mới, dạy người chơi kết trận.
 - **Tu tiên hoá:** *Tiểu linh địa*: Chiến Hồn Đài (kinh nghiệm trưởng lão), Phong Độn Đài (tốc hành quân), Huyết Tinh Trì (máu đệ tử), Linh Khoáng Nhãn (tốc khai mỏ).
-- **Game mình:** 🟡 như A5 — có linh mạch cấp 1 nhưng chỉ buff sản lượng.
+- **Game mình:** ✅ linh mạch cấp 1 (vòng ngoài) cho phe giữ một trong sản lượng · xây · tuyển · chữa +3 % (`veinBuffs` ở `world/points.ts`), bảng điểm ghi rõ; luật tranh chấp như A5.
 - **Ưu tiên:** P1 · **Công sức:** S (thêm kiểu buff cho điểm có sẵn).
 
 #### A7. Altar — tế đàn (zone 1)
@@ -135,7 +135,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
   - Surge Altar: phòng thủ quân **+3 %**; Flame Altar: công quân **+3 %**;
   - Storm Altar: tốc luyện quân **+5 %**; Wisdom Altar: tốc nghiên cứu **+5 %** [5][11][14].
 - **Tu tiên hoá:** *Tế đàn ngũ hành*: Thổ Đàn (xây), Mộc Đàn (sản lượng), Thủy Đàn (thủ), Hỏa Đàn (công), Lôi Đàn (tuyển đệ tử), Văn Đàn (công pháp).
-- **Game mình:** 🟡 như A5.
+- **Game mình:** ✅ linh mạch cấp 2 (vòng giữa) cho phe giữ một trong công · thủ · sinh lực · hành quân +5 % (`veinBuffs`); luật tranh chấp như A5.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### A8. Shrine — thần miếu (zone 2)
@@ -149,7 +149,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
   - Shrine of War: công **+3 %** và tốc luyện quân **+10 %** [5][12][14].
   Hộ vệ quanh Shrine 30.000 quân T3 (C12) [9][12]; luật "một nửa trọng thương chết" chỉ một nguồn và vênh với FAQ (xem A5) [12][B-FAQ-CAS].
 - **Tu tiên hoá:** *Thần miếu tứ tượng*: Huyền Vũ miếu (thủ + máu), Chu Tước miếu (công kết trận + khai mỏ), Thanh Long miếu (hồi linh lực + chữa thương), Bạch Hổ miếu (công + tuyển đệ tử).
-- **Game mình:** 🟡 linh mạch cấp 2 ở vòng giữa (+5 %) — chỉ một kiểu buff; trận nhãn cho điểm mùa.
+- **Game mình:** 🟡 chỉ linh mạch cấp 3 ở tâm (một điểm) có buff kép sản lượng + công +8 % (`veinBuffs`); linh mạch cấp 2 ở vòng giữa mỗi điểm một loại. Thiếu: bộ thần miếu buff kép ở vòng giữa.
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### A9. Lost Temple & King — đền cổ ở tâm và ngôi vua
@@ -163,7 +163,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** đền lớn giữa bản đồ; bảng Vua: lưới tước hiệu, chọn người; thông báo toàn server khi phong tước.
 - **Vì sao giữ chân:** danh vọng + quyền lực mềm; đỉnh của cả dòng thời gian.
 - **Tu tiên hoá:** *Thiên Môn* → minh giữ lâu nhất thành *Giới Chủ*, ban *phong hào* ("Kiếm Thánh", "Đan Tôn"… và phạt "Phế Đồ", "Ma Đầu").
-- **Game mình:** 🟡 Thiên Môn ở tâm mở ngày 35, giữ được 12 điểm mùa/giờ; minh đầu bảng mùa phi thăng. Thiếu: ngôi Giới Chủ, phong hào, buff toàn giới.
+- **Game mình:** ✅ Thiên Môn ở tâm mở ngày 35, giữ được 12 điểm mùa/giờ; minh chủ tiên minh giữ Thiên Môn (chưa ai giữ: minh đầu bảng điểm mùa) là **Giới Chủ** (`world/lord.ts`): sắc phong 4 phúc / 4 hoạ (giữ 24 giờ), ban phúc cả giới mỗi ngày (`bless`), Thiên Ân lễ 3 phần mỗi tuần (`boon`). Thiên Môn không có quân NPC giữ.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### A10. Monument — dòng thời gian vương quốc
@@ -201,7 +201,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** công trình Monument trong thành → dòng thời gian ngang các chương (đã xong / đang chạy có đếm ngược và thanh tiến độ chung / sắp tới bị khoá), mỗi chương có biểu tượng phần thưởng, nút Nhận; chương đã xong lưu lại như biên niên của server.
 - **Vì sao giữ chân:** nhịp "có gì mới" 2–10 ngày một lần trong 3 tháng đầu, thưởng gem đều, cảm giác cả server là một cộng đồng đang viết lịch sử.
 - **Tu tiên hoá:** *Giới Bia* (bia đá thiên đạo): mỗi chương là một *kỷ* — "Linh khí phục tô" (N tông môn đạt Trúc Cơ), "Vạn thú triều" (cả giới hạ N yêu thú), "Khai mạch" (N linh mạch bị chiếm lần đầu), "Tông minh tụ nghĩa" (N tiên minh đủ người), "Phá quan" (minh giữ trận nhãn), "Thiên Môn hiện thế"…
-- **Game mình:** 🟡 có **pha mùa** 4 bậc mở theo ngày (0/5/14/35 trên 49 ngày: Khai giới → Tranh mạch → Trận nhãn → Phi thăng) và **biên niên giới** (lập tông, cướp, độ kiếp, mùa mới, hạ yêu vương). Thiếu: mục tiêu chung có tiến độ, thưởng theo mốc, mở nội dung theo tiến độ thay vì lịch cứng, màn hình dòng thời gian.
+- **Game mình:** 🟡 Thiên Đạo Biên Niên (`world/book.ts`, `BOOK` ở `data.ts`): 13 chương mục tiêu chung của cả giới, hạn theo ngày mùa (từ 15 tông môn tầng 5 tới Thiên Môn có chủ; chương Tu Bổ Thiên Môn cả giới góp tài nguyên — `repair`), tiến độ + danh sách chương trên thẻ mùa bản đồ Giới, xong thì mọi tông môn nhận quà thư, hụt thì sang chương sau. Thiếu: chương chưa mở nội dung — cổng / Thiên Môn vẫn mở theo **pha mùa** ngày cứng (`PHASES`).
 - **Ưu tiên:** P1 · **Công sức:** M (bộ đếm phía server + bảng mốc trong `data.ts` + màn Giới Bia).
 
 #### A11. Eve of the Crusade & Lost Kingdom — tiền KvK và bản đồ KvK (tóm tắt, chi tiết ở file PvP)
@@ -211,7 +211,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Cơ chế (phần PvE):** tiền KvK 3 giai đoạn: hạ Marauder (rơi túi da, trong có mảnh giấy da; đủ bộ 7 mảnh đổi Rương tiếp tế vương quốc, cộng điểm thập tự chinh cá nhân và vương quốc), luyện quân, phá trại Marauder; xếp hạng liên server; điểm vương quốc cho buff dùng tiếp trong Lost Kingdom [21][2]; từ 1.1.12 (22/09/2026) Eve mở cùng lúc với Lost Kingdom và người chơi được tự xếp phe theo điểm Eve (một nguồn) [B-LD1112]. Trên bản đồ KvK: man tộc cấp 26–40 (một đoạn trích ghi từ 25) [20][29], pháo đài cấp 6–10 (Heroic Anthem từ 11) [20][B-HA]; thánh địa KvK có tên riêng (Crusader Fortress, Hieron, Sanctuary, Great Ziggurat…) [20].
 - **Tương tác / UI / giữ chân:** cả vương quốc thành một phe đấu vương quốc khác; là đỉnh nội dung dài hạn (chi tiết ở file PvP).
 - **Tu tiên hoá:** *Vạn giới đại chiến* — ngoài phạm vi (PLAN: không làm liên server). Phần PvE (lưu khấu tà tu trước đại chiến) có thể làm sự kiện cuối mùa trong một giới.
-- **Game mình:** ❌ (cố ý — PLAN "Không làm": liên server). Tương đương gần nhất: pha **Phi thăng** cuối mùa.
+- **Game mình:** ❌ (cố ý — PLAN "Không làm": liên server). Phần PvE của Eve đã có ở đầu mùa: Khai Giới Trảm Tà (`world/eve.ts`, xem C6); cuối mùa là pha **Phi thăng**.
 - **Ưu tiên:** P2 (chỉ phần sự kiện PvE cuối mùa) · **Công sức:** M.
 
 ### 2.B Sương mù, khám phá và trinh sát
@@ -225,7 +225,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** bản đồ phủ mây xám; chạm vùng sương → "Trinh sát" → chọn trinh sát rảnh → biểu tượng trinh sát bay tới, mây tan dần; lọc "Explore View" [HG-SCOUT].
 - **Vì sao giữ chân:** tò mò + thưởng tức thì ở tuần đầu (hang, làng lộ ra), "dọn sạch bản đồ" là mục tiêu hoàn tất cá nhân.
 - **Tu tiên hoá:** *Mê vụ / chướng khí* che giới; chưởng môn thả *linh điểu* (giấy hạc truyền âm) *khai vụ*; *Sơn Hà Đồ* (Kingdom Map) mở ngẫu nhiên một góc.
-- **Game mình:** ❌ không có sương mù: cả giới hiện ra từ đầu (client nhận cả giới khi mở bản đồ — PLAN mục 4 "Đơn giản hoá có chủ đích").
+- **Game mình:** ✅ Mê vụ (`core/fog.ts`, client `world/fog.ts`): mỗi tông môn một bản đồ sương riêng (ô sương 5 × 5 ô, lúc đầu khai quanh tông môn), mây che mọi thứ bên dưới (huy hiệu, tên, đường hành quân — không chọn được); Sơn Hà Đồ tan ngay 12 ô sương gần tông môn nhất (`revealNear`).
 - **Ưu tiên:** P2 · **Công sức:** M (lưu bitmap đã mở theo người — 150 × 150 = 22.500 ô, ~3 KB; lớp mây trên cảnh WebGL).
 
 #### B2. Scout Camp & Scouts — trại trinh sát
@@ -236,7 +236,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** bảng Scout Camp: danh sách trinh sát (rảnh / đang đi / giữ chỗ), nút "Khám phá" tự chọn vùng sương gần nhất; **báo cáo trinh sát** liệt kê phát hiện (làng, hang, cửa ải) và cho bấm bay tới [C-HG-SCOUT2].
 - **Vì sao giữ chân:** thêm một "hàng đợi" chạy song song, công trình rẻ ở đầu game cho cảm giác tiến bộ.
 - **Tu tiên hoá:** *Thám Linh Các* nuôi *linh điểu*; cấp các = số linh điểu, tốc bay, tầm nhìn.
-- **Game mình:** ❌.
+- **Game mình:** ✅ Linh điểu (`world/explore.ts`, `cranes` ở `core/fog.ts`): 1 + 1 mỗi 8 tầng Chủ điện (tối đa 3), thả vào ô sương kề vùng đã khai, bay 1 phút mỗi ô sương, tới nơi tan 3 × 3 ô sương rồi về. Không có công trình Thám Linh Các riêng (tốc bay cố định).
 - **Ưu tiên:** P2 · **Công sức:** M (gộp với B1).
 
 #### B3. Mysterious Caves — hang động bí ẩn
@@ -247,7 +247,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** hang hiện trên bản đồ và trong báo cáo trinh sát → chạm → "Điều tra" → chọn trinh sát → thư báo thưởng.
 - **Vì sao giữ chân:** "hộp quà bất ngờ" rải khắp bản đồ, thưởng người chịu khó.
 - **Tu tiên hoá:** *Động phủ cổ tu / di tích thượng cổ* — linh điểu dò vào nhận *cơ duyên* (đan, phù, mảnh công pháp, đôi khi truyền thừa trưởng lão); ba phẩm: phàm / linh / tiên.
-- **Game mình:** ❌.
+- **Game mình:** ✅ Động phủ cổ tu (`sitesOf` ở `atlas.ts`, `visit` ở `world/explore.ts`): rải theo seed, lộ ra khi tan mê vụ, mỗi người ghé một lần nhận quà theo vòng của vùng (phù tăng tốc, Tụ Khí Đan, Ngân / Kim Duyên Phù).
 - **Ưu tiên:** P2 · **Công sức:** S (điểm mới trong `atlas` + thưởng một lần mỗi người).
 
 #### B4. Tribal Villages — làng bộ lạc
@@ -257,7 +257,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** làng hiện trên bản đồ → gửi trinh sát ghé thăm → quà vào thẳng kho; nút nhảy tới làng chưa nhận (1.0.76).
 - **Vì sao giữ chân:** quà khởi đầu (quân, cấp công nghệ, sách kinh nghiệm) làm tuần đầu nhanh và vui.
 - **Tu tiên hoá:** *Thôn trang phàm nhân* — ghé thăm được lễ vật (lương thảo, đệ tử phàm nhân muốn nhập môn, bí tịch rẻ).
-- **Game mình:** ❌.
+- **Game mình:** ✅ Thôn trang (`sitesOf` ở `atlas.ts`, `visit` ở `world/explore.ts`): lộ ra khi tan mê vụ, mỗi người ghé một lần nhận nang tài nguyên + kinh thư theo vòng của vùng.
 - **Ưu tiên:** P2 · **Công sức:** S (chung với B3).
 
 #### B5. Scouting Enemies — trinh sát thành / đội địch
@@ -269,7 +269,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chạm thành → "Trinh sát" → thư báo cáo có các mục gập mở.
 - **Vì sao giữ chân:** trò "mèo vờn chuột" thông tin.
 - **Tu tiên hoá:** *Thần thức dò xét* / *Khuy Thiên Kính*; phản trinh sát là *Ẩn Nặc Trận*.
-- **Game mình:** 🟡 bảng **Tranh đoạt** có "dò thám" miễn phí và tức thì: phòng thủ làm tròn chục (dưới 50 thì chính xác), trưởng lão giữ nhà + cấp, cấp Hộ Sơn Đại Trận (`scout()` trong `world/fight.ts`), dùng để ước lượng tỉ lệ thắng. Thiếu: dò đội đang đóng ở điểm, báo cáo lưu lại, tốn chi phí / có thể bị phát hiện, công nghệ che giấu.
+- **Game mình:** ✅ bảng **Tranh đoạt** có ước lượng miễn phí (`scout()` trong `world/fight.ts`) và **Do thám** (`world/spy.ts`): thả linh điểu tới tông môn khác (hai bên từ tầng 6), tốn 200 × tầng Chủ điện bên kia linh thạch, báo cáo qua thư (tài nguyên ước cướp, quân giữ nhà + lực chiến, viện binh, trấn thủ, trận lực, khiên); bên kia nhận thư + Web Push. **Do thám linh địa** (`spySpot`): nút "Do thám" ở bảng linh mạch / trận nhãn / Thiên Môn phe khác đang giữ — tốn 200 × (cấp điểm + 5) linh thạch, chiếm một linh điểu tới khi bay về, thư báo số đội đóng, tổng đệ tử, lực chiến. Ẩn Tung Phù chống do thám tông môn. Thiếu: công nghệ che giấu, báo cáo giả.
 - **Ưu tiên:** P1 (dò quân ở linh mạch/trận nhãn trước khi đánh) · **Công sức:** S.
 
 #### B6. Anti-scouting & Watchtower — chống trinh sát, vọng lâu
@@ -279,7 +279,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** dùng vật phẩm từ túi đồ; biểu tượng hiệu ứng trên thành; dải cảnh báo khi bị nhắm (chi tiết chưa xác minh).
 - **Vì sao giữ chân:** cảm giác an toàn khi offline, trò đánh lừa đối thủ.
 - **Tu tiên hoá:** *Ẩn Nặc Phù* (chống dò), *Huyễn Binh Phù* (báo cáo giả), *Vọng Nguyệt Lâu*.
-- **Game mình:** 🟡 Hộ Sơn Đại Trận (thủ, máu bên thủ +4 %/tầng) ≈ phần phòng thủ của tường/vọng lâu; khiên **Hộ Sơn Phù** 8/24/72 giờ đã có trong túi đồ. Không có cảnh báo đội địch đang tới (Web Push chỉ báo **sau** khi bị cướp).
+- **Game mình:** 🟡 Tháp canh (`world/raid.ts`, `Hud.svelte`): đội địch vừa xuất quân (cướp tông môn, cướp khoáng, kết trận công sơn) là bên bị nhắm thấy thẻ son ở mọi tab (tên, giờ tới) + nút Bật khiên / Gọi về, offline thì Web Push; Hộ Sơn Đại Trận (thủ, máu bên thủ +4 %/tầng, trận lực) ≈ tường / vọng lâu. Chống do thám: Ẩn Tung Phù 8/24 giờ (`veil`) làm linh điểu về tay không. Thiếu: báo cáo giả; khiên không chặn do thám.
 - **Ưu tiên:** P1 (cảnh báo "đội địch đang tới + giờ tới") / P2 (vật phẩm chống dò) · **Công sức:** S.
 
 ### 2.C Man tộc, pháo đài và quái bản đồ (PvE chiến đấu)
@@ -298,7 +298,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** thanh AP dưới chân dung thống đốc; bấm để dùng vật phẩm AP; khi thiếu AP có bảng mua nhanh.
 - **Vì sao giữ chân:** nhịp quay lại **2 lần/ngày** (đầy sau ~12 giờ); để đầy là "phí" → thói quen đăng nhập.
 - **Tu tiên hoá:** *Linh lực* (hoặc *tinh lực chưởng môn*) — hồi theo thời gian; *Hồi Linh Đan* là vật phẩm AP; Thanh Long miếu (+hồi linh lực).
-- **Game mình:** ❌ không có thể lực. PvE được giới hạn bằng hang hồi 45 phút (yêu thú), 8 giờ (tông môn NPC), mỗi tầng một lần (bí cảnh, tháp) — hợp nhịp 5–10 phút/phiên của PLAN, nhưng không có "nhiên liệu" để cày tiếp khi muốn chơi lâu.
+- **Game mình:** ✅ Hành lực (`AP_MAX` 100, hồi 1 mỗi 3 phút — `apOf` / `spendAp` ở `core/stats.ts`): mỗi lần săn yêu thú giới tốn 10 (`AP_HUNT`), gọi về giữa đường thì hoàn; Hành Lực Đan +50, được vượt mức tối đa (Thương nhân vân du, Vân Du Khách…). PvE ở bản đồ vùng vẫn giới hạn bằng thời gian hồi như cũ.
 - **Ưu tiên:** P1 (cần khi làm C2 trên giới) · **Công sức:** S (một số hồi lười như tài nguyên trong `advance()`).
 
 #### C2. Barbarians — man tộc
@@ -316,7 +316,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** nút Tìm kiếm → chọn cấp → camera bay tới → chạm → Tấn công → chọn đội (gợi ý đội tự động, từ 1.0.88 tránh chọn tướng khai mỏ) [PN88] → báo cáo trận có vật phẩm rơi.
 - **Vì sao giữ chân:** nguồn kinh nghiệm tướng chính, vòng "tìm – đánh – nhặt đồ" ngắn và có rơi ngẫu nhiên, dùng hết AP là "việc phải làm" mỗi ngày.
 - **Tu tiên hoá:** *Yêu thú hoang dã* trên bản đồ giới: cấp 1–25 (vòng ngoài thấp, tâm cao), rơi *yêu đan* (kinh nghiệm trưởng lão), *phù tăng tốc*, tài nguyên; đánh bằng *linh lực*.
-- **Game mình:** 🟡 15 **yêu thú cố định** trên **bản đồ vùng riêng** (cấp 1–15, hạ cấp n mở n+1, hang trống 45 phút), sức mạnh 15 × 1,4^(n−1) đệ tử bậc 1, thưởng tài nguyên 80 × 1,42^(n−1) mỗi loại và kinh nghiệm 15 × 1,3^(n−1), cuối tuần ×1,5, có **ước lượng tỉ lệ thắng** trước khi đánh (hơn RoK). Thiếu: yêu thú trên **bản đồ giới chung**, nhiều cấp hơn theo vòng, rơi vật phẩm ngẫu nhiên (túi đồ đã có, nhưng "nguồn rơi đồ" còn trống), tìm kiếm, "giành" yêu thú với người khác, nhiên liệu AP.
+- **Game mình:** ✅ **Yêu thú giới** (`atlas.ts` kind `wild`, `hunt` ở `world/arrive.ts`): 6 con mỗi vùng ngoài / giữa (cấp 1–8 / 7–15), săn một mình tốn 10 hành lực, thắng thì chiến lợi phẩm gấp đôi yêu thú vùng + kinh nghiệm, con đó hồi sau 20 phút (ai tới sau thì về tay không); có trong bảng Tìm, có ước lượng tỉ lệ thắng; 15 yêu thú ở bản đồ vùng riêng vẫn giữ. Chưa rơi vật phẩm ngẫu nhiên (chỉ tài nguyên + kinh nghiệm; tàn quyển / yêu cốt theo sự kiện).
 - **Ưu tiên:** **P0** · **Công sức:** M (điểm "yêu thú" sinh lại theo vùng trong `atlas`/`World.spots`, dùng lại `hit`/`fight`).
 
 #### C3. Continuous Attack / Chain Farming — đánh liên hoàn
@@ -326,7 +326,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** đặt đội "giữ vị trí sau trận", chạm con kế tiếp; đội có kỹ năng diện rộng kéo cả bầy vào một trận.
 - **Vì sao giữ chân:** chỗ thể hiện kỹ năng + ghép tướng (tạo nhu cầu nuôi tướng AoE).
 - **Tu tiên hoá:** *Truy kích liên hoàn* — trưởng lão có công pháp quần công (đã có `burst`) dụ bầy yêu thú.
-- **Game mình:** ❌ mỗi trận một mục tiêu, đội về nhà sau mỗi trận.
+- **Game mình:** ✅ Săn liên hoàn (`huntChain` ở `world/spots.ts`): đội vừa săn yêu thú giới, đang về, chạm con khác là đi thẳng từ chỗ đang đứng; quân còn lại giữ nguyên (không hồi), chiến lợi phẩm + thương vong cộng dồn, tốn hành lực như một lần săn. Chưa giảm hành lực khi đánh liên tiếp, chưa kéo bầy bằng công pháp quần công.
 - **Ưu tiên:** P2 · **Công sức:** S (giảm linh lực khi đánh liên tiếp) / M (kéo bầy).
 
 #### C4. Barbarian Buster & Clarion Call — thưởng hạ lần đầu và sự kiện săn
@@ -336,7 +336,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** danh sách nhiệm vụ phụ "hạ man tộc cấp n lần đầu"; bảng sự kiện có điểm, mốc rương, xếp hạng cá nhân / minh.
 - **Vì sao giữ chân:** thưởng lần đầu kéo người chơi thử cấp cao hơn; sự kiện biến việc cày thường ngày thành cuộc đua.
 - **Tu tiên hoá:** *Trảm Yêu Lục* (sổ ghi lần đầu trảm mỗi cấp yêu thú) và sự kiện *Vạn Thú Triều*.
-- **Game mình:** 🟡 nhiệm vụ chính tuyến "Hạ yêu thú cấp n" (≈ Barbarian Buster); Trung tâm sự kiện có **Săn Yêu Lệnh** (Chủ nhật: điểm cho hạ yêu thú 10, qua tầng bí cảnh 12, tầng tháp 15, trận thắng 2; mốc 20/60/120) ≈ Clarion Call, và **Tông Môn Tranh Bá** (như MGE, hôm 4 là săn yêu / bí cảnh); Tân Thủ Chi Lộ có mục "hạ 8 yêu thú". Thiếu: bảng xếp hạng riêng cho săn yêu, thưởng theo cấp yêu thú cao.
+- **Game mình:** ✅ nhiệm vụ chính tuyến "Hạ yêu thú cấp n" (≈ Barbarian Buster); Trung tâm sự kiện có **Săn Yêu Lệnh** (Chủ nhật: điểm cho hạ yêu thú 10, qua tầng bí cảnh 12, tầng tháp 15, trận thắng 2; mốc 20/60/120) và **Trảm Yêu Lệnh** (≈ Clarion Call), **Liên Trảm Bất Hồi** (săn liên hoàn), **Tông Môn Tranh Bá** (như MGE, hôm 4 là săn yêu / bí cảnh); Công Huân tính săn yêu thú giới 2 × cấp. Trảm Yêu Lệnh (`FESTS.tramYeu`) chấm theo cấp: mỗi yêu thú +10 điểm mỗi cấp (`huntLv`), bí cảnh +30, 4 mốc rương, bảng xếp hạng tông môn (top 10) và bảng tiên minh (3 minh đầu) — `FEST_RANKED` / `FEST_ALLY`. Săn Yêu Lệnh vẫn điểm phẳng.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### C5. Barbarian Forts — pháo đài man tộc
@@ -348,7 +348,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** pháo đài trên bản đồ có cấp; chạm → Kết trận (chọn giờ chờ) → cả minh thấy thông báo, bấm Tham gia.
 - **Vì sao giữ chân:** "đi cùng nhau" dễ vào, thưởng Book of Covenant (hiếm) — lý do mở game đúng giờ minh hẹn.
 - **Tu tiên hoá:** *Yêu động / Yêu sào* cấp 1–6 (động hồ ly, sào huyệt lang vương…) chỉ phá được khi tiên minh kết trận.
-- **Game mình:** 🟡 **yêu vương** cấp 2 (vòng giữa: 60.000 sức, bậc 4, 5 "lát", hồi 24 giờ) và cấp 3 (tâm: 150.000, bậc 5, 8 lát, hồi 72 giờ), kho máu chung, kết trận ≤ 8 đội, thưởng chia theo sát thương qua thư (người đánh nhiều nhất nhận trưởng lão Huyền Minh), điểm mùa theo sát thương. Thiếu: **thang cấp thấp cho minh nhỏ / người mới** (hiện chỉ 9 yêu vương, đều ở vòng giữa/tâm), mở cấp dần theo mốc, giới hạn thưởng/ngày, hoàn linh lực.
+- **Game mình:** ✅ **yêu trại** cấp 1 (mỗi vùng ngoài: 12.000 sức, 3 "lát", hồi 8 giờ — `BOSSES[1]`, minh mới kết trận được từ pha đầu), **yêu vương** cấp 2 (vòng giữa: 60.000, 5 lát, hồi 24 giờ) và cấp 3 (tâm: 150.000, 8 lát, hồi 72 giờ); kho máu chung, kết trận ≤ 8 đội, thưởng chia theo sát thương qua thư (cấp 3: người đánh nhiều nhất nhận trưởng lão Huyền Minh), cả minh nhận Minh lễ. Chưa có cấp 4–6, trần thưởng/ngày, mở cấp theo mốc.
 - **Ưu tiên:** P1 · **Công sức:** S–M (thêm `BOSSES[1]` ở vòng ngoài + trần thưởng/ngày).
 
 #### C6. Marauders & Encampments — lưu khấu (tiền KvK)
@@ -360,7 +360,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** Marauder hiện khắp bản đồ; bảng ghép 7 mảnh đổi rương; bảng xếp hạng cá nhân / vương quốc.
 - **Vì sao giữ chân:** chỗ tiêu AP đã dồn, rương lớn, cảm giác "cả server chuẩn bị ra trận".
 - **Tu tiên hoá:** *Tà tu lưu khấu* tràn vào giới trước *Phi thăng*: hạ để lấy *tàn quyển* (7 mảnh ghép thành *bảo hạp*), cộng điểm cho cả giới.
-- **Game mình:** ❌.
+- **Game mình:** ✅ Khai Giới Trảm Tà (`world/eve.ts`, `sect/eve.ts`): trong pha Khai giới (5 ngày đầu mùa) hạ yêu thú giới rơi tàn quyển (1–3 theo cấp), đủ 7 đổi một rương tiếp tế; mỗi tàn quyển cộng giới vận cho tiên minh, cổng mở thì 3 minh đầu sản lượng +10 % trong 24 giờ. Chưa có lưu khấu / trại lưu khấu riêng (dùng yêu thú giới).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### C7. Barbarian Camps & Keeps trên bản đồ KvK
@@ -395,7 +395,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** phòng chờ ghép đội, chọn vai, trận điều khiển trực tiếp trong phó bản riêng.
 - **Vì sao giữ chân:** co-op có vai trò rõ, "raid" cho người thích PvE.
 - **Tu tiên hoá:** *Man Hoang Cổ Tộc* / *Thượng cổ hung thú* — tổ đội 4 người (hộ pháp / chủ công / trị liệu).
-- **Game mình:** ❌ (kết trận yêu vương là co-op nhưng không có vai trò, không phó bản riêng).
+- **Game mình:** 🟡 Man Hoang Cổ Tộc (`world/party.ts`, `AllyParty.svelte` — như Ceroli Crisis): Chủ Điện ≥ 8, phòng tối đa 4 người trong minh, 3 vai (Hộ Pháp / Chủ Công / Trị Liệu), 5 độ khó; đội đầu Luận Kiếm Đài (đệ tử ảo) đánh 5 đợt hung thú mạnh dần, server giải tự động, quà qua thư. Thiếu: Ceroli Assault 12 người, Realm of Mystique, cửa hàng tiền riêng.
 - **Ưu tiên:** P2 · **Công sức:** L.
 
 #### C10. Karuak Ceremony & Trial of Kau Karuak
@@ -405,7 +405,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Tương tác · UI:** nút nhờ minh giúp (Ceremony); mục tiêu hiện trên bản đồ có đồng hồ (Trial), thưởng qua thư.
 - **Vì sao giữ chân:** tượng tướng (Ceremony), pha lê công nghệ KvK (Trial).
 - **Tu tiên hoá:** *Tế Thiên Đại Điển* — mỗi vòng một "tế vật" mạnh hơn.
-- **Game mình:** 🟡 Thông Thiên Tháp là thang khó dần solo; chưa có biến thể sự kiện có nhờ minh giúp.
+- **Game mình:** ✅ Thí Luyện Yêu Hoàng (`sect/trial.ts`, lễ `yeuHoang` 4 ngày mỗi 14 ngày, `Trial.svelte` trong Trung tâm sự kiện): chọn một trong 5 độ khó (Dễ → Địa ngục, khoá cả lượt), đánh lần lượt 50 cửa bằng quân thật (thương binh về Đan phòng, 10 hành lực mỗi trận), cửa 10 / 20… là yêu tướng tinh anh, điểm mỗi cửa = bậc độ khó, mốc quà theo điểm; kèm Thông Thiên Tháp và Luận Võ Liên Hoàn. Thiếu: nhờ minh giúp, mục tiêu có giờ trên bản đồ (bản KvK).
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### C11. Shadow Legion (Dark Fortress) — minh thủ thành trước làn sóng
@@ -416,7 +416,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** Dark Fortress hiện trên bản đồ, đợt quân kéo tới thành từng người, bảng tiến độ đợt của minh.
 - **Vì sao giữ chân:** viện binh cho nhau có ý nghĩa, không sợ mất quân.
 - **Tu tiên hoá:** *Thú triều công sơn* — sóng yêu thú đánh vào các tông môn của tiên minh; đồng môn gửi viện binh chặn.
-- **Game mình:** 🟡 có viện binh đồn trú nhà đồng minh (≤ 3 đội) và **hộ pháp độ kiếp** (đồng minh đóng ở nhà làm lôi kiếp nhẹ 6 %/đội) — đúng tinh thần; chưa có sự kiện sóng quái.
+- **Game mình:** ✅ Ma Triều Công Sơn (`world/legion.ts`): tiên minh ghi danh cả tuần, tối thứ Tư 20h 5 đợt cách 5 phút đánh vào núi từng người trong minh, sức theo lực phòng thủ của chính người đó (0,5× → 1,35×); viện binh đồng minh đóng ở nhà cùng thủ, quân ngã chỉ bị thương; quà theo điểm, ba minh đầu thêm quà.
 - **Ưu tiên:** P1 · **Công sức:** M (dùng lại trận thủ `defense()` + viện binh).
 
 #### C12. Holy-site Guardians & Runes — hộ vệ thánh địa và rune
@@ -427,7 +427,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** hộ vệ đứng quanh thánh địa; rune là vật thể trên bản đồ (1.0.91 hiện viền khi khuất sau núi) [PN91]; biểu tượng rune đang có trên HUD (chi tiết chưa xác minh).
 - **Vì sao giữ chân:** lý do ghé thánh địa hai lần mỗi ngày kể cả khi không tranh chấp; buff nhặt được tạo "cửa sổ vàng" để đánh.
 - **Tu tiên hoá:** *Hộ linh thú* quanh linh địa; rơi *phù văn* (buff tạm 1 giờ, 5 phẩm).
-- **Game mình:** ❌.
+- **Game mình:** ✅ Hộ trận linh thú (`GUARDIANS` ở `data.ts`, `guardSide` ở `world/points.ts`, `take` ở `world/arrive.ts`): linh mạch / trận nhãn / Thiên Môn chưa thuần phục có đội linh thú giữ, mạnh dần theo cấp — phải đánh bại mới chiếm được lần đầu trong mùa. **Phù văn** (`runesAt/runesLeft` ở `world/points.ts`, `rune` ở `world/encamp.ts`): mỗi 12 giờ quanh mỗi linh địa sinh một phù văn ở ô trống (loại: công / thủ / sinh lực / khai mỏ / hành quân / tuyển; phẩm Bạch → Cam, vòng trong cao hơn) theo mầm bản đồ + chu kỳ; xuất quân tới nhặt → tăng ích 1 giờ, mỗi lúc một phù văn, ai tới trước được; vẽ trên bản đồ, chạm được trước điểm bên cạnh. Thiếu: hộ vệ sinh lại mỗi ngày (thuần phục rồi thì cả mùa không hồi).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### C13. Sự kiện quái / PvE khác trên bản đồ
@@ -445,7 +445,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Mở khoá · nhịp:** sự kiện có lịch, lặp lại (lịch cụ thể chưa xác minh); Race Against Time 3 lượt/ngày; Protect the Supplies tính lượt tốt nhất.
 - **Vì sao giữ chân:** biến man tộc thường ngày thành trò chơi ngắn có xếp hạng và tượng tướng.
 - **Tu tiên hoá:** *Nhất Chú Hương* (Race Against Time), *Hộ Tống Linh Thuyền* (Protect the Supplies), *Thương đội phàm nhân gặp nạn* (Barbarian Incursions / Silk Road), *Quỷ tiết* (Halloween → Trung Nguyên, quỷ hồn hiện trên bản đồ).
-- **Game mình:** ❌ (sự kiện tuần 6 chủ đề và Trung tâm sự kiện mới chỉ đếm việc có sẵn — chưa có quái / vật thể sự kiện trên bản đồ).
+- **Game mình:** ❌ chưa có Race Against Time, Hộ Tống, Silk Road hay quỷ hồn sự kiện trên bản đồ — Trung Nguyên Quỷ Tiết, Liên Trảm Bất Hồi chỉ đếm việc có sẵn. Vật thể sự kiện trên bản đồ mới có thôn trang cháy của Thôn Trang Gặp Nạn (`world/rescue.ts`) và Yêu Vương Tuần Sơn (C8).
 - **Ưu tiên:** P2 · **Công sức:** S–M mỗi sự kiện.
 
 ### 2.D Điểm tài nguyên và khai thác
@@ -459,7 +459,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** Tìm kiếm → chọn loại + cấp → chạm mỏ → "Khai thác" → chọn tướng khai (gợi ý tự động) → thanh tiến độ trên đội ở mỏ, số còn lại của mỏ.
 - **Vì sao giữ chân:** "đặt việc dài rồi thoát" — mỗi lần mở game đều có đội về mang quà; khác biệt tướng khai giữa người chơi.
 - **Tu tiên hoá:** *Linh khoáng mạch* (linh khoáng), *Linh thảo viên* (linh thảo), *Linh thạch khoáng* (linh thạch), *Tiên ngọc mạch* (tiên ngọc — premium).
-- **Game mình:** ✅ **144 mỏ** (6 mỗi vùng ngoài/giữa, không có ở tâm), mỗi mỏ **một loại** trong 3 tài nguyên (theo chỉ số), trữ **20.000** (cấp 1, vòng ngoài) / **40.000** (cấp 2, vòng giữa), khai **3.000 / 5.000 mỗi giờ**, cạn thì hồi đầy sau **2 giờ**; mang theo sức mang đội (40 × hệ số bậc mỗi đệ tử); nhiều người khai chung một mỏ tới khi cạn; mỗi người một đội mỗi điểm; linh triều ở vùng thì khai **+50 %**; gọi về mang phần đã khai theo tỉ lệ thời gian. Thiếu: nhiều cấp (1–5) theo vòng, tìm kiếm, mỏ premium.
+- **Game mình:** ✅ **144 mỏ** (6 mỗi vùng ngoài/giữa, không có ở tâm), mỗi mỏ **một loại** trong 3 tài nguyên (theo chỉ số), trữ **20.000** (cấp 1, vòng ngoài) / **40.000** (cấp 2, vòng giữa), khai **3.000 / 5.000 mỗi giờ**, cạn thì hồi đầy sau **2 giờ**; mang theo sức mang đội (40 × hệ số bậc mỗi đệ tử × hệ — `UNIT_CARRY`); nhiều người khai chung một mỏ tới khi cạn; mỗi người một đội mỗi điểm; linh triều ở vùng thì khai **+50 %**; gọi về mang phần đã khai theo tỉ lệ thời gian; có trong bảng Tìm. Thiếu: nhiều cấp (1–5) theo vòng, mỏ premium.
 - **Ưu tiên:** P0 (đã có) · **Công sức:** —
 
 #### D2. Gathering Buffs & Commanders — tốc khai thác, tướng khai mỏ
@@ -491,7 +491,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** tốc khai và sức mang hiện khi chọn đội khai; đội hình gợi ý tự động chọn tướng khai (1.0.88 tránh chọn tướng khai khi đánh man tộc) [PN88].
 - **Vì sao giữ chân:** tạo "nghề" khai mỏ (tài khoản phụ farm), cho tướng rẻ có đất dụng võ.
 - **Tu tiên hoá:** *Khai khoáng thuật* (công pháp), trưởng lão thiên phú *Địa hành*; *Tầm Mạch Phù* (+50 %).
-- **Game mình:** 🟡 tốc khai chỉ theo cấp mỏ + linh triều; **không** có bonus khai thác từ công pháp / trưởng lão / vật phẩm (`Bonus` không có khoá `gather`; có `loot` cho PvE).
+- **Game mình:** ✅ khoá tăng ích `gather` (`gather()` ở `world/arrive.ts` dùng `lead(…, 'gather')`): Khai Linh Phù 8 / 24 giờ +50 %, bị động khai mỏ của Vân Hạc Chân Nhân (+20 %) và Tô Mị Nương (+30 %) từ cấp 20 khi dẫn đội; cộng với linh triều (+50 %) và lãnh thổ minh (+25 %). Chưa có công pháp / Hương Hỏa / thiên phú khai mỏ, chưa có tăng sức mang.
 - **Ưu tiên:** P1 · **Công sức:** S (thêm khoá `gather`, một công pháp, một thiên phú, một phù).
 
 #### D3. Gem Deposits — mỏ gem
@@ -501,7 +501,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** biểu tượng mỏ gem trên bản đồ; gửi đội như mỏ thường.
 - **Vì sao giữ chân:** người không nạp vẫn "đào" được tiền premium → lý do mở game thường xuyên.
 - **Tu tiên hoá:** *Tiên ngọc mạch* — chỉ khai được sau khi ngộ *Tầm Bảo Thuật*.
-- **Game mình:** ❌ (tiên ngọc premium dự kiến P4).
+- **Game mình:** ❌ cố ý — không có tiên ngọc vì game không bán gì (README: gem ❌ cố ý); mỏ chỉ ra ba tài nguyên.
 - **Ưu tiên:** P2 (gắn với kinh tế P4) · **Công sức:** S.
 
 #### D4. Alliance Resource Points & Resource Centers — điểm tài nguyên minh
@@ -514,7 +514,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** người có quyền trong minh chọn chỗ trong lãnh thổ → dựng; thành viên chạm → Khai thác.
 - **Vì sao giữ chân:** khai an toàn cho người yếu, lý do ở gần minh.
 - **Tu tiên hoá:** *Tông minh linh điền* — cả minh góp công dựng, khai không bị cướp.
-- **Game mình:** ❌ (tiên minh chưa có kho chung / công trình chung trên bản đồ).
+- **Game mình:** ✅ Minh khoáng (`allyMine` / `allyGather` ở `world/flags.ts`): trưởng lão / minh chủ dựng ở ô trống trong lãnh thổ (2.000 Minh khố, 2 giờ, mỗi minh một), người trong minh gửi đội khai 30.000/giờ, không ai cướp được, cạn hay sau 3 ngày thì tự tháo; kho minh (`world/storehouse.ts`): mỗi ô lãnh thổ sinh 0,1 Minh khố mỗi giờ.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### D5. Attacked while Gathering — bị đánh khi đang khai
@@ -539,7 +539,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** dùng vật phẩm trong túi → chọn vương quốc và ô → xác nhận; thành biến mất rồi hiện ở chỗ mới.
 - **Vì sao giữ chân:** cho người mới về cạnh bạn bè / minh ngay tuần đầu → giữ nhóm chơi cùng nhau.
 - **Tu tiên hoá:** *Tân thủ Na Di Phù* — tông môn mới được dời núi một lần trong 10 ngày đầu / trước tầng 8.
-- **Game mình:** ❌ chỗ ngồi do server chọn (vùng ngoài ít người nhất, cách tông môn khác ≥ 3 ô, cách điểm ≥ 3 ô — `spawn()`), không đổi được; mỗi mùa xếp lại chỗ.
+- **Game mình:** ✅ Dời núi tân thủ (`newbieMove` ở `world/territory.ts`): trước Chủ điện tầng 8, lần dời đầu tiên tới được mọi ô trống vùng ngoài (không cần tiên minh), mọi đội phải ở nhà; chỗ ngồi đầu vẫn do server chọn (`spawn()`), mỗi mùa xếp lại.
 - **Ưu tiên:** **P1** · **Công sức:** S (thao tác `move` kiểm ô trống giống `spawn()`, chỉ cho khi chưa có đội ngoài).
 
 #### E2. Random Teleport — dịch chuyển ngẫu nhiên
@@ -549,7 +549,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** dùng vật phẩm → xác nhận → thành hiện ở chỗ ngẫu nhiên.
 - **Vì sao giữ chân:** lối thoát nhanh khi bị kẹt giữa vùng chiến.
 - **Tu tiên hoá:** *Tùy Cơ Độn Phù*.
-- **Game mình:** ❌.
+- **Game mình:** ✅ Di Sơn Phù (`moveRandom` ở `world/territory.ts`): dời tông môn tới chỗ trống ngẫu nhiên ở vùng ngoài (như lúc lập tông môn); mọi đội ở nhà, đang sát khí thì không dời được.
 - **Ưu tiên:** P2 · **Công sức:** S (cùng E1).
 
 #### E3. Targeted (Advanced) Teleport — dịch chuyển có đích
@@ -559,7 +559,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chọn ô đích trên bản đồ, xem trước chỗ đặt thành (chi tiết menu chưa xác minh).
 - **Vì sao giữ chân:** chọn vị trí chiến lược (cạnh mỏ tốt, sát minh, áp sát địch).
 - **Tu tiên hoá:** *Định Hướng Truyền Tống Phù*.
-- **Game mình:** ❌.
+- **Game mình:** ✅ Càn Khôn Phù (`move` có `item` ở `world/territory.ts`): tới ô trống bất kỳ ở vòng đã mở theo pha mùa, không cần lãnh thổ, không chờ 24 giờ; mọi đội ở nhà, đang sát khí thì không dời được.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### E4. Territorial Teleport — dịch chuyển lãnh thổ
@@ -570,14 +570,14 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chọn ô trong lãnh thổ minh → xác nhận.
 - **Vì sao giữ chân:** minh "gom quân" về một chỗ là nền của kết trận, phòng thủ chung, tranh thánh địa.
 - **Tu tiên hoá:** *Tông Minh Truyền Tống Trận* — dời sơn môn về cạnh linh mạch minh đang giữ.
-- **Game mình:** ❌. Đây là mảnh thiếu quan trọng nhất cho tiên minh: thành viên rải rác nhiều vùng thì kết trận (đội gần phải chờ đội xa — `RALLY_WAIT`), viện binh, hộ pháp độ kiếp đều chậm.
+- **Game mình:** ✅ Dời tông môn vào ô trống trong lãnh thổ minh mình (`move` ở `world/territory.ts`): chỉ ở vùng ngoài, mọi đội ở nhà, 24 giờ một lần; đội địch đang kéo tới chỗ cũ quay về tay không.
 - **Ưu tiên:** **P1** · **Công sức:** S–M (điều kiện "lãnh thổ" rẻ nhất: trong vùng có linh mạch minh đang giữ).
 
 #### E5. Teleport Restrictions — luật chung khi dịch chuyển
 
 - **Cơ chế:** không dịch chuyển được khi đang giao tranh / "war frenzy", khi còn đội ngoài bản đồ, khi đang giữ viện binh của người khác, lên ô có người hoặc còn sương [RKG-TP]; từ 1.0.87 quân man tộc không còn chặn việc chọn ô [PN87]; kỹ năng Vua "Banish" (1.0.74) đày thành mục tiêu tới chỗ ngẫu nhiên ở tỉnh góc trên trái [PN74]. Nguồn dịch chuyển: cửa hàng, cửa hàng VIP, thương nhân bí ẩn, cửa hàng minh, Era Breakthrough, sự kiện [C-OCG-TP][C-ALPHR][C-GE-TP].
 - **Tu tiên hoá:** *Luật dời sơn môn*: không dời khi còn đội ngoài, khi đang giao chiến, khi đang có viện binh đóng ở nhà.
-- **Game mình:** ❌ (chưa có dịch chuyển nên chưa cần luật).
+- **Game mình:** ✅ luật dời núi (`world/territory.ts`): mọi đội phải ở nhà, đang sát khí (vừa đi cướp) thì không dời được, ô đích phải trống (cách điểm / tông môn khác từ 3 ô), dời vào lãnh thổ 24 giờ một lần; đội địch đang kéo tới chỗ cũ quay về tay không.
 - **Ưu tiên:** đi cùng E1–E4 · **Công sức:** —
 
 #### E6. Migration — di cư sang vương quốc khác (tóm tắt)
@@ -602,7 +602,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** bong bóng bao quanh thành trên bản đồ, đồng hồ khiên (chi tiết HUD chưa xác minh).
 - **Vì sao giữ chân:** người chơi ngủ yên (khiên), người mới không bị "farm" ngay; khiên là món bán chạy.
 - **Tu tiên hoá:** *Hộ Sơn Kết Giới* / *Hộ Sơn Phù*; "sơn môn cháy" → *kết giới vỡ, sơn môn bị đẩy đi*.
-- **Game mình:** 🟡 khiên tân thủ **72 giờ**, khiên **8 giờ** sau khi thủ thua, đi cướp thì mất khiên; báo thù 24 giờ; kho bảo hộ 30 % tài nguyên. Túi đồ đã có **Hộ Sơn Phù 8/24/72 giờ** (nguồn hiện là quà Trung tâm sự kiện: Thất Nhật Lễ, Tân Thủ Chi Lộ, Tông Môn Tranh Bá). Thiếu: khiên chặn dò thám, cơ chế "thành cháy → dời chỗ" (mình không cần vì không có chiếm thành).
+- **Game mình:** ✅ khiên tân thủ **72 giờ**, khiên **8 giờ** sau khi thủ thua, **Hộ Sơn Phù 8/24/72 giờ**, Bế Quan Lệnh (`sect/seclude.ts`); đi cướp thì mất khiên, sát khí 30 phút không bật được khiên; báo thù 24 giờ; kho bảo hộ 45 % sức chứa (`PROTECT`); linh hỏa thiêu sơn — trận lực về 0 lúc cháy thì tông môn bị đánh bật sang chỗ ngẫu nhiên (`core/wall.ts`, `world/wall.ts`). Chưa có khiên chặn do thám.
 - **Ưu tiên:** P1 (thêm nguồn Hộ Sơn Phù, khiên chặn dò thám) · **Công sức:** S.
 
 ### 2.F PvE ngoài bản đồ (chế độ riêng)
@@ -622,7 +622,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** bản đồ chương dạng đường đi qua các màn (sao dưới mỗi màn) → màn chuẩn bị: điều kiện sao, đội địch, chọn tướng + đội hình → trận điều khiển trực tiếp → kết quả sao; rương ngày luôn nhấp nháy khi đầy.
 - **Vì sao giữ chân:** nơi dùng tướng "ngồi không", thưởng tượng tướng ổn định mỗi ngày, câu đố chiến thuật; không mất quân thật nên không sợ thử.
 - **Tu tiên hoá:** *Tiên Lộ Viễn Chinh* / *Vạn Lý Hành* — mỗi chương là một châu (Đông Thắng Thần Châu…), màn là "trạm dừng"; điều kiện sao theo lore ("hộ tống thư đồng", "không để trưởng lão nào trọng thương").
-- **Game mình:** 🟡 bí cảnh (5 × 5 tầng, đánh ngay, mỗi tầng một lần, thưởng đan + trưởng lão) và Thông Thiên Tháp (vô hạn tầng, thưởng lần đầu, trưởng lão ở tầng 30/45) là PvE solo tương tự; thiếu: sao/điều kiện phụ, rương ngày theo số sao, quân ảo (hiện đánh bằng đệ tử thật, có thương vong), nhiều đội cùng trận, cửa hàng tiền riêng. Trận tự động (PLAN: không làm trận điều khiển nhiều phút) — nên giữ tự động, chỉ thêm sao + rương ngày.
+- **Game mình:** 🟡 bí cảnh (5 × 5 tầng, đánh ngay, mỗi tầng một lần, thưởng đan + trưởng lão) và Thông Thiên Tháp (vô hạn tầng, thưởng lần đầu, trưởng lão ở tầng 30/45) là PvE solo tương tự; rương ngày Tĩnh tọa ngộ đạo theo tầng tháp đã qua (`towerChest`). Thiếu: sao / điều kiện phụ, quân ảo (vẫn đánh bằng đệ tử thật, có thương vong), nhiều đội cùng trận, tiền + cửa hàng riêng. Trận tự động (PLAN: không làm trận điều khiển nhiều phút).
 - **Ưu tiên:** P2 · **Công sức:** M (sao + rương ngày trên bí cảnh/tháp có sẵn) / L (chương mới, nhiều đội).
 
 #### F2. Expedition Store — cửa hàng huân chương
@@ -632,7 +632,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** tab cửa hàng trong màn Expedition.
 - **Vì sao giữ chân:** "tiền viễn chinh đổi ra tướng" — động lực đánh tiếp khi đã kẹt màn khó.
 - **Tu tiên hoá:** *Công Huân Các* — đổi *chiến công* lấy truyền thừa trưởng lão, mảnh công pháp.
-- **Game mình:** ❌ không có cửa hàng tiền PvE (chợ P3 chỉ giữa người chơi; túi đồ đã có nhưng chưa có cửa hàng đổi).
+- **Game mình:** ✅ **Trấn Tháp Các** (màn Thông Thiên Tháp): Tháp Lệnh từ tầng tháp đã qua và rương Tĩnh tọa mỗi ngày; hàng có hạn mỗi tuần, tín vật trưởng lão của tuần như tướng nổi bật (`towerBuy`, `TOWER_SHOP`, `TOWER_STARS`). Bí cảnh chưa ra tiền riêng.
 - **Ưu tiên:** P2 · **Công sức:** S (khi đã có F1).
 
 #### F3. Lyceum of Wisdom / Peerless Scholar — đố vui
@@ -647,7 +647,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** màn thi cổ phong, đồng hồ đếm giây từng câu, 4 đáp án, thanh "đúng liên tiếp", bảng xếp hạng.
 - **Vì sao giữ chân:** lý do đăng nhập vào giờ cố định (hẹn giờ thi), học lịch sử (bản sắc RoK), gem cho người không nạp.
 - **Tu tiên hoá:** *Vấn Đạo Đường / Luận Đạo Đại Hội* — câu hỏi về đạo điển, ngũ hành, đan phương, lore tông môn; vòng loại hằng ngày ở *Tàng Kinh Các*, "đại hội luận đạo" cuối tuần.
-- **Game mình:** ❌.
+- **Game mình:** ✅ Vấn Đạo Đài (`sect/quiz.ts`, `Quiz.svelte`; thẻ đầu Tàng Kinh Các, từ Chủ điện tầng 3): mỗi ngày 5 câu rút tất định từ 15 câu về luật chơi, sai thì hiện đáp án đúng, quà theo số câu đúng. Chưa có vòng thi theo giờ / quỹ thưởng chung.
 - **Ưu tiên:** P2 · **Công sức:** M (ngân hàng câu hỏi ×2 ngôn ngữ mới là phần tốn công; cơ chế đơn giản).
 
 #### F4. Sunset Canyon — đấu trường thủ bất đồng bộ (chỉ tóm tắt)
@@ -657,7 +657,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Tương tác · UI:** đánh đội hình phòng thủ của người khác; xếp 5 đội vào lưới ô rồi xem trận tự động.
 - **Vì sao giữ chân:** đấu trường không mất quân, thưởng ngày đều.
 - **Tu tiên hoá:** *Luận Kiếm Đài*.
-- **Game mình:** 🟡 cướp bất đồng bộ P2 (đánh phòng thủ hiện tại của tông môn khác, điểm kiểu Elo) — gần về tinh thần nhưng có mất tài nguyên; chưa có đấu trường đội hình không mất gì.
+- **Game mình:** ✅ Luận Kiếm Đài (`sect/arena.ts`, `world/arena.ts`, `Arena.svelte`): đội hình thủ, đệ tử ảo (không mất quân), 5 lượt/ngày, Elo, rương ngày theo bậc, bảng tuần + thư quà top 10, Kiếm Ý đổi ở Thương Điếm, phục thù.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### F5. Các chế độ PvE solo khác (sự kiện)
@@ -673,7 +673,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Mở khoá · nhịp:** sự kiện có lịch, lặp lại; Arms Training 3 ngày × 5 lượt; Golden Kingdom cần TTC 17.
 - **Vì sao giữ chân:** biến thể ngắn, có xếp hạng, thưởng tướng / bản vẽ.
 - **Tu tiên hoá:** Arms Training → *Thí Luyện Yêu Vương* (yêu vương học thêm thần thông sau mỗi lần thua); Protect the Supplies → *Hộ Tống Linh Thuyền*; Race Against Time → *Nhất Chú Hương* (đốt một nén nhang, giết yêu thú tới khi tàn); Golden Kingdom → *Luân Hồi Huyễn Cảnh* (mỗi tầng chọn một *cơ duyên*).
-- **Game mình:** 🟡 Thông Thiên Tháp (một đội, tầng vô hạn, địch +10 %/tầng, đổi hệ) là khung sẵn cho Arms Training / Golden Kingdom; chưa có chọn cơ duyên, chưa có sự kiện có hạn giờ trên nền PvE; sự kiện tuần hiện chỉ đếm việc (thắng, tuyển, luyện đan, xây, cướp, luyện khí).
+- **Game mình:** 🟡 Luận Võ Liên Hoàn (`sect/drill.ts`, như Arms Training): mỗi ngày một phiên, đội ảo đấu liên tiếp giáo đầu mạnh dần, cứ 3 trận thắng tự chọn 1 trong 3 công pháp cho giáo đầu, mốc quà 3 / 6 / 9 / 12 / 15 trận. Thiếu: Golden Kingdom (hầm chọn cơ duyên), Race Against Time, Protect the Supplies, Kau Karuak.
 - **Ưu tiên:** P2 · **Công sức:** S mỗi sự kiện khi đã có khung (tháp + sự kiện tuần), M cho roguelike.
 
 ### 2.G UI bản đồ
@@ -684,7 +684,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Cơ chế · UI/UX:** chạm nút bản đồ để ra khỏi thành; kéo/chụm để phóng. Hai lớp được đặt tên chính thức: **Tactical View** (gần: thấy hình đại diện quân mình, hiệu ứng kỹ năng, số sát thương) và **Strategic View** (xa: quân mình thành "viên kim cương" kèm hình đại diện) [PN82]. Bản vá 2024–2025 thêm cho Strategic View: lớp "tổng quan trận", **danh sách mọi trận đang diễn ra**, một mức hiển thị rộng hơn (1.0.87); **bản đồ nhiệt** thời gian thực và tùy chọn phóng nhanh (1.0.89); tùy chọn kiểu đơn vị / biểu tượng quân, hiện số quân còn lại của mục tiêu, thanh nộ trên hình đại diện (1.0.82); một chạm gập hết bảng giao diện (1.0.81) [PN87][PN89][PN82][PN81]. **Giữ nút "Về thành"** mở vòng chọn các mức zoom đặt sẵn (1.0.88) [PN88]. Bản đồ làm lại (thử nghiệm 1.0.91): chuyển về bản đồ cũ được; rune ở thánh địa và quân mình khuất sau núi hiện viền [PN91]. Những gì hiện ở từng mức (thành → biểu tượng → lãnh thổ) chi tiết hơn: **chưa xác minh**.
 - **Vì sao giữ chân:** nhìn toàn cục chiến trường (bản đồ nhiệt, danh sách trận) khiến người không tham chiến vẫn muốn mở bản đồ xem.
 - **Tu tiên hoá:** *Thần thức* (gần) ↔ *Thiên nhãn* (xa); bản đồ nhiệt = *sát khí* bốc lên nơi đang giao chiến.
-- **Game mình:** ✅ bản đồ giới WebGL: kéo quán tính, chụm, con lăn, phím mũi tên và +/−, địa hình nướng 3 mức chi tiết (LRU), ghim tên tông môn chỉ hiện khi đủ gần (tối đa 60 tông môn gần tâm nhìn), thu nhỏ hết thì cả giới nằm giữa màn (`WorldView.svelte`). Thiếu: mức "chiến lược" riêng (biểu tượng gộp, sát khí/bản đồ nhiệt, danh sách trận), mức zoom đặt sẵn.
+- **Game mình:** ✅ bản đồ giới WebGL: kéo quán tính, chụm, con lăn, phím mũi tên và +/−, địa hình nướng 3 mức chi tiết (LRU), ghim tên tông môn chỉ hiện khi đủ gần (tối đa 60 tông môn gần tâm nhìn), thu nhỏ hết thì cả giới nằm giữa màn (`WorldView.svelte`); xa tới mức ẩn tên thì hiện hiệu mỗi tiên minh giữa lãnh thổ (`terrTags`), nút Toàn giới / Phóng gần (`whole`), bản đồ nhỏ (`world/Minimap.svelte`). Thiếu: sát khí / bản đồ nhiệt, danh sách trận đang diễn ra.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### G2. Coordinates & Share — toạ độ, chia sẻ toạ độ
@@ -694,7 +694,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Tương tác:** chia toạ độ vào kênh minh / vương quốc để hẹn nhau.
 - **Vì sao giữ chân:** phối hợp minh ("tập trung ở X:512 Y:640") là nền của mọi hoạt động nhóm.
 - **Tu tiên hoá:** *Phương vị* / *Truyền âm phù* chứa toạ độ.
-- **Game mình:** ❌ không hiện toạ độ, không có ô tìm toạ độ, không chia sẻ vị trí vào chat (chat P3 đã có kênh giới + kênh minh).
+- **Game mình:** ✅ bảng chạm ô ghi toạ độ "(x,y)" và có nút gửi vào kênh minh / giới (`TileSheet`); toạ độ trong chat thành nút "Tới" — bản đồ Giới bay tới, vòng son nháy (`Chat`, `WorldView`). Chưa có ô nhập toạ độ.
 - **Ưu tiên:** P1 · **Công sức:** S (toạ độ ô đã có trong `Pick`; thêm định dạng liên kết trong chat + ô nhập).
 
 #### G3. Bookmarks — đánh dấu cá nhân
@@ -703,7 +703,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Cơ chế · UI/UX:** **chưa xác minh** qua nguồn đọc được trong đợt này (bản vá 1.0.87 chỉ nhắc "yêu thích" cho tướng) [PN87].
 - **Vì sao giữ chân (dự đoán):** bớt công tìm lại mỏ, pháo đài, kẻ thù quen.
 - **Tu tiên hoá:** *Ngọc giản ghi dấu*.
-- **Game mình:** ❌.
+- **Game mình:** ✅ Ghi nhớ (`sect/pins.ts`): ★ tối đa 20 chỗ có lời ghi, lưu trong state nên máy nào cũng thấy; hiện trên bản đồ Giới và trong bảng Tìm, bấm là bay tới.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### G4. Alliance Markers — dấu tiên minh trên bản đồ
@@ -713,7 +713,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Tương tác:** chỉ huy minh ra lệnh bằng dấu trên bản đồ.
 - **Vì sao giữ chân:** chỉ huy minh "vẽ kế hoạch" ngay trên bản đồ (tập trung ở đây, 20:00 đánh chỗ kia) — tạo cảm giác tổ chức, hẹn giờ quay lại.
 - **Tu tiên hoá:** *Trận kỳ* cắm trên bản đồ (minh chủ / trưởng lão cắm, cả minh thấy, kèm lời nhắn và *hương hẹn giờ* đếm ngược).
-- **Game mình:** ❌ (tiên minh có bố cáo chữ; kết trận hiện trong bảng điểm).
+- **Game mình:** ✅ Dấu của minh (`allyMark` ở `world/guild.ts`): từ R3 đặt tối đa 5 dấu có lời ghi (≤ 20 chữ), cả minh thấy trên bản đồ Giới, bấm là bay tới. Chưa có dấu đếm ngược giờ hẹn (hẹn giờ nằm ở Minh sự lịch).
 - **Ưu tiên:** P1 · **Công sức:** S (vài dấu mỗi minh, lưu trong `World.allies`; hiện trên cảnh và trong chat minh).
 
 #### G5. Search — tìm man tộc / mỏ theo cấp
@@ -722,7 +722,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Cơ chế · UI/UX:** nút tìm kiếm chọn loại (man tộc, từng loại mỏ) và cấp, tìm điểm **gần nhất** trong tầm có hạn (man tộc cấp cao ngoài tầm thì phải tự thu nhỏ bản đồ mà tìm) [23][C-RKG-FAQ]; man tộc ≤ cấp 12 không có quanh thành thì **sinh ngay cạnh thành**, cấp 13+ chỉ sinh theo đợt ở chỗ ngẫu nhiên [22]; từ 1.0.91 kết quả tìm mỏ đẩy mỏ đang có người hoặc sắp cạn xuống dưới [PN91]; man tộc/mỏ sinh lại theo khoảng ngẫu nhiên [FAQ-SPAWN].
 - **Vì sao giữ chân:** bớt thao tác lặp; vòng "tìm → đánh → tìm" chạy nhanh.
 - **Tu tiên hoá:** *Tầm bảo la bàn* / *Linh thú bàn*.
-- **Game mình:** ❌ (bản đồ vùng có vòng sáng nhấp nháy ở yêu thú cấp tiếp theo; bản đồ giới không có tìm kiếm).
+- **Game mình:** ✅ nút Tìm trên thẻ mùa bản đồ Giới (`WorldView.svelte`): yêu thú giới (nhóm cấp 1–5 / 6–10 / 11–15), mỏ, linh mạch, yêu vương theo cấp — điểm gần nhất còn sống và có đường, bay tới và mở bảng điểm.
 - **Ưu tiên:** P1 (đi kèm C2 yêu thú trên giới) · **Công sức:** S.
 
 #### G6. Filters — bộ lọc hiển thị
@@ -731,7 +731,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Cơ chế · UI/UX:** lọc "Explore View" và "Alliance View" [HG-SCOUT]; **Filter Mode** gộp (1.0.88): lọc quân đồng minh / địch / mình, bật tắt chân dung và mô hình quân [PN88]; bộ lọc tổng quan trận khớp Strategic View, thấy pháo đài minh (1.0.91) [PN91].
 - **Vì sao giữ chân:** bản đồ đông người vẫn đọc được.
 - **Tu tiên hoá:** *Thiên nhãn* chọn "chỉ xem đồng môn / địch".
-- **Game mình:** ❌ (màu theo quan hệ: mình / đồng minh / NPC / người khác đã có trong `Rel`).
+- **Game mình:** ✅ Lớp tình hình (`LAYERS` ở `world/WorldView.svelte`, `setHide` ở `worldmap.ts`): nút ở góc bản đồ Giới bật / tắt Yêu thú · Mỏ · Hành quân · Lãnh thổ, nhớ theo máy; huy hiệu tô màu theo quan hệ (`Rel`). Chưa lọc hành quân theo quan hệ (mình / đồng minh / địch).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### G7. March Lines — đường hành quân hiển thị
@@ -749,7 +749,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Cơ chế · UI/UX:** chạm vật thể → vòng nút thao tác theo loại (tấn công, trinh sát, kết trận, khai thác, đồn trú, chia sẻ…) [FAQ-COORD]; **Quick Commands** (1.0.88): chọn đội rồi chạm đất để đi, chạm mục tiêu để đánh, giữ để "vừa đi vừa đánh"; tự chọn loại mục tiêu được phép [PN88]. Danh sách đầy đủ nút theo từng vật thể: **chưa xác minh**.
 - **Vì sao giữ chân:** mọi việc bắt đầu bằng một chạm — ít màn trung gian.
 - **Tu tiên hoá:** chạm là *thần thức quét* — bảng hiện như cuộn giấy (đã có: Sheet cuộn tranh).
-- **Game mình:** ✅ `TileSheet.svelte`: chạm tông môn (thông tin, đường đi, cướp), điểm (phe giữ, mỏ còn bao nhiêu, yêu vương còn máu, chiếm/khai/đánh, một mình / mở kết trận / góp đội, gọi về), đội hành quân, ô trống (vùng, vòng, địa hình, thời tiết). Thiếu: nút chia sẻ, dò thám, đánh dấu.
+- **Game mình:** ✅ `TileSheet.svelte`: chạm tông môn (thông tin, đường đi, cướp), điểm (phe giữ, mỏ còn bao nhiêu, yêu vương còn máu, chiếm/khai/đánh, một mình / mở kết trận / góp đội, gọi về), đội hành quân, ô trống (vùng, vòng, địa hình, thời tiết); mọi ô có toạ độ, gửi kênh minh / giới, ghi nhớ ★, dấu minh; do thám nằm trong bảng Tranh đoạt (nút Tấn công).
 - **Ưu tiên:** P0 (đã có) · **Công sức:** —
 
 #### G9. Troop Dispatch Queue — danh sách đội ngoài bản đồ
@@ -776,7 +776,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Cơ chế · UI/UX:** thu nhỏ hết thấy toàn vương quốc, lãnh thổ các minh; lớp tổng quan trận + danh sách trận đang diễn ra (1.0.87) [PN87]; **báo cáo trinh sát** liệt kê mọi phát hiện (làng, hang, cửa ải) và cho bấm bay tới [C-HG-SCOUT2]. Danh sách thánh địa kèm minh giữ và bảng lọc: **chưa xác minh** qua nguồn đọc được.
 - **Vì sao giữ chân:** thấy cục diện cả server, biết minh mình đứng đâu.
 - **Tu tiên hoá:** *Sơn Hà Xã Tắc Đồ* — tấm bản đồ toàn giới, liệt kê linh địa và phe giữ.
-- **Game mình:** 🟡 thu nhỏ hết thấy cả giới; dải trên có ngày/pha mùa/biên niên; bảng xếp hạng mùa theo phe. Thiếu: danh sách linh mạch/trận nhãn đang giữ theo phe, bấm để bay tới.
+- **Game mình:** ✅ Sơn Hà Xã Tắc Đồ (`world/Holdings.svelte`, nút ở bảng Tìm): mọi linh mạch / trận nhãn / Thiên Môn theo loại, phe giữ + số đội đóng, tăng ích linh mạch, cổng chưa mở theo pha, lọc "chỉ minh mình", bấm Tới bay tới và mở bảng điểm; thu nhỏ hết thấy cả giới với hiệu từng tiên minh.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 ### 2.H Hành quân
@@ -788,7 +788,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** thời gian tới nơi hiện trước khi bấm xuất quân; đồng hồ trên đội đang đi.
 - **Vì sao giữ chân:** tối ưu tốc là một "nghề" (bộ kỵ nhanh để chặn đường, đánh man tộc xa).
 - **Tu tiên hoá:** *độn tốc* — công pháp độn thuật, *Thần Hành Phù* (đã có).
-- **Game mình:** ✅ 12 giây/ô trên bản đồ giới (`TILE_TIME`), 0,5 giây/đơn vị (tối thiểu 20 giây) trên bản đồ vùng; giảm bằng công pháp **Thần Hành** (−8 %/cấp, 5 cấp) qua `cutOf(s, 'march')`, tối đa giảm `MAX_CUT` 60 %; túi đồ có **Thần Hành Phù** +25 % trong 8 giờ. Khác: không phụ thuộc loại đệ tử (cố ý đơn giản).
+- **Game mình:** ✅ 12 giây/ô trên bản đồ giới (`TILE_TIME`), 0,5 giây/đơn vị (tối thiểu 20 giây) trên bản đồ vùng; giảm bằng công pháp **Thần Hành** (−8 %/cấp, 5 cấp) qua `cutOf(s, 'march')`, tối đa giảm `MAX_CUT` 60 %; túi đồ có **Thần Hành Phù** +25 % trong 8 giờ. Trên bản đồ Giới đội đi theo hệ chậm nhất (`UNIT_SPEED`: kiếm tu ×1,15 · pháp tu ×1 · thể tu ×0,85).
 - **Ưu tiên:** P0 (đã có) · **Công sức:** —
 
 #### H2. Redirect — đổi hướng giữa đường
@@ -798,7 +798,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chọn đội trên bản đồ hoặc trong hàng đội → chạm đích mới.
 - **Vì sao giữ chân:** phản ứng nhanh trong giao tranh; sửa sai không mất trắng thời gian.
 - **Tu tiên hoá:** *Chuyển độn* — đổi hướng độn quang giữa không trung.
-- **Game mình:** ❌ đội đã xuất phát thì đi tới đích (hoặc bị quay về khi mục tiêu mất/đầy). PLAN chọn trận giải ngay khi tới nên đổi hướng chỉ là chọn đích mới từ vị trí nội suy.
+- **Game mình:** 🟡 đội đang đi chỉ quay đầu về được (`turnAround` ở `world/spots.ts`); riêng đội săn đang về thì chuyển thẳng sang yêu thú giới khác (`huntChain`). Thiếu: đổi đích tuỳ ý giữa đường (tính đường mới từ vị trí nội suy `marchAt`).
 - **Ưu tiên:** P2 · **Công sức:** M (tính lại đường từ vị trí giữa đường; đường đi qua cổng nên phải chọn cổng gần nhất).
 
 #### H3. Recall — gọi về
@@ -808,7 +808,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** nút gọi về trên đội / trong hàng đội (chi tiết chưa xác minh).
 - **Vì sao giữ chân:** sửa sai, né đòn đánh úp.
 - **Tu tiên hoá:** *Thu binh hồi sơn*.
-- **Game mình:** 🟡 `recall` chỉ cho đội **đang đóng quân, đang khai mỏ** (mang về phần đã khai theo tỉ lệ thời gian) và **viện binh**; đội **đang đi** thì không gọi về được.
+- **Game mình:** ✅ Gọi về (`recallable` / `turnAround` ở `world/spots.ts`): đội đang đi trên bản đồ Giới (không thuộc kết trận) quay đầu từ chỗ đang đứng, về mất bằng thời gian đã đi, đi săn thì hoàn hành lực, bên bị nhắm thôi thấy đội kéo tới; đội đóng quân, khai mỏ (mang phần đã khai theo tỉ lệ thời gian), viện binh, giữ trận kỳ cũng gọi về được.
 - **Ưu tiên:** P1 · **Công sức:** S (quay đầu: `returnAt = now + (now − startAt)`, như `turnBack()` sẵn có).
 
 #### H4. Station / Stand on the map — đóng quân ở ô trống
@@ -818,7 +818,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chọn đội → chạm ô trống → đội đứng yên chờ lệnh.
 - **Vì sao giữ chân:** mở ra phục kích, chắn đường, dàn trận trước giờ hẹn.
 - **Tu tiên hoá:** *Trú quân / bày trận giữa đường*.
-- **Game mình:** ❌ chỉ đóng quân ở điểm (linh mạch, trận nhãn, Thiên Môn) và nhà đồng minh (viện binh).
+- **Game mình:** ✅ Đóng trại ở ô trống đã khai (`world/encamp.ts`: `camp`, gọi về như đội đóng ở điểm); phe khác đánh trại được (`hitCamp`: như đi cướp, thắng thì trại tan). Ngoài ra đóng quân ở điểm, trận kỳ / Tổng đà (`flagGuard`) và nhà đồng minh (viện binh).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### H5. Open-field Battle & Interception — giao chiến giữa bản đồ, chặn đường
@@ -829,7 +829,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chạm đội địch → Tấn công; trận diễn ra ngay trên bản đồ với số sát thương bay lên.
 - **Vì sao giữ chân:** chiều sâu chiến thuật lớn nhất của RoK (chặn đội kết trận, "kéo" địch, bắt đội khai mỏ).
 - **Tu tiên hoá:** *Chặn đường cướp đạo* / *đấu pháp giữa không trung*.
-- **Game mình:** ❌ **cố ý** — PLAN mục 1 "Không làm": hành quân realtime có chặn giữa đường; mục 4 ghi đường nâng cấp "tính giao điểm hai đường thẳng" nếu người chơi đòi. Bản rẻ hơn nhiều: cho **đánh đội đang khai mỏ / đang đóng quân** (mục tiêu đứng yên) — xem D5.
+- **Game mình:** 🟡 đánh đội **đứng yên** ngoài bản đồ đã có: cướp khoáng (đội đang khai — `world/rob.ts`, D5), đánh trại (`hitCamp` ở `world/encamp.ts`), tranh điểm có quân đóng; cửa ải phe khác giữ chặn đường đi qua (`shutGates` ở `world/points.ts`). Chặn đội **đang đi** giữa đường vẫn **cố ý** không làm (PLAN mục 1; mục 4 ghi đường nâng cấp "tính giao điểm hai đường thẳng" nếu người chơi đòi).
 - **Ưu tiên:** P2 · **Công sức:** L (chặn đội đang đi) / M (đánh đội đứng yên).
 
 #### H6. March Queues & Capacity — số đội và sức chứa mỗi đội (tóm tắt)
@@ -839,7 +839,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** số ô đội trên hàng đội; chọn quân khi xuất quân bị chặn bởi sức chứa.
 - **Vì sao giữ chân:** mỗi mốc TTC 5/11/17/22 là một bước nhảy sức mạnh rõ.
 - **Tu tiên hoá:** số đội xuất sơn theo cảnh giới (đã có).
-- **Game mình:** ✅ 1/2/3/4/5 đội theo cảnh giới (Luyện Khí → Hóa Thần, `MARCH_SLOTS`); quân mỗi đội theo số đệ tử đang có (không trần sức chứa); kết trận tối đa 8 đội, chờ 5/10/30 phút; mỗi điểm tối đa 6 đội đóng mỗi phe; viện binh tối đa 3 đội ở nhà đồng minh.
+- **Game mình:** ✅ 1/2/3/4/5 đội theo cảnh giới (Luyện Khí → Hóa Thần, `MARCH_SLOTS`); trận dung mỗi đội ra bản đồ Giới 500 + 80 mỗi cấp chủ tướng trên 1 (+10 % mỗi sao, Khuếch Trận Kỳ +10 % — `capOf`), xuất chinh ở núi / độ kiếp không giới hạn; kết trận tối đa 8 đội, chờ 5/10/30 phút; mỗi điểm tối đa 6 đội đóng mỗi phe; viện binh tối đa 3 đội ở nhà đồng minh.
 - **Ưu tiên:** P0 (đã có) · **Công sức:** —
 
 ## 3. Bảng tổng kết khoảng cách
@@ -849,67 +849,67 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | A1 | Kingdom Map | ✅ Giới 150 × 150, sinh từ seed, reset theo mùa | P0 | — |
 | A2 | Zones 1–2–3 | ✅ 16 vùng ngoài / 8 giữa / 1 tâm | P0 | — |
 | A3 | Passes Lv.1–3 | ✅ 40 cổng trận nhãn mở theo pha; phe giữ chặn đường phe khác (trừ minh ước); chưa có NPC giữ | P1 | M |
-| A4 | Alliance Territory (Fortress, Flags) | ✅ lãnh thổ + trận kỳ (chưa phá cờ) | P1 (theo vùng) / P2 (cờ từng ô) | M / L |
-| A5 | Holy Sites — luật chung (kỳ 3 ngày, giữ 4 giờ, không cộng dồn, NPC giữ) | 🟡 linh mạch luôn mở, cộng dồn tới 30 % | P1 | M |
+| A4 | Alliance Territory (Fortress, Flags) | ✅ lãnh thổ + trận kỳ (phá / đóng giữ cờ) + Tổng đà | P1 (theo vùng) / P2 (cờ từng ô) | M / L |
+| A5 | Holy Sites — luật chung (kỳ 3 ngày, giữ 4 giờ, không cộng dồn, NPC giữ) | 🟡 linh mạch nhiều loại tăng ích, quà chiếm lần đầu; luôn mở, cộng dồn tới 30 %, không NPC giữ | P1 | M |
 | A6 | Sanctum (4 loại buff) | ✅ linh mạch cấp 1: sản lượng / xây / tuyển / chữa (25/09) | P1 | S |
 | A7 | Altar (6 loại buff) | ✅ linh mạch cấp 2: công / thủ / sinh lực / hành quân (25/09) | P1 | S |
-| A8 | Shrine (4 loại buff kép) | 🟡 linh mạch cấp 2 | P1 | S–M |
-| A9 | Lost Temple & King (tước hiệu, buff vương quốc) | 🟡 Thiên Môn cho điểm mùa; chưa có Giới Chủ / phong hào | P2 | M |
-| A10 | Monument (dòng thời gian, mục tiêu chung, thưởng mốc) | 🟡 pha mùa theo ngày + biên niên giới | **P1** | M |
-| A11 | Eve of the Crusade & Lost Kingdom | ❌ (cố ý: không liên server) | P2 | M |
+| A8 | Shrine (4 loại buff kép) | 🟡 chỉ linh mạch tâm có buff kép (sản lượng + công) | P1 | S–M |
+| A9 | Lost Temple & King (tước hiệu, buff vương quốc) | ✅ Thiên Môn + Giới Chủ: sắc phong, ban phúc cả giới, Thiên Ân lễ (`world/lord.ts`) | P2 | M |
+| A10 | Monument (dòng thời gian, mục tiêu chung, thưởng mốc) | 🟡 Thiên Đạo Biên Niên: 13 chương mục tiêu chung + quà (`world/book.ts`); chưa mở nội dung theo chương | **P1** | M |
+| A11 | Eve of the Crusade & Lost Kingdom | ❌ (cố ý: không liên server); phần PvE Eve: Khai Giới Trảm Tà (C6) | P2 | M |
 | B1 | Fog of War | ✅ mê vụ riêng mỗi người | P2 | M |
 | B2 | Scout Camp & scouts | ✅ linh điểu | P2 | M |
 | B3 | Mysterious Caves | ✅ động phủ cổ tu | P2 | S |
 | B4 | Tribal Villages | ✅ thôn trang | P2 | S |
-| B5 | Scouting enemies (báo cáo trinh sát) | 🟡 dò thám miễn phí trong Tranh đoạt; không dò quân ở điểm | P1 | S |
-| B6 | Anti-scouting & Watchtower / cảnh báo | 🟡 Hộ Sơn Đại Trận; chưa báo đội địch đang tới | P1 / P2 | S |
+| B5 | Scouting enemies (báo cáo trinh sát) | 🟡 Do thám tông môn (`world/spy.ts`: linh điểu, tốn linh thạch, báo cáo thư); chưa dò quân ở điểm | P1 | S |
+| B6 | Anti-scouting & Watchtower / cảnh báo | 🟡 Tháp canh báo đội địch đang tới; chưa có vật phẩm chống dò thám | P1 / P2 | S |
 | C1 | Action Points | ✅ hành lực săn yêu thú giới | P1 | S |
-| C2 | Barbarians (man tộc trên bản đồ chung) | 🟡 15 yêu thú cố định trên bản đồ vùng riêng | **P0** | M |
+| C2 | Barbarians (man tộc trên bản đồ chung) | ✅ yêu thú giới (6 con mỗi vùng ngoài / giữa, cấp 1–15), tốn hành lực; chưa rơi vật phẩm | **P0** | M |
 | C3 | Continuous attack / chain farming | ✅ săn liên hoàn yêu thú giới (25/09) | P2 | S / M |
-| C4 | Barbarian Buster, Clarion Call | 🟡 nhiệm vụ "hạ yêu thú cấp n"; Săn Yêu Lệnh (Chủ nhật), Tông Môn Tranh Bá | P2 | S |
+| C4 | Barbarian Buster, Clarion Call | 🟡 nhiệm vụ "hạ yêu thú cấp n"; Săn Yêu Lệnh, Trảm Yêu Lệnh, Liên Trảm Bất Hồi, Tông Môn Tranh Bá; chưa xếp hạng săn yêu | P2 | S |
 | C5 | Barbarian Forts (cấp 1–6, kết trận) | ✅ yêu trại / yêu vương 3 cấp (vòng ngoài 12.000 hồi 8 giờ · giữa · tâm), kết trận, chia thưởng theo sát thương; chưa có cấp 4–6 | P1 | S–M |
-| C6 | Marauders & Encampments | ❌ | P2 | M |
+| C6 | Marauders & Encampments | ✅ Khai Giới Trảm Tà (`world/eve.ts`); chưa có trại lưu khấu | P2 | M |
 | C7 | Barbarian Camps & Keeps (KvK) | ❌ (ngoài phạm vi) | P2 | M |
 | C8 | Lohar's Trial (vật phẩm triệu hồi boss) | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
 | C9 | Ceroli Crisis / Assault / Realm of Mystique | 🟡 Man Hoang Cổ Tộc (`world/party.ts`): Crisis 4 người 3 vai 5 độ khó, giải tự động; thiếu Assault 12 người, Realm | P2 | L |
-| C10 | Karuak Ceremony / Trial of Kau Karuak | 🟡 Thông Thiên Tháp | P2 | S–M |
-| C11 | Shadow Legion (minh thủ sóng quái) | 🟡 viện binh + hộ pháp độ kiếp | P1 | M |
-| C12 | Holy-site Guardians & Runes | ❌ | P2 | M |
+| C10 | Karuak Ceremony / Trial of Kau Karuak | ✅ Thí Luyện Yêu Hoàng (5 độ khó × 50 cửa); thiếu nhờ minh giúp | P2 | S–M |
+| C11 | Shadow Legion (minh thủ sóng quái) | ✅ Ma Triều Công Sơn (`world/legion.ts`) | P1 | M |
+| C12 | Holy-site Guardians & Runes | ✅ hộ trận linh thú + phù văn 12 giờ | P2 | M |
 | C13 | Race Against Time, Protect the Supplies, Silk Road, Halloween… | ❌ | P2 | S–M |
 | D1 | Resource Points | ✅ 144 mỏ, 2 cấp, hồi 2 giờ, linh triều +50 % | P0 | — |
 | D2 | Gathering buffs & commanders | ✅ khoá `gather`: Khai Linh Phù, bị động khai mỏ của 2 trưởng lão (+ linh triều, lãnh thổ); chưa có công pháp / Hương Hỏa khai mỏ | P1 | S |
 | D3 | Gem Deposits | ❌ | P2 | S |
-| D4 | Alliance Resource Points / Centers | ❌ | P2 | M |
+| D4 | Alliance Resource Points / Centers | ✅ Minh khoáng + kho minh thu từ lãnh thổ | P2 | M |
 | D5 | Attacked while gathering | ✅ Cướp khoáng (`world/rob.ts`) | P1 | M |
 | E1 | Beginner's Teleport | ✅ dời núi tân thủ | **P1** | S |
-| E2 | Random Teleport | ❌ | P2 | S |
-| E3 | Targeted Teleport | ❌ | P2 | S |
+| E2 | Random Teleport | ✅ Di Sơn Phù | P2 | S |
+| E3 | Targeted Teleport | ✅ Càn Khôn Phù | P2 | S |
 | E4 | Territorial Teleport | ✅ dời tông môn vào lãnh thổ | **P1** | S–M |
-| E5 | Luật chung khi dịch chuyển | ❌ | theo E1–E4 | — |
+| E5 | Luật chung khi dịch chuyển | ✅ đội ở nhà, sát khí chặn dời, ô trống, dời lãnh thổ 24 giờ một lần | theo E1–E4 | — |
 | E6 | Migration | ❌ (cố ý) | P2 | M |
-| E7 | Beginner's protection & Peace Shield | 🟡 khiên 72 giờ / 8 giờ; Hộ Sơn Phù 8/24/72 giờ trong túi đồ | P1 | S |
-| F1 | Expedition | 🟡 bí cảnh + Thông Thiên Tháp; thiếu sao, rương ngày | P2 | M / L |
-| F2 | Expedition Store | ❌ | P2 | S |
+| E7 | Beginner's protection & Peace Shield | ✅ khiên 72 / 8 giờ, Hộ Sơn Phù, Bế Quan Lệnh, linh hỏa thiêu sơn; khiên chưa chặn do thám | P1 | S |
+| F1 | Expedition | 🟡 bí cảnh + Thông Thiên Tháp + rương ngày theo tầng tháp; thiếu sao, quân ảo | P2 | M / L |
+| F2 | Expedition Store | ✅ Trấn Tháp Các (Tháp Lệnh) | P2 | S |
 | F3 | Lyceum of Wisdom | ✅ Vấn Đạo Đài | P2 | M |
-| F4 | Sunset Canyon | 🟡 cướp bất đồng bộ (có mất tài nguyên) | P2 | M |
-| F5 | Arms Training, Golden Kingdom… (PvE sự kiện) | 🟡 khung tháp có sẵn | P2 | S / M |
-| G1 | Tactical / Strategic View | ✅ (thiếu lớp chiến lược, zoom đặt sẵn) | P2 | S–M |
+| F4 | Sunset Canyon | ✅ Luận Kiếm Đài (đệ tử ảo, không mất quân) | P2 | M |
+| F5 | Arms Training, Golden Kingdom… (PvE sự kiện) | 🟡 Luận Võ Liên Hoàn (Arms Training); chưa có Golden Kingdom, Race Against Time… | P2 | S / M |
+| G1 | Tactical / Strategic View | ✅ (có toàn giới + hiệu minh, bản đồ nhỏ; thiếu bản đồ nhiệt, danh sách trận) | P2 | S–M |
 | G2 | Toạ độ, chia sẻ toạ độ vào chat | ✅ | P1 | S |
-| G3 | Bookmarks | ❌ | P2 | S |
+| G3 | Bookmarks | ✅ Ghi nhớ ★ (20 chỗ) | P2 | S |
 | G4 | Alliance Markers | ✅ | P1 | S |
 | G5 | Search (tìm theo cấp) | ✅ | P1 | S |
-| G6 | Filters | ❌ | P2 | S |
+| G6 | Filters | ✅ lớp tình hình: yêu thú / mỏ / hành quân / lãnh thổ | P2 | S |
 | G7 | March Lines | ✅ | P0 | — |
-| G8 | Tap tile → action menu | ✅ (thiếu chia sẻ, dò thám, đánh dấu) | P0 | — |
+| G8 | Tap tile → action menu | ✅ (có chia sẻ, ghi nhớ, dấu minh; do thám qua bảng Tranh đoạt) | P0 | — |
 | G9 | Troop Dispatch Queue | ✅ (thiếu hàng đội trên bản đồ giới – điện thoại) | P1 | S |
 | G10 | Return to City | ✅ | P0 | — |
 | G11 | Kingdom Overview (danh sách linh địa theo phe) | ✅ Sơn Hà Xã Tắc Đồ (`Holdings.svelte`) | P1 | S |
-| H1 | March Speed | ✅ 12 giây/ô, công pháp Thần Hành | P0 | — |
-| H2 | Redirect giữa đường | ❌ | P2 | M |
+| H1 | March Speed | ✅ 12 giây/ô, công pháp Thần Hành, tốc theo hệ đệ tử | P0 | — |
+| H2 | Redirect giữa đường | 🟡 quay đầu giữa đường, săn liên hoàn từ đường về; chưa đổi đích tuỳ ý | P2 | M |
 | H3 | Recall | ✅ mọi đội đang đi (quay đầu giữa đường, hoàn hành lực) + đội đóng / khai / viện binh | P1 | S |
 | H4 | Đóng quân ở ô trống | ❌ | P2 | M |
 | H5 | Open-field battle / chặn đường | ❌ (cố ý, PLAN "Không làm") | P2 | L / M |
-| H6 | March queues & capacity | ✅ 1–5 đội theo cảnh giới, kết trận 8 đội | P0 | — |
+| H6 | March queues & capacity | ✅ 1–5 đội theo cảnh giới, trận dung theo chủ tướng, kết trận 8 đội | P0 | — |
 
 **Đếm:** 64 mục — ✅ 10 · 🟡 21 · ❌ 33 (trong đó A11, E6, H5 là cố ý theo PLAN "Không làm"; C7 ngoài phạm vi vì thuộc bản đồ KvK).
 

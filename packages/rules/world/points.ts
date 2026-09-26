@@ -1,9 +1,9 @@
 // Điểm trên bản đồ giới: trạng thái lúc now (mỏ còn bao nhiêu, yêu vương hồi chưa), phe giữ, điểm mùa khi giữ.
 // Dùng chung cho các tính năng của world/ (như base.ts, fight.ts).
-import { MAP_W, type Atlas, type Point, type PointKind, type Pos } from '../atlas.ts'
+import { MAP_W, sitesOf, type Atlas, type Point, type PointKind, type Pos } from '../atlas.ts'
 import { type Side } from '../combat.ts'
 import { beastStr, mob, tierFor } from '../core/battle.ts'
-import { HOUR } from '../core/util.ts'
+import { HOUR, count } from '../core/util.ts'
 import {
   BEATS,
   BOSSES,
@@ -19,23 +19,37 @@ import {
   SEASON_RUIN,
   SEASON_VEIN,
   CAMP_STAGE_PTS,
+  BUILD_MAX,
+  BUILD_PER,
   FLAG_R,
   FORT_BUFFS,
   FORT_R,
+  GUARDIANS,
   TERR_POINT,
   TERR_SEAT,
   TYPES,
   VEIN_BUFF,
   EVE_BUFF,
   thoiAt,
+  RUNE_CYCLE,
+  RUNE_KINDS,
+  RUNE_R,
+  RUNE_TIERS,
+  ALLY_SKILL_IDS,
+  ALLY_SKILLS,
+  ALLY_TECH_IDS,
+  ALLY_TECHS,
   type Bonus,
 } from '../data.ts'
 import {
   allyOf,
+  techLevel,
+  type Alliance,
   setSpot,
   sideKey,
   sideName,
   type MapCtx,
+  type Party,
   type Players,
   type Spot,
   type Task,
@@ -73,6 +87,18 @@ export function wildSide(a: Atlas, i: number): Side | null {
   const type = TYPES[i % TYPES.length]
   const rest = TYPES.filter(x => x !== type).map(x => [x, (1 - MAIN_SHARE) / 2] as [(typeof TYPES)[number], number])
   return mob(beastStr(p.lv), tierFor(p.lv), [[type, MAIN_SHARE], ...rest])
+}
+// Hộ trận linh thú ở điểm i (linh mạch / trận nhãn / Thiên Môn chưa thuần phục): đội tới chiếm gặp đúng chừng này
+export function guardSide(a: Atlas, i: number): Side | null {
+  const p = a.points[i],
+    g = p && GUARDIANS[p.kind as keyof typeof GUARDIANS]?.[p.lv - 1]
+  if (!g) return null
+  const type = TYPES[(i + 1) % TYPES.length]
+  return mob(g[0], g[1], [
+    [type, 0.5],
+    [BEATS[type], 0.3],
+    [BEATS[BEATS[type]], 0.2],
+  ])
 }
 // Một "lát" của yêu vương ở điểm i: đội đánh gặp đúng chừng này (client dùng để ước lượng tỉ lệ thắng)
 export function bossSlice(a: Atlas, i: number): Side | null {
@@ -132,7 +158,7 @@ export const bank = (w: World, side: number, pts: number): World =>
 // Đặt lại điểm i lúc at; đổi phe giữ thì chốt điểm mùa cho phe cũ theo số giờ đã giữ
 export function hold(w: World, map: MapCtx | undefined, i: number, sp: Spot, at: number): World {
   const old = w.spots[i]
-  const next = setSpot(w, i, sp)
+  const next = setSpot(w, i, old?.tamed ? { ...sp, tamed: 1 } : sp) // linh thú đã thuần phục thì giữ vậy cả mùa
   if (!map || old?.own === undefined || old.own === sp.own) return next
   return bank(next, old.own, ((at - (old.since ?? at)) / HOUR) * seasonRate(map.atlas.points[i]))
 }
@@ -183,7 +209,7 @@ export function claimsOf(ps: Players, w: World, a: Atlas, now: number): Claim[] 
     const c = sp.own !== undefined ? claim(a, Number(k), sp.own) : null
     if (c) out.push(c)
   }
-  for (const f of Object.values(w.flags ?? {})) if (f.done <= now && w.allies[f.aid]) out.push(flagClaim(f))
+  for (const f of Object.values(w.flags ?? {})) if (f.done <= now && w.allies[f.aid] && !f.mine) out.push(flagClaim(f))
   return out
 }
 export const flagClaim = (f: { x: number; y: number; aid: number; fort?: boolean }): Claim => ({
@@ -192,11 +218,64 @@ export const flagClaim = (f: { x: number; y: number; aid: number; fort?: boolean
   r: f.fort ? FORT_R : FLAG_R,
   side: f.aid,
 })
+// Phù văn của chu kỳ cyc (RUNE_CYCLE): mỗi linh mạch / trận nhãn / Thiên Môn một phù văn ở ô trống gần đó — tất định theo mầm bản đồ
+export type Rune = { i: number; x: number; y: number; k: number; t: number }
+export function runesAt(a: Atlas, cyc: number): Rune[] {
+  const taken = new Set([...a.points, ...sitesOf(a)].map(p => p.y * MAP_W + p.x))
+  const out: Rune[] = []
+  for (const p of a.points) {
+    if (p.kind !== 'vein' && p.kind !== 'gate' && p.kind !== 'heaven') continue
+    let h = (Math.imul(a.seed ^ (cyc * 0x9e3779b1), 2654435761) ^ Math.imul(p.i + 1, 0x85ebca6b)) >>> 0
+    const next = () => (h = (Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) >>> 0)
+    const x = p.x + (next() % (2 * RUNE_R + 1)) - RUNE_R,
+      y = p.y + (next() % (2 * RUNE_R + 1)) - RUNE_R
+    if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_W || taken.has(y * MAP_W + x)) continue
+    taken.add(y * MAP_W + x)
+    const ring = p.kind === 'heaven' ? 2 : p.kind === 'gate' ? 1 : 0
+    const t = Math.min(RUNE_TIERS.length - 1, (next() % 3) + ring)
+    out.push({ i: out.length, x, y, k: next() % RUNE_KINDS.length, t })
+  }
+  return out
+}
+export const runeCycle = (t: number) => Math.floor(t / RUNE_CYCLE)
+// phù văn còn (chưa ai nhặt) lúc t
+export const runesLeft = (w: World, a: Atlas, t: number) => {
+  const cyc = runeCycle(t)
+  const got = w.runes?.cyc === cyc ? w.runes.got : []
+  return runesAt(a, cyc).filter(r => !got.includes(r.i))
+}
+// Tăng ích tông môn từ các trận Hộ Minh Đại Trận (nguồn 'ally')
+export const allyBuffs = (al: Alliance | undefined): Buff[] =>
+  al
+    ? ALLY_TECH_IDS.flatMap(id => {
+        const d = ALLY_TECHS[id],
+          lv = techLevel(al, id)
+        return lv && d.key !== 'helps' && d.key !== 'seats'
+          ? [{ key: d.key as Bonus, v: Math.round(d.v * lv * 1000) / 1000, until: 0, src: 'ally' }]
+          : []
+      })
+    : []
+// Minh trận thần thông đang hiệu lực lúc t (nguồn 'askill', tự hết lúc until)
+export const skillBuffs = (al: Alliance | undefined, t: number): Buff[] =>
+  ALLY_SKILL_IDS.flatMap(id => {
+    const until = al?.skills?.[id] ?? 0
+    return until > t ? [{ key: ALLY_SKILLS[id].key as Bonus, v: ALLY_SKILLS[id].v, until, src: 'askill' }] : []
+  })
 // Tổng đà của minh đã dựng xong lúc t: người trong minh có FORT_BUFFS
 export function fortBuffs(w: World, pid: number, t: number): Buff[] {
   const al = allyOf(w, pid)
   const done = !!al && Object.values(w.flags ?? {}).some(f => f.fort && f.aid === al.id && f.done <= t)
   return done ? FORT_BUFFS.map(b => ({ ...b, until: 0, src: 'fort' })) : []
+}
+// Góp quân xây: tốc dựng theo số đệ tử đang đóng ở công trình (trần BUILD_MAX)
+export const buildRate = (troops: number) => 1 + Math.min(BUILD_MAX - 1, troops / BUILD_PER)
+export const troopsOf = (g: Party) => g.reduce((n, [, , m]) => n + count(m.army), 0)
+// Người góp đổi lúc t (đội tới / gọi về): việc còn lại giữ nguyên, thời gian còn lại co giãn theo tốc mới
+export function rebuild(w: World, id: number, t: number, before: Party, after: Party): World {
+  const f = w.flags?.[id]
+  if (!f || f.done <= t) return w
+  const done = t + Math.ceil(((f.done - t) * buildRate(troopsOf(before))) / buildRate(troopsOf(after)))
+  return { ...w, flags: { ...w.flags, [id]: { ...f, done } } }
 }
 // Chủ ô (x, y): id tiên minh; 0 — không của ai hoặc tranh chấp
 export function ownerAt(claims: Claim[], x: number, y: number): number {

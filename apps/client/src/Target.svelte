@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { MedalTone } from '@rok/art'
   // Bảng mục tiêu trên bản đồ: yêu thú, tông môn đối địch, bí cảnh. Xem địch, phần thưởng, chọn đội rồi xuất quân.
   import {
     BEASTS,
@@ -23,6 +24,12 @@
     towerReward,
     towerType,
     towerChest,
+    towerBought,
+    towerCoins,
+    towerStar,
+    TOWER_CHEST_COIN,
+    TOWER_COIN,
+    TOWER_SHOP,
     dayOf,
     winChance,
     type Army,
@@ -128,7 +135,7 @@
 
 <Sheet open={!!target} {onclose} title={target ? L.target(target) : ''} sub={info?.sub} lore={info?.lore || undefined}>
   {#snippet art()}
-    {#if target && info}<Medal emblem={info.emblem} tone={target.kind} size={62} />{/if}
+    {#if target && info}<Medal emblem={info.emblem} tone={target.kind as MedalTone} size={62} />{/if}
   {/snippet}
   {#if target && info}
     {#if foe}
@@ -187,6 +194,33 @@
         </div>
         <small class="t-tiny t-soft">{L.tower.chestHint}</small>
       </Section>
+      <!-- Trấn Tháp Các: Tháp Lệnh từ tầng tháp và rương ngày, mỗi món có hạn mỗi tuần; tín vật trưởng lão của tuần -->
+      {@const coins = towerCoins(game)}
+      {@const bought = towerBought(game, now)}
+      {@const star = towerStar(now)}
+      <Section title={L.tower.shop}>
+        {#snippet aside()}<b class="t-num t-gold">{L.tower.coins(num(coins))}</b>{/snippet}
+        <p class="t-tiny t-soft">{L.tower.shopHint(TOWER_COIN, TOWER_CHEST_COIN)}</p>
+        <ul class="goods">
+          {#each TOWER_SHOP as x, i (i)}
+            <li class="good">
+              {#if x.star}<Portrait look={LOOK[star]} size={40} /><b class="t-tiny"
+                  >{L.tavern.tokens(L.elders[star].name, x.star)}</b
+                >
+              {:else}<Bag items={x.r?.items} size="sm" />{/if}
+              <small class="t-tiny t-num">{L.tower.price(num(x.price))} · {L.arena.limit(bought[i] ?? 0, x.week)}</small
+              >
+              <Button
+                size="sm"
+                variant="gold"
+                wide
+                disabled={(bought[i] ?? 0) >= x.week || coins < x.price}
+                onclick={() => g.act({ type: 'towerBuy', i }, 'reward')}>{L.arena.buy}</Button
+              >
+            </li>
+          {/each}
+        </ul>
+      </Section>
     {/if}
     <div class="mt-3">
       {#if err === 'locked'}
@@ -215,3 +249,25 @@
     </div>
   {/if}
 </Sheet>
+
+<style>
+  .goods {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--sp-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .good {
+    display: grid;
+    justify-items: center;
+    align-content: space-between;
+    gap: 3px;
+    padding: 8px;
+    text-align: center;
+    background: var(--paper2);
+    border: 1.5px solid var(--paper3);
+    border-radius: 12px;
+  }
+</style>

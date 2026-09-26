@@ -1,4 +1,4 @@
-import type { Items } from '@rok/rules'
+import type { ElderId, Items } from '@rok/rules'
 // Hồ sơ đang mở và cuộc truyền âm cần mở: màn nào cũng gọi được (chat, tiên minh, bản đồ giới) mà không phải truyền prop
 // qua App. App vẽ bảng hồ sơ; Chat đang hiện (dải chat ở Bản đồ hoặc chat trong trang Tiên minh) mở cuộc truyền âm.
 // arena: bảng Luận Kiếm Đài đang mở (HUD mở, App vẽ) · market: Phường thị đang mở (Thương hội mở, App vẽ)
@@ -13,6 +13,7 @@ export const social = $state<{
   quiz: boolean
   unlock: number // Chủ điện vừa lên tầng này: màn Mở khoá (0: đóng)
   gift: Items | null // vật phẩm vừa nhận: dải Tạ lễ (null: tắt)
+  elders: ElderId[] // trưởng lão vừa thu nhận, chờ màn Thu nhận lần lượt (trống: tắt)
 }>({
   profile: null,
   dm: null,
@@ -23,4 +24,5 @@ export const social = $state<{
   quiz: false,
   unlock: 0,
   gift: null,
+  elders: [],
 })
