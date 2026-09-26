@@ -78,7 +78,7 @@ export type MapSnap = {
   chron: Chron[]
   spots: SpotView[]
   lord?: number | null
-  book?: { ch: number; done: number[]; value: number }
+  book?: { ch: number; done: number[]; value: number; by?: [number, number][] } // by: đóng góp từng người (chương có chỉ số riêng)
   bless?: { key: BlessKey; until: number; day: number } // phúc Giới Chủ ban cả giới
   allies?: { id: number; tag: string }[] // tiên minh có lãnh thổ (hiệu để ghi trên bản đồ)
   flags?: (Flag & { guard?: [n: number, might: number, troops: number] })[] // trận kỳ (đang dựng: done > lúc xem); guard: đội giữ, lực chiến, số đệ tử

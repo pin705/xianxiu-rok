@@ -2,11 +2,11 @@
   // Màn tiêu đề. 'first': tiêu đề → lời dẫn → chọn đạo thống → đặt tên (server lập tông môn). 'splash': người cũ, chạm hoặc chờ 1.6 giây là vào.
   // wait: đã xong màn tiêu đề nhưng server chưa gửi state (mạng chậm) — hiện dòng "đang kết nối".
   import { onMount } from 'svelte'
-  import { DAO_IDS, type DaoId } from '@rok/rules'
-  import { DAO_TONES, artAll, onArtProgress } from '@rok/art'
+  import { DAOS, DAO_IDS, type Bonus, type DaoId } from '@rok/rules'
+  import { DAO_TONES, artAll, emblemArt, onArtProgress, paintedUrl } from '@rok/art'
   import { Button, Medal } from './ui'
   import { L, sfx, suggestNames } from './lib'
-  import DaoChoose from './DaoChoose.svelte'
+  import DaoChoose, { ACCENT } from './DaoChoose.svelte'
 
   let {
     mode,
@@ -24,6 +24,7 @@
 
   let step: 'title' | 'intro' | 'dao' | 'name' | 'stamp' | 'email' | 'code' = $state('title')
   let dao: DaoId = $state(DAO_IDS[0])
+  const daoFx = $derived(Object.entries(DAOS[dao]).map(([k, v]) => L.bonus(k as Bonus, v as number)))
   let email = $state('')
   let pass = $state('')
   let code = $state('')
@@ -177,10 +178,20 @@
   {:else}
     <div class="cover dim">
       <form class="card scroll-skin stack center" class:gone={step === 'stamp'} onsubmit={found}>
-        <button type="button" class="dao row center" onclick={to('dao')} aria-label={L.dao.pick}>
-          <Medal emblem={dao} tone={DAO_TONES[dao]} size={44} />
-          <b>{L.dao.names[dao].name}</b>
-          <small class="t-tiny t-soft">· {L.dao.swap}</small>
+        <!-- đạo thống đã chọn: tổ sư, huy hiệu, lối chơi, ba tiềm năng, đệ tử đặc trưng — chạm để chọn lại -->
+        <button type="button" class="dao" style:--accent={ACCENT[dao]} onclick={to('dao')} aria-label={L.dao.pick}>
+          <span class="face">
+            <img src={paintedUrl(`fig:${dao}`, () => emblemArt(dao), 160)} alt="" draggable="false" />
+            <span class="badge"><Medal emblem={dao} tone={DAO_TONES[dao]} size={30} /></span>
+          </span>
+          <span class="info">
+            <span class="head"><b>{L.dao.names[dao].name}</b><span class="way">{L.dao.names[dao].style}</span></span>
+            <span class="chips"
+              >{#each daoFx as f (f)}<i>{f}</i>{/each}</span
+            >
+            <small class="t-tiny t-soft">{L.dao.uniTitle}: <b>{L.dao.names[dao].unit}</b></small>
+          </span>
+          <span class="swap t-tiny">{L.dao.swap} ›</span>
         </button>
         <h2 class="t-title">{L.naming.title}</h2>
         <p class="t-small t-lore">{L.naming.hint}</p>
@@ -319,14 +330,83 @@
     opacity: 0.85;
   }
   .dao {
+    position: relative;
+    display: flex;
+    align-items: stretch;
     gap: var(--sp-2);
-    padding: 4px 12px 4px 4px;
+    width: 100%;
+    padding: 6px 10px 6px 6px;
     color: inherit;
     font: inherit;
-    background: color-mix(in srgb, var(--ink) 6%, transparent);
-    border: 0;
-    border-radius: 999px;
+    text-align: left;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 12px;
     cursor: pointer;
+  }
+  /* tổ sư nửa người trong khung, huy hiệu đạo ở góc */
+  .face {
+    position: relative;
+    flex: none;
+    width: 72px;
+    height: 88px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 40%, transparent), transparent) center
+      30% / 130% 100% no-repeat;
+  }
+  .face img {
+    position: absolute;
+    top: -2px;
+    left: -30%;
+    width: 160%;
+  }
+  .badge {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+  }
+  .info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+  }
+  .head {
+    padding-right: 44px; /* chừa chỗ "Đổi ›" */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+  }
+  .way {
+    padding: 1px 8px 2px;
+    font-size: var(--fs-1, 12px);
+    font-weight: 700;
+    color: var(--silk);
+    background: var(--accent);
+    border-radius: 999px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .chips i {
+    padding: 1px 6px;
+    font-size: var(--fs-1, 12px);
+    font-style: normal;
+    font-weight: 700;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .swap {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    font-weight: 700;
+    opacity: 0.7;
   }
   .skip {
     position: absolute;

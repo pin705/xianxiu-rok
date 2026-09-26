@@ -25,6 +25,7 @@
     DIG_MAX,
     BLESSINGS,
     BOOK,
+    BOOK_TOP,
     EVE_CHEST_N,
     HONOR_TIERS,
     RESOURCES,
@@ -97,14 +98,15 @@
   let scene = $state.raw<WorldScene>()
   let layer = $state<HTMLDivElement>()
   let chronOpen = $state(false)
-  // thẻ mùa thu gọn (chỉ dòng mùa + Công Huân + nút): nhớ theo máy, bộ nhớ trình duyệt hỏng thì mặc định mở rộng
+  // thẻ mùa thu gọn (chỉ dòng mùa + Công Huân + nút): mặc định gọn — thẻ mở rộng che một phần ba bản đồ trên điện thoại;
+  // người chơi mở ra thì nhớ theo máy
   const SLIM = 'rok.worldCard'
   let slim = $state(
     (() => {
       try {
-        return localStorage.getItem(SLIM) === '1'
+        return localStorage.getItem(SLIM) !== '0'
       } catch {
-        return false
+        return true
       }
     })(),
   )
@@ -672,6 +674,21 @@
           {/each}
         </span>
         <small class="t-tiny t-soft">{L.book.gave}</small>
+      {/if}
+      {#if b.by}
+        <!-- công đầu chương (đóng góp từng người vào chương có chỉ số riêng): hạng của mình, mở ra xem top -->
+        {@const k = b.by.findIndex(([p]) => p === me)}
+        {#if k >= 0}<small class="t-tiny t-gold">{L.book.mine(k + 1, num(b.by[k][1]))}</small>{/if}
+        {#if bookOpen}
+          <small class="t-tiny t-strong">{L.book.top(BOOK_TOP)}</small>
+          <ol class="stack" style:--gap="2px">
+            {#each b.by.slice(0, 5) as [p, n], i (p)}
+              <li class="row between t-tiny" class:t-strong={p === me}>
+                <span>{i + 1}. {snap.seats.find(x => x.pid === p)?.name ?? '?'}</span><b class="t-num">{num(n)}</b>
+              </li>
+            {/each}
+          </ol>
+        {/if}
       {/if}
       {#if bookOpen}
         <ol class="stack" style:--gap="4px">

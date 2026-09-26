@@ -10,6 +10,9 @@ import { mail } from './mail.ts'
 import {
   DAY_OFFSET,
   FEST_STAGED,
+  RACE_LV,
+  RACE_MAX,
+  RACE_PLUS,
   FEST_STAR,
   FESTS,
   PASS_LEVELS,
@@ -60,6 +63,12 @@ const METRIC: Record<Metric, (s: State) => number> = {
   runes: s => s.stats.runes ?? 0,
   guards: s => s.stats.guards ?? 0,
   trial: s => s.stats.trial ?? 0,
+  kiem2: s => s.stats.t2kiem ?? 0,
+  phap2: s => s.stats.t2phap ?? 0,
+  the2: s => s.stats.t2the ?? 0,
+  train2: s => (s.stats.t2kiem ?? 0) + (s.stats.t2phap ?? 0) + (s.stats.t2the ?? 0),
+  drain: s => s.stats.drained ?? 0,
+  forts: s => s.stats.forts ?? 0,
 }
 export const metric = (s: State, m: Metric) => METRIC[m](s)
 
@@ -99,8 +108,8 @@ export function festWindow(
 }
 
 // Lễ may rủi (vòng quà, bàn xúc xắc): kiếm lệnh từ việc trong lễ, mỗi ngày một lượt miễn phí, kết quả theo mầm server
-export const luck = (d: FestDef): d is Extract<FestDef, { kind: 'wheel' | 'dice' }> =>
-  d.kind === 'wheel' || d.kind === 'dice'
+export const luck = (d: FestDef): d is Extract<FestDef, { kind: 'wheel' | 'dice' | 'egg' | 'dig' | 'wish' }> =>
+  d.kind === 'wheel' || d.kind === 'dice' || d.kind === 'egg' || d.kind === 'dig' || d.kind === 'wish'
 const used = (d: FestDef): Metric[] => {
   if (d.kind === 'tasks' || d.kind === 'activity') return [...new Set(d.tasks.map(x => x.m))]
   return d.kind === 'points' || d.kind === 'shop' || luck(d)
@@ -139,7 +148,9 @@ export function rollFest(s: State, t: number): State {
       f = { key: w.key, stage: w.stage, base: snap(s, d), bank: 0, got: [], days: 0, last: -1 }
     else if (cur.stage !== w.stage || cur.shut) {
       const { shut, ...c } = cur // mở lại cùng lượt (khung ngày có quãng nghỉ): điểm đã dồn lúc đóng
-      f = { ...(shut ? c : bankStage(s, id, c)), stage: w.stage, base: snap(s, d) }
+      // việc của lễ nhiều ngày tính từ lúc mở lượt, trừ lễ làm mới mỗi ngày
+      const keep = d.kind === 'tasks' && !d.daily
+      f = { ...(shut ? c : bankStage(s, id, c)), stage: w.stage, base: keep ? c.base : snap(s, d) }
     } else continue
     fest = { ...fest, [id]: f }
   }
@@ -239,19 +250,55 @@ export const festBought = (s: State, id: FestId, i: number) => s.fest[id]?.got.f
 export function festTokens(s: State, id: FestId) {
   const d = FESTS[id]
   const f = s.fest[id]
-  // vòng quà / bàn xúc xắc: got — các ô trúng / mặt đã đổ, days — số lượt miễn phí đã dùng
-  if (luck(d)) return festPoints(s, id) - d.cost * ((f?.got.length ?? 0) - (f?.days ?? 0))
+  // vòng quà: got — các ô trúng; bàn xúc xắc: các mặt đã đổ (số âm) lẫn rương mốc đã nhận; days — số lượt miễn phí đã dùng
+  if (luck(d)) return festPoints(s, id) - d.cost * (spins(s, id) - (f?.days ?? 0))
   if (d.kind !== 'shop') return 0
   return festPoints(s, id) - sum((f?.got ?? []).map(i => d.shop[i]?.price ?? 0))
 }
 // Vòng quà: hôm nay còn lượt miễn phí (last — ngày đã quay miễn phí), trưởng lão chủ lễ của lượt lễ này
 export const wheelFree = (s: State, id: FestId, t: number) => festOpen(s, id, t) && s.fest[id]?.last !== dayOf(t)
-// Bàn xúc xắc: ô đang đứng và số vòng đã đi (got — các mặt đã đổ)
+// Số lượt đã quay / đổ / đập trong lượt lễ (bàn xúc xắc, đập trứng ghi kết quả bằng số âm trong got, rương mốc đã nhận là số
+// không âm)
+export const spins = (s: State, id: FestId) => {
+  const got = s.fest[id]?.got ?? []
+  return FESTS[id].kind === 'wheel' ? got.length : got.filter(x => x < 0 && x > WISH_BLOOM).length
+}
+// Cầu duyên: mỗi lượt ghi −(k + 1) (quà thứ k của cây); cây nở lại (rút đủ quà đặc biệt) ghi WISH_BLOOM. Vòng đang cầu, quà đã rút
+export const WISH_BLOOM = -1000
+export function wishAt(s: State, id: FestId) {
+  const got = (s.fest[id]?.got ?? []).filter(x => x < 0)
+  const from = got.lastIndexOf(WISH_BLOOM) + 1
+  return { round: got.filter(x => x === WISH_BLOOM).length, drawn: got.slice(from).map(x => -x - 1) }
+}
+// Bàn xúc xắc: ô đang đứng, số vòng đã đi, số lượt đã đổ
 export function diceAt(s: State, id: FestId) {
   const d = FESTS[id]
-  const n = sum(s.fest[id]?.got ?? [])
+  const n = -sum((s.fest[id]?.got ?? []).filter(x => x < 0))
   const len = d.kind === 'dice' ? d.board.length : 1
-  return { pos: n % len, laps: Math.floor(n / len) }
+  return { pos: n % len, laps: Math.floor(n / len), rolls: spins(s, id) }
+}
+// Trảm Yêu Tốc Chiến: lượt đua ghi ở sp = [hết giờ, điểm, lúc bắt đầu], days / last — số lượt hôm nay, bank — kỷ lục một lượt
+export function raceAt(s: State, t: number) {
+  const f = s.fest.tocChien
+  const [end = 0, pts = 0, start = 0] = f?.sp ?? []
+  return { live: end > t, end, pts, start, runs: f && f.last === dayOf(t) ? f.days : 0, best: f?.bank ?? 0 }
+}
+// Hạ một yêu thú giới cấp lv lúc t: đang đua thì cộng điểm (con cấp cao cộng giờ, tới trần), cập nhật kỷ lục
+export function raceHit(s: State, lv: number, t: number): State {
+  const r = raceAt(s, t)
+  const f = s.fest.tocChien
+  if (!f || !r.live) return s
+  const end = lv >= RACE_LV ? Math.min(r.start + RACE_MAX, r.end + RACE_PLUS) : r.end
+  const pts = r.pts + lv
+  return { ...s, fest: { ...s.fest, tocChien: { ...f, sp: [end, pts, r.start], bank: Math.max(f.bank, pts) } } }
+}
+// Khảo cổ: mỗi nhát đào ghi −(ô × 100 + r + 1) trong got — r = 0 trúng giải tối thượng (qua tầng), r = k + 1 quà thường thứ k.
+// Tầng đang đào (số lần trúng giải), các ô đã đào ở tầng này
+export function digAt(s: State, id: FestId) {
+  const codes = (s.fest[id]?.got ?? []).filter(x => x < 0).map(x => -x - 1)
+  const layer = codes.filter(x => x % 100 === 0).length
+  const from = codes.map(x => x % 100 === 0).lastIndexOf(true) + 1
+  return { layer, dug: codes.slice(from).map(x => ({ cell: Math.floor(x / 100), r: (x % 100) - 1 })) }
 }
 export function wheelElder(s: State, id: FestId) {
   const d = FESTS[id]
@@ -270,18 +317,25 @@ export function festDone(s: State, id: FestId, i: number) {
     return !!c && f.got.filter(k => k < d.tasks.length).length >= c.need
   }
   if (d.kind === 'shop') return !!d.shop[i] && festTokens(s, id) >= d.shop[i].price
-  if (luck(d)) return false // vòng quà, bàn xúc xắc: không có quà nhận, chỉ quay / đổ
+  if (d.kind === 'wheel' || d.kind === 'wish') return false // vòng quà, cây nguyện: không có quà nhận, chỉ quay / cầu
+  if (d.kind === 'dice' || d.kind === 'egg') return i < d.goals.length && spins(s, id) >= d.goals[i] // rương mốc theo số lượt
+  if (d.kind === 'dig') return i < d.goals.length && digAt(s, id).layer >= d.goals[i] // rương mốc theo số tầng đã qua
+  if (d.kind === 'thief') return i < d.goals.length && (f.sp?.[f.stage] ?? 0) >= d.goals[i] // rương ngày: sát thương hôm nay
   return i < d.goals.length && festPoints(s, id) >= d.goals[i] // tích điểm, hoạt lực
 }
 // Đã nhận hết (kho đổi: đổi đủ max lần)
 export function festGot(s: State, id: FestId, i: number) {
   const d = FESTS[id]
-  return d.kind === 'shop' ? festBought(s, id, i) >= (d.shop[i]?.max ?? 0) : !!s.fest[id]?.got.includes(i)
+  if (d.kind === 'shop') return festBought(s, id, i) >= (d.shop[i]?.max ?? 0)
+  return !!s.fest[id]?.got.includes(festCode(s, id, i))
 }
+// Mã ghi vào got khi nhận quà i: rương ngày của Dạ Hành Đạo Tặc nhận lại mỗi ngày (ngày của khung × 10 + i)
+export const festCode = (s: State, id: FestId, i: number) =>
+  FESTS[id].kind === 'thief' ? (s.fest[id]?.stage ?? 0) * 10 + i : i
 export const festRewards = (id: FestId) => {
   const d = FESTS[id]
   if (d.kind === 'shop') return d.shop.map(x => x.reward)
-  if (luck(d)) return []
+  if (d.kind === 'wheel' || d.kind === 'wish') return []
   return d.kind === 'tasks' ? [...d.tasks.map(x => x.reward), ...(d.chests ?? []).map(c => c.reward)] : d.rewards
 }
 // Số quà đang chờ nhận ở mọi sự kiện đang mở của một bảng — chấm đỏ trên nút Sự kiện (bảng mặc định) hay Nhiệm vụ ngày
@@ -289,7 +343,7 @@ export const festRewards = (id: FestId) => {
 export const festReady = (s: State, t: number, panel?: 'daily') =>
   FEST_IDS.filter(id => FESTS[id].panel === panel && festOpen(s, id, t)).reduce((n, id) => {
     const k = festRewards(id).filter((_, i) => festDone(s, id, i) && !festGot(s, id, i)).length
-    if (luck(FESTS[id])) return n + (wheelFree(s, id, t) ? 1 : 0) // chấm đỏ: còn lượt quay / đổ miễn phí
+    if (luck(FESTS[id])) return n + k + (wheelFree(s, id, t) ? 1 : 0) // chấm đỏ: còn lượt quay / đổ miễn phí
     return n + (FESTS[id].kind === 'shop' ? Math.min(1, k) : k)
   }, 0)
 

@@ -2,6 +2,7 @@
 import { randomInt } from 'node:crypto'
 import {
   BOOK,
+  BOOK_TOP_PRIZES,
   FEST_ALLY,
   FEST_ALLY_PRIZES,
   FEST_RANKED,
@@ -47,6 +48,7 @@ import {
   arkStep,
   SEASON_DAYS,
   partyStep,
+  aquizStep,
   wallStep,
   planStep,
 } from '@rok/rules/world'
@@ -169,17 +171,25 @@ export function bookCheck(w: World, now: number) {
   const r = bookStep(w.shared, w.ps, w.map(now), now, dayIn(w.opened, now), w.npc)
   if (r.world === w.shared) return
   w.share(r.world)
-  const ch = r.done ?? r.missed!
+  const ch = r.done ?? r.missed
+  if (ch === undefined) return // chỉ ghi chỉ số bắt đầu cho người mới
   w.record({ at: now, k: 'book', a: [ch, r.done === undefined ? 0 : 1] })
   if (r.done === undefined) return
   for (const [pid, slot] of w.slots)
     if (!w.npc.has(pid)) w.commit(slot, mail(w.ps.get(pid)!, { at: now, k: 'book', a: [ch], gift: BOOK[ch].reward }))
+  // công đầu: người góp nhiều nhất chương này thêm quà theo hạng
+  r.top?.forEach(([pid], i) => {
+    const slot = w.slots.get(pid)
+    const gift = BOOK_TOP_PRIZES[i === 0 ? 0 : i < 3 ? 1 : 2]
+    if (slot) w.commit(slot, mail(w.ps.get(pid)!, { at: now, k: 'bookTop', a: [ch, i + 1], gift }))
+  })
 }
 
 // Luận Kiếm Minh Chiến: tới 20h thứ Bảy mà tuần này chưa giải thì giải (một lần mỗi tuần), ghi biên niên từng cặp
 // Sự kiện có giờ: quà ải Tranh Bá (0h), Luận Kiếm Minh Chiến (tối thứ Bảy), Ma Triều Công Sơn (tối thứ Tư)… — mỗi nhịp xem tới giờ chưa
 export function allyEvents(w: World, now: number) {
   stageCheck(w, now)
+  aquizCheck(w, now)
   legionCheck(w, now)
   warCheck(w, now)
   arkCheck(w, now)
@@ -206,6 +216,16 @@ function wallCheck(w: World, now: number) {
 // Ma Triều Công Sơn: tới giờ thì giải các đợt (mỗi đợt một lần), đợt cuối xong thì quà qua thư
 function legionCheck(w: World, now: number) {
   const r = legionStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Luận Đạo Vấn Đáp: phiên hết giờ thì chấm, người có trả lời nhận thư (quà theo mốc điểm minh)
+function aquizCheck(w: World, now: number) {
+  const r = aquizStep(w.ps, w.shared, now)
   if (r.world === w.shared) return
   w.share(r.world)
   for (const [pid, s] of r.changed) {

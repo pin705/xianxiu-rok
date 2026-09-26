@@ -35,6 +35,7 @@ import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
 import { partyActions, type PartyAction } from './party.ts'
+import { aquizActions, type AquizAction } from './aquiz.ts'
 import { rescueActions, type RescueAction } from './rescue.ts'
 import { planActions, type PlanAction } from './plans.ts'
 import { spyActions, type SpyAction } from './spy.ts'
@@ -64,6 +65,7 @@ export type WorldAction =
   | PotAction
   | ArkAction
   | PartyAction
+  | AquizAction
   | RescueAction
   | PlanAction
   | SpyAction
@@ -92,6 +94,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...potActions,
   ...arkActions,
   ...partyActions,
+  ...aquizActions,
   ...rescueActions,
   ...planActions,
   ...spyActions,

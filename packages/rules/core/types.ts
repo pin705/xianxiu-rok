@@ -97,7 +97,20 @@ export type Drill = {
 export type Report = {
   id: number
   at: number
-  kind: 'beast' | 'sect' | 'realm' | 'tower' | 'trib' | 'pvp' | 'spot' | 'arena' | 'legion' | 'drill' | 'camp' | 'trial' // legion: đợt i Ma triều · drill: trận i Luận Võ · camp: trận ở trại ô i · trial: cửa i Thí Luyện
+  kind:
+    | 'beast'
+    | 'sect'
+    | 'realm'
+    | 'tower'
+    | 'trib'
+    | 'pvp'
+    | 'spot'
+    | 'arena'
+    | 'legion'
+    | 'drill'
+    | 'camp'
+    | 'trial'
+    | 'thief' // thief: Dạ Hành Đạo Tặc (i: phần nghìn sát thương) · legion: đợt i Ma triều · drill: trận i Luận Võ · camp: trận ở trại ô i · trial: cửa i Thí Luyện
   i: number
   spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
@@ -135,6 +148,11 @@ export type Stats = {
   duels?: number // trận Luận Kiếm Đài đã đánh (bên đánh)
   duelWins?: number
   kp?: number // chiến công (Kill Points của RoK): thế lực đệ tử địch hạ được trong trận giữa các tông môn
+  t2kiem?: number // đệ tử bậc 2 trở lên tuyển / nâng bậc xong, theo hệ (Tam Hệ Luyện Binh)
+  t2phap?: number
+  t2the?: number
+  drained?: number // mỏ trên bản đồ giới khai cạn
+  forts?: number // lần góp sức hạ yêu vương giới (Truyền Đạo Tứ Phương)
 }
 // Một sự kiện của trung tâm sự kiện: lượt đang mở (key), giai đoạn, chỉ số lúc bắt đầu giai đoạn, điểm đã dồn từ giai đoạn
 // trước, quà đã nhận, số ngày đăng nhập trong lượt (và ngày đếm gần nhất)
@@ -213,6 +231,8 @@ export type MailArgs = {
   boon: [lord: string] // Giới Chủ ban Thiên Ân lễ
   mobTop: [rank: number] // hạng Minh vụ của minh mình khi hết tuần
   book: [ch: number] // chương Thiên Đạo Biên Niên cả giới vừa hoàn thành
+  bookTop: [ch: number, rank: number] // công đầu chương đó: hạng đóng góp
+  aquiz: [mine: number, total: number, tier: number] // Luận Đạo Vấn Đáp: câu đúng của mình, tổng cả minh, mốc đạt được
   war: [win: 0 | 1, foe: string] // Luận Kiếm Minh Chiến: minh mình thắng / thua minh foe (hiệu)
   season: [season: number, rank: number, up: 0 | 1]
   sold: [good: string, n: number, net: number]
@@ -386,31 +406,9 @@ export type State = {
 }
 
 export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'
-export type Err =
-  | 'max_level'
-  | 'need_main_hall'
-  | 'busy'
-  | 'queue_full'
-  | 'not_enough'
-  | 'not_done'
-  | 'locked'
-  | 'cooldown'
-  | 'empty'
-  | 'no_item'
-  | 'slots'
-  | 'trib'
-  | 'bad'
-  | 'shield'
-  | 'weak'
-  | 'gone'
-  | 'far'
-  | 'cap' // vượt trận dung của trưởng lão dẫn đội
-  | 'friend'
-  | 'taken'
-  | 'full'
-  | 'limit'
-  | 'claimed' // phần thưởng đã nhận rồi
-  | 'frenzy' // vừa đi cướp: chưa bật khiên được (cơn sát khí)
-  | 'secluded' // đang bế quan: xuất quan mới làm được
-  | 'blocked' // cửa ải phe khác đang giữ chặn đường
+// Lỗi thao tác. cap: vượt trận dung của trưởng lão dẫn đội · claimed: phần thưởng đã nhận rồi · frenzy: vừa đi cướp, chưa bật khiên
+// được (cơn sát khí) · secluded: đang bế quan, xuất quan mới làm được · blocked: cửa ải phe khác đang giữ chặn đường
+type ErrJob = 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done' | 'locked' | 'cooldown'
+type ErrUse = 'empty' | 'no_item' | 'slots' | 'trib' | 'bad' | 'shield' | 'weak' | 'gone' | 'far' | 'cap' | 'friend'
+export type Err = ErrJob | ErrUse | 'taken' | 'full' | 'limit' | 'claimed' | 'frenzy' | 'secluded' | 'blocked'
 export type Result = { ok: true; state: State } | { ok: false; error: Err }

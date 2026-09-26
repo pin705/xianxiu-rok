@@ -1375,6 +1375,10 @@
     padding-bottom: 26px;
     background: linear-gradient(rgb(243 244 240 / 0.94), rgb(243 244 240 / 0.7) 62%, transparent);
     filter: none;
+    pointer-events: none; /* phần sương mờ dưới đáy là trang trí: chạm xuyên xuống (nút gạt bản đồ, đầu trang) */
+  }
+  .ink .topbar > * {
+    pointer-events: auto;
   }
   .ink .avatar {
     width: 60px;
@@ -1507,6 +1511,7 @@
   }
   /* cuối tuần: dải lụa son nhỏ dưới hàng tranh (không tràn sang cảnh) */
   .wk {
+    align-self: start;
     width: 64px;
     padding: 2px 4px 8px;
     font-size: 10.5px;

@@ -17,7 +17,7 @@
   } from '@rok/rules'
   import { recallable } from '@rok/rules/world'
   import { Icon, Portrait, type Emblem } from '@rok/art'
-  import { Badge, Button, Card, Medal, Tag } from '../ui'
+  import { Button, Card, Medal, Tag, Tile } from '../ui'
   import { EMBLEM, L, LOOK, clock, marchDoing, marchName } from '../lib'
   import { MAP, MAP_H, MapScene } from './map'
   import View from './View.svelte'
@@ -142,10 +142,18 @@
       ></Tag
     ></span
   >
-  {#if game.levels.chuDien >= PVP_HALL}<Button size="sm" icon="swords" onclick={onrivals}>{L.pvp.find}</Button>{/if}
-  <span class="rep"
-    ><Button size="sm" icon="scroll" onclick={onreports}>{L.report.title}</Button><Badge n={unread} /></span
-  >
+</div>
+<!-- lối tắt cột phải như cột biểu tượng bản đồ của game: tranh đóng khung, nhãn viên mực -->
+<div class="side">
+  {#if game.levels.chuDien >= PVP_HALL}<Tile
+      art="fx-battle"
+      icon="swords"
+      label={L.pvp.find}
+      size={54}
+      look="ink"
+      onclick={onrivals}
+    />{/if}
+  <Tile art="ev-report" icon="scroll" label={L.report.title} n={unread} size={54} look="ink" onclick={onreports} />
 </div>
 
 {#if game.marches.length}
@@ -292,8 +300,14 @@
     z-index: -1;
     background: linear-gradient(color-mix(in srgb, var(--paper) 88%, transparent) 55%, transparent);
   }
-  .rep {
-    position: relative;
+  .side {
+    position: fixed;
+    top: calc(196px + var(--safe-t));
+    right: max(8px, (100% - var(--col)) / 2 + 8px);
+    z-index: var(--z-page);
+    display: grid;
+    gap: 10px;
+    width: 72px;
   }
   .slots .short {
     display: none;
@@ -331,6 +345,10 @@
     .marches {
       bottom: var(--sp-5);
       width: min(100% - var(--rail) - 48px, 520px);
+    }
+    .side {
+      top: calc(var(--top) + 76px);
+      right: 20px;
     }
   }
 </style>

@@ -690,6 +690,21 @@ export const vi = {
       ['Vận Linh Trận hao tổn ít nhất bao nhiêu (Tàng Bảo Các tầng cao)?', ['0 %', '8 %', '20 %', '35 %']],
       ['Ngũ hành: Hỏa khắc gì?', ['Mộc', 'Thổ', 'Thủy', 'Kim']],
       ['Linh điểu dùng để làm gì?', ['Đưa thư', 'Chở tài nguyên', 'Tan mê vụ trên bản đồ giới', 'Cướp tông môn']],
+      ['Pháp tu khắc hệ nào?', ['Kiếm tu', 'Thể tu', 'Pháp tu', 'Không khắc hệ nào']],
+      ['Thí Luyện Yêu Hoàng có bao nhiêu cửa?', ['10', '30', '50', '100']],
+      ['Mỗi ngày đánh Dạ Hành Đạo Tặc được mấy lượt?', ['2', '1', '3', '5']],
+      [
+        'Sản lượng còn nằm ở công trình (chưa chạm thu) có bị cướp không?',
+        ['Bị cướp hết', 'Bị cướp một nửa', 'Chỉ khi hết khiên', 'Không bị cướp'],
+      ],
+      ['Tông Môn Tranh Bá có mấy ải?', ['3', '6', '5', '7']],
+      ['Khảo Cổ Động Phủ: mỗi tầng có bao nhiêu ô?', ['9', '12', '25', '16']],
+      ['Hành lực tích tối đa (không tính Hành Lực Đan) là bao nhiêu?', ['100', '50', '150', '200']],
+      ['Mỗi lần xuất quân săn yêu thú giới tốn mấy hành lực?', ['5', '15', '10', '20']],
+      ['Trảm Yêu Tốc Chiến: một lượt đua cơ bản dài bao lâu?', ['5 phút', '10 phút', '15 phút', '30 phút']],
+      ['Thiên Đạo Biên Niên có bao nhiêu chương?', ['7', '10', '20', '13']],
+      ['Ngũ hành: Thủy khắc gì?', ['Hỏa', 'Kim', 'Mộc', 'Thổ']],
+      ['Cây Nguyện Thụ treo bao nhiêu quà đặc biệt?', ['2', '3', '4', '6']],
     ] as [string, [string, string, string, string]][],
   },
   strat: {
@@ -1587,6 +1602,8 @@ export const vi = {
     end: 'Đã qua hết các chương của mùa này.',
     give: (n: string) => `Góp ${n} mỗi loại`,
     gave: 'Góp tài nguyên thì được Công Huân (1 điểm mỗi 1.000).',
+    mine: (rank: number, n: string) => `Đóng góp của bạn: #${rank} · ${n}`,
+    top: (n: number) => `Công đầu chương (top ${n} nhận thêm quà khi xong)`,
   },
   // Giới Chủ và sắc phong (King / Kingdom Titles)
   lord: {
@@ -2078,6 +2095,14 @@ export const vi = {
       book: (ch: number): [string, string] => [
         `Biên niên · ${vi.book.names[ch] ?? ch + 1}`,
         `Cả giới vừa hoàn thành chương "${vi.book.names[ch] ?? ch + 1}" của Thiên Đạo Biên Niên. Quà cho mọi tông môn ở dưới.`,
+      ],
+      aquiz: (mine: number, total: number, tier: number): [string, string] => [
+        `Luận Đạo · cả minh ${total} câu đúng`,
+        `Phiên Luận Đạo Vấn Đáp của tiên minh vừa xong: bạn đúng ${mine} câu, cả minh ${total} câu${tier ? ` — đạt mốc ${tier}, quà ở dưới.` : ' — chưa tới mốc quà, phiên sau cố lên.'}`,
+      ],
+      bookTop: (ch: number, rank: number): [string, string] => [
+        `Công đầu · ${vi.book.names[ch] ?? ch + 1} · hạng ${rank}`,
+        `Tông môn góp nhiều thứ ${rank} cả giới vào chương "${vi.book.names[ch] ?? ch + 1}" của Thiên Đạo Biên Niên. Quà công đầu ở dưới.`,
       ],
       war: (win: number, foe: string): [string, string] =>
         win
@@ -2727,6 +2752,68 @@ export const vi = {
           : `${Math.max(1, Math.ceil(ms / 60_000))}p`,
   },
   // Trung tâm sự kiện (như Events của RoK)
+  aquiz: {
+    title: 'Luận Đạo Vấn Đáp',
+    lore: 'Cả minh cùng trả lời 10 câu về phép tu, mỗi câu 15 giây. Tổng câu đúng cả minh đạt mốc thì ai có trả lời đều nhận quà qua thư.',
+    start: 'Mở Luận Đạo (bắt đầu sau 1 phút)',
+    officer: 'Đường chủ / minh chủ mở, mỗi ngày một phiên.',
+    soon: (t: string) => `Bắt đầu sau ${t}`,
+    step: (n: number, of: number, t: string) => `Câu ${n}/${of} · còn ${t}`,
+    picked: 'Đã chọn — đổi được tới lúc hết câu',
+    scoring: 'Đang chấm…',
+    done: 'Phiên hôm nay đã xong — kết quả gửi qua thư.',
+    tiers: (a: string) => `Mốc câu đúng cả minh: ${a}`,
+  },
+  race: {
+    start: 'Bắt đầu lượt đua',
+    runs: (n: number, of: number) => `Còn ${n}/${of} lượt hôm nay`,
+    live: (t: string, pts: number) => `Đang đua · còn ${t} · ${pts} điểm`,
+    last: (pts: number) => `Lượt vừa rồi: ${pts} điểm`,
+    best: (pts: number) => `Kỷ lục: ${pts} điểm`,
+    tip: 'Xuất quân săn yêu thú giới trên bản đồ — con hạ trong giờ mới tính; săn liên hoàn từ đường về để khỏi mất thời gian.',
+    late: 'Lễ sắp đóng — không bắt đầu lượt mới được nữa.',
+  },
+  wish: {
+    free: 'Cầu miễn phí',
+    one: (cost: number) => `Cầu duyên · ${cost} lệnh`,
+    round: (n: number) => `Cây nở lần ${n}`,
+    bigs: (n: number, of: number) => `Quà đặc biệt: ${n}/${of}`,
+    got: 'Vừa cầu được',
+    bloom: 'Đủ 4 quà đặc biệt — nhận nốt quà còn lại, cây nở lại!',
+    wishing: 'Đang cầu…',
+  },
+  thief: {
+    left: (n: number, of: number) => `Còn ${n}/${of} lượt hôm nay`,
+    best: (pm: string) => `Hôm nay cao nhất: ${pm}`,
+    record: (pm: string) => `Kỷ lục: ${pm}`,
+    go: 'Đuổi đạo tặc',
+    virtual: 'Đội ảo — không mất quân; đạo tặc mạnh theo đội đầy của trưởng lão dẫn',
+    last: (pm: string) => `Vừa gây ${pm} sát thương`,
+    pm: (n: number) => `${(n / 10).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} %`,
+    name: 'Dạ Hành Đạo Tặc',
+    chests: 'Rương ngày (theo sát thương cao nhất hôm nay)',
+  },
+  delve: {
+    layer: (n: number, grand: boolean) => `Tầng ${n}${grand ? ' · tầng lớn' : ''}`,
+    pick: 'Giải tối thượng của tầng (đổi được tới lúc tìm ra)',
+    tap: (cost: number, free: boolean) =>
+      free ? 'Chạm một ô để cuốc (miễn phí hôm nay)' : `Chạm một ô để cuốc · ${cost} Linh Cuốc`,
+    found: 'Tìm ra giải tối thượng — xuống tầng sau!',
+    got: 'Cuốc được',
+    layers: (n: number) => `Đã qua ${n} tầng`,
+    digging: 'Đang cuốc…',
+  },
+  egg: {
+    pick: 'Món chủ lực (mỗi quả 7,5 % trúng) — chọn trước khi đập',
+    free: 'Đập miễn phí',
+    one: (cost: number) => `Đập · ${cost} lệnh`,
+    ten: (cost: number) => `Đập ×10 · ${cost} lệnh`,
+    tap: 'Chạm một quả linh noãn để đập',
+    got: 'Vừa đập được',
+    jackpot: 'Trúng món chủ lực!',
+    eggs: (n: number) => `Đã đập ${n} quả`,
+    cracking: 'Linh noãn đang nứt…',
+  },
   dice: {
     free: 'Đổ miễn phí',
     roll: (cost: number) => `Đổ · ${cost} lệnh`,
@@ -2812,6 +2899,12 @@ export const vi = {
       runes: 'phù văn nhặt được',
       guards: 'trận thắng hộ trận linh thú',
       trial: 'điểm Thí Luyện',
+      kiem2: 'Kiếm tu bậc 2+ tuyển xong',
+      phap2: 'Pháp tu bậc 2+ tuyển xong',
+      the2: 'Thể tu bậc 2+ tuyển xong',
+      train2: 'đệ tử bậc 2+ tuyển xong',
+      drain: 'mỏ khai cạn',
+      forts: 'lần góp sức hạ yêu vương',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Thế lực đạt ${n}`,
@@ -2844,6 +2937,12 @@ export const vi = {
       runes: (n: string) => `Nhặt ${n} phù văn quanh linh địa`,
       guards: (n: string) => `Đánh bại hộ trận linh thú ${n} lần`,
       trial: (n: string) => `Đạt ${n} điểm Thí Luyện Yêu Hoàng`,
+      kiem2: (n: string) => `Tuyển (hay nâng bậc) ${n} Kiếm tu bậc 2 trở lên`,
+      phap2: (n: string) => `Tuyển (hay nâng bậc) ${n} Pháp tu bậc 2 trở lên`,
+      the2: (n: string) => `Tuyển (hay nâng bậc) ${n} Thể tu bậc 2 trở lên`,
+      train2: (n: string) => `Tuyển (hay nâng bậc) ${n} đệ tử bậc 2 trở lên`,
+      drain: (n: string) => `Khai cạn ${n} mỏ trên bản đồ giới`,
+      forts: (n: string) => `Góp sức hạ ${n} yêu vương giới (đánh hay kết trận)`,
     } satisfies Record<Metric, (n: string) => string>,
     // việc đo bằng phần tăng thêm (Nhật Khóa, Minh vụ): chỉ các chỉ số có câu khác với task (tổng tích luỹ)
     gain: {
@@ -2905,9 +3004,77 @@ export const vi = {
         name: 'Tàng Kinh Ngộ Đạo',
         desc: 'Hai ngày Tàng Kinh Các mở rộng cửa: lĩnh ngộ công pháp được nhiều điểm.',
       },
+      thuLuc: {
+        name: 'Thế Lực Bạo Tăng',
+        desc: 'Hai ngày đua thế lực: xây, nghiên cứu, tuyển đệ tử, nâng trưởng lão — thế lực tăng thêm bao nhiêu tính bấy nhiêu điểm; mốc quà và bảng xếp hạng cả giới.',
+      },
+      chinhChien: {
+        name: 'Chinh Chiến Bất Hưu',
+        desc: 'Ba ngày chinh chiến không nghỉ, làm mới mỗi ngày: hạ yêu thú ở sơn môn và trên bản đồ giới đủ 5 / 10 / 15 / 25 con mỗi ngày.',
+      },
+      khaiLo: {
+        name: 'Khai Lò Luyện Khí',
+        desc: 'Hai ngày khai lò, làm mới mỗi ngày: luyện pháp bảo, tuyển đệ tử, săn yêu, khai mỏ — mỗi việc một phần quà.',
+      },
+      tamHe: {
+        name: 'Tam Hệ Luyện Binh',
+        desc: 'Bốn ngày luyện binh, làm mới mỗi ngày: tuyển (hay nâng bậc) đệ tử bậc 2 trở lên đủ số ở từng hệ Kiếm / Pháp / Thể và tổng cả ba hệ — mỗi ngày nhận lại quà.',
+      },
+      nguyenTieu: {
+        name: 'Nguyên Tiêu Hoa Đăng',
+        desc: 'Rằm tháng Giêng thả hoa đăng: ba ngày thắng trận, giúp đồng minh, mở thiếp, săn yêu ra điểm, đủ mốc mở rương.',
+      },
+      xuanHoi: {
+        name: 'Xuân Hồi Vạn Vật',
+        desc: 'Xuân về vạn vật hồi sinh: năm ngày xây, nghiên cứu, tuyển đệ tử, khai mỏ ra điểm, đủ mốc mở rương.',
+      },
+      trienLam: {
+        name: 'Tàng Bảo Các Triển Lãm',
+        desc: 'Ba ngày triển lãm bảo vật: khai mê vụ, ghé thôn trang / động phủ, mở thiếp, luyện pháp bảo ra Cổ Vật, đổi quà ở kho lễ.',
+      },
+      doanNgo: {
+        name: 'Đoan Ngọ Tống Tử',
+        desc: 'Tết Đoan Ngọ gói bánh tro: năm ngày thắng trận, săn yêu, khai mỏ, giúp đồng minh ra điểm, đủ mốc mở rương.',
+      },
+      haChi: {
+        name: 'Hạ Chí Thịnh Hội',
+        desc: 'Bảy ngày hội hạ chí: săn liên hoàn, khai mỏ, tuyển, thắng trận ra Hạ Hoa, đổi quà ở kho lễ.',
+      },
+      baVi: {
+        name: 'Bách Vị Tiên Yến',
+        desc: 'Tiệc tạ ơn trăm vị: năm ngày săn yêu, săn liên hoàn, khai mỏ, chữa thương ra điểm, đủ mốc mở rương.',
+      },
+      tocChien: {
+        name: 'Trảm Yêu Tốc Chiến',
+        desc: 'Ba ngày đua trảm yêu: mỗi ngày 3 lượt đua 10 phút — xuất quân săn yêu thú giới liên tiếp (săn liên hoàn càng tốt). Điểm = tổng cấp yêu thú hạ trong giờ, con từ cấp 5 cộng thêm 1 phút (tối đa 14 phút). Mốc quà và bảng xếp hạng theo kỷ lục một lượt.',
+      },
+      nguyenThu: {
+        name: 'Nguyện Thụ Cầu Duyên',
+        desc: 'Bốn ngày cầu duyên dưới cây nguyện: cây treo 12 quà (4 quà đặc biệt), mỗi lượt cầu rút một quà còn trên cây — rút tới đâu hết tới đó. Rút đủ 4 quà đặc biệt thì nhận nốt mọi quà còn lại và cây nở lại. Mỗi ngày một lượt miễn phí; săn yêu, thắng trận, xây, nghiên cứu, mở thiếp ra Nguyện Tiền.',
+      },
+      daTac: {
+        name: 'Dạ Hành Đạo Tặc',
+        desc: 'Ba ngày đuổi đạo tặc đêm: mỗi ngày 2 lượt đánh bằng đội ảo (không mất quân). Đạo tặc mạnh gấp mấy lần đội đầy của trưởng lão dẫn — hệ khắc, công pháp, trưởng lão quyết định sát thương. Sát thương cao nhất hôm nay mở rương ngày, kỷ lục cả lượt lên bảng xếp hạng.',
+      },
+      truyenDao: {
+        name: 'Truyền Đạo Tứ Phương',
+        desc: 'Hai ngày truyền đạo, làm mới mỗi ngày: tuyển (hay nâng bậc) đệ tử bậc 2 trở lên và góp sức hạ yêu vương trên bản đồ giới.',
+      },
+      manThuong: {
+        name: 'Tàng Bảo Mãn Thương',
+        desc: 'Hai ngày chất đầy kho, làm mới mỗi ngày: khai cạn mỏ trên bản đồ giới và mang về đủ tài nguyên khai mỏ.',
+      },
+      khaoCo: {
+        name: 'Khảo Cổ Động Phủ',
+        desc: 'Ba ngày khảo cổ động phủ cổ nhân: mỗi tầng 16 ô, chọn trước giải tối thượng (đổi được tới lúc tìm ra; tầng 5, 10… lựa chọn quý hơn), cuốc từng ô nhận quà, đào trúng giải thì xuống tầng sau. Qua đủ tầng mở rương mốc. Mỗi ngày một nhát miễn phí; khai mỏ, săn yêu, săn liên hoàn ra Linh Cuốc.',
+      },
       linhNoan: {
         name: 'Linh Noãn Kỳ Bảo',
-        desc: 'Ba ngày bàn cờ linh noãn: đổ xúc xắc đi quanh bàn 20 ô, dừng ô nào nhận quà ô đó, mỗi lần qua Khởi điểm thêm quà vòng. Mỗi ngày một lượt miễn phí; săn yêu, thắng trận, xây, tuyển, khai mỏ ra Linh Noãn Lệnh để đổ thêm.',
+        desc: 'Ba ngày đập linh noãn: chọn trước một món chủ lực (mỗi quả 7,5 % trúng), còn lại ra tăng tốc, sách, tài nguyên; đập đủ số quả mở rương mốc. Mỗi ngày một quả miễn phí; săn yêu, thắng trận, dùng tăng tốc, nghiên cứu, chữa thương ra Linh Chuỳ để đập thêm.',
+      },
+      vanHoa: {
+        name: 'Vạn Hoa Viên',
+        desc: 'Ba ngày dạo vườn vạn hoa: đổ xúc xắc đi quanh bàn 20 ô, dừng ô nào nhận quà ô đó, mỗi lần qua Khởi điểm thêm quà vòng, đổ đủ số lượt mở rương mốc. Mỗi ngày một lượt miễn phí; săn yêu, thắng trận, xây, tuyển, khai mỏ ra Ngân Xúc Xắc để đổ thêm.',
       },
       yeuHoang: {
         name: 'Thí Luyện Yêu Hoàng',
@@ -3000,7 +3167,12 @@ export const vi = {
       ngaMi: 'Nga Mi Lệnh',
       trungThu: 'Nguyệt Bính',
       thonTrang: 'Hộ Thôn Lệnh',
-      linhNoan: 'Linh Noãn Lệnh',
+      vanHoa: 'Ngân Xúc Xắc',
+      linhNoan: 'Linh Chuỳ',
+      khaoCo: 'Linh Cuốc',
+      nguyenThu: 'Nguyện Tiền',
+      trienLam: 'Cổ Vật',
+      haChi: 'Hạ Hoa',
     } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Đổi · ${price}`,
     left: (n: number, max: number) => `Còn ${n}/${max}`,

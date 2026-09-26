@@ -204,7 +204,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **UI/UX:** màn chương: chương hiện tại (mục tiêu, thanh tiến độ, đồng hồ), chương trước/sau.
 - **Vì sao hấp dẫn:** nhịp "mở hộp" đều; ai cũng biết "tuần sau đèo mở"; giờ mở cố định giúp tập hợp người.
 - **Tu tiên hoá:** **Thiên Đạo Biên Niên** khắc trên **Thiên Đạo Bia** — thiết kế ở mục 3.3.
-- **Game mình:** 🟡 — Thiên Đạo Biên Niên (`world/book.ts`, `bookCheck`): 13 chương mục tiêu chung của cả giới, hạn theo ngày mùa; xong thì mọi tông môn nhận quà thư, hụt thì sang chương sau. Chương mở khoá như Kingdom Monument mở đèo: hoàn thành chương 2 / 5 / 9 (`PHASE_CH`) thì pha Tranh mạch / Trận nhãn / Phi thăng mở ngay (`phaseOf(day, done)`, server và client cùng luật), không kịp thì vẫn mở theo ngày cứng; danh sách chương ghi chương nào mở pha nào. Thiếu: đóng góp cá nhân / thưởng top.
+- **Game mình:** ✅ — Thiên Đạo Biên Niên (`world/book.ts`, `bookCheck`): 13 chương mục tiêu chung của cả giới, hạn theo ngày mùa; xong thì mọi tông môn nhận quà thư, hụt thì sang chương sau. Chương mở khoá như Kingdom Monument mở đèo: hoàn thành chương 2 / 5 / 9 (`PHASE_CH`) thì pha Tranh mạch / Trận nhãn / Phi thăng mở ngay (`phaseOf(day, done)`, server và client cùng luật), không kịp thì vẫn mở theo ngày cứng; danh sách chương ghi chương nào mở pha nào. **Công đầu** (`bookBy`, `BOOK_TOP_PRIZES`): chương có chỉ số riêng (khai mê vụ, chiến công, Tu Bổ Thiên Môn) tính đóng góp từng người từ lúc chương mở (`bookBase`, `repairBy`), thẻ mùa hiện hạng của mình + top 5; xong chương thì top 10 nhận thêm quà theo hạng qua thư.
 - **Ưu tiên:** **P0** · **Công sức:** M.
 
 #### A6. Honor Points, Kill Points, Acclaim — điểm cá nhân, minh, vương quốc
@@ -790,7 +790,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A2 | Eve of the Crusade | Khai Giới Trảm Tà | ✅ tàn quyển + giới vận (`world/eve.ts`) | P1 | M |
 | A3 | Matchmaking, story registration, bỏ phiếu | Thiên Mệnh Chọn Luật (bỏ phiếu luật mùa) | ❌ (liên server ⛔) | P2 | S |
 | A4 | Lost Kingdom map (đèo, thánh địa, Ziggurat) | Giới Chiến Đồ | ✅ buff theo loại linh mạch + thưởng chiếm lần đầu (25/09) | P1 | S–M |
-| A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | 🟡 Thiên Đạo Biên Niên 13 chương (hạn theo ngày mùa); chưa mở khoá theo chương | **P0** | M |
+| A5 | Lost Kingdom Chronicles | Thiên Đạo Biên Niên | ✅ 13 chương (hạn theo ngày mùa), xong sớm mở pha sớm (`PHASE_CH`), đóng góp cá nhân + quà công đầu (`bookBy`) | **P0** | M |
 | A6 | Honor / Kill Points / Acclaim | Công Huân · Danh Vọng · Giới Vận | ✅ Công Huân cá nhân (25/09) + điểm mùa theo phe + chiến công | P1 | S |
 | A7 | Ancient Ruins, Altars of Darkness | Cổ Di Tích, Huyết Tế Đàn | ✅ (25/09) | P1 | S–M |
 | A8 | Crusader Achievements, Conquest Coins, shop | Chinh Chiến Công Tích, Phi Thăng Tệ, Thiên Môn Thương Điếm | ✅ mốc Công Huân + Phi Thăng Tệ + cửa hàng | P1 | M |

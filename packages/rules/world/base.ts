@@ -118,6 +118,7 @@ export type Alliance = {
   plans?: Plan[] // Minh sự lịch: việc chung đã hẹn giờ
   skills?: Partial<Record<AllySkillId, number>> // Minh trận thần thông: hiệu lực tới lúc này
   named?: number // lần đổi tên / hiệu gần nhất
+  quiz?: { at: number; by: number; done?: boolean; mine?: number[] } // Luận Đạo Vấn Đáp (world/aquiz.ts); mine: chỉ ở AllyInfo
 }
 // Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
 export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
@@ -217,6 +218,9 @@ export type World = {
   ark?: Ark // Tranh Đoạt Linh Châu tuần này (on: tuần đã dựng trận)
   runes?: { cyc: number; got: number[] } // phù văn đã bị nhặt trong chu kỳ cyc
   stageDay?: number // ngày (dayOf) đã trao quà ải Tông Môn Tranh Bá tới
+  aquizAns?: Record<number, Record<number, number[]>> // Luận Đạo Vấn Đáp: đáp án từng người theo minh (để ngoài minh: chọn không báo cả minh)
+  bookBase?: Record<number, number> // Biên Niên: chỉ số riêng của từng người lúc chương đang mở bắt đầu (chương khai vụ / chiến công)
+  repairBy?: Record<number, number> // Tu Bổ Thiên Môn: tài nguyên từng người đã góp
 }
 // Ma triều: tuần, minh đã ghi danh, số đợt đã đánh, điểm từng minh, điểm và số đợt giữ được của từng người
 export type Legion = {

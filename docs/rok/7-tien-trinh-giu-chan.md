@@ -962,7 +962,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | B2 Side Quests → **Tông vụ** 4 dòng | ✅ Tông vụ 4 dòng (trong bảng Nhiệm vụ ngày) | P1 | S–M |
 | A1 Civilizations → **Đạo thống** | ✅ | P1 | M |
 | B4 Achievements → **Công tích bảng** + ấn vẽ tay | ✅ Thành tựu 15 chuỗi × 5 bậc có thưởng; chưa có ấn vẽ tay | P1 | M |
-| B6 Monument → **Thiên Đạo Bia** (mục tiêu chung của giới) | 🟡 Thiên Đạo Biên Niên (13 chương, quà cả giới); pha mùa vẫn theo ngày | P1 | M |
+| B6 Monument → **Thiên Đạo Bia** (mục tiêu chung của giới) | ✅ Thiên Đạo Biên Niên (13 chương, quà cả giới, mở pha sớm theo chương, công đầu từng chương) | P1 | M |
 | B7 / D10 Lịch theo tuổi vương quốc → **Lịch giới** + trung tâm sự kiện | 🟡 trung tâm sự kiện + lịch 7 ngày tới; nội dung theo ngày mùa (Khai Giới, Thiên Thời, chặng Chính Tà) chưa vào lịch sự kiện | P1 | M |
 | C1 Tavern → **Chiêu Hiền Đài** (thiếp miễn phí, pity tất định, không bán) | ✅ Chiêu Hiền Đài | P1 | M |
 | C11 Quà / điểm / cửa hàng liên minh → **Cống hiến**, **Minh lễ** | ✅ cống hiến + Cống Hiến Các + Minh lễ | P1 | M |

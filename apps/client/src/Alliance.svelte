@@ -44,11 +44,12 @@
   import type { Ack } from '@rok/protocol'
   import { untrack, type Snippet } from 'svelte'
   import { Icon, artOf } from '@rok/art'
-  import { Button, Card, Confirm, Medal, Meter, Page, Section, Tabs, Tag } from './ui'
+  import { Button, Card, Confirm, Medal, Meter, Page, Section, Tabs, Tag, Tile } from './ui'
   import { L, clock, num, sfx } from './lib'
   import { useGame } from './game'
   import AllyTech from './AllyTech.svelte'
   import AllyShop from './AllyShop.svelte'
+  import AllyQuiz from './AllyQuiz.svelte'
   import AllySkills from './AllySkills.svelte'
   import AllyMob from './AllyMob.svelte'
   import AllyPot from './AllyPot.svelte'
@@ -175,7 +176,17 @@
 
 <Page title={L.ally.title} icon="tienMinh">
   {#if !ally}
-    <p class="t-lore">{L.ally.intro}</p>
+    <!-- chưa có minh: sảnh trống — ba người đứng chờ, cờ chưa có hiệu, lời dẫn trong sảnh -->
+    <header class="hall">
+      <span class="flag"
+        >{#if ui('ally-people')}<img class="crowd" src={ui('ally-people')} alt="" draggable="false" />{:else}<Medal
+            emblem="crest"
+            tone="gold"
+            size={46}
+          />{/if}</span
+      >
+      <p class="t-lore t-small">{L.ally.intro}</p>
+    </header>
     <Section title={L.ally.list}>
       {#if rows && !rows.length}<p class="t-small t-soft">{L.ally.none}</p>{/if}
       <ul class="stack">
@@ -269,32 +280,29 @@
 
     <!-- lối vào như menu tiên minh của RoK: ô hình + tên + dòng phụ, chấm đỏ khi lượt cung phụng đầy (đang phí lượt hồi) -->
     <div class="tiles">
-      <button type="button" class="tile" onclick={() => (sheet = 'tech')}>
-        {#if left >= DONATE_MAX}<span class="dot-red" aria-hidden="true"></span>{/if}
-        {#if ui('ally-tech')}<img src={ui('ally-tech')} alt="" draggable="false" />{:else}<Icon
-            name="shield"
-            size={30}
-          />{/if}
-        <b class="t-small">{L.guild.tech}</b>
-        <small class="t-tiny t-soft">{L.guild.left(left)}</small>
-      </button>
-      <button type="button" class="tile" onclick={() => (sheet = 'mob')}>
-        {#if mobReady}<span class="dot-red" aria-hidden="true"></span>{/if}
-        {#if ui('ally-mob')}<img src={ui('ally-mob')} alt="" draggable="false" />{:else}<Icon
-            name="scroll"
-            size={30}
-          />{/if}
-        <b class="t-small">{L.mob.title}</b>
-        <small class="t-tiny t-soft">{L.mob.pts(num(boardOf(ally, g.now).pts))}</small>
-      </button>
-      <button type="button" class="tile" onclick={() => (sheet = 'shop')}>
-        {#if ui('ally-shop')}<img src={ui('ally-shop')} alt="" draggable="false" />{:else}<Icon
-            name="hoSon"
-            size={30}
-          />{/if}
-        <b class="t-small">{L.guild.shop}</b>
-        <small class="t-tiny t-soft">{L.guild.credit} {num(game.contrib?.credit ?? 0)}</small>
-      </button>
+      <Tile
+        art="ally-tech"
+        icon="shield"
+        label={L.guild.tech}
+        sub={L.guild.left(left)}
+        dot={left >= DONATE_MAX}
+        onclick={() => (sheet = 'tech')}
+      />
+      <Tile
+        art="ally-mob"
+        icon="scroll"
+        label={L.mob.title}
+        sub={L.mob.pts(num(boardOf(ally, g.now).pts))}
+        dot={mobReady}
+        onclick={() => (sheet = 'mob')}
+      />
+      <Tile
+        art="ally-shop"
+        icon="hoSon"
+        label={L.guild.shop}
+        sub="{L.guild.credit} {num(game.contrib?.credit ?? 0)}"
+        onclick={() => (sheet = 'shop')}
+      />
     </div>
     <AllyTech open={sheet === 'tech'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
     <AllyShop open={sheet === 'shop'} onclose={() => (sheet = null)} {ally} officer={myRole >= 1} {send} />
@@ -367,6 +375,7 @@
       </Section>
 
       <AllySkills {ally} officer={myRole >= 1} {go} />
+      <AllyQuiz {ally} officer={myRole >= 1} {go} />
 
       {#if myRole >= 1}
         <Section title={L.ally.mail}>
@@ -718,6 +727,11 @@
     font-weight: 900;
     color: var(--cinnabar);
   }
+  .flag img.crowd {
+    width: 84px;
+    margin: 4px 0 0;
+    animation: none;
+  }
   .flag.mini {
     width: 34px;
   }
@@ -779,32 +793,6 @@
     gap: var(--sp-2);
     margin-top: var(--sp-3);
   }
-  .tile {
-    position: relative;
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-    padding: 0 2px 4px;
-    font: inherit;
-    color: inherit;
-    cursor: pointer;
-  }
-  .tile img {
-    width: 76px;
-    height: 76px;
-    filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.22));
-    transition: transform var(--dur-1) var(--ease);
-  }
-  .tile:active img {
-    transform: scale(0.94);
-  }
-  /* tên lối vào: chữ mực đậm trên nét cọ son (xuống dòng vẫn đẹp, không như dải lụa bị kéo cao) */
-  .tile b {
-    padding: 0 6px 6px;
-    line-height: 1.2;
-    text-align: center;
-    background: var(--stroke-red) no-repeat center bottom / 100% 6px;
-  }
   /* bố cáo: tờ giấy ghim son */
   .note {
     position: relative;
@@ -825,15 +813,5 @@
     border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18);
     box-shadow: 0 2px 2px rgb(0 0 0 / 0.3);
-  }
-  .dot-red {
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--cinnabar);
-    box-shadow: 0 0 0 2px var(--silk);
   }
 </style>

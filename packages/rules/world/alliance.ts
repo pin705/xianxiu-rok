@@ -117,6 +117,8 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
   })
   return {
     ...al,
+    // Luận Đạo Vấn Đáp: chỉ thấy đáp án của mình (không chép bài người khác); hết phiên thì kèm tổng điểm minh
+    ...(al.quiz && { quiz: { ...al.quiz, mine: w.aquizAns?.[al.id]?.[pid] ?? [] } }),
     people: people.sort((a, b) => b.role - a.role || b.power - a.power),
     applicants: (al.apps ?? []).flatMap(p => {
       const s = ps.get(p)

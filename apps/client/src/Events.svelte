@@ -24,6 +24,8 @@
     FEST_STAR_TOKENS,
     passReady,
     wheelFree,
+    luck,
+    nextDay,
     type Army,
     type DropSrc,
     type ElderId,
@@ -39,6 +41,12 @@
   import type { FestView } from '@rok/protocol'
   import type { Net } from './net'
   import Wheel from './Wheel.svelte'
+  import Dice from './Dice.svelte'
+  import Egg from './Egg.svelte'
+  import Delve from './Delve.svelte'
+  import Thief from './Thief.svelte'
+  import Wish from './Wish.svelte'
+  import Race from './Race.svelte'
   import Pass from './Pass.svelte'
   import SeasonCal from './SeasonCal.svelte'
   import Trial from './Trial.svelte'
@@ -55,7 +63,7 @@
     onclose: () => void
     api?: Pick<Net, 'ask'> | null
     opened?: number // lúc mở mùa của giới (Lịch giới)
-    onfight?: (elder: ElderId, army: Army) => Promise<Report | null> // trận Thí Luyện: server giải, client xem lại
+    onfight?: (elder: ElderId, army: Army, thief?: boolean) => Promise<Report | null> // trận Thí Luyện / Đạo Tặc: server giải, client xem lại
     onreplay?: (r: Report) => void
   } = $props()
   const g = useGame()
@@ -98,6 +106,24 @@
     quyTiet: 'skull',
     thonTrang: 'shield',
     thienCo: 'star',
+    vanHoa: 'nganDuyen',
+    linhNoan: 'kimDuyen',
+    khaoCo: 'hammer',
+    tamHe: 'people',
+    thuLuc: 'power',
+    chinhChien: 'swords',
+    khaiLo: 'hammer',
+    daTac: 'skull',
+    tocChien: 'bolt',
+    nguyenTieu: 'star',
+    xuanHoi: 'star',
+    trienLam: 'scroll',
+    doanNgo: 'globe',
+    haChi: 'star',
+    baVi: 'cauldron',
+    nguyenThu: 'nganDuyen',
+    truyenDao: 'flag',
+    manThuong: 'cauldron',
   }
   // tranh thẻ sự kiện vẽ tay (ui:fx-*): cột trái, băng rôn đầu sự kiện, lịch; tắt art thì về Icon
   const FX: Record<FestId, string> = {
@@ -134,6 +160,24 @@
     quyTiet: 'demon',
     thonTrang: 'shield',
     thienCo: 'moon',
+    vanHoa: 'treasure',
+    linhNoan: 'love',
+    khaoCo: 'explore',
+    tamHe: 'train',
+    thuLuc: 'battle',
+    chinhChien: 'demon',
+    khaiLo: 'build',
+    daTac: 'demon',
+    tocChien: 'bolt',
+    nguyenTieu: 'moon',
+    xuanHoi: 'spring',
+    trienLam: 'treasure',
+    doanNgo: 'spring',
+    haChi: 'spring',
+    baVi: 'cauldron',
+    nguyenThu: 'love',
+    truyenDao: 'flag',
+    manThuong: 'treasure',
   }
   const fx = (n: string) => artOf(`ui:fx-${n}`)?.src
   // lịch 7 ngày (sự kiện tương lai chưa mở vẫn hiện để người chơi chuẩn bị, như Event Calendar của RoK)
@@ -146,8 +190,8 @@
   // kho đổi: một chấm khi có món đổi được (không đếm từng món, không "nhận tất cả")
   const shop = (id: FestId) => FESTS[id].kind === 'shop'
   const waiting = (id: FestId) => {
-    if (FESTS[id].kind === 'wheel') return wheelFree(s, id, now) ? 1 : 0 // vòng quà: còn lượt miễn phí
     const n = festRewards(id).filter((_, i) => festDone(s, id, i) && !got(id, i)).length
+    if (luck(FESTS[id])) return n + (wheelFree(s, id, now) ? 1 : 0) // vòng quà, bàn xúc xắc: còn lượt miễn phí
     return shop(id) ? Math.min(1, n) : n
   }
   const got = (id: FestId, i: number) => festGot(s, id, i)
@@ -289,13 +333,23 @@
                     onclick={() => (dayPick = d)}
                   >
                     <b class="t-small">{L.fest.day(d + 1)}</b>
-                    <small class="t-tiny">{L.fest.branch[d]}</small>
+                    {#if cur === 'tanThu'}<small class="t-tiny">{L.fest.branch[d]}</small>{/if}
                     {#if d > f.stage}<Icon name="lock" size={14} />{:else if n}<Badge {n} />{/if}
                   </button>
                 {/each}
               </div>
-              {#if day > f.stage && s.born !== undefined}<p class="t-small t-soft">
-                  {L.fest.opensIn(L.ago(Math.max(0, s.born + day * DAY - now)))}
+              {#if day > f.stage}<p class="t-small t-soft">
+                  <!-- ngày chưa mở: lễ tân thủ theo giờ lập tông môn, lễ theo lịch theo 0h các ngày của khung -->
+                  {L.fest.opensIn(
+                    L.ago(
+                      Math.max(
+                        0,
+                        (cur === 'tanThu' && s.born !== undefined ? s.born : nextDay(now) - (f.stage + 1) * DAY) +
+                          day * DAY -
+                          now,
+                      ),
+                    ),
+                  )}
                 </p>{/if}
             {/if}
             <ul class="stack rows">
@@ -353,6 +407,16 @@
             {/if}
           {:else if def.kind === 'wheel'}
             <Wheel id={cur} />
+          {:else if def.kind === 'dice'}
+            <Dice id={cur} />
+          {:else if def.kind === 'egg'}
+            <Egg id={cur} />
+          {:else if def.kind === 'dig'}
+            <Delve id={cur} />
+          {:else if def.kind === 'wish'}
+            <Wish id={cur} />
+          {:else if def.kind === 'thief'}
+            <Thief {s} onfight={onfight && ((e, a) => onfight(e, a, true))} {onreplay} />
           {:else if def.kind === 'shop'}
             <p class="row between">
               <b class="pts t-num t-gold">{L.fest.tokens(num(festTokens(s, cur)), L.fest.tokenName[cur])}</b>
@@ -387,6 +451,7 @@
               {/each}
             </ul>
           {:else}
+            {#if def.kind === 'race'}<Race {s} />{/if}
             <p class="row between">
               <b class="pts t-num t-gold">{def.kind === 'drop' ? L.fest.pouches(num(pts)) : L.fest.points(num(pts))}</b>
             </p>

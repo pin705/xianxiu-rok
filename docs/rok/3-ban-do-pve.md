@@ -855,7 +855,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | A7 | Altar (6 loại buff) | ✅ linh mạch cấp 2: công / thủ / sinh lực / hành quân (25/09) | P1 | S |
 | A8 | Shrine (4 loại buff kép) | 🟡 chỉ linh mạch tâm có buff kép (sản lượng + công) | P1 | S–M |
 | A9 | Lost Temple & King (tước hiệu, buff vương quốc) | ✅ Thiên Môn + Giới Chủ: sắc phong, ban phúc cả giới, Thiên Ân lễ (`world/lord.ts`) | P2 | M |
-| A10 | Monument (dòng thời gian, mục tiêu chung, thưởng mốc) | 🟡 Thiên Đạo Biên Niên: 13 chương mục tiêu chung + quà (`world/book.ts`); chưa mở nội dung theo chương | **P1** | M |
+| A10 | Monument (dòng thời gian, mục tiêu chung, thưởng mốc) | ✅ Thiên Đạo Biên Niên: 13 chương mục tiêu chung + quà (`world/book.ts`), chương xong sớm mở pha sớm, bảng đóng góp + quà công đầu | P1 | M |
 | A11 | Eve of the Crusade & Lost Kingdom | ❌ (cố ý: không liên server); phần PvE Eve: Khai Giới Trảm Tà (C6) | P2 | M |
 | B1 | Fog of War | ✅ mê vụ riêng mỗi người | P2 | M |
 | B2 | Scout Camp & scouts | ✅ linh điểu | P2 | M |
@@ -907,7 +907,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | H1 | March Speed | ✅ 12 giây/ô, công pháp Thần Hành, tốc theo hệ đệ tử | P0 | — |
 | H2 | Redirect giữa đường | 🟡 quay đầu giữa đường, săn liên hoàn từ đường về; chưa đổi đích tuỳ ý | P2 | M |
 | H3 | Recall | ✅ mọi đội đang đi (quay đầu giữa đường, hoàn hành lực) + đội đóng / khai / viện binh | P1 | S |
-| H4 | Đóng quân ở ô trống | ❌ | P2 | M |
+| H4 | Đóng quân ở ô trống | ✅ đóng trại ở ô trống đã khai (`world/encamp.ts`), phe khác đánh tan được | P2 | M |
 | H5 | Open-field battle / chặn đường | ❌ (cố ý, PLAN "Không làm") | P2 | L / M |
 | H6 | March queues & capacity | ✅ 1–5 đội theo cảnh giới, trận dung theo chủ tướng, kết trận 8 đội | P0 | — |
 

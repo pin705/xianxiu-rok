@@ -25,6 +25,12 @@ import {
   vipGot,
   wheelElder,
   wheelFree,
+  diceAt,
+  spinError,
+  spins,
+  digAt,
+  delveError,
+  wishAt,
   weekOf,
   weekStart,
   festEnded,
@@ -38,7 +44,9 @@ import {
   pushReport,
   noGain,
   FEST_PRIZES,
+  FEST_RANKED,
   expAt,
+  type FestId,
   type State,
 } from './index.ts'
 
@@ -306,6 +314,218 @@ test('Thiên Cơ Luân: mỗi ngày một lượt miễn phí, lượt thêm t�
   const next = advance(s, t + DAY)
   assert.equal(wheelFree(next, 'thienCo', t + DAY), true)
   assert.equal(wheelFree(s, 'thienCo', t), false)
+})
+
+test('Vạn Hoa Viên: mỗi ngày một lượt đổ miễn phí, mặt theo mầm server (client chờ); đi quanh bàn nhận quà ô dừng, qua Khởi điểm thêm quà vòng, rương mốc theo số lượt', () => {
+  const d = FESTS.vanHoa
+  assert.equal(d.kind, 'dice')
+  if (d.kind !== 'dice') return
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 7 } }
+  while (!festOpen(advance(base, t), 'vanHoa', t)) t += DAY
+  let s: State = { ...advance(base, t), seed: 4242 }
+  assert.deepEqual(apply({ ...s, seed: 0 }, { type: 'spin', id: 'vanHoa', n: 1 }, t), {
+    ok: true,
+    state: { ...s, seed: 0 },
+  })
+  assert.equal(spinError(s, 'vanHoa', 10), 'bad', 'xúc xắc: từng lượt')
+  const before = s.items
+  s = run(s, { type: 'spin', id: 'vanHoa', n: 1 })
+  const face = -s.fest.vanHoa!.got[0]
+  assert.ok(face >= 1 && face <= 6)
+  assert.deepEqual(diceAt(s, 'vanHoa'), { pos: face, laps: 0, rolls: 1 })
+  const [item, n] = Object.entries(d.board[face].items!)[0] as [keyof State['items'], number]
+  assert.equal(s.items[item], (before[item] ?? 0) + n, 'quà ô dừng')
+  assert.equal(spinError(s, 'vanHoa', 1), 'not_enough', 'hết lượt miễn phí, chưa có lệnh')
+  // đứng ô cuối, săn 5 yêu thú = 10 lệnh = một lượt: đổ mặt nào cũng qua Khởi điểm — thêm quà vòng
+  const f = s.fest.vanHoa!
+  s = {
+    ...s,
+    stats: { ...s.stats, hunted: (s.stats.hunted ?? 0) + 5 },
+    fest: { ...s.fest, vanHoa: { ...f, got: [-(d.board.length - 1)] } },
+  }
+  const lapItems = s.items.nganDuyen ?? 0
+  s = run(s, { type: 'spin', id: 'vanHoa', n: 1 })
+  assert.equal(diceAt(s, 'vanHoa').laps, 1)
+  assert.ok((s.items.nganDuyen ?? 0) >= lapItems + (d.lap.items!.nganDuyen ?? 0))
+  assert.equal(festTokens(s, 'vanHoa'), 0)
+  // rương mốc theo số lượt đổ: nhận thì ghi chỉ số rương, không tính là một lượt đổ
+  assert.equal(festError(s, 'vanHoa', 0), 'not_done')
+  const many = { ...s, fest: { ...s.fest, vanHoa: { ...s.fest.vanHoa!, got: Array(d.goals[0]).fill(-1) } } }
+  const claimed = run(many, { type: 'fest', id: 'vanHoa', i: 0 })
+  assert.equal(diceAt(claimed, 'vanHoa').rolls, d.goals[0])
+  assert.equal(festError(claimed, 'vanHoa', 0), 'claimed')
+})
+
+test('Linh Noãn Kỳ Bảo: chọn món chủ lực rồi đập; kết quả theo mầm server (client chờ); món chủ lực ~7,5 %; rương mốc theo số quả đã đập', () => {
+  const d = FESTS.linhNoan
+  assert.equal(d.kind, 'egg')
+  if (d.kind !== 'egg') return
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 7 } }
+  while (!festOpen(advance(base, t), 'linhNoan', t)) t += DAY
+  let s: State = { ...advance(base, t), seed: 99 }
+  assert.equal(spinError(s, 'linhNoan', 1), 'bad', 'chưa chọn món chủ lực')
+  assert.equal(spinError(s, 'linhNoan', 1, d.picks.length), 'bad')
+  assert.deepEqual(apply({ ...s, seed: 0 }, { type: 'spin', id: 'linhNoan', n: 1, pick: 0 }, t), {
+    ok: true,
+    state: { ...s, seed: 0 },
+  })
+  s = run(s, { type: 'spin', id: 'linhNoan', n: 1, pick: 0 })
+  assert.equal(spins(s, 'linhNoan'), 1, 'quả miễn phí')
+  assert.equal(spinError(s, 'linhNoan', 1, 0), 'not_enough')
+  // nhiều Linh Chuỳ: đập 400 quả — món chủ lực ra khoảng 7,5 %, ghi −1; rương mốc mở theo số quả
+  s = { ...s, stats: { ...s.stats, hunted: (s.stats.hunted ?? 0) + 2000 } }
+  const kim = s.items.kimDuyen ?? 0
+  for (let k = 0; k < 40; k++) s = run(s, { type: 'spin', id: 'linhNoan', n: 10, pick: 0 })
+  const res = s.fest.linhNoan!.got.filter(x => x < 0)
+  const jack = res.filter(x => x === -1).length
+  assert.equal(res.length, 401)
+  assert.ok(jack > 15 && jack < 50, `món chủ lực ${jack}/401`)
+  const after = res.slice(1).filter(x => x === -1).length // quả đầu (miễn phí) đập trước lúc đếm kim
+  assert.equal((s.items.kimDuyen ?? 0) - kim, after * (d.picks[0].items!.kimDuyen ?? 0))
+  s = run(s, { type: 'fest', id: 'linhNoan', i: d.goals.length - 1 })
+  assert.equal(spins(s, 'linhNoan'), 401, 'nhận rương không tính là một quả')
+})
+
+test('Khảo Cổ Động Phủ: cuốc từng ô tầng 16 ô, ô có giải theo mầm server (client chờ); ô cuối chắc có giải → xuống tầng; tầng 5 bảng quý; rương mốc theo tầng', () => {
+  const d = FESTS.khaoCo
+  assert.equal(d.kind, 'dig')
+  if (d.kind !== 'dig') return
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 7 } }
+  while (!festOpen(advance(base, t), 'khaoCo', t)) t += DAY
+  let s: State = { ...advance(base, t), seed: 31337, stats: { ...base.stats, hunted: 5000 } }
+  assert.deepEqual(apply({ ...s, seed: 0 }, { type: 'delve', id: 'khaoCo', cell: 0, pick: 0 }, t), {
+    ok: true,
+    state: { ...s, seed: 0 },
+  })
+  assert.equal(delveError(s, 'khaoCo', d.cells, 0), 'bad')
+  assert.equal(delveError(s, 'khaoCo', 0, d.picks.length), 'bad')
+  // cuốc lần lượt từng ô tới khi trúng giải: ô đã cuốc không cuốc lại; trúng thì sang tầng 2, lưới mới
+  const thoi = s.items.thoiQuang480 ?? 0
+  let cell = 0
+  while (digAt(s, 'khaoCo').layer === 0) {
+    s = run(s, { type: 'delve', id: 'khaoCo', cell, pick: 0 })
+    if (digAt(s, 'khaoCo').layer === 0) assert.equal(delveError(s, 'khaoCo', cell, 0), 'bad', 'ô đã cuốc')
+    cell++
+  }
+  assert.ok(cell <= d.cells, 'ô cuối chắc có giải')
+  assert.equal((s.items.thoiQuang480 ?? 0) - thoi, 1, 'giải tối thượng đã chọn')
+  assert.deepEqual(digAt(s, 'khaoCo').dug, [])
+  // qua 4 tầng nữa: tầng 5 dùng bảng grand
+  for (let L = 1; L < 4; L++)
+    for (let k = 0; digAt(s, 'khaoCo').layer === L; k++) s = run(s, { type: 'delve', id: 'khaoCo', cell: k, pick: 0 })
+  assert.equal(digAt(s, 'khaoCo').layer, 4)
+  const kim = s.items.kimDuyen ?? 0
+  for (let k = 0; digAt(s, 'khaoCo').layer === 4; k++) s = run(s, { type: 'delve', id: 'khaoCo', cell: k, pick: 0 })
+  assert.equal((s.items.kimDuyen ?? 0) - kim, d.grand[0].items!.kimDuyen, 'tầng 5: giải quý')
+  s = run(s, { type: 'fest', id: 'khaoCo', i: 2 })
+  assert.equal(festError(s, 'khaoCo', 3), 'not_done')
+})
+
+test('lễ nhiệm vụ nhiều ngày: tiến độ tính từ lúc mở lượt (Thí Luyện); lễ làm mới mỗi ngày (Tam Hệ Luyện Binh) tính riêng từng ngày, nhánh ngày nhận riêng', () => {
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 10 } }
+  const first = (id: 'yeuHoang' | 'tamHe') => {
+    while (!festOpen(advance(base, t), id, t) || advance(base, t).fest[id]!.stage !== 0) t += DAY
+  }
+  first('yeuHoang')
+  let s = advance(base, t)
+  s = { ...s, stats: { ...s.stats, trial: (s.stats.trial ?? 0) + 7 } }
+  s = advance(s, t + DAY)
+  assert.equal(s.fest.yeuHoang!.stage, 1)
+  assert.equal(festProgress(s, 'yeuHoang', 'trial'), 7, 'ngày 2 vẫn giữ điểm ngày 1')
+  // Tam Hệ Luyện Binh: đệ tử bậc 2+ theo hệ, làm mới mỗi ngày
+  const d = FESTS.tamHe
+  assert.equal(d.kind, 'tasks')
+  if (d.kind !== 'tasks') return
+  t = MON
+  first('tamHe')
+  const rich = { linhThach: 1e9, linhThao: 1e9, linhKhoang: 1e9 }
+  s = advance({ ...base, levels: { ...base.levels, dienVoTruong: 10 }, res: rich }, t)
+  s = run(s, { type: 'train', unit: 'kiem2', n: 200 })
+  s = advance(s, s.train!.finishAt + 1)
+  assert.equal(festProgress(s, 'tamHe', 'kiem2'), 200, 'tuyển bậc 2 tính theo hệ')
+  assert.equal(festProgress(s, 'tamHe', 'train2'), 200)
+  assert.equal(festProgress(s, 'tamHe', 'phap2'), 0)
+  s = run(s, { type: 'train', unit: 'kiem1', n: 200 })
+  s = advance(s, s.train!.finishAt + 1)
+  assert.equal(festProgress(s, 'tamHe', 'train2'), 200, 'bậc 1 không tính')
+  s = run({ ...s, stats: { ...s.stats, t2kiem: (s.stats.t2kiem ?? 0) + 800 } }, { type: 'fest', id: 'tamHe', i: 0 })
+  s = advance(s, t + DAY)
+  assert.equal(festProgress(s, 'tamHe', 'kiem2'), 0, 'ngày mới làm mới')
+  assert.equal(festError(s, 'tamHe', 4), 'not_done', 'nhánh ngày 2: việc Kiếm tu chưa xong')
+})
+
+test('Nguyện Thụ Cầu Duyên: rút quà còn trên cây (không trùng trong một vòng); đủ quà đặc biệt thì nhận nốt phần còn lại, cây nở lại', () => {
+  const d = FESTS.nguyenThu
+  assert.equal(d.kind, 'wish')
+  if (d.kind !== 'wish') return
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 7 } }
+  while (!festOpen(advance(base, t), 'nguyenThu', t)) t += DAY
+  let s: State = { ...advance(base, t), seed: 2024, stats: { ...base.stats, hunted: 5000 } }
+  assert.deepEqual(apply({ ...s, seed: 0 }, { type: 'spin', id: 'nguyenThu', n: 1 }, t), {
+    ok: true,
+    state: { ...s, seed: 0 },
+  })
+  assert.equal(spinError(s, 'nguyenThu', 10), 'bad')
+  const bigs = d.pool.filter(p => p.big).length
+  const before = s.items
+  let draws = 0
+  while (wishAt(s, 'nguyenThu').round === 0) {
+    const drawn = wishAt(s, 'nguyenThu').drawn
+    assert.equal(new Set(drawn).size, drawn.length, 'không rút trùng trong vòng')
+    s = run(s, { type: 'spin', id: 'nguyenThu', n: 1 })
+    draws++
+  }
+  assert.ok(draws >= bigs && draws <= d.pool.length)
+  // hết vòng: mọi quà của cây đã về túi đúng một lần
+  for (const p of d.pool)
+    for (const [k, v] of Object.entries(p.r.items!))
+      assert.ok((s.items[k as keyof State['items']] ?? 0) >= (before[k as keyof State['items']] ?? 0) + v!, k)
+  assert.deepEqual(wishAt(s, 'nguyenThu'), { round: 1, drawn: [] }, 'cây nở lại')
+})
+
+test('lễ theo lịch: Nguyên Tiêu, Xuân Hồi, Triển Lãm, Đoan Ngọ, Hạ Chí, Tạ Ơn mở đúng ngày (giờ VN), đóng ngoài ngày', () => {
+  const noon = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 5) // 12h trưa giờ VN
+  const cases: [FestId, [number, number, number], number][] = [
+    ['nguyenTieu', [2027, 2, 20], 3],
+    ['xuanHoi', [2027, 3, 20], 5],
+    ['trienLam', [2027, 5, 18], 3],
+    ['doanNgo', [2027, 6, 9], 5],
+    ['haChi', [2027, 6, 21], 7],
+    ['baVi', [2026, 11, 26], 5],
+  ]
+  for (const [id, [y, m, d], len] of cases) {
+    const t = noon(y, m, d)
+    const s = advance({ ...newGame(t - 2 * DAY), levels: { ...newGame(t).levels, chuDien: 5 } }, t)
+    assert.equal(festOpen(s, id, t), true, `${id} mở ngày đầu`)
+    assert.equal(festOpen(advance(s, t + (len - 1) * DAY), id, t + (len - 1) * DAY), true, `${id} còn mở ngày cuối`)
+    assert.equal(festOpen(advance(s, t + len * DAY), id, t + len * DAY), false, `${id} đóng sau ${len} ngày`)
+  }
+})
+
+test('Thế Lực Bạo Tăng: điểm = thế lực tăng thêm trong lượt (có xếp hạng); Chinh Chiến Bất Hưu: săn yêu mỗi ngày làm mới', () => {
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 8, tangKinhCac: 8 } }
+  while (!festOpen(advance(base, t), 'thuLuc', t)) t += DAY
+  let s = advance(base, t)
+  assert.equal(festPoints(s, 'thuLuc'), 0)
+  const before = metric(s, 'power')
+  s = { ...s, levels: { ...s.levels, chuDien: 9 } } // xây xong một tầng Chủ điện
+  assert.equal(festPoints(s, 'thuLuc'), metric(s, 'power') - before)
+  assert.ok(festPoints(s, 'thuLuc') > 0)
+  assert.ok((FEST_RANKED as readonly string[]).includes('thuLuc'), 'có bảng xếp hạng')
+  t = MON
+  while (!festOpen(advance(base, t), 'chinhChien', t) || advance(base, t).fest.chinhChien!.stage !== 0) t += DAY
+  s = advance(base, t)
+  s = { ...s, stats: { ...s.stats, hunted: (s.stats.hunted ?? 0) + 6 } }
+  s = run(s, { type: 'fest', id: 'chinhChien', i: 0 })
+  s = advance(s, t + DAY)
+  assert.equal(festProgress(s, 'chinhChien', 'hunt'), 0, 'ngày mới làm mới')
+  assert.equal(festError(s, 'chinhChien', 4), 'not_done', 'nhánh ngày 2 chưa đủ 5 con')
 })
 
 test('Hương Hỏa Các: món mở theo cấp, mỗi tuần mua có hạn (thứ Hai làm mới), giá nhân tầng Chủ điện', () => {

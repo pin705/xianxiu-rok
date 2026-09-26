@@ -886,7 +886,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | E2 | Chat minh và thông báo | ✅ thiếu ghim, tin hệ thống, @nhắc | P1 | S |
 | E3 | Chat riêng và nhóm tự tạo | ✅ truyền âm 1-1 (Web Push khi offline) + nhóm chat tự tạo tới 20 người (25/09) | **P0** | M |
 | E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; ❌ threads / kênh phái trong giới (làm được) | P2 | M |
-| E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | 🟡 chia sẻ toạ độ + chiến báo vào chat (nút tới / xem trận); chưa chia sẻ trưởng lão, chưa sửa / thu hồi tin | **P0** | M |
+| E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | ✅ chia sẻ toạ độ, chiến báo (nút tới / xem trận), thẻ trưởng lão (`#tl:`), trả lời, thu hồi tin trong hạn; chưa sửa tin | **P0** | M |
 | E6 | Thư người chơi/thư minh/báo cáo do thám | ✅ thư minh (R4/R5 → hộp thư cả minh, 25/09); truyền âm thay thư 1-1; báo cáo do thám qua thư; chưa xoá / yêu thích thư | P1 | M |
 | F1 | Gửi tài nguyên (Trading Post) | ✅ Vận Linh Trận (25/09): hao tổn 35 → 8 %, trần ngày theo sức chứa kho hai bên | P2 | S–M |
 | G1 | Hồ sơ người chơi | ✅ hồ sơ chưởng môn (từ chat, minh, bản đồ, chân dung): truyền âm, chặn, mời, tiếp tế | P1 | M |
@@ -919,11 +919,11 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | J5 | Shadow Legion (ma triều công sơn) | ✅ Ma Triều Công Sơn (5 đợt tối thứ Tư) | P1 | M |
 | J6 | Canyon Clash / Sunset Canyon | ✅ Luận Kiếm Minh Chiến + Luận Kiếm Đài | P2 | M |
 | J7 | Champions of Olympia 5v5 | ⛔ thời gian thực | — | — |
-| J8 | Đố vui minh, Ascension, tiệc lễ | 🟡 Vấn Đạo Đài (đố vui cá nhân); chưa có đố vui minh | P2 | S–M |
+| J8 | Đố vui minh, Ascension, tiệc lễ | ✅ Luận Đạo Vấn Đáp (đố cả minh cùng lúc, mốc điểm minh) + Vấn Đạo Đài (đố một mình); chưa có tiệc lễ | P2 | S–M |
 | J9 | Kết trận pháo đài hằng ngày (tạo quà minh) | ✅ yêu trại cấp 1 (hồi 8 giờ) → Minh lễ cả minh | **P0** | S–M |
 | J10 | MGE | ✅ Tông Môn Tranh Bá (6 ải, bảng từng ải + cả lượt) | P2 | S |
 | K1 | Lịch minh, đăng ký, phân vai officer | ✅ Minh sự lịch (`world/plans.ts`) + ghi danh minh chiến / ma triều, chức vị đường chủ | P1 | S |
-| K2 | Địa vị, danh hiệu, tag | 🟡 tag ở bảng mùa / lãnh thổ, bậc R, chức vị, tước và danh hiệu mùa trên hồ sơ; chưa hiện tag trong chat | P2 | S |
+| K2 | Địa vị, danh hiệu, tag | ✅ tag ở bảng mùa / lãnh thổ và trước tên trong chat ("[TAG] Tên"), bậc R, chức vị, tước và danh hiệu mùa trên hồ sơ | P2 | S |
 
 **Gợi ý thứ tự làm (P0, rẻ trước):**
 1. D3 đánh dấu bản đồ + I6 cảnh báo khi có đội nhắm vào mình (S).

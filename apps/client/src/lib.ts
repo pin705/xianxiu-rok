@@ -218,6 +218,7 @@ export function reportName(r: Report) {
   if (r.kind === 'legion') return L.legion.wave(r.i + 1)
   if (r.kind === 'drill') return L.drill.fightN(r.i + 1)
   if (r.kind === 'trial') return L.trial.name(r.i + 1)
+  if (r.kind === 'thief') return L.thief.name
   return L.target({ kind: r.kind, i: r.i })
 }
 // Tên đích của một đội: tông môn bị cướp, điểm trên bản đồ giới, hay mục tiêu PvE

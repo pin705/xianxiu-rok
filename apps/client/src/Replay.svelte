@@ -181,6 +181,7 @@
     legion: 'thunder',
     drill: 'tower',
     trial: 'red',
+    thief: 'ink',
   }
   const tone = $derived<MedalTone>(report ? (TONE[report.kind] ?? (report.kind as MedalTone)) : 'pvp')
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
@@ -189,6 +190,7 @@
     if (report.kind === 'legion') return 'ghost'
     if (report.kind === 'drill') return 'fist'
     if (report.kind === 'trial') return 'demon'
+    if (report.kind === 'thief') return 'ghost'
     if (report.kind === 'pvp' || report.kind === 'arena' || report.kind === 'camp') return 'crest'
     if (report.kind === 'spot') return EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus'
     return EMBLEM[report.kind][report.i]
@@ -294,17 +296,24 @@
       <div class="result">
         <Card tone={report.win ? 'glow' : 'paper'}>
           <div class="stack">
-            <h2 class="t-title center" class:t-bad={!report.win}>
-              {report.kind === 'trib'
-                ? report.win
-                  ? L.report.tribWin
-                  : L.report.tribLose
-                : report.win
-                  ? L.report.win
-                  : L.report.lose}
-            </h2>
-            {#if verdict}<p class="center t-small t-strong" class:t-gold={report.win}>{verdict.text}</p>{/if}
-            {#if verdict && !report.win && onfocus && report.kind !== 'drill'}
+            {#if report.kind === 'thief'}
+              <!-- Dạ Hành Đạo Tặc: không có thắng thua, chỉ sát thương -->
+              <h2 class="t-title center t-gold">{L.thief.last(L.thief.pm(report.i))}</h2>
+            {:else}
+              <h2 class="t-title center" class:t-bad={!report.win}>
+                {report.kind === 'trib'
+                  ? report.win
+                    ? L.report.tribWin
+                    : L.report.tribLose
+                  : report.win
+                    ? L.report.win
+                    : L.report.lose}
+              </h2>
+            {/if}
+            {#if verdict && report.kind !== 'thief'}<p class="center t-small t-strong" class:t-gold={report.win}>
+                {verdict.text}
+              </p>{/if}
+            {#if verdict && !report.win && onfocus && report.kind !== 'drill' && report.kind !== 'thief'}
               <div class="row wrap center">
                 <Button size="sm" variant="gold" onclick={() => onfocus('dienVoTruong', 'train')}
                   >{verdict.counter ? L.verdict.recruit(L.units[verdict.counter]) : L.verdict.recruitAny}</Button

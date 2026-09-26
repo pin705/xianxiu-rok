@@ -1,3 +1,19 @@
+<script module lang="ts">
+  import type { DaoId as Id } from '@rok/rules'
+  // màu nhấn mỗi đạo, theo tông đĩa huy hiệu (emblems.ts DAO_TONES) — Title dùng lại cho thẻ đạo ở bước đặt tên
+  export const ACCENT: Record<Id, string> = {
+    kiemTong: 'var(--azurite)',
+    phapTong: 'var(--cinnabar)',
+    theTong: 'var(--ochre)',
+    danTong: 'var(--malachite)',
+    tranTong: 'var(--gold)',
+    khiTong: 'var(--ink3)',
+    phuTong: '#6f5bb5',
+    thuTong: 'var(--indigo)',
+    maTong: '#7a1f2b',
+  }
+</script>
+
 <script lang="ts">
   // Màn chọn đạo thống (như màn chọn nền văn minh của RoK): tranh tổ sư lớn đứng trước ấn của đạo, tên + lối chơi, ba tiềm năng,
   // dải chín huy hiệu để chọn; vuốt ngang hay phím mũi tên để lướt. Dùng lúc lập tông môn (Title) và khi cải tu (DaoPick).
@@ -24,18 +40,6 @@
     onpick: (id: DaoId) => void
   } = $props()
 
-  // màu nhấn mỗi đạo, theo tông đĩa huy hiệu (emblems.ts DAO_TONES)
-  const ACCENT: Record<DaoId, string> = {
-    kiemTong: 'var(--azurite)',
-    phapTong: 'var(--cinnabar)',
-    theTong: 'var(--ochre)',
-    danTong: 'var(--malachite)',
-    tranTong: 'var(--gold)',
-    khiTong: 'var(--ink3)',
-    phuTong: '#6f5bb5',
-    thuTong: 'var(--indigo)',
-    maTong: '#7a1f2b',
-  }
   const at = $derived(DAO_IDS.indexOf(value))
   const fx = $derived(Object.entries(DAOS[value]).map(([k, v]) => L.bonus(k as Bonus, v as number)))
   // tổ sư vẽ tay (fig:<đạo>); chưa có tranh thì hình chạm lớn

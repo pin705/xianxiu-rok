@@ -580,7 +580,8 @@
       onclose={() => (festsOpen = false)}
       api={net ?? null}
       opened={info?.opened}
-      onfight={(elder, army) => fightNow({ type: 'trialFight', elder, army })}
+      onfight={(elder, army, thief) =>
+        fightNow(thief ? { type: 'thief', elder, army } : { type: 'trialFight', elder, army })}
       onreplay={r => (replay = r)}
     />
     <Panel

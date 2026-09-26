@@ -11,6 +11,7 @@ import {
   nextDay,
   rate,
   storage,
+  yardOf,
   type JobKind,
   type Report,
   type State,
@@ -43,9 +44,10 @@ export function careReminds(s: State, now: number): Remind[] {
   const out: Remind[] = []
   if (s.shield - SHIELD_WARN - now >= REMIND_MIN) out.push({ k: 'shield', at: s.shield - SHIELD_WARN })
   const cap = storage(s)
+  const held = (r: (typeof RESOURCES)[number]) => s.res[r] + yardOf(s, r) // kho + sản lượng chờ thu trên công trình
   const full = Math.min(
-    ...RESOURCES.filter(r => rate(s, r) > 0 && s.res[r] < cap).map(
-      r => now + ((cap - s.res[r]) / rate(s, r)) * 3_600_000,
+    ...RESOURCES.filter(r => rate(s, r) > 0 && held(r) < cap).map(
+      r => now + ((cap - held(r)) / rate(s, r)) * 3_600_000,
     ),
   )
   if (Number.isFinite(full) && full - now >= REMIND_MIN) out.push({ k: 'store', at: Math.round(full) })

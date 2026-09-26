@@ -36,6 +36,8 @@ import {
   storage,
   trialElite,
   trialFoe,
+  thiefNow,
+  THIEF_TRIES,
   type State,
 } from './index.ts'
 import { might } from './combat.ts'
@@ -270,4 +272,43 @@ test('Thí Luyện Yêu Hoàng: chọn độ khó một lần mỗi lượt; đ�
   let u = t + 5 * DAY
   while (!festOpen(advance(s1, u), 'yeuHoang', u)) u += DAY
   assert.ok(run(advance(s1, u), { type: 'trialStart', d: 4 }).ok)
+})
+
+test('Dạ Hành Đạo Tặc: mỗi ngày 2 lượt đội ảo (không mất quân), sát thương phần nghìn; hôm nay cao nhất mở rương ngày (nhận lại ngày sau), kỷ lục giữ cả lượt', () => {
+  const at = (t: number) => ({ ...advance(sect(), t), seed: 4321 })
+  let t = T0
+  while (!festOpen(at(t), 'daTac', t) || at(t).fest.daTac!.stage !== 0) t += DAY
+  let s = at(t)
+  const go = { type: 'thief', elder: 'thanhPhong', army: { kiem3: 1000 } }
+  const c = run({ ...s, seed: 0 }, go)
+  assert.ok(c.ok)
+  assert.equal(c.state.reports.length, s.reports.length, 'client chờ server')
+  const r1 = run(s, go)
+  assert.ok(r1.ok)
+  s = r1.state
+  const rep = s.reports.at(-1)!
+  assert.equal(rep.kind, 'thief')
+  assert.ok(rep.i > 0 && rep.i < 1000, `sát thương ${rep.i}‰`)
+  assert.equal(s.troops.kiem3, 1000, 'đội ảo: không mất quân')
+  assert.deepEqual(thiefNow(s), { left: THIEF_TRIES - 1, best: rep.i, record: rep.i })
+  const r2 = run(s, go)
+  assert.ok(r2.ok)
+  s = r2.state
+  assert.deepEqual(run(s, go), { ok: false, error: 'limit' }, 'hết lượt hôm nay')
+  // rương ngày: nhận theo sát thương hôm nay, ngày sau nhận lại được
+  const best = thiefNow(s).best
+  const tier = [100, 250, 450, 700].filter(g => best >= g).length
+  if (tier) {
+    const got = run(s, { type: 'fest', id: 'daTac', i: 0 })
+    assert.ok(got.ok)
+    s = got.state
+    assert.deepEqual(run(s, { type: 'fest', id: 'daTac', i: 0 }), { ok: false, error: 'claimed' })
+  }
+  const next = advance(s, t + DAY)
+  assert.deepEqual(
+    thiefNow(next),
+    { left: THIEF_TRIES, best: 0, record: thiefNow(s).record },
+    'ngày mới: lượt mới, kỷ lục giữ',
+  )
+  assert.deepEqual(run(next, { type: 'fest', id: 'daTac', i: 0 }), { ok: false, error: 'not_done' })
 })

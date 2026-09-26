@@ -1,6 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  BOOK,
+  AQUIZ_N,
+  AQUIZ_Q,
+  AQUIZ_TIERS,
+  AQUIZ_WAIT,
+  QUIZ_KEY,
+  RACE_LV,
+  RACE_MS,
+  RACE_PLUS,
+  festOpen,
+  raceAt,
+  raceHit,
   ELDERS,
   type ElderId,
   cranes,
@@ -127,6 +139,7 @@ import {
   warAt,
   warResolve,
   bookStep,
+  bookBy,
   bookView,
   lordOf,
   titleOf,
@@ -180,6 +193,8 @@ import {
   runesAt,
   runeCycle,
   runesLeft,
+  aquizQs,
+  aquizStep,
 } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -872,6 +887,43 @@ test('Thiên Đạo Biên Niên: chương đủ mục tiêu thì xong (sang chư
   assert.deepEqual(late.world.book, { ch: 3, done: [0, 1] })
 })
 
+test('Thiên Đạo Biên Niên — công đầu: chương có chỉ số riêng tính đóng góp từ lúc chương mở; xong chương thì top người góp nhiều nhất', () => {
+  const map = { atlas: atlas(777), phase: 0 }
+  const ch = BOOK.findIndex(g => g.m === 'kp')
+  let ps = world(sect('A', 9), sect('B', 9), sect('C', 9))
+  const kp = (pid: number, n: number) => {
+    const s = ps.get(pid)!
+    ps = new Map([...ps, [pid, { ...s, stats: { ...s.stats, kp: (s.stats.kp ?? 0) + n } }]])
+  }
+  kp(3, 1000) // chiến công có từ trước chương: không tính
+  const r0 = bookStep({ ...freshWorld(), book: { ch, done: [] } }, ps, map, T0, 1)
+  assert.equal(r0.done, undefined)
+  assert.deepEqual(r0.world.bookBase, { 1: 0, 2: 0, 3: 1000 }, 'ghi chỉ số lúc chương mở')
+  kp(1, 150_000)
+  kp(2, 60_000)
+  assert.deepEqual(bookView(r0.world, ps, map, T0).by, [
+    [1, 150_000],
+    [2, 60_000],
+  ])
+  const r1 = bookStep(r0.world, ps, map, T0, 1)
+  assert.equal(r1.done, ch, 'cả giới đủ chiến công: xong chương')
+  assert.deepEqual(r1.top, [
+    [1, 150_000],
+    [2, 60_000],
+  ])
+  assert.equal(r1.world.bookBase, undefined, 'chương sau không có chỉ số riêng')
+  // Tu Bổ Thiên Môn: đóng góp là số đã góp
+  const rep = {
+    ...freshWorld(),
+    book: { ch: BOOK.findIndex(g => g.m === 'repair'), done: [] },
+    repairBy: { 2: 500, 3: 900 },
+  }
+  assert.deepEqual(bookBy(rep, ps), [
+    [3, 900],
+    [2, 500],
+  ])
+})
+
 test('Luận Kiếm Minh Chiến: ghi danh (trưởng lão, đủ người), ghép cặp, người thứ k đấu người thứ k, thư quà + chiến báo, điểm minh chiến', () => {
   const strong = (n: string) => ({ ...sect(n, 12), elders: { thanhPhong: expAt(40), nhuYen: expAt(35) } })
   const weak = (n: string) => ({ ...sect(n, 12), elders: { thanhPhong: expAt(3) } })
@@ -955,6 +1007,80 @@ test('săn liên hoàn: đội săn đang về đi thẳng tới con khác từ 
   assert.deepEqual(home.path![0], seat, 'về núi theo đường mới từ chỗ yêu thú')
   assert.ok(home.returnAt > m1.arriveAt)
   assert.equal(ps.get(1)!.stats.chained, 1, 'Liên Trảm Bất Hồi: đếm con hạ bằng săn liên hoàn (con đầu không tính)')
+})
+
+test('Luận Đạo Vấn Đáp: đường chủ mở (mỗi ngày một phiên), đếm ngược rồi từng câu có giờ; chấm tổng câu đúng cả minh, thư quà theo mốc', () => {
+  const ps = world(sect('Chủ', 10), sect('Đệ', 10), sect('Khách', 10))
+  let w: World = {
+    ...freshWorld(),
+    allies: { 1: { id: 1, name: 'Vạn Kiếm', tag: 'VK', members: { 1: 2, 2: 0 }, notice: '', at: T0, helps: [] } },
+  }
+  const act = (pid: number, a: object, t: number) => {
+    const r = worldAct(ps, pid, a as never, t, 1, undefined, w)
+    if (r.ok) w = r.world
+    return r.ok ? null : r.error
+  }
+  assert.equal(act(2, { type: 'aquizStart' }, T0), 'locked', 'chân truyền không mở được')
+  assert.equal(act(1, { type: 'aquizStart' }, T0), null)
+  assert.equal(act(1, { type: 'aquizStart' }, T0 + 1000), 'claimed', 'mỗi ngày một phiên')
+  const at = w.allies[1].quiz!.at
+  assert.equal(at, T0 + AQUIZ_WAIT)
+  assert.equal(act(2, { type: 'aquiz', pick: 0 }, T0 + 1000), 'locked', 'chưa tới giờ')
+  const qs = aquizQs(1, at)
+  const al0 = w.allies[1]
+  // người 1 trả lời đúng hết, người 2 đúng câu đầu rồi sai (đổi đáp án câu 2 vẫn tính lần chọn cuối)
+  for (let k = 0; k < AQUIZ_N; k++) {
+    assert.equal(act(1, { type: 'aquiz', pick: QUIZ_KEY[qs[k]] }, at + k * AQUIZ_Q + 100), null)
+    if (k < 2)
+      assert.equal(act(2, { type: 'aquiz', pick: (QUIZ_KEY[qs[k]] + (k ? 1 : 0)) % 4 }, at + k * AQUIZ_Q + 200), null)
+  }
+  assert.equal(w.allies[1], al0, 'chọn đáp án không đổi minh (không báo cả minh)')
+  assert.equal(act(3, { type: 'aquiz', pick: 0 }, at + 100), 'locked', 'không trong minh')
+  const done = aquizStep(ps, w, at + AQUIZ_N * AQUIZ_Q)
+  const total = AQUIZ_N + 1
+  const m1 = done.changed.get(1)!.mail.at(-1)!
+  assert.deepEqual([m1.k, m1.a], ['aquiz', [AQUIZ_N, total, AQUIZ_TIERS.filter(n => total >= n).length]])
+  assert.deepEqual(done.changed.get(2)!.mail.at(-1)!.a, [1, total, AQUIZ_TIERS.filter(n => total >= n).length])
+  assert.equal(done.world.allies[1].quiz!.done, true)
+  assert.equal(done.world.aquizAns?.[1], undefined, 'đáp án dọn sau khi chấm')
+  assert.equal(aquizStep(ps, done.world, at + AQUIZ_N * AQUIZ_Q + 1).changed.size, 0, 'không chấm lại')
+})
+
+test('Trảm Yêu Tốc Chiến: bắt đầu lượt đua, yêu thú giới hạ trong giờ ra điểm theo cấp (cấp cao cộng giờ), kỷ lục một lượt; hết giờ không tính', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 0 }
+  const p = a.points.find(x => x.kind === 'wild' && x.lv >= RACE_LV && x.lv <= 8)!
+  let t = T0
+  const base = { ...sect('Đua', 12, { kiem4: 1500 }), elders: { thanhPhong: expAt(40) }, seat: { x: p.x + 1, y: p.y } }
+  while (!festOpen(advance(base, t), 'tocChien', t)) t += 86_400_000
+  const ps = world(advance(base, t))
+  const started = apply(ps.get(1)!, { type: 'race' }, t)
+  assert.ok(started.ok, JSON.stringify(started))
+  ps.set(1, started.state)
+  assert.deepEqual(apply(started.state, { type: 'race' }, t + 1000), { ok: false, error: 'busy' }, 'đang đua')
+  const r = worldAct(
+    ps,
+    1,
+    { type: 'go', i: p.i, task: 'hunt', elder: 'thanhPhong', army: { kiem4: 1500 } },
+    t,
+    5,
+    map,
+    freshWorld(),
+  )
+  assert.ok(r.ok, JSON.stringify(r))
+  for (const [k, v] of r.changed) ps.set(k, v)
+  const at = ps.get(1)!.marches[0].arriveAt
+  assert.ok(at < t + RACE_MS, 'tới nơi trong giờ đua')
+  const done = advanceAll(ps, freshWorld(), at, map)
+  const s = done.changed.get(1)!
+  assert.equal(s.reports.at(-1)!.win, true)
+  const race = raceAt(s, at)
+  assert.equal(race.pts, p.lv)
+  assert.equal(race.best, p.lv)
+  assert.equal(race.end, t + RACE_MS + RACE_PLUS, 'yêu thú cấp cao cộng giờ')
+  // hết giờ: hạ thêm không tính
+  const late = raceHit(s, 9, race.end + 1)
+  assert.equal(raceAt(late, race.end + 1).pts, p.lv)
 })
 
 test('yêu thú giới: săn một mình, thắng thì chiến lợi phẩm + kinh nghiệm theo đội về, con đó hồi sau 20 phút', () => {
@@ -1302,6 +1428,20 @@ test('khai mỏ: mang về theo sức mang, hết giờ khai rồi về; gọi v
   assert.equal(rc.world.spots[mine.i].left, 20_000 - back.mine!.amount)
   const home = advance(rc.changed.get(1)!, back.returnAt)
   assert.ok(home.res[back.mine!.res] >= ps.get(1)!.res[back.mine!.res] + back.mine!.amount)
+})
+
+test('khai cạn mỏ: đội mang hết phần còn lại thì mỏ cạn (hồi sau) và tính một lần khai cạn (Tàng Bảo Mãn Thương)', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const mine = a.points.find(p => p.kind === 'mine' && p.region === 0)!
+  const ps = world({ ...sect('A', 10, { kiem2: 1000 }), seat: { x: a.regions[0].cx, y: a.regions[0].cy } })
+  const go = { type: 'go', i: mine.i, task: 'gather', elder: 'thanhPhong', army: { kiem2: 1000 } } as const
+  const r = worldAct(ps, 1, go, T0, 1, map, freshWorld())
+  assert.ok(r.ok)
+  for (const [k, v] of r.changed) ps.set(k, v)
+  const done = advanceAll(ps, freshWorld(), ps.get(1)!.marches[0].arriveAt, map)
+  assert.equal(done.world.spots[mine.i].left, 0)
+  assert.equal(done.changed.get(1)!.stats.drained, 1)
 })
 
 test('lãnh thổ tiên minh: mốc từ tông môn trong minh + điểm minh giữ, ô tranh chấp; khai mỏ trong lãnh thổ nhanh hơn; dời tông môn vào lãnh thổ', () => {
@@ -1917,6 +2057,11 @@ test('yêu vương: kho máu chung, mỗi đội đánh một lát; hạ thì th
   assert.ok((w.spots[boss.i].until ?? 0) > at, 'đã hạ, chờ hồi sinh')
   const gifts = [1, 2].map(p => ps.get(p)!.mail.find(m => m.k === 'boss'))
   assert.ok(gifts.every(Boolean), 'ai đánh cũng có quà')
+  assert.deepEqual(
+    [1, 2, 3].map(p => ps.get(p)!.stats.forts ?? 0),
+    [1, 1, 0],
+    'góp sức hạ yêu vương (Truyền Đạo Tứ Phương)',
+  )
   const minhLe = (p: number) => ps.get(p)!.mail.find(m => m.k === 'allyGift')
   assert.ok(minhLe(1) && minhLe(3), 'Minh lễ: cả minh của người đánh nhận quà, kể cả người không đánh')
   assert.equal(minhLe(2), undefined, 'không vào minh: không có Minh lễ')

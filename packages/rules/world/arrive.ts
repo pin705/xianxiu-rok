@@ -3,7 +3,7 @@
 import { route, tide } from '../atlas.ts'
 import { fight, might } from '../combat.ts'
 import { beastExp, beastLoot, marchSide, marchSnap, pushReport, snap } from '../core/battle.ts'
-import { festDrop } from '../core/fest.ts'
+import { festDrop, raceHit } from '../core/fest.ts'
 import { lead, unitOf } from '../core/stats.ts'
 import { HOUR, addItems, noGain } from '../core/util.ts'
 import type { Army, Gain, March, Report } from '../core/types.ts'
@@ -114,9 +114,12 @@ function gather(ps: Players, w: World, map: MapCtx, [pid, att, m]: Party[number]
   const end = at + Math.round((amount / rate) * HOUR)
   const res = RESOURCES[i % RESOURCES.length]
   const changed: Players = new Map()
+  const left = sp.left! - amount
+  // Tàng Bảo Mãn Thương: đội này khai cạn mỏ
+  const me = left > 0 ? att : { ...att, stats: { ...att.stats, drained: (att.stats.drained ?? 0) + 1 } }
   changed.set(
     pid,
-    withMarch(addHonor(att, amount / HONOR_GATHER), {
+    withMarch(addHonor(me, amount / HONOR_GATHER), {
       ...m,
       mine: { end, amount, res },
       back: m.army,
@@ -125,7 +128,6 @@ function gather(ps: Players, w: World, map: MapCtx, [pid, att, m]: Party[number]
       returnAt: end + travel(m),
     }),
   )
-  const left = sp.left! - amount
   return { changed, world: setSpot(w, i, left > 0 ? { left } : { left: 0, until: at + MINE_RESPAWN }) }
 }
 
@@ -180,8 +182,9 @@ function hitBoss(ps: Players, w: World, map: MapCtx, group: Party, sp: Spot, at:
     .sort((a, b) => b[1] - a[1])
     .forEach(([id2, d], n) => {
       const who = Number(id2),
-        st = changed.get(who) ?? ps.get(who)
-      if (!st) return
+        st0 = changed.get(who) ?? ps.get(who)
+      if (!st0) return
+      const st = { ...st0, stats: { ...st0.stats, forts: (st0.stats.forts ?? 0) + 1 } } // Truyền Đạo Tứ Phương: góp hạ yêu vương
       const share = d / sum
       const gift: Reward = {
         res: Object.fromEntries(RESOURCES.map(r => [r, Math.floor((boss.reward.res?.[r] ?? 0) * share)])),
@@ -273,7 +276,7 @@ function hunt(w: World, map: MapCtx, [pid, s, m]: Party[number], at: number): Ar
       HONOR_WILD * p.lv,
     )
   if (!f.win) return { changed: new Map([[pid, x]]), world: w }
-  x = festDrop(x, 'hunt', m.seed, at) // Tích Cốc Phòng Cơ: có thể nhặt Linh Nang
+  x = raceHit(festDrop(x, 'hunt', m.seed, at), p.lv, at) // Tích Cốc Phòng Cơ: có thể nhặt Linh Nang; Trảm Yêu Tốc Chiến
   // Khai Giới Trảm Tà: pha Khai giới rơi tàn quyển, cộng giới vận cho minh · Yêu Vương Tuần Sơn: cấp cao rơi yêu cốt
   const n = map.phase === 0 ? eveFrags(p.lv) : 0
   if (n) x = { ...x, frag: (x.frag ?? 0) + n }

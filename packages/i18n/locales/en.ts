@@ -710,6 +710,21 @@ export const en: Text = {
         'What are spirit cranes for?',
         ['Delivering mail', 'Carrying resources', 'Clearing the fog on the world map', 'Raiding sects'],
       ],
+      ['Which path do Spell cultivators beat?', ['Sword', 'Body', 'Spell', 'None']],
+      ['How many gates does the Demon King Trial have?', ['10', '30', '50', '100']],
+      ['How many Thief in the Night attacks do you get per day?', ['2', '1', '3', '5']],
+      [
+        'Can uncollected production still in buildings be raided?',
+        ['All of it', 'Half of it', 'Only without a shield', 'No'],
+      ],
+      ['How many stages does the Sect Supremacy event have?', ['3', '6', '5', '7']],
+      ['Ancient Cave Dig: how many tiles per layer?', ['9', '12', '25', '16']],
+      ['What is the action point cap (without AP pills)?', ['100', '50', '150', '200']],
+      ['How many action points does one realm beast hunt cost?', ['5', '15', '10', '20']],
+      ['Race Against Time: how long is a basic run?', ['5 minutes', '10 minutes', '15 minutes', '30 minutes']],
+      ['How many chapters does the Heavenly Chronicle have?', ['7', '10', '20', '13']],
+      ['Five elements: what does Water overcome?', ['Fire', 'Metal', 'Wood', 'Earth']],
+      ['How many special prizes hang on the Wishing Tree?', ['2', '3', '4', '6']],
     ] as [string, [string, string, string, string]][],
   },
   strat: {
@@ -1593,6 +1608,8 @@ export const en: Text = {
     end: 'All chapters of this season are over.',
     give: (n: string) => `Give ${n} of each`,
     gave: 'Donations earn Honor (1 point per 1,000).',
+    mine: (rank: number, n: string) => `Your contribution: #${rank} · ${n}`,
+    top: (n: number) => `Top contributors (top ${n} get a bonus when done)`,
   },
   lord: {
     title: 'Realm Lord',
@@ -2080,6 +2097,14 @@ export const en: Text = {
       book: (ch: number): [string, string] => [
         `Chronicle · ${en.book.names[ch] ?? ch + 1}`,
         `The whole realm completed the chapter "${en.book.names[ch] ?? ch + 1}" of the Chronicle of Heaven. A gift for every sect below.`,
+      ],
+      aquiz: (mine: number, total: number, tier: number): [string, string] => [
+        `Alliance quiz · ${total} correct`,
+        `Your alliance quiz just ended: you got ${mine} right, the alliance ${total}${tier ? ` — milestone ${tier} reached, your prize is attached.` : ' — no milestone this time.'}`,
+      ],
+      bookTop: (ch: number, rank: number): [string, string] => [
+        `Top contributor · ${en.book.names[ch] ?? ch + 1} · rank ${rank}`,
+        `Your sect was the realm's #${rank} contributor to the Chronicle chapter "${en.book.names[ch] ?? ch + 1}". Your prize is attached.`,
       ],
       war: (win: number, foe: string): [string, string] =>
         win
@@ -2712,6 +2737,68 @@ export const en: Text = {
           ? `${Math.round(ms / 3_600_000)}h`
           : `${Math.max(1, Math.ceil(ms / 60_000))}m`,
   },
+  aquiz: {
+    title: 'Alliance Quiz',
+    lore: 'The whole alliance answers 10 questions on cultivation, 15 seconds each. When the alliance total reaches a milestone, everyone who answered gets a prize by mail.',
+    start: 'Start the quiz (begins in 1 minute)',
+    officer: 'Officers and the leader start it, once a day.',
+    soon: (t: string) => `Starts in ${t}`,
+    step: (n: number, of: number, t: string) => `Question ${n}/${of} · ${t} left`,
+    picked: 'Answer set — you can change it until time runs out',
+    scoring: 'Scoring…',
+    done: "Today's quiz is over — results arrive by mail.",
+    tiers: (a: string) => `Alliance correct-answer milestones: ${a}`,
+  },
+  race: {
+    start: 'Start a run',
+    runs: (n: number, of: number) => `${n}/${of} runs left today`,
+    live: (t: string, pts: number) => `Racing · ${t} left · ${pts} points`,
+    last: (pts: number) => `Last run: ${pts} points`,
+    best: (pts: number) => `Best run: ${pts} points`,
+    tip: 'March out and hunt realm beasts on the map — only kills within the timer count; chain hunts from the way home save time.',
+    late: 'The event is about to close — no new runs.',
+  },
+  wish: {
+    free: 'Free wish',
+    one: (cost: number) => `Wish · ${cost} coins`,
+    round: (n: number) => `Bloom ${n}`,
+    bigs: (n: number, of: number) => `Special prizes: ${n}/${of}`,
+    got: 'You wished for',
+    bloom: 'All 4 specials — the rest is yours and the tree blooms again!',
+    wishing: 'Wishing…',
+  },
+  thief: {
+    left: (n: number, of: number) => `${n}/${of} attacks left today`,
+    best: (pm: string) => `Today's best: ${pm}`,
+    record: (pm: string) => `Record: ${pm}`,
+    go: 'Chase the thief',
+    virtual: "Phantom army — no losses; the thief scales with your leading elder's full army",
+    last: (pm: string) => `Just dealt ${pm} damage`,
+    pm: (n: number) => `${(n / 10).toLocaleString('en', { maximumFractionDigits: 1 })}%`,
+    name: 'Thief in the Night',
+    chests: "Daily chests (by today's best damage)",
+  },
+  delve: {
+    layer: (n: number, grand: boolean) => `Layer ${n}${grand ? ' · grand layer' : ''}`,
+    pick: 'Ultimate prize of this layer (changeable until found)',
+    tap: (cost: number, free: boolean) =>
+      free ? 'Tap a tile to dig (free today)' : `Tap a tile to dig · ${cost} Spirit Picks`,
+    found: 'Ultimate prize found — down to the next layer!',
+    got: 'Dug up',
+    layers: (n: number) => `${n} layers cleared`,
+    digging: 'Digging…',
+  },
+  egg: {
+    pick: 'Featured prize (7.5% per egg) — pick before cracking',
+    free: 'Free crack',
+    one: (cost: number) => `Crack · ${cost} hammers`,
+    ten: (cost: number) => `Crack ×10 · ${cost} hammers`,
+    tap: 'Tap a spirit egg to crack it',
+    got: 'Just cracked',
+    jackpot: 'Featured prize!',
+    eggs: (n: number) => `${n} eggs cracked`,
+    cracking: 'The egg is cracking…',
+  },
   dice: {
     free: 'Free roll',
     roll: (cost: number) => `Roll · ${cost} tokens`,
@@ -2798,6 +2885,12 @@ export const en: Text = {
       runes: 'rune collected',
       guards: 'holy-site guardian defeated',
       trial: 'Trial point',
+      kiem2: 'Sword cultivator (tier 2+) trained',
+      phap2: 'Spell cultivator (tier 2+) trained',
+      the2: 'Body cultivator (tier 2+) trained',
+      train2: 'disciple (tier 2+) trained',
+      drain: 'mine depleted',
+      forts: 'demon king kill joined',
     } satisfies Record<Metric, string>,
     task: {
       power: (n: string) => `Reach ${n} power`,
@@ -2830,6 +2923,12 @@ export const en: Text = {
       runes: (n: string) => `Collect ${n} runes around holy sites`,
       guards: (n: string) => `Defeat holy-site guardians ${n} times`,
       trial: (n: string) => `Earn ${n} Demon King Trial points`,
+      kiem2: (n: string) => `Train (or upgrade) ${n} tier 2+ Sword cultivators`,
+      phap2: (n: string) => `Train (or upgrade) ${n} tier 2+ Spell cultivators`,
+      the2: (n: string) => `Train (or upgrade) ${n} tier 2+ Body cultivators`,
+      train2: (n: string) => `Train (or upgrade) ${n} tier 2+ disciples`,
+      drain: (n: string) => `Deplete ${n} mines on the realm map`,
+      forts: (n: string) => `Help defeat ${n} realm demon kings (attack or rally)`,
     } satisfies Record<Metric, (n: string) => string>,
     gain: {
       power: (n: string) => `Gain ${n} power`,
@@ -2890,9 +2989,77 @@ export const en: Text = {
         name: 'Boundless Insight',
         desc: 'The Scripture Pavilion opens wide for two days: mastering techniques scores big.',
       },
+      thuLuc: {
+        name: 'Surge of Power',
+        desc: 'Two days racing for power: build, research, train and raise elders — every point of power gained counts; milestones and a realm ranking.',
+      },
+      chinhChien: {
+        name: 'War Without End',
+        desc: 'Three days of endless war, refreshed daily: slay 5 / 10 / 15 / 25 beasts a day on your mountain or the realm map.',
+      },
+      khaiLo: {
+        name: "Artisan's Forge",
+        desc: 'Two days of forging, refreshed daily: forge artifacts, train disciples, hunt and gather — each task has its reward.',
+      },
+      tamHe: {
+        name: 'Three Paths Drill',
+        desc: 'Four days of drilling, refreshed daily: train (or upgrade) enough tier 2+ disciples of each path — Sword, Spell, Body — and in total. Rewards again every day.',
+      },
+      nguyenTieu: {
+        name: 'Lantern Festival',
+        desc: 'Lanterns on the first full moon: three days of battles won, alliance help, scroll draws and hunts for points and chests.',
+      },
+      xuanHoi: {
+        name: "Spring's Return",
+        desc: 'Spring brings everything back to life: five days of building, research, training and gathering for points and chests.',
+      },
+      trienLam: {
+        name: 'Grand Treasure Exhibition',
+        desc: 'Three days of treasures on show: explore the fog, visit villages and caves, draw scrolls and forge artifacts for Relics, then trade them in the event shop.',
+      },
+      doanNgo: {
+        name: 'Dragon Boat Festival',
+        desc: 'Wrapping rice cakes for the fifth-month festival: five days of battles won, hunts, gathering and alliance help for points and chests.',
+      },
+      haChi: {
+        name: 'Midsummer Festival',
+        desc: 'Seven days of midsummer: chain hunts, gathering, training and battles won earn Summer Blossoms to trade in the event shop.',
+      },
+      baVi: {
+        name: 'Hundred-Flavour Feast',
+        desc: 'A thanksgiving feast: five days of hunts, chain hunts, gathering and healing for points and chests.',
+      },
+      tocChien: {
+        name: 'Race Against Time',
+        desc: 'Three days of racing: 3 runs of 10 minutes a day — march out and hunt realm beasts back to back (chain hunts help). Score = total level of beasts slain in time; each level 5+ beast adds a minute (up to 14). Milestones and the ranking use your best run.',
+      },
+      nguyenThu: {
+        name: 'Wishing Tree',
+        desc: 'Four days under the wishing tree: 12 prizes hang on it (4 special); each wish takes one prize still on the tree — what is taken is gone. Take all 4 specials to receive every remaining prize and the tree blooms again. One free wish a day; hunting, winning battles, building, research and scroll draws earn Wishing Coins.',
+      },
+      daTac: {
+        name: 'Thief in the Night',
+        desc: "Three nights chasing a thief: 2 attacks a day with a phantom army (no losses). The thief is several times stronger than your leading elder's full army — counters, skills and the elder decide the damage. Today's best damage opens daily chests; the event record goes on the ranking.",
+      },
+      truyenDao: {
+        name: 'Spreading the Dao',
+        desc: 'Two days of spreading the Dao, refreshed daily: train (or upgrade) tier 2+ disciples and help defeat demon kings on the realm map.',
+      },
+      manThuong: {
+        name: 'Fill the Storehouse',
+        desc: 'Two days of filling your vaults, refreshed daily: deplete mines on the realm map and bring home enough gathered resources.',
+      },
+      khaoCo: {
+        name: 'Ancient Cave Dig',
+        desc: 'Three days digging an ancient cave: each layer has 16 tiles — pick the ultimate prize first (changeable until found; layers 5, 10… offer better picks), dig tile by tile for prizes, and find the ultimate prize to go down a layer. Clear layers for milestone chests. One free dig a day; gathering, hunting and chain hunts earn Spirit Picks.',
+      },
       linhNoan: {
         name: 'Spirit Egg Treasure',
-        desc: 'Three days on the spirit-egg board: roll the dice to move around 20 squares, collect the prize where you land, plus a lap prize each time you pass Start. One free roll a day; hunting, winning battles, building, training and gathering earn Spirit Egg Tokens for more rolls.',
+        desc: 'Three days of cracking spirit eggs: pick a featured prize first (7.5% per egg), the rest gives speedups, books and resources; crack enough eggs to open milestone chests. One free egg a day; hunting, winning battles, using speedups, research and healing earn Spirit Hammers for more.',
+      },
+      vanHoa: {
+        name: 'Garden of Myriad Blossoms',
+        desc: 'Three days in the garden: roll the dice to move around 20 squares, collect the prize where you land, a lap prize each time you pass Start, and milestone chests for total rolls. One free roll a day; hunting, winning battles, building, training and gathering earn Silver Dice for more rolls.',
       },
       yeuHoang: {
         name: 'Demon King Trial',
@@ -2985,7 +3152,12 @@ export const en: Text = {
       thucSon: 'Shushan Tokens',
       ngaMi: 'Emei Tokens',
       thonTrang: 'Warden Tokens',
-      linhNoan: 'Spirit Egg Token',
+      vanHoa: 'Silver Dice',
+      linhNoan: 'Spirit Hammer',
+      khaoCo: 'Spirit Pick',
+      nguyenThu: 'Wishing Coin',
+      trienLam: 'Relic',
+      haChi: 'Summer Blossom',
     } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Exchange · ${price}`,
     left: (n: number, max: number) => `${n}/${max} left`,

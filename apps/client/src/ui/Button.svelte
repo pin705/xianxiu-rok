@@ -1,5 +1,5 @@
 <script module lang="ts">
-  export type ButtonVariant = 'primary' | 'gold' | 'danger' | 'ghost' | 'quiet'
+  export type ButtonVariant = 'primary' | 'gold' | 'danger' | 'ghost' | 'quiet' | 'ink'
 </script>
 
 <script lang="ts">
@@ -97,15 +97,31 @@
   .danger {
     --sk: var(--sk-btn-danger);
   }
+  /* nút phụ: giấy trắng viền mực đôi mảnh (cùng họ khung thẻ) — không phải tấm kim loại xám */
   .ghost {
-    --sk: var(--sk-btn-ghost);
+    --sk: none;
     --fg: var(--text);
     --shade: none;
+    background: #fff;
+    border: 1.5px solid var(--rim, var(--ink3));
+    border-radius: 6px;
+    box-shadow:
+      inset 0 0 0 2px #fff,
+      inset 0 0 0 3px var(--paper3),
+      0 1px 2px rgb(0 0 0 / 0.12);
+  }
+  .ghost.sm {
+    padding-bottom: 1px;
   }
   .btn:disabled {
     --sk: var(--sk-btn-off);
     --fg: var(--text-soft);
     --shade: none;
+  }
+  .ghost:disabled,
+  .ink:disabled {
+    --sk: none;
+    opacity: 0.55;
   }
   /* nút vàng: thỉnh thoảng một vệt sáng lướt qua mặt kim (trong lòng nút, không tràn ra mép vẽ) */
   .gold:not(:disabled)::after {
@@ -138,6 +154,21 @@
     text-shadow: none;
     border: 0 solid transparent;
     border-image: var(--sk-tag-dark);
+  }
+  /* nút nổi trên cảnh (bản đồ, trận): viên mực đen chữ trắng như thanh trên của HUD */
+  .ink {
+    --sk: none;
+    --fg: #f5f5f1;
+    --shade: none;
+    background: rgb(31 27 23 / 0.82);
+    border: 1px solid rgb(255 255 255 / 0.2);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+    white-space: nowrap;
+  }
+  .ink.sm {
+    min-height: 34px;
+    padding: 0 14px 1px;
   }
   .quiet {
     min-height: 0;

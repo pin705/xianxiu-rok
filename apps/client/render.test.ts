@@ -1077,11 +1077,19 @@ test('bản đồ giới: cảnh, ghim, dải trên, bảng chạm cho mọi lo�
     assert.ok(holdings.includes(`(${vein.x},${vein.y})`) && holdings.includes(L.world.flyTo), 'danh sách linh địa')
     // Tu Bổ Thiên Môn: chương đang mở → nút góp tài nguyên trên thẻ mùa
     const mend = { ...snap, book: { ch: BOOK.findIndex(g => g.m === 'repair'), done: [], value: 0 } }
+    // thẻ mùa mặc định thu gọn trên điện thoại: giả như người chơi đã mở rộng (nhớ theo máy)
+    const store = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: { getItem: () => '0', setItem: () => {} },
+      configurable: true,
+    })
     const mending = paint(
       'WorldView',
       { game, now, info, me: 1, snap: mend, allies: [3], onpick: noop, send: async () => ({ ok: true }) },
       'Tu Bổ Thiên Môn',
     )
+    if (store) Object.defineProperty(globalThis, 'localStorage', store)
+    else delete (globalThis as { localStorage?: unknown }).localStorage
     assert.ok(mending.includes(L.book.gave), 'góp tài nguyên được Công Huân')
     paint(
       'WorldView',

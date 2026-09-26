@@ -77,6 +77,7 @@
     ]}
     value={mode}
     onchange={choose}
+    look="switch"
   />
 {/snippet}
 

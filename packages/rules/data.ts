@@ -992,6 +992,17 @@ export const TRIAL_GROW = 1.06
 export const TRIAL_ELITE = 1.5
 export const TRIAL_AP = 10
 export const TRIAL_EXP = 400
+// Dạ Hành Đạo Tặc (Thief in the Night): mỗi ngày THIEF_TRIES lượt đội ảo, đạo tặc mạnh gấp THIEF_K đội đầy trận dung của người dẫn
+export const THIEF_TRIES = 2
+export const THIEF_K = 2.5
+// Trảm Yêu Tốc Chiến (Race Against Time): mỗi ngày RACE_RUNS lượt đua RACE_MS; hạ yêu thú giới trong giờ ra điểm bằng cấp con đó,
+// con từ cấp RACE_LV cộng thêm RACE_PLUS (tối đa tới RACE_MAX); không bắt đầu được trong RACE_LATE cuối lễ
+export const RACE_RUNS = 3
+export const RACE_MS = 10 * 60_000
+export const RACE_MAX = 14 * 60_000
+export const RACE_LV = 5
+export const RACE_PLUS = 60_000
+export const RACE_LATE = 30 * 60_000
 // Phù văn (Runes của RoK): mỗi RUNE_CYCLE (theo giờ thế giới) quanh mỗi linh mạch / trận nhãn / Thiên Môn sinh một phù văn ở ô trống
 // cách tối đa RUNE_R ô — vị trí, loại (RUNE_KINDS), phẩm (RUNE_TIERS: Bạch / Lục / Lam / Tử / Cam, vòng trong phẩm cao hơn) theo mầm bản
 // đồ + chu kỳ. Xuất quân tới nhặt: tăng ích RUNE_HOURS giờ, mỗi lúc chỉ một phù văn (nhặt cái mới thay cái cũ); ai tới trước được.
@@ -1325,6 +1336,14 @@ export type BookGoal =
   | 'heaven'
 // Tu Bổ Thiên Môn: góp REPAIR_HONOR tài nguyên thì được 1 Công Huân (chỉ lúc chương đang mở)
 export const REPAIR_HONOR = 1000
+// Công đầu Biên Niên: chương có chỉ số riêng từng người (khai mê vụ, chiến công, góp tu bổ) — xong chương thì BOOK_TOP người góp nhiều
+// nhất nhận thêm quà theo hạng (1 · 2–3 · 4–10)
+export const BOOK_TOP = 10
+export const BOOK_TOP_PRIZES: Reward[] = [
+  { items: { kimDuyen: 1, thoiQuang480: 1 } },
+  { items: { nganDuyen: 2, thoiQuang180: 1 } },
+  { items: { nganDuyen: 1, thoiQuang60: 1 } },
+]
 export const BOOK: { m: BookGoal; n: number; day: number; reward: Reward }[] = [
   { m: 'hall5', n: 15, day: 1, reward: { items: { thoiQuang15: 2, thachNang1k: 2 } } },
   { m: 'hall8', n: 10, day: 3, reward: { items: { thoiQuang60: 1, thachNang5k: 1 } } },
@@ -1530,7 +1549,17 @@ export const GUEST_GIFTS: Reward[] = [
 // thứ tự câu), trả lời lần lượt; xong thì quà theo số câu đúng (QUIZ_GIFTS[số đúng])
 export const QUIZ_HALL = 3
 export const QUIZ_DAY = 5
-export const QUIZ_KEY = [0, 2, 1, 3, 0, 1, 2, 0, 3, 1, 2, 0, 1, 3, 2]
+// Luận Đạo Vấn Đáp (Alliance Quiz): đếm ngược AQUIZ_WAIT, AQUIZ_N câu mỗi câu AQUIZ_Q; mốc tổng câu đúng cả minh AQUIZ_TIERS → quà
+export const AQUIZ_WAIT = 60_000
+export const AQUIZ_N = 10
+export const AQUIZ_Q = 15_000
+export const AQUIZ_TIERS = [10, 30, 60]
+export const AQUIZ_PRIZES: Reward[] = [
+  { items: { thoiQuang60: 2, kinhThu500: 2 } },
+  { items: { thoiQuang180: 1, kinhThu2k: 1 } },
+  { items: { thoiQuang480: 1, nganDuyen: 2 } },
+]
+export const QUIZ_KEY = [0, 2, 1, 3, 0, 1, 2, 0, 3, 1, 2, 0, 1, 3, 2, 1, 2, 0, 3, 1, 3, 0, 2, 1, 3, 0, 2]
 export const QUIZ_GIFTS: Reward[] = [
   { items: { kinhThu500: 1 } },
   { items: { thoiQuang15: 1 } },
@@ -1877,7 +1906,7 @@ export const EVENT_PRIZES: Reward[] = [
 ]
 // Lễ có xếp hạng (Tông Môn Tranh Bá — Mightiest Governor, Trảm Yêu Lệnh — Clarion Call): hết lượt lễ, top FEST_TOP điểm lễ của giới
 // nhận thư quà theo hạng (1 · 2–3 · 4–10)
-export const FEST_RANKED = ['tranhBa', 'tramYeu', 'tichCoc', 'gioiChu'] as const
+export const FEST_RANKED = ['tranhBa', 'tramYeu', 'tichCoc', 'gioiChu', 'daTac', 'tocChien', 'thuLuc'] as const
 // Trưởng lão của đợt (MGE: mỗi tướng thưởng 4 lượt liền rồi đổi): top FEST_STAR_TOKENS.length của lượt lễ nhận tín vật người đó theo hạng
 export const FEST_STAR: Partial<Record<FestId, ElderId[]>> = {
   tranhBa: ['hanBang', 'bachVoNhai', 'macSau', 'hoacThienCuong', 'diepCoThanh'],
@@ -2177,7 +2206,13 @@ export const METRICS = [
   'rescue', // việc cứu nạn Thôn Trang Gặp Nạn đã báo công
   'runes', // phù văn đã nhặt
   'guards', // trận thắng hộ trận linh thú
-  'trial', // cửa Thí Luyện Yêu Hoàng đã qua
+  'trial', // điểm Thí Luyện Yêu Hoàng
+  'kiem2', // đệ tử Kiếm tu bậc 2 trở lên tuyển / nâng bậc xong
+  'phap2', // … Pháp tu
+  'the2', // … Thể tu
+  'train2', // đệ tử bậc 2 trở lên tuyển / nâng bậc xong (cả ba hệ)
+  'drain', // mỏ trên bản đồ giới khai cạn
+  'forts', // lần góp sức hạ yêu vương giới
 ] as const
 export type Metric = (typeof METRICS)[number]
 // Khung giờ: newbie — ngày thứ from..to (0 = ngày lập tông môn) · week — các thứ trong tuần giờ VN (0 = thứ Hai … 6 = Chủ nhật)
@@ -2204,6 +2239,7 @@ export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
   | {
       kind: 'tasks'
       abs?: boolean
+      daily?: boolean // tiến độ làm mới mỗi ngày (việc theo nhánh ngày); không thì tính từ lúc mở lượt
       tasks: { m: Metric; n: number; reward: Reward; day?: number }[]
       chests?: { need: number; reward: Reward }[]
     }
@@ -2220,11 +2256,43 @@ export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
       slots: { w: number; r?: Reward; token?: number }[] // token: số tín vật của trưởng lão chủ lễ
     }
   | {
-      kind: 'dice' // bàn cờ xúc xắc (Holy Knight's Treasure): đổ đi quanh bàn, ô dừng ra quà, qua Khởi điểm thêm quà vòng
+      kind: 'dice' // bàn cờ xúc xắc (Garden of Infinity): đổ đi quanh bàn, ô dừng ra quà, qua Khởi điểm thêm quà vòng
       stages: Partial<Record<Metric, number>>[]
       cost: number // lệnh mỗi lượt đổ thêm (mỗi ngày một lượt miễn phí)
       board: Reward[] // các ô quanh bàn; ô 0 là Khởi điểm
       lap: Reward
+      goals: number[] // rương mốc theo tổng số lượt đã đổ
+      rewards: Reward[]
+    }
+  | {
+      kind: 'egg' // đập trứng (Holy Knight's Treasure): chọn trước món chủ lực (tỉ lệ ch mỗi quả), còn lại rút theo trọng số pool
+      stages: Partial<Record<Metric, number>>[]
+      cost: number // lệnh mỗi quả đập thêm (mỗi ngày một quả miễn phí)
+      picks: Reward[]
+      ch: number
+      pool: { w: number; r: Reward }[]
+      goals: number[] // rương mốc theo tổng số trứng đã đập trong lượt
+      rewards: Reward[]
+    }
+  | {
+      kind: 'wish' // cầu duyên cạn dần (Esmeralda's Prayer): bảng quà có hạn, rút tới đâu hết tới đó; rút đủ quà đặc biệt (big) thì
+      // nhận nốt phần còn lại, bảng làm lại vòng mới
+      stages: Partial<Record<Metric, number>>[]
+      cost: number // lệnh mỗi lượt cầu thêm (mỗi ngày một lượt miễn phí)
+      pool: { w: number; r: Reward; big?: boolean }[]
+    }
+  | { kind: 'thief'; goals: number[]; rewards: Reward[] }
+  | { kind: 'race'; goals: number[]; rewards: Reward[] } // Trảm Yêu Tốc Chiến (core/fest.ts raceHit): mốc theo kỷ lục một lượt đua // Dạ Hành Đạo Tặc (sect/thief.ts): rương ngày theo phần nghìn sát thương cao nhất hôm nay
+  | {
+      kind: 'dig' // khảo cổ theo tầng (Hunt for History): mỗi tầng chọn giải tối thượng, đào từng ô, trúng giải thì sang tầng sau
+      stages: Partial<Record<Metric, number>>[]
+      cost: number // lệnh mỗi nhát đào thêm (mỗi ngày một nhát miễn phí)
+      cells: number // số ô mỗi tầng
+      picks: Reward[] // giải tối thượng chọn được ở tầng thường
+      grand: Reward[] // tầng 5, 10…: lựa chọn tốt hơn
+      pool: { w: number; r: Reward }[] // quà các ô không có giải
+      goals: number[] // rương mốc theo số tầng đã qua
+      rewards: Reward[]
     }
 )
 const fests = {
@@ -2686,6 +2754,89 @@ const fests = {
       { items: { thoiQuang480: 1, kimDuyen: 1 } },
     ],
   },
+  // Nguyên Tiêu Hoa Đăng (New Year Fireworks — rằm tháng Giêng): 3 ngày thả hoa đăng — thắng trận, giúp đồng minh, mở thiếp ra điểm.
+  // Rằm tháng Giêng từng năm (lịch âm): 20/2/2027, 9/2/2028
+  nguyenTieu: {
+    window: { kind: 'dates', from: [vnDay(2027, 2, 20), vnDay(2028, 2, 9)], len: 3 },
+    hall: 3,
+    kind: 'points',
+    stages: [{ win: 5, ally: 4, draw: 10, hunt: 4 }],
+    goals: [50, 150, 350],
+    rewards: [
+      { items: { thoiQuang60: 2, nganDuyen: 1 } },
+      { items: { thoiQuang180: 1, kinhThu2k: 1 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Xuân Hồi Vạn Vật (Spring's Return): 5 ngày quanh xuân phân — xây, nghiên cứu, tuyển, khai mỏ ra điểm
+  xuanHoi: {
+    window: { kind: 'dates', from: [vnDay(2027, 3, 20), vnDay(2028, 3, 20)], len: 5 },
+    hall: 3,
+    kind: 'points',
+    stages: [{ build: 10, tech: 10, train: 0.05, gather: 0.001 }],
+    goals: [80, 250, 550],
+    rewards: [
+      { items: { loBan60: 2, thachNang5k: 1 } },
+      { items: { loBan180: 1, kinhThu2k: 1 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Tàng Bảo Các Triển Lãm (Grand Museum Day, 18/5): 3 ngày — khai mê vụ, ghé thôn trang / động phủ, mở thiếp, luyện pháp bảo ra Cổ
+  // Vật, đổi quà
+  trienLam: {
+    window: { kind: 'dates', from: [vnDay(2027, 5, 18), vnDay(2028, 5, 18)], len: 3 },
+    hall: 3,
+    kind: 'shop',
+    stages: [{ explore: 1, sites: 6, draw: 4, forge: 6 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 120, max: 1 },
+      { reward: { items: { kinhThu8k: 1 } }, price: 60, max: 2 },
+      { reward: { items: { thoiQuang180: 1 } }, price: 40, max: 3 },
+      { reward: { items: { nganDuyen: 1 } }, price: 20, max: 5 },
+      { reward: { items: { khoangNang5k: 1 } }, price: 10, max: 5 },
+    ],
+  },
+  // Đoan Ngọ Tống Tử (Dragon Boat — mùng 5 tháng 5 âm): 5 ngày gói bánh tro — thắng trận, săn yêu, khai mỏ, giúp đồng minh ra điểm.
+  // Mùng 5 tháng 5 từng năm (lịch âm): 9/6/2027, 28/5/2028
+  doanNgo: {
+    window: { kind: 'dates', from: [vnDay(2027, 6, 9), vnDay(2028, 5, 28)], len: 5 },
+    hall: 3,
+    kind: 'points',
+    stages: [{ win: 4, hunt: 5, gather: 0.001, ally: 3 }],
+    goals: [60, 200, 450],
+    rewards: [
+      { items: { thoiQuang60: 2, thaoNang5k: 1 } },
+      { items: { thoiQuang180: 1, nganDuyen: 2 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Hạ Chí Thịnh Hội (Summer Festival, quanh hạ chí): 7 ngày — săn liên hoàn, khai mỏ, tuyển, thắng trận ra Hạ Hoa, đổi quà
+  haChi: {
+    window: { kind: 'dates', from: [vnDay(2027, 6, 21), vnDay(2028, 6, 21)], len: 7 },
+    hall: 3,
+    kind: 'shop',
+    stages: [{ chain: 6, gather: 0.001, train: 0.03, win: 3 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 120, max: 1 },
+      { reward: { items: { tuLinh24: 1 } }, price: 60, max: 2 },
+      { reward: { items: { thoiQuang180: 1 } }, price: 40, max: 3 },
+      { reward: { items: { luyenBinh60: 2 } }, price: 25, max: 5 },
+      { reward: { items: { thachNang5k: 1 } }, price: 10, max: 5 },
+    ],
+  },
+  // Bách Vị Tiên Yến (Thanksgiving — thứ Năm tuần thứ tư tháng 11): 5 ngày — săn yêu, săn liên hoàn, khai mỏ, chữa thương ra điểm
+  baVi: {
+    window: { kind: 'dates', from: [vnDay(2026, 11, 26), vnDay(2027, 11, 25), vnDay(2028, 11, 23)], len: 5 },
+    hall: 3,
+    kind: 'points',
+    stages: [{ hunt: 5, chain: 8, gather: 0.001, heal: 0.1 }],
+    goals: [60, 200, 450],
+    rewards: [
+      { items: { thoiQuang60: 2, khoangNang5k: 1 } },
+      { items: { thoiQuang180: 1, kinhThu2k: 1 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
   // Ô Thước Kiều (Thất Tịch, 7/7 âm lịch): 7 ngày — giúp đồng minh, cung phụng, thắng trận, săn liên hoàn ra Hỷ Thước, đổi quà.
   // Mùng 7 tháng Bảy từng năm (lịch âm): 19/8/2026 (đã qua), 8/8/2027, 26/8/2028
   thatTich: {
@@ -2735,9 +2886,212 @@ const fests = {
   },
   // Thiên Cơ Luân (Wheel of Fortune của RoK, không bán): 3 ngày, hai tuần một lần — quay vòng 12 ô theo trọng số (mầm của
   // server). Ô tín vật là của trưởng lão chủ lễ (một trong bốn Tiên phẩm, đổi mỗi lượt lễ). Mỗi ngày một lượt miễn phí; lượt thêm
-  // Linh Noãn Kỳ Bảo (Holy Knight's Treasure): 3 ngày mỗi 14 ngày — đổ xúc xắc đi quanh bàn 20 ô, dừng ô nào nhận quà ô đó, qua Khởi
-  // điểm thêm quà vòng; mỗi ngày một lượt miễn phí, lượt thêm tốn Linh Noãn Lệnh kiếm từ việc trong lễ (mặt xúc xắc theo mầm server)
+  // Thế Lực Bạo Tăng (Game of Power / Overwhelming Strength): 2 ngày mỗi 14 ngày — thế lực tăng thêm bằng mọi cách (xây, nghiên cứu,
+  // tuyển, trưởng lão…), mốc quà và bảng xếp hạng
+  thuLuc: {
+    window: { kind: 'cycle', every: 14, len: 2, offset: 6 },
+    hall: 5,
+    kind: 'points',
+    stages: [{ power: 1 }],
+    goals: [2000, 10000, 30000, 80000],
+    rewards: [
+      { items: { loBan60: 1, thachNang5k: 1 } },
+      { items: { loBan180: 1, kinhThu2k: 1 } },
+      { items: { thoiQuang480: 1, nganDuyen: 2 } },
+      { items: { thoiQuang480: 2, kimDuyen: 1 } },
+    ],
+  },
+  // Chinh Chiến Bất Hưu (War Forever): 3 ngày mỗi 14 ngày, làm mới mỗi ngày — hạ yêu thú (sơn môn, bản đồ giới) nhiều mốc
+  chinhChien: {
+    window: { kind: 'cycle', every: 14, len: 3, offset: 2 },
+    hall: 4,
+    kind: 'tasks',
+    daily: true,
+    tasks: [0, 1, 2].flatMap(day => [
+      { m: 'hunt' as const, n: 5, day, reward: { items: { thoiQuang15: 2, kinhThu500: 1 } } },
+      { m: 'hunt' as const, n: 10, day, reward: { items: { thoiQuang60: 1, thachNang5k: 1 } } },
+      { m: 'hunt' as const, n: 15, day, reward: { items: { thoiQuang60: 2, kinhThu2k: 1 } } },
+      { m: 'hunt' as const, n: 25, day, reward: { items: { thoiQuang180: 1, nganDuyen: 1 } } },
+    ]),
+  },
+  // Khai Lò Luyện Khí (Artisan's Forge): 2 ngày mỗi 14 ngày, làm mới mỗi ngày — luyện pháp bảo, tuyển đệ tử, săn yêu, khai mỏ
+  khaiLo: {
+    window: { kind: 'cycle', every: 14, len: 2, offset: 10 },
+    hall: 6,
+    kind: 'tasks',
+    daily: true,
+    tasks: [0, 1].flatMap(day => [
+      { m: 'forge' as const, n: 1, day, reward: { items: { kinhThu2k: 1 } } },
+      { m: 'forge' as const, n: 3, day, reward: { items: { thoiQuang180: 1, nganDuyen: 1 } } },
+      { m: 'train' as const, n: 500, day, reward: { items: { luyenBinh60: 2 } } },
+      { m: 'hunt' as const, n: 15, day, reward: { items: { thoiQuang60: 2 } } },
+      { m: 'gather' as const, n: 50000, day, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+    ]),
+  },
+  // Tam Hệ Luyện Binh (Warpath / Victorious Heart): 4 ngày mỗi 14 ngày, làm mới mỗi ngày — tuyển (hay nâng bậc) đệ tử bậc 2 trở lên
+  // từng hệ và tổng cả ba hệ
+  tamHe: {
+    window: { kind: 'cycle', every: 14, len: 4, offset: 12 },
+    hall: 6,
+    kind: 'tasks',
+    daily: true,
+    tasks: [0, 1, 2, 3].flatMap(day => [
+      { m: 'kiem2' as const, n: 1000, day, reward: { res: { linhThach: 30000, linhThao: 30000 } } },
+      { m: 'phap2' as const, n: 1000, day, reward: { res: { linhThao: 30000, linhKhoang: 30000 } } },
+      { m: 'the2' as const, n: 1000, day, reward: { res: { linhThach: 30000, linhKhoang: 30000 } } },
+      { m: 'train2' as const, n: 5000, day, reward: { items: { kinhThu2k: 2, luyenBinh180: 1 } } },
+    ]),
+  },
+  // Nguyện Thụ Cầu Duyên (Esmeralda's Prayer): 4 ngày mỗi 21 ngày — cây nguyện 12 quà (8 thường, 4 đặc biệt), mỗi lượt cầu rút một quà
+  // còn trên cây (theo trọng số, quà đặc biệt hiếm); rút đủ 4 quà đặc biệt thì nhận nốt quà còn lại và cây nở lại; mỗi ngày một lượt
+  // miễn phí, Nguyện Tiền kiếm từ việc trong lễ (quà rút theo mầm server)
+  nguyenThu: {
+    window: { kind: 'cycle', every: 21, len: 4, offset: 11 },
+    hall: 6,
+    kind: 'wish',
+    stages: [{ hunt: 2, win: 2, build: 5, tech: 5, draw: 5 }],
+    cost: 10,
+    pool: [
+      { w: 3, big: true, r: { items: { kimDuyen: 2 } } },
+      { w: 3, big: true, r: { items: { thoiQuang1440: 1 } } },
+      { w: 3, big: true, r: { items: { kinhThu8k: 2 } } },
+      { w: 3, big: true, r: { items: { hoSon24: 1, kimCuong: 1 } } },
+      { w: 12, r: { items: { thoiQuang60: 2 } } },
+      { w: 12, r: { items: { thoiQuang180: 1 } } },
+      { w: 12, r: { items: { thachNang5k: 2 } } },
+      { w: 12, r: { items: { thaoNang5k: 2 } } },
+      { w: 12, r: { items: { khoangNang5k: 2 } } },
+      { w: 10, r: { items: { kinhThu2k: 1 } } },
+      { w: 10, r: { items: { loBan60: 2 } } },
+      { w: 10, r: { items: { nganDuyen: 1 } } },
+    ],
+  },
+  // Trảm Yêu Tốc Chiến (Race Against Time): 3 ngày mỗi 21 ngày — mỗi ngày 3 lượt đua 10 phút, xuất quân săn yêu thú giới liên tiếp;
+  // điểm = tổng cấp yêu thú hạ trong giờ, con cấp cao cộng giờ; mốc quà và bảng xếp hạng theo kỷ lục một lượt
+  tocChien: {
+    window: { kind: 'cycle', every: 21, len: 3, offset: 4 },
+    hall: 8,
+    kind: 'race',
+    goals: [20, 50, 90, 140],
+    rewards: [
+      { items: { thoiQuang60: 2, kinhThu500: 2 } },
+      { items: { thoiQuang180: 1, dieuThu60: 1 } },
+      { items: { thoiQuang480: 1, nganDuyen: 2 } },
+      { items: { thoiQuang480: 2, kimDuyen: 1 } },
+    ],
+  },
+  // Dạ Hành Đạo Tặc (Thief in the Night): 3 ngày mỗi 21 ngày — mỗi ngày 2 lượt đánh đạo tặc bằng đội ảo; sát thương cao nhất hôm nay mở
+  // rương ngày (làm mới mỗi ngày), kỷ lục cả lượt lên bảng xếp hạng
+  daTac: {
+    window: { kind: 'cycle', every: 21, len: 3, offset: 18 },
+    hall: 7,
+    kind: 'thief',
+    goals: [100, 250, 450, 700],
+    rewards: [
+      { items: { thoiQuang60: 1, thachNang5k: 1 } },
+      { items: { thoiQuang180: 1, kinhThu2k: 1 } },
+      { items: { thoiQuang480: 1, nganDuyen: 1 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Truyền Đạo Tứ Phương (Spreading Civilization): 2 ngày mỗi 14 ngày, làm mới mỗi ngày — tuyển (hay nâng bậc) đệ tử bậc 2 trở lên,
+  // góp sức hạ yêu vương giới
+  truyenDao: {
+    window: { kind: 'cycle', every: 14, len: 2, offset: 8 },
+    hall: 7,
+    kind: 'tasks',
+    daily: true,
+    tasks: [0, 1].flatMap(day => [
+      { m: 'train2' as const, n: 1000, day, reward: { items: { thoiQuang60: 1, kinhThu500: 2 } } },
+      { m: 'train2' as const, n: 2500, day, reward: { items: { luyenBinh60: 2, kinhThu2k: 1 } } },
+      { m: 'train2' as const, n: 5000, day, reward: { items: { luyenBinh180: 1, nganDuyen: 1 } } },
+      { m: 'forts' as const, n: 1, day, reward: { items: { thoiQuang180: 1 } } },
+      { m: 'forts' as const, n: 3, day, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+    ]),
+  },
+  // Tàng Bảo Mãn Thương (Fill the Storehouse): 2 ngày mỗi 14 ngày, làm mới mỗi ngày — khai cạn mỏ trên bản đồ giới, tổng tài nguyên
+  // khai mỏ mang về
+  manThuong: {
+    window: { kind: 'cycle', every: 14, len: 2, offset: 1 },
+    hall: 5,
+    kind: 'tasks',
+    daily: true,
+    tasks: [0, 1].flatMap(day => [
+      { m: 'drain' as const, n: 1, day, reward: { items: { thoiQuang60: 1 } } },
+      { m: 'drain' as const, n: 2, day, reward: { items: { khaiLinh8: 1 } } },
+      { m: 'drain' as const, n: 4, day, reward: { items: { thoiQuang180: 1, nganDuyen: 1 } } },
+      { m: 'gather' as const, n: 30000, day, reward: { items: { thachNang5k: 1, thaoNang5k: 1 } } },
+      { m: 'gather' as const, n: 80000, day, reward: { items: { khoangNang5k: 2, kinhThu2k: 1 } } },
+      { m: 'gather' as const, n: 150000, day, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+    ]),
+  },
+  // Khảo Cổ Động Phủ (Hunt for History): 3 ngày mỗi 14 ngày — mỗi tầng động phủ 16 ô, chọn trước giải tối thượng (đổi được tới lúc tìm
+  // ra; tầng 5, 10… lựa chọn tốt hơn), cuốc từng ô nhận quà, đào trúng giải thì xuống tầng sau; rương mốc theo số tầng đã qua; mỗi
+  // ngày một nhát miễn phí, nhát thêm tốn Linh Cuốc kiếm từ khai mỏ, săn yêu, săn liên hoàn (ô trúng giải theo mầm server)
+  khaoCo: {
+    window: { kind: 'cycle', every: 14, len: 3, offset: 4 },
+    hall: 6,
+    kind: 'dig',
+    stages: [{ gather: 0.001, hunt: 2, chain: 2, win: 1 }],
+    cost: 10,
+    cells: 16,
+    picks: [{ items: { thoiQuang480: 1 } }, { items: { kinhThu8k: 1 } }, { items: { nganDuyen: 3 } }],
+    grand: [{ items: { kimDuyen: 3 } }, { items: { thoiQuang1440: 1 } }, { items: { hoSon24: 1, kimCuong: 1 } }],
+    pool: [
+      { w: 20, r: { items: { thoiQuang15: 2 } } },
+      { w: 14, r: { items: { thoiQuang60: 1 } } },
+      { w: 14, r: { items: { thachNang5k: 1 } } },
+      { w: 14, r: { items: { thaoNang5k: 1 } } },
+      { w: 14, r: { items: { khoangNang5k: 1 } } },
+      { w: 10, r: { items: { kinhThu500: 2 } } },
+      { w: 8, r: { items: { loBan60: 1 } } },
+      { w: 6, r: { items: { nganDuyen: 1 } } },
+    ],
+    goals: [1, 3, 5, 10],
+    rewards: [
+      { items: { thoiQuang60: 2, kinhThu2k: 1 } },
+      { items: { thoiQuang180: 2, nganDuyen: 2 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+      { items: { thoiQuang480: 2, kimDuyen: 2 } },
+    ],
+  },
+  // Linh Noãn Kỳ Bảo (Holy Knight's Treasure): 3 ngày mỗi 14 ngày — chọn trước một món chủ lực (7,5 % mỗi quả), đập linh noãn nhận
+  // quà (phần lớn tăng tốc), rương mốc theo tổng số quả đã đập; mỗi ngày một quả miễn phí, quả thêm tốn Linh Chuỳ kiếm từ việc trong lễ
   linhNoan: {
+    window: { kind: 'cycle', every: 14, len: 3, offset: 7 },
+    hall: 6,
+    kind: 'egg',
+    stages: [{ hunt: 2, win: 2, speed: 0.05, tech: 5, heal: 0.05 }],
+    cost: 10,
+    picks: [
+      { items: { kimDuyen: 2 } },
+      { items: { thoiQuang1440: 1 } },
+      { items: { kinhThu8k: 2 } },
+      { items: { hoSon24: 1 } },
+    ],
+    ch: 0.075,
+    pool: [
+      { w: 20, r: { items: { thoiQuang15: 3 } } },
+      { w: 16, r: { items: { thoiQuang60: 1 } } },
+      { w: 8, r: { items: { thoiQuang180: 1 } } },
+      { w: 14, r: { items: { loBan60: 1 } } },
+      { w: 14, r: { items: { luyenBinh60: 1 } } },
+      { w: 12, r: { items: { thachNang5k: 1, thaoNang5k: 1 } } },
+      { w: 10, r: { items: { kinhThu2k: 1 } } },
+      { w: 6, r: { items: { nganDuyen: 1 } } },
+    ],
+    goals: [5, 15, 30, 60],
+    rewards: [
+      { items: { thoiQuang60: 2, kinhThu2k: 1 } },
+      { items: { thoiQuang180: 2, nganDuyen: 2 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+      { items: { thoiQuang480: 2, kimDuyen: 2 } },
+    ],
+  },
+  // Vạn Hoa Viên (Garden of Infinity): 3 ngày mỗi 14 ngày — đổ xúc xắc đi quanh bàn 20 ô, dừng ô nào nhận quà ô đó, qua Khởi điểm
+  // thêm quà vòng, rương mốc theo tổng số lượt đổ; mỗi ngày một lượt miễn phí, lượt thêm tốn Ngân Xúc Xắc kiếm từ việc trong lễ (mặt
+  // xúc xắc theo mầm server)
+  vanHoa: {
     window: { kind: 'cycle', every: 14, len: 3, offset: 0 },
     hall: 6,
     kind: 'dice',
@@ -2766,6 +3120,13 @@ const fests = {
       { items: { chienY: 1 } },
     ],
     lap: { items: { nganDuyen: 2, thoiQuang180: 1 } },
+    goals: [5, 15, 30, 50],
+    rewards: [
+      { items: { thoiQuang60: 2, kinhThu2k: 1 } },
+      { items: { thoiQuang180: 2, nganDuyen: 2 } },
+      { items: { thoiQuang480: 1, kimDuyen: 1 } },
+      { items: { thoiQuang480: 2, kimDuyen: 2 } },
+    ],
   },
   // tốn Thiên Cơ Lệnh kiếm từ săn yêu, thắng trận, tăng tốc, khai mỏ, mở thiếp; cứ 30 lượt thì lượt đó chắc trúng ô lớn nhất.
   thienCo: {

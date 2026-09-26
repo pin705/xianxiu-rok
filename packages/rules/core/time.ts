@@ -37,6 +37,14 @@ const trainPts = (t: TrainJob) => {
   return t.n * (TRAIN_PTS[k] - (t.up ? (TRAIN_PTS[k - 1] ?? 0) : 0))
 }
 
+// Tam Hệ Luyện Binh: đệ tử bậc 2 trở lên tuyển / nâng bậc xong, đếm theo hệ
+function t2(s: State, t: TrainJob) {
+  const u = unitOf(t.unit)
+  if (u.tier < 2) return {}
+  const k = `t2${u.type}` as 't2kiem' | 't2phap' | 't2the'
+  return { [k]: (s.stats[k] ?? 0) + t.n }
+}
+
 function arrive(s: State, id: number): State {
   const m = s.marches.find(x => x.id === id)!
   const others = s.marches.filter(x => x.id !== id)
@@ -91,7 +99,12 @@ export function due(s: State, now: number): Due[] {
         ...st,
         train: null,
         troops: plus(st.troops, { [t.unit]: t.n }),
-        stats: { ...st.stats, trained: st.stats.trained + t.n, trainPts: (st.stats.trainPts ?? 0) + trainPts(t) },
+        stats: {
+          ...st.stats,
+          trained: st.stats.trained + t.n,
+          trainPts: (st.stats.trainPts ?? 0) + trainPts(t),
+          ...t2(st, t),
+        },
       }),
     ])
   const h = s.heal
