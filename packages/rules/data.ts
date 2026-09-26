@@ -997,6 +997,34 @@ export const THIEF_TRIES = 2
 export const THIEF_K = 2.5
 // Trảm Yêu Tốc Chiến (Race Against Time): mỗi ngày RACE_RUNS lượt đua RACE_MS; hạ yêu thú giới trong giờ ra điểm bằng cấp con đó,
 // con từ cấp RACE_LV cộng thêm RACE_PLUS (tối đa tới RACE_MAX); không bắt đầu được trong RACE_LATE cuối lễ
+// Hoàng Kim Mê Cảnh (Golden Kingdom): mê cung MAZE_FLOORS tầng, mỗi tầng MAZE_W × MAZE_W ô phủ sương; mở ô kề ô đã mở. Mỗi ngày một
+// lượt với tối đa MAZE_TEAMS đội ảo (quân chụp lúc vào, không mất quân thật, không hồi giữa đường trừ suối linh). Ô: yêu binh
+// (đánh), bảo rương, thần đàn (chọn một trong ba phúc), suối linh (hồi MAZE_SPRING phần đã mất), bẫy (mất MAZE_TRAP quân hiện có);
+// mỗi tầng có một thủ lĩnh — hạ được thì xuống tầng sau. Địch mạnh theo lực chiến lúc vào của đội đánh × (hệ số tầng)
+export const MAZE_FLOORS = 10
+export const MAZE_W = 4
+export const MAZE_TEAMS = 3
+export const MAZE_KINDS = ['foe', 'gift', 'shrine', 'spring', 'trap', 'boss', 'start'] as const
+export const MAZE_ODDS = [44, 20, 12, 14, 10] // trọng số ô thường (theo MAZE_KINDS, trừ thủ lĩnh / khởi điểm)
+export const MAZE_FOE = [0.2, 0.05] // yêu binh: lực chiến lúc vào × (a + b × tầng)
+export const MAZE_BOSS = [0.4, 0.08]
+export const MAZE_SPRING = 0.4
+export const MAZE_TRAP = 0.08
+export const MAZE_BLESS: Record<string, { atk?: number; def?: number; hp?: number; mend?: number }> = {
+  cong: { atk: 0.12 }, // Phá Quân: công
+  thu: { def: 0.15 }, // Kim Cương: thủ
+  sinh: { hp: 0.12 }, // Trường Sinh: máu
+  hoi: { mend: 0.1 }, // Hồi Xuân: thắng trận hồi 10 % phần đã mất
+  kiem: { atk: 0.06, def: 0.06 }, // Kiếm Tâm
+  linh: { hp: 0.06, mend: 0.05 }, // Linh Tuyền
+}
+export const MAZE_GIFTS: Reward[] = [
+  { items: { thoiQuang15: 2 } },
+  { items: { thoiQuang60: 1 } },
+  { items: { thachNang5k: 1 } },
+  { items: { kinhThu500: 2 } },
+  { items: { nganDuyen: 1 } },
+]
 export const RACE_RUNS = 3
 export const RACE_MS = 10 * 60_000
 export const RACE_MAX = 14 * 60_000
@@ -1073,6 +1101,8 @@ export const REBIRTH_MAX = 5 // sản lượng/tốc độ xây từ luân hồi
 // Kho bảo hộ PROTECT; cướp RAID_SHARE phần vượt, mỗi đệ tử còn đứng mang về tối đa CARRY × sức bậc. Thủ thua được khiên SHIELD_TIME;
 // đi đánh người khác thì mất khiên. Người mới có khiên NEWBIE_SHIELD. Bị đánh thì được báo thù trong REVENGE_TIME.
 // Chữa thương đắt (40 % chi phí tuyển) nên đánh người đang giữ nhà là lỗ — PvP là cướp người vắng, đúng ý đồ.
+// Thương nhẹ (slightly wounded của RoK): đội xuất quân về núi thì LIGHT phần thương binh tự lành, về đội luôn; còn lại vào Đan phòng
+export const LIGHT = 0.3
 export const PVP_HALL = 6
 export const PVP_FLOOR = 0.5
 export const PROTECT = 0.45
@@ -2282,7 +2312,8 @@ export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
       pool: { w: number; r: Reward; big?: boolean }[]
     }
   | { kind: 'thief'; goals: number[]; rewards: Reward[] }
-  | { kind: 'race'; goals: number[]; rewards: Reward[] } // Trảm Yêu Tốc Chiến (core/fest.ts raceHit): mốc theo kỷ lục một lượt đua // Dạ Hành Đạo Tặc (sect/thief.ts): rương ngày theo phần nghìn sát thương cao nhất hôm nay
+  | { kind: 'race'; goals: number[]; rewards: Reward[] }
+  | { kind: 'maze'; goals: number[]; rewards: Reward[] } // Hoàng Kim Mê Cảnh (sect/maze.ts): mốc theo số tầng đã qua (kỷ lục) // Trảm Yêu Tốc Chiến (core/fest.ts raceHit): mốc theo kỷ lục một lượt đua // Dạ Hành Đạo Tặc (sect/thief.ts): rương ngày theo phần nghìn sát thương cao nhất hôm nay
   | {
       kind: 'dig' // khảo cổ theo tầng (Hunt for History): mỗi tầng chọn giải tối thượng, đào từng ô, trúng giải thì sang tầng sau
       stages: Partial<Record<Metric, number>>[]
@@ -2964,6 +2995,20 @@ const fests = {
       { w: 10, r: { items: { kinhThu2k: 1 } } },
       { w: 10, r: { items: { loBan60: 2 } } },
       { w: 10, r: { items: { nganDuyen: 1 } } },
+    ],
+  },
+  // Hoàng Kim Mê Cảnh (Golden Kingdom): 5 ngày mỗi 28 ngày — mỗi ngày một lượt đi mê cung 10 tầng bằng tối đa 3 đội ảo; mốc quà theo
+  // kỷ lục số tầng qua được
+  meCanh: {
+    window: { kind: 'cycle', every: 28, len: 5, offset: 20 },
+    hall: 10,
+    kind: 'maze',
+    goals: [2, 4, 7, 10],
+    rewards: [
+      { items: { thoiQuang180: 2, kinhThu2k: 2 } },
+      { items: { thoiQuang480: 1, nganDuyen: 3 } },
+      { items: { thoiQuang480: 2, kimDuyen: 1 } },
+      { items: { thoiQuang1440: 1, kimDuyen: 2 } },
     ],
   },
   // Trảm Yêu Tốc Chiến (Race Against Time): 3 ngày mỗi 21 ngày — mỗi ngày 3 lượt đua 10 phút, xuất quân săn yêu thú giới liên tiếp;

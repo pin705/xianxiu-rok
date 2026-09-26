@@ -4,6 +4,7 @@
   // Toạ độ "(x,y)" trong tin (chia sẻ từ bản đồ giới) thành nút nhảy tới ô đó, như link toạ độ xanh của RoK.
   // Chạm một tin: hồ sơ người gửi, truyền âm riêng, chặn, báo cáo, trả lời (trích dẫn "#q<mã>"); tin của mình thu hồi được trong
   // 2 phút. Hàng biểu cảm chèn emoji vào ô gõ. Truyền âm: nhóm chat tự tạo + cuộc gần đây → từng cuộc.
+  // Tin là bong bóng lời nói (như cố vấn ở Advisor): người khác bên trái, mình bên phải tô son nhạt.
   import type { Ack, Channel, ChatMsg, Dm, FriendView, GroupView } from '@rok/protocol'
   import type { WorldAction } from '@rok/rules/world'
   import { ELDERS, RARITY, type ElderId, type Report } from '@rok/rules'
@@ -251,7 +252,7 @@
       </div>
     {/if}
     {#if tab === 'world' && game.levels.chuDien < 3}<p class="t-small t-soft mt-2">{L.chat.locked}</p>{/if}
-    <ol class="log stack" style:--gap="4px">
+    <ol class="log talk stack" style:--gap="6px">
       {#each shown as m (m.id)}
         <li>
           <button class="msg" class:mine={m.pid === me} onclick={() => (pick = pick?.id === m.id ? null : m)}>
@@ -471,11 +472,37 @@
   .msg {
     display: block;
     width: 100%;
-    padding: 2px 0;
+    padding: 4px 0;
     text-align: left;
     background: none;
     border: 0;
     cursor: pointer;
+  }
+  .log:not(.talk) > li {
+    border-bottom: 1px dashed var(--paper3);
+  }
+  /* bong bóng lời nói: giấy trắng viền mực, góc nhọn phía người nói */
+  .talk .msg {
+    width: auto;
+    max-width: 88%;
+    padding: 5px 11px 6px;
+    background: rgb(255 255 255 / 0.92);
+    border: 1.5px solid var(--rim, var(--ink3));
+    border-radius: 14px 14px 14px 4px;
+    box-shadow: 0 2px 6px rgb(var(--shade) / 0.12);
+  }
+  .talk .msg > b {
+    display: block;
+    font-size: var(--fs-1);
+  }
+  .talk .msg.mine {
+    margin-left: auto;
+    background: color-mix(in srgb, var(--cinnabar) 9%, var(--paper));
+    border-radius: 14px 14px 4px 14px;
+  }
+  .talk > li:has(.mine) {
+    display: grid;
+    justify-items: end;
   }
   .mine b {
     color: var(--gold-d);

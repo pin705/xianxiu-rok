@@ -422,6 +422,10 @@ test('Khảo Cổ Động Phủ: cuốc từng ô tầng 16 ô, ô có giải th
   assert.equal((s.items.kimDuyen ?? 0) - kim, d.grand[0].items!.kimDuyen, 'tầng 5: giải quý')
   s = run(s, { type: 'fest', id: 'khaoCo', i: 2 })
   assert.equal(festError(s, 'khaoCo', 3), 'not_done')
+  // nhát ở ô 10–15 (mã ≤ −1000) cũng tính là một nhát đã tiêu lệnh
+  const before = festTokens(s, 'khaoCo')
+  s = run(s, { type: 'delve', id: 'khaoCo', cell: 15, pick: 0 })
+  assert.equal(festTokens(s, 'khaoCo'), before - d.cost)
 })
 
 test('lễ nhiệm vụ nhiều ngày: tiến độ tính từ lúc mở lượt (Thí Luyện); lễ làm mới mỗi ngày (Tam Hệ Luyện Binh) tính riêng từng ngày, nhánh ngày nhận riêng', () => {

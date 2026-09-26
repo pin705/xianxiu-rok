@@ -157,7 +157,7 @@
     height: 100%;
     object-fit: contain;
     rotate: -3deg;
-    filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.25));
+    filter: drop-shadow(0 4px 6px rgb(var(--shade) / 0.25));
   }
   /* ấn son tròn đè góc tranh, số cấp trắng */
   .lvseal {
@@ -170,12 +170,15 @@
     height: 42px;
     font-size: var(--fs-5);
     font-weight: 900;
-    color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
-    background: var(--ui-seal-img, radial-gradient(circle at 40% 35%, #e0604c, #a8352a 60%, #6e1f18)) center / 100% 100%
-      no-repeat;
+    color: var(--silk);
+    text-shadow: 0 1px 2px rgb(var(--shade) / 0.45);
+    background: var(
+        --ui-seal-img,
+        radial-gradient(circle at 40% 35%, var(--cinnabar-l), var(--cinnabar) 60%, var(--lacquer))
+      )
+      center / 100% 100% no-repeat;
     border-radius: 50%;
-    filter: drop-shadow(0 2px 3px rgb(110 31 24 / 0.35));
+    filter: drop-shadow(0 2px 3px color-mix(in srgb, var(--lacquer) 35%, transparent));
   }
   .pts {
     font-size: var(--fs-5);
@@ -208,7 +211,10 @@
     justify-items: center;
     height: var(--h);
     padding-top: 2px;
-    background: linear-gradient(#e2e0d8, #cfccc2);
+    background: linear-gradient(
+      color-mix(in srgb, var(--ink3) 18%, var(--silk)),
+      color-mix(in srgb, var(--ink3) 35%, var(--silk))
+    );
     border-top: 3px solid var(--ink3);
     border-radius: 2px 2px 0 0;
   }
@@ -219,7 +225,10 @@
     color: var(--text-soft);
   }
   .steps li.hit {
-    background: linear-gradient(#efd9cf, #e0c3b6);
+    background: linear-gradient(
+      color-mix(in srgb, var(--cinnabar) 14%, var(--silk)),
+      color-mix(in srgb, var(--cinnabar) 26%, var(--silk))
+    );
     border-top-color: var(--cinnabar);
   }
   .steps li.hit b {
@@ -233,7 +242,7 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18);
+    background: radial-gradient(circle at 35% 35%, var(--cinnabar-l), var(--cinnabar) 60%, var(--lacquer));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--cinnabar) 22%, transparent);
   }
   /* ---------- bài vị tăng ích ---------- */
@@ -248,11 +257,11 @@
     align-content: start;
     gap: 4px;
     padding: 8px 10px 10px;
-    background: #fbf9f3;
+    background: var(--silk);
     border: 1px solid var(--paper3);
     border-top: 3px solid var(--ink3);
     border-radius: 3px;
-    box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+    box-shadow: 0 2px 5px rgb(var(--shade) / 0.1);
   }
   .tablet.nx {
     border-top-color: var(--cinnabar);
@@ -293,15 +302,15 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.22));
+    filter: drop-shadow(0 3px 5px rgb(var(--shade) / 0.22));
   }
   .offer.ready .box img {
-    filter: drop-shadow(0 0 8px rgb(var(--gold-glow) / 0.9)) drop-shadow(0 3px 5px rgb(0 0 0 / 0.22));
+    filter: drop-shadow(0 0 8px rgb(var(--gold-glow) / 0.9)) drop-shadow(0 3px 5px rgb(var(--shade) / 0.22));
   }
   .box .stamp {
     position: absolute;
     bottom: 6px;
-    background: rgb(255 255 255 / 0.75);
+    background: color-mix(in srgb, var(--silk) 75%, transparent);
   }
   /* ---------- kệ gỗ Hương Hỏa Các (như tủ trong Túi đồ) ---------- */
   .shelf {
@@ -312,10 +321,12 @@
     padding: 6px 8px 12px;
     list-style: none;
     background:
-      linear-gradient(90deg, #6b4526, #4a2e17) left top / 8px 100% no-repeat,
-      linear-gradient(90deg, #4a2e17, #6b4526) right top / 8px 100% no-repeat,
-      linear-gradient(#efe9df, #e6dfd2);
-    border-top: 8px solid #6b4526;
+      linear-gradient(90deg, color-mix(in srgb, var(--ochre) 45%, var(--lacquer2)), var(--lacquer2)) left top / 8px 100%
+        no-repeat,
+      linear-gradient(90deg, var(--lacquer2), color-mix(in srgb, var(--ochre) 45%, var(--lacquer2))) right top / 8px
+        100% no-repeat,
+      linear-gradient(var(--silk), color-mix(in srgb, var(--paper2) 45%, var(--silk)));
+    border-top: 8px solid color-mix(in srgb, var(--ochre) 45%, var(--lacquer2));
     border-radius: 4px 4px 0 0;
     box-shadow: 0 4px 10px rgb(var(--shade) / 0.18);
   }
@@ -337,16 +348,16 @@
     padding: 4px 0 12px;
     background: linear-gradient(
         transparent calc(100% - 12px),
-        #8a5c38 calc(100% - 12px),
-        #5c3a1f calc(100% - 3px),
-        rgb(0 0 0 / 0.14) calc(100% - 3px)
+        var(--ochre) calc(100% - 12px),
+        var(--lacquer2) calc(100% - 3px),
+        rgb(var(--shade) / 0.14) calc(100% - 3px)
       )
       no-repeat;
   }
   .pic .stamp {
     position: absolute;
     top: 26px;
-    background: rgb(255 255 255 / 0.8);
+    background: color-mix(in srgb, var(--silk) 80%, transparent);
   }
   .nm {
     display: -webkit-box;
@@ -364,8 +375,8 @@
   .lock {
     justify-content: center;
     padding: 2px 8px;
-    color: #f5f5f1;
-    background: rgb(31 27 23 / 0.75);
+    color: var(--silk);
+    background: color-mix(in srgb, var(--ink) 75%, transparent);
     border-radius: 999px;
   }
   .price {

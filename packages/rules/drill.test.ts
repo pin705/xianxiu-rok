@@ -38,6 +38,10 @@ import {
   trialFoe,
   thiefNow,
   THIEF_TRIES,
+  mazeToday,
+  mazeNear,
+  mazeDone,
+  mazeKind,
   type State,
 } from './index.ts'
 import { might } from './combat.ts'
@@ -311,4 +315,51 @@ test('Dạ Hành Đạo Tặc: mỗi ngày 2 lượt đội ảo (không mất q
     'ngày mới: lượt mới, kỷ lục giữ',
   )
   assert.deepEqual(run(next, { type: 'fest', id: 'daTac', i: 0 }), { ok: false, error: 'not_done' })
+})
+
+test('Hoàng Kim Mê Cảnh: một lượt mỗi ngày với đội ảo; mở ô kề ô đã mở (rút loại ô theo mầm server); hạ thủ lĩnh xuống tầng sau, kỷ lục tầng; quân thật không mất', () => {
+  const at = (t: number) => ({ ...advance(sect(), t), seed: 777 })
+  let t = T0
+  while (!festOpen(at(t), 'meCanh', t)) t += DAY
+  let s = at(t)
+  const start = { type: 'mazeStart', teams: [{ elder: 'thanhPhong', army: { kiem3: 800 } }] }
+  assert.deepEqual(run(s, { type: 'mazeStart', teams: [{ elder: 'thanhPhong', army: { kiem3: 5000 } }] }), {
+    ok: false,
+    error: 'cap',
+  })
+  const r0 = run(s, start)
+  assert.ok(r0.ok, JSON.stringify(r0))
+  s = r0.state
+  assert.deepEqual(run(s, start), { ok: false, error: 'claimed' }, 'mỗi ngày một lượt')
+  assert.deepEqual(run(s, { type: 'mazeOpen', i: 15, team: 0 }), { ok: false, error: 'bad' }, 'ô không kề ô đã mở')
+  const c = run({ ...s, seed: 0 }, { type: 'mazeOpen', i: 1, team: 0 })
+  assert.ok(c.ok && c.state.maze!.tiles[1] === -1, 'client chờ server')
+  // đi cho tới khi xuống tầng 2 hay hết quân
+  let steps = 0
+  while (mazeToday(s)!.floor === 0 && !mazeToday(s)!.over && steps++ < 60) {
+    const m = mazeToday(s)!
+    if (m.offer) {
+      const p = run(s, { type: 'mazePick', k: 0 })
+      assert.ok(p.ok)
+      s = p.state
+      continue
+    }
+    const i = m.tiles.findIndex(
+      (x, k) => (x < 0 && mazeNear(m.tiles, k)) || (x >= 0 && !mazeDone(x) && ['foe', 'boss'].includes(mazeKind(x)!)),
+    )
+    const r = run(s, { type: 'mazeOpen', i, team: 0 })
+    assert.ok(r.ok, JSON.stringify(r))
+    s = r.state
+  }
+  const m = mazeToday(s)!
+  assert.ok(m.floor === 1 || m.over, `xuống tầng hay hết quân (tầng ${m.floor})`)
+  if (m.floor === 1) {
+    assert.equal(s.fest.meCanh!.bank, 1, 'kỷ lục 1 tầng')
+    assert.equal(m.tiles.filter(x => x < 0).length, 15, 'tầng mới phủ sương')
+  }
+  assert.equal(s.troops.kiem3, 1000, 'đội ảo: quân thật không mất')
+  assert.ok(
+    s.reports.some(r => r.kind === 'maze'),
+    'có chiến báo mê cảnh',
+  )
 })

@@ -110,7 +110,8 @@ export type Report = {
     | 'drill'
     | 'camp'
     | 'trial'
-    | 'thief' // thief: Dạ Hành Đạo Tặc (i: phần nghìn sát thương) · legion: đợt i Ma triều · drill: trận i Luận Võ · camp: trận ở trại ô i · trial: cửa i Thí Luyện
+    | 'thief'
+    | 'maze' // maze: Hoàng Kim Mê Cảnh (i: tầng × 100 + ô) · thief: Dạ Hành Đạo Tặc (i: phần nghìn sát thương) · legion: đợt i Ma triều · drill: trận i Luận Võ · camp: trận ở trại ô i · trial: cửa i Thí Luyện
   i: number
   spot?: string // loại điểm bản đồ giới
   f?: number // bí cảnh: tầng
@@ -121,6 +122,7 @@ export type Report = {
   fights: { a: Snap; b: Snap; rounds: Round[] }[]
   hurt: Army // thương vong
   dead: Army // phần Đan phòng không còn chỗ nằm
+  light?: Army // thương nhẹ tự lành khi đội về núi (không vào Đan phòng)
   gain: Gain
 }
 // Việc cứu nạn đang làm: ở thôn i, tăng chỉ số m thêm n (từ mức from lúc nhận) trước lúc until
@@ -299,6 +301,17 @@ export type NewMail = { [K in MailKind]: { at: number; k: K; a: MailArgs[K]; gif
 // Thư đã lưu: save cũ có thể thiếu a; server mới hơn client có thể gửi khoá client chưa biết
 export type Mail = { id: number; at: number; k: string; a?: (string | number)[]; gift?: Reward; got?: boolean }
 
+// Hoàng Kim Mê Cảnh: ngày của lượt, tầng đang đi (từ 0), ô của tầng (−1 sương; kind; kind + 8 đã xong), các đội ảo (quân lúc vào /
+// còn lại, lực chiến lúc vào), phúc đã chọn và phúc đang mời chọn, lượt đã hết (mọi đội ngã)
+export type Maze = {
+  day: number
+  floor: number
+  tiles: number[]
+  teams: { elder: ElderId; full: Army; army: Army; base: number }[]
+  bless: string[]
+  offer?: string[]
+  over?: boolean
+}
 export type State = {
   v: 4 // phiên bản save
   name: string // tên tông môn
@@ -397,6 +410,7 @@ export type State = {
   honor?: number // Công Huân trong mùa (hết mùa về 0)
   honorGot?: number // số mốc Chinh Chiến Công Tích đã nhận trong mùa
   drill?: Drill // Luận Võ Liên Hoàn hôm nay
+  maze?: Maze // Hoàng Kim Mê Cảnh hôm nay (sect/maze.ts)
   strat?: StratId // chiến lược mùa này (luân hồi: chọn lại)
   guestAt?: number // Vân Du Khách kế tiếp ghé núi lúc này (chưa có: born + GUEST_EVERY)
   guests?: number // số lần đã nhận quà khách (xoay vòng GUEST_GIFTS)

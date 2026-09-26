@@ -171,7 +171,12 @@
         })
       }
       const casts = report.fights.reduce((n, fx) => n + fx.rounds.filter(rd => rd.cast[side]).length, 0)
-      return { rows: [...rows.values()], casts }
+      // sát thương theo nguồn (đòn thường / công pháp) và đệ tử hồi lại — chiến báo cũ không có thì 0
+      const all = report.fights.flatMap(fx => fx.rounds)
+      const plain = all.reduce((n, rd) => n + (rd.src?.[side][0] ?? 0), 0)
+      const skill = all.reduce((n, rd) => n + (rd.src?.[side][1] ?? 0), 0)
+      const heal = all.reduce((n, rd) => n + (rd.heal?.[side] ?? 0), 0)
+      return { rows: [...rows.values()], casts, plain, skill, heal }
     }
     return [sum(0), sum(1)] as const
   })
@@ -182,6 +187,7 @@
     drill: 'tower',
     trial: 'red',
     thief: 'ink',
+    maze: 'gold',
   }
   const tone = $derived<MedalTone>(report ? (TONE[report.kind] ?? (report.kind as MedalTone)) : 'pvp')
   const foeName = $derived(!report ? '' : report.kind === 'trib' ? L.report.wave(fi + 1) : reportName(report))
@@ -191,6 +197,7 @@
     if (report.kind === 'drill') return 'fist'
     if (report.kind === 'trial') return 'demon'
     if (report.kind === 'thief') return 'ghost'
+    if (report.kind === 'maze') return 'demon'
     if (report.kind === 'pvp' || report.kind === 'arena' || report.kind === 'camp') return 'crest'
     if (report.kind === 'spot') return EMBLEM.spot[report.spot ?? 'vein'] ?? 'lotus'
     return EMBLEM[report.kind][report.i]
@@ -327,8 +334,11 @@
               </div>
             {/if}
             {#if retreat}<p class="center t-small t-lore">{L.report.retreat}</p>{/if}
-            {#if count(report.hurt) - dead}<Stat label={L.report.hurt}
-                ><Icon name="heal" size={16} />{num(count(report.hurt) - dead)}</Stat
+            {#if count(report.hurt) - dead - count(report.light ?? {})}<Stat label={L.report.hurt}
+                ><Icon name="heal" size={16} />{num(count(report.hurt) - dead - count(report.light ?? {}))}</Stat
+              >{/if}
+            {#if count(report.light ?? {})}<Stat label={L.report.light} tone="good"
+                ><Icon name="heal" size={16} />{num(count(report.light ?? {}))}</Stat
               >{/if}
             {#if dead}<Stat label={L.report.dead} tone="bad"><Icon name="skull" size={16} />{num(dead)}</Stat>{/if}
             {#if report.gain.exp && f.a.elder}<Stat label="{L.report.exp} · {L.elders[f.a.elder].name}" tone="gold"
@@ -360,6 +370,10 @@
                         >
                       {/each}
                       {#if b.casts}<small class="t-tiny t-gold">{L.report.casts(b.casts)}</small>{/if}
+                      {#if b.plain + b.skill}<small class="t-tiny t-num"
+                          >{L.report.dmg(num(b.plain), num(b.skill))}</small
+                        >{/if}
+                      {#if b.heal}<small class="t-tiny t-good">{L.report.healed(num(b.heal))}</small>{/if}
                     </div>
                   {/each}
                 </div>

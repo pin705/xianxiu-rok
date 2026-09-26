@@ -82,7 +82,7 @@
     gap: 6px;
     height: 100%;
     padding: 20px 16px;
-    color: #f6eedc;
+    color: var(--silk);
     text-align: center;
   }
   .rar1 {
@@ -115,8 +115,8 @@
     font-size: var(--fs-2);
     font-weight: 900;
     letter-spacing: 0.06em;
-    color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+    color: var(--silk);
+    text-shadow: 0 1px 2px rgb(var(--shade) / 0.45);
     background: var(--cinnabar);
     clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 10px 50%);
     animation: rise 0.5s var(--ease) both;
@@ -132,11 +132,11 @@
     width: min(58vw, 232px);
     margin: 10px 0 6px;
     padding: 10px;
-    background: linear-gradient(#fbfaf6, #eceee8);
+    background: linear-gradient(var(--silk), var(--paper));
     box-shadow:
       0 0 0 2px rgb(var(--glow) / 0.85),
       0 0 38px rgb(var(--glow) / 0.55),
-      0 12px 24px rgb(0 0 0 / 0.45);
+      0 12px 24px rgb(var(--shade) / 0.45);
     animation: arrive 0.7s var(--spring) both;
   }
   /* trục gỗ sơn mài hai đầu, núm tròn thò ra hai bên */
@@ -147,9 +147,9 @@
     left: -9px;
     right: -9px;
     height: 10px;
-    background: linear-gradient(#6b4a2e, #3e2a18);
+    background: linear-gradient(var(--ochre), var(--lacquer2));
     border-radius: 5px;
-    box-shadow: 0 2px 3px rgb(0 0 0 / 0.4);
+    box-shadow: 0 2px 3px rgb(var(--shade) / 0.4);
   }
   .scroll::before {
     top: -6px;
@@ -174,9 +174,9 @@
     font-size: var(--fs-2);
     font-weight: 900;
     line-height: 1.1;
-    color: #fff;
+    color: var(--silk);
     background: color-mix(in srgb, var(--cinnabar) 88%, transparent);
-    border: 2px solid #fbe9e2;
+    border: 2px solid var(--silk);
     outline: 1.5px solid var(--cinnabar);
     border-radius: 4px;
     rotate: -8deg;
@@ -186,7 +186,7 @@
     position: relative;
     font-size: 28px;
     line-height: 1.2;
-    text-shadow: 0 2px 8px rgb(0 0 0 / 0.6);
+    text-shadow: 0 2px 8px rgb(var(--shade) / 0.6);
     animation: rise 0.5s 0.25s var(--ease) both;
   }
   .sub {

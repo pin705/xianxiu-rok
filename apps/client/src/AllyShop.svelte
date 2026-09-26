@@ -149,9 +149,9 @@
     line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  /* ---------- kệ gỗ: mỗi hàng 100px — ô 64, ván, thẻ giá; vách tủ hai bên ---------- */
+  /* ---------- kệ gỗ: mỗi hàng 96px — ô 64 đứng trên ván, thẻ giá ghim trước mặt ván; vách tủ hai bên ---------- */
   .shelf {
-    --row: 100px;
+    --row: 96px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
     grid-auto-rows: var(--row);
@@ -175,14 +175,16 @@
     display: grid;
     grid-template-rows: 64px auto;
     justify-items: center;
-    row-gap: 13px;
+    row-gap: 4px;
   }
   .shelf li.out :global(.cell) {
     opacity: 0.45;
     filter: grayscale(0.6);
   }
-  /* thẻ giá: mẩu giấy nhỏ dưới ván */
+  /* thẻ giá: mẩu giấy nhỏ ghim trước mặt ván */
   .price {
+    position: relative;
+    z-index: 1;
     padding: 0 6px 1px;
     font-size: var(--fs-1);
     line-height: 1.3;

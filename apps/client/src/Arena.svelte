@@ -387,7 +387,7 @@
     padding: 1px 16px 2px;
     font-size: var(--fs-2);
     font-weight: 900;
-    color: #fff;
+    color: var(--text-inv);
     text-shadow: 0 1px 1px rgb(0 0 0 / 0.3);
     background: var(--cinnabar);
     clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 50%, 100% 100%, 0 100%, 7px 50%);
@@ -558,7 +558,7 @@
     border-radius: 999px;
   }
   .slot .rank-no {
-    color: #fff;
+    color: var(--text-inv);
     background: var(--cinnabar);
     border-radius: 50%;
     min-width: 24px;
@@ -588,7 +588,7 @@
     border-left: 1px solid var(--paper3);
   }
   .units button.on {
-    color: #fff;
+    color: var(--text-inv);
     background: var(--cinnabar);
   }
   .add {

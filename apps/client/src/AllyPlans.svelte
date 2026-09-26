@@ -51,10 +51,11 @@
 <Section title={L.plan.title}>
   <p class="t-small t-soft">{L.plan.hint}</p>
   {#if !plans.length}<p class="t-small t-soft">{L.plan.none}</p>{/if}
-  <ul class="stack rows">
+  <!-- dòng thời gian: mỗi việc một hạt trên sợi chỉ, việc đã tới giờ hạt son -->
+  <ol class="path">
     {#each plans as p (p.id)}
       {@const mine = p.go.includes(me)}
-      <li>
+      <li class:hit={p.at <= now}>
         <Card tone={mine ? 'glow' : undefined}>
           <div class="stack" style:--gap="4px">
             <p class="row between">
@@ -94,7 +95,7 @@
         </Card>
       </li>
     {/each}
-  </ul>
+  </ol>
   {#if officer}
     <Card tone="silk">
       <div class="stack" style:--gap="6px">
@@ -116,9 +117,6 @@
 </Section>
 
 <style>
-  .rows {
-    --gap: var(--sp-2);
-  }
   .field {
     width: 100%;
     min-width: 0;

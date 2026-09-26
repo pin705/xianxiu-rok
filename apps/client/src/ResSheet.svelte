@@ -145,7 +145,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.25));
+    filter: drop-shadow(0 4px 5px rgb(var(--shade) / 0.25));
   }
   .big {
     font-size: var(--fs-6);
@@ -162,10 +162,11 @@
     margin: 0;
     padding: 14px 10px 10px;
     background:
-      repeating-linear-gradient(90deg, rgb(0 0 0 / 0.05) 0 2px, transparent 2px 38px), linear-gradient(#9a6a42, #7a5030);
-    border: 5px solid #5c3a1f;
+      repeating-linear-gradient(90deg, rgb(var(--shade) / 0.05) 0 2px, transparent 2px 38px),
+      linear-gradient(var(--ochre), color-mix(in srgb, var(--ochre) 70%, var(--lacquer2)));
+    border: 5px solid var(--lacquer2);
     border-radius: 6px;
-    box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.3);
+    box-shadow: inset 0 2px 6px rgb(var(--shade) / 0.3);
   }
   .board > div {
     position: relative;
@@ -173,9 +174,9 @@
     align-content: start;
     gap: 1px;
     padding: 8px 8px 7px;
-    background: #fbf9f3;
+    background: var(--silk);
     border-radius: 2px;
-    box-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
+    box-shadow: 0 2px 4px rgb(var(--shade) / 0.3);
   }
   .board > div:nth-child(odd) {
     rotate: -0.6deg;
@@ -191,9 +192,9 @@
     width: 9px;
     height: 9px;
     translate: -50% 0;
-    background: radial-gradient(circle at 35% 35%, #f5a08c, #b3372a 55%, #6a1a12);
+    background: radial-gradient(circle at 35% 35%, var(--cinnabar-l), var(--cinnabar) 55%, var(--lacquer));
     border-radius: 50%;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    box-shadow: 0 1px 2px rgb(var(--shade) / 0.4);
   }
   dt {
     font-size: var(--fs-1);

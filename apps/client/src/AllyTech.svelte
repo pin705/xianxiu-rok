@@ -75,8 +75,8 @@
     <span class="plaque"><small>{L.guild.credit}</small><b class="t-num">{num(game.contrib?.credit ?? 0)}</b></span>
   </div>
 
-  <!-- trận đồ: 9 trận nhãn nối nét mực, đỉnh đồng mờ ở tâm; vòng quanh nhãn = điểm của tầng đang lên, ấn son = tầng -->
-  <div class="array" style:--ding={ui('ally-tech') ? `url(${ui('ally-tech')})` : undefined}>
+  <!-- trận đồ: 9 trận nhãn nối nét mực; vòng quanh nhãn = điểm của tầng đang lên, ấn son = tầng -->
+  <div class="array">
     {#each ALLY_TECH_IDS as id (id)}
       <button
         type="button"
@@ -194,15 +194,6 @@
     gap: var(--gy) var(--gx);
     margin: var(--sp-4) 0 var(--sp-3);
     padding: 6px 0;
-  }
-  /* đỉnh đồng mờ sau trận đồ */
-  .array::before {
-    content: '';
-    position: absolute;
-    inset: 12% 22%;
-    background: var(--ding, none) center / contain no-repeat;
-    opacity: 0.16;
-    pointer-events: none;
   }
   .node {
     position: relative;

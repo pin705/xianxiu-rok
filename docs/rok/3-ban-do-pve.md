@@ -892,7 +892,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | F2 | Expedition Store | ✅ Trấn Tháp Các (Tháp Lệnh) | P2 | S |
 | F3 | Lyceum of Wisdom | ✅ Vấn Đạo Đài | P2 | M |
 | F4 | Sunset Canyon | ✅ Luận Kiếm Đài (đệ tử ảo, không mất quân) | P2 | M |
-| F5 | Arms Training, Golden Kingdom… (PvE sự kiện) | 🟡 Luận Võ Liên Hoàn (Arms Training); chưa có Golden Kingdom, Race Against Time… | P2 | S / M |
+| F5 | Arms Training, Golden Kingdom… (PvE sự kiện) | ✅ Luận Võ Liên Hoàn, Hoàng Kim Mê Cảnh, Trảm Yêu Tốc Chiến, Dạ Hành Đạo Tặc | P2 | S / M |
 | G1 | Tactical / Strategic View | ✅ (có toàn giới + hiệu minh, bản đồ nhỏ; thiếu bản đồ nhiệt, danh sách trận) | P2 | S–M |
 | G2 | Toạ độ, chia sẻ toạ độ vào chat | ✅ | P1 | S |
 | G3 | Bookmarks | ✅ Ghi nhớ ★ (20 chỗ) | P2 | S |

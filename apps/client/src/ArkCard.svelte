@@ -4,6 +4,7 @@
   import { ARK_ADJ, ARK_CENTER, ARK_HOME, ARK_OBELISKS, ARK_ROUND, ARK_ROUNDS } from '@rok/rules'
   import { arkAt, type ArkRow, type WorldAction } from '@rok/rules/world'
   import { weekOf } from '@rok/rules'
+  import { artOf } from '@rok/art'
   import { Button, Section, Tag } from './ui'
   import { L, clock } from './lib'
   import { useGame } from './game'
@@ -22,6 +23,7 @@
     go: (a: WorldAction, sound?: 'reward' | 'tap') => Promise<boolean>
   } = $props()
   const g = useGame()
+  const fight = artOf('ui:fx-battle')?.src // hai tu sĩ giao kiếm: đầu mục khi chưa vào trận
   const f = $derived(row?.live ?? null)
   const mine = $derived(f?.units.find(u => u.pid === me))
   const side = $derived(f?.b === aid ? 1 : 0)
@@ -75,8 +77,11 @@
   <p class="t-small t-soft">{L.ark.hint}</p>
   {#if f}
     {#if f.cup}<Tag tone="gold">{L.ark.cup.title} · {L.ark.cup[f.cup]}</Tag>{/if}
-    <p class="row between t-small">
-      <b class="t-num">[{tag(side as 0 | 1)}] {f.pts[side]} – {f.pts[side ? 0 : 1]} [{tag(side ? 0 : 1)}]</b>
+    <!-- bảng điểm hai minh: số to ở giữa, hiệp và giờ bên dưới -->
+    <p class="row center">
+      <b class="t-title t-num">[{tag(side as 0 | 1)}] {f.pts[side]} – {f.pts[side ? 0 : 1]} [{tag(side ? 0 : 1)}]</b>
+    </p>
+    <p class="row center t-small">
       <span class="t-soft"
         >{f.round < ARK_ROUNDS ? L.ark.round(f.round + 1, ARK_ROUNDS, clock(Math.max(0, next))) : L.ark.ended}</span
       >
@@ -127,9 +132,10 @@
       </ol>
     {/if}
   {:else}
-    <p class="row between t-small">
-      <b>{row?.signed ? L.ark.signed : L.ark.when(clock(Math.max(0, start - g.now)))}</b>
-    </p>
+    <div class="row">
+      {#if fight}<img src={fight} alt="" width="72" height="72" draggable="false" />{/if}
+      <b class="grow t-small">{row?.signed ? L.ark.signed : L.ark.when(clock(Math.max(0, start - g.now)))}</b>
+    </div>
     {#if officer}
       <Button
         size="sm"
@@ -171,7 +177,9 @@
     <ol class="stack league" style:--gap="1px">
       {#each row.league as r, k (r.id)}
         <li class="row between t-small" class:t-gold={r.id === aid}>
-          <span>{k + 1}. [{r.tag}]</span><span class="t-num">{L.ark.leagueRow(r.w, r.l, r.pts)}</span>
+          <span class="row" style:--gap="6px"><i class="rank-no r{k + 1}">{k + 1}</i>[{r.tag}]</span><span class="t-num"
+            >{L.ark.leagueRow(r.w, r.l, r.pts)}</span
+          >
         </li>
       {/each}
     </ol>

@@ -3,8 +3,8 @@
   // "chỉ minh mình" — bấm Tới để bay khung nhìn tới đó (và mở bảng của điểm).
   import { cellOf, clear, type Fog } from '@rok/rules'
   import { veinBuffs, type Atlas, type MapSnap } from '@rok/rules/world'
-  import { Badge, Button, Card, Sheet } from '../ui'
-  import { L, spotName } from '../lib'
+  import { Button, Medal, Sheet, Tabs, Toggle } from '../ui'
+  import { EMBLEM, L, spotName } from '../lib'
 
   let {
     open,
@@ -45,51 +45,50 @@
 
 <Sheet {open} {onclose} title={L.world.overview}>
   <p class="t-small t-soft">{L.world.overviewHint}</p>
-  <div class="row wrap" style:--gap="6px">
-    {#each KINDS as k (k)}
-      <span class="tab"
-        ><Button size="sm" variant={kind === k ? 'gold' : 'ghost'} onclick={() => (kind = k)}>{spotName(k)}</Button
-        ><Badge n={held(k)} /></span
-      >
-    {/each}
-    <Button size="sm" variant={only ? 'gold' : 'quiet'} onclick={() => (only = !only)}>{L.world.mineOnly}</Button>
-  </div>
-  <ul class="stack rows">
+  <!-- thẻ kẹp sách theo loại điểm (số đang giữ trong ngoặc), công tắc chỉ minh mình -->
+  <Tabs
+    items={KINDS.map(k => ({ id: k, label: held(k) ? `${spotName(k)} (${held(k)})` : spotName(k) }))}
+    value={kind}
+    onchange={k => (kind = k)}
+  />
+  <Toggle checked={only} onchange={v => (only = v)}>{L.world.mineOnly}</Toggle>
+  <!-- sổ địa bạ: mỗi điểm một dòng kẻ mực đứt — huy hiệu loại, tên + cấp + toạ độ, phe giữ, tăng ích; điểm minh mình tô son -->
+  <ul class="rows">
     {#each rows as p (p.i)}
       {@const sp = spots.get(p.i)}
-      <li>
-        <Card tone={sp?.side === side ? 'glow' : undefined}>
-          <div class="row">
-            <span class="grow stack" style:--gap="1px">
-              <b class="t-small"
-                >{spotName(p.kind)} · {L.lv(p.lv)}
-                <span class="t-soft t-num">({p.x},{p.y})</span>{#if fog && !clear(fog, cellOf(p).cx, cellOf(p).cy, now)}
-                  <span class="t-tiny t-soft">· {L.world.inFog}</span>{/if}</b
-              >
-              <small class="t-tiny" class:t-gold={sp?.side === side} class:t-soft={!sp?.own}
-                >{shut(p) ? L.world.shut : (sp?.own ?? L.world.nobody)}{#if sp?.n}
-                  · {L.world.troopsAt(sp.n)}{/if}</small
-              >
-              {#if p.kind === 'vein'}<small class="t-tiny t-good"
-                  >{veinBuffs(p)
-                    .map(b => L.bonus(b.key, b.v))
-                    .join(' · ')}</small
-                >{/if}
-            </span>
-            <Button size="sm" variant="ghost" icon="arrow" onclick={() => onfly(p.x, p.y)}>{L.world.flyTo}</Button>
-          </div>
-        </Card>
+      <li class="row" class:mine={sp?.side === side}>
+        <Medal emblem={EMBLEM.spot[p.kind]} tone="spot" size={36} pips={p.lv} dim={shut(p)} />
+        <span class="grow stack" style:--gap="1px">
+          <b class="t-small"
+            >{spotName(p.kind)} · {L.lv(p.lv)}
+            <span class="t-soft t-num">({p.x},{p.y})</span>{#if fog && !clear(fog, cellOf(p).cx, cellOf(p).cy, now)}
+              <span class="t-tiny t-soft">· {L.world.inFog}</span>{/if}</b
+          >
+          <small class="t-tiny" class:t-gold={sp?.side === side} class:t-soft={!sp?.own}
+            >{shut(p) ? L.world.shut : (sp?.own ?? L.world.nobody)}{#if sp?.n}
+              · {L.world.troopsAt(sp.n)}{/if}</small
+          >
+          {#if p.kind === 'vein'}<small class="t-tiny t-good"
+              >{veinBuffs(p)
+                .map(b => L.bonus(b.key, b.v))
+                .join(' · ')}</small
+            >{/if}
+        </span>
+        <Button size="sm" variant="ghost" icon="arrow" onclick={() => onfly(p.x, p.y)}>{L.world.flyTo}</Button>
       </li>
     {/each}
   </ul>
 </Sheet>
 
 <style>
-  .tab {
-    position: relative;
-  }
   .rows {
-    --gap: var(--sp-2);
     margin-top: var(--sp-2);
+  }
+  .rows li {
+    padding: 6px 4px;
+    border-bottom: 1px dashed var(--paper3);
+  }
+  .rows li.mine {
+    background: color-mix(in srgb, var(--cinnabar) 8%, transparent);
   }
 </style>

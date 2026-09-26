@@ -626,7 +626,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Vì sao hay:** chế độ roguelite ngay trong SLG; không mất quân; ai cũng tới được tầng 4–8.
 - **Tu tiên hoá:** **"Hoàng Kim Mê Cảnh"** hoặc "Bí cảnh Kim Quốc": pháp khí dùng một lần, phúc duyên giữ suốt lượt, lều linh dược, trại
   tán tu gia nhập.
-- **Game mình:** 🟡 — 5 bí cảnh × 5 tầng dùng chung engine trận; thiếu sương mù, relic, blessing, thưởng theo tầng có hạn.
+- **Game mình:** ✅ Hoàng Kim Mê Cảnh (lễ `meCanh` 5 ngày mỗi 28 ngày, `sect/maze.ts`, `Maze.svelte`): mỗi ngày một lượt, tối đa 3 đội ảo chụp lúc vào (không mất quân thật, không hồi giữa đường trừ suối linh), 10 tầng × 16 ô phủ sương, mở ô kề ô đã mở — ô rút lúc mở theo mầm server (thủ lĩnh 1 / số ô sương còn lại nên tầng nào cũng có): yêu binh, bảo rương, thần đàn (chọn 1 trong 3 phúc: công / thủ / máu / hồi sau trận), suối linh (hồi 40 % phần mất), bẫy (−8 % quân); địch mạnh theo lực chiến lúc vào của đội đánh × hệ số tầng; hạ thủ lĩnh xuống tầng; mốc quà theo kỷ lục 2 / 4 / 7 / 10 tầng. Chưa có: relic dùng một lần, chợ tầng, 20 tầng.
 - **Ưu tiên:** P2 · **Công sức:** L.
 
 #### D6. Ceroli Crisis — PvE 4 người, ghép liên server
@@ -1259,7 +1259,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | D2 | Arms Training | Luận Võ Liên Hoàn | ✅ (25/09) mỗi ngày một phiên, công pháp cho giáo đầu mỗi 3 thắng | P1 | M |
 | D3 | Karuak Ceremony | Thí Luyện Yêu Hoàng | ✅ 5 độ khó × 50 cửa; thiếu gọi minh, trùm chung | P1 | M |
 | D4 | Trial of Kau Karuak | (gắn mùa) | ❌ | P2 | M |
-| D5 | Golden Kingdom | Hoàng Kim Mê Cảnh | 🟡 bí cảnh | P2 | L |
+| D5 | Golden Kingdom | Hoàng Kim Mê Cảnh | ✅ 10 tầng sương, 3 đội ảo, phúc, suối, bẫy, thủ lĩnh; chưa relic / chợ | P2 | L |
 | D6 | Ceroli Crisis | Tổ Đội Bí Cảnh | ✅ Man Hoang Cổ Tộc (`world/party.ts`), bất đồng bộ | P2 | L |
 | D7 | Ceroli Assault | Vây Công Yêu Vương | 🟡 | P2 | S |
 | D8 | Ian's Ballads | Tứ Nhân Thám Bí | ❌ | P2 | L |

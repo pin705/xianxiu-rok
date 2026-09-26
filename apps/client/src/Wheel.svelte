@@ -16,7 +16,7 @@
     type Items,
     type Metric,
   } from '@rok/rules'
-  import { Icon, Portrait } from '@rok/art'
+  import { Icon, Portrait, artOf } from '@rok/art'
   import { Bag, Button, Card, Meter } from './ui'
   import { L, LOOK, num, sfx } from './lib'
   import { useGame } from './game'
@@ -34,6 +34,7 @@
   const tokens = $derived(festTokens(game, id))
   const free = $derived(wheelFree(game, id, now))
   const stage = $derived(d ? d.stages[Math.min(f?.stage ?? 0, d.stages.length - 1)] : {})
+  const hub = artOf('ui:fx-calendar')?.src // trục đĩa: đĩa lịch đồng
   const STEP = 30 // độ mỗi ô (12 ô)
 
   // quay: bấm thì chờ server trả các ô trúng (got dài thêm), rồi bánh xe quay tới ô cuối
@@ -105,6 +106,9 @@
     <span class="pointer" aria-hidden="true"></span>
     <div class="wheel" style:rotate="{rot}deg" aria-hidden="true">
       <span class="top"></span>
+      <span class="hub"
+        >{#if hub}<img src={hub} alt="" draggable="false" />{/if}</span
+      >
       {#each d.slots as slot, k (k)}
         {@const it = firstItem(slot.r)}
         <span class="slot" style:--a="{k * STEP}deg">
@@ -119,7 +123,7 @@
     <b class="t-num t-gold">{L.fest.tokens(num(tokens), L.fest.tokenName[id])}</b>
     <small class="t-tiny t-soft">{L.wheel.pity(d.pity - (got.length % d.pity))}</small>
   </p>
-  <div class="row acts">
+  <div class="acts">
     <Button
       variant="gold"
       disabled={pending !== null || !!spinError({ ...game, time: now }, id, 1)}
@@ -143,13 +147,12 @@
       </div>
     </Card>
   {/if}
-  <Card>
-    <ul class="today">
-      {#each Object.entries(stage) as [m, v] (m)}
-        <li class="t-small">{L.fest.per(v ?? 0, L.fest.unit[m as Metric])}</li>
-      {/each}
-    </ul>
-  </Card>
+  <!-- việc ra lệnh hôm nay: dòng kẻ mực đứt -->
+  <ul class="today">
+    {#each Object.entries(stage) as [m, v] (m)}
+      <li class="t-small">{L.fest.per(v ?? 0, L.fest.unit[m as Metric])}</li>
+    {/each}
+  </ul>
 {/if}
 
 <style>
@@ -163,43 +166,73 @@
     color: #7a47a6;
   }
   .rar4 {
-    color: var(--gold-d, #9a6b16);
+    color: var(--gold-d);
   }
+  /* bánh xe như đĩa lịch đồng: mặt giấy chia 12 ô bằng nét mực, vành đồng mảnh, trục đĩa lịch ở giữa.
+     Cỡ theo bề ngang chỗ đặt (cột sự kiện trên điện thoại chỉ ~250px): container query */
   .wheel-box {
     position: relative;
-    width: min(280px, 80vw);
+    width: min(100%, 280px);
     aspect-ratio: 1;
     margin: var(--sp-2) auto;
+    container-type: inline-size;
   }
   .pointer {
     position: absolute;
     top: -6px;
     left: 50%;
-    z-index: 1;
+    z-index: 2;
     width: 0;
     height: 0;
     translate: -50% 0;
-    border: 12px solid transparent;
-    border-top: 22px solid var(--cinnabar, #b8382a);
-    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.35));
+    border: 11px solid transparent;
+    border-top: 20px solid var(--cinnabar);
+    filter: drop-shadow(0 2px 2px rgb(var(--shade) / 0.35));
   }
   .wheel {
     position: absolute;
     inset: 0;
-    border: 5px solid var(--gold, #c9a14a);
+    border: 4px solid var(--ochre);
     border-radius: 50%;
-    background: repeating-conic-gradient(from -15deg, #f4e8c8 0deg 30deg, #e3cf98 30deg 60deg);
+    background:
+      repeating-conic-gradient(
+        from -15deg,
+        color-mix(in srgb, var(--ink) 55%, transparent) 0deg 0.6deg,
+        transparent 0.6deg 30deg
+      ),
+      radial-gradient(circle, var(--silk) 55%, color-mix(in srgb, var(--paper2) 35%, var(--silk)));
     box-shadow:
       0 4px 14px rgb(var(--shade) / 0.3),
-      inset 0 0 0 2px rgb(255 255 255 / 0.35);
+      inset 0 0 0 3px var(--silk),
+      inset 0 0 0 4px var(--ink3);
     transition: rotate 3.2s cubic-bezier(0.15, 0.85, 0.2, 1);
   }
-  /* ô lớn nhất (ô 0): nền son */
+  /* ô lớn nhất (ô 0): nền son nhạt */
   .top {
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: conic-gradient(from -15deg, rgb(184 56 42 / 0.45) 0deg 30deg, transparent 30deg);
+    background: conic-gradient(
+      from -15deg,
+      color-mix(in srgb, var(--cinnabar) 28%, transparent) 0deg 30deg,
+      transparent 30deg
+    );
+  }
+  .hub {
+    position: absolute;
+    inset: 36%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--silk);
+    border: 1.5px solid var(--ink3);
+    border-radius: 50%;
+  }
+  /* tranh đĩa lịch có khung vuông: phóng to, cắt tròn chỉ còn mặt đĩa */
+  .hub img {
+    width: 150%;
+    height: 150%;
+    object-fit: contain;
   }
   .slot {
     position: absolute;
@@ -207,7 +240,7 @@
     left: 50%;
     display: grid;
     justify-items: center;
-    transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(min(280px, 80vw) * -0.36));
+    transform: translate(-50%, -50%) rotate(var(--a)) translateY(-37cqw);
   }
   .n {
     font-size: 11px;
@@ -215,13 +248,20 @@
     color: var(--ink);
   }
   .acts {
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
+    gap: var(--sp-2);
   }
   .today {
     display: grid;
-    gap: 2px;
     margin: 0;
-    padding: 0 0 0 1.1em;
+    padding: 0;
+    list-style: none;
+  }
+  .today li {
+    padding: 3px 0;
+    border-bottom: 1px dashed var(--paper3);
   }
   @media (prefers-reduced-motion: reduce) {
     .wheel {

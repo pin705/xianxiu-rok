@@ -983,7 +983,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | A6 Thời đại → hình công trình tầng 16–25 | ✅ đủ 5 bậc hình (tới tầng 25) | P2 | M |
 | A11 Khám phá sương mù → Thần thức dò xét | ✅ mê vụ + linh điểu + thôn trang / động phủ | P2 | M |
 | C8 Sunset Canyon → Luận Kiếm Đài | ✅ Luận Kiếm Đài | P2 | M |
-| D5 Golden Kingdom → Hư Vô Bí Cảnh | 🟡 tháp + Luận Võ Liên Hoàn (chọn công pháp cho giáo đầu); chưa có buff tự chọn | P2 | M |
+| D5 Golden Kingdom → Hư Vô Bí Cảnh | ✅ Hoàng Kim Mê Cảnh (mê cung 10 tầng, đội ảo, phúc tự chọn) + Luận Võ Liên Hoàn | P2 | M |
 | D6 Ceroli Crisis → trấn yêu tổ đội | ✅ Man Hoang Cổ Tộc (tổ đội 4 người) | P2 | M |
 | D7 Ark of Osiris → Tiên Minh Luận Chiến (bất đồng bộ) | ✅ Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu (chiến trường 5 ô) | P2 | L |
 | A12 Man di + AP | ✅ yêu thú + hồi hang; yêu thú giới tốn hành lực | P2 | — |

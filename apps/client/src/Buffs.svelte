@@ -77,38 +77,39 @@
 {/if}
 
 <Sheet {open} onclose={() => (open = false)} center title={L.buffs.title}>
-  <div class="stack">
-    {#if rows.length}
-      <ul class="stack rows">
-        {#each rows as r (r.key)}
-          <li class="row">
-            <Icon name={r.icon} size={32} />
-            <span class="grow stack" style:--gap="2px">
-              <b>{r.name}</b>
-              {#each r.fx as f (f)}<small class="t-soft">{f}</small>{/each}
-            </span>
-            <small class="t-num t-strong">{r.until ? L.bag.left(clock(r.until - now)) : L.buffs.always}</small>
-          </li>
-        {/each}
-      </ul>
-    {:else}
-      <p class="t-soft">{L.buffs.none}</p>
-    {/if}
-    {#if items.length}
-      <p class="t-small t-strong">{L.buffs.items}</p>
-      <ul class="stack rows">
-        {#each items as id (id)}
-          <li class="row">
-            <Icon name={bagFamily(id)} size={32} />
-            <span class="grow"
-              ><b>{L.bag.family[bagFamily(id)].name} · {denom(id)}</b> <small>×{game.items[id]}</small></span
-            >
-            <Button size="sm" onclick={() => use(id)}>{L.bag.use}</Button>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </div>
+  <!-- mỗi tăng ích một lá bùa treo trên sợi dây: icon, tên, hiệu quả, giờ còn lại trên dải son (thường trực: dải mực) -->
+  {#if rows.length}
+    <ul class="slips">
+      {#each rows as r (r.key)}
+        <li class:shield={r.key === 'shield'}>
+          <Icon name={r.icon} size={36} />
+          <b class="t-small">{r.name}</b>
+          {#each r.fx as f (f)}<small class="t-tiny t-soft">{f}</small>{/each}
+          <small class="left t-num" class:always={!r.until}
+            >{r.until ? L.bag.left(clock(r.until - now)) : L.buffs.always}</small
+          >
+        </li>
+      {/each}
+    </ul>
+  {:else}
+    <p class="t-soft">{L.buffs.none}</p>
+  {/if}
+  {#if items.length}
+    <p class="t-small t-strong mt-3">{L.buffs.items}</p>
+    <!-- phù trong túi: dòng gọn kẻ mực đứt, dùng ngay -->
+    <ul class="rows">
+      {#each items as id (id)}
+        <li class="row">
+          <Icon name={bagFamily(id)} size={32} />
+          <span class="grow"
+            ><b class="t-small">{L.bag.family[bagFamily(id)].name} · {denom(id)}</b>
+            <small class="t-soft">×{game.items[id]}</small></span
+          >
+          <Button size="sm" variant="gold" onclick={() => use(id)}>{L.bag.use}</Button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
 </Sheet>
 
 <style>
@@ -141,9 +142,68 @@
   .more {
     padding: 0 7px;
   }
+  /* dây treo bùa: sợi chỉ đỏ ngang, lá bùa giấy nghiêng nhẹ, đinh son */
+  .slips {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 16px 10px;
+    margin: var(--sp-2) 0 0;
+    padding: 12px 2px 4px;
+    list-style: none;
+    background: linear-gradient(var(--cinnabar), var(--cinnabar)) 0 3px / 100% 1.5px no-repeat;
+  }
+  .slips li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 14px 8px 0;
+    overflow: hidden;
+    text-align: center;
+    background: var(--silk);
+    border: 1px solid var(--paper3);
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgb(var(--shade) / 0.14);
+  }
+  .slips li:nth-child(odd) {
+    rotate: -1.2deg;
+  }
+  .slips li:nth-child(even) {
+    rotate: 1deg;
+  }
+  .slips li::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: calc(50% - 5px);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, var(--cinnabar-l), var(--cinnabar) 60%, var(--lacquer));
+  }
+  .slips li.shield {
+    border-color: var(--malachite);
+  }
+  /* giờ còn lại: dải son đáy lá bùa */
+  .left {
+    width: calc(100% + 16px);
+    margin-top: auto;
+    padding: 2px 4px 3px;
+    font-weight: 800;
+    color: var(--silk);
+    background: var(--cinnabar);
+  }
+  .left.always {
+    background: color-mix(in srgb, var(--ink) 80%, transparent);
+  }
   .rows {
     padding: 0;
     margin: 0;
     list-style: none;
+  }
+  .rows li {
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--paper3);
   }
 </style>

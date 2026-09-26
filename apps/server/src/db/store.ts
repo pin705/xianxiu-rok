@@ -175,12 +175,15 @@ export async function flushWorld(db: Database, b: Batch) {
               kills int, seen jsonb)
           where p.id = r.id and p.world_id = ${b.world}`),
       )
-    if (b.reports.length)
+    // một chiến báo có thể vào lô hai lần (tạo lúc trận, sửa lúc đội về: thương nhẹ / tử trận) — một lệnh ghi không được đụng
+    // một dòng hai lần: giữ bản mới nhất
+    const reps = [...new Map(b.reports.map(r => [`${r.pid}:${r.id}`, r])).values()]
+    if (reps.length)
       q.push(
         tx.execute(sql`
           insert into ${reports} (player_id, id, at, kind, win, body)
           select r.pid, r.id, to_timestamp(r.at / 1000.0), r.kind, r.win, r.body
-          from jsonb_to_recordset(${JSON.stringify(b.reports)}::jsonb) as r(pid int, id int, at float8, kind text, win boolean, body jsonb)
+          from jsonb_to_recordset(${JSON.stringify(reps)}::jsonb) as r(pid int, id int, at float8, kind text, win boolean, body jsonb)
           on conflict (player_id, id) do update set body = excluded.body, win = excluded.win`),
       )
     if (b.events.length)

@@ -580,6 +580,7 @@
       onclose={() => (festsOpen = false)}
       api={net ?? null}
       opened={info?.opened}
+      onmaze={(i, team) => fightNow({ type: 'mazeOpen', i, team })}
       onfight={(elder, army, thief) =>
         fightNow(thief ? { type: 'thief', elder, army } : { type: 'trialFight', elder, army })}
       onreplay={r => (replay = r)}

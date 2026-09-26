@@ -3,7 +3,8 @@
   // người hay hết giờ chờ thì server giải, quà qua thư
   import { PARTY_HALL, PARTY_MAX, PARTY_MIGHT, PARTY_ROLES, dayOf, type PartyRole } from '@rok/rules'
   import type { AllyInfo, WorldAction } from '@rok/rules/world'
-  import { Button, Section, Tag } from './ui'
+  import { artOf } from '@rok/art'
+  import { Button, Section, Tabs, Tag } from './ui'
   import { L, clock, num } from './lib'
   import { useGame } from './game'
 
@@ -20,11 +21,15 @@
   const room = $derived(ally.party && ally.party.at > g.now ? ally.party : null)
   const played = $derived(game.partyDay === dayOf(g.now))
   const name = (pid: number) => ally.people.find(p => p.pid === pid)?.name ?? '?'
+  const tent = artOf('ui:ally-war')?.src // lều trại cờ giáo: phòng chờ của tổ đội
   const inside = $derived(!!room?.members.some(m => m.pid === me))
 </script>
 
 <Section title={L.party.title}>
-  <p class="t-small t-soft">{L.party.hint}</p>
+  <div class="row">
+    {#if tent}<img src={tent} alt="" width="72" height="72" draggable="false" />{/if}
+    <p class="grow t-small t-soft">{L.party.hint}</p>
+  </div>
   {#if game.levels.chuDien < PARTY_HALL}
     <p class="t-small t-soft">{L.party.locked(PARTY_HALL)}</p>
   {:else if room}
@@ -32,10 +37,13 @@
       <b>{L.party.room(room.lv, num(PARTY_MIGHT[room.lv - 1]))}</b>
       <span class="t-num t-soft">{L.party.left(clock(room.at - g.now), room.members.length, PARTY_MAX)}</span>
     </p>
+    <!-- chỗ ngồi trong lều: người đã vào (vai), chỗ trống chờ người -->
     <div class="row wrap" style:--gap="4px">
-      {#each room.members as m (m.pid)}<Tag tone={m.pid === me ? 'gold' : 'plain'}
-          >{name(m.pid)} · {L.party.roles[m.role]}</Tag
-        >{/each}
+      {#each { length: PARTY_MAX } as _, k (k)}
+        {@const m = room.members[k]}
+        {#if m}<Tag tone={m.pid === me ? 'gold' : 'plain'}>{name(m.pid)} · {L.party.roles[m.role]}</Tag>
+        {:else}<Tag icon="people">—</Tag>{/if}
+      {/each}
     </div>
   {:else if played}
     <p class="t-small t-soft">{L.party.done}</p>
@@ -49,12 +57,8 @@
     </div>
   {/if}
   {#if game.levels.chuDien >= PARTY_HALL && !played && !inside && (!room || room.members.length < PARTY_MAX)}
-    <div class="row wrap" style:--gap="4px">
-      <small class="t-tiny">{L.party.pick}:</small>
-      {#each ROLES as r (r)}
-        <Button size="sm" variant={role === r ? 'gold' : 'ghost'} onclick={() => (role = r)}>{L.party.roles[r]}</Button>
-      {/each}
-    </div>
+    <small class="t-tiny">{L.party.pick}:</small>
+    <Tabs items={ROLES.map(r => ({ id: r, label: L.party.roles[r] }))} value={role} onchange={r => (role = r)} />
     <small class="t-tiny t-soft">{L.party.roleHint[role]}</small>
     <Button
       variant="gold"

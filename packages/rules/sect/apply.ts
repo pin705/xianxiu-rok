@@ -12,6 +12,7 @@ import { festActions, type FestAction } from './fest.ts'
 import { passActions, type PassAction } from './pass.ts'
 import { trialActions, type TrialAction } from './trial.ts'
 import { thiefActions, type ThiefAction } from './thief.ts'
+import { mazeActions, type MazeAction } from './maze.ts'
 import { vipActions, type VipAction } from './vip.ts'
 import { tavernActions, type TavernAction } from './tavern.ts'
 import { achActions, type AchAction } from './ach.ts'
@@ -55,6 +56,7 @@ export type Action =
   | PassAction
   | TrialAction
   | ThiefAction
+  | MazeAction
   | VipAction
   | TavernAction
   | AchAction
@@ -89,6 +91,7 @@ const ACTIONS: Actions<Action> = {
   ...passActions,
   ...trialActions,
   ...thiefActions,
+  ...mazeActions,
   ...vipActions,
   ...tavernActions,
   ...achActions,

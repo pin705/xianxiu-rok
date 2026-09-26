@@ -1,9 +1,11 @@
 <script lang="ts">
   // Hộp thư: thư (quà nhận ngay tại đây) và chiến báo (chạm để xem lại trận; chia sẻ vào chat), mới nhất trên cùng.
+  // Bố cục: hai tranh đồ vật (hạc ngậm thư · cuộn chiến báo) làm công tắc ngăn; thư là lá thư hạc, quà đã nhận đóng dấu son;
+  // chiến báo là dòng gọn kẻ mực đứt có huy hiệu thắng / thua.
   import { mailText } from '@rok/i18n'
   import { RESOURCES, count, type ElderId, type Mail, type Report, type Res } from '@rok/rules'
-  import { Icon, Portrait } from '@rok/art'
-  import { Bag, Button, Card, IconButton, Medal, Sheet, Tabs, fly } from './ui'
+  import { Icon, Portrait, artOf } from '@rok/art'
+  import { Bag, Button, Card, IconButton, Medal, Sheet, Tile, fly } from './ui'
   import { L, LOOK, defended, num, reportName, sfx } from './lib'
   import { useGame } from './game'
 
@@ -31,6 +33,12 @@
   const list = $derived([...game.reports].reverse())
   const mails = $derived([...game.mail].reverse())
   const text = (m: Mail) => mailText(L, m)
+  // hai ngăn của hộp thư: [ngăn, tranh ui:*, nhãn, số thư còn quà]
+  const doors = $derived([
+    ['mail', 'ev-mail', L.mail.title, mails.filter(m => m.gift && !m.got).length],
+    ['reports', 'ev-report', L.mail.reports, 0],
+  ] as const)
+  const crane = artOf('ui:ev-mail')?.src // hạc ngậm thư vẽ tay đầu mỗi lá thư
   const total = (b?: Partial<Record<Res, number>>) => RESOURCES.reduce((n, x) => n + (b?.[x] ?? 0), 0)
   // Đệ tử địch hạ được (mọi cặp giao tranh): quân địch lúc vào trận trừ quân còn sau lượt cuối
   const kills = (r: Report) =>
@@ -56,14 +64,20 @@
 </script>
 
 <Sheet {open} {onclose} title={tab === 'mail' ? L.mail.title : L.report.title}>
-  <Tabs
-    items={[
-      { id: 'mail', label: L.mail.title },
-      { id: 'reports', label: L.mail.reports },
-    ]}
-    value={tab}
-    onchange={t => (picked = t as 'mail' | 'reports')}
-  />
+  <div class="doors">
+    {#each doors as [id, art, label, n] (id)}
+      <span class="door" class:on={tab === id}
+        ><Tile
+          {art}
+          icon={id === 'mail' ? 'mail' : 'swords'}
+          {label}
+          {n}
+          size={64}
+          onclick={() => (picked = id)}
+        /></span
+      >
+    {/each}
+  </div>
   {#if tab === 'mail'}
     {#if !mails.length}<p class="center t-lore mt-4">{L.mail.empty}</p>{/if}
     {@const gifts = mails.filter(m => m.gift && !m.got)}
@@ -86,7 +100,10 @@
           <Card tone={m.gift && !m.got ? 'glow' : 'paper'}>
             <div class="stack" style:--gap="4px">
               <span class="row"
-                ><Icon name="mail" size={18} /><b class="grow">{title}</b><small class="t-tiny t-soft"
+                >{#if crane}<img class="crane" src={crane} alt="" draggable="false" />{:else}<Icon
+                    name="mail"
+                    size={18}
+                  />{/if}<b class="grow">{title}</b><small class="t-tiny t-soft"
                   >{L.ago(Math.max(60_000, game.time - m.at))}</small
                 ></span
               >
@@ -108,7 +125,7 @@
                       >{/each}</span
                   >
                   {#if m.got}
-                    <span class="t-small t-good">{L.mail.got}</span>
+                    <span class="stamp">{L.mail.got}</span>
                   {:else}
                     <Button
                       variant="gold"
@@ -129,21 +146,17 @@
     </ul>
   {:else}
     {#if !list.length}<p class="center t-lore mt-4">{L.report.none}</p>{/if}
-    <ul class="stack mt-2">
+    <ul class="rows mt-2">
       {#each list as r (r.id)}
         <li class="row">
-          <span class="grow">
-            <Card onclick={() => onopen(r)} label={reportName(r)}>
-              <span class="row">
-                <Medal emblem={r.win ? 'win' : 'lose'} tone={r.win ? 'red' : 'ink'} size={38} />
-                <span class="grow stack" style:--gap="1px">
-                  <b>{reportName(r)}{r.f !== undefined ? ` · ${L.level(r.f + 1)}` : ''}</b>
-                  <small class="t-small t-soft">{line(r)}</small>
-                </span>
-                <Icon name="arrow" size={16} />
-              </span>
-            </Card>
-          </span>
+          <button class="grow row" aria-label={reportName(r)} onclick={() => onopen(r)}>
+            <Medal emblem={r.win ? 'win' : 'lose'} tone={r.win ? 'red' : 'ink'} size={38} />
+            <span class="grow stack" style:--gap="1px">
+              <b>{reportName(r)}{r.f !== undefined ? ` · ${L.level(r.f + 1)}` : ''}</b>
+              <small class="t-small t-soft">{line(r)}</small>
+            </span>
+            <Icon name="arrow" size={16} />
+          </button>
           {#if share && r.kind !== 'trib'}<IconButton
               icon="upload"
               label={L.report.share}
@@ -155,3 +168,29 @@
     </ul>
   {/if}
 </Sheet>
+
+<style>
+  /* hai ngăn: tranh đang mở rõ, ngăn kia mờ */
+  .doors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-items: center;
+    gap: var(--sp-2);
+  }
+  .door:not(.on) {
+    opacity: 0.55;
+    filter: saturate(0.4);
+  }
+  .crane {
+    width: 30px;
+    height: 30px;
+    margin: -4px 0;
+  }
+  .rows li {
+    padding: 6px 2px;
+    border-bottom: 1px dashed var(--paper3);
+  }
+  .rows button {
+    text-align: left;
+  }
+</style>

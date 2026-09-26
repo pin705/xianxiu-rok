@@ -683,7 +683,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.4 | Tavern (rương tướng, bảo hiểm) | ✅ Chiêu Hiền Đài (thiếp miễn phí, bảo hiểm thiếp vàng; không bán) | P1 (free) / P2 (bán) | M |
 | 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan, Tâm Đắc Kinh Thư | P2 | S |
 | 2.6 | Sao 1–6, tượng sao, may mắn | ✅ sao 1–6 bằng tín vật (tất định, không may rủi) | P1 | M |
-| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | 🟡 tín vật: thu nhận + nâng sao (mỗi sao: công pháp +5 %, công / máu +3 %); chưa có tầng công pháp nâng bằng tín vật (ngẫu nhiên) / reset kỹ năng | P1 | M |
+| 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | ✅/🟡 tín vật: thu nhận, nâng sao, nâng tầng từng công pháp (tầng 1–5, tinh thông khi đủ); chưa có reset kỹ năng | P1 | M |
 | 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | ✅ chân nguyên (tụ theo lượt + khi mất máu) | P0 | M |
 | 2.9 | Expertise | ✅ công pháp đủ cấp mở Tinh thông (`expertOf`) | P2 | M |
 | 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | ✅/🟡 3 cây riêng từng trưởng lão (Công / Thủ / Đạo mạch, mở tầng theo điểm đã cộng), điểm = cấp − 1 + 2 mỗi sao, Tẩy Tủy Đan; chưa lưu bộ | P1 | L |
@@ -708,7 +708,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.26 | Sức mạnh, không upkeep | ✅ | — | — |
 | 2.27 | Quân theo mùa, đánh xa | ❌ | P2 | L |
 | 2.28 | Bệnh viện (sức chứa, chữa, liên minh giúp) | ✅ Đan phòng | P2 (chọn số chữa) | S |
-| 2.29 | 3 mức thương vong, Hall of Heroes | 🟡 thương binh / tử trận + Anh Linh Điện hồi sinh tử trận trong 3 ngày (`sect/hero.ts`); chưa có thương nhẹ tự hồi | P1 | S |
+| 2.29 | 3 mức thương vong, Hall of Heroes | ✅ thương nhẹ (30 % thương binh của đội xuất quân tự lành khi về núi — `LIGHT`, chiến báo ghi riêng) / thương nặng vào Đan phòng / tử trận khi hết chỗ + Anh Linh Điện hồi sinh tử trận trong 3 ngày | P1 | S |
 | 2.30 | Giao tranh thời gian thực trên bản đồ | ❌ cố ý (PLAN §1) | P0 | L |
 | 2.31 | Giao tranh nhiều bên, AoE, swarm | 🟡 gộp đội khi kết trận / đồn trú, yêu vương theo lát | P1 | M |
 | 2.32 | Rút lui, điều khiển giữa trận | 🟡 tự rút sau 10 lượt, gọi về đội đóng quân / đang đi; chưa rút giữa trận | P1 | M |
@@ -716,7 +716,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.34 | Đồn trú và tiếp viện | ✅ | P2 | S |
 | 2.35 | Công thành: độ bền tường, cháy, dời thành, khiên | ✅ trận lực + linh hỏa thiêu sơn + sơn môn thất thủ (dời chỗ); khiên sau thua + Hộ Sơn Phù | P1 | M |
 | 2.36 | Trinh sát | ✅ dò thám làm tròn + Do thám bằng linh điểu | P2 | S |
-| 2.37 | Chiến báo chi tiết (tách nguồn sát thương, chia sẻ) | 🟡 phát lại, chi tiết trận, chia sẻ vào chat; chưa tách sát thương theo nguồn | P1 | S |
+| 2.37 | Chiến báo chi tiết (tách nguồn sát thương, chia sẻ) | ✅ phát lại, chi tiết trận (từng loại đệ tử vào / còn, công pháp thi triển mấy lần, sát thương đòn thường / công pháp, đệ tử hồi), chia sẻ vào chat | P1 | S |
 | 2.38 | Điểm tiêu diệt (KP) | ✅ chiến công + bảng xếp hạng | P0 | S |
 | 2.39 | Danh dự (KvK) | ✅ Công Huân (điểm cá nhân trong mùa) | P2 | S |
 | 2.40 | Zeroing | ❌ cố ý, khuyên giữ | P2 | M |

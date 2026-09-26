@@ -4,8 +4,8 @@ import { rollDay } from './calendar.ts'
 import { festDrop, rollFest } from './fest.ts'
 import { rate, storage, unitOf, wildRate } from './stats.ts'
 import { type Job, type JobKind, type State, type TrainJob } from './types.ts'
-import { addItems, count, HOUR, minus, plus, noGain } from './util.ts'
-import { RESOURCES, TRAIN_PTS, hallGift, type Bag } from '../data.ts'
+import { addItems, compact, count, HOUR, minus, plus, noGain } from './util.ts'
+import { LIGHT, RESOURCES, TRAIN_PTS, UNITS, hallGift, type Bag } from '../data.ts'
 import { mail } from './mail.ts'
 
 function accrue(s: State, t: number): State {
@@ -59,16 +59,23 @@ function arrive(s: State, id: number): State {
 function comeHome(s: State, id: number): State {
   const m = s.marches.find(x => x.id === id)!
   if (!m.back) return s // trận chưa giải (mầm ẩn ở client): chờ server báo kết quả
-  const { state, dead } = admit({ ...s, marches: s.marches.filter(x => x.id !== id) }, m.hurt ?? {})
-  let st = addGain({ ...state, troops: plus(state.troops, m.back ?? m.army) }, m.elder, m.gain ?? noGain())
+  // thương nhẹ tự lành về đội luôn, thương nặng vào Đan phòng (quá chỗ thì tử trận)
+  const light = compact(Object.fromEntries(UNITS.map(u => [u, Math.floor((m.hurt?.[u] ?? 0) * LIGHT)])))
+  const heavy = compact(Object.fromEntries(UNITS.map(u => [u, (m.hurt?.[u] ?? 0) - (light[u] ?? 0)])))
+  const { state, dead } = admit({ ...s, marches: s.marches.filter(x => x.id !== id) }, heavy)
+  let st = addGain({ ...state, troops: plus(plus(state.troops, m.back ?? m.army), light) }, m.elder, m.gain ?? noGain())
   // khai mỏ: đếm tài nguyên mang về (sự kiện khai thác)
   if (m.task === 'gather' && m.gain) {
     const got = Object.values(m.gain.res).reduce((a, b) => a + (b ?? 0), 0)
     st = { ...st, stats: { ...st.stats, gathered: (st.stats.gathered ?? 0) + got } }
     if (got > 0) st = festDrop(st, 'gather', m.seed, m.returnAt) // Tích Cốc Phòng Cơ: có thể nhặt Linh Nang
   }
-  // Báo cho chiến báo của chuyến này biết bao nhiêu người không qua khỏi
-  if (count(dead)) st = { ...st, reports: st.reports.map(r => (r.id === m.report ? { ...r, dead } : r)) }
+  // Báo cho chiến báo của chuyến này biết bao nhiêu người tự lành, bao nhiêu người không qua khỏi
+  if (count(dead) || count(light))
+    st = {
+      ...st,
+      reports: st.reports.map(r => (r.id === m.report ? { ...r, dead, ...(count(light) && { light }) } : r)),
+    }
   return st
 }
 

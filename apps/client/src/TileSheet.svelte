@@ -85,10 +85,10 @@
   } from '@rok/rules/world'
   import type { Ack, Channel, WorldInfo } from '@rok/protocol'
   import type { Net } from './net'
-  import { landAt } from '@rok/art'
+  import { artOf, landAt } from '@rok/art'
   import ArmyPick from './Army.svelte'
   import Help from './Help.svelte'
-  import { Bag, Button, Card, Medal, Meter, Section, Sheet, Tag } from './ui'
+  import { Bag, Button, Card, Medal, Meter, Section, Sheet, Stat, Tabs, Tag } from './ui'
   import { EMBLEM, L, clock, marchDoing, num, sfx, spotName } from './lib'
   import type { Pick } from './world/worldmap'
   import { useGame } from './game'
@@ -152,6 +152,9 @@
   const site = $derived(pick?.kind === 'site' ? sitesOf(atlas)[pick.i] : undefined)
   const fog = $derived(fogOf(game))
   const freeCranes = $derived(cranes(game) - cranesOut(fold(fog, now), now))
+  // tranh đầu bảng: thôn trang / động phủ (lữ khách nhìn núi), ô mê vụ (hạc linh điểu); tắt art thì không có tranh
+  const ui = (n: string) => artOf(`ui:${n}`)?.src
+  const fogged = $derived(pick?.kind === 'tile' && !!game.seat && !clear(fog, cellOf(pick).cx, cellOf(pick).cy, now))
   async function visit(i: number) {
     if (!(await send({ type: 'visit', i })).ok) return
     sfx('reward')
@@ -317,11 +320,16 @@
     .join(' · ') || undefined}
 >
   {#snippet art()}
-    {#if point}<Medal emblem={EMBLEM.spot[point.kind]} tone="spot" size={62} />{:else if seat}<Medal
+    {#if point}<Medal emblem={EMBLEM.spot[point.kind]} tone="spot" size={84} pips={point.lv} />{:else if seat}<Medal
         emblem="crest"
         tone={seat.pid === me ? 'gold' : seat.npc ? 'ink' : 'pvp'}
-        size={62}
-      />{/if}
+        size={84}
+      />{:else if site && ui('fx-explore')}<img
+        src={ui('fx-explore')}
+        alt=""
+        width="84"
+        height="84"
+      />{:else if fogged && ui('ev-mail')}<img src={ui('ev-mail')} alt="" width="84" height="84" />{/if}
   {/snippet}
   {#if seat}
     {@const r = road(seat)}
@@ -337,7 +345,9 @@
             >{/if}
         </span>
         {#if seat.pid !== me}
-          <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : farText(seat)}</small>
+          {#if r}<Stat label={L.map.time}>{time(r.len)}</Stat>{:else}<small class="t-small t-soft"
+              >{farText(seat)}</small
+            >{/if}
         {/if}
         {#if !seat.npc && seat.pid !== me}<Button size="sm" variant="ghost" onclick={() => (social.profile = seat.pid)}
             >{L.profile.open}</Button
@@ -368,7 +378,7 @@
       {/if}
     {:else if seat.pid !== me && !seat.shield && r}
       <div class="mt-3">
-        <Button variant="danger" wide icon="swords" onclick={() => onraid(seat.pid)}>{L.pvp.attack}</Button>
+        <Button variant="gold" wide icon="swords" onclick={() => onraid(seat.pid)}>{L.pvp.attack}</Button>
       </div>
     {/if}
   {:else if point}
@@ -397,9 +407,10 @@
           >
           <small class="t-tiny t-soft">{L.world.ruinHint}</small>
         {/if}
-        {#if task === 'take'}<small class="t-small"
-            >{spot?.own ? `${L.world.held}: ${spot.own} · ${spot.n ?? 0}` : L.world.free}</small
-          >{/if}
+        {#if task === 'take'}
+          {#if spot?.own}<Stat label={L.world.held}>{spot.own} · {spot.n ?? 0}</Stat>
+          {:else}<small class="t-small t-soft">{L.world.free}</small>{/if}
+        {/if}
         {#if task === 'take' && spot?.side !== undefined && (spot.n ?? 0) > 0 && spot.side !== (ally?.id ?? -(me ?? 0)) && game.levels.chuDien >= PVP_HALL}
           <!-- do thám linh địa phe khác: thư báo số đội, đệ tử, lực chiến đang đóng -->
           <Button
@@ -423,19 +434,17 @@
             class="t-tiny t-gold">{L.world.firstTake}</small
           >{/if}
         {#if point.kind === 'mine'}
-          <small class="t-small"
-            >{dead
-              ? L.world.refill(clock(spot!.until! - now))
-              : `${L.world.left}: ${num(spot?.left ?? MINE_STOCK[point.lv - 1])}`}</small
-          >
+          {#if dead}<small class="t-small">{L.world.refill(clock(spot!.until! - now))}</small>
+          {:else}
+            {@const full = MINE_STOCK[point.lv - 1]}
+            <Stat label={L.world.left}>{num(spot?.left ?? full)}</Stat>
+            <Meter value={(spot?.left ?? full) / full} tone="gold" size="sm" />
+          {/if}
         {/if}
         {#if point.kind === 'wild'}
           {@const foe = wildSide(atlas, point.i)}
-          <small class="t-small"
-            >{dead
-              ? L.world.respawn(clock(spot!.until! - now))
-              : `${L.world.might}: ${num(foe ? might(foe) : 0)}`}</small
-          >
+          {#if dead}<small class="t-small">{L.world.respawn(clock(spot!.until! - now))}</small>
+          {:else}<Stat label={L.world.might}>{num(foe ? might(foe) : 0)}</Stat>{/if}
           <small class="t-small" class:t-bad={apOf(game, now) < AP_HUNT}
             >{L.world.ap(apOf(game, now), AP_MAX)} · {L.world.apCost(AP_HUNT)}</small
           >
@@ -443,11 +452,11 @@
         {#if point.kind === 'boss'}
           {@const roaming = !!spot?.lohar && (spot.loharUntil ?? 0) > now}
           {@const full = (BOSSES[point.lv]?.str ?? 0) * (roaming ? LOHAR_HP : 1)}
-          <small class="t-small"
-            >{dead
-              ? L.world.respawn(clock(spot!.until! - now))
-              : `${L.world.hp}: ${num(spot?.hp ?? full)}/${num(full)}`}</small
-          >
+          {#if dead}<small class="t-small">{L.world.respawn(clock(spot!.until! - now))}</small>
+          {:else}
+            <Stat label={L.world.hp} tone="bad">{num(spot?.hp ?? full)}/{num(full)}</Stat>
+            <Meter value={(spot?.hp ?? full) / full} tone="bad" size="sm" />
+          {/if}
           <!-- Yêu Vương Tuần Sơn: bản mạnh do người chơi triệu hồi bằng yêu cốt, quà lớn khi hạ -->
           {#if roaming}<small class="t-small t-bad"
               ><b>{L.lohar.name}</b> · {L.lohar.by(spot?.lohar ?? '', clock((spot?.loharUntil ?? now) - now))}</small
@@ -464,7 +473,8 @@
             </span>
           {/if}
         {/if}
-        <small class="t-small t-soft">{r ? `${L.map.time}: ${time(r.len)}` : farText(point)}</small>
+        {#if r}<Stat label={L.map.time}>{time(r.len)}</Stat>{:else}<small class="t-small t-soft">{farText(point)}</small
+          >{/if}
       </div>
     </Card>
     {#if diggers.length && game.levels.chuDien >= PVP_HALL}
@@ -511,27 +521,22 @@
       {#if guard}<p class="t-small t-bad mt-2">{L.world.guardians(num(Math.round(might(guard))))}</p>{/if}
       {#if ally && task !== 'gather' && task !== 'hunt'}
         <Section title={L.world.rally}>
-          <div class="row wrap">
-            <Button size="sm" variant={way === 'solo' ? 'gold' : 'ghost'} onclick={() => (way = 'solo')}
-              >{L.world.solo}</Button
-            >
-            <Button size="sm" variant={way === 'rally' ? 'gold' : 'ghost'} onclick={() => (way = 'rally')}
-              >{L.world.openRally}</Button
-            >
-            {#each rallies as rl (rl.id)}
-              <Button size="sm" variant={way === rl.id ? 'gold' : 'ghost'} onclick={() => (way = rl.id)}
-                >{L.world.joinRally(clock(rl.at - now))}</Button
-              >
-            {/each}
-          </div>
+          <Tabs
+            items={[
+              { id: 'solo', label: L.world.solo },
+              { id: 'rally', label: L.world.openRally },
+              ...rallies.map(rl => ({ id: String(rl.id), label: L.world.joinRally(clock(rl.at - now)) })),
+            ]}
+            value={String(way)}
+            onchange={id => (way = id === 'solo' || id === 'rally' ? id : Number(id))}
+          />
           {#if way === 'rally'}
-            <div class="row wrap">
-              {#each RALLY_WAIT as ms, k (k)}
-                <Button size="sm" variant={wait === k ? 'gold' : 'quiet'} onclick={() => (wait = k as 0 | 1 | 2)}
-                  >{L.world.wait(ms / 60_000)}</Button
-                >
-              {/each}
-            </div>
+            <Tabs
+              look="switch"
+              items={RALLY_WAIT.map((ms, k) => ({ id: String(k), label: L.world.wait(ms / 60_000) }))}
+              value={String(wait)}
+              onchange={id => (wait = Number(id) as 0 | 1 | 2)}
+            />
           {/if}
         </Section>
       {/if}

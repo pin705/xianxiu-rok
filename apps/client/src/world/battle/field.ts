@@ -20,6 +20,7 @@ export const THEME: Record<Report['kind'], Theme> = {
   drill: 'tower', // Ma triều công sơn: trời tối như lôi kiếp
   trial: 'fire', // Thí Luyện Yêu Hoàng: yêu hoả
   thief: 'storm', // Dạ Hành Đạo Tặc: đêm tối
+  maze: 'tower', // Hoàng Kim Mê Cảnh: sân đá trong mê cung
 }
 export const REALM: Theme[] = ['forest', 'fire', 'ice', 'storm', 'storm'] // Lôi Trì, Hỗn Độn: trời tối như lôi kiếp
 export const REALM_TINT = [C.malachite, C.cinnabarL, C.azuriteL]

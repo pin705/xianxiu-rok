@@ -1,5 +1,6 @@
 <script lang="ts">
   // Cài đặt: âm thanh, ngôn ngữ, hướng dẫn, tài khoản, thông tin. Tiến độ nằm trên server (không còn xuất/nhập save).
+  // Bố cục: mỗi nhóm một tấm bảng giấy khung đôi (Card), trong bảng là các hàng kẻ chấm — không xếp chồng từng thẻ rời.
   import { Icon } from '@rok/art'
   import { Button, Card, Section, Sheet, Toggle } from './ui'
   import { SECLUDE_DAYS } from '@rok/rules'
@@ -35,30 +36,39 @@
 </script>
 
 <Sheet {open} {onclose} title={L.settings.title}>
-  <Toggle checked={!muted} onchange={onmute}
-    ><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</Toggle
-  >
-  <Toggle
-    checked={music}
-    onchange={on => {
-      music = on
-      setMusicOn(on)
-      if (on) startMusic()
-      else stopMusic()
-    }}><Icon name="music" size={20} />{L.settings.music}</Toggle
-  >
-  <!-- Giảm chuyển động / tiết kiệm pin: tắt hiệu ứng, mây bay, phần thưởng bay (hệ điều hành đã bật thì game theo sẵn) -->
-  <Toggle
-    checked={calmOn}
-    onchange={on => {
-      calmOn = on
-      setCalm(on)
-    }}><Icon name="power" size={20} />{L.settings.calm}</Toggle
-  >
+  <Card>
+    <Toggle checked={!muted} onchange={onmute}
+      ><Icon name={muted ? 'mute' : 'sound'} size={20} />{L.settings.sound}</Toggle
+    >
+    <Toggle
+      checked={music}
+      onchange={on => {
+        music = on
+        setMusicOn(on)
+        if (on) startMusic()
+        else stopMusic()
+      }}><Icon name="music" size={20} />{L.settings.music}</Toggle
+    >
+    <!-- Giảm chuyển động / tiết kiệm pin: tắt hiệu ứng, mây bay, phần thưởng bay (hệ điều hành đã bật thì game theo sẵn) -->
+    <Toggle
+      checked={calmOn}
+      onchange={on => {
+        calmOn = on
+        setCalm(on)
+      }}><Icon name="power" size={20} />{L.settings.calm}</Toggle
+    >
+    <!-- tên mỗi ngôn ngữ viết bằng chính ngôn ngữ đó: người đọc không hiểu ngôn ngữ đang hiện vẫn tìm được tiếng mình -->
+    <label class="lang row">
+      <Icon name="globe" size={20} />
+      <select aria-label="Language" value={LANG} onchange={e => setLang(e.currentTarget.value as Locale)}>
+        {#each LOCALE_IDS as id (id)}<option value={id}>{LOCALES[id].name}</option>{/each}
+      </select>
+    </label>
+  </Card>
   <!-- Bế Quan Lệnh: nghỉ dài ngày, không ai cướp được (đang bế quan thì nút xuất quan ở HUD) -->
   <Section title={L.seclude.title}>
-    <p class="t-small t-soft">{L.seclude.hint}</p>
-    <div class="row wrap" style:--gap="6px">
+    <p class="t-tiny t-soft">{L.seclude.hint}</p>
+    <div class="grid" style:--cols="3" style:--gap="6px">
       {#each SECLUDE_DAYS as d (d)}
         <Button
           size="sm"
@@ -69,25 +79,17 @@
       {/each}
     </div>
   </Section>
-  <!-- tên mỗi ngôn ngữ viết bằng chính ngôn ngữ đó: người đọc không hiểu ngôn ngữ đang hiện vẫn tìm được tiếng mình -->
-  <label class="lang row">
-    <Icon name="globe" size={20} />
-    <select aria-label="Language" value={LANG} onchange={e => setLang(e.currentTarget.value as Locale)}>
-      {#each LOCALE_IDS as id (id)}<option value={id}>{LOCALES[id].name}</option>{/each}
-    </select>
-  </label>
 
   <Section title={L.guide.title}>
-    <div class="stack">
+    <!-- cẩm nang: một tấm bảng, mỗi mục một hàng mở ra (không xếp chồng từng thẻ) -->
+    <Card>
       {#each L.guide.items as [q, a] (q)}
-        <Card>
-          <details>
-            <summary class="row t-strong"><span class="chev"><Icon name="arrow" size={14} /></span>{q}</summary>
-            <p class="t-small t-soft mt-2">{a}</p>
-          </details>
-        </Card>
+        <details>
+          <summary class="row t-strong"><span class="chev"><Icon name="arrow" size={14} /></span>{q}</summary>
+          <p class="t-small t-soft">{a}</p>
+        </details>
       {/each}
-    </div>
+    </Card>
   </Section>
 
   {#if account && open}
@@ -137,6 +139,16 @@
     appearance: none;
     -webkit-appearance: none;
     cursor: pointer;
+  }
+  details {
+    padding: 8px 2px;
+    background: var(--img-dots) left bottom / 12px 6px repeat-x;
+  }
+  details:last-child {
+    background: none;
+  }
+  details p {
+    padding: 6px 0 2px 20px;
   }
   summary {
     --gap: 6px;

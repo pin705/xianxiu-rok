@@ -10,6 +10,7 @@ import {
   FESTS,
   festPoints,
   HOSPITAL_BASE,
+  LIGHT,
   PILLS,
   QUESTS,
   SPEEDUP,
@@ -317,6 +318,20 @@ test('Đan phòng hết chỗ thì thương binh dư tử trận', () => {
   assert.equal(count(r.wounded), Math.min(count(rep.hurt), HOSPITAL_BASE))
   assert.equal(count(rep.dead), count(rep.hurt) - count(r.wounded))
   assert.equal(r.troops.kiem1, 400 - count(rep.hurt))
+})
+
+test('thương nhẹ: đội xuất quân về núi thì LIGHT phần thương binh tự lành về đội, còn lại vào Đan phòng', () => {
+  let s = { ...rich(5), troops: { ...rich(5).troops, kiem1: 300 }, seed: 4242 }
+  s = run(s, { type: 'march', target: { kind: 'beast', i: 0 }, elder: 'thanhPhong', army: { kiem1: 300 } })
+  const m = s.marches[0]
+  const home = advance(s, m.returnAt + 1)
+  const rep = home.reports.at(-1)!
+  const hurt = count(rep.hurt)
+  assert.ok(hurt > 0, 'trận có thương vong')
+  const light = count(rep.light ?? {})
+  assert.equal(light, Math.floor((rep.hurt.kiem1 ?? 0) * LIGHT))
+  assert.equal(count(home.wounded) + count(rep.dead), hurt - light, 'thương nặng vào Đan phòng')
+  assert.equal(home.troops.kiem1, 300 - hurt + light, 'thương nhẹ về đội luôn')
 })
 
 test('chữa thương: tốn tài nguyên, xong thì về môn hạ', () => {
@@ -1153,4 +1168,25 @@ test('Chủ điện lên tầng: thư quà mừng mỗi tầng; tầng đột ph
   const boundary = TRIBS[0].hall + 1
   assert.ok(hallGift(boundary).items?.kimDuyen, 'đột phá có Kim Duyên')
   assert.equal(hallGift(boundary + 1).items?.kimDuyen, undefined)
+})
+
+test('chiến báo tách sát thương theo nguồn: mỗi lượt ghi đòn thường / công pháp của hai bên, lượt thi triển mới có sát thương công pháp; hồi phục ghi riêng', () => {
+  const side = (skill: Side['skill']): Side => ({
+    skill,
+    troops: [{ type: 'kiem', tier: 2, n: 500, atk: 20, def: 10, hp: 100 }],
+  })
+  const f = fight(side({ kind: 'burst', v: 1.2, type: 'kiem' }), side({ kind: 'heal', v: 0.3 }), 99)
+  assert.ok(
+    f.rounds.every(r => r.src && r.src[0][0] > 0),
+    'đòn thường mỗi lượt',
+  )
+  for (const r of f.rounds) assert.equal(r.src![0][1] > 0, r.cast[0], 'sát thương công pháp chỉ ở lượt thi triển')
+  assert.ok(
+    f.rounds.some(r => (r.heal?.[1] ?? 0) > 0),
+    'bên hồi phục có ghi đệ tử hồi',
+  )
+  assert.ok(
+    f.rounds.every(r => r.src![1][1] === 0),
+    'công pháp hồi phục không gây sát thương',
+  )
 })

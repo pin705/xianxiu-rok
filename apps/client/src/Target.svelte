@@ -135,17 +135,17 @@
 
 <Sheet open={!!target} {onclose} title={target ? L.target(target) : ''} sub={info?.sub} lore={info?.lore || undefined}>
   {#snippet art()}
-    {#if target && info}<Medal emblem={info.emblem} tone={target.kind as MedalTone} size={62} />{/if}
+    {#if target && info}<Medal emblem={info.emblem} tone={target.kind as MedalTone} size={84} pips={info.tier} />{/if}
   {/snippet}
   {#if target && info}
     {#if foe}
       <Section title={L.map.enemy}>
-        <ul class="row wrap">
+        <!-- hàng quân địch: mỗi hệ một huy hiệu lớn (chấm = bậc), số quân viết dưới -->
+        <ul class="row wrap" style:--gap="18px">
           {#each foe.troops as t, i (i)}
-            <li class="row" style:--gap="5px">
-              <Medal emblem={EMBLEM.unit[t.type]} tone={t.type} size={30} pips={t.tier} /><span class="t-small t-strong"
-                >~{num(t.n)} {L.units[t.type]}</span
-              >
+            <li class="stack center" style:--gap="2px">
+              <Medal emblem={EMBLEM.unit[t.type]} tone={t.type} size={46} pips={t.tier} />
+              <b class="t-num">~{num(t.n)}</b><small class="t-tiny t-soft">{L.units[t.type]}</small>
             </li>
           {/each}
         </ul>

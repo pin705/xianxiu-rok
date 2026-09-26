@@ -261,7 +261,7 @@ export const wheelFree = (s: State, id: FestId, t: number) => festOpen(s, id, t)
 // không âm)
 export const spins = (s: State, id: FestId) => {
   const got = s.fest[id]?.got ?? []
-  return FESTS[id].kind === 'wheel' ? got.length : got.filter(x => x < 0 && x > WISH_BLOOM).length
+  return FESTS[id].kind === 'wheel' ? got.length : got.filter(x => x < 0 && x !== WISH_BLOOM).length
 }
 // Cầu duyên: mỗi lượt ghi −(k + 1) (quà thứ k của cây); cây nở lại (rút đủ quà đặc biệt) ghi WISH_BLOOM. Vòng đang cầu, quà đã rút
 export const WISH_BLOOM = -1000

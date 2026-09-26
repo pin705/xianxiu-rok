@@ -1,6 +1,7 @@
 <script lang="ts">
   // Tài khoản (trong Cài đặt): khách thì gắn email + mật khẩu; đã gắn thì đổi mật khẩu. Mã chuyển máy (một lần, 15 phút),
   // bật thông báo đẩy, đăng xuất / đăng xuất mọi nơi, xoá tài khoản. Server kiểm mọi thứ (apps/server/src/http/account.ts).
+  // Bố cục: nhóm việc thành từng tấm bảng giấy (đăng nhập · chuyển máy · tên & mã quà · thông báo), việc rời đi xuống đáy.
   import { onMount } from 'svelte'
   import type { Net } from './net'
   import { Button, Card, Section, Toggle } from './ui'
@@ -104,49 +105,52 @@
 
 <Section title={L.settings.account}>
   {#if info}
-    <p class="t-small t-lore">{info.email ? L.account.linked(info.email) : L.account.guest}</p>
-    {#if !info.email}
-      <form class="stack" onsubmit={link}>
-        <input
-          type="email"
-          bind:value={email}
-          autocomplete="email"
-          placeholder={L.account.email}
-          aria-label={L.account.email}
-        />
-        <input
-          type="password"
-          bind:value={pass}
-          autocomplete="new-password"
-          minlength="8"
-          placeholder={L.account.pass}
-          aria-label={L.account.pass}
-        />
-        <Button variant="gold" wide type="submit" disabled={busy || !email.includes('@') || pass.length < 8}
-          >{L.account.link}</Button
-        >
-      </form>
-    {:else}
-      <form class="stack" onsubmit={change}>
-        <input
-          type="password"
-          bind:value={old}
-          autocomplete="current-password"
-          placeholder={L.account.old}
-          aria-label={L.account.old}
-        />
-        <input
-          type="password"
-          bind:value={pass}
-          autocomplete="new-password"
-          minlength="8"
-          placeholder={L.account.fresh}
-          aria-label={L.account.fresh}
-        />
-        <Button variant="ghost" wide type="submit" disabled={busy || !old || pass.length < 8}>{L.account.change}</Button
-        >
-      </form>
-    {/if}
+    <Card tone={info.email ? 'paper' : 'glow'}>
+      <p class="t-small t-lore">{info.email ? L.account.linked(info.email) : L.account.guest}</p>
+      {#if !info.email}
+        <form class="stack mt-2" onsubmit={link}>
+          <input
+            type="email"
+            bind:value={email}
+            autocomplete="email"
+            placeholder={L.account.email}
+            aria-label={L.account.email}
+          />
+          <input
+            type="password"
+            bind:value={pass}
+            autocomplete="new-password"
+            minlength="8"
+            placeholder={L.account.pass}
+            aria-label={L.account.pass}
+          />
+          <Button variant="gold" wide type="submit" disabled={busy || !email.includes('@') || pass.length < 8}
+            >{L.account.link}</Button
+          >
+        </form>
+      {:else}
+        <form class="stack mt-2" onsubmit={change}>
+          <input
+            type="password"
+            bind:value={old}
+            autocomplete="current-password"
+            placeholder={L.account.old}
+            aria-label={L.account.old}
+          />
+          <input
+            type="password"
+            bind:value={pass}
+            autocomplete="new-password"
+            minlength="8"
+            placeholder={L.account.fresh}
+            aria-label={L.account.fresh}
+          />
+          <Button variant="ghost" wide type="submit" disabled={busy || !old || pass.length < 8}
+            >{L.account.change}</Button
+          >
+        </form>
+      {/if}
+    </Card>
 
     <Card>
       <div class="stack" style:--gap="4px">
@@ -161,36 +165,42 @@
       </div>
     </Card>
 
-    <form class="stack" onsubmit={renameSect}>
-      <b class="t-small">{L.account.rename} · {g.game.name}</b>
-      <small class="t-tiny t-soft">{L.account.renameHint(decrees)}</small>
-      <input bind:value={fresh} maxlength="20" placeholder={L.account.renameTo} aria-label={L.account.renameTo} />
-      <Button variant="ghost" wide type="submit" disabled={busy || !decrees || [...fresh.trim()].length < 2}
-        >{L.account.renameGo}</Button
-      >
-    </form>
+    <Card>
+      <form class="stack" onsubmit={renameSect}>
+        <b class="t-small">{L.account.rename} · {g.game.name}</b>
+        <small class="t-tiny t-soft">{L.account.renameHint(decrees)}</small>
+        <input bind:value={fresh} maxlength="20" placeholder={L.account.renameTo} aria-label={L.account.renameTo} />
+        <Button variant="ghost" wide type="submit" disabled={busy || !decrees || [...fresh.trim()].length < 2}
+          >{L.account.renameGo}</Button
+        >
+      </form>
 
-    <form class="stack" onsubmit={redeem}>
-      <b class="t-small">{L.account.redeem}</b>
-      <small class="t-tiny t-soft">{L.account.redeemHint}</small>
-      <input
-        bind:value={gift}
-        maxlength="32"
-        autocapitalize="characters"
-        placeholder={L.account.redeem}
-        aria-label={L.account.redeem}
-      />
-      <Button variant="ghost" wide type="submit" disabled={busy || gift.trim().length < 4}>{L.account.redeemGo}</Button>
-    </form>
+      <form class="stack mt-4" onsubmit={redeem}>
+        <b class="t-small">{L.account.redeem}</b>
+        <small class="t-tiny t-soft">{L.account.redeemHint}</small>
+        <input
+          bind:value={gift}
+          maxlength="32"
+          autocapitalize="characters"
+          placeholder={L.account.redeem}
+          aria-label={L.account.redeem}
+        />
+        <Button variant="ghost" wide type="submit" disabled={busy || gift.trim().length < 4}
+          >{L.account.redeemGo}</Button
+        >
+      </form>
+    </Card>
 
     {#if info.push && !pushed}<Button variant="ghost" wide icon="mail" onclick={push}
         >{L.push.toggle}: {L.push.on}</Button
       >{/if}
     {#if info.push && pushed}
-      <small class="t-tiny t-soft">{L.push.kinds}</small>
-      {#each TAGS as tag (tag)}
-        <Toggle checked={!info.off.includes(tag)} onchange={on => toggle(tag, on)}>{L.push.kind[tag]}</Toggle>
-      {/each}
+      <Card>
+        <small class="t-tiny t-soft">{L.push.kinds}</small>
+        {#each TAGS as tag (tag)}
+          <Toggle checked={!info.off.includes(tag)} onchange={on => toggle(tag, on)}>{L.push.kind[tag]}</Toggle>
+        {/each}
+      </Card>
     {/if}
     {#if msg}<p class="t-small" class:t-bad={msg.bad} class:t-good={!msg.bad} role="status">{msg.text}</p>{/if}
 

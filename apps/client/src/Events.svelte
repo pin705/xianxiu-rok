@@ -47,6 +47,7 @@
   import Thief from './Thief.svelte'
   import Wish from './Wish.svelte'
   import Race from './Race.svelte'
+  import Maze from './Maze.svelte'
   import Pass from './Pass.svelte'
   import SeasonCal from './SeasonCal.svelte'
   import Trial from './Trial.svelte'
@@ -57,6 +58,7 @@
     api = null,
     opened,
     onfight,
+    onmaze,
     onreplay,
   }: {
     open: boolean
@@ -64,6 +66,7 @@
     api?: Pick<Net, 'ask'> | null
     opened?: number // lúc mở mùa của giới (Lịch giới)
     onfight?: (elder: ElderId, army: Army, thief?: boolean) => Promise<Report | null> // trận Thí Luyện / Đạo Tặc: server giải, client xem lại
+    onmaze?: (i: number, team: number) => Promise<Report | null> // Hoàng Kim Mê Cảnh: mở ô (có thể là trận)
     onreplay?: (r: Report) => void
   } = $props()
   const g = useGame()
@@ -115,6 +118,7 @@
     khaiLo: 'hammer',
     daTac: 'skull',
     tocChien: 'bolt',
+    meCanh: 'kimDuyen',
     nguyenTieu: 'star',
     xuanHoi: 'star',
     trienLam: 'scroll',
@@ -169,6 +173,7 @@
     khaiLo: 'build',
     daTac: 'demon',
     tocChien: 'bolt',
+    meCanh: 'treasure',
     nguyenTieu: 'moon',
     xuanHoi: 'spring',
     trienLam: 'treasure',
@@ -452,8 +457,15 @@
             </ul>
           {:else}
             {#if def.kind === 'race'}<Race {s} />{/if}
+            {#if def.kind === 'maze'}<Maze {s} onfight={onmaze} {onreplay} />{/if}
             <p class="row between">
-              <b class="pts t-num t-gold">{def.kind === 'drop' ? L.fest.pouches(num(pts)) : L.fest.points(num(pts))}</b>
+              <b class="pts t-num t-gold"
+                >{def.kind === 'drop'
+                  ? L.fest.pouches(num(pts))
+                  : def.kind === 'maze'
+                    ? L.maze.best(pts)
+                    : L.fest.points(num(pts))}</b
+              >
             </p>
             {#if def.kind === 'drop'}
               <!-- lễ rơi đồ: việc nào có thể rơi Linh Nang, tỉ lệ -->
@@ -481,8 +493,8 @@
                   <Card tone={festDone(s, cur, i) && !got(cur, i) ? 'glow' : undefined}>
                     <div class="stack" style:--gap="4px">
                       <p class="row between">
-                        <b class="t-small">{L.fest.goal(num(goal))}</b><small class="t-num t-soft"
-                          >{num(Math.min(pts, goal))}/{num(goal)}</small
+                        <b class="t-small">{def.kind === 'maze' ? L.maze.goal(goal) : L.fest.goal(num(goal))}</b><small
+                          class="t-num t-soft">{num(Math.min(pts, goal))}/{num(goal)}</small
                         >
                       </p>
                       <Meter value={Math.min(1, pts / goal)} size="sm" />

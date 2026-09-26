@@ -36,7 +36,7 @@
     troops: ['bad', 'var(--cinnabar)', 'people'],
     tech: ['azure', 'var(--azurite)', 'scroll'],
     gear: ['good', 'var(--malachite)', 'swords'],
-    elders: ['spirit', 'var(--spirit, #4e9aa8)', 'star'],
+    elders: ['spirit', 'var(--spirit)', 'star'],
   }
   const power = artOf('ui:power')?.src
   function go(k: Part, e: MouseEvent) {
@@ -104,7 +104,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.25));
+    filter: drop-shadow(0 4px 6px rgb(var(--shade) / 0.25));
   }
   .total {
     font-size: var(--fs-7);
@@ -116,7 +116,7 @@
     gap: 2px;
     height: 12px;
     padding: 2px;
-    background: #fff;
+    background: var(--silk);
     border: 1px solid var(--ink3);
     border-radius: 3px;
   }
@@ -143,7 +143,7 @@
     flex: none;
     width: 34px;
     height: 34px;
-    background: #fff;
+    background: var(--silk);
     border: 1.5px solid currentColor;
     border-radius: 50%;
   }

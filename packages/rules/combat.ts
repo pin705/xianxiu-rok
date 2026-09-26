@@ -27,7 +27,13 @@ export type Troop = { type: UnitType; tier: Tier; n: number; atk: number; def: n
 export type Side = { troops: Troop[]; skill?: Skill; skill2?: Skill; el?: Element; dao?: DaoId }
 // n: số còn lại của từng nhóm sau lượt · cast: bên nào thi triển công pháp lượt này · rage: chân nguyên hai bên sau lượt
 // (chiến báo cũ chưa có)
-export type Round = { n: [number[], number[]]; cast: [boolean, boolean]; rage?: [number, number] }
+export type Round = {
+  n: [number[], number[]]
+  cast: [boolean, boolean]
+  rage?: [number, number]
+  src?: [[number, number], [number, number]] // sát thương mỗi bên gây ra lượt này theo nguồn: [đòn thường, công pháp] (chiến báo cũ chưa có)
+  heal?: [number, number] // đệ tử mỗi bên hồi lại nhờ công pháp lượt này
+}
 export type Fight = { win: boolean; rounds: Round[] }
 
 // mulberry32: chỉ dùng phép số nguyên 32-bit nên mọi engine ra cùng dãy
@@ -70,6 +76,11 @@ export function fight(a: Side, b: Side, seed: number): Fight {
   for (let r = 1; r <= MAX_ROUNDS && alive(0) && alive(1); r++) {
     const cast: [boolean, boolean] = [false, false]
     const guard = [1, 1]
+    const src: [[number, number], [number, number]] = [
+      [0, 0],
+      [0, 0],
+    ]
+    const healed: [number, number] = [0, 0]
     for (const i of [0, 1]) {
       if (!sides[i].skill) continue
       rage[i] += RAGE_TURN
@@ -81,7 +92,12 @@ export function fight(a: Side, b: Side, seed: number): Fight {
         // hai độc vụ cùng lượt: chồng nhân (1 − v1)(1 − v2); một thì giữ đúng v
         if (sk.kind === 'weaken')
           weak[1 - i] = { v: weak[1 - i].left === 2 ? 1 - (1 - weak[1 - i].v) * (1 - sk.v) : sk.v, left: 2 }
-        if (sk.kind === 'heal') sides[i].troops.forEach((t, k) => (n[i][k] += Math.floor((t.n - n[i][k]) * sk.v)))
+        if (sk.kind === 'heal')
+          sides[i].troops.forEach((t, k) => {
+            const back = Math.floor((t.n - n[i][k]) * sk.v)
+            n[i][k] += back
+            healed[i] += back
+          })
       }
     }
     const atkMul = weak.map(w => (w.left-- > 0 ? 1 - w.v : 1))
@@ -92,20 +108,22 @@ export function fight(a: Side, b: Side, seed: number): Fight {
       const foe = sides[j].troops
       const bulk = foe.reduce((sum, t, k) => sum + n[j][k] * t.hp, 0)
       if (!bulk) continue
-      const hit = (power: number, type?: UnitType) =>
+      const hit = (power: number, type: UnitType | undefined, from: 0 | 1) =>
         foe.forEach((t, k) => {
           if (!n[j][k]) return
           const adv = type ? advantage(type, t.type) : 1
-          dmg[j][k] += ((power * n[j][k] * t.hp) / bulk) * adv * (DEF_K / (DEF_K + t.def)) * guard[j] * el[i]
+          const d = ((power * n[j][k] * t.hp) / bulk) * adv * (DEF_K / (DEF_K + t.def)) * guard[j] * el[i]
+          dmg[j][k] += d
+          src[i][from] += d
         })
-      sides[i].troops.forEach((t, k) => n[i][k] && hit(n[i][k] * t.atk * atkMul[i] * (0.9 + 0.2 * rand()), t.type))
+      sides[i].troops.forEach((t, k) => n[i][k] && hit(n[i][k] * t.atk * atkMul[i] * (0.9 + 0.2 * rand()), t.type, 0))
       for (const sk of cast[i] ? skills(sides[i]) : [])
         if (sk.kind === 'burst') {
           const base = sides[i].troops.reduce(
             (sum, t, k) => sum + (!sk.type || t.type === sk.type ? n[i][k] * t.atk : 0),
             0,
           )
-          hit(base * sk.v * atkMul[i], sk.type)
+          hit(base * sk.v * atkMul[i], sk.type, 1)
         }
     }
 
@@ -120,7 +138,16 @@ export function fight(a: Side, b: Side, seed: number): Fight {
       })
       if (sides[i].skill && pool[i]) rage[i] += (RAGE_HURT * lost) / pool[i]
     }
-    rounds.push({ n: [[...n[0]], [...n[1]]], cast, rage: [Math.floor(rage[0]), Math.floor(rage[1])] })
+    rounds.push({
+      n: [[...n[0]], [...n[1]]],
+      cast,
+      rage: [Math.floor(rage[0]), Math.floor(rage[1])],
+      src: [
+        [Math.round(src[0][0]), Math.round(src[0][1])],
+        [Math.round(src[1][0]), Math.round(src[1][1])],
+      ],
+      ...(healed[0] + healed[1] > 0 && { heal: healed }),
+    })
   }
   return { win: alive(0) && !alive(1), rounds }
 }

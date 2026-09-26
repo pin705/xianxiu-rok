@@ -107,7 +107,7 @@
     width: 70px;
     margin: -6px -4px 0 0;
     rotate: 4deg;
-    filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.25));
+    filter: drop-shadow(0 3px 5px rgb(var(--shade) / 0.25));
   }
   .two {
     display: grid;
@@ -139,8 +139,8 @@
     font-weight: 800;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: #f5f5f1;
-    background: rgb(31 27 23 / 0.78);
+    color: var(--silk);
+    background: color-mix(in srgb, var(--ink) 80%, transparent);
     clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 50%, 100% 100%, 0 100%, 6px 50%);
   }
   .free .ribbon {
@@ -155,10 +155,10 @@
     /* quầng sau thiệp (bạc: lam xám, vàng: ánh kim) + án gỗ thấp: mặt án, hai chân, bóng dưới đất */
     background:
       radial-gradient(closest-side, rgb(var(--halo) / 0.6), transparent) center 38% / 100% 86% no-repeat,
-      linear-gradient(#9a6a42, #5c3a1f) center bottom 12px / 80% 7px no-repeat,
-      linear-gradient(90deg, #5c3a1f, #3e2714) 22% bottom 3px / 5px 10px no-repeat,
-      linear-gradient(90deg, #5c3a1f, #3e2714) 78% bottom 3px / 5px 10px no-repeat,
-      radial-gradient(closest-side, rgb(0 0 0 / 0.2), transparent) center bottom / 90% 8px no-repeat;
+      linear-gradient(var(--ochre), var(--lacquer2)) center bottom 12px / 80% 7px no-repeat,
+      linear-gradient(90deg, var(--lacquer2), var(--lacquer)) 22% bottom 3px / 5px 10px no-repeat,
+      linear-gradient(90deg, var(--lacquer2), var(--lacquer)) 78% bottom 3px / 5px 10px no-repeat,
+      radial-gradient(closest-side, rgb(var(--shade) / 0.2), transparent) center bottom / 90% 8px no-repeat;
   }
   .stand::before {
     /* viền son chạy dọc mép án (án sơn mài) */
@@ -174,7 +174,7 @@
   .stand :global(.icon) {
     margin-bottom: 16px;
     rotate: -6deg;
-    filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.25));
+    filter: drop-shadow(0 4px 5px rgb(var(--shade) / 0.25));
     transition: transform var(--dur-2) var(--spring);
   }
   .gold .stand :global(.icon) {
@@ -193,8 +193,8 @@
     padding: 1px 10px 2px;
     font-size: var(--fs-1);
     font-weight: 800;
-    color: #f5f5f1;
-    background: rgb(31 27 23 / 0.78);
+    color: var(--silk);
+    background: color-mix(in srgb, var(--ink) 80%, transparent);
     border-radius: 999px;
   }
   .acts {
@@ -228,7 +228,7 @@
   }
   .beads i.on {
     border-color: var(--cinnabar);
-    background: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18);
+    background: radial-gradient(circle at 35% 35%, var(--cinnabar-l), var(--cinnabar) 60%, var(--lacquer));
   }
   /* ---------- quà vừa mở: tờ giấy ghim son ---------- */
   .got {
@@ -239,10 +239,10 @@
     margin-top: var(--sp-3);
     padding: 16px 12px 12px;
     text-align: center;
-    background: #fbf7ec;
-    border: 1px solid #d8cdb4;
+    background: var(--silk);
+    border: 1px solid var(--paper3);
     border-radius: 3px;
-    box-shadow: 0 3px 8px rgb(0 0 0 / 0.14);
+    box-shadow: 0 3px 8px rgb(var(--shade) / 0.14);
     rotate: -0.6deg;
     animation: drop 0.4s var(--spring) both;
   }
@@ -254,8 +254,8 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18);
-    box-shadow: 0 2px 2px rgb(0 0 0 / 0.3);
+    background: radial-gradient(circle at 35% 35%, var(--cinnabar-l), var(--cinnabar) 60%, var(--lacquer));
+    box-shadow: 0 2px 2px rgb(var(--shade) / 0.3);
   }
   .got-h {
     padding: 0 12px 6px;

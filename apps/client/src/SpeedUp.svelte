@@ -1,8 +1,9 @@
 <script lang="ts">
   // Bảng tăng tốc một việc đang chờ (như RoK): đồng hồ còn lại, mọi phù/đan dùng được, mệnh giá nhỏ trước.
   // Mỗi dòng: dùng 1 cái, hoặc "dùng đủ" — số cái vừa đủ xong việc (không phí quá một cái).
+  // Bố cục: đồng hồ cát vẽ tay + giờ còn lại to trên cùng, gợi ý "dùng vừa đủ" viền sáng, rồi các dòng phù / đan kẻ mực đứt.
   import { SPEEDUP, SPEEDUP_BIG, bagFamily, jobOf, type Action, type BagId, type JobKind } from '@rok/rules'
-  import { Icon } from '@rok/art'
+  import { Icon, artOf } from '@rok/art'
   import { Button, Card, Meter, Sheet } from './ui'
   import { denom, speedMin, speedPlan, speedsFor, type SpeedStock } from './bag'
   import { L, clock, progress } from './lib'
@@ -14,6 +15,7 @@
   const now = $derived(g.now)
   const act = g.act
 
+  const glass = artOf('ui:fx-clock')?.src
   const job = $derived(jobOf(game, kind))
   const left = $derived(job ? Math.max(0, job.finishAt - now) : 0)
   const talismans = $derived(speedsFor(game, kind))
@@ -58,9 +60,15 @@
 <Sheet {open} {onclose} center title={L.bag.speedTitle} sub={L.jobs[kind]}>
   {#if job}
     <div class="stack">
-      <p class="row between"><span class="t-soft">{L.bag.remaining}</span><b class="t-num big">{clock(left)}</b></p>
+      <!-- đồng hồ cát là tâm điểm: giờ còn lại viết to cạnh tranh -->
+      <div class="clock">
+        {#if glass}<img src={glass} alt="" draggable="false" />{:else}<Icon name="clock" size={48} />{/if}
+        <span class="stack" style:--gap="2px"
+          ><small class="t-soft">{L.bag.remaining}</small><b class="t-num big">{clock(left)}</b></span
+        >
+      </div>
       <Meter value={progress(job, now)} size="md" />
-      <p class="t-small t-soft">{L.bag.speedHint}</p>
+      <p class="t-tiny t-soft">{L.bag.speedHint}</p>
       {#if !talismans.length && !pills.length}<p class="t-small t-soft">{L.bag.empty}</p>{/if}
       {#if plan.use.length}
         <Card tone="glow">
@@ -120,12 +128,26 @@
 </Sheet>
 
 <style>
+  .clock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+  }
+  .clock img {
+    width: 84px;
+    height: 84px;
+  }
   .big {
-    font-size: var(--fs-6);
+    font-size: var(--fs-7);
+    line-height: 1;
   }
   .rows {
     padding: 0;
-    margin: 0;
     list-style: none;
+  }
+  .rows li {
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--paper3);
   }
 </style>

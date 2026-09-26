@@ -277,6 +277,14 @@ const validLate = (s: any) =>
         (obj(s.nan.q) &&
           [s.nan.q.i, s.nan.q.n, s.nan.q.from, s.nan.q.until].every(num) &&
           METRICS.includes(s.nan.q.m)))))
+// Hoàng Kim Mê Cảnh: tầng, ô, các đội (trưởng lão, quân đầy / còn, lực chiến lúc vào), phúc đã chọn
+const validMaze = (m: any) =>
+  obj(m) &&
+  [m.day, m.floor].every(num) &&
+  [m.tiles, m.bless, m.offer ?? []].every(Array.isArray) &&
+  m.teams.every(
+    (t: any) => Object.hasOwn(ELDERS, t.elder) && isTroops({ ...troops(() => 0), ...t.army }) && num(t.base),
+  )
 const validFest = (s: any) =>
   obj(s.fest) &&
   Object.entries(s.fest).every(
@@ -289,14 +297,10 @@ const validFest = (s: any) =>
       (f.sp === undefined || (Array.isArray(f.sp) && f.sp.every(num))),
   ) &&
   obj(s.vip) &&
-  num(s.vip.pts) &&
-  num(s.vip.streak) &&
-  num(s.vip.day) &&
-  num(s.vip.chest) &&
+  [s.vip.pts, s.vip.streak, s.vip.day, s.vip.chest].every(num) &&
   obj(s.tavern) &&
-  num(s.tavern.silver) &&
-  num(s.tavern.gold) &&
-  num(s.tavern.pity) &&
+  [s.tavern.silver, s.tavern.gold, s.tavern.pity].every(num) &&
+  (s.maze === undefined || validMaze(s.maze)) &&
   obj(s.tokens) &&
   Object.entries(s.tokens).every(([e, n]) => Object.hasOwn(ELDERS, e) && num(n)) &&
   obj(s.stars) &&
@@ -322,12 +326,9 @@ const validFest = (s: any) =>
   (s.strat === undefined || Object.hasOwn(STRATS, s.strat)) &&
   (s.drill === undefined ||
     (obj(s.drill) &&
-      num(s.drill.day) &&
+      [s.drill.day, s.drill.base, s.drill.wins, s.drill.got].every(num) &&
       Object.hasOwn(ELDERS, s.drill.elder) &&
       obj(s.drill.army) &&
-      num(s.drill.base) &&
-      num(s.drill.wins) &&
-      num(s.drill.got) &&
       [s.drill.mods, s.drill.offer ?? []].every(
         (l: unknown) => Array.isArray(l) && l.every(m => Object.hasOwn(DRILL_MODS, m)),
       ))) &&
