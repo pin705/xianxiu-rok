@@ -867,3 +867,26 @@ test("Bói Quẻ Thiên Cơ (Esmeralda's House): lắc ống xăm rút quẻ the
   const hidden = apply({ ...s, seed: 0 }, { type: 'spin', id: 'boQue', n: 1 }, t + DAY)
   assert.ok(hidden.ok, 'mầm 0: client chờ server')
 })
+
+test('Tân Giới Thất Nhật: 8 ngày đầu mùa giới, chỉ tông môn đã luân hồi; việc tính phần làm thêm từ lúc mở lễ, nhánh mở theo giờ mở mùa', () => {
+  const seasonAt = MON
+  const base = newGame(MON - 60 * DAY)
+  const fresh = advance({ ...base, seasonAt }, MON + 1000)
+  assert.equal(festOpen(fresh, 'tanGioi', fresh.time), false, 'chưa luân hồi: đã có Khai Sơn Thất Nhật tân thủ')
+  let s: State = advance({ ...base, seasonAt, rebirths: 1, levels: { ...base.levels, chuDien: 3 } }, MON + 1000)
+  assert.equal(festOpen(s, 'tanGioi', s.time), true)
+  assert.equal(festError(s, 'tanGioi', 0), 'not_done', 'Chủ điện chưa lên thêm')
+  s = { ...s, levels: { ...s.levels, chuDien: 5 } }
+  assert.equal(festProgress(s, 'tanGioi', 'hall'), 2, 'tính phần lên thêm từ lúc mở lễ (3 → 5)')
+  const had = s.items.loBan60 ?? 0
+  s = run(s, { type: 'fest', id: 'tanGioi', i: 0 })
+  assert.equal(s.items.loBan60, had + 1)
+  // nhánh ngày 2 (Kết Minh) mở sau 24 giờ kể từ lúc mở mùa
+  const d = FESTS.tanGioi as Extract<(typeof FESTS)['tanGioi'], { kind: 'tasks' }>
+  const k = d.tasks.findIndex(t => t.day === 1 && t.m === 'hall')
+  const tall: State = { ...s, levels: { ...s.levels, chuDien: 9 } }
+  assert.equal(festError(tall, 'tanGioi', k), 'not_done', 'nhánh ngày 2 chưa mở')
+  assert.equal(festError(advance(tall, seasonAt + DAY + 1000), 'tanGioi', k), null)
+  const end = seasonAt + 8 * DAY + 1
+  assert.equal(festOpen(advance(s, end), 'tanGioi', end), false, 'hết 8 ngày đầu mùa')
+})

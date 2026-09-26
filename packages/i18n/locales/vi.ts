@@ -3138,8 +3138,9 @@ export const vi = {
     claimed: 'Đã nhận',
     day: (n: number) => `Ngày ${n}`,
     branch: ['Nhập Sơn', 'Chiêu Hiền', 'Tụ Linh', 'Khai Mạch', 'Bế Quan'],
+    branchGioi: ['Nhập Giới', 'Kết Minh', 'Tụ Linh', 'Khai Mạch', 'Tranh Phong'], // Tân Giới Thất Nhật
     opensIn: (t: string) => `Nhánh này mở sau ${t}`,
-    chests: 'Rương Khai Sơn — theo số việc đã nhận quà',
+    chests: 'Rương mốc — theo số việc đã nhận quà',
     chestNeed: (n: number) => `Nhận quà ${n} việc`,
     days: (n: number, of: number) => `Đã đăng nhập ${n}/${of} ngày`,
     points: (n: string) => `${n} điểm`,
@@ -3241,6 +3242,10 @@ export const vi = {
       tanThu: {
         name: 'Khai Sơn Thất Nhật',
         desc: 'Tám ngày đầu của tông môn: mỗi ngày mở một nhánh việc mới (Nhập Sơn → Chiêu Hiền → Tụ Linh → Khai Mạch → Bế Quan), xong việc nào nhận quà việc đó; rương cuối theo số việc đã nhận — bỏ ngày nào cũng tiếc.',
+      },
+      tanGioi: {
+        name: 'Tân Giới Thất Nhật',
+        desc: 'Tám ngày đầu mỗi mùa giới, cho tông môn đã luân hồi: mỗi ngày mở một nhánh việc (Nhập Giới → Kết Minh → Tụ Linh → Khai Mạch → Tranh Phong), tính phần làm thêm từ lúc mở lễ; xong việc nào nhận quà việc đó, rương cuối theo số việc đã nhận.',
       },
       khaiVu: {
         name: 'Khai Vụ Tứ Phương',

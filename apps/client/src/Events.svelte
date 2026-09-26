@@ -83,6 +83,7 @@
     nhatKhoa: 'scroll',
     thatNhat: 'star',
     tanThu: 'flag',
+    tanGioi: 'globe',
     tongLenh: 'kimDuyen',
     khaiVu: 'globe',
     binhThe: 'skull',
@@ -143,6 +144,7 @@
     nhatKhoa: 'scroll',
     thatNhat: 'login',
     tanThu: 'flag',
+    tanGioi: 'explore',
     tongLenh: 'treasure',
     khaiVu: 'explore',
     binhThe: 'demon',
@@ -238,6 +240,16 @@
     }
   })
   const def = $derived(cur ? FESTS[cur] : null)
+  // nhánh theo ngày có tên (Khai Sơn / Tân Giới Thất Nhật); lúc ngày 0 của lượt bắt đầu: lễ tân thủ theo giờ lập tông môn, lễ đầu mùa
+  // theo giờ mở mùa, còn lại theo 0h các ngày của khung
+  const branches = $derived(cur === 'tanThu' ? L.fest.branch : cur === 'tanGioi' ? L.fest.branchGioi : null)
+  function zeroOf(id: FestId, stage: number) {
+    const w = FESTS[id].window
+    const at = w.kind === 'newbie' ? s.born : w.kind === 'season' ? s.seasonAt : undefined
+    return (w.kind === 'newbie' || w.kind === 'season') && at !== undefined
+      ? at + w.from * DAY
+      : nextDay(now) - (stage + 1) * DAY
+  }
   const stage = $derived(
     cur && (def?.kind === 'points' || def?.kind === 'shop')
       ? def.stages[Math.min(s.fest[cur]?.stage ?? 0, def.stages.length - 1)]
@@ -375,23 +387,14 @@
                     onclick={() => (dayPick = d)}
                   >
                     <b class="t-small">{L.fest.day(d + 1)}</b>
-                    {#if cur === 'tanThu'}<small class="t-tiny">{L.fest.branch[d]}</small>{/if}
+                    {#if branches}<small class="t-tiny">{branches[d]}</small>{/if}
                     {#if d > f.stage}<Icon name="lock" size={14} />{:else if n}<Badge {n} />{/if}
                   </button>
                 {/each}
               </div>
               {#if day > f.stage}<p class="t-small t-soft">
                   <!-- ngày chưa mở: lễ tân thủ theo giờ lập tông môn, lễ theo lịch theo 0h các ngày của khung -->
-                  {L.fest.opensIn(
-                    L.ago(
-                      Math.max(
-                        0,
-                        (cur === 'tanThu' && s.born !== undefined ? s.born : nextDay(now) - (f.stage + 1) * DAY) +
-                          day * DAY -
-                          now,
-                      ),
-                    ),
-                  )}
+                  {L.fest.opensIn(L.ago(Math.max(0, zeroOf(cur, f.stage) + day * DAY - now)))}
                 </p>{/if}
             {/if}
             <ul class="stack rows">
@@ -401,9 +404,9 @@
                   <Card tone={festDone(s, cur, i) && !got(cur, i) ? 'glow' : undefined}>
                     <div class="stack" style:--gap="4px">
                       <p class="row between">
-                        <b class="t-small">{L.fest.task[t.m as Metric](num(t.n))}</b><small class="t-num t-soft"
-                          >{num(Math.min(v, t.n))}/{num(t.n)}</small
-                        >
+                        <b class="t-small"
+                          >{(def.abs ? L.fest.task[t.m] : (L.fest.gain[t.m] ?? L.fest.task[t.m]))(num(t.n))}</b
+                        ><small class="t-num t-soft">{num(Math.min(v, t.n))}/{num(t.n)}</small>
                       </p>
                       <Meter value={Math.min(1, v / t.n)} size="sm" />
                       <div class="row between">

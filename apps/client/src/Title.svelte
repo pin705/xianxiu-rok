@@ -116,7 +116,7 @@
       <span class="tap">{wait ? L.net.connecting : L.tapToStart}</span>
     </button>
   {:else if step === 'intro'}
-    <button class="cover dim" onclick={tapIntro}>
+    <button class="cover veil" onclick={tapIntro}>
       <span class="lines stack">
         {#each L.intro.slice(0, line + 1) as text, i (i)}<span class="ln">{text}</span>{/each}
       </span>
@@ -124,13 +124,13 @@
     </button>
     <span class="skip"><Button variant="ghost" size="sm" onclick={() => (step = 'dao')}>{L.skip}</Button></span>
   {:else if step === 'dao'}
-    <div class="cover dim pick">
+    <div class="cover veil pick">
       <h2 class="t-title">{L.dao.pick}</h2>
       <p class="t-small hint">{L.dao.pickHint}</p>
       <DaoChoose bind:value={dao} note={L.dao.note} onpick={() => (step = 'name')} />
     </div>
   {:else if step === 'email' || step === 'code'}
-    <div class="cover dim">
+    <div class="cover veil">
       <form class="card scroll-skin stack center" onsubmit={login}>
         <h2 class="t-title">{step === 'code' ? L.account.enterCode : L.account.login}</h2>
         {#if step === 'code'}
@@ -176,7 +176,7 @@
       </form>
     </div>
   {:else}
-    <div class="cover dim">
+    <div class="cover veil">
       <form class="card scroll-skin stack center" class:gone={step === 'stamp'} onsubmit={found}>
         <!-- đạo thống đã chọn: tổ sư, huy hiệu, lối chơi, ba tiềm năng, đệ tử đặc trưng — chạm để chọn lại -->
         <button type="button" class="dao" style:--accent={ACCENT[dao]} onclick={to('dao')} aria-label={L.dao.pick}>
@@ -258,7 +258,7 @@
       font-size: calc(var(--fs-7) * 1.5);
     }
   }
-  .dim {
+  .veil {
     justify-content: center;
     background: rgb(var(--shade) / 0.66);
   }

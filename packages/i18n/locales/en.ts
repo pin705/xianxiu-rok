@@ -3123,8 +3123,9 @@ export const en: Text = {
     claimed: 'Claimed',
     day: (n: number) => `Day ${n}`,
     branch: ['Arrival', 'Recruitment', 'Gathering Qi', 'Opening Veins', 'Seclusion'],
+    branchGioi: ['Arrival', 'Alliance', 'Gathering Qi', 'Opening Veins', 'Contest'], // Seven Days of a New Realm
     opensIn: (t: string) => `This branch opens in ${t}`,
-    chests: 'Founding chests — by goals claimed',
+    chests: 'Milestone chests — by goals claimed',
     chestNeed: (n: number) => `Claim ${n} goals`,
     days: (n: number, of: number) => `Logged in ${n}/${of} days`,
     points: (n: string) => `${n} points`,
@@ -3225,6 +3226,10 @@ export const en: Text = {
       tanThu: {
         name: 'Seven Days of Founding',
         desc: "Your sect's first eight days: a new branch of goals opens each day (Arrival → Recruitment → Gathering Qi → Opening Veins → Seclusion), every goal has a reward, and the final chests count how many goals you claimed.",
+      },
+      tanGioi: {
+        name: 'Seven Days of a New Realm',
+        desc: 'The first eight days of every realm season, for reborn sects: a new branch of goals opens each day (Arrival → Alliance → Gathering Qi → Opening Veins → Contest), counting what you do after it opens; every goal has a reward, and the final chests count how many goals you claimed.',
       },
       khaiVu: {
         name: 'Lifting the Mist',

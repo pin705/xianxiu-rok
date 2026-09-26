@@ -2376,7 +2376,8 @@ export type FestWindow =
 export const vnDay = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d) / 86_400_000
 // Lễ rơi đồ (Strategic Reserve): việc nền có xác suất rơi Linh Nang qua thư — săn yêu thú thắng (sơn môn, bản đồ giới), đội khai mỏ về
 export type DropSrc = 'hunt' | 'gather'
-export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
+// reborn: chỉ người đã luân hồi (lễ đầu mùa cho người cũ — người mới đã có lễ tân thủ cùng khuôn)
+export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily'; reborn?: boolean } & (
   | { kind: 'login'; rewards: Reward[] }
   // tasks — abs: so chỉ số tuyệt đối (đạt tầng n…); day: việc mở từ giai đoạn (ngày) này; chests: rương theo số việc đã nhận quà
   | {
@@ -2559,6 +2560,52 @@ const fests = {
       { need: 16, reward: { items: { thoiQuang180: 1, kinhThu2k: 2 } } },
       { need: 24, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
       { need: 30, reward: { items: { kimDuyen: 2, tuLinh24: 1, huongHoa200: 1 } } },
+    ],
+  },
+  // Tân Giới Thất Nhật (Create Your Own History gắn ngày mở vương quốc — mỗi mùa một giới mới): 8 ngày đầu mỗi mùa giới, cho người
+  // đã luân hồi (xây lại từ căn cơ); như Khai Sơn Thất Nhật nhưng tính phần làm thêm từ lúc mở lễ — mỗi ngày mở một nhánh (Nhập Giới →
+  // Kết Minh → Tụ Linh → Khai Mạch → Tranh Phong), rương cuối theo số việc đã nhận
+  tanGioi: {
+    window: { kind: 'season', from: 0, to: 7 },
+    reborn: true,
+    kind: 'tasks',
+    tasks: [
+      { m: 'hall', n: 2, day: 0, reward: { items: { loBan60: 1 } } },
+      { m: 'hall', n: 4, day: 0, reward: { res: b(20000, 20000, 20000) } },
+      { m: 'build', n: 25, day: 0, reward: { items: { thoiQuang60: 1 } } },
+      { m: 'explore', n: 40, day: 0, reward: { items: { sonHa12: 1 } } },
+      { m: 'sites', n: 3, day: 0, reward: { items: { kinhThu2k: 1 } } },
+      { m: 'win', n: 10, day: 0, reward: { items: { thoiQuang60: 1 } } },
+      { m: 'ally', n: 10, day: 1, reward: { items: { thoiQuang60: 1 } } },
+      { m: 'ally', n: 40, day: 1, reward: { items: { thoiQuang180: 1 } } },
+      { m: 'draw', n: 5, day: 1, reward: { items: { nganDuyen: 1 } } },
+      { m: 'draw', n: 15, day: 1, reward: { items: { kimDuyen: 1 } } },
+      { m: 'hall', n: 6, day: 1, reward: { items: { loBan60: 2, thoiQuang60: 1 } } },
+      { m: 'hunt', n: 10, day: 1, reward: { items: { kinhThu2k: 1 } } },
+      { m: 'tech', n: 5, day: 2, reward: { items: { ngoDao60: 2 } } },
+      { m: 'tech', n: 12, day: 2, reward: { items: { ngoDao180: 1 } } },
+      { m: 'train', n: 2000, day: 2, reward: { items: { luyenBinh60: 1 } } },
+      { m: 'train', n: 6000, day: 2, reward: { items: { luyenBinh180: 1 } } },
+      { m: 'brew', n: 5, day: 2, reward: { items: { thoiQuang60: 1 } } },
+      { m: 'hunt', n: 25, day: 2, reward: { items: { kinhThu2k: 1, chienY: 1 } } },
+      { m: 'gather', n: 60000, day: 3, reward: { items: { khaiLinh8: 1 } } },
+      { m: 'gather', n: 250000, day: 3, reward: { items: { khaiLinh24: 1 } } },
+      { m: 'hall', n: 9, day: 3, reward: { res: b(60000, 60000, 60000), items: { tuLinh24: 1 } } },
+      { m: 'forge', n: 3, day: 3, reward: { items: { thoiQuang180: 1 } } },
+      { m: 'chain', n: 5, day: 3, reward: { items: { kinhThu2k: 2 } } },
+      { m: 'rescue', n: 2, day: 3, reward: { items: { chienY: 1, kinhThu2k: 1 } } },
+      { m: 'speed', n: 300, day: 4, reward: { items: { thoiQuang180: 1 } } },
+      { m: 'speed', n: 1500, day: 4, reward: { items: { thoiQuang480: 1 } } },
+      { m: 'realm', n: 3, day: 4, reward: { items: { kinhThu8k: 1 } } },
+      { m: 'power', n: 20000, day: 4, reward: { items: { thoiQuang480: 1, hoSon24: 1 } } },
+      { m: 'power', n: 60000, day: 4, reward: { items: { thoiQuang480: 1, kimDuyen: 1 } } },
+      { m: 'win', n: 60, day: 4, reward: { items: { kinhThu8k: 1 } } },
+    ],
+    chests: [
+      { need: 8, reward: { items: { thoiQuang180: 2, nganDuyen: 1 } } },
+      { need: 16, reward: { items: { thoiQuang480: 1, kinhThu8k: 1 } } },
+      { need: 24, reward: { items: { kimDuyen: 1, thoiQuang480: 1, tuLinh24: 1 } } },
+      { need: 30, reward: { items: { kimDuyen: 2, hoSon24: 1, huongHoa200: 1 } } },
     ],
   },
   // Tông Lệnh Bảo Khố (Hero Returns): 8 ngày đầu — xây, tuyển, săn yêu, nghiên cứu ra Tông Môn Lệnh; đổi quà, mỗi món có hạn

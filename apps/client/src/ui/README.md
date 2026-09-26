@@ -17,7 +17,7 @@ tâm điểm, chữ ngắn, hình + số. Tranh đồ vật: `artOf('ui:<tên>')
 - Màu vai trò: `--text --text-soft --text-faint --text-inv --good --bad`, khoáng `--paper --paper2 --paper3 --cinnabar
   --malachite --azurite --gold --rim`.
 - Đồ vật: `--wood --wood-l --wood-d` (gỗ), `--talisman --talisman-edge` (giấy bùa), `--pin` (đinh son), `--pill --pill-fg`
-  (viên mực; `--pill-hot`: số đầy trên viên mực), `--altar-top --gilt` (mặt án son, chỉ vàng; `--lacquer`: sơn mài tối), `--rar2 --rar3 --rar4` (phẩm lam · tím · vàng),
+  (viên mực; `--pill-hot`: số đầy trên viên mực), `--altar-top --gilt` (mặt án son, chỉ vàng; `--lacquer`: sơn mài tối), `--stone` (bệ đá), `--thunder-wash` (tím lôi kiếp loang), `--rar2 --rar3 --rar4` (phẩm lam · tím · vàng),
   `--mist` (sương trắng, kênh rgb: nền HUD mờ dần), `--jade` (ngọc lam lục: dải yên — bế quan).
 - Da vẽ tay: `--sk-card` (khung đôi), `--sk-card-glow`, `--sk-card-silk`, `--img-mountains`, `--ui-seal-img`,
   `--ui-ribbon-img`, `--stroke-red`, `--stroke-ink`, `--paper-tex`.
@@ -26,27 +26,29 @@ tâm điểm, chữ ngắn, hình + số. Tranh đồ vật: `artOf('ui:<tên>')
 ## Lớp (theme.css)
 - Bố cục: `.stack` (dọc) `.row` (ngang) `.wrap` `.between` `.center` `.grow` `.grid` (cột đều, `--cols`) `.fill` (tự xếp,
   ô tối thiểu `--min`) `.split` (cột co + cột giãn; `.end-side`: đảo) `.scroller` (hàng cuộn ngang) `.plain` (bỏ chấm danh
-  sách) `.items-start/.items-end` `.justify-center/.justify-end` `.self-start/.self-center/.self-end` `.span-all` `.w-full`
+  sách) `.items-start/.items-end` `.justify-center/.justify-end` `.self-start/.self-center/.self-end` `.middle` (con lưới đứng giữa, cột không co) `.span-all` `.w-full`
   `.rel` `.sticky-top` `.mt-1…5` `.hidden-narrow` `.only-narrow` `.sr-narrow` (máy hẹp: chỉ còn cho trình đọc màn hình). Khoảng cách qua `--gap`.
-- Chữ: `.t-title .t-head .t-strong .t-small .t-tiny .t-lore .t-soft .t-faint .t-good .t-bad .t-gold .t-num .t-ellipsis
+- Chữ: `.t-title .t-head .t-strong .t-small .t-tiny .t-body .t-big .t-giant .w-num .t-lore .t-soft .t-faint .t-good .t-bad .t-gold .t-num .t-ellipsis
   .t-center .t-right .t-left .t-italic .pre-line .nowrap .clamp` (`--lines`) `.t-code` (mã để chép) `.dim` `.on-dark` `.sr` `.t-link` (nút chữ phụ gạch chấm: Để sau, bỏ qua).
 - Đồ vật nhỏ: `.stamp` (dấu son "Đã nhận"), `.path` + `li.hit` (đường mốc thưởng; `.slim`: mốc là dòng thấp), `.rank-no.r1/r2/r3` (đồng tiền hạng; `.lg` cỡ lớn),
   `.ledger` + `li.on/.good` (sổ dòng kẻ đứt); `li > button` dòng bấm được, `.mile` dòng mốc trên `.path` (số mốc rộng `--at`), `.ledge` kệ một ván dưới hàng đồ vật (`--ledge`), `.spot` sân khấu nhỏ giữa bảng cắt tràn (`--h`), `.trio` ba cột hai bên co giữa giãn (cán cân Ta — Địch), `.field` (ô nhập chữ: input, textarea), `.t-upper` (chữ in hoa), `.tray` (khay giấy một món trong quầy đổi),
   `.ruled` + `.on` (một dòng kẻ đứt đứng riêng), `.lamp` + `.on` (đèn trạng thái: đang chơi), `.ruled-top` (nét đứt phía trên nhóm nút), `.lamp.alert` (chấm son trong dòng: tin chưa đọc), `.quote` + `.on` (trích dẫn vạch trái / đang trả lời), `.scroll-box` (hộp cuộn dọc, `--max-h`), `.glyph-btn` (nút một ký tự: emoji, ×), `.vista` (thẻ khung đôi nền núi mờ: danh thiếp),
+  `.brush` (chữ gạch nét cọ son: tiêu đề cột), `.busy-row` (dòng việc đang chờ ánh vàng, kẻ đứt), `.warn` (khung nhắc thiếu nền son nhạt viền đứt), `.wash` (dòng loang màu `--wash`: đợt lôi kiếp),
   `.t-action` (chữ bấm được có biểu tượng, vàng đậm), `.line-btn` (nút trần cả dòng canh trái: mở/thu chi tiết).
 
 ## Component
 | Component | Dùng cho |
 |---|---|
 | `Sheet` / `Page` | bảng trượt / trang của tab (tiêu đề nét cọ son) |
-| `Banner` | băng rôn đầu màn: tên, dải lụa, tranh nghiêng (`art` hoặc snippet `pic`), phần con bên dưới |
+| `Banner` | băng rôn đầu màn: tên (`icon`), dải lụa, tranh nghiêng (`art`/snippet `pic`; `picSize`, `picLeft`, `halo` quầng vàng), `lead` cạnh tranh, phần con bên dưới, `foot` dưới vạch đứt |
 | `Band` | dải lụa ghi giờ/cấp/trạng thái (`tone` red · ink · jade) |
 | `Pill` | viên mực ghi số/giá trên tranh, cảnh |
 | `Seal` | ấn son tròn: nút lớn (có `onclick`) hoặc dấu số đè góc tranh; `big`: số to đóng xuống (tầng vừa mở) |
 | `Altar` | án son bày lễ vật (chi phí, cung phụng) |
 | `Note` | tờ giấy ghim son (bùa, cáo thị, thư); `tilt`, `ready`, `dim`, bấm được |
 | `Board` | bảng gỗ ghim các `Note` |
-| `Shelf` | tủ gỗ nhiều tầng kệ (túi đồ, tủ đan, kệ hàng, kệ bí kíp) |
+| `Shelf` | tủ gỗ nhiều tầng kệ (túi đồ, tủ đan, kệ hàng, kệ bí kíp); `cols` số ô cố định, `label` nhóm |
+| `Ware` | món có tên trên `Shelf` để chọn: hình, đồng tiền cấp/số (`n`, `full`), tên gạch son khi chọn, `busy`, `side` (chân dung nhỏ), khoá — kệ bí kíp, giá binh khí, kệ đan (khác `Goods`: ô hình không tên) |
 | `Goods` | món đồ đứng trên `Shelf` để chọn: hình, mệnh giá góc trên (`tag`), số lượng (`n`); `look` cell (ô túi đồ) · jar (lọ đan), `faded`, `dot` |
 | `Rays` | hào quang tia sáng xoay chậm sau đồ vật (ấn mở khoá, tranh thu nhận): `size`, `y`, `reach`, `alpha`, `tone` |
 | `Trophy` | đồ vật vừa mở/nhận trên đĩa sáng: tranh (con), tên gạch son, dòng son nhỏ; bấm được, hiện lần lượt theo `i` |
@@ -59,6 +61,13 @@ tâm điểm, chữ ngắn, hình + số. Tranh đồ vật: `artOf('ui:<tên>')
 | `Face` | chân dung trong vòng ngọc (`ring`: vòng khác — khung hồ sơ đặc biệt) |
 | `Speech` | bong bóng lời nói (chat, cố vấn); `fit` rộng theo chữ, `onclick` bấm được |
 | `InkArrow` | mũi tên nét mực "trước → sau" |
+| `Ascend` | bậc thăng trước → sau: snippet `from` `to` + mũi tên mực, nhãn sau tô son; `glow`, `align` end · center, `small` |
+| `Timer` | thẻ giờ cạnh nút ấn son: thời gian + dòng phụ (xong lúc…) |
+| `Podium` | sân đứng: hàng nhân vật vẽ tay, người chọn đứng lớn trên bệ đá (chọn hệ đệ tử) |
+| `Slip` | lá bùa nhỏ ghim son chọn một mức (bậc): `pips`, `lock`, `on` |
+| `Tally` | sổ số liệu: ô nhãn + số, ngăn nét đứt; `cols`, `size` lg · md |
+| `Choice` | dòng chọn một món: tranh + tên + dòng phụ, chọn viền son (cột đổi đi / nhận về) |
+| `Art` | tranh đồ vật `ui:<art>` cỡ `size` (lùi về Icon khi tắt art), `tilt` |
 | `Tile` | lối vào bằng tranh đồ vật + nhãn (`look` paper · ink, `selected`, `dim`: ngăn chưa mở) |
 | `Cell` | ô trò chơi trên lưới `.grid` (lật bài, mê cung, khảo cổ): `back` card · fog · stone, `up`, `done`, `busy`, `ring`, `ratio` |
 | `Lattice` + `RingNode` | trận đồ lưới 3 cột nối nét mực đứt; trận nhãn đĩa tròn có vòng tiến độ, ấn son tầng, sao (đại trận minh) |

@@ -182,7 +182,7 @@ export function festCalendar(s: State, t: number, n = 7): { day: number; ids: Fe
     const at = k ? noon : t // hôm nay: đúng lúc này (sự kiện tân thủ tính theo giờ)
     return {
       day,
-      ids: FEST_IDS.filter(id => s.levels.chuDien >= (FESTS[id].hall ?? 1) && festWindow(s, FESTS[id], at)),
+      ids: FEST_IDS.filter(id => festFits(s, FESTS[id]) && festWindow(s, FESTS[id], at)),
     }
   })
 }
@@ -225,8 +225,10 @@ export const festEnds = (s: State, id: FestId, t: number) => festWindow(s, FESTS
 export const festOpen = (s: State, id: FestId, t: number) => {
   const d = FESTS[id]
   const w = festWindow(s, d, t)
-  return !!w && s.levels.chuDien >= (d.hall ?? 1) && s.fest[id]?.key === w.key
+  return !!w && festFits(s, d) && s.fest[id]?.key === w.key
 }
+// Tông môn này dự được lễ d không: đủ tầng Chủ điện, lễ cho người đã luân hồi thì phải luân hồi rồi
+export const festFits = (s: State, d: FestDef) => s.levels.chuDien >= (d.hall ?? 1) && (!d.reborn || s.rebirths > 0)
 export const festPoints = (s: State, id: FestId) => {
   const f = s.fest[id]
   const d = FESTS[id]

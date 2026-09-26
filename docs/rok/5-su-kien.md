@@ -217,7 +217,8 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Rương cuối cho "Tông Môn Lệnh".
 - **Game mình:** 🟡.
   - Có: **Khai Sơn Thất Nhật** (`tanThu`, 8 ngày theo đồng hồ riêng từng tông môn): 5 nhánh mở theo ngày — Nhập Sơn (Chủ điện, xây, thắng trận) → Chiêu Hiền (cấp trưởng lão, mở thiếp, giúp minh) → Tụ Linh (công pháp, săn yêu, tuyển) → Khai Mạch (khai mỏ giới, pháp bảo, thôn trang) → Bế Quan (tăng tốc, bí cảnh, thế lực), 30 việc có quà, **4 rương cuối theo số việc đã nhận** (8 / 16 / 24 / 30); UI thanh ngày (khoá + giờ mở, chấm đỏ theo ngày). Cùng **Khai Vụ Tứ Phương**, **Thất Nhật Lễ**, **Tông Lệnh Bảo Khố**; 71 nhiệm vụ chính tuyến.
-  - Thiếu: bản gắn ngày mở giới (mỗi mùa có giới mới), rương đổi Tông Môn Lệnh.
+  - Gắn ngày mở giới: **Tân Giới Thất Nhật** (`tanGioi`, lễ cờ `reborn`: 8 ngày đầu mỗi mùa giới — mỗi mùa một giới mới như vương quốc mới của RoK — cho tông môn đã luân hồi, người mới đã có bản tân thủ): 5 nhánh mở theo giờ mở mùa — Nhập Giới (Chủ điện, xây, mê vụ, thôn trang, thắng trận) → Kết Minh (giúp minh, mở thiếp, săn yêu) → Tụ Linh (công pháp, tuyển, luyện đan) → Khai Mạch (khai mỏ, pháp bảo, săn liên hoàn, cứu nạn) → Tranh Phong (tăng tốc, bí cảnh, thế lực, thắng trận), 30 việc tính phần làm thêm từ lúc mở lễ (chữ "lên thêm / tăng thêm"), 4 rương cuối theo số việc (8 / 16 / 24 / 30).
+  - Thiếu: rương đổi Tông Môn Lệnh.
 - **Ưu tiên:** P0 · **Công sức:** M. Cùng khuôn K6 với mọi sự kiện lễ, làm một lần dùng nhiều lần.
 
 #### A2. Hero Returns — đổi Emblem of Loyalty
@@ -1226,7 +1227,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 |---|---|---|---|---|---|
 | — | Event Center (màn sự kiện, chấm đỏ) | Trung tâm Sự kiện | ✅ cột thẻ tranh bên trái, chấm đỏ đếm quà, dấu "!" vàng cho lượt lễ mới mở chưa xem (New), băng rôn tranh + đếm ngược; chưa có lịch sử lễ đã qua | P0 | S |
 | — | Event Calendar (lưới 7 ngày, báo trước ~3 ngày) | Lịch giới | ✅ lịch 7 ngày | P0 | M |
-| A1 | Create Your Own History | Khai Sơn Thất Nhật | 🟡 Khai Sơn Thất Nhật 5 nhánh mở theo ngày + rương; chưa gắn ngày mở giới | P0 | M |
+| A1 | Create Your Own History | Khai Sơn Thất Nhật | ✅ Khai Sơn Thất Nhật (tân thủ) + Tân Giới Thất Nhật (8 ngày đầu mỗi mùa giới, người đã luân hồi) — 5 nhánh mở theo ngày + rương; chưa có rương đổi Tông Môn Lệnh | P0 | M |
 | A2 | Hero Returns | Tông Lệnh Bảo Khố | ✅ | P0 | S |
 | A3 | Who Will Reign Supreme | Giới Chủ Tranh Phong | ✅ `gioiChu` (khung mùa) | P1 | S |
 | A4 | Path of Wisdom | Nhập Môn Ngộ Đạo | ✅/🟡 | P2 | S |
