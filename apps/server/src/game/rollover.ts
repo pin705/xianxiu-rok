@@ -46,6 +46,7 @@ import {
   arkAt,
   arkOf,
   arkStep,
+  betSettle,
   SEASON_DAYS,
   partyStep,
   aquizStep,
@@ -274,8 +275,9 @@ function arkCheck(w: World, now: number) {
   if (r.world === w.shared) return
   const champ = r.world.ark?.cup?.final?.[0]
   if (champ !== undefined && !ark.cup?.final) w.record({ at: now, k: 'cup', a: [r.world.allies[champ]?.tag ?? '?'] })
-  w.share(r.world)
-  for (const [pid, s] of r.changed) {
+  const bet = betSettle(new Map([...w.ps, ...r.changed]), r.world, now) // Luận Kiếm Đặt Cược: trận playoff vừa xong thì trả cược
+  w.share(bet.world)
+  for (const [pid, s] of [...r.changed, ...bet.changed]) {
     const slot = w.slots.get(pid)
     if (slot) w.commit(slot, s)
   }

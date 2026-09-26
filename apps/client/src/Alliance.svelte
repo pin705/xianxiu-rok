@@ -652,7 +652,11 @@
           <ul class="stack" style:--gap="2px">
             {#each ally.rallies as r (r.id)}<li class="row t-small">
                 <span class="grow"
-                  >{L.world.rallyAt(nameOf(r.by), rallyWhat(r), clock(Math.max(0, r.at - game.time)))}</span
+                  >{L.world.rallyAt(
+                    r.tag ? `[${r.tag}] ${r.name ?? '?'}` : nameOf(r.by),
+                    rallyWhat(r),
+                    clock(Math.max(0, r.at - game.time)),
+                  )}</span
                 >
                 {#if r.task === 'raid' && onraid && r.at > game.time}<Button
                     size="sm"

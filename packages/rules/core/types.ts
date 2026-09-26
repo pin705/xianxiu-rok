@@ -283,6 +283,7 @@ export type MailArgs = {
   spyVeil: [foe: string, x: number, y: number] // do thám tông môn đang dùng Ẩn Tung Phù: không dò được gì
   code: [code: string] // quà mã quà tặng
   league: [rank: number] // Cửu Thiên Luận Đạo Hội: minh mình hạng rank cả mùa
+  bet: [win: 0 | 1, tag: string, stage: 'semi' | 'final' | 'third', n: number] // Luận Kiếm Đặt Cược: trúng nhận n tệ / trượt hoàn n tệ
   camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
   campStage: [n: number, m: string, won: 0 | 1, a: number, b: number] // chặng thi đua n (việc m): phái mình thắng, điểm hai phái
   ark: [win: 0 | 1, foe: string, mine: number, theirs: number] // Tranh Đoạt Linh Châu: thắng / thua minh foe, điểm hai bên
@@ -394,6 +395,7 @@ export type State = {
   tokens: Partial<Record<ElderId, number>> // tín vật (hồn ấn) từng trưởng lão
   stars: Partial<Record<ElderId, number>> // sao trưởng lão (không có = 1 sao)
   skl?: Partial<Record<ElderId, number[]>> // tầng [công pháp, tâm pháp 1, 2…] đã ngộ (không có = tầng 1)
+  relics?: Partial<Record<ElderId, number>> // Anh Linh Điện: bậc di vật của trưởng lão trong mùa này
   ach: Partial<Record<AchId, number>> // thành tựu: số bậc đã nhận quà
   incoming?: Incoming[] // đội đang kéo tới cướp mình (như Tháp canh của RoK) — server ghi lúc bên kia xuất quân
   contrib?: Contrib // cống hiến tiên minh (chưa từng góp / giúp: chưa có)

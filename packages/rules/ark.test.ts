@@ -7,6 +7,7 @@ import {
   ARK_TAKE,
   LEAGUE_LOSE,
   LEAGUE_WIN,
+  coins,
   expAt,
   newGame,
   type State,
@@ -18,6 +19,8 @@ import {
   arkRow,
   arkStep,
   atlas,
+  betOpen,
+  betSettle,
   endSeason,
   freshWorld,
   leagueBoard,
@@ -284,4 +287,100 @@ test('Cửu Thiên playoff: trận áp chót của mùa là bán kết 4 minh đ
   const out = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, end, 1, new Set())
   const rank = (pid: number) => out.changed.get(pid)!.mail.find(m => m.k === 'league')?.a
   assert.deepEqual([rank(fin[0] * 10), rank(fin[1] * 10), rank(30), rank(40)], [[1], [2], [3], undefined])
+})
+
+test('Luận Kiếm Đặt Cược: hạt giống chốt khi hết trận tuần trước bán kết; cược một bên mỗi trận; trúng nhận × hệ số, trượt hoàn sau chung kết', () => {
+  // minh 1–4 vào playoff (minh 4 không ai đủ tầng: xử thua, minh 3 yếu); 100 cược, 101 không có tệ
+  const ps: Players = new Map()
+  const allies: World['allies'] = {}
+  for (let id = 1; id <= 4; id++) {
+    const members: Record<number, 0 | 2> = {}
+    for (let k = 0; k < 3; k++) {
+      const pid = id * 10 + k
+      const s = sect(`M${pid}`, id !== 3)
+      ps.set(pid, id === 4 ? { ...s, levels: { ...s.levels, chuDien: 1 } } : s)
+      members[pid] = k ? 0 : 2
+    }
+    allies[id] = ally(id, `T${id}`, members)
+  }
+  ps.set(100, { ...sect('Khách', true), honorAll: 4000 }) // 200 tệ
+  ps.set(101, sect('Nghèo', true))
+  const wk = Math.floor((T0 + 7 * 3_600_000) / (7 * 86_400_000)) + 1
+  const end = arkAt(wk + 1) + ARK_ROUNDS * ARK_ROUND + 60_000 // tuần wk bán kết, wk + 1 chung kết
+  let w: World = {
+    ...freshWorld(),
+    allies,
+    ark: {
+      on: -1,
+      done: -1,
+      signed: [],
+      live: [],
+      last: [],
+      league: { 1: [3, 0, 9], 2: [2, 1, 7], 3: [1, 2, 5], 4: [1, 2, 4] },
+    },
+  }
+  const step = (at: number) => {
+    const r = arkStep(ps, w, at, 7, end)
+    const b = betSettle(new Map([...ps, ...r.changed]), r.world, at)
+    for (const [k, v] of [...r.changed, ...b.changed]) ps.set(k, v)
+    w = b.world
+  }
+  const bet = (pid: number, on: number, n: number, at: number) => {
+    const r = worldAct(ps, pid, { type: 'leagueBet', on, n }, at, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  assert.deepEqual(betOpen(w), [], 'chưa chốt hạt giống: chưa cược')
+  const t1 = arkAt(wk - 1) + ARK_ROUNDS * ARK_ROUND + 1000
+  step(t1)
+  assert.deepEqual(
+    arkOf(w).cup,
+    { seeds: [1, 2, 3, 4], win: [], lose: [] },
+    'hết trận tuần trước bán kết: chốt hạt giống',
+  )
+  assert.deepEqual(betOpen(w), [
+    ['semi', 1, 4],
+    ['semi', 2, 3],
+  ])
+  assert.equal(bet(100, 1, 30, t1), null)
+  assert.equal(bet(100, 4, 10, t1), 'taken', 'mỗi trận một bên')
+  assert.equal(bet(100, 1, 30, t1), 'limit', 'tối đa BET_MAX một trận')
+  assert.equal(bet(100, 3, 20, t1), null)
+  assert.equal(bet(100, 5, 10, t1), 'gone', 'minh ngoài playoff')
+  assert.equal(bet(101, 2, 10, t1), 'not_enough')
+  assert.equal(coins(ps.get(100)!), 150)
+  // bán kết: minh 4 xử thua ngay — cược minh 1 trúng ×2; trận 2–3 đang đánh thì đóng cược
+  step(arkAt(wk) + 1000)
+  assert.equal(coins(ps.get(100)!), 210)
+  assert.deepEqual(ps.get(100)!.mail.at(-1)!.a, [1, 'T1', 'semi', 60])
+  assert.equal(bet(100, 2, 10, arkAt(wk) + 2000), 'gone', 'playoff đang đánh')
+  // bán kết xong: minh 3 thua — cược trượt chờ hoàn; mở cược chung kết + tranh hạng ba
+  const t2 = arkAt(wk) + ARK_ROUNDS * ARK_ROUND + 1000
+  step(t2)
+  assert.deepEqual(w.bets, [{ pid: 100, k: 'semi', on: 3, n: 20, lost: true }])
+  assert.deepEqual(betOpen(w), [
+    ['final', 1, 2],
+    ['third', 4, 3],
+  ])
+  assert.equal(bet(100, 2, 50, t2), null)
+  step(arkAt(wk + 1) + 1000)
+  step(arkAt(wk + 1) + ARK_ROUNDS * ARK_ROUND + 1000)
+  const won = arkOf(w).cup!.final![0] === 2
+  assert.deepEqual(w.bets, [], 'playoff xong: trả hết')
+  assert.equal(
+    coins(ps.get(100)!),
+    160 + (won ? 75 : 50) + 20,
+    'chung kết trúng ×1,5 hay hoàn; cược bán kết trượt được hoàn',
+  )
+})
+
+test('Luận Kiếm Đặt Cược: hết mùa còn cược treo thì hoàn tệ', () => {
+  const ps: Players = new Map([[100, { ...sect('Khách', true), honorAll: 4000 }]])
+  const w: World = { ...freshWorld(), bets: [{ pid: 100, k: 'final', on: 1, n: 40 }] }
+  ps.set(100, { ...ps.get(100)!, coinSpent: 40 })
+  const out = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, T0, 1, new Set())
+  assert.equal(coins(out.changed.get(100)!), 200)
+  assert.equal(out.world.bets, undefined)
 })

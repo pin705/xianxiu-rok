@@ -46,6 +46,7 @@
   import { Icon, Portrait } from '@rok/art'
   import ElderStory from './ElderStory.svelte'
   import ElderSwap from './ElderSwap.svelte'
+  import ElderRelic from './ElderRelic.svelte'
   import { Button, Card, Medal, Meter, Page, Section, Sheet, Tabs, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num, unitName, type PanelTab } from './lib'
   import Help from './Help.svelte'
@@ -313,6 +314,7 @@
         </Card>
       {/if}
       <ElderSwap elder={e} />
+      <ElderRelic elder={e} />
     </Section>
     {@const g = gearOf(game, e)}
     {@const busy = isMarching(game, e)}

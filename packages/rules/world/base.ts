@@ -200,6 +200,9 @@ export type World = {
   rallies: Record<number, Rally>
   tourney?: Tourney // Luận Kiếm Đại Hội (tuần cuối mùa)
   packets?: Packet[] // Hồng Bao đang gửi trong giới
+  rule?: number // Thiên Mệnh Chọn Luật: luật của mùa này (RULES), phiếu chọn luật mùa sau (người → luật)
+  votes?: Record<number, number>
+  bets?: { pid: number; k: 'semi' | 'final' | 'third'; on: number; n: number; lost?: true }[] // Luận Kiếm Đặt Cược (world/bets.ts)
   nextRally: number
   pts: Record<number, number>
   orders: Record<number, Order>
@@ -325,7 +328,7 @@ export const put = (w: World, al: Alliance): World => ({ ...w, allies: { ...w.al
 export function allyTouched(prev: World, next: World): number[] {
   const rallies = (w: World, aid: number) =>
     Object.values(w.rallies)
-      .filter(r => r.ally === aid)
+      .filter(r => r.ally === aid || w.allies[aid]?.naps?.includes(r.ally)) // kết trận minh ước cũng báo
       .map(r => r.id)
       .join()
   const out = new Set<number>()

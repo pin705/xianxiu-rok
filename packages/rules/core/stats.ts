@@ -68,6 +68,7 @@ import {
   UNITS,
   STAR_BONUS,
   EXPERTISE,
+  RELIC_BONUS,
   PASSIVE_LV,
   SKILL_LV_POWER,
   SKILL_MAX,
@@ -133,6 +134,7 @@ export function lead(s: State, elder: ElderId, key: Bonus) {
   if (t) TALENT_NODES.forEach((d, i) => own(d.key) === key && (v += d.v * (t[i] ?? 0)))
   if (key === 'skill') v += SKILL_LV_POWER * (skillLv(s, elder)[0] - 1) // tầng công pháp đã ngộ
   if (expertOf(s, elder)) v += EXPERTISE[key] ?? 0 // Bản Mệnh Thần Thông
+  v += (RELIC_BONUS[key] ?? 0) * (s.relics?.[elder] ?? 0) // Anh Linh Điện (di vật trong mùa)
   return v + (STAR_BONUS[key] ?? 0) * ((s.stars?.[elder] ?? 1) - 1) // sao trưởng lão (Chiêu Hiền Đài)
 }
 export const talentPoints = (s: State, elder: ElderId) =>

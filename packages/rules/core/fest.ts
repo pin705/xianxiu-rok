@@ -108,8 +108,13 @@ export function festWindow(
 }
 
 // Lễ may rủi (vòng quà, bàn xúc xắc): kiếm lệnh từ việc trong lễ, mỗi ngày một lượt miễn phí, kết quả theo mầm server
-export const luck = (d: FestDef): d is Extract<FestDef, { kind: 'wheel' | 'dice' | 'egg' | 'dig' | 'wish' }> =>
-  d.kind === 'wheel' || d.kind === 'dice' || d.kind === 'egg' || d.kind === 'dig' || d.kind === 'wish'
+export const luck = (d: FestDef): d is Extract<FestDef, { kind: 'wheel' | 'dice' | 'egg' | 'dig' | 'wish' | 'omen' }> =>
+  d.kind === 'wheel' ||
+  d.kind === 'dice' ||
+  d.kind === 'egg' ||
+  d.kind === 'dig' ||
+  d.kind === 'wish' ||
+  d.kind === 'omen'
 const used = (d: FestDef): Metric[] => {
   if (d.kind === 'tasks' || d.kind === 'activity') return [...new Set(d.tasks.map(x => x.m))]
   return d.kind === 'points' || d.kind === 'shop' || d.kind === 'cards' || d.kind === 'offer' || luck(d)
@@ -331,7 +336,8 @@ export function festDone(s: State, id: FestId, i: number) {
   }
   if (d.kind === 'shop') return !!d.shop[i] && festTokens(s, id) >= d.shop[i].price
   if (d.kind === 'wheel' || d.kind === 'wish' || d.kind === 'cards' || d.kind === 'swap') return false // không có quà nhận
-  if (d.kind === 'dice' || d.kind === 'egg') return i < d.goals.length && spins(s, id) >= d.goals[i] // rương mốc theo số lượt
+  if (d.kind === 'dice' || d.kind === 'egg' || d.kind === 'omen')
+    return i < d.goals.length && spins(s, id) >= d.goals[i] // rương mốc theo số lượt
   if (d.kind === 'dig') return i < d.goals.length && digAt(s, id).layer >= d.goals[i] // rương mốc theo số tầng đã qua
   if (d.kind === 'thief') return i < d.goals.length && (f.sp?.[f.stage] ?? 0) >= d.goals[i] // rương ngày: sát thương hôm nay
   if (d.kind === 'offer') return i < d.goals.length && (f.sp?.[1] ?? 0) >= d.goals[i] // cấp theo kinh nghiệm đã nộp

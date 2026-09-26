@@ -7,7 +7,17 @@ import { apOf, spendAp } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Buff, type March, type State } from '../core/types.ts'
 import { compact, noGain } from '../core/util.ts'
-import { AP_HUNT, BOSSES, GARRISON_MAX, RALLY_MAX, RALLY_WAIT, TIDE_PROD, type Bonus, type ElderId } from '../data.ts'
+import {
+  AP_HUNT,
+  BOSSES,
+  GARRISON_MAX,
+  RALLY_MAX,
+  RALLY_WAIT,
+  RULES,
+  TIDE_PROD,
+  type Bonus,
+  type ElderId,
+} from '../data.ts'
 import {
   allyOf,
   farErr,
@@ -267,7 +277,9 @@ function rallyAct(
   if (!map || !s.seat) return no('far')
   if (!al) return no('locked')
   const rally = a.type === 'rallyJoin' ? w.rallies[a.id] : undefined
-  if (a.type === 'rallyJoin' && (!rally || rally.ally !== al.id || rally.at <= t)) return no('gone')
+  // góp đội vào kết trận của minh mình hay của minh ước (Minh Ước chung kết trận)
+  if (a.type === 'rallyJoin' && (!rally || (rally.ally !== al.id && !al.naps?.includes(rally.ally)) || rally.at <= t))
+    return no('gone')
   if (rally?.task === 'raid') return no('bad') // công sơn: raidJoin
   const i = a.type === 'rally' ? a.i : rally!.i
   const p = map.atlas.points[i]
@@ -330,6 +342,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     b.src === 'eve' ||
     b.src === 'thoi' ||
     b.src === 'order' ||
+    b.src === 'rule' ||
     b.src === 'fort' ||
     b.src === 'askill' ||
     b.src.startsWith('tide')
@@ -352,6 +365,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
       ...eveBuffs(w, pid, at), // Khai Giới Trảm Tà: minh đứng đầu giới vận
       ...thoiBuffs(map, s), // Thiên Thời: thời đang chạy + chỉ lệnh đã chọn
       ...orderBuffs(map, allyOf(w, pid)), // Minh lệnh của thời
+      ...Object.entries(RULES[w.rule ?? -1] ?? {}).map(([key, v]) => ({ key: key as Bonus, v, until: 0, src: 'rule' })), // luật mùa
       ...fortBuffs(w, pid, at), // Tổng đà của minh
     ]
     const keep = s.buffs.filter(b => !mapped(b))

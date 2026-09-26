@@ -649,6 +649,7 @@
       {me}
       load={b => net?.ranks(b).then(r => (r.ok ? r.data : null)) ?? Promise.resolve(null)}
       season={info ? () => net?.ask({ k: 'season' }) ?? Promise.resolve(null) : undefined}
+      send={sendWorld}
       onclose={() => (ranksOpen = false)}
     />
     <Result {outcome} onclose={() => (outcome = null)} onreplay={r => (replay = r)} />
@@ -686,4 +687,3 @@
   {/if}
 </svelte:boundary>
 <Conn {status} onretry={() => net?.retry()} onfresh={() => (status = 'nosect')} />
-

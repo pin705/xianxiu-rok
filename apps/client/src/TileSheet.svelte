@@ -185,6 +185,8 @@
     point && ally ? ally.rallies.filter(r => r.task !== 'raid' && r.i === point.i && r.at > now) : [],
   )
   const isAlly = (pid: number) => !!ally?.people.some(p => p.pid === pid)
+  // người cùng minh hay thuộc minh ước (Minh Ước chung kết trận): viện binh được, không đánh được
+  const isFriend = (s: { pid: number; aid?: number }) => isAlly(s.pid) || (!!s.aid && !!ally?.naps?.includes(s.aid))
   // cướp khoáng: đội tông môn khác (không phải đồng minh) đang khai ở mỏ này; khai trong lãnh thổ minh mình thì an toàn
   const digging = (m: MapMarch) => (m.dig ?? 0) > now && m.pid !== me && !isAlly(m.pid)
   const diggers = $derived(
@@ -377,7 +379,7 @@
           >{/if}
       </div>
     </Card>
-    {#if seat.pid !== me && isAlly(seat.pid) && r}
+    {#if seat.pid !== me && isFriend(seat) && r}
       {#if aiding}
         <ArmyPick
           field

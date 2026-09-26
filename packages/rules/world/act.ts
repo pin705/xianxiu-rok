@@ -33,6 +33,8 @@ import { bookActions, type BookAction } from './book.ts'
 import { thoiActions, type ThoiAction } from './thoi.ts'
 import { redirectActions, type RedirectAction } from './redirect.ts'
 import { packetActions, type PacketAction } from './packet.ts'
+import { voteActions, type VoteAction } from './vote.ts'
+import { betActions, type BetAction } from './bets.ts'
 import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
@@ -65,6 +67,8 @@ export type WorldAction =
   | ThoiAction
   | RedirectAction
   | PacketAction
+  | VoteAction
+  | BetAction
   | LoharAction
   | PotAction
   | ArkAction
@@ -96,6 +100,8 @@ const WORLD: WorldActions<WorldAction> = {
   ...thoiActions,
   ...redirectActions,
   ...packetActions,
+  ...voteActions,
+  ...betActions,
   ...loharActions,
   ...potActions,
   ...arkActions,

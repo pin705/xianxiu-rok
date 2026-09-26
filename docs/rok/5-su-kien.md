@@ -827,7 +827,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Cơ chế:** tiêu gem để "bói" ra quà ngẫu nhiên. Ví dụ tỉ lệ: rương tài nguyên cấp 4 × 5: 24,2 %; tăng tốc 8 giờ các loại × 4: mỗi loại
   10,08 %; rương nguyên liệu chọn: 2–12 %. Luật hứa **mỗi quẻ luôn đáng hơn số gem bỏ ra**. Rương mốc ở 10 / 20 / 40 / 70 quẻ.
 - **Tu tiên hoá:** "Bói Quẻ Thiên Cơ".
-- **Game mình:** ❌ · **Ưu tiên:** P2 (chỉ bản dùng tiền tệ lễ) · **Công sức:** S.
+- **Game mình:** ✅ Bói Quẻ Thiên Cơ (lễ `boQue` 3 ngày mỗi 21 ngày, kiểu `omen` — `omen` ở `sect/fest.ts`, `Omen.svelte`): việc trong lễ cho Linh Xăm, lắc ống xăm rút quẻ theo trọng số (mầm server) — Thượng Thượng 5 % (Kim Duyên Phù + Thời Quang 3 giờ), Thượng 20 %, Trung 45 %, Hạ 30 %, quẻ nào cũng đáng hơn giá; xin 1 hay 10 quẻ, mỗi ngày một quẻ miễn phí, "Quẻ vừa xin" hiện 10 quẻ cuối; rương mốc 10 / 20 / 40 / 70 quẻ · **Ưu tiên:** P2 · **Công sức:** S.
 
 #### F4. Esmeralda's Prayer / Collection / Treasures (chuỗi Spring Symphony, 10 ngày)
 - **Prayer:**
@@ -890,7 +890,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Cơ chế:** Mark of the Champion (đăng nhập, gói, nhiệm vụ "Allure of Gold") cược vào liên minh cùng realm trong vòng playoff 32 đội.
   Hệ số cược giảm dần theo vòng. Thắng nhận thêm dấu; thua được hoàn sau chung kết. Có Champion Shop. Thuộc Osiris League — file 6.
 - **Tu tiên hoá:** "Luận Kiếm Đặt Cược" (file 4: cược "linh tệ" không quy ra tiền, PLAN mục 9).
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** M.
+- **Game mình:** ✅ Luận Kiếm Đặt Cược (`world/bets.ts`, thẻ ở tab Mùa của bảng xếp hạng — `LeagueBet.svelte`): hết trận Linh Châu tuần trước bán kết thì bốn hạt giống chốt ngay, cả giới cược Phi Thăng Tệ vào một bên mỗi trận bán kết; bán kết xong thì mở cược chung kết + tranh hạng ba; trận playoff đang đánh thì đóng. Mỗi trận một bên, tối đa 50 tệ; đoán đúng nhận lại tệ × 2 (bán kết) / × 1,5 (chung kết, hạng ba), đoán sai được hoàn đủ sau chung kết (bản gốc hoàn 50 %); hết mùa còn cược treo thì hoàn; mỗi lần trả / hoàn một thư. Dùng Phi Thăng Tệ và Thiên Môn Thương Điếm sẵn có thay Mark of the Champion + Champion Shop · **Ưu tiên:** P2 · **Công sức:** M.
 
 ### G. Hoạt động thường nhật mang tính sự kiện
 
@@ -972,7 +972,7 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
 
 **Bài học cho mình:** làm **một khuôn lễ** (7+1 ngày + rơi + nộp lên cấp + cửa hàng + rương minh + lì xì) là đủ cho mọi lễ.
 
-**Game mình:** kiểu lễ `offer` (nộp lên cấp) — Vạn Đăng Hội 5 ngày mỗi 28 ngày: việc trong lễ (săn yêu, thắng trận, xây, tuyển, khai mỏ, tăng tốc) cho Hoa Đăng; thả đèn ×1 / ×10 / hết, mỗi lần nộp có thể chí mạng ×2 (15 %) hay ×5 (5 %) theo mầm server; 25 cấp, mỗi cấp một quà, cấp 5, 10… quà lớn (`offer` ở `sect/fest.ts`, `Offer.svelte`). Còn thiếu: lì xì tặng nhau.
+**Game mình:** kiểu lễ `offer` (nộp lên cấp) — Vạn Đăng Hội 5 ngày mỗi 28 ngày: việc trong lễ (săn yêu, thắng trận, xây, tuyển, khai mỏ, tăng tốc) cho Hoa Đăng; thả đèn ×1 / ×10 / hết, mỗi lần nộp có thể chí mạng ×2 (15 %) hay ×5 (5 %) theo mầm server; 25 cấp, mỗi cấp một quà, cấp 5, 10… quà lớn (`offer` ở `sect/fest.ts`, `Offer.svelte`). Lì xì (Lucky Red Packet): Hồng Bao (quà cấp 10 / 20 của Vạn Đăng Hội) gửi ở kênh Giới (từ tầng 3) hay Tiên minh bằng nút "🧧 Lì xì" cạnh ô chat; 5 người đầu (không phải người gửi; bao kênh minh chỉ người trong minh) chạm "Mở lì xì" nhận một phần ngẫu nhiên của 20.000 linh thạch do hệ thống trả, mỗi người một lần, quá 24 giờ thì tan (`world/packet.ts`, `Chat.svelte`).
 - **Bỏ cơ chế "thu mỗi 20 phút"**: rơi theo sản lượng nhận được, có trần ngày, hợp trụ cột "phiên 5–10 phút".
 - Bậc cao cấp chỉ cho cosmetic hoặc gắn Tu Tiên Lệnh (P4).
 
@@ -1278,7 +1278,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | E5 | Alliance Quiz | Luận Đạo Vấn Đáp | ✅ 10 câu × 15 giây cả minh, mốc điểm minh | P2 | M |
 | F1 | More Than Gems | Tiên Ngọc Hồi Lễ | ❌ | P2 | S |
 | F2 | Wheel of Fortune | Thiên Cơ Luân | ✅ Thiên Cơ Luân (`thienCo`), lượt thêm bằng lệnh kiếm được | — | — |
-| F3 | Esmeralda's House | Bói Quẻ Thiên Cơ | ❌ | P2 | S |
+| F3 | Esmeralda's House | Bói Quẻ Thiên Cơ | ✅ xin xăm 4 bậc quẻ, quẻ miễn phí mỗi ngày, rương mốc theo số quẻ | P2 | S |
 | F4 | Esmeralda's Prayer / Collection / Treasures | Nguyện Thụ Cầu Duyên | ✅ cây 12 quà cạn dần, đủ 4 đặc biệt thì viên mãn | P2 | S–M |
 | F5 | Card King | Phiên Bài Kỳ Ngộ | ✅ 12 lá 6 đôi, 2 lá miễn phí mỗi ván, 10 ván | P2 | S |
 | F6 | Holy Knight's Treasure | Linh Noãn Kỳ Bảo | ✅ món chủ lực 7,5 %, 9 quả, rương mốc | P2 | S |
@@ -1287,11 +1287,11 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | F9 | Team Draw | Đồng Tâm Rút Thăm | ⛔/❌ | P2 | M |
 | F10 | Legendary Tavern | Tiên Duyên Tửu Quán | ⛔ | — | — |
 | F11 | Heart's Desire | Tâm Nguyện Trưởng Lão | ⛔ | — | — |
-| F12 | League Bets | Luận Kiếm Đặt Cược | ❌ | P2 | M |
+| F12 | League Bets | Luận Kiếm Đặt Cược | ✅ cược Phi Thăng Tệ vào trận playoff Cửu Thiên, đúng × 2 / × 1,5, sai hoàn sau chung kết | P2 | M |
 | G1 | Mysterious Merchant | Vân Du Thương Nhân | ✅ Thương nhân vân du (`sect/merchant.ts`) | P1 | S–M |
 | G2 | Đăng nhập / Sign-in Spoils | Điểm Danh Bảy Ngày | ✅ Thất Nhật Lễ (tân thủ), Khánh Điển Khai Tông (đầu mùa), lì xì Tết | P1 | S |
 | G3 | Peerless Scholar | Vấn Đạo Đài | ✅ Vấn Đạo Đài (`sect/quiz.ts`) | P2 | M |
-| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | 🟡 khung `dates` + kho đổi / tích điểm / đăng nhập; việc theo ngày + rương theo số việc (kiểu 7+1: Khai Sơn Thất Nhật), lễ rơi đồ (Tích Cốc Phòng Cơ, Tầm Bảo), nộp lên cấp 25 có chí mạng (Vạn Đăng Hội — kiểu lễ `offer`); chưa có lì xì tặng nhau | **P1** | M |
+| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | ✅ khung `dates` + kho đổi / tích điểm / đăng nhập; việc theo ngày + rương theo số việc (kiểu 7+1: Khai Sơn Thất Nhật), lễ rơi đồ (Tích Cốc Phòng Cơ, Tầm Bảo), nộp lên cấp 25 có chí mạng (Vạn Đăng Hội — kiểu lễ `offer`), lì xì Hồng Bao gửi ở kênh Giới / Tiên minh (`world/packet.ts`) | **P1** | M |
 | H1 | Tết Âm lịch | Tân Xuân Khai Sơn | ✅ lì xì 7 ngày (fest `tanXuan`) | P1 | S (sau H0) |
 | H2 | Valentine's | (thay bằng Thất Tịch) | ✅ thay bằng Ô Thước Kiều (H8) | P2 | — |
 | H3 | Spring's Return / Spring Symphony | Xuân Hồi Vạn Vật | ✅ `xuanHoi` (5 ngày quanh xuân phân) | P2 | S |

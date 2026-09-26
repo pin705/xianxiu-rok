@@ -983,7 +983,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H6–H7 | Tăng sản lượng, tăng công/thủ | ✅ Tụ Linh, Chiến Ý, Kim Cương, Hộ Thể Phù | — | — |
 | H8 | Mở rộng quân | ✅ trận dung (`capOf`) + Khuếch Trận Kỳ +10 % | P2 | S |
 | H9 | Khiên 8 giờ/24 giờ/3 ngày | ✅ Hộ Sơn Phù 8/24/72 giờ | — | — |
-| H10 | Chống do thám | ❌ | P2 | S |
+| H10 | Chống do thám | 🟡 Ẩn Tung Phù 8/24 giờ (linh điểu về tay không); chưa có báo cáo giả | P2 | S |
 | H11 | 4 loại dịch chuyển | ✅ dời núi tân thủ, dời vào lãnh thổ, Di Sơn Phù, Càn Khôn Phù | P2 | M |
 | H12 | Chìa Tửu quán | ✅ Ngân / Kim Duyên Phù | P1 | S |
 | H13 | Sách kinh nghiệm | ✅ Tâm Đắc Kinh Thư | — | — |

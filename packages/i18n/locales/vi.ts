@@ -2035,6 +2035,12 @@ export const vi = {
         `Man Hoang Cổ Tộc · độ khó ${lv}`,
         `Tổ đội ${n} người ${waves >= 5 ? 'đã quét sạch cả năm đợt hung thú' : waves ? `qua được ${waves}/5 đợt hung thú` : 'chưa qua được đợt nào'}. Quà cho mọi người trong đội ở dưới.`,
       ],
+      bet: (win: 0 | 1, tag: string, stage: 'semi' | 'final' | 'third', n: number): [string, string] => [
+        win ? `Luận Kiếm Đặt Cược · trúng [${tag}]` : `Luận Kiếm Đặt Cược · hoàn cược [${tag}]`,
+        win
+          ? `[${tag}] thắng trận ${{ semi: 'bán kết', final: 'chung kết', third: 'tranh hạng ba' }[stage]} như bạn đoán — nhận ${n} Phi Thăng Tệ (cả phần cược).`
+          : `Cược [${tag}] (${{ semi: 'bán kết', final: 'chung kết', third: 'tranh hạng ba' }[stage]}) không trúng — hoàn lại ${n} Phi Thăng Tệ.`,
+      ],
       league: (rank: number): [string, string] => [
         `Cửu Thiên Luận Đạo Hội · minh hạng ${rank}`,
         `Mùa này tiên minh đứng hạng ${rank} giải Cửu Thiên Luận Đạo Hội (các trận Tranh Đoạt Linh Châu). Quà cho mọi người trong minh ở dưới.`,
@@ -2919,6 +2925,35 @@ export const vi = {
     next: 'Tiếp',
     done: 'Đã hiểu',
   },
+  relic: {
+    title: 'Anh Linh Điện',
+    hint: 'Cung phụng di vật tiền bối cho trưởng lão bằng Phi Thăng Tệ: đội người đó dẫn mạnh thêm tới hết mùa. Mỗi mùa tối đa 3 trưởng lão; hết mùa di vật tan.',
+    used: (n: number, max: number) => `Đã cung phụng ${n}/${max}`,
+    lv: (n: number, max: number) => `Di vật bậc ${n}/${max}`,
+    go: (cost: number, have: string) => `Cung phụng · ${cost} Phi Thăng Tệ (có ${have})`,
+    next: (fx: string) => `Bậc kế: ${fx}`,
+    full: 'Mùa này đã cung phụng đủ 3 trưởng lão.',
+  },
+  rule: {
+    title: 'Thiên Mệnh Chọn Luật',
+    now: (name: string) => `Luật mùa này: ${name}`,
+    none: 'Mùa này chưa có luật — ba ngày cuối mùa cả giới bỏ phiếu chọn luật cho mùa sau.',
+    hint: 'Ba ngày cuối mùa, ai trong giới cũng bỏ phiếu chọn luật cho mùa sau; luật nhiều phiếu nhất thành tăng ích cả giới suốt mùa.',
+    open: 'Đang bỏ phiếu luật mùa sau — bấm luật khác là đổi phiếu, hết mùa thì chốt.',
+    names: ['Phong Đăng', 'Sát Phạt', 'Hưng Thịnh'],
+    votes: (n: number) => `${n} phiếu`,
+  },
+  bet: {
+    title: 'Luận Kiếm Đặt Cược',
+    hint: 'Trước mỗi vòng playoff Cửu Thiên Luận Đạo Hội, cược Phi Thăng Tệ vào minh bạn đoán thắng. Đoán đúng nhận lại tệ × hệ số; đoán sai được hoàn sau chung kết.',
+    have: (n: string) => `Có ${n} tệ`,
+    amount: 'Số tệ cược',
+    stake: (n: number, max: number) => `Mỗi lần chạm cược ${n} tệ (tối đa ${max} tệ một trận)`,
+    odds: (stage: string, x: number) => `${stage} · đoán đúng ×${String(x).replace('.', ',')}`,
+    mine: (tag: string, n: number) => `[${tag}] · ${n} tệ`,
+    lost: (tag: string, n: number) => `[${tag}] trượt · ${n} tệ hoàn sau chung kết`,
+    wait: 'Cược của bạn',
+  },
   truyen: {
     title: 'Truyền công',
     hint: (n: number) =>
@@ -2928,6 +2963,15 @@ export const vi = {
     go: (n: number) => `Truyền công · ${n} phù`,
     sure: (a: string, b: string) => `Đổi toàn bộ tầng công pháp của ${a} và ${b}? Phù đã tiêu không hoàn lại.`,
     none: 'Chưa có trưởng lão cùng phẩm, cùng số tâm pháp để truyền công.',
+  },
+  omen: {
+    draw: (n: number) => `Xin ${n} quẻ`,
+    free: 'Hôm nay còn một quẻ miễn phí',
+    cost: (n: number) => `Mỗi quẻ ${n} Linh Xăm`,
+    tiers: ['Thượng Thượng', 'Thượng', 'Trung', 'Hạ'],
+    last: 'Quẻ vừa xin',
+    count: (n: number) => `Đã xin ${n} quẻ`,
+    goal: (n: number) => `Xin ${n} quẻ`,
   },
   offer: {
     level: (n: number, max: number) => `Hội đèn cấp ${n}/${max}`,
@@ -3346,6 +3390,10 @@ export const vi = {
         name: 'Vạn Đăng Hội',
         desc: 'Năm ngày hội đèn: săn yêu, thắng trận, xây, tuyển, khai mỏ, tăng tốc đều cho Hoa Đăng. Thả đèn lên hội — có lúc chí mạng gấp đôi, gấp năm — hội đèn lên cấp, 25 cấp mỗi cấp một quà.',
       },
+      boQue: {
+        name: 'Bói Quẻ Thiên Cơ',
+        desc: 'Ba ngày xin xăm: việc trong lễ cho Linh Xăm, lắc ống xăm rút quẻ — Thượng Thượng có Kim Duyên Phù, quẻ nào cũng đáng hơn giá. Mỗi ngày một quẻ miễn phí; xin đủ 10 / 20 / 40 / 70 quẻ mở rương.',
+      },
       tamBao: {
         name: 'Tầm Bảo Kỳ Ngộ',
         desc: 'Năm ngày săn kho báu: săn yêu thú thắng hay đội khai mỏ trở về có thể nhặt Tàng Bảo Đồ tàn phiến (qua thư). Đủ 7 mảnh thì ghép ở bản đồ giới — điểm đào hiện gần tông môn, ai cũng thấy nhưng chỉ bạn đào được.',
@@ -3414,6 +3462,7 @@ export const vi = {
     calendar: 'Lịch 7 ngày',
     tokens: (n: string, name = 'Tông Môn Lệnh') => `${name}: ${n}`,
     tokenName: {
+      boQue: 'Linh Xăm',
       vanDang: 'Hoa Đăng',
       thienCo: 'Thiên Cơ Lệnh',
       thatTich: 'Hỷ Thước',

@@ -1229,6 +1229,10 @@ export const LEAGUE_PRIZES: Reward[] = [
   { items: { kimDuyen: 2, thoiQuang480: 1 } },
   { items: { kimDuyen: 1, thoiQuang180: 2 } },
 ]
+// Luận Kiếm Đặt Cược (League Bets của RoK): trước mỗi vòng playoff ai trong giới cũng cược Phi Thăng Tệ vào một bên mỗi trận, tối đa
+// BET_MAX tệ một trận; đoán đúng nhận lại tệ × BET_ODDS của vòng (vòng sau hệ số thấp hơn), đoán sai được hoàn sau chung kết
+export const BET_MAX = 50
+export const BET_ODDS = { semi: 2, final: 1.5, third: 1.5 }
 // Ma Triều Công Sơn (Shadow Legion của RoK): tiên minh ghi danh cả tuần; thứ Tư (LEGION_DAY) từ LEGION_HOUR giờ VN,
 // LEGION_WAVES đợt cách nhau LEGION_GAP đánh vào tông môn từng người trong minh. Sức mỗi đợt = LEGION_POW[k] × lực phòng thủ
 // của chính người đó (viện binh đồng minh không làm địch mạnh thêm — kéo viện binh về giữ nhà là cách qua đợt khó). Giữ được
@@ -1299,6 +1303,20 @@ export const HONOR_ALTAR = 4
 // Phi Thăng Tệ (Conquest Coins của RoK): mỗi COIN_PER Công Huân kiếm được (cả đời, không mất khi hết mùa) thành một đồng — tiêu ở
 // Thiên Môn Thương Điếm, chưa tiêu thì mang sang mùa sau
 export const COIN_PER = 20
+// Thiên Mệnh Chọn Luật (thay ghép cặp / bỏ phiếu KvK của RoK): VOTE_DAYS ngày cuối mùa người trong giới chọn một luật cho mùa sau; hết mùa
+// luật nhiều phiếu nhất (bằng phiếu: luật đứng trước) thành luật mùa mới — tăng ích cả giới suốt mùa. Phong Đăng · Sát Phạt · Hưng Thịnh
+export const VOTE_DAYS = 3
+export const RULES: Partial<Record<Bonus, number>>[] = [
+  { prod: 0.1, gather: 0.1 },
+  { atk: 0.05, loot: 0.1 },
+  { build: 0.1, train: 0.1 },
+]
+// Anh Linh Điện (Museum của Season of Conquest): trong mùa giới, từ Chủ điện RELIC_HALL, cung phụng di vật cho tối đa RELIC_MAX trưởng lão
+// bằng Phi Thăng Tệ — mỗi bậc (1–3, giá RELIC_COST) thêm RELIC_BONUS cho đội người đó dẫn; hết mùa (luân hồi) di vật tan, tệ không hoàn
+export const RELIC_HALL = 16
+export const RELIC_MAX = 3
+export const RELIC_COST = [30, 60, 120]
+export const RELIC_BONUS: Partial<Record<Bonus, number>> = { atk: 0.05, def: 0.03, hp: 0.05 }
 export const COIN_SHOP: { reward: Reward; price: number }[] = [
   { reward: { items: { kimDuyen: 1 } }, price: 60 },
   { reward: { items: { hoSon24: 1 } }, price: 35 },
@@ -2424,6 +2442,15 @@ export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
   // đổi phù (War and Peace): phù họ from sang họ to cùng mệnh giá (SPEED_MIN), mỗi mệnh giá tối đa max lá mỗi lượt
   | { kind: 'swap'; from: 'loBan'; to: 'luyenBinh'; max: number }
   | {
+      kind: 'omen' // xin xăm (Esmeralda's House của RoK): mỗi lượt rút một quẻ theo trọng số — Thượng Thượng / Thượng / Trung / Hạ, quà
+      // theo quẻ; rương mốc theo tổng số lượt đã xin
+      stages: Partial<Record<Metric, number>>[]
+      cost: number // lệnh mỗi lượt xin thêm (mỗi ngày một lượt miễn phí)
+      tiers: { w: number; r: Reward }[]
+      goals: number[]
+      rewards: Reward[]
+    }
+  | {
       kind: 'offer' // nộp lên cấp (khuôn lễ hội của RoK): lệnh bài lễ từ việc trong lễ nộp vào, mỗi lệnh một kinh nghiệm × hệ số chí
       // mạng (mầm server, theo trọng số crit); kinh nghiệm đủ goals[k] là lên cấp k + 1, mỗi cấp một quà
       stages: Partial<Record<Metric, number>>[]
@@ -2765,6 +2792,28 @@ const fests = {
     from: 'loBan',
     to: 'luyenBinh',
     max: 200,
+  },
+  boQue: {
+    // Bói Quẻ Thiên Cơ (Esmeralda's House): 3 ngày mỗi 21 ngày — việc trong lễ cho Linh Xăm, lắc ống xăm rút quẻ Thượng Thượng (5 %) /
+    // Thượng (20 %) / Trung (45 %) / Hạ (30 %), quẻ nào cũng đáng hơn giá; rương mốc 10 / 20 / 40 / 70 quẻ
+    window: { kind: 'cycle', every: 21, len: 3, offset: 5 },
+    hall: 6,
+    kind: 'omen',
+    stages: [{ hunt: 2, win: 2, build: 5, train: 0.02, gather: 0.0005 }],
+    cost: 10,
+    tiers: [
+      { w: 5, r: { items: { kimDuyen: 1, thoiQuang180: 1 } } },
+      { w: 20, r: { items: { thoiQuang60: 2, tuyTam5k: 1 } } },
+      { w: 45, r: { items: { thoiQuang15: 2, kinhThu500: 2 } } },
+      { w: 30, r: { items: { thoiQuang5: 3, thachNang1k: 2 } } },
+    ],
+    goals: [10, 20, 40, 70],
+    rewards: [
+      { items: { nganDuyen: 1, thoiQuang60: 2 } },
+      { items: { kinhThu8k: 1, tuyTam20k: 1 } },
+      { items: { kimDuyen: 1, thoiQuang180: 2 } },
+      { items: { kimDuyen: 2, thoiQuang480: 1 } },
+    ],
   },
   vanDang: {
     // Vạn Đăng Hội (khuôn lễ hội "nộp lên cấp 25" của RoK): 5 ngày mỗi 28 ngày — việc trong lễ cho Hoa Đăng, nộp vào hội đèn lên cấp

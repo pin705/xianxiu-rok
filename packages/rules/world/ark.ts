@@ -274,9 +274,11 @@ const cupDone = (c: Cup, k: CupStage, win: number, lose: number): Cup =>
 // Dựng trận playoff của tuần: bán kết (bốn minh đầu bảng giải) hay chung kết + tranh hạng ba (sau bán kết). Minh không ra được trận
 // (thiếu chiến binh) xử thua ngay; cả hai cùng thiếu thì hạt giống cao hơn đi tiếp
 function cupSetup(ps: Players, w: World, ark: Ark, stage: 'semi' | 'final') {
-  const seeds = leagueBoard(w)
-    .slice(0, LEAGUE_PLAYOFF)
-    .map(x => x.id)
+  const seeds =
+    ark.cup?.seeds ??
+    leagueBoard(w)
+      .slice(0, LEAGUE_PLAYOFF)
+      .map(x => x.id)
   if (stage === 'semi' && seeds.length < LEAGUE_PLAYOFF) return null
   if (stage === 'final' && (!ark.cup || ark.cup.win.length < 2 || ark.cup.final)) return null
   let cup: Cup = stage === 'semi' ? { seeds, win: [], lose: [] } : ark.cup!
@@ -370,6 +372,12 @@ export function arkStep(ps: Players, w: World, now: number, seed: number, end?: 
     }
     return { a: f.a, b: f.b, an: f.an, bn: f.bn, wa: f.pts[0], wb: f.pts[1] }
   })
+  // hết trận tuần trước bán kết: chốt luôn bốn hạt giống (Luận Kiếm Đặt Cược cần biết trước cặp đấu — world/bets.ts)
+  const seeds = leagueBoard(w, league)
+    .slice(0, LEAGUE_PLAYOFF)
+    .map(x => x.id)
+  if (!cup && end !== undefined && wk === lastWeek(end) - 2 && seeds.length === LEAGUE_PLAYOFF)
+    cup = { seeds, win: [], lose: [] }
   return {
     changed,
     world: {
@@ -407,8 +415,8 @@ export function leagueRank(w: World) {
   return [...top, ...leagueBoard(w).map(x => x.id)].filter((id, k, all) => w.allies[id] && all.indexOf(id) === k)
 }
 // Bảng Cửu Thiên Luận Đạo Hội của mùa: điểm giải cao trước, bằng thì nhiều trận thắng hơn, rồi mã minh
-export const leagueBoard = (w: World) =>
-  Object.entries(arkOf(w).league ?? {})
+export const leagueBoard = (w: World, league = arkOf(w).league ?? {}) =>
+  Object.entries(league)
     .filter(([id]) => w.allies[Number(id)])
     .map(([id, [wn, l, pts]]) => ({ id: Number(id), tag: w.allies[Number(id)].tag, w: wn, l, pts }))
     .sort((a, b) => b.pts - a.pts || b.w - a.w || a.id - b.id)

@@ -36,6 +36,9 @@ import {
   stageMetric,
   stageScore,
   tourneyView,
+  voteOpen,
+  betView,
+  voteTally,
 } from '@rok/rules/world'
 import type { Answer, FestView, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
@@ -90,6 +93,20 @@ function festView(w: World, pid: number, id: FestId): FestView {
 }
 
 export type Answers = { [K in Query['k']]: (sock: Sock, q: QueryOf<K>) => Answer[K] | Promise<Answer[K]> }
+
+// Chiến báo người khác chia sẻ xem được: trong kênh mình nghe được có tin của chính người đó mang mã "#r<id>", hay là trận Luận Kiếm
+// Đại Hội (cả giới xem được)
+const shareable = (w: World, viewer: number, pid: number, id: number) =>
+  !!w.shared.tourney?.games.some(g => g.a === pid && g.rep === id) || sharedIn(w, viewer, pid, id)
+// Thiên Mệnh Chọn Luật: luật mùa này, đang mở bỏ phiếu không, số phiếu từng luật, phiếu của người hỏi
+const voteView = (w: World, pid: number) => ({
+  ...(w.shared.rule !== undefined && { rule: w.shared.rule }),
+  open: voteOpen(w.map(w.now()).day),
+  tally: voteTally(w.shared),
+  ...(w.shared.votes?.[pid] !== undefined && { mine: w.shared.votes[pid] }),
+})
+// tab Mùa: phiếu chọn luật và Luận Kiếm Đặt Cược (trận playoff đang nhận cược, cược của người hỏi)
+const pollsOf = (w: World, pid: number) => ({ vote: voteView(w, pid), bet: betView(w.shared, pid) })
 
 export const answersOf = (w: World): Answers => ({
   rivals: (sock, q) => {
@@ -165,6 +182,7 @@ export const answersOf = (w: World): Answers => ({
       camps: campTotal(rows, w.shared), // Chính Tà Phân Tranh: điểm mùa hai phái (cả chặng thắng), phái của mình
       camp: campOf(side),
       stage: stageView(w, sock.data.pid),
+      ...pollsOf(w, sock.data.pid),
     }
   },
   map: sock => {
@@ -173,11 +191,8 @@ export const answersOf = (w: World): Answers => ({
     return w.snapshot(now)
   },
   fest: (sock, q) => festView(w, sock.data.pid, q.id),
-  // Chiến báo người khác chia sẻ: chỉ khi trong kênh mình nghe được có tin của chính người đó mang mã "#r<id>", hay là trận
-  // Luận Kiếm Đại Hội (cả giới xem được)
   shared: async (sock, q) => {
-    const cup = w.shared.tourney?.games.some(g => g.a === q.pid && g.rep === q.id)
-    if (!cup && !sharedIn(w, sock.data.pid, q.pid, q.id)) return null
+    if (!shareable(w, sock.data.pid, q.pid, q.id)) return null
     const mem = [...(w.persist.inflight?.reports ?? []), ...w.persist.pending.reports].find(
       r => r.pid === q.pid && r.id === q.id,
     )

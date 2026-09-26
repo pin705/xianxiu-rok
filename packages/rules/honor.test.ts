@@ -1,6 +1,21 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { COIN_PER, COIN_SHOP, HONOR_KP, HONOR_TIERS, apply, coins, newGame, seasonEnd, type State } from './index.ts'
+import {
+  COIN_PER,
+  COIN_SHOP,
+  HONOR_KP,
+  HONOR_TIERS,
+  RELIC_BONUS,
+  RELIC_COST,
+  apply,
+  coins,
+  expAt,
+  lead,
+  newGame,
+  relicError,
+  seasonEnd,
+  type State,
+} from './index.ts'
 import { addHonor, addKp, atlas, campOf, campPts, endSeason, freshWorld, type Players } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -124,4 +139,34 @@ test('hết mùa (luân hồi): giữ thành tựu đã nhận, sự kiện, Hư
   assert.deepEqual([x.builder2, x.joined, x.born], [s.builder2, s.joined, s.born])
   assert.deepEqual(x.fest, s.fest, 'sự kiện tân thủ không mở lại')
   assert.equal(x.rebirths, s.rebirths + 1)
+})
+
+test('Anh Linh Điện (Museum): trong mùa giới, từ tầng 16, Phi Thăng Tệ cung phụng di vật trưởng lão (3 bậc, tối đa 3 người), hết mùa di vật tan', () => {
+  const base = newGame(T0, 'Anh Linh')
+  const s0: State = {
+    ...base,
+    levels: { ...base.levels, chuDien: 16 },
+    seat: { x: 10, y: 10 },
+    honorAll: COIN_PER * 300,
+    elders: { thanhPhong: expAt(20), thachKien: expAt(20), nhuYen: expAt(20), loiChan: expAt(20) },
+  }
+  assert.equal(relicError({ ...s0, seat: null }, 'thanhPhong'), 'locked', 'ngoài giới')
+  assert.equal(relicError({ ...s0, levels: { ...s0.levels, chuDien: 15 } }, 'thanhPhong'), 'locked', 'chưa tới tầng 16')
+  assert.equal(relicError(s0, 'vanHac'), 'locked', 'chưa thu nhận')
+  const atk0 = lead(s0, 'thanhPhong', 'atk')
+  let s = s0
+  for (let k = 0; k < RELIC_COST.length; k++) {
+    const r = apply(s, { type: 'relic', elder: 'thanhPhong' }, T0)
+    assert.ok(r.ok)
+    s = r.state
+  }
+  assert.equal(coins(s), 300 - RELIC_COST.reduce((a, b) => a + b, 0))
+  assert.equal(s.relics?.thanhPhong, 3)
+  assert.ok(Math.abs(lead(s, 'thanhPhong', 'atk') - atk0 - 3 * (RELIC_BONUS.atk ?? 0)) < 1e-9, 'công +5 % mỗi bậc')
+  assert.equal(relicError(s, 'thanhPhong'), 'max_level')
+  s = { ...s, honorAll: COIN_PER * 1000 }
+  for (const e of ['thachKien', 'nhuYen'] as const)
+    s = (apply(s, { type: 'relic', elder: e }, T0) as { state: State }).state
+  assert.equal(relicError(s, 'loiChan'), 'limit', 'mỗi mùa tối đa 3 trưởng lão')
+  assert.equal(seasonEnd(s, T0 + 1000, 1).relics, undefined, 'hết mùa di vật tan')
 })

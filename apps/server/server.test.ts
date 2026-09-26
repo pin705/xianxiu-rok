@@ -786,12 +786,20 @@ test(
     const w1 = await c.welcome
     assert.equal(w1.world.season, 1)
     const board = await c.ask({ k: 'season' })
-    const { camps, camp, stage, ...rest } = board as {
+    const { camps, camp, stage, vote, bet, ...rest } = board as {
       camps: [number, number]
       camp: 0 | 1
       stage: { n: number; m: string; score: [number, number]; mine: number }
+      vote: { open: boolean; tally: number[] }
+      bet: { open: unknown[]; mine: unknown[] }
     }
     assert.deepEqual(rest, { rows: [], me: null, fame: [] })
+    assert.deepEqual(bet, { open: [], mine: [] }, 'Luận Kiếm Đặt Cược: đầu mùa chưa có playoff')
+    assert.deepEqual(
+      vote,
+      { open: false, tally: [0, 0, 0] },
+      'Thiên Mệnh Chọn Luật: đầu mùa chưa bỏ phiếu, chưa có luật',
+    )
     assert.deepEqual([camps, [0, 1].includes(camp)], [[0, 0], true], 'Chính Tà: điểm hai phái, phái của mình')
     assert.deepEqual(
       [stage.n, stage.m, stage.score, stage.mine],

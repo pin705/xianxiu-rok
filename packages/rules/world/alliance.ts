@@ -26,6 +26,7 @@ import {
   welcome,
   helpCredit,
   helpsOf,
+  napBetween,
   put,
   raidPath,
   seatsOf,
@@ -67,7 +68,7 @@ function join(w: World, al: Alliance, pid: number): World {
 export type AllyInfo = Alliance & {
   people: Member[]
   applicants: { pid: number; name: string; hall: number; power: number }[] // đơn xin vào đang chờ
-  rallies: Rally[]
+  rallies: (Rally & { tag?: string; name?: string })[] // tag / name: kết trận của minh ước
   war: { signed: boolean; pts: number; last: WarResult[] }
   // Ma Triều Công Sơn của tuần `week` (client so với tuần hiện tại): minh đã ghi danh chưa, số đợt đã đánh, điểm minh, điểm mình
   legion: { week: number; signed: boolean; done: number; pts: number; mine: number }
@@ -125,7 +126,10 @@ export function allyInfo(w: World, ps: Players, pid: number, online: (pid: numbe
       const s = ps.get(p)
       return s ? [{ pid: p, name: s.name, hall: s.levels.chuDien, power: Math.round(power(s)) }] : []
     }),
-    rallies: Object.values(w.rallies).filter(r => r.ally === al.id),
+    // kết trận của minh mình và của các minh ước (Minh Ước chung kết trận): minh ước ghi thêm hiệu minh và tên người mở
+    rallies: Object.values(w.rallies)
+      .filter(r => r.ally === al.id || al.naps?.includes(r.ally))
+      .map(r => (r.ally === al.id ? r : { ...r, tag: w.allies[r.ally]?.tag, name: ps.get(r.by)?.name })),
     war: {
       signed: !!w.war?.signed.includes(al.id),
       pts: w.war?.pts[al.id] ?? PVP_START,
@@ -366,12 +370,12 @@ export const allianceActions: WorldActions<AllianceAction> = {
   },
 }
 
-// Viện binh: đóng quân ở nhà người cùng minh, tối đa REINFORCE_MAX đội; nhà đó bị cướp thì cùng thủ
+// Viện binh: đóng quân ở nhà người cùng minh (hay minh ước), tối đa REINFORCE_MAX đội; nhà đó bị cướp thì cùng thủ
 function aidAct({ ps, w, pid, s, seed, map }: Ctx, a: { pid: number; elder: ElderId; army: Army }): WorldResult {
   const t = s.time
   const to = ps.get(a.pid)
   if (!to || a.pid === pid) return no('gone')
-  if (allyOf(w, pid)?.members[a.pid] === undefined) return no('locked')
+  if (allyOf(w, pid)?.members[a.pid] === undefined && !napBetween(w, pid, a.pid)) return no('locked')
   if (aidAt(ps, a.pid).length >= REINFORCE_MAX) return no('full')
   if (s.marches.some(m => m.task === 'aid' && m.target.i === a.pid)) return no('busy')
   const go = raidPath(s, to, map, a.army)

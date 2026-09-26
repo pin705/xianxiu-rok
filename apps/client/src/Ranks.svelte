@@ -3,7 +3,10 @@
   // tô đậm; chạm một dòng: hồ sơ) và điểm mùa theo phe + bảng phong thần các mùa trước (actor của giới tính lúc hỏi).
   // Bố cục như bảng vinh danh của game: dải thẻ bảng (tranh vẽ tay), bục ba hạng đầu (cúp trên hạng nhất), phần còn lại dòng
   // gọn có đồng tiền hạng, hạng của mình ghim ở đáy bảng.
-  import type { Season } from '@rok/protocol'
+  import type { Ack, Season } from '@rok/protocol'
+  import type { WorldAction } from '@rok/rules/world'
+  import RuleVote from './RuleVote.svelte'
+  import LeagueBet from './LeagueBet.svelte'
   import type { Ranks } from './net'
   import { CAMP_STAGE_PTS } from '@rok/rules'
   import type { IconName } from '@rok/art'
@@ -29,12 +32,14 @@
     me,
     load,
     season,
+    send,
     onclose,
   }: {
     open: boolean
     me: number | null
     load: (b: Board) => Promise<Ranks | null>
     season?: () => Promise<Season | null>
+    send?: (a: WorldAction) => Promise<Ack> // Thiên Mệnh Chọn Luật: bỏ phiếu
     onclose: () => void
   } = $props()
 
@@ -91,6 +96,12 @@
 
   {#if board === 'season' && sea}
     <p class="t-tiny t-soft mt-2">{L.rank.seasonHint}</p>
+    {#if sea.vote}<div class="mt-2">
+        <RuleVote vote={sea.vote} {send} onvoted={() => void season?.().then(d => (sea = d))} />
+      </div>{/if}
+    {#if sea.bet && (sea.bet.open.length || sea.bet.mine.length)}<div class="mt-2">
+        <LeagueBet bet={sea.bet} {send} onbet={() => void season?.().then(d => (sea = d))} />
+      </div>{/if}
     {#if sea.camps}
       <!-- Chính Tà Phân Tranh: hai tấm biển phái đối diện, phái mình viền son -->
       <div class="grid mt-2">

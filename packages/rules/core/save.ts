@@ -261,6 +261,8 @@ const validLate = (s: any) =>
   (s.pass === undefined ||
     (obj(s.pass) && num(s.pass.xp) && [s.pass.got, s.pass.gold].every(a => Array.isArray(a) && a.every(num)))) &&
   (s.face === undefined || Object.hasOwn(ELDERS, s.face)) &&
+  (s.relics === undefined ||
+    (obj(s.relics) && Object.entries(s.relics).every(([e, v]) => Object.hasOwn(ELDERS, e) && num(v)))) &&
   (s.fallen === undefined || (obj(s.fallen) && obj(s.fallen.army) && num(s.fallen.until))) &&
   (s.wall === undefined ||
     (obj(s.wall) &&

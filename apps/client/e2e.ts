@@ -392,12 +392,12 @@ try {
   )
   await a.js(`[...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Giới').click()`)
   assert.ok(
-    await a.until(`!!document.querySelector('.pins .pin.mine')`, 15000),
+    await a.until(`!!document.querySelector('.overlay > .tag.mine')`, 15000),
     `bản đồ giới không hiện tông môn của mình — ${await seen()}`,
   )
   // chạm tông môn đầu tiên không bị HUD che (tông môn mình có thể sát mép giới). Chuyển tab chạy View Transition: trong lúc
   // hiệu ứng trình duyệt chỉ hit-test vào <html> — nên đợi tới khi điểm chạm trúng lớp cử chỉ
-  const spot = `[...document.querySelectorAll('.pins .pin')].map(p => { const r = p.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top - 18, name: p.innerText } }).find(p => document.elementFromPoint(p.x, p.y)?.classList.contains('touch'))`
+  const spot = `[...document.querySelectorAll('.overlay > .tag')].map(p => { const r = p.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top - 18, name: p.innerText } }).find(p => document.elementFromPoint(p.x, p.y)?.classList.contains('touch'))`
   assert.ok(await a.until(`!!${spot}`), 'không ghim tông môn nào chạm được')
   const pin = (await a.js(spot)) as { x: number; y: number; name: string }
   for (const type of ['mousePressed', 'mouseReleased'])

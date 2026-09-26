@@ -141,6 +141,26 @@ function wish(s: State, id: FestId, d: Extract<FestDef, { kind: 'wish' }>): Stat
   return { ...st, seed: nextSeed(s.seed), fest: { ...st.fest, [id]: next } }
 }
 
+// Xin xăm: n quẻ, mỗi quẻ một bậc theo trọng số (mầm server), nhận quà của bậc; got ghi −(bậc + 1)
+function omen(s: State, id: FestId, d: Extract<FestDef, { kind: 'omen' }>, n: number): State {
+  const f = s.fest[id]!
+  const free = wheelFree(s, id, s.time)
+  const total = d.tiers.reduce((a, t) => a + t.w, 0)
+  let st = s,
+    seed = s.seed
+  const got = [...f.got]
+  for (let k = 0; k < n; k++) {
+    let x = ((seed >>> 0) / 2 ** 32) * total
+    const i = d.tiers.findIndex(t => (x -= t.w) < 0)
+    const tier = i < 0 ? d.tiers.length - 1 : i
+    seed = nextSeed(seed)
+    got.push(-(tier + 1))
+    st = grant(st, d.tiers[tier].r)
+  }
+  const next = { ...f, got, days: f.days + (free ? 1 : 0), last: free ? dayOf(s.time) : f.last }
+  return { ...st, seed, fest: { ...st.fest, [id]: next } }
+}
+
 export function spinError(s: State, id: FestId, n: number, pick?: number): Err | null {
   const d = FESTS[id]
   if (!luck(d) || !festOpen(s, id, s.time)) return 'locked'
@@ -321,6 +341,7 @@ export const festActions: Actions<FestAction> = {
       if (dd.kind === 'dice') return ok(roll(s, a.id, dd))
       if (dd.kind === 'egg') return ok(smash(s, a.id, dd, a.n, a.pick!))
       if (dd.kind === 'wish') return ok(wish(s, a.id, dd))
+      if (dd.kind === 'omen') return ok(omen(s, a.id, dd, a.n))
       const d = dd as Extract<FestDef, { kind: 'wheel' }>
       const f = s.fest[a.id]!
       const free = wheelFree(s, a.id, s.time)

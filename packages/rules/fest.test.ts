@@ -845,3 +845,25 @@ test('Vạn Đăng Hội (nộp lên cấp của khuôn lễ hội): việc tron
     'mốc tăng dần',
   )
 })
+
+test("Bói Quẻ Thiên Cơ (Esmeralda's House): lắc ống xăm rút quẻ theo trọng số (mầm server), quà theo quẻ, mỗi ngày một quẻ miễn phí, rương mốc theo số quẻ", () => {
+  let t = MON
+  while (festWindow({}, FESTS.boQue, t)) t += DAY
+  while (!festWindow({}, FESTS.boQue, t)) t += DAY
+  const base = newGame(MON)
+  let s: State = advance({ ...base, levels: { ...base.levels, chuDien: 8 } }, t)
+  assert.ok(festOpen(s, 'boQue', t))
+  assert.equal(spinError(s, 'boQue', 10), 'not_enough', 'chưa có Linh Xăm: chỉ quẻ miễn phí')
+  s = run({ ...s, seed: 4242 }, { type: 'spin', id: 'boQue', n: 1 })
+  const code = s.fest.boQue!.got.at(-1)!
+  assert.ok(code <= -1 && code >= -4, 'ghi bậc quẻ bằng số âm')
+  assert.equal(spins(s, 'boQue'), 1)
+  assert.equal(wheelFree(s, 'boQue', t), false, 'đã dùng quẻ miễn phí')
+  s = { ...s, stats: { ...s.stats, hunted: (s.stats.hunted ?? 0) + 50 } } // 100 Linh Xăm
+  s = run({ ...s, seed: 99 }, { type: 'spin', id: 'boQue', n: 10 })
+  assert.equal(spins(s, 'boQue'), 11)
+  assert.equal(festTokens(s, 'boQue'), 0)
+  assert.equal(festError(s, 'boQue', 0), null, 'đủ 10 quẻ: rương mốc đầu')
+  const hidden = apply({ ...s, seed: 0 }, { type: 'spin', id: 'boQue', n: 1 }, t + DAY)
+  assert.ok(hidden.ok, 'mầm 0: client chờ server')
+})

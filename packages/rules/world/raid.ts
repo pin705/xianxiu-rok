@@ -71,7 +71,9 @@ export const raidActions: WorldActions<RaidAction> = {
     },
     run: (ctx, a) => {
       const rl = ctx.w.rallies[a.id]
-      if (!rl || rl.task !== 'raid' || rl.ally !== allyOf(ctx.w, ctx.pid)?.id || rl.at <= ctx.s.time) return no('gone')
+      const al = allyOf(ctx.w, ctx.pid) // kết trận công sơn của minh mình hay minh ước
+      if (!rl || rl.task !== 'raid' || !al || (rl.ally !== al.id && !al.naps?.includes(rl.ally)) || rl.at <= ctx.s.time)
+        return no('gone')
       const n = [...ctx.ps.values()].reduce((k, x) => k + x.marches.filter(m => m.rally === rl.id).length, 0)
       if (n >= RALLY_MAX || ctx.s.marches.some(m => m.rally === rl.id)) return no('full')
       return sortie(ctx, rl.i, a.elder, a.army, { rally: rl.id, at: rl.at })

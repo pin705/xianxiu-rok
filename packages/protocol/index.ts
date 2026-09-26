@@ -9,6 +9,7 @@ import type {
   AllyRow,
   ArkRow,
   ArenaFoe,
+  BetView,
   TourneyView,
   Good,
   MapSnap,
@@ -140,6 +141,9 @@ export type Season = {
     wins: [number, number]
     last?: { n: number; won: 0 | 1 | null }
   }
+  // Thiên Mệnh Chọn Luật: luật mùa này, đang mở bỏ phiếu không, số phiếu từng luật, phiếu của mình
+  vote?: { rule?: number; open: boolean; tally: number[]; mine?: number }
+  bet?: BetView // Luận Kiếm Đặt Cược: trận playoff đang nhận cược, cược của mình
 }
 // Chat: kênh giới (từ tầng 3), kênh tiên minh, truyền âm 1-1 với người chơi pid ('p<pid>'). Chữ đã lọc ở server.
 export type Channel = 'world' | 'ally' | `p${number}` | `g${number}` // g<id>: nhóm chat tự tạo

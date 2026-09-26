@@ -263,7 +263,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   - Gỡ một exhibit hoàn lại 70 Exhibit Coins (1 nguồn, cộng ghi chú bản 1.0.81 và 1.0.86).
 - *Giữ chân:* làm tướng cũ dùng lại được, chống cảm giác "tướng lỗi thời"; có phần trả phí.
 - **Tu tiên hoá:** **Anh Linh Điện** của giới — thờ di vật tiền bối, chỉ linh nghiệm trong mùa giới.
-- **Game mình:** ❌ — đã có mùa 49 ngày, nhưng không có buff theo trưởng lão trong mùa.
+- **Game mình:** ✅ Anh Linh Điện (`relic` ở `sect/honor.ts`, `RELIC_*`, `ElderRelic.svelte` trong bảng trưởng lão): trong mùa giới, từ Chủ điện 16, cung phụng di vật cho trưởng lão bằng Phi Thăng Tệ — 3 bậc (30 / 60 / 120 tệ), mỗi bậc công +5 %, thủ +3 %, sinh lực +5 % cho đội người đó dẫn (`lead`); tối đa 3 trưởng lão mỗi mùa; hết mùa (luân hồi) di vật tan, tệ không hoàn. Chưa có gian trưng bày theo từng tướng như bản gốc.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### 2.14 Đổi tướng (Commander Swap)
@@ -689,7 +689,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | ✅/🟡 3 cây riêng từng trưởng lão (Công / Thủ / Đạo mạch, mở tầng theo điểm đã cộng), điểm = cấp − 1 + 2 mỗi sao, Tẩy Tủy Đan; chưa lưu bộ | P1 | L |
 | 2.11 | Cặp tướng chính / phụ | ✅ phó trưởng lão (tâm pháp + công pháp nửa sức) | P0 | M |
 | 2.12 | Truyện tướng, Trust, giao diện danh sách | ✅/🟡 Liệt truyện: mỗi trưởng lão ba chương mở theo cấp 10 / 20 / 30 (hai thứ tiếng), tên, danh hiệu, lời dẫn, chân dung; chưa có hảo cảm / đổi y phục | P2 | S–M |
-| 2.13 | Museum (buff tướng theo mùa) | ❌ | P2 | M |
+| 2.13 | Museum (buff tướng theo mùa) | ✅ Anh Linh Điện: di vật 3 bậc cho tối đa 3 trưởng lão mỗi mùa (Phi Thăng Tệ) | P2 | M |
 | 2.14 | Đổi tướng (Commander Swap) | ✅ Truyền công trong Truyền Công Đại Hội | P2 | S |
 | 2.15 | Tướng Prime, Artifact | ❌ | P2 | M |
 | 2.16 | Lò rèn: 8 ô, nguyên liệu, bản vẽ, bộ | 🟡 9 pháp bảo tất định, 1 món mỗi trưởng lão | P1 | L |

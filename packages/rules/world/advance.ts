@@ -8,6 +8,7 @@ import {
   aidAt,
   allyOf,
   dropIncoming,
+  napBetween,
   freshWorld,
   turnBack,
   withMarch,
@@ -115,7 +116,9 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
     if (m.task === 'aid') {
       // viện binh tới nơi: còn cùng minh và nhà đó chưa đủ viện binh thì đóng lại, không thì về
       const ok =
-        d && allyOf(w, pid)?.members[m.target.i] !== undefined && aidAt(view(), m.target.i).length < REINFORCE_MAX
+        d &&
+        (allyOf(w, pid)?.members[m.target.i] !== undefined || napBetween(w, pid, m.target.i)) &&
+        aidAt(view(), m.target.i).length < REINFORCE_MAX
       changed.set(pid, ok ? withMarch(att, { ...m, stay: true }) : turnBack(att, m, at))
       continue
     }

@@ -22,6 +22,8 @@ import { allyOf, freshWorld, sideKey, type MapCtx, type Players, type World } fr
 import { unsold } from './market.ts'
 import { leagueRank } from './ark.ts'
 import { campOf, campTotal, type SeasonRow, seasonBoard } from './points.ts'
+import { voteWinner } from './vote.ts'
+import { betSettle } from './bets.ts'
 
 // Hết mùa cho cả giới (trừ skip: NPC, server làm mới riêng): minh đứng đầu (người từ ASCEND_HALL) và ai ở tầng cao nhất phi thăng,
 // còn lại luân hồi một kiếp; ai cũng nhận thư kết quả. Phần chung làm mới, giữ tiên minh (bỏ các việc đang nhờ giúp).
@@ -45,9 +47,10 @@ export function endSeason(
   ) // Cửu Thiên: minh → hạng (playoff trước, rồi bảng giải)
   const won = camps[0] === camps[1] ? null : camps[0] > camps[1] ? 0 : 1 // Chính Tà Phân Tranh: phái thắng mùa
   const changed: Players = new Map()
+  const paid = betSettle(ps, w, now, true).changed // Luận Kiếm Đặt Cược còn treo: hoàn tệ
   for (const [pid, s0] of ps) {
     if (skip.has(pid)) continue
-    const s = advance(s0, now) // việc xong lúc offline (Chủ điện vừa lên tầng…) cũng tính cho phi thăng, tổng kết
+    const s = advance(paid.get(pid) ?? s0, now) // việc xong lúc offline (Chủ điện vừa lên tầng…) cũng tính cho phi thăng, tổng kết
     const side = sideKey(w, pid)
     const up = (side === first && s.levels.chuDien >= ASCEND_HALL) || s.levels.chuDien >= MAX_LEVEL
     // Công Huân: top HONOR_RANKS nhận quà theo hạng (thư trước thư kết mùa); mùa mới mọi người về 0
@@ -90,7 +93,14 @@ export function endSeason(
   )
   return {
     changed,
-    world: { ...freshWorld(), allies, nextAlly: w.nextAlly, nextRally: w.nextRally, nextOrder: w.nextOrder },
+    world: {
+      ...freshWorld(),
+      allies,
+      nextAlly: w.nextAlly,
+      nextRally: w.nextRally,
+      nextOrder: w.nextOrder,
+      ...(voteWinner(w) !== undefined && { rule: voteWinner(w) }), // Thiên Mệnh Chọn Luật: luật mùa mới
+    },
     top,
   }
 }

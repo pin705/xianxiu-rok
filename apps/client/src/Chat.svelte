@@ -11,7 +11,7 @@
   import type { Net } from './net'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Capsule, FloatBar, Sheet, Speech, Tabs } from './ui'
-  import { L, LOOK, clock, coords } from './lib'
+  import { L, LOOK, clock, coords, num } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
 
@@ -170,7 +170,8 @@
     toast(r.ok ? L.chat.packetGot(num(Math.max(0, game.res.linhThach - before))) : L.chat.packetNone)
   }
   async function packet() {
-    if (!act2 || !api || (ch !== 'world' && ch !== 'ally')) return
+    // kênh Giới mở từ tầng 3: kênh khoá thì không gửi (bao sẽ không có tin trỏ tới)
+    if (!act2 || !api || (ch !== 'world' && ch !== 'ally') || (ch === 'world' && game.levels.chuDien < 3)) return
     const r = await act2({ type: 'packetSend', ally: ch === 'ally' })
     if (r.ok) await api.say(ch, '#hb')
     else toast(L.chat.err.bad)
@@ -377,7 +378,7 @@
       >
       <input class="field grow" bind:value={text} maxlength="200" placeholder={L.chat.say} aria-label={L.chat.say} />
       <Button size="sm" type="submit" disabled={!text.trim()}>{L.chat.send}</Button>
-      {#if act2 && (game.items.hongBao ?? 0) > 0 && (ch === 'world' || ch === 'ally')}
+      {#if act2 && (game.items.hongBao ?? 0) > 0 && (ch === 'ally' || (ch === 'world' && game.levels.chuDien >= 3))}
         <Button size="sm" variant="gold" onclick={packet}>{L.chat.packetSend(game.items.hongBao ?? 0)}</Button>
       {/if}
     </form>

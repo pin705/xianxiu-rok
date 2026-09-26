@@ -19,6 +19,12 @@ import {
   SPY_COST,
   VEIN_HOLD,
   TOURNEY_DAY,
+  PACKET_SHARES,
+  RULES,
+  VOTE_DAYS,
+  addItems,
+  PACKET_TOTAL,
+  PACKET_TTL,
   DAY,
   VEIN_EVERY,
   FORT_BUFFS,
@@ -126,6 +132,7 @@ import {
   veinBuffs,
   contestStep,
   tourneyStep,
+  voteTally,
   contestWindow,
   shrineOf,
   groupsOf,
@@ -3060,4 +3067,68 @@ test('đổi đích giữa đường (Redirect): đội đang đi đổi sang đ
   assert.deepEqual(m1.path![0], m0.path![0], 'lộ trình nối từ nhà')
   assert.deepEqual([m1.path!.at(-1)!.x, m1.path!.at(-1)!.y], [near.x, near.y])
   assert.equal(act({ type: 'redirect', id: m1.id, i: far.i }, m1.arriveAt + 1), 'bad', 'tới nơi rồi')
+})
+
+test('Hồng Bao (lì xì): gửi kênh Giới / Tiên minh, 5 người đầu mở được phần ngẫu nhiên, không tự mở, mỗi người một lần, hết hạn thì tan', () => {
+  const withBao = (x: State) => ({ ...x, items: addItems(x.items, { hongBao: 2 }) })
+  const ps = world(withBao(sect('A', 10)), ...['B', 'C', 'D', 'E', 'F', 'G'].map(n => sect(n, 10)))
+  let w: World = {
+    ...freshWorld(),
+    allies: { 1: { id: 1, name: 'Minh', tag: 'MN', members: { 1: 2, 2: 0 }, notice: '', at: T0, helps: [] } },
+  }
+  const act = (pid: number, x: Parameters<typeof worldAct>[2], at = T0) => {
+    const r = worldAct(ps, pid, x, at, 77 + pid, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  assert.equal(act(3, { type: 'packetSend', ally: false }), 'no_item')
+  assert.equal(act(1, { type: 'packetSend', ally: false }), null)
+  assert.equal(ps.get(1)!.items.hongBao, 1)
+  const left = w.packets![0].left
+  assert.equal(left.length, PACKET_SHARES)
+  assert.equal(
+    left.reduce((a, b) => a + b, 0),
+    PACKET_TOTAL,
+  )
+  assert.equal(act(1, { type: 'packetOpen', by: 1 }), 'bad', 'không tự mở')
+  const before = ps.get(2)!.res.linhThach
+  assert.equal(act(2, { type: 'packetOpen', by: 1 }), null)
+  assert.equal(ps.get(2)!.res.linhThach, before + left[0])
+  assert.equal(act(2, { type: 'packetOpen', by: 1 }), 'empty', 'mỗi người một lần')
+  for (const pid of [3, 4, 5, 6]) assert.equal(act(pid, { type: 'packetOpen', by: 1 }), null)
+  assert.equal(act(7, { type: 'packetOpen', by: 1 }), 'empty', 'năm phần đã hết')
+  // bao kênh Tiên minh: chỉ người trong minh mở được; hết hạn thì tan
+  assert.equal(act(3, { type: 'packetSend', ally: true }), 'no_item')
+  assert.equal(act(1, { type: 'packetSend', ally: true }), null)
+  assert.equal(act(3, { type: 'packetOpen', by: 1 }), 'empty', 'ngoài minh')
+  assert.equal(act(2, { type: 'packetOpen', by: 1 }, T0 + PACKET_TTL + 1), 'empty', 'hết hạn')
+  assert.equal(act(2, { type: 'packetOpen', by: 1 }, T0 + 1000), null)
+})
+
+test('Thiên Mệnh Chọn Luật: 3 ngày cuối mùa bỏ phiếu luật mùa sau (đổi phiếu được), hết mùa luật nhiều phiếu nhất thành tăng ích cả giới', () => {
+  const a = atlas(777)
+  const ps = world(sect('A', 10), sect('B', 10), sect('C', 10))
+  let w = freshWorld()
+  const map = (day: number) => ({ atlas: a, phase: 3, day })
+  const vote = (pid: number, k: number, day: number) => {
+    const r = worldAct(ps, pid, { type: 'vote', k }, T0, 1, map(day), w)
+    if (r.ok) w = r.world
+    return r.ok ? null : r.error
+  }
+  assert.equal(vote(1, 0, 49 - VOTE_DAYS - 1), 'locked', 'chưa tới 3 ngày cuối')
+  assert.equal(vote(1, 2, 49 - VOTE_DAYS), null)
+  assert.equal(vote(2, 2, 47), null)
+  assert.equal(vote(3, 0, 48), null)
+  assert.equal(vote(3, 2, 48), null, 'đổi phiếu')
+  assert.deepEqual(voteTally(w), [0, 0, 3])
+  const next = endSeason(ps, w, map(49), T0, 1, new Set()).world
+  assert.equal(next.rule, 2)
+  assert.equal(next.votes, undefined, 'mùa mới bỏ phiếu lại từ đầu')
+  const buffs = worldBuffs(ps, next, map(0), T0)
+    .get(1)!
+    .buffs.filter(b => b.src === 'rule')
+    .map(b => [b.key, b.v])
+  assert.deepEqual(buffs, Object.entries(RULES[2]))
 })

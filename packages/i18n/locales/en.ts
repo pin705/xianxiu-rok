@@ -2033,6 +2033,12 @@ export const en: Text = {
         `Primal Tribes · difficulty ${lv}`,
         `Your party of ${n} ${waves >= 5 ? 'cleared all five waves of beasts' : waves ? `cleared ${waves}/5 waves of beasts` : 'did not clear a wave'}. A reward for every member is below.`,
       ],
+      bet: (win: 0 | 1, tag: string, stage: 'semi' | 'final' | 'third', n: number): [string, string] => [
+        win ? `League Bets · [${tag}] won` : `League Bets · refund [${tag}]`,
+        win
+          ? `[${tag}] won the ${{ semi: 'semifinal', final: 'final', third: 'third-place match' }[stage]} as you guessed — you get ${n} Ascension Coins (stake included).`
+          : `Your bet on [${tag}] (${{ semi: 'semifinal', final: 'final', third: 'third-place match' }[stage]}) missed — ${n} Ascension Coins refunded.`,
+      ],
       league: (rank: number): [string, string] => [
         `Nine Heavens League · alliance rank ${rank}`,
         `This season your alliance placed ${rank} in the Nine Heavens League (the Spirit Orb battles). A reward for every member is below.`,
@@ -2903,6 +2909,35 @@ export const en: Text = {
     next: 'Next',
     done: 'Got it',
   },
+  relic: {
+    title: 'Hall of Relics',
+    hint: "Enshrine an ancestor's relic for this elder with Ascension Coins: teams they lead grow stronger until the season ends. Up to 3 elders per season; relics fade when the season ends.",
+    used: (n: number, max: number) => `Enshrined ${n}/${max}`,
+    lv: (n: number, max: number) => `Relic tier ${n}/${max}`,
+    go: (cost: number, have: string) => `Enshrine · ${cost} coins (have ${have})`,
+    next: (fx: string) => `Next tier: ${fx}`,
+    full: 'Three elders already enshrined this season.',
+  },
+  rule: {
+    title: 'Mandate of Heaven',
+    now: (name: string) => `This season's rule: ${name}`,
+    none: "No rule this season yet — in the season's last three days the realm votes on next season's rule.",
+    hint: "In the season's last three days everyone in the realm votes on next season's rule; the winner becomes a realm-wide buff all season.",
+    open: "Voting on next season's rule — tap another rule to change your vote; it locks when the season ends.",
+    names: ['Bountiful Harvest', 'Warpath', 'Prosperity'],
+    votes: (n: number) => `${n} votes`,
+  },
+  bet: {
+    title: 'League Bets',
+    hint: 'Before each Nine Heavens League playoff round, stake Ascension Coins on the alliance you think will win. Guess right and get your coins back × the odds; guess wrong and they are refunded after the final.',
+    have: (n: string) => `${n} coins`,
+    amount: 'Coins to stake',
+    stake: (n: number, max: number) => `Each tap stakes ${n} coins (up to ${max} per match)`,
+    odds: (stage: string, x: number) => `${stage} · win pays ×${x}`,
+    mine: (tag: string, n: number) => `[${tag}] · ${n} coins`,
+    lost: (tag: string, n: number) => `[${tag}] lost · ${n} coins refunded after the final`,
+    wait: 'Your bets',
+  },
   truyen: {
     title: 'Skill transmission',
     hint: (n: number) =>
@@ -2912,6 +2947,15 @@ export const en: Text = {
     go: (n: number) => `Transmit · ${n} talismans`,
     sure: (a: string, b: string) => `Swap all learned skill tiers of ${a} and ${b}? Talismans spent are not refunded.`,
     none: 'No elder of the same rarity and skill count to swap with yet.',
+  },
+  omen: {
+    draw: (n: number) => `Draw ${n}`,
+    free: 'One free draw left today',
+    cost: (n: number) => `${n} Fortune Slips per draw`,
+    tiers: ['Great Fortune', 'Good Fortune', 'Fair', 'Modest'],
+    last: 'Latest draws',
+    count: (n: number) => `${n} draws so far`,
+    goal: (n: number) => `${n} draws`,
   },
   offer: {
     level: (n: number, max: number) => `Festival level ${n}/${max}`,
@@ -3330,6 +3374,10 @@ export const en: Text = {
         name: 'Lantern Festival',
         desc: 'Five festival days: hunting, winning battles, building, recruiting, gathering and speedups all earn Lanterns. Release them to raise the festival — sometimes a critical ×2 or ×5 — through 25 levels, each with a gift.',
       },
+      boQue: {
+        name: "Esmeralda's House",
+        desc: 'Three days of fortune sticks: event tasks give Fortune Slips; shake the tube to draw — Great Fortune holds a Gold Fate Talisman, and every draw is worth more than it costs. One free draw a day; 10 / 20 / 40 / 70 draws open chests.',
+      },
       tamBao: {
         name: 'Treasure Hunt',
         desc: 'Five days of treasure hunting: winning beast hunts and gathering teams returning home may turn up treasure map fragments (by mail). Assemble 7 on the world map — a dig site appears near your sect, visible to all but only yours to dig.',
@@ -3398,6 +3446,7 @@ export const en: Text = {
     calendar: '7-day calendar',
     tokens: (n: string, name = 'Sect Tokens') => `${name}: ${n}`,
     tokenName: {
+      boQue: 'Fortune Slips',
       vanDang: 'Lanterns',
       thienCo: 'Fate Token',
       trungThu: 'Mooncakes',

@@ -747,7 +747,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng đăng ký có khung giờ và danh sách; bản đồ trận riêng; màn xem trực tiếp có cược.
 - **Giữ chân:** lịch cố định; không mất quân nên ai cũng dám đánh; xem và cược tạo cộng đồng khán giả.
 - **Tu tiên hoá:** "Thần Chu tranh đoạt" (hộ tống linh chu); "Cửu Thiên Luận Đạo Hội" (giải có khán giả, cược bằng "linh tệ" không quy ra tiền, PLAN mục 9).
-- **Game mình:** ✅ Luận Kiếm Minh Chiến (`world/war.ts`: minh ghi danh, 20h thứ Bảy ghép cặp theo điểm minh chiến, người thứ k đấu người thứ k bằng đội hình Luận Kiếm Đài) + Tranh Đoạt Linh Châu (`world/ark.ts`, `ArkCard.svelte`: 20h Chủ nhật, chiến trường 11 ô như bản đồ Ark — Tụ Linh Nhãn nối nhau, Linh Tháp +10 % công, Linh Châu nạp ở Tiểu Trận — 8 hiệp × 10 phút giải tất định, không mất quân) + Cửu Thiên Luận Đạo Hội (bảng giải cả mùa, playoff bán kết / chung kết / tranh hạng ba cho 4 minh đầu — `leagueBoard` / `cupSetup` / `leagueRank`, quà theo hạng). Còn thiếu: khán giả xem trực tiếp, cược (League Bets).
+- **Game mình:** ✅ Luận Kiếm Minh Chiến (`world/war.ts`: minh ghi danh, 20h thứ Bảy ghép cặp theo điểm minh chiến, người thứ k đấu người thứ k bằng đội hình Luận Kiếm Đài) + Tranh Đoạt Linh Châu (`world/ark.ts`, `ArkCard.svelte`: 20h Chủ nhật, chiến trường 11 ô như bản đồ Ark — Tụ Linh Nhãn nối nhau, Linh Tháp +10 % công, Linh Châu nạp ở Tiểu Trận — 8 hiệp × 10 phút giải tất định, không mất quân) + Cửu Thiên Luận Đạo Hội (bảng giải cả mùa, playoff bán kết / chung kết / tranh hạng ba cho 4 minh đầu — `leagueBoard` / `cupSetup` / `leagueRank`, quà theo hạng). Cược: Luận Kiếm Đặt Cược (`world/bets.ts`, doc 5 F12). Còn thiếu: khán giả xem trực tiếp.
 - **Ưu tiên:** P1 · **Công sức:** L.
 
 #### J3. Karuak Ceremony / Trial of Kau Karuak — **Karuak Ceremony**
@@ -913,7 +913,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | I11 | Kill points, honor, lực chiến | ✅ chiến công (bảng xếp hạng), Công Huân, lực chiến, Elo | P1 | S |
 | I12 | KvK, xếp hạng vương quốc | ⛔ thay bằng mùa 49 ngày | — | — |
 | J1 | Động viên liên minh (Mobilization) | ✅ Minh vụ đường | **P0** | M |
-| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu giản lược + bảng giải mùa; chưa có khán giả / cược | P1 | L |
+| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu giản lược + bảng giải mùa + playoff + cược (Luận Kiếm Đặt Cược); chưa có khán giả xem trực tiếp | P1 | L |
 | J3 | Karuak Ceremony / Trial | ✅ Thí Luyện Yêu Hoàng; thiếu nhờ minh giúp | P2 | S |
 | J4 | Ceroli Crisis/Assault (tổ đội PvE) | ✅ Man Hoang Cổ Tộc (tổ 4 người trong minh, 3 vai, 5 độ khó); chưa có bản 12 người | P2 | L |
 | J5 | Shadow Legion (ma triều công sơn) | ✅ Ma Triều Công Sơn (5 đợt tối thứ Tư) | P1 | M |
