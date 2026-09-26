@@ -9,6 +9,7 @@ import { alchemyActions, type AlchemyAction } from './alchemy.ts'
 import { armyActions, type ArmyAction } from './army.ts'
 import { bagActions, type BagAction } from './bag.ts'
 import { festActions, type FestAction } from './fest.ts'
+import { stallActions, type StallAction } from './stall.ts'
 import { passActions, type PassAction } from './pass.ts'
 import { trialActions, type TrialAction } from './trial.ts'
 import { thiefActions, type ThiefAction } from './thief.ts'
@@ -53,6 +54,7 @@ export type Action =
   | InboxAction
   | BagAction
   | FestAction
+  | StallAction
   | PassAction
   | TrialAction
   | ThiefAction
@@ -88,6 +90,7 @@ const ACTIONS: Actions<Action> = {
   ...inboxActions,
   ...bagActions,
   ...festActions,
+  ...stallActions,
   ...passActions,
   ...trialActions,
   ...thiefActions,

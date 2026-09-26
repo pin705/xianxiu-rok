@@ -311,11 +311,11 @@ const validFest = (s: any) =>
   // trường số thêm sau (save cũ thiếu là không có)
   [s.frenzy, s.moved, s.builder2, s.joined, s.towerDay, s.honor].every(optNum) &&
   [s.honorGot, s.guestAt, s.frag, s.bones, s.honorAll, s.partyDay, s.seasonAt].every(optNum) &&
-  [s.veil, s.born, s.coinSpent, s.secludeAt, s.guests].every(optNum) &&
+  [s.veil, s.mirage, s.born, s.coinSpent, s.secludeAt, s.guests].every(optNum) &&
   (s.friends === undefined || (Array.isArray(s.friends) && s.friends.every(num))) &&
   validLate(s) &&
   (s.potOpened === undefined || (obj(s.potOpened) && num(s.potOpened.week) && num(s.potOpened.n))) &&
-  (s.crowns === undefined || (Array.isArray(s.crowns) && s.crowns.every(num))) &&
+  [s.crowns, s.honors].every(x => x === undefined || (Array.isArray(x) && x.every(num))) &&
   (s.yb === undefined || (obj(s.yb) && num(s.yb.kp) && num(s.yb.hunted) && num(s.yb.raided) && num(s.yb.gathered))) &&
   (s.seclude === undefined || (obj(s.seclude) && num(s.seclude.until) && num(s.seclude.shield))) &&
   (s.thoi === undefined || (obj(s.thoi) && num(s.thoi.n) && num(s.thoi.pick))) &&

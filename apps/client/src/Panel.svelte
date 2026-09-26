@@ -17,6 +17,9 @@
     TRIB_CLOUD,
     REBIRTH_HALL,
     TECH_ROWS,
+    STUDY_CUT,
+    stallCost,
+    stallOf,
     TRIBS,
     batch,
     buildTime,
@@ -149,7 +152,8 @@
     {@const locked = lv === 0 && hall < d.unlock}
     {@const job = game.queue.find(j => j.building === id)}
     {@const err = upgradeError(game, id)}
-    {@const c = cost(id, Math.min(next, MAX_LEVEL))}
+    {@const c = stallCost(game, 'build', cost(id, Math.min(next, MAX_LEVEL)))}
+    {@const lucky = stallOf(game, 'build')}
     {@const tr = TRIBS[game.trib]}
     <!-- nâng cấp thường (không đang xây, không độ kiếp, chưa tối đa): bố cục nghi lễ — hai tầng, lễ vật trên án, nút ấn son -->
     {@const rite = !job && !(err === 'trib' && tr) && err !== 'max_level'}
@@ -269,6 +273,12 @@
           >
         {:else if id === 'tangKinhCac'}
           <Stat label={L.panel.rows}>{TECH_ROWS.filter(r => r <= lv).length}/{TECH_ROWS.length}</Stat>
+          <!-- mỗi tầng bớt thời gian lĩnh ngộ công pháp (như tốc nghiên cứu của Học viện) -->
+          <Stat label={L.panel.study}
+            >−{Math.round(STUDY_CUT * lv * 100)}%{#if lv < MAX_LEVEL}<span class="t-good"
+                >→ −{Math.round(STUDY_CUT * next * 100)}%</span
+              >{/if}</Stat
+          >
         {:else if id === 'chuDien'}
           <Stat label={L.panel.slots}>{marchSlots(game)}</Stat>
         {:else if id === 'hoSonDaiTran'}
@@ -378,7 +388,10 @@
               {#if err === 'queue_full'}<Tag icon="cross" tone="bad">{L.panel.busy}</Tag>{/if}
             </div>
           {/if}
-          <!-- lễ vật trên án son: mỗi tài nguyên một món, số đủ / thiếu -->
+          <!-- lễ vật trên án son: mỗi tài nguyên một món, số đủ / thiếu (Cát Tường Hạ Giá: giá đã giảm, có nhãn) -->
+          {#if lucky}<div class="row justify-center">
+              <Tag tone="gold" icon="star">{L.stall.tag(Math.round(lucky.cut * 100))}</Tag>
+            </div>{/if}
           <Altar
             items={Object.entries(c).map(([r, v]) => {
               const have = game.res[r as keyof typeof game.res] ?? 0

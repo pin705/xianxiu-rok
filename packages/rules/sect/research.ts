@@ -1,5 +1,6 @@
 // Công pháp ở Tàng Kinh Các.
 import { no, ok, pay, type Actions } from '../core/action.ts'
+import { stallCost, stallTake } from '../core/stall.ts'
 import { oneOf } from '../core/parse.ts'
 import { techCost, techTime } from '../core/stats.ts'
 import { type Err, type State } from '../core/types.ts'
@@ -11,7 +12,7 @@ export function techError(s: State, t: TechId): Err | null {
   if (level > TECHS[t].max) return 'max_level'
   if (s.levels.tangKinhCac < TECH_ROWS[TECHS[t].row]) return 'locked'
   if (s.study) return 'busy'
-  return afford(s.res, techCost(t, level)) ? null : 'not_enough'
+  return afford(s.res, stallCost(s, 'tech', techCost(t, level))) ? null : 'not_enough' // Cát Tường Hạ Giá
 }
 
 export type ResearchAction = { type: 'study'; tech: TechId }
@@ -23,10 +24,11 @@ export const researchActions: Actions<ResearchAction> = {
       const e = techError(s, a.tech)
       if (e) return no(e)
       const level = (s.tech[a.tech] ?? 0) + 1
+      const t = stallTake(s, 'tech', techCost(a.tech, level))
       return ok({
-        ...s,
-        res: pay(s, techCost(a.tech, level)),
-        study: { tech: a.tech, level, startAt: s.time, finishAt: s.time + techTime(a.tech, level) },
+        ...t.s,
+        res: pay(t.s, t.cost),
+        study: { tech: a.tech, level, startAt: s.time, finishAt: s.time + techTime(s, a.tech, level) },
       })
     },
   },

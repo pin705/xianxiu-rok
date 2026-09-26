@@ -13,6 +13,8 @@ export const newSeed = () => randomInt(1, 2 ** 32 - 1) // mầm mới trước m
 function publicText(a: WorldAction) {
   if (a.type === 'allyFound') return [a.name, a.tag]
   if (a.type === 'groupNew') return [a.name]
+  if (a.type === 'boardPost') return [a.title, a.text] // Luận Đạo Bảng
+  if (a.type === 'boardReply') return [a.text]
   return a.type === 'allyNotice' || a.type === 'allyMark' || a.type === 'allyMail' || a.type === 'planAdd'
     ? [a.text]
     : []

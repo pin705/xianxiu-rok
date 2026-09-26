@@ -1,5 +1,6 @@
 // Đệ tử: tuyển, nâng bậc, chữa thương binh ở Đan phòng, Hồi Xuân Đan.
 import { no, ok, pay, use, type Actions } from '../core/action.ts'
+import { stallCost, stallTake } from '../core/stall.ts'
 import { bump } from '../core/calendar.ts'
 import { int, oneOf } from '../core/parse.ts'
 import { batch, healCost, healTime, HIGH_FIRST, tierOpen, trainCost, trainTime, unitOf } from '../core/stats.ts'
@@ -11,7 +12,7 @@ export function trainError(s: State, u: UnitId, n: number): Err | null {
   if (!UNITS.includes(u) || !Number.isInteger(n) || n < 1 || n > batch(s)) return 'bad'
   if (!s.levels.dienVoTruong || !tierOpen(s, unitOf(u).tier)) return 'locked'
   if (s.train) return 'busy'
-  return afford(s.res, trainCost(u, n)) ? null : 'not_enough'
+  return afford(s.res, stallCost(s, 'train', trainCost(u, n))) ? null : 'not_enough' // Cát Tường Hạ Giá
 }
 
 export function healError(s: State): Err | null {
@@ -58,7 +59,8 @@ export const armyActions: Actions<ArmyAction> = {
       const e = trainError(s, a.unit, a.n)
       if (e) return no(e)
       const train = { unit: a.unit, n: a.n, startAt: s.time, finishAt: s.time + trainTime(s, a.unit, a.n) }
-      return ok(bump({ ...s, res: pay(s, trainCost(a.unit, a.n)), train }, 'train', a.n))
+      const t = stallTake(s, 'train', trainCost(a.unit, a.n))
+      return ok(bump({ ...t.s, res: pay(t.s, t.cost), train }, 'train', a.n))
     },
   },
   promote: {

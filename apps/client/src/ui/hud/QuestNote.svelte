@@ -36,7 +36,7 @@
   <p class="quest t-small t-lore" class:ink>{empty}</p>
 {:else}
   <button class="quest" class:ink class:done={state !== 'todo'} class:enter={state !== 'held'} {onclick}>
-    <span class="stack grow" style:--gap="3px">
+    <span class="stack col grow" style:--gap="3px">
       <small class="row"
         >{title}{#if prog}<b class="t-num">{prog}</b>{/if}</small
       >
@@ -143,7 +143,7 @@
       flex-wrap: wrap;
       row-gap: 6px;
     }
-    .quest > .stack {
+    .quest > .col {
       flex-basis: 100%;
     }
   }

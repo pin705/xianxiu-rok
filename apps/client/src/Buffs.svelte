@@ -54,12 +54,20 @@
       })
     if ((game.veil ?? 0) > now)
       out.push({ key: 'veil', icon: 'anTung', name: L.bag.family.anTung.name, fx: [L.buffs.veil], until: game.veil! })
+    if ((game.mirage ?? 0) > now)
+      out.push({
+        key: 'mirage',
+        icon: 'huyenAnh',
+        name: L.bag.family.huyenAnh.name,
+        fx: [L.buffs.mirage],
+        until: game.mirage!,
+      })
     return out.sort((a, b) => (a.until || Infinity) - (b.until || Infinity))
   })
   // vừa bề ngang cụm nút trên HUD điện thoại: tối đa 3 chip, nhiều hơn thì 2 chip + "+N"
   const show = $derived(rows.length > 3 ? 2 : 3)
   const items = $derived(
-    BAG_IDS.filter(id => ['buff', 'shield', 'veil'].includes(BAG[id].use) && (game.items[id] ?? 0) > 0),
+    BAG_IDS.filter(id => ['buff', 'shield', 'veil', 'mirage'].includes(BAG[id].use) && (game.items[id] ?? 0) > 0),
   )
   let open = $state(false)
   const use = (id: BagId) => g.act({ type: 'use', item: id, n: 1 }, 'reward')

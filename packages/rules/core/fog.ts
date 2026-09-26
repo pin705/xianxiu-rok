@@ -63,5 +63,11 @@ export function revealNear(s: State, n: number, t: number): Fog {
     ),
   }
 }
+// Chuyển tông môn tới at (dời núi, bị phóng trục…): mê vụ quanh chỗ mới tan như lúc lập tông môn
+export const resettle = (s: State, at: { x: number; y: number }, extra: Partial<State> = {}): State => {
+  const f = fogOf(s),
+    c = cellOf(at)
+  return { ...s, ...extra, seat: at, fog: { ...f, rows: lift(f.rows, around(c.cx, c.cy, FOG_HOME)) } }
+}
 export const cranes = (s: State) => Math.min(CRANE_MAX, 1 + Math.floor(s.levels.chuDien / CRANE_PER))
 export const cranesOut = (f: Fog, t: number) => f.fly.filter(x => x.back > t).length

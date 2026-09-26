@@ -50,6 +50,7 @@
   import Swap from './Swap.svelte'
   import Offer from './Offer.svelte'
   import Omen from './Omen.svelte'
+  import Stall from './Stall.svelte'
   import Race from './Race.svelte'
   import Maze from './Maze.svelte'
   import Pass from './Pass.svelte'
@@ -100,6 +101,7 @@
     khaiDien: 'star',
     hoaKien: 'swords',
     boQue: 'scroll',
+    catTuong: 'star',
     vanDang: 'star',
     truyenCong: 'scroll',
     gioiChu: 'swords',
@@ -161,6 +163,7 @@
     khaiDien: 'login',
     hoaKien: 'train',
     boQue: 'scroll',
+    catTuong: 'treasure',
     vanDang: 'moon',
     truyenCong: 'scroll',
     gioiChu: 'battle',
@@ -452,6 +455,8 @@
             <Offer id={cur} />
           {:else if def.kind === 'omen'}
             <Omen id={cur} />
+          {:else if def.kind === 'stall'}
+            <Stall id={cur} />
           {:else if def.kind === 'wish'}
             <Wish id={cur} />
           {:else if def.kind === 'thief'}

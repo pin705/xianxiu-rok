@@ -12,6 +12,8 @@
     daoUnit,
     tierOpen,
     trainCost,
+    stallCost,
+    stallOf,
     trainError,
     trainTime,
     unitOf,
@@ -22,7 +24,22 @@
     type UnitId,
     type UnitType,
   } from '@rok/rules'
-  import { Altar, Ascend, Bag, Button, FirstTap, Medal, Podium, Seal, Section, Slider, Slip, Tally, Timer } from './ui'
+  import {
+    Altar,
+    Ascend,
+    Bag,
+    Button,
+    FirstTap,
+    Medal,
+    Podium,
+    Seal,
+    Section,
+    Slider,
+    Slip,
+    Tag,
+    Tally,
+    Timer,
+  } from './ui'
   import { paintedUrl, soldier, type IconName } from '@rok/art'
   import JobRow from './JobRow.svelte'
   import Refill from './Refill.svelte'
@@ -49,7 +66,8 @@
   let n = $state(0)
   const count = $derived(Math.min(n || most, cap))
   const err = $derived(trainError(game, u, count))
-  const cost = $derived(trainCost(u, count))
+  const cost = $derived(stallCost(game, 'train', trainCost(u, count))) // Cát Tường Hạ Giá: giá đã giảm
+  const lucky = $derived(stallOf(game, 'train'))
   const uni = $derived(daoUnit(game)) // đệ tử đặc trưng của đạo thống: chỉ số gốc cao hơn
   const stat = (k: 'atk' | 'def' | 'hp') =>
     Math.round(UNIT_BASE[type][k] * TIER[tier].stat * (uni?.type === type ? 1 + (uni[k] ?? 0) : 1))
@@ -141,8 +159,11 @@
 </div>
 <Slider value={count} min={1} max={cap} label={L.train.count} onchange={v => (n = v)} />
 
-<!-- lễ vật trên án son: mỗi tài nguyên một món, số đủ / thiếu -->
+<!-- lễ vật trên án son: mỗi tài nguyên một món, số đủ / thiếu (Cát Tường Hạ Giá: giá đã giảm, có nhãn) -->
 <div class="mt-3">
+  {#if lucky}<div class="row justify-center">
+      <Tag tone="gold" icon="star">{L.stall.tag(Math.round(lucky.cut * 100))}</Tag>
+    </div>{/if}
   <Altar
     items={RESOURCES.filter(r => cost[r]).map(r => ({
       key: r,

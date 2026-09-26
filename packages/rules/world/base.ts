@@ -205,6 +205,9 @@ export type World = {
   bets?: { pid: number; k: 'semi' | 'final' | 'third'; on: number; n: number; lost?: true }[] // Luận Kiếm Đặt Cược (world/bets.ts)
   heroes?: { picks: number[][]; votes: Record<number, number>[] } // Lưu Danh Sử Sách (world/heroes.ts): ứng viên, phiếu theo hạng mục
   paper?: Paper // Giới Báo (world/paper.ts)
+  recalls?: Record<number, { by: number; at: number }[]> // Cố Nhân Tương Phùng: ai đã gọi người vắng này về, lúc nào
+  recallGot?: Record<number, number> // số lần người gọi đã nhận quà mùa này (world/recall.ts)
+  board?: { next: number; topics: Topic[] } // Luận Đạo Bảng (world/board.ts), chủ đề sôi nổi trước
   nextRally: number
   pts: Record<number, number>
   orders: Record<number, Order>
@@ -216,6 +219,7 @@ export type World = {
   war: War // Luận Kiếm Minh Chiến
   bless?: { key: BlessKey; until: number; day: number } // Giới Chủ ban phúc cả giới (ngày dayOf đã ban)
   boon?: { week: number; left: number } // Thiên Ân lễ Giới Chủ còn ban được trong tuần
+  banishAt?: number // lần Phóng Trục gần nhất của Giới Chủ (world/lord.ts)
   flags?: Record<number, Flag> // trận kỳ các tiên minh đã cắm
   nextFlag?: number
   legion?: Legion // Ma Triều Công Sơn tuần này
@@ -308,6 +312,18 @@ export type Issue = {
   likes: number[][]
 }
 export type Paper = { day: number; base: Record<number, number[]>; issues: Issue[]; read: number[] }
+// Luận Đạo Bảng: một chủ đề — người mở (tên kèm hiệu minh lúc viết), tiêu đề, lời mở, lúc mở, lời mới nhất, các lời trả lời
+export type Reply = { pid: number; name: string; text: string; at: number }
+export type Topic = {
+  id: number
+  pid: number
+  name: string
+  title: string
+  text: string
+  at: number
+  last: number
+  replies: Reply[]
+}
 // Một tước: ai giữ, phong lúc nào, tới lúc nào
 export type Title = { pid: number; at: number; until: number }
 export const freshWorld = (): World => ({

@@ -250,5 +250,10 @@ test('Lưu Danh Sử Sách: ba ngày cuối mùa chốt ứng viên theo chỉ s
     [[0, 1]],
   )
   assert.deepEqual(got(2), [])
+  assert.deepEqual(
+    [out.changed.get(3)!.honors, out.changed.get(1)!.honors, out.changed.get(2)!.honors],
+    [[1 * 8 + 1], [1 * 8 + 0], undefined],
+    'danh hiệu mùa: Công Thần mùa 1 cho người 3, Chiến Thần mùa 1 cho người 1',
+  )
   assert.equal(out.world.heroes, undefined, 'mùa mới bình chọn lại')
 })

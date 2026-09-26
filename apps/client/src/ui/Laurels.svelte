@@ -16,7 +16,7 @@
           {#if k === 0}<span class="cup"><Art art="rank-cup" icon="rank" size={64} /></span>{/if}
           <b class="nm">{r.name}</b>
           <small class="t-num t-gold">{r.v}</small>
-          <span class="step"><i class="rank-no r{r.rank}">{r.rank}</i></span>
+          <span class="step"><i class="rank-no coin r{r.rank}">{r.rank}</i></span>
         </button>
       </li>
     {/if}
@@ -83,7 +83,7 @@
   .p3 .step {
     height: 34px;
   }
-  .rank-no {
+  .coin {
     min-width: 30px;
     height: 30px;
   }

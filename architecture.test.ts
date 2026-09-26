@@ -114,3 +114,36 @@ test('màn không tự viết CSS: mọi kiểu nằm trong apps/client/src/ui',
   }
   assert.deepEqual([...bad, ...done], [])
 })
+
+// Lớp riêng của component ui/ không trùng tên lớp toàn cục đứng một mình trong theme.css: lớp toàn cục vẫn trúng phần tử
+// của component (Svelte chỉ khoá phạm vi lớp riêng) và dồn thêm kiểu lạ — `.scroller` từng biến khung cảnh thành hàng
+// cuộn ngang, `.stamp` đóng khung son lên dấu tích. Đặt tên khác cho lớp riêng.
+const classesOf = (css: string) =>
+  new Set(
+    [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{/g)].flatMap(m =>
+      m[1].split(',').flatMap(sel => {
+        const last =
+          sel
+            .trim()
+            .split(/\s*[ >+~]\s*/)
+            .at(-1) ?? ''
+        const one = last.match(/^\.([\w-]+)(?::[\w-]+(?:\([^)]*\))?)*$/)
+        return one ? [one[1]] : []
+      }),
+    ),
+  )
+test('lớp riêng của component ui/ không trùng lớp toàn cục của theme.css', () => {
+  const ui = join(root, 'apps/client/src/ui')
+  const globals = classesOf(readFileSync(join(ui, 'theme.css'), 'utf8'))
+  const bad: string[] = []
+  for (const f of readdirSync(ui, { recursive: true, encoding: 'utf8' }).filter(f => f.endsWith('.svelte'))) {
+    const src = readFileSync(join(ui, f), 'utf8')
+    const style = src.match(/<style>([\s\S]*?)<\/style>/)?.[1]
+    if (!style) continue
+    const markup = src.slice(0, src.indexOf('<style>'))
+    for (const c of classesOf(style))
+      if (globals.has(c) && new RegExp(`class(?::${c}\\b|="[^"]*\\b${c}\\b)`).test(markup))
+        bad.push(`ui/${f}: lớp riêng .${c} trùng lớp toàn cục trong theme.css — đổi tên`)
+  }
+  assert.deepEqual(bad, [])
+})

@@ -252,6 +252,7 @@ export const vi = {
     batch: 'Mỗi lượt tuyển',
     hospital: 'Chỗ nằm thương binh',
     rows: 'Hàng công pháp mở',
+    study: 'Thời gian lĩnh ngộ',
     slots: 'Đội xuất quân',
     gearCap: 'Cấp pháp bảo tối đa',
     requires: 'Yêu cầu',
@@ -421,8 +422,9 @@ export const vi = {
       forge: 'Thời gian luyện khí',
       cap: 'Trận dung',
       gather: 'Tốc khai mỏ',
+      study: 'Thời gian lĩnh ngộ',
     }
-    const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
+    const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge', 'study'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
   },
   techs: {
@@ -1500,6 +1502,8 @@ export const vi = {
     noAlly: 'Chưa vào tiên minh',
     offline: 'Đang bế quan',
     crown: (n: number) => `Đệ nhất Công Huân · mùa ${n}`,
+    honor: (k: number, n: number) =>
+      `${['Chiến Thần', 'Công Thần', 'Liệp Yêu Vương', 'Khoáng Vương', 'Quán quân Cửu Thiên'][k] ?? '?'} · mùa ${n}`,
     ascended: (n: number) => `Phi thăng ${n} mùa`,
     pvp: 'Tranh đoạt thắng / thua',
     wl: (w: number, l: number) => `${w} / ${l}`,
@@ -1636,6 +1640,11 @@ export const vi = {
     good: 'Phúc',
     bad: 'Hoạ',
     strip: 'Thu hồi tước',
+    banish: 'Phóng Trục',
+    banishAsk: (name: string) => `Chạm lần nữa: phóng trục ${name} ra vùng ngoài`,
+    banished: (name: string) => `Đã phóng trục ${name} ra vùng ngoài.`,
+    banishHint:
+      'Phóng Trục: đẩy tông môn không cùng minh (không bế quan, mọi đội ở nhà) ra chỗ trống ở vùng ngoài; 24 giờ một lần.',
     held: (name: string) => `Đang giữ: ${name}`,
     names: {
       chienThan: 'Chiến Thần',
@@ -1856,6 +1865,10 @@ export const vi = {
     packetSend: (n: number) => `🧧 Lì xì (${n})`,
     packetOpen: 'Mở lì xì',
     joinAlly: 'Vào minh',
+    away: (d: number) => `vắng ${d} ngày`,
+    callBack: 'Gọi về',
+    called: 'Đã gọi',
+    callSent: 'Đã gửi lời gọi — đạo hữu quay lại trong 14 ngày thì cả hai nhận quà Cố Nhân Tương Phùng.',
     // giờ tin nhắn, gọn: dưới 1 phút "vừa xong", rồi phút / giờ / ngày
     ago: (ms: number) => {
       if (ms < 60_000) return 'vừa xong'
@@ -1868,6 +1881,7 @@ export const vi = {
     packetNone: 'Bao này đã mở hết, hết hạn, hoặc bạn đã mở rồi.',
     world: 'Giới',
     camp: 'Phái',
+    board: 'Luận đạo',
     campLocked: 'Kênh phái (người cùng Chính / Tà phái với bạn) mở khi Chủ điện đạt tầng 3',
     reply: 'Trả lời',
     replyTo: (name: string) => `Trả lời ${name}`,
@@ -1949,6 +1963,18 @@ export const vi = {
         'Hồi Quy Lễ',
         `Đạo hữu vắng núi ${days} ngày — cả tông môn mừng chưởng môn trở về. Chút lễ vật để bắt nhịp lại (theo tầng Chủ điện).`,
       ],
+      recall: (name: string, k: 0 | 1 | 2): [string, string] =>
+        [
+          [
+            `${name} gọi bạn quay về`,
+            `Đạo hữu ${name} nhớ bạn và gửi lời gọi: quay lại núi trong 14 ngày thì cả hai cùng nhận quà Cố Nhân Tương Phùng.`,
+          ],
+          [
+            'Cố Nhân Tương Phùng',
+            `Bạn đã quay lại theo lời gọi của ${name}. Quà tương phùng ở dưới — ${name} cũng nhận quà cảm tạ.`,
+          ],
+          ['Cố nhân đã về', `${name} đã quay lại núi nhờ lời gọi của bạn. Quà cảm tạ ở dưới.`],
+        ][k] as [string, string],
       dig: (x: number, y: number): [string, string] => [
         `Kho báu (${x},${y})`,
         `Đội đào tới điểm đánh dấu trên Tàng Bảo Đồ ở (${x},${y}) và đào được một rương kho báu. Quà đính kèm.`,
@@ -2152,6 +2178,10 @@ export const vi = {
       boon: (lord: string): [string, string] => [
         'Thiên Ân lễ',
         `Giới Chủ ${lord} tự tay ban Thiên Ân lễ cho tông môn — mỗi tuần chỉ vài phần. Quà ở dưới.`,
+      ],
+      banish: (lord: string, x: number, y: number): [string, string] => [
+        'Bị Phóng Trục',
+        `Giới Chủ ${lord} phóng trục tông môn ra vùng ngoài — núi đã dời tới (${x},${y}). Đội địch đang kéo tới chỗ cũ sẽ quay về tay không.`,
       ],
       titled: (title: string, lord: string): [string, string] => [
         `Sắc phong: ${vi.lord.names[title as TitleId] ?? title}`,
@@ -2796,6 +2826,7 @@ export const vi = {
     shieldFx: 'Không ai cướp được tông môn (tự tan khi bạn đi cướp)',
     builder2: 'Tạp dịch thứ hai: xây song song hai công trình',
     veil: 'Linh điểu do thám của người khác không dò được gì',
+    mirage: 'Do thám thấy nghi binh: quân giữ nhà ×2, của cướp được ×0,3',
     src: {
       vein: 'Linh mạch phe mình giữ',
       tide: 'Linh triều vùng mình',
@@ -2973,6 +3004,20 @@ export const vi = {
     lost: (tag: string, n: number) => `[${tag}] trượt · ${n} tệ hoàn sau chung kết`,
     wait: 'Cược của bạn',
   },
+  board: {
+    hint: 'Luận Đạo Bảng: mở chủ đề cho cả giới bàn (tìm minh, hẹn đánh yêu vương, hỏi cách tu…). Chủ đề có lời mới nổi lên đầu; hết mùa bảng trống.',
+    none: 'Chưa có chủ đề nào — mở chủ đề đầu tiên.',
+    title: 'Tiêu đề (tối đa 40 chữ)',
+    body: 'Lời mở đầu (tối đa 200 chữ)',
+    post: 'Mở chủ đề',
+    reply: 'Trả lời…',
+    send: 'Gửi',
+    back: 'Các chủ đề',
+    del: 'Xoá chủ đề',
+    noReply: 'Chưa ai trả lời.',
+    replies: (n: number) => `${n} lời`,
+    locked: 'Luận Đạo Bảng mở khi Chủ điện đạt tầng 3.',
+  },
   paper: {
     title: 'Giới Báo',
     open: 'Giới Báo',
@@ -3011,6 +3056,17 @@ export const vi = {
     go: (n: number) => `Truyền công · ${n} phù`,
     sure: (a: string, b: string) => `Đổi toàn bộ tầng công pháp của ${a} và ${b}? Phù đã tiêu không hoàn lại.`,
     none: 'Chưa có trưởng lão cùng phẩm, cùng số tâm pháp để truyền công.',
+  },
+  stall: {
+    pick: 'Chọn việc được giảm (đổi được tới lần ước đầu)',
+    jobs: ['Xây / nâng công trình', 'Lĩnh ngộ công pháp', 'Tuyển đệ tử'],
+    wish: 'Ước mức giảm (miễn phí)',
+    rewish: (n: number) => `Ước lại · ${n} tệ`,
+    cut: (p: number) => `Đang giảm ${p}%`,
+    none: 'Chưa ước — chọn việc rồi ước một mức giảm.',
+    tiers: 'Mức có thể ước: −20% · −30% · −40% · −50% · −60% (hiếm)',
+    saved: 'Đã bớt trong lễ (trần mỗi loại)',
+    tag: (p: number) => `Cát Tường −${p}%`,
   },
   omen: {
     draw: (n: number) => `Xin ${n} quẻ`,
@@ -3443,6 +3499,10 @@ export const vi = {
         name: 'Vạn Đăng Hội',
         desc: 'Năm ngày hội đèn: săn yêu, thắng trận, xây, tuyển, khai mỏ, tăng tốc đều cho Hoa Đăng. Thả đèn lên hội — có lúc chí mạng gấp đôi, gấp năm — hội đèn lên cấp, 25 cấp mỗi cấp một quà.',
       },
+      catTuong: {
+        name: 'Cát Tường Hạ Giá',
+        desc: 'Năm ngày chợ phúc: chọn một việc (xây, lĩnh ngộ, tuyển) rồi ước mức giảm chi phí từ −20 % tới −60 %. Lần ước đầu miễn phí, ước lại tốn Cát Tường Tệ (săn yêu thú, hạ yêu vương, dùng tăng tốc). Mỗi loại tài nguyên cả lễ bớt tối đa 300.000.',
+      },
       boQue: {
         name: 'Bói Quẻ Thiên Cơ',
         desc: 'Ba ngày xin xăm: việc trong lễ cho Linh Xăm, lắc ống xăm rút quẻ — Thượng Thượng có Kim Duyên Phù, quẻ nào cũng đáng hơn giá. Mỗi ngày một quẻ miễn phí; xin đủ 10 / 20 / 40 / 70 quẻ mở rương.',
@@ -3516,6 +3576,7 @@ export const vi = {
     tokens: (n: string, name = 'Tông Môn Lệnh') => `${name}: ${n}`,
     tokenName: {
       boQue: 'Linh Xăm',
+      catTuong: 'Cát Tường Tệ',
       vanDang: 'Hoa Đăng',
       thienCo: 'Thiên Cơ Lệnh',
       thatTich: 'Hỷ Thước',
@@ -3631,6 +3692,10 @@ export const vi = {
       anTung: {
         name: 'Ẩn Tung Phù',
         desc: 'Mây mù che núi: linh điểu do thám của tông môn khác không dò được gì. Dùng thêm thì kéo dài.',
+      },
+      huyenAnh: {
+        name: 'Huyễn Ảnh Phù',
+        desc: 'Bày nghi binh quanh núi 8 giờ: ai do thám sẽ thấy quân giữ nhà và lực chiến gấp đôi, của cải cướp được chỉ còn một phần — kẻ địch dễ chùn tay. Dùng thêm thì kéo dài.',
       },
       baoDo: {
         name: 'Tàng Bảo Đồ tàn phiến',

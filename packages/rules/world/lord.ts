@@ -1,9 +1,13 @@
 // Giới Chủ và sắc phong (King / Kingdom Titles của RoK): ai làm chủ giới, phong / tước tước cho người trong giới. Tăng ích
 // của tước tới người giữ qua worldBuffs (titleBuffs ở base.ts).
+import { spawn } from '../atlas.ts'
+import { rng } from '../combat.ts'
 import { no } from '../core/action.ts'
+import { resettle } from '../core/fog.ts'
 import { isId, oneOf } from '../core/parse.ts'
 import { advance } from '../core/time.ts'
 import {
+  BANISH_COOL,
   BLESSINGS,
   BLESS_TIME,
   GIFT_WEEK,
@@ -16,7 +20,7 @@ import {
 } from '../data.ts'
 import { dayOf, weekOf } from '../core/calendar.ts'
 import { mail } from '../sect/inbox.ts'
-import { type MapCtx, type Players, type World, type WorldActions } from './base.ts'
+import { allyOf, type MapCtx, type Players, type World, type WorldActions } from './base.ts'
 import { seasonBoard, spotOf } from './points.ts'
 
 // Tiên minh làm chủ giới: minh giữ Thiên Môn; chưa minh nào giữ thì minh đứng đầu điểm mùa. Chỉ tiên minh (người đi một
@@ -43,6 +47,7 @@ export type LordAction =
   | { type: 'uncrown'; title: TitleId }
   | { type: 'bless'; key: BlessKey } // ban phúc cả giới, mỗi ngày một lần
   | { type: 'boon'; pid: number } // ban Thiên Ân lễ cho một người
+  | { type: 'banish'; pid: number } // Phóng Trục: đẩy tông môn người đó ra vùng ngoài
 // Thiên Ân lễ còn ban được trong tuần của lúc t
 export const boonLeft = (w: World, t: number) => (w.boon?.week === weekOf(t) ? w.boon.left : GIFT_WEEK)
 const isTitle = oneOf(TITLE_IDS)
@@ -98,6 +103,26 @@ export const lordActions: WorldActions<LordAction> = {
         world: { ...w, boon: { week: weekOf(now), left: left - 1 } },
         changed: new Map([[a.pid, got]]),
       }
+    },
+  },
+  // Phóng Trục: tông môn không cùng minh Giới Chủ, không đang bế quan, mọi đội ở nhà → chỗ trống ngẫu nhiên ở vùng ngoài (như lúc lập
+  // tông môn); người bị phóng trục có thư. Đội địch đang kéo tới chỗ cũ thì tới nơi quay về (advance.ts)
+  banish: {
+    pick: a => (isId(a.pid) ? { type: 'banish', pid: a.pid } : null),
+    run: ({ ps, w, pid, s, map, now, seed }, a) => {
+      if (!map || lordOf(w, ps, map, now) !== pid) return no('locked')
+      const to = ps.get(a.pid)
+      if (!to?.seat || a.pid === pid) return no('gone')
+      if (allyOf(w, a.pid) && allyOf(w, a.pid) === allyOf(w, pid)) return no('friend')
+      if ((w.banishAt ?? -Infinity) + BANISH_COOL > now) return no('cooldown')
+      const t = advance(to, now)
+      if (t.seclude && t.seclude.until > now) return no('secluded')
+      if (t.marches.length) return no('busy')
+      const taken = [...ps].flatMap(([id, o]) => (id !== a.pid && o.seat ? [o.seat] : []))
+      const at = spawn(map.atlas, taken, rng(seed || 1))
+      if (!at) return no('taken')
+      const moved = mail(resettle(t, at), { at: now, k: 'banish', a: [s.name, at.x, at.y] })
+      return { ok: true, world: { ...w, banishAt: now }, changed: new Map([[a.pid, moved]]) }
     },
   },
 }

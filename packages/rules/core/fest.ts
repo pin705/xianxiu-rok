@@ -260,6 +260,7 @@ export function festTokens(s: State, id: FestId) {
   // vòng quà: got — các ô trúng; bàn xúc xắc: các mặt đã đổ (số âm) lẫn rương mốc đã nhận; days — số lượt miễn phí đã dùng
   if (luck(d)) return festPoints(s, id) - d.cost * (spins(s, id) - (f?.days ?? 0))
   if (d.kind === 'cards') return festPoints(s, id) - d.cost * (f?.days ?? 0) // days: số lá đã lật tốn lệnh
+  if (d.kind === 'stall') return festPoints(s, id) - d.cost * (f?.days ?? 0) // days: số lần ước lại (tốn tệ)
   if (d.kind === 'offer') return festPoints(s, id) - (f?.sp?.[0] ?? 0) // sp: [lệnh đã nộp, kinh nghiệm, hệ số lần nộp cuối]
   if (d.kind !== 'shop') return 0
   return festPoints(s, id) - sum((f?.got ?? []).map(i => d.shop[i]?.price ?? 0))
@@ -337,7 +338,8 @@ export function festDone(s: State, id: FestId, i: number) {
     return !!c && f.got.filter(k => k < d.tasks.length).length >= c.need
   }
   if (d.kind === 'shop') return !!d.shop[i] && festTokens(s, id) >= d.shop[i].price
-  if (d.kind === 'wheel' || d.kind === 'wish' || d.kind === 'cards' || d.kind === 'swap') return false // không có quà nhận
+  if (d.kind === 'wheel' || d.kind === 'wish' || d.kind === 'cards' || d.kind === 'swap' || d.kind === 'stall')
+    return false // không có quà nhận
   if (d.kind === 'dice' || d.kind === 'egg' || d.kind === 'omen')
     return i < d.goals.length && spins(s, id) >= d.goals[i] // rương mốc theo số lượt
   if (d.kind === 'dig') return i < d.goals.length && digAt(s, id).layer >= d.goals[i] // rương mốc theo số tầng đã qua
@@ -357,7 +359,8 @@ export const festCode = (s: State, id: FestId, i: number) =>
 export const festRewards = (id: FestId) => {
   const d = FESTS[id]
   if (d.kind === 'shop') return d.shop.map(x => x.reward)
-  if (d.kind === 'wheel' || d.kind === 'wish' || d.kind === 'cards' || d.kind === 'swap') return []
+  if (d.kind === 'wheel' || d.kind === 'wish' || d.kind === 'cards' || d.kind === 'swap' || d.kind === 'stall')
+    return []
   return d.kind === 'tasks' ? [...d.tasks.map(x => x.reward), ...(d.chests ?? []).map(c => c.reward)] : d.rewards
 }
 // Số quà đang chờ nhận ở mọi sự kiện đang mở của một bảng — chấm đỏ trên nút Sự kiện (bảng mặc định) hay Nhiệm vụ ngày

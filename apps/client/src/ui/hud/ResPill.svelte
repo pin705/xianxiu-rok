@@ -38,7 +38,7 @@
 
 <li class="res" class:full class:ink data-res={id} {title}>
   {#if img}<img class="vessel" src={img} alt="" draggable="false" />{:else}<Icon name={icon} size={22} />{/if}
-  <span class="stack">
+  <span class="stack col">
     <b class="t-num">{value}<span class="sr"> {name}</span></b>
     <Meter value={ratio} tone={full ? 'bad' : 'spirit'} size="xs" />
   </span>
@@ -58,7 +58,7 @@
     border: 0 solid transparent;
     border-image: var(--sk-capsule);
   }
-  .stack {
+  .col {
     flex: 1;
     min-width: 0;
     --gap: 4px;

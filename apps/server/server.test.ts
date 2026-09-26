@@ -664,6 +664,13 @@ test(
     await until(() => heard.some(h => h.ch === 'camp'), 1500)
     assert.equal(heard.find(h => h.ch === 'camp')?.text, 'Cả phái tập hợp ở Thiên Môn')
     assert.equal((await ca.ask({ k: 'chat', ch: 'camp' })).at(-1)?.text, 'Cả phái tập hợp ở Thiên Môn')
+    // Luận Đạo Bảng: chữ tục bị chặn; chủ đề lành thì cả giới thấy
+    assert.deepEqual(await ca.act({ type: 'boardPost', title: 'đm cả giới', text: 'x' }), { ok: false, err: 'rude' })
+    assert.ok((await ca.act({ type: 'boardPost', title: 'Tìm đạo hữu', text: 'Cùng săn yêu thú' })).ok)
+    assert.deepEqual(
+      (await cb.ask({ k: 'board' })).map(t => t.title),
+      ['Tìm đạo hữu'],
+    )
     const prof = await cb.ask({ k: 'profile', pid: A.pid })
     assert.deepEqual([prof?.name, prof?.hall, prof?.ally?.tag, prof?.online], [state.name, 10, 'TVM', true])
     assert.ok(prof?.supply && prof.supply.get > 0, 'cùng minh: hồ sơ có Vận Linh Trận')

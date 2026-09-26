@@ -2,9 +2,19 @@
   // Tàng Kinh Các: 20 công pháp chia 5 hàng, hàng sau mở theo tầng Tàng Kinh Các. Mỗi lúc lĩnh ngộ một môn.
   // Bố cục thư các: án thư trên cùng mở bí kíp đang chọn (tranh bí kíp sáng, bonus, chi phí, nút lĩnh ngộ),
   // dưới là các hàng kệ — mỗi môn một cuộn bí kíp, số tầng đã ngộ trên đồng tiền nhỏ.
-  import { TECHS, TECH_IDS, TECH_ROWS, techCost, techError, techTime, type TechId } from '@rok/rules'
+  import {
+    TECHS,
+    TECH_IDS,
+    TECH_ROWS,
+    stallCost,
+    stallOf,
+    techCost,
+    techError,
+    techTime,
+    type TechId,
+  } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { Art, Bag, Banner, Button, Shelf, Ware } from './ui'
+  import { Art, Bag, Banner, Button, Shelf, Tag, Ware } from './ui'
   import JobRow from './JobRow.svelte'
   import { L, clock } from './lib'
   import { useGame } from './game'
@@ -51,11 +61,14 @@
           ><Icon name="lock" size={14} />{L.library.row(TECH_ROWS[d.row])}</small
         >
       {:else if !doing}
-        <Bag res={techCost(cur, lv + 1)} have={game.res} size="sm" />
+        <Bag res={stallCost(game, 'tech', techCost(cur, lv + 1))} have={game.res} size="sm" />
+        {#if stallOf(game, 'tech')}<Tag tone="gold" icon="star"
+            >{L.stall.tag(Math.round((stallOf(game, 'tech')?.cut ?? 0) * 100))}</Tag
+          >{/if}
         <Button
           size="sm"
           variant="gold"
-          trail={clock(techTime(cur, lv + 1))}
+          trail={clock(techTime(game, cur, lv + 1))}
           disabled={!!err}
           onclick={() => act({ type: 'study', tech: cur }, 'build')}>{L.library.go}</Button
         >

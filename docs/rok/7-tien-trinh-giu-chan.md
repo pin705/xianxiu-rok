@@ -643,7 +643,7 @@
   - 7 ngày điểm danh cho *mọi người* (không chỉ người mới);
   - **"Cố nhân tương phùng"**: mã mời người cũ quay lại, quà cho cả hai;
   - **"Tông môn chí"**: tổng kết mùa để chia sẻ (cảnh giới cao nhất, trận lớn nhất, trưởng lão thân nhất), hợp với PLAN mục 8.
-- **Game mình:** 🟡. Tổng kết mùa đã có: hết mùa ai cũng nhận thư tổng kết riêng (`yearbook`, `endSeason` ở `world/season.ts`); lễ theo lịch có Tân Xuân Khai Sơn (7 bao lì xì đăng nhập cho mọi người), Trung Thu, Thất Tịch, Quỷ Tiết, Đông Chí. **Khánh Điển Khai Tông** (`khaiDien`, khung lễ mới `season` theo `seasonAt` — server gán lúc mở mùa khi vào giới): 14 ngày đầu mỗi mùa, mọi người trong giới, 7 phần quà điểm danh (phần 7 có 2 Kim Duyên). **Hồi Quy Lễ**: vắng từ 7 ngày, lần vào lại có thư quà chào mừng (theo tầng Chủ điện). Chưa có mã mời người cũ (quà cho người mời).
+- **Game mình:** 🟡. Tổng kết mùa đã có: hết mùa ai cũng nhận thư tổng kết riêng (`yearbook`, `endSeason` ở `world/season.ts`); lễ theo lịch có Tân Xuân Khai Sơn (7 bao lì xì đăng nhập cho mọi người), Trung Thu, Thất Tịch, Quỷ Tiết, Đông Chí. **Khánh Điển Khai Tông** (`khaiDien`, khung lễ mới `season` theo `seasonAt` — server gán lúc mở mùa khi vào giới): 14 ngày đầu mỗi mùa, mọi người trong giới, 7 phần quà điểm danh (phần 7 có 2 Kim Duyên). **Hồi Quy Lễ**: vắng từ 7 ngày, lần vào lại có thư quà chào mừng (theo tầng Chủ điện). Chưa có mã mời người cũ (quà cho người mời). **Cố Nhân Tương Phùng** (`world/recall.ts`, danh sách đạo hữu ở thẻ Truyền âm): đạo hữu vắng từ 7 ngày (theo ngày vào game cuối) có nút "Gọi về" — thư tới người đó; họ quay lại trong 14 ngày thì người quay lại nhận quà tương phùng (Kim Duyên Phù, Thời Quang 8 giờ, Tụ Linh Phù 24 giờ), mỗi người đã gọi nhận quà cảm tạ (tối đa 3 lần mỗi mùa); mỗi lần vắng một người chỉ gọi được một lần.
 - **Ưu tiên:** P1 · **Công sức:** S (điểm danh mùa, tổng kết) / M (mời người cũ).
 
 #### D10 · Nhịp và lịch sự kiện (tổng)
@@ -956,7 +956,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | C12 Mã quà + quà liên kết email | ✅ mã quà tặng + quà gắn email | P1 | S |
 | C14 Thông báo đẩy thêm loại + chọn loại | ✅ tắt được từng loại; nhắc việc dài xong, đội về, bị cướp / đội địch đang tới, khiên sắp hết, kho sắp đầy, chuỗi Hương Hỏa, rương Nhật Khóa chưa nhận (trước 0h), lễ tích điểm sắp đóng (`notify.ts`) | P1 | S |
 | D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | ✅/🟡 Tông Môn Tranh Bá (6 ải, bảng từng ải + cả lượt, trưởng lão của đợt); sự kiện tuần cũ chưa gộp | P1 | S |
-| D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | 🟡 tổng kết mùa + lễ theo lịch; chưa có điểm danh đầu mùa, mời người cũ | P1 | S / M |
+| D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | 🟡 tổng kết mùa + lễ theo lịch + điểm danh đầu mùa (Khánh Điển Khai Tông) + Hồi Quy Lễ + Tân Giới Thất Nhật; Cố Nhân Tương Phùng: gọi đạo hữu vắng ≥ 7 ngày về, cả hai nhận quà (`world/recall.ts`) | P1 | S / M |
 | F3 Growth Fund → **Quỹ Tiên Lộ** | ❌ (P4) | P1 | S |
 | F4 Supply Depot → **Nguyệt Lệnh** | ❌ (P4) | P1 | S |
 | B2 Side Quests → **Tông vụ** 4 dòng | ✅ Tông vụ 4 dòng (trong bảng Nhiệm vụ ngày) | P1 | S–M |

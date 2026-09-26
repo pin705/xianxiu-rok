@@ -3,7 +3,7 @@
   let { name, level = 0, dim = false }: { name: string; level?: number; dim?: boolean } = $props()
 </script>
 
-<span class="plate" class:dim>
+<span class="plate" class:faded={dim}>
   {#if level}<b class="lv">{level}</b>{/if}<span class="t-ellipsis">{name}</span>
 </span>
 
@@ -25,7 +25,7 @@
   .plate:not(:has(.lv)) {
     padding-left: 14px;
   }
-  .dim {
+  .faded {
     opacity: 0.8;
   }
   .lv {

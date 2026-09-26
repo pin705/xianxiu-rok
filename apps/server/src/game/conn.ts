@@ -1,6 +1,7 @@
 // Kết nối của người chơi vào actor: nhận tab mới (đưa state tới giờ, xếp chỗ, welcome), tab rời đi (lưu lát "lúc rời game",
 // hẹn nhắc), đá tab, gửi lại ảnh chụp khi client lệch version.
 import { RETURN_AWAY, RETURN_GIFT, advance, dayOf, mail, type State } from '@rok/rules'
+import { recallBack } from '@rok/rules/world'
 import { view, type Bye, type Snap } from '@rok/protocol'
 import * as store from '../db/store.ts'
 import { careReminds, nextRemind } from './notify.ts'
@@ -28,6 +29,15 @@ export async function attach(w: World, sock: Sock) {
   const away = slot.seen ? now - slot.seen.time : 0
   const days = Math.floor(away / 86_400_000)
   w.commit(slot, away >= RETURN_AWAY ? mail(s1, { at: now, k: 'back', a: [days], gift: RETURN_GIFT }) : s1)
+  if (away >= RETURN_AWAY) {
+    // Cố Nhân Tương Phùng: đạo hữu đã gọi về thì cả hai nhận quà
+    const r = recallBack(w.ps, w.shared, pid, now)
+    if (r.world !== w.shared) w.share(r.world)
+    for (const [p, s] of r.changed) {
+      const sl = w.slots.get(p)
+      if (sl) w.commit(sl, s)
+    }
+  }
   w.seat(slot, now)
   slot.conns.add(sock)
   slot.away++

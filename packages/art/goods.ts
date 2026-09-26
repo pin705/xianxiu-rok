@@ -22,6 +22,7 @@ export const GOOD_ICONS = [
   'canKhon', // Càn Khôn Phù: dời núi tới chỗ chọn
   'caiDanh', // Cải Danh Lệnh: đổi tên tông môn
   'anTung', // Ẩn Tung Phù: chống do thám
+  'huyenAnh', // Huyễn Ảnh Phù: nghi binh — báo cáo do thám giả
   'baoDo', // Tàng Bảo Đồ tàn phiến
   'truyenCong', // Truyền Công Phù: truyền công giữa hai trưởng lão
   'hongBao', // Hồng Bao: lì xì gửi ở kênh chat
@@ -240,6 +241,7 @@ const DRAW: Record<GoodIcon, (g: G) => void> = {
   canKhon: g => talisman(g, mix(C.goldL, C.silk, 0.3), C.goldD, mountainWard, 350),
   caiDanh: g => talisman(g, mix(C.goldL, C.silk, 0.5), C.cinnabar, openBook, 360),
   anTung: g => talisman(g, mix(C.azuriteL, C.ink, 0.3), C.silk, cloudRun, 370),
+  huyenAnh: g => talisman(g, mix(C.malachiteL, C.ink, 0.35), C.goldL, spiritRise, 380),
   baoDo: g => talisman(g, mix(C.ochreL, C.silk, 0.35), C.cinnabar, openBook, 390),
   truyenCong: g => talisman(g, mix(C.malachiteL, C.silk, 0.45), C.cinnabar, spiritRise, 400),
   hongBao: g => invite(g, C.cinnabarL, C.goldD, 420),

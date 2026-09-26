@@ -17,7 +17,7 @@
   const src = $derived(paintedUrl(`medal:${emblem}:${tone}`, () => medal(emblem, tone), size))
 </script>
 
-<span class="medal" class:dim style:--s="{size}px" aria-hidden="true">
+<span class="medal" class:faded={dim} style:--s="{size}px" aria-hidden="true">
   <img {src} width={size} height={size} alt="" draggable="false" />
   {#if pips}<span class="pips" class:many={pips > 3}
       >{#each { length: pips } as _}<i></i>{/each}</span
@@ -39,7 +39,7 @@
     width: 100%;
     height: 100%;
   }
-  .dim {
+  .faded {
     filter: grayscale(1) brightness(0.85);
     opacity: 0.72;
   }

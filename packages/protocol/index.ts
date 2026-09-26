@@ -12,6 +12,8 @@ import type {
   BetView,
   HeroView,
   PaperView,
+  BoardRow,
+  Topic,
   TourneyView,
   Good,
   MapSnap,
@@ -98,8 +100,11 @@ export type Query =
   | { k: 'shared'; pid: number; id: number }
   | { k: 'fest'; id: FestId } // bảng xếp hạng lễ (FEST_RANKED) lượt đang mở
   | { k: 'paper' } // Giới Báo: các số báo gần đây
+  | { k: 'board' } // Luận Đạo Bảng: các chủ đề
+  | { k: 'topic'; id: number } // một chủ đề đủ lời
 // Đạo hữu đã kết giao: tên, cảnh giới, đang chơi không
-export type FriendView = { pid: number; name: string; hall: number; online: boolean }
+// away: số ngày chưa vào game · called: mình đã gọi về (Cố Nhân Tương Phùng)
+export type FriendView = { pid: number; name: string; hall: number; online: boolean; away: number; called: boolean }
 // Nhóm chat của mình: tên, người trong nhóm (tên theo state hiện tại), tin cuối
 export type GroupView = {
   id: number
@@ -162,7 +167,8 @@ export type ChatMsg = { id: number; pid: number; name: string; text: string; at:
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
 export type { AllyInfo, AllyRow, MapSnap, Rival }
 // Hồ sơ như người xem thấy; supply: cùng minh — Vận Linh Trận còn gửi được bao nhiêu (null: không gửi được / chợ tắt)
-export type Profile = BaseProfile & { supply?: SupplyRoom | null; crowns?: number[] } // crowns: mùa đệ nhất Công Huân
+// crowns: mùa đệ nhất Công Huân · honors: danh hiệu mùa khác (mùa × 8 + loại — honorOf)
+export type Profile = BaseProfile & { supply?: SupplyRoom | null; crowns?: number[]; honors?: number[] }
 // Một cuộc truyền âm gần đây: người bên kia, tin cuối
 export type Dm = { pid: number; name: string; last: ChatMsg }
 // Trả lời từng truy vấn. Server trả null khi không trả lời được (truy vấn sai, lỗi) — client coi như không có.
@@ -184,6 +190,8 @@ export type Answer = {
   shared: Report | null // chiến báo người khác chia sẻ vào kênh mình nghe được
   fest: FestView
   paper: PaperView
+  board: BoardRow[]
+  topic: Topic | null // chủ đề đã bị xoá / rơi khỏi bảng
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }

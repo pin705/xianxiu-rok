@@ -8,6 +8,7 @@ import {
   EVENT_TOP,
   FEST_PRIZES,
   HERO_GIFT,
+  HONOR_CUP,
   HONOR_RANKS,
   LEAGUE_PRIZES,
   MAX_LEVEL,
@@ -67,9 +68,12 @@ export function endSeason(
     // Chính Tà Phân Tranh: người phái thắng mùa có quà (thư trước thư kết mùa)
     if (won !== null && campOf(side) === won)
       x = mail(x, { at: now, k: 'camp', a: [won, camps[won], camps[won ? 0 : 1]], gift: CAMP_WIN })
+    // danh hiệu mùa (giữ qua luân hồi): anh kiệt từng hạng mục, người trong minh quán quân Cửu Thiên
+    const titled = [...heroes.flatMap((h, k) => (h?.pid === pid ? [k] : [])), ...(lr === 0 ? [HONOR_CUP] : [])]
     heroes.forEach((h, k) => {
       if (h?.pid === pid) x = mail(x, { at: now, k: 'hero', a: [k, h.votes], gift: HERO_GIFT })
     })
+    if (titled.length) x = { ...x, honors: [...(x.honors ?? []), ...titled.map(k => season * 8 + k)] }
     x = mail(x, { at: now, k: 'season', a: [season, rank.get(side) ?? 0, up ? 1 : 0] })
     // Tổng kết mùa: phần bộ đếm tăng trong mùa (so với lúc đầu mùa), rồi ghi mốc cho mùa sau
     const now4 = {

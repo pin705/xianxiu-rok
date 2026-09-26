@@ -19,6 +19,7 @@ const TAB_OF = {
   move: 'other',
   rename: 'other',
   veil: 'buff',
+  mirage: 'buff',
   frag: 'other',
   swap: 'other',
   pick: 'res',
@@ -30,7 +31,7 @@ export const tabOf = (id: BagId): BagTab => TAB_OF[BAG[id].use]
 export function denom(id: BagId) {
   const d = BAG[id]
   if (d.use === 'speed') return L.bag.denom.min(d.min)
-  if (d.use === 'buff' || d.use === 'shield' || d.use === 'builder' || d.use === 'veil')
+  if (d.use === 'buff' || d.use === 'shield' || d.use === 'builder' || d.use === 'veil' || d.use === 'mirage')
     return L.bag.denom.hours(d.hours)
   return d.use === 'key' ||
     d.use === 'ticket' ||

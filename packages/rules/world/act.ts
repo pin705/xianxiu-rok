@@ -37,6 +37,8 @@ import { voteActions, type VoteAction } from './vote.ts'
 import { betActions, type BetAction } from './bets.ts'
 import { heroActions, type HeroAction } from './heroes.ts'
 import { paperActions, type PaperAction } from './paper.ts'
+import { recallActions, type RecallAction } from './recall.ts'
+import { boardActions, type BoardAction } from './board.ts'
 import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
@@ -73,6 +75,8 @@ export type WorldAction =
   | BetAction
   | HeroAction
   | PaperAction
+  | RecallAction
+  | BoardAction
   | LoharAction
   | PotAction
   | ArkAction
@@ -108,6 +112,8 @@ const WORLD: WorldActions<WorldAction> = {
   ...betActions,
   ...heroActions,
   ...paperActions,
+  ...recallActions,
+  ...boardActions,
   ...loharActions,
   ...potActions,
   ...arkActions,

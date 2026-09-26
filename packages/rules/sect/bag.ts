@@ -88,6 +88,7 @@ export const bagActions: Actions<BagAction> = {
       if (d.use === 'map') return ok({ ...st, fog: revealNear(st, d.n * a.n, s.time) })
       if (d.use === 'douse') return ok({ ...st, wall: { ...wallAt(st, s.time), fire: 0 } })
       if (d.use === 'veil') return ok({ ...st, veil: Math.max(st.veil ?? 0, s.time) + d.hours * HOUR * a.n })
+      if (d.use === 'mirage') return ok({ ...st, mirage: Math.max(st.mirage ?? 0, s.time) + d.hours * HOUR * a.n })
       return d.use === 'exp' ? ok(giveExp(st, a.elder!, d.n * a.n)) : no('bad')
     },
   },

@@ -1,5 +1,6 @@
 // Công trình: nâng tầng, tăng tốc việc đang chờ bằng đan, đổi tài nguyên ở Tàng Bảo Các.
 import { no, ok, pay, use, type Actions } from '../core/action.ts'
+import { stallCost, stallTake } from '../core/stall.ts'
 import { bump } from '../core/calendar.ts'
 import { int, JOB_KINDS, oneOf } from '../core/parse.ts'
 import { buildTime, cost, storage, tradeKeep, yardOf } from '../core/stats.ts'
@@ -27,7 +28,7 @@ export function upgradeError(s: State, b: BuildingId): Err | null {
   if (b !== 'chuDien' && s.levels.chuDien < Math.max(level, BUILDINGS[b].unlock)) return 'need_main_hall'
   if (s.queue.some(j => j.building === b)) return 'busy'
   if (s.queue.length >= queueSize(s)) return 'queue_full'
-  return afford(s.res, cost(b, level)) ? null : 'not_enough'
+  return afford(s.res, stallCost(s, 'build', cost(b, level))) ? null : 'not_enough' // Cát Tường Hạ Giá
 }
 
 export type BuildingAction =
@@ -44,7 +45,8 @@ export const buildingActions: Actions<BuildingAction> = {
       if (e) return no(e)
       const level = s.levels[a.building] + 1
       const job = { building: a.building, level, startAt: s.time, finishAt: s.time + buildTime(s, a.building, level) }
-      return ok(bump({ ...s, res: pay(s, cost(a.building, level)), queue: [...s.queue, job] }, 'build'))
+      const t = stallTake(s, 'build', cost(a.building, level))
+      return ok(bump({ ...t.s, res: pay(t.s, t.cost), queue: [...s.queue, job] }, 'build'))
     },
   },
   // Thu sản lượng nằm ở công trình vào kho, tới sức chứa (phần thừa nằm lại); không có gì thu được thì báo đầy / trống

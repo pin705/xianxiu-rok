@@ -8,7 +8,7 @@
 
 <span class="bubble">
   <span class="ic"><Icon name={icon} size={13} /></span>
-  <span class="stack">
+  <span class="stack col">
     <b class="t-num">{time}</b>
     <Meter {value} size="xs" />
   </span>
@@ -25,7 +25,7 @@
     border: 0 solid transparent;
     border-image: var(--sk-capsule);
   }
-  .stack {
+  .col {
     --gap: 3px;
     min-width: 42px;
   }

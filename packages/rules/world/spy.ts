@@ -10,7 +10,7 @@ import { elderLevel, storage } from '../core/stats.ts'
 import { count } from '../core/util.ts'
 import type { State } from '../core/types.ts'
 import { wallHp, wallMax } from '../core/wall.ts'
-import { CRANE_TIME, PROTECT, PVP_HALL, RAID_SHARE, RESOURCES, SPY_COST } from '../data.ts'
+import { CRANE_TIME, MIRAGE_LOOT, MIRAGE_SHOW, PROTECT, PVP_HALL, RAID_SHARE, RESOURCES, SPY_COST } from '../data.ts'
 import { mail } from '../sect/inbox.ts'
 import { aidAt, garrison, guardMight, napBetween, sideKey, sideName, type WorldActions } from './base.ts'
 import { defense, guardOf } from './fight.ts'
@@ -36,7 +36,10 @@ export const spyActions: WorldActions<SpyAction> = {
       const [a0, b0] = [cellOf(s.seat), cellOf(d.seat)]
       const trip = CRANE_TIME * Math.max(1, Math.abs(a0.cx - b0.cx), Math.abs(a0.cy - b0.cy))
       const g = guardOf(d)
-      const [thach, thao, khoang] = lootable(d)
+      // Huyễn Ảnh Phù: nghi binh — quân, lực chiến trông gấp bội, của cướp được trông ít đi
+      const fake = (d.mirage ?? 0) > t
+      const [show, loot] = fake ? [MIRAGE_SHOW, MIRAGE_LOOT] : [1, 1]
+      const [thach, thao, khoang] = lootable(d).map(v => Math.floor(v * loot))
       const paid = {
         ...s,
         res: { ...s.res, linhThach: s.res.linhThach - cost },
@@ -56,8 +59,8 @@ export const spyActions: WorldActions<SpyAction> = {
               thach,
               thao,
               khoang,
-              count(d.troops),
-              Math.round(might(defense(d))),
+              count(d.troops) * show,
+              Math.round(might(defense(d)) * show),
               aidAt(ps, a.pid).length,
               Math.round((wallHp(d, t) / wallMax(d)) * 100),
               d.shield > t ? 1 : 0,

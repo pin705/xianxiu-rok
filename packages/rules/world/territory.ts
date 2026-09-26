@@ -8,8 +8,8 @@ import { MAP_W, dist, regionOf, spawn, type Atlas, type Pos } from '../atlas.ts'
 import { rng } from '../combat.ts'
 import { no, use } from '../core/action.ts'
 import { int } from '../core/parse.ts'
-import { FOG_HOME, MOVE_COOL, NEWBIE_MOVE_HALL } from '../data.ts'
-import { around, cellOf, fogOf, lift } from '../core/fog.ts'
+import { MOVE_COOL, NEWBIE_MOVE_HALL } from '../data.ts'
+import { resettle as relocate } from '../core/fog.ts'
 import { allyOf, type Players, type WorldActions } from './base.ts'
 import { type State } from '../core/types.ts'
 import { claimsOf, ownerAt } from './points.ts'
@@ -22,12 +22,6 @@ export const ringOpen = (ring: number, phase: number) => ring === 0 || (ring ===
 const free = (ps: Players, a: Atlas, pid: number, at: Pos) => {
   const near = (p: Pos) => dist(p, at) < 3
   return !a.points.some(near) && ![...ps].some(([id, o]) => id !== pid && o.seat && near(o.seat))
-}
-// Chuyển tông môn tới at: mê vụ quanh chỗ mới tan (như lúc lập tông môn)
-const relocate = (s: State, at: Pos, extra: Partial<State>): State => {
-  const f = fogOf(s),
-    c = cellOf(at)
-  return { ...s, ...extra, seat: at, fog: { ...f, rows: lift(f.rows, around(c.cx, c.cy, FOG_HOME)) } }
 }
 
 export const territoryActions: WorldActions<TerritoryAction> = {

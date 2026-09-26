@@ -5,6 +5,7 @@ import {
   ARK_ROUND,
   ARK_ROUNDS,
   ARK_TAKE,
+  HONOR_CUP,
   LEAGUE_LOSE,
   LEAGUE_WIN,
   coins,
@@ -287,6 +288,11 @@ test('Cửu Thiên playoff: trận áp chót của mùa là bán kết 4 minh đ
   const out = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, end, 1, new Set())
   const rank = (pid: number) => out.changed.get(pid)!.mail.find(m => m.k === 'league')?.a
   assert.deepEqual([rank(fin[0] * 10), rank(fin[1] * 10), rank(30), rank(40)], [[1], [2], [3], undefined])
+  assert.deepEqual(
+    [out.changed.get(fin[0] * 10)!.honors, out.changed.get(fin[1] * 10)!.honors],
+    [[1 * 8 + HONOR_CUP], undefined],
+    'danh hiệu Quán quân Cửu Thiên cho người trong minh vô địch',
+  )
 })
 
 test('Luận Kiếm Đặt Cược: hạt giống chốt khi hết trận tuần trước bán kết; cược một bên mỗi trận; trúng nhận × hệ số, trượt hoàn sau chung kết', () => {

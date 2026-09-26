@@ -445,7 +445,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **Mở khoá · nhịp:** sự kiện có lịch, lặp lại (lịch cụ thể chưa xác minh); Race Against Time 3 lượt/ngày; Protect the Supplies tính lượt tốt nhất.
 - **Vì sao giữ chân:** biến man tộc thường ngày thành trò chơi ngắn có xếp hạng và tượng tướng.
 - **Tu tiên hoá:** *Nhất Chú Hương* (Race Against Time), *Hộ Tống Linh Thuyền* (Protect the Supplies), *Thương đội phàm nhân gặp nạn* (Barbarian Incursions / Silk Road), *Quỷ tiết* (Halloween → Trung Nguyên, quỷ hồn hiện trên bản đồ).
-- **Game mình:** ❌ chưa có Race Against Time, Hộ Tống, Silk Road hay quỷ hồn sự kiện trên bản đồ — Trung Nguyên Quỷ Tiết, Liên Trảm Bất Hồi chỉ đếm việc có sẵn. Vật thể sự kiện trên bản đồ mới có thôn trang cháy của Thôn Trang Gặp Nạn (`world/rescue.ts`) và Yêu Vương Tuần Sơn (C8).
+- **Game mình:** 🟡 ✅ Race Against Time = **Trảm Yêu Tốc Chiến** (`tocChien`, 3 lượt đua/ngày săn yêu thú giới, con cấp cao cộng giờ, bảng kỷ lục một lượt — README). ❌ chưa có Hộ Tống, Silk Road hay quỷ hồn sự kiện trên bản đồ — Trung Nguyên Quỷ Tiết, Liên Trảm Bất Hồi chỉ đếm việc có sẵn. Vật thể sự kiện trên bản đồ mới có thôn trang cháy của Thôn Trang Gặp Nạn (`world/rescue.ts`) và Yêu Vương Tuần Sơn (C8).
 - **Ưu tiên:** P2 · **Công sức:** S–M mỗi sự kiện.
 
 ### 2.D Điểm tài nguyên và khai thác
@@ -861,8 +861,8 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | B2 | Scout Camp & scouts | ✅ linh điểu | P2 | M |
 | B3 | Mysterious Caves | ✅ động phủ cổ tu | P2 | S |
 | B4 | Tribal Villages | ✅ thôn trang | P2 | S |
-| B5 | Scouting enemies (báo cáo trinh sát) | ✅ Do thám tông môn và linh địa (`world/spy.ts`, `spySpot`: số đội, đệ tử, lực chiến đang đóng); chưa có báo cáo giả | P1 | S |
-| B6 | Anti-scouting & Watchtower / cảnh báo | ✅ Tháp canh báo đội địch đang tới; Ẩn Tung Phù 8/24 giờ chống do thám; chưa có báo cáo giả | P1 / P2 | S |
+| B5 | Scouting enemies (báo cáo trinh sát) | ✅ Do thám tông môn và linh địa (`world/spy.ts`, `spySpot`: số đội, đệ tử, lực chiến đang đóng); tông môn dùng Huyễn Ảnh Phù thì báo cáo giả | P1 | S |
+| B6 | Anti-scouting & Watchtower / cảnh báo | ✅ Tháp canh báo đội địch đang tới; Ẩn Tung Phù 8/24 giờ chống do thám; Huyễn Ảnh Phù cho báo cáo giả | P1 / P2 | S |
 | C1 | Action Points | ✅ hành lực săn yêu thú giới | P1 | S |
 | C2 | Barbarians (man tộc trên bản đồ chung) | ✅ yêu thú giới (6 con mỗi vùng ngoài / giữa, cấp 1–15), tốn hành lực; chưa rơi vật phẩm | **P0** | M |
 | C3 | Continuous attack / chain farming | ✅ săn liên hoàn yêu thú giới (25/09) | P2 | S / M |
@@ -875,7 +875,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C10 | Karuak Ceremony / Trial of Kau Karuak | ✅ Thí Luyện Yêu Hoàng (5 độ khó × 50 cửa); thiếu nhờ minh giúp | P2 | S–M |
 | C11 | Shadow Legion (minh thủ sóng quái) | ✅ Ma Triều Công Sơn (`world/legion.ts`) | P1 | M |
 | C12 | Holy-site Guardians & Runes | ✅ hộ trận linh thú + phù văn 12 giờ | P2 | M |
-| C13 | Race Against Time, Protect the Supplies, Silk Road, Halloween… | ❌ | P2 | S–M |
+| C13 | Race Against Time, Protect the Supplies, Silk Road, Halloween… | 🟡 Race Against Time = Trảm Yêu Tốc Chiến; chưa Hộ Tống / Silk Road / quỷ hồn | P2 | S–M |
 | D1 | Resource Points | ✅ 144 mỏ, 2 cấp, hồi 2 giờ, linh triều +50 % | P0 | — |
 | D2 | Gathering buffs & commanders | ✅ khoá `gather`: Khai Linh Phù, bị động khai mỏ của 2 trưởng lão (+ linh triều, lãnh thổ); chưa có công pháp / Hương Hỏa khai mỏ | P1 | S |
 | D3 | Gem Deposits | ❌ | P2 | S |

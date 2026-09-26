@@ -20,6 +20,7 @@ import {
   BASE_RATE,
   DAOS,
   STRATS,
+  STUDY_CUT,
   DEPUTY_HALL,
   MARCH_CAP,
   MARCH_CAP_STAR,
@@ -93,6 +94,7 @@ export function bonus(s: State, key: Bonus) {
   for (const id of TECH_IDS) if (TECHS[id].key === key) v += TECHS[id].v * (s.tech[id] ?? 0)
   if (key === 'prod') v += REBIRTH_PROD * Math.min(REBIRTH_MAX, s.rebirths)
   if (key === 'build') v += REBIRTH_BUILD * Math.min(REBIRTH_MAX, s.rebirths)
+  if (key === 'study') v += STUDY_CUT * s.levels.tangKinhCac
   for (const b of s.buffs) if (b.key === key) v += b.v
   if (s.dao) v += (DAOS[s.dao.id] as Partial<Record<Bonus, number>>)[key] ?? 0
   if (s.strat) v += (STRATS[s.strat] as Partial<Record<Bonus, number>>)[key] ?? 0
@@ -199,7 +201,8 @@ export const healTime = (s: State, a: Army) =>
   Math.round(UNITS.reduce((sum, u) => sum + (a[u] ?? 0) * unitSeconds(u), 0) * HEAL_TIME * cutOf(s, 'heal')) * 1000
 
 export const techCost = (t: TechId, level: number) => bag(r => grow(TECHS[t].cost[r], TECH_COST_GROWTH, level - 1))
-export const techTime = (t: TechId, level: number) => grow(TECHS[t].time, TECH_TIME_GROWTH, level - 1) * 1000
+export const techTime = (s: State, t: TechId, level: number) =>
+  Math.round(grow(TECHS[t].time, TECH_TIME_GROWTH, level - 1) * cutOf(s, 'study')) * 1000
 export const techSum = (s: State) => TECH_IDS.reduce((sum, t) => sum + (s.tech[t] ?? 0), 0)
 export const brewCost = (s: State, p: PillId, n: number) =>
   bag(r => Math.round(PILLS[p].cost[r] * n * cutOf(s, 'brew')))

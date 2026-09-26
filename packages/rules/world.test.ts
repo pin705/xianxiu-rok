@@ -3,6 +3,11 @@ import assert from 'node:assert/strict'
 import {
   ALLY_COST,
   ALLY_HALL,
+  RECALL_GIFT,
+  RECALL_MAX,
+  RECALL_THANKS,
+  MIRAGE_LOOT,
+  MIRAGE_SHOW,
   BOOK,
   AQUIZ_N,
   AQUIZ_Q,
@@ -216,6 +221,9 @@ import {
   aquizStep,
   paperStep,
   paperView,
+  recallBack,
+  boardView,
+  topicView,
 } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -2631,6 +2639,17 @@ test('do thám: tốn linh thạch theo tầng bên kia, chiếm một linh đi�
   assert.ok(hid.ok)
   assert.deepEqual(hid.changed.get(1)!.mail.at(-1)!.k, 'spyVeil')
   assert.equal(hid.changed.get(2)!.mail.at(-1)!.k, 'spied')
+  // Huyễn Ảnh Phù: báo cáo giả — quân giữ nhà, lực chiến ×MIRAGE_SHOW, của cướp được ×MIRAGE_LOOT
+  const fake = apply({ ...foe, items: { huyenAnh8: 1 } }, { type: 'use', item: 'huyenAnh8', n: 1 }, T0)
+  assert.ok(fake.ok && fake.state.mirage === T0 + 8 * HOUR)
+  const seen = spy(1, T0, new Map([...ps, [2, fake.state]]))
+  assert.ok(seen.ok)
+  const lie = seen.changed.get(1)!.mail.at(-1)!.a!
+  assert.equal(lie[6], 300 * MIRAGE_SHOW, 'quân giữ nhà trông gấp đôi')
+  assert.equal(lie[3], Math.floor((rep.a![3] as number) * MIRAGE_LOOT), 'của cướp được trông ít đi')
+  const after = spy(1, T0 + 9 * HOUR, new Map([...ps, [2, fake.state]]))
+  assert.ok(after.ok)
+  assert.equal(after.changed.get(1)!.mail.at(-1)!.a![6], 300, 'hết giờ thì thấy thật')
 })
 
 test('tốc khai mỏ: Khai Linh Phù (+50 %) rút thời gian khai; bị động khai mỏ chỉ khi trưởng lão đó dẫn đội', () => {
@@ -3186,4 +3205,114 @@ test('Giới Báo: qua 0h ra số báo hôm trước — người dẫn đầu t
   assert.equal(act(2, { type: 'paperRead' }, T0 + 2 * DAY), 'locked', 'sang ngày mà server chưa ra số mới')
   const v = paperView(w, 2, T0 + DAY)
   assert.deepEqual([v.issues[0].likes, v.issues[0].mine, v.gift], [[1, 0, 0], [0], true])
+})
+
+test('Cố Nhân Tương Phùng: gọi đạo hữu vắng từ 7 ngày về (thư); họ quay lại thì cả hai nhận quà — người gọi tối đa RECALL_MAX lần mỗi mùa', () => {
+  const DAYMS = 86_400_000
+  const day = Math.floor((T0 + 7 * 3_600_000) / DAYMS)
+  const ps = world(sect('A', 10), sect('B', 10), sect('C', 10))
+  ps.set(1, { ...ps.get(1)!, friends: [2, 3] })
+  ps.set(2, { ...ps.get(2)!, vip: { ...ps.get(2)!.vip, day: day - 8 } }) // B vắng 8 ngày
+  ps.set(3, { ...ps.get(3)!, vip: { ...ps.get(3)!.vip, day: day - 2 } }) // C mới vắng 2 ngày
+  let w: World = freshWorld()
+  const act = (pid: number, a: object) => {
+    const r = worldAct(ps, pid, a as never, T0, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  assert.equal(act(1, { type: 'friendRecall', pid: 3 }), 'locked', 'chưa vắng đủ 7 ngày')
+  assert.equal(act(2, { type: 'friendRecall', pid: 1 }), 'gone', 'chỉ gọi đạo hữu của mình')
+  assert.equal(act(1, { type: 'friendRecall', pid: 2 }), null)
+  assert.equal(act(1, { type: 'friendRecall', pid: 2 }), 'claimed', 'mỗi lần vắng gọi một lần')
+  assert.deepEqual(ps.get(2)!.mail.at(-1)!.a, ['A', 0], 'B nhận thư gọi về')
+  // B quay lại: B nhận quà tương phùng, A nhận quà cảm tạ; lời gọi xoá
+  const r = recallBack(ps, w, 2, T0 + DAYMS)
+  assert.deepEqual(r.changed.get(2)!.mail.at(-1)!.gift, RECALL_GIFT)
+  assert.deepEqual([r.changed.get(1)!.mail.at(-1)!.a, r.changed.get(1)!.mail.at(-1)!.gift], [['B', 2], RECALL_THANKS])
+  assert.deepEqual([r.world.recalls, r.world.recallGot], [{}, { 1: 1 }])
+  assert.equal(recallBack(ps, r.world, 2, T0 + DAYMS).changed.size, 0, 'không có lời gọi: không quà')
+  // người gọi đã nhận đủ RECALL_MAX lần mùa này: người quay lại vẫn nhận, người gọi thì thôi
+  const full: World = { ...w, recallGot: { 1: RECALL_MAX } }
+  const r2 = recallBack(ps, full, 2, T0 + DAYMS)
+  assert.deepEqual([r2.changed.has(2), r2.changed.has(1)], [true, false])
+  // quá hạn 14 ngày: lời gọi hết hiệu lực
+  assert.equal(recallBack(ps, w, 2, T0 + 15 * DAYMS).changed.size, 0)
+})
+
+test('Luận Đạo Bảng: mở chủ đề (tầng 3, cách 30 phút), trả lời đẩy chủ đề lên đầu (cách 20 giây), người mở xoá được; giữ 30 chủ đề', () => {
+  const ps = world(sect('A', 10), sect('B', 10), sect('C', 2))
+  let w: World = freshWorld()
+  const act = (pid: number, a: object, at = T0) => {
+    const r = worldAct(ps, pid, a as never, at, 1, undefined, w)
+    if (!r.ok) return r.error
+    w = r.world
+    return null
+  }
+  assert.equal(act(3, { type: 'boardPost', title: 'Hỏi', text: 'Có ai không' }), 'locked', 'dưới tầng 3')
+  assert.equal(act(1, { type: 'boardPost', title: '', text: 'Không tiêu đề' }), 'bad')
+  assert.equal(act(1, { type: 'boardPost', title: 'Tìm minh', text: 'Thanh Vân Minh nhận người' }), null)
+  assert.equal(
+    act(1, { type: 'boardPost', title: 'Lần nữa', text: 'x' }, T0 + 60_000),
+    'cooldown',
+    '30 phút mới mở tiếp',
+  )
+  assert.equal(act(2, { type: 'boardPost', title: 'Hẹn yêu vương', text: 'Tối nay 8h' }, T0 + 1000), null)
+  assert.deepEqual(
+    boardView(w, 1).map(r => [r.title, r.mine]),
+    [
+      ['Hẹn yêu vương', false],
+      ['Tìm minh', true],
+    ],
+    'mới trước',
+  )
+  const [hen, tim] = boardView(w, 1)
+  assert.equal(act(2, { type: 'boardReply', id: tim.id, text: 'Cho vào với' }, T0 + 2000), null)
+  assert.equal(
+    act(2, { type: 'boardReply', id: tim.id, text: 'Nhanh nhé' }, T0 + 3000),
+    'cooldown',
+    '20 giây giữa hai lời',
+  )
+  assert.deepEqual(boardView(w, 2)[0].title, 'Tìm minh', 'có lời mới thì nổi lên đầu')
+  assert.deepEqual(
+    topicView(w, tim.id)?.replies.map(r => [r.name, r.text]),
+    [['B', 'Cho vào với']],
+  )
+  assert.equal(act(1, { type: 'boardDel', id: hen.id }), 'locked', 'không xoá chủ đề người khác')
+  assert.equal(act(1, { type: 'boardDel', id: tim.id }), null)
+  assert.equal(topicView(w, tim.id), null)
+  // giữ 30 chủ đề sôi nổi nhất
+  for (let k = 0; k < 35; k++) act(1, { type: 'boardPost', title: `Đề ${k}`, text: 'x' }, T0 + (k + 1) * 31 * 60_000)
+  assert.equal(boardView(w, 1).length, 30)
+})
+
+test('Phóng Trục: Giới Chủ đẩy tông môn không cùng minh (không bế quan, đội ở nhà) ra chỗ trống vùng ngoài, có thư; 24 giờ một lần', () => {
+  const ps = world(sect('A', 12), sect('B', 12), sect('C', 12), sect('D', 12))
+  const map = { atlas: atlas(777), phase: 3 }
+  const r0 = map.atlas.regions.find(r => r.ring === 0)!
+  for (const [pid, s] of ps) ps.set(pid, { ...s, seat: { x: r0.cx + pid * 4, y: r0.cy } })
+  let w: World = {
+    ...freshWorld(),
+    allies: { 1: { id: 1, name: 'Vạn Kiếm', tag: 'VK', members: { 1: 2, 2: 0 }, notice: '', at: T0, helps: [] } },
+    pts: { 1: 50 },
+  }
+  const act = (pid: number, a: Parameters<typeof worldAct>[2], now = T0) => {
+    const r = worldAct(ps, pid, a, now, 7, map, w)
+    if (!r.ok) return r.error
+    for (const [id, s] of r.changed) ps.set(id, s)
+    w = r.world
+    return null
+  }
+  assert.equal(act(3, { type: 'banish', pid: 4 }), 'locked', 'chỉ Giới Chủ')
+  assert.equal(act(1, { type: 'banish', pid: 2 }), 'friend', 'không phóng trục người cùng minh')
+  ps.set(4, { ...ps.get(4)!, seclude: { until: T0 + HOUR, shield: 0 } })
+  assert.equal(act(1, { type: 'banish', pid: 4 }), 'secluded')
+  const old = ps.get(3)!.seat!
+  assert.equal(act(1, { type: 'banish', pid: 3 }), null)
+  const moved = ps.get(3)!
+  assert.notDeepEqual(moved.seat, old, 'núi đã dời')
+  assert.equal(map.atlas.regions[regionOf(map.atlas, moved.seat!)].ring, 0, 'tới vùng ngoài')
+  assert.deepEqual(moved.mail.at(-1)!.a, ['A', moved.seat!.x, moved.seat!.y])
+  assert.equal(act(1, { type: 'banish', pid: 3 }, T0 + HOUR), 'cooldown', '24 giờ một lần')
 })

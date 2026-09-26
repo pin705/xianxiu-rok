@@ -38,6 +38,7 @@ function reborn(s: State, t: number, n: number): State {
     // Phi Thăng Tệ mang sang mùa sau; Tông vụ giữ tiến độ (không nhận lại quà các tầng đã qua); tàn quyển, yêu cốt là vật liệu
     ...(s.honorAll !== undefined && { honorAll: s.honorAll }),
     ...(s.crowns && { crowns: s.crowns }),
+    ...(s.honors && { honors: s.honors }),
     ...(s.coinSpent !== undefined && { coinSpent: s.coinSpent }),
     ...(s.side && { side: s.side }),
     ...(s.frag !== undefined && { frag: s.frag }),

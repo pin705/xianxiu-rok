@@ -38,7 +38,7 @@
   type="button"
   class="tile {look}"
   class:selected
-  class:dim
+  class:faded={dim}
   aria-pressed={selected || undefined}
   style:--size="{size}px"
   onclick={e => {
@@ -84,7 +84,7 @@
   .selected .pic {
     transform: scale(1.08) rotate(-2deg);
   }
-  .dim {
+  .faded {
     opacity: 0.55;
     filter: saturate(0.4);
   }

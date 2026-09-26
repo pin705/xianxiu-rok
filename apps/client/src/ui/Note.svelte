@@ -32,7 +32,7 @@
     class="note"
     class:pin
     class:ready
-    class:dim
+    class:faded={dim}
     class:snug
     style:rotate="{tilt}deg"
     aria-label={label}
@@ -42,7 +42,9 @@
     }}>{@render children()}</button
   >
 {:else}
-  <div class="note" class:pin class:ready class:dim class:snug style:rotate="{tilt}deg">{@render children()}</div>
+  <div class="note" class:pin class:ready class:faded={dim} class:snug style:rotate="{tilt}deg">
+    {@render children()}
+  </div>
 {/if}
 
 <style>
@@ -77,7 +79,7 @@
       0 0 0 2px color-mix(in srgb, var(--cinnabar) 35%, transparent),
       0 0 14px rgb(var(--gold-glow) / 0.6);
   }
-  .dim {
+  .faded {
     opacity: 0.62;
   }
   button.note:active {

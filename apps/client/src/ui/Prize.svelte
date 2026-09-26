@@ -25,7 +25,7 @@
   } = $props()
 </script>
 
-<button class="prize" class:gold class:can class:dim disabled={!can} aria-label={label} {onclick}>
+<button class="prize" class:gold class:can class:faded={dim} disabled={!can} aria-label={label} {onclick}>
   {@render children()}
   {#if stamp}<span class="got">{stamp}</span>
   {:else if lock}<span class="mark"><Icon name="lock" size={14} /></span>{/if}
@@ -43,7 +43,7 @@
     border-radius: 4px;
     box-shadow: 0 2px 4px rgb(var(--shade) / 0.08);
   }
-  .dim {
+  .faded {
     opacity: 0.6;
   }
   .gold {

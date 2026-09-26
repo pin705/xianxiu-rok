@@ -409,7 +409,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** thêm tab trong khung chat; bảng threads có danh sách chủ đề.
 - **Giữ chân:** thảo luận có cấu trúc, ít trôi tin.
 - **Tu tiên hoá:** "Luận đạo bảng" (threads trong một giới).
-- **Game mình:** ⛔ liên server. ✅ **Kênh phái** (thẻ "Phái" trong khung chat, từ Chủ điện 3): người cùng Chính / Tà phái (Chính Tà Phân Tranh — cùng minh là cùng phái) nói chuyện riêng, có lịch sử, thu hồi, báo cáo như kênh giới (`channel` / `listeners` ở `talk.ts`, phòng `c0` / `c1`). ❌ chưa có bảng threads (Luận đạo bảng).
+- **Game mình:** ⛔ liên server. ✅ **Kênh phái** (thẻ "Phái" trong khung chat, từ Chủ điện 3): người cùng Chính / Tà phái (Chính Tà Phân Tranh — cùng minh là cùng phái) nói chuyện riêng, có lịch sử, thu hồi, báo cáo như kênh giới (`channel` / `listeners` ở `talk.ts`, phòng `c0` / `c1`). ✅ **Luận Đạo Bảng** (`world/board.ts`, thẻ "Luận đạo" trong khung chat — `Board.svelte`): từ Chủ điện 3 mở chủ đề cho cả giới (tiêu đề ≤ 40 chữ + lời ≤ 200 chữ, mỗi người 30 phút một chủ đề), trả lời (cách nhau 20 giây), chủ đề có lời mới nổi lên đầu; giữ 30 chủ đề, mỗi chủ đề 40 lời cuối; người mở xoá được; chữ tục bị chặn như bố cáo minh; hết mùa bảng trống (như threads của Lost Kingdom).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### E5. Công cụ trong chat: chia sẻ, sửa tin — **Share Coordinates / Reports / Commanders; Recall / Edit / Quote**
@@ -555,7 +555,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang Vương quốc có mục Kỹ năng vua và Nhập cư.
 - **Giữ chân:** quyền lực có công cụ thật; người bận vẫn "giữ chỗ".
 - **Tu tiên hoá:** "Phóng Trục" (Banish); **"Bế Quan Lệnh"** (Vacation Permit). Chưởng môn bế quan thì không bị đánh và không tính vào ghép; rất hợp với tu tiên.
-- **Game mình:** 🟡 có Bế Quan Lệnh (`sect/seclude.ts`): Cài đặt › Bế quan 3 / 7 / 14 ngày, phải gọi hết đội về và không đang sát khí → khiên tới hết hạn, chỉ nhận thư / điểm danh; xuất quan lúc nào cũng được, 3 ngày sau mới bế quan lại. Chưa có kỹ năng Giới Chủ (Phóng Trục…), quản lý nhập cư.
+- **Game mình:** 🟡 có Bế Quan Lệnh (`sect/seclude.ts`): Cài đặt › Bế quan 3 / 7 / 14 ngày, phải gọi hết đội về và không đang sát khí → khiên tới hết hạn, chỉ nhận thư / điểm danh; xuất quan lúc nào cũng được, 3 ngày sau mới bế quan lại. ✅ **Phóng Trục** (`banish` ở `world/lord.ts`, nút trong hồ sơ người khác khi mình là Giới Chủ — chạm hai lần để chắc): đẩy tông môn không cùng minh, không đang bế quan, mọi đội ở nhà ra chỗ trống ngẫu nhiên ở vùng ngoài (như lúc lập tông môn), 24 giờ một lần; người bị phóng trục có thư, đội địch đang kéo tới chỗ cũ quay về. Kỹ năng Giới Chủ khác: sắc phong phúc / hoạ, ban phúc cả giới, Thiên Ân lễ. Chưa có quản lý nhập cư.
 - **Ưu tiên:** P2 (riêng Bế Quan Lệnh có thể lên P1 vì hợp trụ cột "chờ đợi có nghĩa") · **Công sức:** M.
 
 #### H5. Luật vương quốc, NAP, luật MGE (do cộng đồng đặt) — **Kingdom Rules / NAP**
@@ -885,7 +885,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | E1 | Chat vương quốc | ✅ kênh giới, lọc từ, báo cáo; thiếu dịch | P1 | M |
 | E2 | Chat minh và thông báo | ✅ thiếu ghim, tin hệ thống, @nhắc | P1 | S |
 | E3 | Chat riêng và nhóm tự tạo | ✅ truyền âm 1-1 (Web Push khi offline) + nhóm chat tự tạo tới 20 người (25/09) | **P0** | M |
-| E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; ✅ kênh phái (Chính / Tà) trong giới; ❌ threads | P2 | M |
+| E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; ✅ kênh phái (Chính / Tà) + Luận Đạo Bảng (threads) trong giới | P2 | M |
 | E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | ✅ chia sẻ toạ độ, chiến báo (nút tới / xem trận), thẻ trưởng lão (`#tl:`), trả lời, thu hồi tin trong hạn; chưa sửa tin | **P0** | M |
 | E6 | Thư người chơi/thư minh/báo cáo do thám | ✅ thư minh (R4/R5 → hộp thư cả minh, 25/09); truyền âm thay thư 1-1; báo cáo do thám qua thư; chưa xoá / yêu thích thư | P1 | M |
 | F1 | Gửi tài nguyên (Trading Post) | ✅ Vận Linh Trận (25/09): hao tổn 35 → 8 %, trần ngày theo sức chứa kho hai bên | P2 | S–M |
@@ -896,7 +896,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | H1 | Vua và Lost Temple | ✅ Giới Chủ (minh chủ giữ Thiên Môn) | P1 | M |
 | H2 | Title vương quốc buff/debuff | ✅ sắc phong 4 phúc / 4 hoạ, giữ 24 giờ | P1 | M |
 | H3 | Buff vương quốc, quà của vua | ✅ ban phúc cả giới mỗi ngày + Thiên Ân lễ | P2 | S |
-| H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | 🟡 Bế Quan Lệnh (`sect/seclude.ts`); chưa có kỹ năng vua / nhập cư | P2 (P1 cho Bế Quan) | M |
+| H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | 🟡 Bế Quan Lệnh (`sect/seclude.ts`) + Phóng Trục (Banish của Giới Chủ); chưa quản lý nhập cư | P2 (P1 cho Bế Quan) | M |
 | H5 | NAP, luật cộng đồng → minh ước | ✅ minh ước bất xâm phạm (đề nghị / nhận / huỷ) | P1 | S–M |
 | H6 | Di cư, bảng tuyển mộ | ⛔ di cư; ✅ chiêu mộ qua kênh Giới (tin có nút Vào minh); chưa có bảng tuyển có yêu cầu | P2 | S |
 | H7 | Bảo vệ và dịch chuyển tân thủ | ✅ khiên 72 giờ, PvP từ tầng 6, sàn lực chiến 50% | — | — |

@@ -291,7 +291,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** cây nút nối nhau, nút khoá hiện điều kiện. Chạm nút → bảng chi phí/thời gian/hiệu quả cấp sau → "Nghiên cứu" / "Nghiên cứu ngay" (gem). Danh hiệu "Nhà khoa học" của vua cộng thêm tốc độ [2 nguồn].
 - **Vì sao hấp dẫn:** "sức mạnh vĩnh viễn tốt nhất trong game" [1 nguồn], cây dài để theo đuổi.
 - **Tu tiên hoá:** **Tàng Kinh Các** (công pháp), đã làm.
-- **Game mình:** ✅ Tàng Kinh Các: 28 công pháp, 7 hàng mở ở tầng 1/3/6/9/12/16/21, có sản lượng từng loại, sức chứa, tốc xây, tuyển, chữa, luyện đan, hành quân… 🟡 không có khoá "tốc độ nghiên cứu" (`Bonus` không có `study`), và Tàng Kinh Các không tự cộng tốc nghiên cứu theo tầng như Academy.
+- **Game mình:** ✅ Tàng Kinh Các: 28 công pháp, 7 hàng mở ở tầng 1/3/6/9/12/16/21, có sản lượng từng loại, sức chứa, tốc xây, tuyển, chữa, luyện đan, hành quân… ✅ tốc lĩnh ngộ: mỗi tầng Tàng Kinh Các bớt 1 % thời gian lĩnh ngộ công pháp (tầng 25: −25 %, như Học viện RoK cấp 25) — khoá `study` (`bonus`, `techTime` ở `core/stats.ts`), bảng Tàng Kinh Các hiện "Thời gian lĩnh ngộ −n % → −(n+1) %".
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### D2. Alliance Center — Trung tâm liên minh
@@ -631,7 +631,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### H10. Anti-scouting — Chống do thám
 - **Cơ chế:** có vật phẩm làm báo cáo trinh sát của địch **sai lệch** (hiện gấp đôi quân) [1 nguồn]. Tên chính xác, thời hạn [chưa xác minh].
 - **Tu tiên hoá:** "**Mê Tung Phù**": trinh sát của đối thủ thấy quân số gấp đôi, trưởng lão ẩn.
-- **Game mình:** 🟡 Ẩn Tung Phù 8/24 giờ (`veil`: `sect/bag.ts`, `world/spy.ts`): linh điểu do thám của người khác về tay không (vẫn tốn, bên kia vẫn nhận thư bị do thám); bán ở Thương nhân vân du và Hương Hỏa Các. Màn chọn đối thủ PvP vẫn lộ quân giữ nhà (làm tròn), trưởng lão trấn thủ, tầng Hộ Sơn Đại Trận (`scout()` trong `world/fight.ts`); chưa có báo cáo giả.
+- **Game mình:** 🟡 Ẩn Tung Phù 8/24 giờ (`veil`: `sect/bag.ts`, `world/spy.ts`): linh điểu do thám của người khác về tay không (vẫn tốn, bên kia vẫn nhận thư bị do thám); bán ở Thương nhân vân du và Hương Hỏa Các. Màn chọn đối thủ PvP vẫn lộ quân giữ nhà (làm tròn), trưởng lão trấn thủ, tầng Hộ Sơn Đại Trận (`scout()` trong `world/fight.ts`). ✅ Báo cáo giả: **Huyễn Ảnh Phù** 8 giờ (`mirage`: `sect/bag.ts`, `world/spy.ts`) — ai do thám sẽ thấy quân giữ nhà và lực chiến ×2, của cướp được ×0,3 (nghi binh); bán ở Thương nhân vân du và Hương Hỏa Các (Hương Hỏa 5). Chưa hiện trên thanh tăng ích HUD.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### H11. Teleports — Dịch chuyển
@@ -947,7 +947,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | C7 | 4 bệnh viện, viện đầy thì chết | ✅ Đan phòng (1 nhà) | — | — |
 | C8 | Lâu đài: sức chứa kết trận | 🟡 kết trận 8 đội cố định | P2 | S |
 | C9 | Trại trinh sát, làng/hang | ✅ linh điểu + thôn trang / động phủ (mê vụ) | P2 | M |
-| D1 | Học viện: tốc nghiên cứu, cây kinh tế | ✅ Tàng Kinh Các; 🟡 thiếu tốc nghiên cứu | P2 | S |
+| D1 | Học viện: tốc nghiên cứu, cây kinh tế | ✅ Tàng Kinh Các + tốc lĩnh ngộ theo tầng (−1 %/tầng, tối đa −25 %) | P2 | S |
 | D2 | Trung tâm liên minh: 5→30 lượt giúp, viện binh | 🟡 10 → 15 lượt theo Hộ Minh Đại Trận, không công trình | P1 | S |
 | D3 | Tửu quán: rương miễn phí theo giờ | ✅ Chiêu Hiền Đài (thiếp bạc 6 giờ, vàng 48 giờ; không bán) | P1 | M |
 | D4/F1 | Thợ xây thứ 2 (thuê 2 ngày / VIP 6) | ✅ Tạp Dịch Lệnh (thuê 48 giờ, không vĩnh viễn) | P1 | M |
@@ -958,7 +958,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | D9 | Lyceum (câu đố) | ✅ Vấn Đạo Đài | P2 | M |
 | D10 | Bảng tin | 🟡 thư admin | P2 | S |
 | D11 | State Forum (armaments) | ❌ (file 2) | P2 | L |
-| D12 | Bảo tàng (buff mùa) | ❌ | P2 | M |
+| D12 | Bảo tàng (buff mùa) | ✅ Anh Linh Điện: di vật 3 bậc cho tối đa 3 trưởng lão mỗi mùa (Phi Thăng Tệ) — doc 2 mục 2.13 | P2 | M |
 | D13 | Mỏ/TT nghiên cứu pha lê (công nghệ mùa) | ❌ (file 6) | P2 | M |
 | D14 | Mỏ Heliamber ("Valor") | ❌ chưa xác minh | P2 | — |
 | E6 | Không upkeep quân | ✅ | — | — |
@@ -983,7 +983,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H6–H7 | Tăng sản lượng, tăng công/thủ | ✅ Tụ Linh, Chiến Ý, Kim Cương, Hộ Thể Phù | — | — |
 | H8 | Mở rộng quân | ✅ trận dung (`capOf`) + Khuếch Trận Kỳ +10 % | P2 | S |
 | H9 | Khiên 8 giờ/24 giờ/3 ngày | ✅ Hộ Sơn Phù 8/24/72 giờ | — | — |
-| H10 | Chống do thám | 🟡 Ẩn Tung Phù 8/24 giờ (linh điểu về tay không); chưa có báo cáo giả | P2 | S |
+| H10 | Chống do thám | ✅ Ẩn Tung Phù (linh điểu về tay không) + Huyễn Ảnh Phù (báo cáo giả: quân ×2, của cướp ×0,3) | P2 | S |
 | H11 | 4 loại dịch chuyển | ✅ dời núi tân thủ, dời vào lãnh thổ, Di Sơn Phù, Càn Khôn Phù | P2 | M |
 | H12 | Chìa Tửu quán | ✅ Ngân / Kim Duyên Phù | P1 | S |
 | H13 | Sách kinh nghiệm | ✅ Tâm Đắc Kinh Thư | — | — |

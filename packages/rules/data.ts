@@ -193,6 +193,7 @@ export type Bonus =
   | 'forge'
   | 'cap' // trận dung (sức chứa đệ tử mỗi đội)
   | 'gather' // tốc khai mỏ trên bản đồ giới
+  | 'study' // bớt thời gian lĩnh ngộ công pháp (Tàng Kinh Các — như tốc nghiên cứu của Học viện RoK)
 
 // ---------- Ngũ hành ----------
 
@@ -392,6 +393,8 @@ export const TALENT_NODES = TALENT_TREES.flat()
 // ---------- Tàng Kinh Các ----------
 
 export const TECH_ROWS = [1, 3, 6, 9, 12, 16, 21] // tầng Tàng Kinh Các mở từng hàng
+// Tàng Kinh Các mỗi tầng bớt STUDY_CUT thời gian lĩnh ngộ công pháp (tầng 25: −25 %, như Học viện RoK cấp 25)
+export const STUDY_CUT = 0.01
 export const TECH_COST_GROWTH = 1.7
 export const TECH_TIME_GROWTH = 1.8
 export type TechDef = { row: number; max: number; key: Bonus; v: number; cost: Bag; time: number }
@@ -521,6 +524,7 @@ export type BagDef =
   | { use: 'move'; pick: boolean } // Di Sơn Phù (ngẫu nhiên) / Càn Khôn Phù (chọn chỗ): dời núi ở bản đồ giới, không dùng thẳng từ túi
   | { use: 'rename' } // Cải Danh Lệnh: đổi tên tông môn (Cài đặt → Tài khoản; server chặn tên trùng)
   | { use: 'veil'; hours: number } // Ẩn Tung Phù: tông môn bị do thám thì linh điểu không dò được gì (Anti-Scouting của RoK)
+  | { use: 'mirage'; hours: number } // Huyễn Ảnh Phù: do thám thấy nghi binh — quân, lực chiến ×MIRAGE_SHOW, của cướp được ×MIRAGE_LOOT
   | { use: 'frag' } // Tàng Bảo Đồ tàn phiến: không dùng thẳng — gom DIG_FRAGS mảnh ghép bản đồ ở bản đồ giới
   | { use: 'swap' } // Truyền Công Phù: không dùng thẳng — trả phí Truyền công ở bảng trưởng lão (trong Truyền Công Đại Hội)
   | { use: 'packet' } // Hồng Bao: không dùng thẳng — gửi ở kênh chat Giới / Tiên minh (world/packet.ts)
@@ -580,6 +584,7 @@ const bag = {
   caiDanh: { use: 'rename' }, // Cải Danh Lệnh: đổi tên tông môn (Rename của RoK)
   anTung8: { use: 'veil', hours: 8 }, // Ẩn Tung Phù: do thám không thấy gì (dùng thêm thì kéo dài)
   anTung24: { use: 'veil', hours: 24 },
+  huyenAnh8: { use: 'mirage', hours: 8 }, // Huyễn Ảnh Phù: báo cáo do thám giả (dùng thêm thì kéo dài)
   baoDo: { use: 'frag' }, // Tàng Bảo Đồ tàn phiến
   truyenCong: { use: 'swap' }, // Truyền Công Phù
   hongBao: { use: 'packet' }, // Hồng Bao (lì xì)
@@ -618,6 +623,7 @@ export const BAG_FAMILIES = [
   'canKhon',
   'caiDanh',
   'anTung',
+  'huyenAnh',
   'baoDo',
   'truyenCong',
   'hongBao',
@@ -1142,6 +1148,9 @@ export const FRENZY_TIME = 30 * 60_000 // cơn sát khí: vừa xuất quân cư
 // tầng Chủ điện bên kia linh thạch, linh điểu bay đi về (CRANE_TIME mỗi ô sương mỗi chiều). Báo cáo qua thư ngay: tài nguyên ước
 // cướp được, quân giữ nhà, viện binh, trấn thủ, trận lực, khiên. Bên kia nhận thư "bị do thám" (và Web Push)
 export const SPY_COST = 200
+// Huyễn Ảnh Phù: tông môn đang dùng thì báo cáo do thám ghi quân giữ nhà, lực chiến ×MIRAGE_SHOW, của cướp được ×MIRAGE_LOOT (nghi binh)
+export const MIRAGE_SHOW = 2
+export const MIRAGE_LOOT = 0.3
 // Trận lực Hộ Sơn Đại Trận + linh hỏa thiêu sơn (độ bền tường, thành cháy, bị buộc dời thành của RoK): trận lực tối đa WALL_HP ×
 // (1 + tầng Hộ Sơn Đại Trận). Thủ thua: mất WALL_HIT phần trận lực tối đa, núi bốc linh hỏa FIRE_TIME (thua tiếp thì cháy lại từ
 // đầu); đang cháy mất FIRE_DRAIN phần mỗi phút, hết cháy thì tự hồi WALL_REGEN phần mỗi giờ. Tu bổ trận cơ: miễn phí mỗi
@@ -1317,6 +1326,9 @@ export const RULES: Partial<Record<Bonus, number>>[] = [
 export const HERO_KINDS = ['kp', 'honor', 'hunted', 'gathered'] as const
 export const HERO_PICKS = 5
 export const HERO_GIFT: Reward = { items: { kimDuyen: 2, thoiQuang480: 1 } }
+// Danh hiệu mùa (State.honors, mã = mùa × 8 + loại): 0–3 anh kiệt từng hạng mục HERO_KINDS, HONOR_CUP quán quân Cửu Thiên
+export const HONOR_CUP = 4
+export const honorOf = (code: number) => ({ season: Math.floor(code / 8), k: code % 8 })
 // Giới Báo (Kingdom Newspaper của RoK): 0h mỗi ngày ra một số báo — người dẫn đầu hôm trước ở từng mục (PAPER_KINDS: khai mỏ, săn yêu,
 // chiến công, cướp thắng) và tổng cả giới; giữ PAPER_KEEP số, bấm thích từng bài; đọc số hôm nay nhận PAPER_GIFT (mỗi ngày một lần)
 export const PAPER_KINDS = ['gathered', 'hunted', 'kp', 'raided'] as const
@@ -1412,6 +1424,7 @@ export const MERCHANT_POOL: { item: BagId; n: number; res: Res; price: number; w
   { item: 'khuechTran8', n: 1, res: 'linhThach', price: 900, w: 3 },
   { item: 'sonHa12', n: 1, res: 'linhThao', price: 700, w: 4 },
   { item: 'anTung8', n: 1, res: 'linhKhoang', price: 800, w: 3 },
+  { item: 'huyenAnh8', n: 1, res: 'linhKhoang', price: 900, w: 2 },
 ]
 
 // ---------- Thiên Đạo Biên Niên (Monument của RoK) ----------
@@ -1475,6 +1488,9 @@ export type TitleId = keyof typeof TITLES
 export const TITLE_IDS = Object.keys(TITLES) as TitleId[]
 export const TITLE_TIME = 24 * 3_600_000
 export const TITLE_COOL = 10 * 60_000
+// Phóng Trục (Banish của vua RoK): Giới Chủ đẩy một tông môn (không cùng minh, không bế quan, mọi đội ở nhà) ra chỗ trống ngẫu nhiên
+// ở vùng ngoài; BANISH_COOL mới phóng trục tiếp
+export const BANISH_COOL = 24 * 3_600_000
 // Giới Chủ ban phúc (King's Buff): mỗi ngày một lần, một tăng ích cho mọi tông môn trong giới trong BLESS_TIME.
 // Thiên Ân lễ (King's Gifts): mỗi tuần GIFT_WEEK phần quà Giới Chủ tự tay ban cho người chơi (thư).
 export const BLESSINGS = { build: 0.05, train: 0.05, prod: 0.05, march: 0.08 } as const satisfies Partial<
@@ -1543,6 +1559,14 @@ export const GUARD_STEP = 0.04 // Hộ Sơn Đại Trận: thủ và máu bên t
 // Tỉ lệ thắng ước lượng coi là chắc thắng: giao diện báo "áp đảo"; bot và NPC chỉ đánh từ mức này
 export const SURE_WIN = 0.8
 export const CHAT_HALL = 3 // kênh giới mở từ tầng Chủ điện này
+// Luận Đạo Bảng (threads của RoK): giữ BOARD_TOPICS chủ đề sôi nổi nhất, mỗi chủ đề BOARD_REPLIES lời cuối; tiêu đề / lời tối đa
+// BOARD_TITLE / BOARD_TEXT chữ; mỗi người BOARD_COOL mới mở chủ đề tiếp, BOARD_REPLY_COOL giữa hai lời trả lời
+export const BOARD_TOPICS = 30
+export const BOARD_REPLIES = 40
+export const BOARD_TITLE = 40
+export const BOARD_TEXT = 200
+export const BOARD_COOL = 30 * 60_000
+export const BOARD_REPLY_COOL = 20_000
 
 // Phân đà NPC: tà phái giữ vùng ngoài (server điều khiển, rules/bot.ts), NPC_PER mỗi vùng, chơi một lượt mỗi NPC_EVERY
 // như người chơi thường. Lúc lập: Chủ điện NPC_HALL, trưởng lão cấp NPC_ELDER, NPC_TROOPS đệ tử bậc 2 mỗi hệ, NPC_RES mỗi loại.
@@ -2236,6 +2260,13 @@ export const hallGift = (lv: number): Reward => {
 // Hồi Quy Lễ (quà người chơi cũ quay lại): vắng từ RETURN_AWAY trở lên, lần vào game đầu tiên nhận thư quà (theo tầng Chủ điện)
 export const RETURN_AWAY = 7 * 24 * 3_600_000
 export const RETURN_GIFT: Reward = { hallRes: 300, items: { thoiQuang180: 2, kinhThu2k: 2, nganDuyen: 1, hoSon24: 1 } }
+// Cố Nhân Tương Phùng (mời người cũ quay lại — doc 7 D9): đạo hữu vắng từ RECALL_DAYS ngày thì "Gọi về" được (thư tới họ); họ quay
+// lại trong RECALL_TTL thì người quay lại nhận RECALL_GIFT, mỗi người đã gọi nhận RECALL_THANKS (tối đa RECALL_MAX lần mỗi mùa)
+export const RECALL_DAYS = 7
+export const RECALL_TTL = 14 * 86_400_000
+export const RECALL_MAX = 3
+export const RECALL_GIFT: Reward = { items: { kimDuyen: 1, thoiQuang480: 1, tuLinh24: 1 } }
+export const RECALL_THANKS: Reward = { items: { kimDuyen: 1, thoiQuang180: 2 } }
 
 // ---------- Hương Hỏa (như VIP của RoK — không bán, chỉ đến từ việc chơi) ----------
 
@@ -2325,6 +2356,7 @@ export const VIP_SHOP: { item: BagId; n: number; res: Res; price: number; lv: nu
   { item: 'canKhon', n: 1, res: 'linhThao', price: 4000, lv: 10, week: 1 },
   { item: 'kimDuyen', n: 1, res: 'linhThach', price: 5000, lv: 11, week: 1 },
   { item: 'tuLinh24', n: 1, res: 'linhThao', price: 1500, lv: 12, week: 2 },
+  { item: 'huyenAnh8', n: 1, res: 'linhKhoang', price: 700, lv: 5, week: 2 },
 ]
 
 // ---------- Trung tâm sự kiện (như Events của RoK) ----------
@@ -2470,6 +2502,14 @@ export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily'; rebo
       crit: { w: number; x: number }[]
       goals: number[]
       rewards: Reward[]
+    }
+  | {
+      kind: 'stall' // Cát Tường Hạ Giá (Lucky Stall): chọn việc (STALL_JOBS: xây / lĩnh ngộ / tuyển), ước một mức giảm chi phí theo
+      // trọng số (mầm server); lần ước đầu miễn phí, ước lại tốn `cost` Cát Tường Tệ (việc trong lễ); cả lễ bớt tối đa `cap` mỗi loại
+      stages: Partial<Record<Metric, number>>[]
+      cost: number
+      tiers: { cut: number; w: number }[]
+      cap: number
     }
   | {
       kind: 'dig' // khảo cổ theo tầng (Hunt for History): mỗi tầng chọn giải tối thượng, đào từng ô, trúng giải thì sang tầng sau
@@ -2873,6 +2913,23 @@ const fests = {
       { items: { kimDuyen: 1, thoiQuang180: 2 } },
       { items: { kimDuyen: 2, thoiQuang480: 1 } },
     ],
+  },
+  catTuong: {
+    // Cát Tường Hạ Giá (Lucky Stall của RoK): 5 ngày mỗi 28 ngày — chọn xây / lĩnh ngộ / tuyển, ước mức giảm chi phí −20 % … −60 %;
+    // Cát Tường Tệ từ săn yêu thú, hạ yêu vương, dùng tăng tốc; mỗi loại tài nguyên cả lễ bớt tối đa 300.000
+    window: { kind: 'cycle', every: 28, len: 5, offset: 9 },
+    hall: 6,
+    kind: 'stall',
+    stages: [{ hunt: 1, forts: 3, speed: 0.02 }],
+    cost: 10,
+    tiers: [
+      { cut: 0.2, w: 10 },
+      { cut: 0.3, w: 25 },
+      { cut: 0.4, w: 30 },
+      { cut: 0.5, w: 23 },
+      { cut: 0.6, w: 12 },
+    ],
+    cap: 300_000,
   },
   vanDang: {
     // Vạn Đăng Hội (khuôn lễ hội "nộp lên cấp 25" của RoK): 5 ngày mỗi 28 ngày — việc trong lễ cho Hoa Đăng, nộp vào hội đèn lên cấp
@@ -3510,6 +3567,8 @@ const fests = {
   },
 } satisfies Record<string, FestDef>
 export type FestId = keyof typeof fests
+// Việc Cát Tường Hạ Giá giảm được (chỉ số trong fest.sp[0]): 0 xây / nâng công trình · 1 lĩnh ngộ công pháp · 2 tuyển đệ tử
+export const STALL_JOBS = ['build', 'tech', 'train'] as const
 export const FESTS: Record<FestId, FestDef> = fests
 export const NHAT_KHOA_DAY = 2 // rương mốc thứ 3 (60 điểm) của Nhật Khóa = một hôm mở rương ngày (nhiệm vụ tuần)
 

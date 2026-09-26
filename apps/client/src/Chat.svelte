@@ -7,16 +7,17 @@
   // Tin là bong bóng lời nói (như cố vấn ở Advisor): người khác bên trái, mình bên phải tô son nhạt.
   import type { Ack, Channel, ChatMsg, Dm, FriendView, GroupView } from '@rok/protocol'
   import type { WorldAction } from '@rok/rules/world'
-  import { ELDERS, RARITY, type ElderId, type Report } from '@rok/rules'
+  import { ELDERS, RARITY, RECALL_DAYS, type ElderId, type Report } from '@rok/rules'
   import type { Net } from './net'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Capsule, FloatBar, Sheet, Speech, Tabs } from './ui'
   import { L, LOOK, coords, num } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
+  import Board from './Board.svelte'
 
   type Api = Pick<Net, 'ask' | 'say' | 'report' | 'onChat' | 'unsay'>
-  type Tab = 'world' | 'ally' | 'camp' | 'dm' // camp: kênh phái (Chính / Tà phái của mình)
+  type Tab = 'world' | 'ally' | 'camp' | 'board' | 'dm' // camp: kênh phái · board: Luận Đạo Bảng
   let {
     me,
     ally = false,
@@ -42,10 +43,10 @@
   const game = $derived(g.game)
   const act = g.act
 
-  const tabs = $derived<Tab[]>(ally ? ['world', 'ally', 'camp', 'dm'] : ['world', 'camp', 'dm'])
+  const tabs = $derived<Tab[]>(ally ? ['world', 'ally', 'camp', 'board', 'dm'] : ['world', 'camp', 'board', 'dm'])
   let tab = $state<Tab>('world')
   let peer = $state<{ ch: Channel; name: string } | null>(null) // cuộc truyền âm / nhóm đang xem
-  const ch = $derived<Channel | null>(tab !== 'dm' ? tab : (peer?.ch ?? null))
+  const ch = $derived<Channel | null>(tab === 'board' ? null : tab !== 'dm' ? tab : (peer?.ch ?? null))
   let open = $state(false)
   let text = $state('')
   let logs = $state<Record<string, ChatMsg[]>>({})
@@ -97,6 +98,11 @@
     if (!logs[p.ch]) void api?.ask({ k: 'chat', ch: p.ch }).then(list => list && put(p.ch, list))
   }
   const openDm = (p: { pid: number; name: string }) => openPeer({ ch: `p${p.pid}`, name: p.name })
+  async function call(pid: number) {
+    if (!act2 || !(await act2({ type: 'friendRecall', pid })).ok) return
+    toast(L.chat.callSent)
+    void api?.ask({ k: 'friends' }).then(list => list && (friends = list))
+  }
   async function newGroup(e: SubmitEvent) {
     e.preventDefault()
     if (!act2 || !(await act2({ type: 'groupNew', name: groupName })).ok) return
@@ -220,6 +226,18 @@
             <Capsule dot={f.online} onclick={() => openDm(f)}>{f.name}</Capsule>
           {/each}
         </li>
+        <!-- Cố Nhân Tương Phùng: đạo hữu vắng lâu — gọi về, họ quay lại thì cả hai nhận quà -->
+        {#each friends.filter(f => !f.online && f.away >= RECALL_DAYS) as f (f.pid)}
+          <li class="row between" style:--gap="6px">
+            <small class="t-small">{f.name} · <span class="t-soft">{L.chat.away(f.away)}</span></small>
+            <Button
+              size="sm"
+              variant={f.called ? 'ghost' : 'gold'}
+              disabled={!act2 || f.called}
+              onclick={() => call(f.pid)}>{f.called ? L.chat.called : L.chat.callBack}</Button
+            >
+          </li>
+        {/each}
       {/if}
       {#each groups as x (x.id)}
         <li>
@@ -261,6 +279,10 @@
       </form>
       <small class="t-tiny t-soft">{L.chat.groupHint}</small>
     {/if}
+  {:else if tab === 'board'}
+    <div class="scroll-box mt-2" style:--max-h={inline ? '320px' : undefined}>
+      <Board {me} ask={api?.ask} send={act2} {toast} />
+    </div>
   {:else}
     {#if peer}<button class="row t-small mt-2" style:--gap="4px" onclick={() => (peer = null)}
         ><Icon name="back" size={14} />{L.chat.back} · <b>{peer.name}</b></button

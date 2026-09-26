@@ -346,10 +346,16 @@ test('chữa thương: tốn tài nguyên, xong thì về môn hạ', () => {
   assert.equal(err({ ...s, wounded: newGame(T0).wounded }, { type: 'heal' }), 'empty')
 })
 
+test('Tàng Kinh Các: mỗi tầng bớt 1 % thời gian lĩnh ngộ công pháp (như tốc nghiên cứu của Học viện)', () => {
+  const s = rich(10, 10)
+  const base = techTime({ ...s, levels: { ...s.levels, tangKinhCac: 0 } }, 'tuLinh', 3)
+  assert.equal(techTime(s, 'tuLinh', 3), Math.round((base / 1000) * 0.9) * 1000)
+})
+
 test('công pháp tăng sản lượng; luyện đan và dùng Tụ Khí Đan rút ngắn thời gian', () => {
   let s = rich(6, 5)
   s = run(s, { type: 'study', tech: 'tuLinh' })
-  s = advance(s, T0 + techTime('tuLinh', 1))
+  s = advance(s, T0 + techTime(s, 'tuLinh', 1))
   assert.equal(s.tech.tuLinh, 1)
   const empty = { ...s, res: { linhThach: 0, linhThao: 0, linhKhoang: 0 } } // kho đầy thì không sản xuất
   assert.ok(advance(empty, s.time + HOUR).res.linhThach > advance({ ...empty, tech: {} }, s.time + HOUR).res.linhThach)

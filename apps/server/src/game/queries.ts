@@ -40,6 +40,10 @@ import {
   betView,
   heroView,
   paperView,
+  recallsOf,
+  awayDays,
+  boardView,
+  topicView,
   voteTally,
 } from '@rok/rules/world'
 import type { Answer, FestView, Query, QueryOf } from '@rok/protocol'
@@ -115,14 +119,21 @@ const pollsOf = (w: World, pid: number) => ({
 })
 
 // Truy vấn xã giao: truyền âm, nhóm chat, đạo hữu, Giới Báo
-const social = (w: World): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper'> => ({
+const social = (w: World): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper' | 'board' | 'topic'> => ({
+  board: sock => boardView(w.shared, sock.data.pid), // Luận Đạo Bảng
+  topic: (_sock, q) => topicView(w.shared, q.id),
   dms: sock => dmsOf(w, sock.data.pid),
   groups: sock => groupViews(w, sock.data.pid),
   paper: sock => paperView(w.shared, sock.data.pid, w.now()),
+  // away: số ngày chưa vào game · called: mình đã gọi về (Cố Nhân Tương Phùng), lời gọi còn hạn
   friends: sock =>
     (w.ps.get(sock.data.pid)?.friends ?? []).flatMap(pid => {
-      const s = w.ps.get(pid)
-      return s ? [{ pid, name: s.name, hall: s.levels.chuDien, online: !!w.slots.get(pid)?.conns.size }] : []
+      const s = w.ps.get(pid),
+        now = w.now()
+      if (!s) return []
+      const called = recallsOf(w.shared, pid, now).some(x => x.by === sock.data.pid)
+      const online = !!w.slots.get(pid)?.conns.size
+      return [{ pid, name: s.name, hall: s.levels.chuDien, online, away: awayDays(s, now), called }]
     }),
 })
 
@@ -147,8 +158,9 @@ export const answersOf = (w: World): Answers => ({
     const crown = lord === sock.data.pid
     // Vận Linh Trận: còn gửi được bao nhiêu cho người này (chỉ người cùng minh; chợ tắt thì tắt cả tiếp tế)
     const supply = w.info.market ? supplyRoom(w.shared, w.ps, sock.data.pid, q.pid, now) : null
-    const crowns = w.ps.get(q.pid)?.crowns ?? [] // danh hiệu mùa (đệ nhất Công Huân)
-    return p && { ...p, crown, boon: crown ? boonLeft(w.shared, now) : 0, invite, supply, crowns }
+    const crowns = w.ps.get(q.pid)?.crowns ?? [], // danh hiệu mùa (đệ nhất Công Huân), các danh hiệu mùa khác
+      honors = w.ps.get(q.pid)?.honors ?? []
+    return p && { ...p, crown, boon: crown ? boonLeft(w.shared, now) : 0, invite, supply, crowns, honors }
   },
   ...social(w),
   arena: sock => {

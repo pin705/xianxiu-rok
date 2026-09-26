@@ -253,6 +253,7 @@ export const en: Text = {
     batch: 'Per batch',
     hospital: 'Beds for the wounded',
     rows: 'Technique rows open',
+    study: 'Study time',
     slots: 'March slots',
     gearCap: 'Max artifact level',
     requires: 'Requires',
@@ -422,8 +423,9 @@ export const en: Text = {
       forge: 'Forging time',
       cap: 'March capacity',
       gather: 'Gathering speed',
+      study: 'Study time',
     }
-    const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge'].includes(key)
+    const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge', 'study'].includes(key)
     return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
   },
   techs: {
@@ -1506,6 +1508,8 @@ export const en: Text = {
     noAlly: 'No alliance',
     offline: 'In seclusion',
     crown: (n: number) => `Honor champion · season ${n}`,
+    honor: (k: number, n: number) =>
+      `${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King', 'League champion'][k] ?? '?'} · season ${n}`,
     ascended: (n: number) => `Ascended ${n} seasons`,
     pvp: 'Raids won / lost',
     wl: (w: number, l: number) => `${w} / ${l}`,
@@ -1641,6 +1645,11 @@ export const en: Text = {
     good: 'Blessings',
     bad: 'Curses',
     strip: 'Revoke',
+    banish: 'Banish',
+    banishAsk: (name: string) => `Tap again to banish ${name} to the outer lands`,
+    banished: (name: string) => `${name} was banished to the outer lands.`,
+    banishHint:
+      'Banish: push a sect outside your alliance (not in seclusion, all marches home) to an empty spot in the outer lands; once every 24 hours.',
     held: (name: string) => `Held by ${name}`,
     names: {
       chienThan: 'War God',
@@ -1856,6 +1865,10 @@ export const en: Text = {
     packetSend: (n: number) => `🧧 Envelope (${n})`,
     packetOpen: 'Open envelope',
     joinAlly: 'Join',
+    away: (d: number) => `away ${d} days`,
+    callBack: 'Call back',
+    called: 'Called',
+    callSent: 'Call sent — if your friend comes back within 14 days you both get a Reunion gift.',
     // message time, short: under a minute "just now", then minutes / hours / days
     ago: (ms: number) => {
       if (ms < 60_000) return 'just now'
@@ -1868,6 +1881,7 @@ export const en: Text = {
     packetNone: 'This envelope is empty, expired, or you already opened it.',
     world: 'World',
     camp: 'Camp',
+    board: 'Threads',
     campLocked: 'The camp channel (everyone in your Light / Darkness camp) opens at Main Hall 3',
     reply: 'Reply',
     replyTo: (name: string) => `Replying to ${name}`,
@@ -1948,6 +1962,18 @@ export const en: Text = {
         'Welcome Back',
         `You were away ${days} days — the whole sect celebrates its leader's return. A small gift to get back into the swing (scaled to your Main Hall).`,
       ],
+      recall: (name: string, k: 0 | 1 | 2): [string, string] =>
+        [
+          [
+            `${name} is calling you back`,
+            `Your friend ${name} misses you: come back within 14 days and you both receive a Reunion gift.`,
+          ],
+          [
+            'Reunion',
+            `You came back at ${name}'s call. Your reunion gift is below — ${name} gets a thank-you gift too.`,
+          ],
+          ['An old friend returns', `${name} came back thanks to your call. Your thank-you gift is below.`],
+        ][k] as [string, string],
       dig: (x: number, y: number): [string, string] => [
         `Treasure (${x},${y})`,
         `Your team reached the spot marked on the treasure map at (${x},${y}) and dug up a treasure chest. The contents are attached.`,
@@ -2154,6 +2180,10 @@ export const en: Text = {
       boon: (lord: string): [string, string] => [
         'Heavenly Grace',
         `Realm Lord ${lord} personally bestowed a Heavenly Grace gift on your sect — only a few each week. See below.`,
+      ],
+      banish: (lord: string, x: number, y: number): [string, string] => [
+        'Banished',
+        `Realm Lord ${lord} banished your sect to the outer lands — your mountain now stands at (${x},${y}). Enemy marches heading to your old spot will return empty-handed.`,
       ],
       titled: (title: string, lord: string): [string, string] => [
         `Title granted: ${en.lord.names[title as TitleId] ?? title}`,
@@ -2783,6 +2813,7 @@ export const en: Text = {
     shieldFx: 'Nobody can raid your sect (breaks when you raid someone)',
     builder2: 'Second builder: construct two buildings at once',
     veil: "Other sects' scouts learn nothing",
+    mirage: 'Scouts see phantom troops: garrison ×2, lootable ×0.3',
     src: {
       vein: 'Spirit veins held by your side',
       tide: 'Spirit tide in your region',
@@ -2957,6 +2988,20 @@ export const en: Text = {
     lost: (tag: string, n: number) => `[${tag}] lost · ${n} coins refunded after the final`,
     wait: 'Your bets',
   },
+  board: {
+    hint: 'Threads: start a topic for the whole realm (find an alliance, plan a demon-king rally, ask for advice…). Topics with new replies rise to the top; the board clears each season.',
+    none: 'No topics yet — start the first one.',
+    title: 'Title (up to 40 characters)',
+    body: 'Opening post (up to 200 characters)',
+    post: 'Start topic',
+    reply: 'Reply…',
+    send: 'Send',
+    back: 'All topics',
+    del: 'Delete topic',
+    noReply: 'No replies yet.',
+    replies: (n: number) => `${n} replies`,
+    locked: 'Threads open at Main Hall 3.',
+  },
   paper: {
     title: 'Realm Gazette',
     open: 'Gazette',
@@ -2995,6 +3040,17 @@ export const en: Text = {
     go: (n: number) => `Transmit · ${n} talismans`,
     sure: (a: string, b: string) => `Swap all learned skill tiers of ${a} and ${b}? Talismans spent are not refunded.`,
     none: 'No elder of the same rarity and skill count to swap with yet.',
+  },
+  stall: {
+    pick: 'Pick the job to discount (changeable until your first wish)',
+    jobs: ['Building / upgrades', 'Studying techniques', 'Recruiting disciples'],
+    wish: 'Wish for a discount (free)',
+    rewish: (n: number) => `Wish again · ${n} coins`,
+    cut: (p: number) => `Current cut ${p}%`,
+    none: 'No wish yet — pick a job, then wish for a discount.',
+    tiers: 'Possible cuts: −20% · −30% · −40% · −50% · −60% (rare)',
+    saved: 'Saved this event (cap per resource)',
+    tag: (p: number) => `Lucky −${p}%`,
   },
   omen: {
     draw: (n: number) => `Draw ${n}`,
@@ -3427,6 +3483,10 @@ export const en: Text = {
         name: 'Lantern Festival',
         desc: 'Five festival days: hunting, winning battles, building, recruiting, gathering and speedups all earn Lanterns. Release them to raise the festival — sometimes a critical ×2 or ×5 — through 25 levels, each with a gift.',
       },
+      catTuong: {
+        name: 'Lucky Stall',
+        desc: 'Five days of lucky deals: pick one job (building, studying, recruiting) and wish for a cost cut from −20% to −60%. The first wish is free; wishing again costs Lucky Coins (hunt beasts, defeat demon kings, use speedups). Each resource can be cut by up to 300,000 over the event.',
+      },
       boQue: {
         name: "Esmeralda's House",
         desc: 'Three days of fortune sticks: event tasks give Fortune Slips; shake the tube to draw — Great Fortune holds a Gold Fate Talisman, and every draw is worth more than it costs. One free draw a day; 10 / 20 / 40 / 70 draws open chests.',
@@ -3500,6 +3560,7 @@ export const en: Text = {
     tokens: (n: string, name = 'Sect Tokens') => `${name}: ${n}`,
     tokenName: {
       boQue: 'Fortune Slips',
+      catTuong: 'Lucky Coins',
       vanDang: 'Lanterns',
       thienCo: 'Fate Token',
       trungThu: 'Mooncakes',
@@ -3613,6 +3674,10 @@ export const en: Text = {
       anTung: {
         name: 'Veiling Talisman',
         desc: 'Mist hides your mountain: scouts from other sects learn nothing. Using more extends it.',
+      },
+      huyenAnh: {
+        name: 'Mirage Talisman',
+        desc: 'Set up phantom troops around your mountain for 8 hours: scouts see double your garrison and power, and only a fraction of your lootable resources — attackers think twice. Using more extends it.',
       },
       baoDo: {
         name: 'Treasure Map Fragment',

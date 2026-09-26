@@ -2,7 +2,7 @@
   // Hồ sơ chưởng môn (như Governor Profile của RoK): chạm chân dung mình, tên ở chat, người trong minh, tông môn trên bản đồ.
   // Cảnh giới, lực chiến, tiên minh, chỗ ngồi (tới xem trên bản đồ), chiến tích; truyền âm, chặn.
   import type { Ack, GroupView, Profile } from '@rok/protocol'
-  import { ELDER_IDS, FRAMES, TITLES, TITLE_IDS, frameOpen, type TitleId } from '@rok/rules'
+  import { ELDER_IDS, FRAMES, TITLES, TITLE_IDS, frameOpen, honorOf, type TitleId } from '@rok/rules'
   import { DAO_TONES, Portrait, artOf, paintedUrl, portraitRing } from '@rok/art'
   import type { WorldAction } from '@rok/rules/world'
   import type { Net } from './net'
@@ -46,6 +46,19 @@
   const reload = () => social.profile !== null && api?.ask({ k: 'profile', pid: social.profile }).then(r => (p = r))
   async function crown(title: TitleId) {
     if (p && send && (await send({ type: 'crown', title, pid: p.pid })).ok) void reload()
+  }
+  // Phóng Trục (kỹ năng Giới Chủ): chạm lần đầu hỏi lại, lần hai mới đẩy tông môn người này ra vùng ngoài
+  let banishing = $state(false)
+  let banished = $state<string | null>(null)
+  async function banish() {
+    if (!p || !send) return
+    if (!banishing) {
+      banishing = true
+      return
+    }
+    banishing = false
+    const r = await send({ type: 'banish', pid: p.pid })
+    banished = r.ok ? L.lord.banished(p.name) : (L.err[r.err] ?? L.err.bad)
   }
   // hồ sơ của mình: chân dung theo state đang chơi (vừa đổi thì hiện ngay, không chờ hỏi lại server)
   const face = $derived(p?.pid === me ? game.face : p?.face)
@@ -99,6 +112,9 @@
           <div class="row wrap" style:--gap="4px">
             {#if p.ascended}<Tag tone="gold" icon="star">{L.profile.ascended(p.ascended)}</Tag>{/if}
             {#each p.crowns ?? [] as n (n)}<Tag tone="gold" icon="rank">{L.profile.crown(n)}</Tag>{/each}
+            {#each p.honors ?? [] as code (code)}{@const h = honorOf(code)}<Tag tone="gold" icon="star"
+                >{L.profile.honor(h.k, h.season)}</Tag
+              >{/each}
             {#if p.lord}<Tag tone="gold" icon="flag">{L.lord.is}</Tag>{/if}
             {#if p.title}<Tag tone={TITLES[p.title].good ? 'good' : 'bad'}
                 >{L.lord.names[p.title]} · {L.lord.fx(p.title)}</Tag
@@ -239,6 +255,12 @@
               variant="quiet"
               onclick={async () => p?.title && (await send({ type: 'uncrown', title: p.title })).ok && reload()}
               >{L.lord.strip}</Button
+            >{/if}
+          {#if p.pid !== me}<Button size="sm" variant={banishing ? 'danger' : 'quiet'} icon="flag" onclick={banish}
+              >{banishing ? L.lord.banishAsk(p.name) : L.lord.banish}</Button
+            >{/if}
+          {#if banished}<small class="t-tiny t-soft">{banished}</small>{:else}<small class="t-tiny t-soft"
+              >{L.lord.banishHint}</small
             >{/if}
         </div>
       {/if}

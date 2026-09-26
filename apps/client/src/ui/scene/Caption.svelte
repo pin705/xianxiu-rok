@@ -28,8 +28,8 @@
 <span
   class="caption {size} {tone}"
   class:spaced
-  class:wrap
-  class:dim
+  class:multi={wrap}
+  class:faded={dim}
   style:--c={color}
   style:translate={shift ? `${shift}px 0` : undefined}>{@render children()}</span
 >
@@ -52,13 +52,13 @@
   .spaced {
     letter-spacing: 0.04em;
   }
-  .wrap {
+  .multi {
     width: 100px;
     white-space: normal;
     text-align: center;
     line-height: 1.15;
   }
-  .dim {
+  .faded {
     opacity: 0.6;
   }
 </style>
