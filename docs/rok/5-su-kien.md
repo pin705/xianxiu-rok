@@ -971,6 +971,8 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
 - Zenith là "pay-to-win".
 
 **Bài học cho mình:** làm **một khuôn lễ** (7+1 ngày + rơi + nộp lên cấp + cửa hàng + rương minh + lì xì) là đủ cho mọi lễ.
+
+**Game mình:** kiểu lễ `offer` (nộp lên cấp) — Vạn Đăng Hội 5 ngày mỗi 28 ngày: việc trong lễ (săn yêu, thắng trận, xây, tuyển, khai mỏ, tăng tốc) cho Hoa Đăng; thả đèn ×1 / ×10 / hết, mỗi lần nộp có thể chí mạng ×2 (15 %) hay ×5 (5 %) theo mầm server; 25 cấp, mỗi cấp một quà, cấp 5, 10… quà lớn (`offer` ở `sect/fest.ts`, `Offer.svelte`). Còn thiếu: lì xì tặng nhau.
 - **Bỏ cơ chế "thu mỗi 20 phút"**: rơi theo sản lượng nhận được, có trần ngày, hợp trụ cột "phiên 5–10 phút".
 - Bậc cao cấp chỉ cho cosmetic hoặc gắn Tu Tiên Lệnh (P4).
 
@@ -1289,7 +1291,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | G1 | Mysterious Merchant | Vân Du Thương Nhân | ✅ Thương nhân vân du (`sect/merchant.ts`) | P1 | S–M |
 | G2 | Đăng nhập / Sign-in Spoils | Điểm Danh Bảy Ngày | ✅ Thất Nhật Lễ (tân thủ), Khánh Điển Khai Tông (đầu mùa), lì xì Tết | P1 | S |
 | G3 | Peerless Scholar | Vấn Đạo Đài | ✅ Vấn Đạo Đài (`sect/quiz.ts`) | P2 | M |
-| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | 🟡 khung `dates` + kho đổi / tích điểm / đăng nhập (5 lễ); chưa có 7+1, rơi đồ lễ, 25 cấp, lì xì tặng nhau | **P1** | M |
+| H0 | Khuôn lễ hội (7+1, rơi, 25 cấp, đổi, lì xì) | Khuôn Lễ Hội | 🟡 khung `dates` + kho đổi / tích điểm / đăng nhập; việc theo ngày + rương theo số việc (kiểu 7+1: Khai Sơn Thất Nhật), lễ rơi đồ (Tích Cốc Phòng Cơ, Tầm Bảo), nộp lên cấp 25 có chí mạng (Vạn Đăng Hội — kiểu lễ `offer`); chưa có lì xì tặng nhau | **P1** | M |
 | H1 | Tết Âm lịch | Tân Xuân Khai Sơn | ✅ lì xì 7 ngày (fest `tanXuan`) | P1 | S (sau H0) |
 | H2 | Valentine's | (thay bằng Thất Tịch) | ✅ thay bằng Ô Thước Kiều (H8) | P2 | — |
 | H3 | Spring's Return / Spring Symphony | Xuân Hồi Vạn Vật | ✅ `xuanHoi` (5 ngày quanh xuân phân) | P2 | S |

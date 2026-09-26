@@ -45,6 +45,7 @@ export type FestAction =
   | { type: 'spin'; id: FestId; n: 1 | 10; pick?: number } // pick: món chủ lực đã chọn (đập trứng)
   | { type: 'delve'; id: FestId; cell: number; pick: number } // khảo cổ: cuốc ô cell, giải tối thượng đã chọn
   | { type: 'swap'; id: FestId; i: number; n: number } // đổi phù: n lá mệnh giá SPEED_MIN[i]
+  | { type: 'offer'; id: FestId; n: number } // nộp lên cấp: n lệnh bài lễ
 
 // Một lượt quay: ô theo trọng số từ mầm; lượt thứ pity, 2·pity… (k: số lượt đã quay trước đó) chắc trúng ô đầu
 function wheelPick(d: Extract<FestDef, { kind: 'wheel' }>, seed: number, k: number): number {
@@ -221,6 +222,25 @@ export function swapError(s: State, id: FestId, i: number, n: number): Err | nul
 }
 
 export const festActions: Actions<FestAction> = {
+  // Nộp lên cấp: n lệnh bài lễ, kinh nghiệm = n × hệ số chí mạng rút bằng mầm server (client mầm 0: chờ patch)
+  offer: {
+    pick: a => (oneOf(FEST_IDS)(a.id) && int(1, 99_999)(a.n) ? { type: 'offer', id: a.id, n: a.n as number } : null),
+    run: (s, a) => {
+      const d = FESTS[a.id]
+      if (d.kind !== 'offer' || !festOpen(s, a.id, s.time)) return no('locked')
+      if (festTokens(s, a.id) < a.n) return no('not_enough')
+      if (!s.seed) return ok(s)
+      let r = ((s.seed >>> 0) / 2 ** 32) * d.crit.reduce((n, c) => n + c.w, 0)
+      const x = (d.crit.find(c => (r -= c.w) < 0) ?? d.crit[0]).x
+      const f = s.fest[a.id]!
+      const [spent = 0, exp = 0] = f.sp ?? []
+      return ok({
+        ...s,
+        seed: nextSeed(s.seed),
+        fest: { ...s.fest, [a.id]: { ...f, sp: [spent + a.n, exp + a.n * x, x] } },
+      })
+    },
+  },
   swap: {
     pick: a =>
       oneOf(FEST_IDS)(a.id) && int(0, 5)(a.i) && int(1, 200)(a.n)

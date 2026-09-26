@@ -48,6 +48,7 @@
   import Wish from './Wish.svelte'
   import Cards from './Cards.svelte'
   import Swap from './Swap.svelte'
+  import Offer from './Offer.svelte'
   import Race from './Race.svelte'
   import Maze from './Maze.svelte'
   import Pass from './Pass.svelte'
@@ -96,6 +97,7 @@
     tamBao: 'globe',
     khaiDien: 'star',
     hoaKien: 'swords',
+    vanDang: 'star',
     truyenCong: 'scroll',
     gioiChu: 'swords',
     yeuHoang: 'skull',
@@ -154,6 +156,7 @@
     tamBao: 'treasure',
     khaiDien: 'login',
     hoaKien: 'train',
+    vanDang: 'moon',
     truyenCong: 'scroll',
     gioiChu: 'battle',
     yeuHoang: 'demon',
@@ -453,6 +456,8 @@
             <Cards id={cur} />
           {:else if def.kind === 'swap'}
             <Swap id={cur} />
+          {:else if def.kind === 'offer'}
+            <Offer id={cur} />
           {:else if def.kind === 'wish'}
             <Wish id={cur} />
           {:else if def.kind === 'thief'}

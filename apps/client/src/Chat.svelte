@@ -157,9 +157,24 @@
       ? t
           .replace(TL, '')
           .replace(/#r\d{1,9}\b/g, '')
+          .replace(/(^|\s)#hb(?=\s|$)/g, `$1${L.chat.packet}`)
           .replace(/^#q\d{1,9} /, '')
           .trim() // mã chiến báo có nút Xem trận riêng, mã trả lời vẽ thành trích dẫn
       : L.chat.recalled
+  // lì xì: tin "#hb" trỏ tới Hồng Bao của người gửi tin (world/packet.ts) — người khác chạm để mở, người gửi có Hồng Bao thì gửi thêm
+  const hb = (t: string) => /(^|\s)#hb(\s|$)/.test(t)
+  async function grab(by: number) {
+    if (!act2) return
+    const before = game.res.linhThach
+    const r = await act2({ type: 'packetOpen', by })
+    toast(r.ok ? L.chat.packetGot(num(Math.max(0, game.res.linhThach - before))) : L.chat.packetNone)
+  }
+  async function packet() {
+    if (!act2 || !api || (ch !== 'world' && ch !== 'ally')) return
+    const r = await act2({ type: 'packetSend', ally: ch === 'ally' })
+    if (r.ok) await api.say(ch, '#hb')
+    else toast(L.chat.err.bad)
+  }
   // chiến báo chia sẻ trong tin: "#r<id>" (của chính người gửi)
   const shared = (t: string) => [...t.matchAll(/#r(\d{1,9})\b/g)].map(m => Number(m[1]))
   async function watch(m: ChatMsg, id: number) {
@@ -287,6 +302,9 @@
                 ><small class="t-tiny">{L.lv(c.lv)} {'★'.repeat(c.star)}</small></Capsule
               >
             {/each}
+            {#if act2 && !mine && hb(m.text)}
+              <Capsule rar={4} icon="star" onclick={() => grab(m.pid)}>{L.chat.packetOpen}</Capsule>
+            {/if}
             {#if onreplay}
               {#each shared(m.text) as id (id)}
                 <Capsule tone="azure" icon="swords" onclick={() => watch(m, id)}>{L.report.watch}</Capsule>
@@ -359,6 +377,9 @@
       >
       <input class="field grow" bind:value={text} maxlength="200" placeholder={L.chat.say} aria-label={L.chat.say} />
       <Button size="sm" type="submit" disabled={!text.trim()}>{L.chat.send}</Button>
+      {#if act2 && (game.items.hongBao ?? 0) > 0 && (ch === 'world' || ch === 'ally')}
+        <Button size="sm" variant="gold" onclick={packet}>{L.chat.packetSend(game.items.hongBao ?? 0)}</Button>
+      {/if}
     </form>
   {/if}
 {/snippet}

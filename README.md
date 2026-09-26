@@ -5,6 +5,7 @@ Game tu tiên chiến lược (SLG) chạy trên trình duyệt: dựng tông m�
 ```bash
 npm install
 npm run db         # Postgres cho dev/test (Docker, cổng 5439) — một lần mỗi lần bật máy
+# hoặc bỏ Docker: DATABASE_URL=postgres://user:pass@host:5432/rok trong .env (user cần quyền CREATEDB cho test/e2e/play)
 npm run server     # server game: http://localhost:8787 (tự khởi động lại khi sửa code; tài liệu API ở /docs)
 npm run dev        # chơi thử: http://localhost:5173 (proxy /api và /socket.io sang server)
 npm test           # luật game, gói tin, i18n, ranh giới package, server với Postgres thật, vẽ mọi màn hình (SSR)

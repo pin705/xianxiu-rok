@@ -190,6 +190,8 @@ export type Supply = { day: number; sent: number; got: number }
 // Luận Kiếm Đại Hội của mùa (world/tourney.ts): người theo thứ tự hạt giống, các trận theo vòng (a đánh b; win: a thắng; rep: mã
 // chiến báo của a — cả giới xem lại), Kiếm Khôi
 type Game = { r: number; a: number; b: number; win?: boolean; rep?: number }
+// Hồng Bao đang gửi (world/packet.ts): người gửi, minh (gửi kênh Tiên minh), lúc gửi, các phần còn lại, ai đã mở được bao nhiêu
+export type Packet = { by: number; ally?: number; at: number; left: number[]; got: [number, number][] }
 export type Tourney = { seeds: number[]; games: Game[]; champ?: number }
 export type World = {
   allies: Record<number, Alliance>
@@ -197,6 +199,7 @@ export type World = {
   spots: Record<number, Spot>
   rallies: Record<number, Rally>
   tourney?: Tourney // Luận Kiếm Đại Hội (tuần cuối mùa)
+  packets?: Packet[] // Hồng Bao đang gửi trong giới
   nextRally: number
   pts: Record<number, number>
   orders: Record<number, Order>

@@ -817,3 +817,31 @@ test('Lễ vật tấn cấp (Special Privilege Chest): mỗi cấp Hương Hỏ
   assert.equal(vipGiftError({ ...t, res: { ...t.res, linhThach: 0 } }, 2), 'not_enough')
   assert.deepEqual(migrate(JSON.parse(JSON.stringify(t)))?.vip.gifts, [1], 'save giữ lễ đã mua')
 })
+
+test('Vạn Đăng Hội (nộp lên cấp của khuôn lễ hội): việc trong lễ cho Hoa Đăng, thả đèn ra kinh nghiệm × chí mạng (mầm server), 25 cấp mỗi cấp một quà', () => {
+  let t = MON
+  while (festWindow({}, FESTS.vanDang, t)) t += DAY
+  while (!festWindow({}, FESTS.vanDang, t)) t += DAY // ngày đầu lượt kế tiếp
+  const base = newGame(MON)
+  let s: State = advance({ ...base, levels: { ...base.levels, chuDien: 8 } }, t)
+  assert.ok(festOpen(s, 'vanDang', t))
+  s = { ...s, stats: { ...s.stats, hunted: (s.stats.hunted ?? 0) + 30 } } // săn 30 yêu thú: 30 Hoa Đăng
+  assert.equal(festTokens(s, 'vanDang'), 30)
+  assert.equal(apply(s, { type: 'offer', id: 'vanDang', n: 31 }, t).ok, false, 'không đủ đèn')
+  const hidden = apply({ ...s, seed: 0 }, { type: 'offer', id: 'vanDang', n: 5 }, t)
+  assert.ok(hidden.ok && hidden.state.fest.vanDang?.sp === undefined, 'mầm 0: chờ server')
+  s = run({ ...s, seed: 12345 }, { type: 'offer', id: 'vanDang', n: 20 })
+  const [spent, exp, x] = s.fest.vanDang!.sp!
+  assert.deepEqual([spent, exp], [20, 20 * x])
+  assert.ok([1, 2, 5].includes(x))
+  assert.equal(festTokens(s, 'vanDang'), 10)
+  assert.equal(festError(s, 'vanDang', 0), null, 'đủ kinh nghiệm cấp 1')
+  s = run(s, { type: 'fest', id: 'vanDang', i: 0 })
+  assert.equal(festError(s, 'vanDang', 0), 'claimed')
+  const goals = (FESTS.vanDang as { goals: number[] }).goals
+  assert.equal(goals.length, 25)
+  assert.ok(
+    goals.every((g, k) => k === 0 || g > goals[k - 1]),
+    'mốc tăng dần',
+  )
+})

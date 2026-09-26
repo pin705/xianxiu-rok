@@ -112,14 +112,14 @@ export const luck = (d: FestDef): d is Extract<FestDef, { kind: 'wheel' | 'dice'
   d.kind === 'wheel' || d.kind === 'dice' || d.kind === 'egg' || d.kind === 'dig' || d.kind === 'wish'
 const used = (d: FestDef): Metric[] => {
   if (d.kind === 'tasks' || d.kind === 'activity') return [...new Set(d.tasks.map(x => x.m))]
-  return d.kind === 'points' || d.kind === 'shop' || d.kind === 'cards' || luck(d)
+  return d.kind === 'points' || d.kind === 'shop' || d.kind === 'cards' || d.kind === 'offer' || luck(d)
     ? [...new Set(d.stages.flatMap(st => Object.keys(st) as Metric[]))]
     : []
 }
 const snap = (s: State, d: FestDef) => Object.fromEntries(used(d).map(m => [m, metric(s, m)])) as Fest['base']
 // Điểm giai đoạn đang chạy (chưa dồn vào bank)
 function stagePts(s: State, d: FestDef, f: Fest) {
-  if (d.kind !== 'points' && d.kind !== 'shop' && d.kind !== 'cards' && !luck(d)) return 0
+  if (d.kind !== 'points' && d.kind !== 'shop' && d.kind !== 'cards' && d.kind !== 'offer' && !luck(d)) return 0
   const w = d.stages[Math.min(f.stage, d.stages.length - 1)]
   return sum(
     (Object.keys(w) as Metric[]).map(m => Math.floor((w[m] ?? 0) * Math.max(0, metric(s, m) - (f.base[m] ?? 0)))),
@@ -253,6 +253,7 @@ export function festTokens(s: State, id: FestId) {
   // vòng quà: got — các ô trúng; bàn xúc xắc: các mặt đã đổ (số âm) lẫn rương mốc đã nhận; days — số lượt miễn phí đã dùng
   if (luck(d)) return festPoints(s, id) - d.cost * (spins(s, id) - (f?.days ?? 0))
   if (d.kind === 'cards') return festPoints(s, id) - d.cost * (f?.days ?? 0) // days: số lá đã lật tốn lệnh
+  if (d.kind === 'offer') return festPoints(s, id) - (f?.sp?.[0] ?? 0) // sp: [lệnh đã nộp, kinh nghiệm, hệ số lần nộp cuối]
   if (d.kind !== 'shop') return 0
   return festPoints(s, id) - sum((f?.got ?? []).map(i => d.shop[i]?.price ?? 0))
 }
@@ -333,6 +334,7 @@ export function festDone(s: State, id: FestId, i: number) {
   if (d.kind === 'dice' || d.kind === 'egg') return i < d.goals.length && spins(s, id) >= d.goals[i] // rương mốc theo số lượt
   if (d.kind === 'dig') return i < d.goals.length && digAt(s, id).layer >= d.goals[i] // rương mốc theo số tầng đã qua
   if (d.kind === 'thief') return i < d.goals.length && (f.sp?.[f.stage] ?? 0) >= d.goals[i] // rương ngày: sát thương hôm nay
+  if (d.kind === 'offer') return i < d.goals.length && (f.sp?.[1] ?? 0) >= d.goals[i] // cấp theo kinh nghiệm đã nộp
   return i < d.goals.length && festPoints(s, id) >= d.goals[i] // tích điểm, hoạt lực
 }
 // Đã nhận hết (kho đổi: đổi đủ max lần)

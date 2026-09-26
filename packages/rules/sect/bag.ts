@@ -21,7 +21,8 @@ export function useError(s: State, a: BagAction): Err | null {
     d.use === 'move' ||
     d.use === 'rename' ||
     d.use === 'frag' ||
-    d.use === 'swap'
+    d.use === 'swap' ||
+    d.use === 'packet'
   )
     return 'bad' // thiếp: Chiêu Hiền Đài · Luận Kiếm Lệnh: Luận Kiếm Đài · phù dời núi: bản đồ giới
   if (a.n > (s.items[a.item] ?? 0)) return 'no_item'

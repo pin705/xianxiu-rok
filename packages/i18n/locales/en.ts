@@ -1848,6 +1848,11 @@ export const en: Text = {
     open: 'Open',
   },
   chat: {
+    packet: '🧧 Red envelope',
+    packetSend: (n: number) => `🧧 Envelope (${n})`,
+    packetOpen: 'Open envelope',
+    packetGot: (n: string) => `You got ${n} spirit stone!`,
+    packetNone: 'This envelope is empty, expired, or you already opened it.',
     world: 'World',
     reply: 'Reply',
     replyTo: (name: string) => `Replying to ${name}`,
@@ -2908,6 +2913,15 @@ export const en: Text = {
     sure: (a: string, b: string) => `Swap all learned skill tiers of ${a} and ${b}? Talismans spent are not refunded.`,
     none: 'No elder of the same rarity and skill count to swap with yet.',
   },
+  offer: {
+    level: (n: number, max: number) => `Festival level ${n}/${max}`,
+    exp: (n: string, need: string) => `Experience ${n}/${need}`,
+    max: 'The festival is at its highest level',
+    give: (n: number) => `Release ${n}`,
+    all: (n: number) => `Release all (${n})`,
+    crit: (x: number) => `Critical ×${x}!`,
+    goal: (n: number) => `Level ${n}`,
+  },
   swap: {
     row: (from: string, to: string) => `${from} → ${to}`,
     have: (n: number) => `Own ${n}`,
@@ -3312,6 +3326,10 @@ export const en: Text = {
         name: 'Commander Swap',
         desc: 'Three days of skill transmission: event tasks give Transmission Talismans; open an elder in Disciples to swap learned skill tiers between two elders of the same rarity and skill count — no investment is ever wasted.',
       },
+      vanDang: {
+        name: 'Lantern Festival',
+        desc: 'Five festival days: hunting, winning battles, building, recruiting, gathering and speedups all earn Lanterns. Release them to raise the festival — sometimes a critical ×2 or ×5 — through 25 levels, each with a gift.',
+      },
       tamBao: {
         name: 'Treasure Hunt',
         desc: 'Five days of treasure hunting: winning beast hunts and gathering teams returning home may turn up treasure map fragments (by mail). Assemble 7 on the world map — a dig site appears near your sect, visible to all but only yours to dig.',
@@ -3380,6 +3398,7 @@ export const en: Text = {
     calendar: '7-day calendar',
     tokens: (n: string, name = 'Sect Tokens') => `${name}: ${n}`,
     tokenName: {
+      vanDang: 'Lanterns',
       thienCo: 'Fate Token',
       trungThu: 'Mooncakes',
       thatTich: 'Magpies',
@@ -3500,6 +3519,10 @@ export const en: Text = {
       truyenCong: {
         name: 'Transmission Talisman',
         desc: 'The fee for skill transmission during the Transmission Assembly: swap learned skill tiers between two elders of the same rarity (elder panel under Disciples).',
+      },
+      hongBao: {
+        name: 'Red Envelope',
+        desc: 'Send it in World or Alliance chat: the first 5 players to open it each get a random share of spirit stone — it costs the sender nothing else.',
       },
       diSon: {
         name: 'Mountain-Shift Talisman',

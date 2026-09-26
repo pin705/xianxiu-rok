@@ -1,4 +1,4 @@
-// npm start — chạy cả game để chơi thử trên máy: database (docker), server game (tự khởi động lại khi sửa code), client (Vite).
+// npm start — chạy cả game để chơi thử trên máy: database (docker, hoặc DATABASE_URL trong .env thì bỏ qua docker), server game (tự khởi động lại khi sửa code), client (Vite).
 // Mở http://localhost:5173 (client chuyển /api, /socket.io sang server ở cổng 8787). Ctrl+C tắt cả hai; database vẫn chạy nền
 // (tắt: docker compose -f apps/server/deploy/compose.dev.yml down).
 import { spawn, execFileSync, type ChildProcess } from 'node:child_process'
@@ -12,16 +12,19 @@ function log(name: keyof typeof color, text: string) {
     if (line.trim()) process.stdout.write(`\x1b[${color[name]}m[${name}]\x1b[0m ${line}\n`)
 }
 
-log('db', 'bật Postgres (docker compose, cổng 5439)…')
-try {
-  execFileSync('docker', ['compose', '-f', 'apps/server/deploy/compose.dev.yml', 'up', '-d', '--wait'], {
-    cwd: root,
-    stdio: 'pipe',
-  })
-  log('db', 'sẵn sàng')
-} catch (e) {
-  log('db', `không bật được database — Docker đã chạy chưa?\n${(e as { stderr?: Buffer }).stderr?.toString() ?? e}`)
-  process.exit(1)
+if (process.env.DATABASE_URL) log('db', 'dùng DATABASE_URL từ .env/môi trường — bỏ qua docker')
+else {
+  log('db', 'bật Postgres (docker compose, cổng 5439)…')
+  try {
+    execFileSync('docker', ['compose', '-f', 'apps/server/deploy/compose.dev.yml', 'up', '-d', '--wait'], {
+      cwd: root,
+      stdio: 'pipe',
+    })
+    log('db', 'sẵn sàng')
+  } catch (e) {
+    log('db', `không bật được database — Docker đã chạy chưa?\n${(e as { stderr?: Buffer }).stderr?.toString() ?? e}`)
+    process.exit(1)
+  }
 }
 
 const kids: ChildProcess[] = []

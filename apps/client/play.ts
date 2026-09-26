@@ -19,6 +19,7 @@ import postgres from 'postgres'
 const DIR = process.env.PLAY_DIR ?? join(tmpdir(), 'rok-play')
 const SRC = join(DIR, 'src')
 const CLIENT = join(SRC, 'apps/client')
+if (existsSync(join(import.meta.dirname, '../../.env'))) process.loadEnvFile(join(import.meta.dirname, '../../.env'))
 const ADMIN = process.env.DATABASE_URL ?? 'postgres://rok:rok@127.0.0.1:5439/rok'
 const CHROME =
   process.env.CHROME ??

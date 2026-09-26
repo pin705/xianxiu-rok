@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/main.ts",
-    "dev": "node --watch src/main.ts",
+    "dev": "node --env-file-if-exists=../../.env --watch src/main.ts",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

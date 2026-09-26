@@ -126,7 +126,7 @@
             <Button variant="ghost" onclick={() => use({ res: r })}><Icon name={r} size={18} />{L.res[r]}</Button>
           {/each}
         </div>
-      {:else if def.use !== 'key' && def.use !== 'ticket' && def.use !== 'frag' && def.use !== 'swap'}
+      {:else if def.use !== 'key' && def.use !== 'ticket' && def.use !== 'frag' && def.use !== 'swap' && def.use !== 'packet'}
         <!-- thiếp Chiêu Hiền Đài: mở ở Chiêu Hiền Đài (tab Môn hạ); tàn phiến Tàng Bảo Đồ: ghép ở bản đồ giới — mô tả đã nói -->
         <Button wide onclick={() => use()}>{n > 1 ? L.bag.useAll(n) : L.bag.use}</Button>
       {/if}

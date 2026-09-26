@@ -523,6 +523,7 @@ export type BagDef =
   | { use: 'veil'; hours: number } // Ẩn Tung Phù: tông môn bị do thám thì linh điểu không dò được gì (Anti-Scouting của RoK)
   | { use: 'frag' } // Tàng Bảo Đồ tàn phiến: không dùng thẳng — gom DIG_FRAGS mảnh ghép bản đồ ở bản đồ giới
   | { use: 'swap' } // Truyền Công Phù: không dùng thẳng — trả phí Truyền công ở bảng trưởng lão (trong Truyền Công Đại Hội)
+  | { use: 'packet' } // Hồng Bao: không dùng thẳng — gửi ở kênh chat Giới / Tiên minh (world/packet.ts)
 export const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
 const speeds = <P extends string>(prefix: P, job?: SpeedJob) =>
@@ -581,6 +582,7 @@ const bag = {
   anTung24: { use: 'veil', hours: 24 },
   baoDo: { use: 'frag' }, // Tàng Bảo Đồ tàn phiến
   truyenCong: { use: 'swap' }, // Truyền Công Phù
+  hongBao: { use: 'packet' }, // Hồng Bao (lì xì)
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -618,6 +620,7 @@ export const BAG_FAMILIES = [
   'anTung',
   'baoDo',
   'truyenCong',
+  'hongBao',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -1278,6 +1281,11 @@ export const RUIN_EVERY = 39 * 3_600_000
 export const RUIN_OPEN = 3_600_000
 export const ALTAR_EVERY = 84 * 3_600_000
 export const ALTAR_OPEN = 2 * 3_600_000
+// Hồng Bao (Lucky Red Packet của RoK, không tiền thật): gửi ở kênh Giới / Tiên minh, PACKET_SHARES người đầu mở được, mỗi người một phần
+// ngẫu nhiên của PACKET_TOTAL linh thạch (hệ thống trả — người gửi chỉ tốn Hồng Bao); quá PACKET_TTL thì phần còn lại tan
+export const PACKET_SHARES = 5
+export const PACKET_TOTAL = 20_000
+export const PACKET_TTL = 24 * 3_600_000
 // Kỳ tranh chấp linh mạch (Holy Sites của RoK): phe đang đóng quân giữ liên tục VEIN_HOLD thì thành phe kiểm soát (nhận tăng ích
 // linh mạch). Linh mạch đã có phe kiểm soát chỉ tranh được trong kỳ — mở VEIN_OPEN mỗi VEIN_EVERY, lệch giờ riêng từng điểm; ngoài kỳ
 // là bảo hộ, chỉ phe kiểm soát (và phe đang đóng quân) ra vào. Giữ đủ trong kỳ thì kiểm soát tới khi phe khác giữ đủ ở kỳ sau
@@ -2416,6 +2424,14 @@ export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
   // đổi phù (War and Peace): phù họ from sang họ to cùng mệnh giá (SPEED_MIN), mỗi mệnh giá tối đa max lá mỗi lượt
   | { kind: 'swap'; from: 'loBan'; to: 'luyenBinh'; max: number }
   | {
+      kind: 'offer' // nộp lên cấp (khuôn lễ hội của RoK): lệnh bài lễ từ việc trong lễ nộp vào, mỗi lệnh một kinh nghiệm × hệ số chí
+      // mạng (mầm server, theo trọng số crit); kinh nghiệm đủ goals[k] là lên cấp k + 1, mỗi cấp một quà
+      stages: Partial<Record<Metric, number>>[]
+      crit: { w: number; x: number }[]
+      goals: number[]
+      rewards: Reward[]
+    }
+  | {
       kind: 'dig' // khảo cổ theo tầng (Hunt for History): mỗi tầng chọn giải tối thượng, đào từng ô, trúng giải thì sang tầng sau
       stages: Partial<Record<Metric, number>>[]
       cost: number // lệnh mỗi nhát đào thêm (mỗi ngày một nhát miễn phí)
@@ -2749,6 +2765,31 @@ const fests = {
     from: 'loBan',
     to: 'luyenBinh',
     max: 200,
+  },
+  vanDang: {
+    // Vạn Đăng Hội (khuôn lễ hội "nộp lên cấp 25" của RoK): 5 ngày mỗi 28 ngày — việc trong lễ cho Hoa Đăng, nộp vào hội đèn lên cấp
+    // (chí mạng ×2 / ×5), 25 cấp mỗi cấp một quà, cấp 5, 10… quà lớn
+    window: { kind: 'cycle', every: 28, len: 5, offset: 23 },
+    hall: 6,
+    kind: 'offer',
+    stages: [{ hunt: 1, win: 1, build: 3, train: 0.01, gather: 0.0003, speed: 0.05 }],
+    crit: [
+      { w: 80, x: 1 },
+      { w: 15, x: 2 },
+      { w: 5, x: 5 },
+    ],
+    goals: Array.from({ length: 25 }, (_, k) => Math.round(8 * (k + 1) + 1.28 * (k + 1) ** 2)),
+    rewards: Array.from({ length: 25 }, (_, k): Reward => {
+      const lv = k + 1
+      if (lv % 5 === 0)
+        return { items: { kimDuyen: lv / 5, thoiQuang180: lv / 5, tuyTam20k: 1, ...(lv % 10 === 0 && { hongBao: 2 }) } }
+      return {
+        items: {
+          ...(lv % 2 ? { thoiQuang60: 1 + Math.floor(lv / 6) } : { tuyTam5k: 1 + Math.floor(lv / 8) }),
+          ...(lv > 10 && { kinhThu2k: 1 }),
+        },
+      }
+    }),
   },
   truyenCong: {
     // Truyền Công Đại Hội (Commander Swap): 3 ngày mỗi 28 ngày, Chủ điện ≥ 10 — việc trong lễ cho Truyền Công Phù; trong lễ, bảng

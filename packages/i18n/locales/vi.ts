@@ -1848,6 +1848,11 @@ export const vi = {
     open: 'Mở',
   },
   chat: {
+    packet: '🧧 Lì xì',
+    packetSend: (n: number) => `🧧 Lì xì (${n})`,
+    packetOpen: 'Mở lì xì',
+    packetGot: (n: string) => `Mở được ${n} linh thạch!`,
+    packetNone: 'Bao này đã mở hết, hết hạn, hoặc bạn đã mở rồi.',
     world: 'Giới',
     reply: 'Trả lời',
     replyTo: (name: string) => `Trả lời ${name}`,
@@ -2924,6 +2929,15 @@ export const vi = {
     sure: (a: string, b: string) => `Đổi toàn bộ tầng công pháp của ${a} và ${b}? Phù đã tiêu không hoàn lại.`,
     none: 'Chưa có trưởng lão cùng phẩm, cùng số tâm pháp để truyền công.',
   },
+  offer: {
+    level: (n: number, max: number) => `Hội đèn cấp ${n}/${max}`,
+    exp: (n: string, need: string) => `Kinh nghiệm ${n}/${need}`,
+    max: 'Hội đèn đã tới cấp cao nhất',
+    give: (n: number) => `Thả ${n} đèn`,
+    all: (n: number) => `Thả hết (${n})`,
+    crit: (x: number) => `Chí mạng ×${x}!`,
+    goal: (n: number) => `Cấp ${n}`,
+  },
   swap: {
     row: (from: string, to: string) => `${from} → ${to}`,
     have: (n: number) => `Có ${n}`,
@@ -3328,6 +3342,10 @@ export const vi = {
         name: 'Truyền Công Đại Hội',
         desc: 'Ba ngày truyền công: làm việc trong lễ nhận Truyền Công Phù; mở bảng trưởng lão ở Môn hạ để đổi tầng công pháp đã ngộ giữa hai trưởng lão cùng phẩm, cùng số tâm pháp — nuôi nhầm người cũng không phí công.',
       },
+      vanDang: {
+        name: 'Vạn Đăng Hội',
+        desc: 'Năm ngày hội đèn: săn yêu, thắng trận, xây, tuyển, khai mỏ, tăng tốc đều cho Hoa Đăng. Thả đèn lên hội — có lúc chí mạng gấp đôi, gấp năm — hội đèn lên cấp, 25 cấp mỗi cấp một quà.',
+      },
       tamBao: {
         name: 'Tầm Bảo Kỳ Ngộ',
         desc: 'Năm ngày săn kho báu: săn yêu thú thắng hay đội khai mỏ trở về có thể nhặt Tàng Bảo Đồ tàn phiến (qua thư). Đủ 7 mảnh thì ghép ở bản đồ giới — điểm đào hiện gần tông môn, ai cũng thấy nhưng chỉ bạn đào được.',
@@ -3396,6 +3414,7 @@ export const vi = {
     calendar: 'Lịch 7 ngày',
     tokens: (n: string, name = 'Tông Môn Lệnh') => `${name}: ${n}`,
     tokenName: {
+      vanDang: 'Hoa Đăng',
       thienCo: 'Thiên Cơ Lệnh',
       thatTich: 'Hỷ Thước',
       conLon: 'Côn Lôn Lệnh',
@@ -3518,6 +3537,10 @@ export const vi = {
       truyenCong: {
         name: 'Truyền Công Phù',
         desc: 'Phí truyền công trong Truyền Công Đại Hội: đổi tầng công pháp đã ngộ giữa hai trưởng lão cùng phẩm (bảng trưởng lão ở Môn hạ).',
+      },
+      hongBao: {
+        name: 'Hồng Bao',
+        desc: 'Lì xì gửi ở kênh chat Giới hay Tiên minh: 5 người đầu mở được, mỗi người một phần linh thạch ngẫu nhiên — người gửi không mất tài nguyên.',
       },
       diSon: {
         name: 'Di Sơn Phù',
