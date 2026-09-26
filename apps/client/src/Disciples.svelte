@@ -47,7 +47,7 @@
   import ElderStory from './ElderStory.svelte'
   import ElderSwap from './ElderSwap.svelte'
   import ElderRelic from './ElderRelic.svelte'
-  import { Button, Card, Medal, Meter, Page, Section, Sheet, Tabs, Tag } from './ui'
+  import { Beads, Button, Card, Medal, Meter, Page, Scroll, Section, Sheet, Tabs, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num, unitName, type PanelTab } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
@@ -111,13 +111,6 @@
   )
 </script>
 
-<!-- tầng đã ngộ của một môn: SKILL_MAX chấm, chấm sáng tới tầng hiện tại -->
-{#snippet pips(n: number)}
-  <span class="pips" aria-hidden="true">
-    {#each Array.from({ length: SKILL_MAX }, (_, k) => k) as k (k)}<i class:on={k < n}></i>{/each}
-  </span>
-{/snippet}
-
 <Page title={L.monHa.title} icon="monHa">
   {#if game.levels.chuDien >= TAVERN_HALL}
     <Section title={L.tavern.title}>
@@ -133,31 +126,30 @@
         >{/each}
     </div>
     <!-- sảnh treo tranh: mỗi trưởng lão một bức tranh treo (trục trên dưới), dấu trạng thái đóng góc -->
-    <ul class="hall">
+    <ul class="grid" style:--cols="3" style:--gap="16px 10px">
       {#each roster as e (e)}
         {@const has = game.elders[e] !== undefined}
         {@const m = marchOf(e)}
-        <li>
-          <button
-            class="scroll rar{RARITY[e]}"
-            class:off={!has}
-            disabled={!has}
+        <li class="stack" style:--gap="6px">
+          <Scroll
+            rar={RARITY[e]}
+            off={!has}
             onclick={() => (open = e)}
             title={has ? undefined : L.unlockHint[e]}
-            aria-label={has ? L.elders[e].name : L.unlockHint[e]}
+            label={has ? L.elders[e].name : L.unlockHint[e]}
+            name={has ? L.elders[e].name : '???'}
+            meter={has ? expPart(e) : undefined}
+            stamp={has ? (m ? clock(m.returnAt - now) : L.monHa.home) : undefined}
+            stampTone={m ? 'bad' : 'good'}
           >
             <Portrait look={LOOK[e]} size={66} dim={!has} />
-            <b class="nm">{has ? L.elders[e].name : '???'}</b>
-            {#if has}
-              <small class="lvl t-num">{L.lv(elderLevel(game.elders[e]))} {'★'.repeat(starOf(game, e))}</small>
-              <span class="bar"><Meter value={expPart(e)} tone="gold" size="xs" /></span>
-              <span class="stamp" class:out={!!m}>{m ? clock(m.returnAt - now) : L.monHa.home}</span>
-            {:else}
-              <small class="lvl"
-                ><Icon name="lock" size={11} />{#if game.tokens[e]}{game.tokens[e]}/{TOKEN_SUMMON}{/if}</small
-              >
-            {/if}
-          </button>
+            {#snippet sub()}
+              {#if has}{L.lv(elderLevel(game.elders[e]))} {'★'.repeat(starOf(game, e))}{:else}<Icon
+                  name="lock"
+                  size={11}
+                />{#if game.tokens[e]}{game.tokens[e]}/{TOKEN_SUMMON}{/if}{/if}
+            {/snippet}
+          </Scroll>
           {#if !has && (game.tokens[e] ?? 0) >= TOKEN_SUMMON}
             <Button variant="gold" size="sm" wide onclick={() => act({ type: 'recruit', elder: e }, 'reward')}
               >{L.tavern.recruit}</Button
@@ -170,7 +162,7 @@
 
   <Section title="{L.monHa.disciples} · {num(count(game.troops) + count(out))}">
     <Card>
-      <div class="table" style:--n={tiers.length}>
+      <div class="matrix" style:--n={tiers.length}>
         <span></span>
         {#each tiers as t (t)}<span class="th t-tiny t-soft">{L.tiers[t]}</span>{/each}
         {#each TYPES as type (type)}
@@ -181,8 +173,8 @@
           >
           {#each tiers as t (t)}
             {@const u = `${type}${t}` as UnitId}
-            <span class="cell" class:zero={!game.troops[u] && !out[u]}>
-              <b class="t-num">{num(game.troops[u])}</b>
+            <span class="well">
+              <b class="t-num" class:t-faint={!game.troops[u] && !out[u]}>{num(game.troops[u])}</b>
               {#if out[u]}<small class="t-tiny t-bad row" style:--gap="2px"
                   ><Icon name="flag" size={10} />{num(out[u])}</small
                 >{/if}
@@ -272,14 +264,14 @@
             ><b>{L.elders[e].skill}</b><small class="t-small t-soft">{L.skillText(d.skill)}</small><small
               class="t-tiny t-gold">{L.monHa.tier(L.monHa.tiers[sk[0] - 1], sk[0], SKILL_MAX)}</small
             ></span
-          >{@render pips(sk[0])}</span
+          ><Beads look="pips" n={SKILL_MAX} on={sk[0]} /></span
         >
       </Card>
     </Section>
     <Section title={L.monHa.passive}>
       {#each d.passives as p, i (i)}
         <Card>
-          <span class="row" class:off={lv < p.at}>
+          <span class="row" class:dim={lv < p.at}>
             <Icon name={lv < p.at ? 'lock' : 'check'} size={18} />
             <span class="stack grow" style:--gap="1px"
               ><b class="t-small">{L.elders[e].passives[i]} · {L.monHa.passiveAt(p.at)}</b><small class="t-small t-soft"
@@ -287,7 +279,7 @@
               ><small class="t-tiny t-gold">{L.monHa.tier(L.monHa.tiers[sk[i + 1] - 1], sk[i + 1], SKILL_MAX)}</small
               ></span
             >
-            {@render pips(sk[i + 1])}
+            <Beads look="pips" n={SKILL_MAX} on={sk[i + 1]} />
           </span>
         </Card>
       {/each}
@@ -387,17 +379,17 @@
       />
       {#each [0, 1, 2, 3] as tier (tier)}
         {@const open = talentSpent(game, e, tree) >= TALENT_TIER[tier]}
-        <div class="tier" class:shut={!open}>
+        <div class="stack mt-1" style:--gap="4px" class:dim={!open}>
           {#if !open}<small class="t-tiny t-soft"
               ><Icon name="lock" size={12} /> {L.talent.need(TALENT_TIER[tier])}</small
             >{/if}
-          <div class="row wrap" style:--gap="6px">
+          <div class="stack" style:--gap="6px">
             {#each TALENT_TREES[tree] as d, k (k)}
               {#if d.tier === tier}
                 {@const i = tree * TALENT_TREE_SIZE + k}
                 {@const n = tal[i] ?? 0}
                 <Card tone={d.tier === 3 ? 'glow' : undefined}>
-                  <div class="row node">
+                  <div class="row" style:--gap="6px">
                     <span class="grow stack" style:--gap="1px"
                       ><b class="t-small">{L.talent.nodes[tree][k]} · {n}/{d.max}</b><small class="t-tiny t-soft"
                         >{L.bonus(d.key.replace('.own', `.${ELDERS[e].type}`) as Bonus, d.v * Math.max(1, n))}</small
@@ -435,172 +427,3 @@
     {/if}
   {/if}
 </Sheet>
-
-<style>
-  .tier {
-    display: grid;
-    gap: 4px;
-    margin-top: 6px;
-  }
-  .tier.shut {
-    opacity: 0.55;
-  }
-  .tier :global(.card) {
-    flex: 1 1 100%;
-  }
-  .node {
-    gap: 6px;
-  }
-  .pips {
-    display: inline-flex;
-    gap: 3px;
-    flex: none;
-  }
-  .pips i {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 1.5px solid var(--gold);
-  }
-  .pips i.on {
-    background: var(--gold);
-  }
-  /* phẩm trưởng lão: lam · tím · vàng */
-  .rar2 {
-    color: var(--azurite);
-  }
-  .rar3 {
-    color: #7a47a6;
-  }
-  .rar4 {
-    color: var(--gold-d, #9a6b16);
-  }
-  .table {
-    display: grid;
-    grid-template-columns: 1.7fr repeat(var(--n), 1fr);
-    gap: var(--sp-2) 6px;
-    align-items: center;
-  }
-  .th {
-    text-align: center;
-    font-weight: 700;
-  }
-  /* ô số: nền giấy nhạt, gạch chân mực vẽ tay */
-  .cell {
-    display: grid;
-    justify-items: center;
-    padding: 5px 0 8px;
-    border: 0 solid transparent;
-    border-image: var(--sk-field);
-  }
-  .zero b {
-    color: var(--text-faint);
-  }
-  .off {
-    opacity: 0.55;
-  }
-
-  /* ---------- Sảnh treo tranh ---------- */
-  .hall {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px 10px;
-    padding: 0;
-    list-style: none;
-  }
-  .hall li {
-    display: grid;
-    gap: 6px;
-  }
-  .scroll {
-    position: relative;
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-    width: 100%;
-    padding: 14px 6px 16px;
-    color: var(--text);
-    background: linear-gradient(#ffffff, #f1f2ee);
-    border: 1px solid var(--paper3);
-    box-shadow: 0 4px 8px rgb(var(--shade) / 0.14);
-    cursor: pointer;
-    transition: transform var(--dur-1) var(--ease);
-  }
-  .scroll:active {
-    transform: scale(0.97);
-  }
-  /* trục gỗ trên dưới, hai đầu núm */
-  .scroll::before,
-  .scroll::after {
-    content: '';
-    position: absolute;
-    left: -5px;
-    right: -5px;
-    height: 7px;
-    background: linear-gradient(#6b4a2e, #3e2a18);
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
-  }
-  .scroll::before {
-    top: -4px;
-  }
-  .scroll::after {
-    bottom: -4px;
-  }
-  .nm {
-    max-width: 100%;
-    margin-top: 4px;
-    padding: 1px 8px 2px;
-    overflow: hidden;
-    font-size: var(--fs-2);
-    font-weight: 800;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    background: var(--paper2);
-    border-radius: 999px;
-  }
-  .lvl {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: var(--fs-1);
-    font-weight: 700;
-    color: var(--gold-d);
-  }
-  .bar {
-    width: 70%;
-  }
-  /* dấu trạng thái: triện son (xuất chinh: giờ về) / lục (ở tông môn) */
-  .stamp {
-    position: absolute;
-    top: 8px;
-    right: 4px;
-    padding: 1px 5px;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--malachite);
-    border: 1.5px solid currentColor;
-    border-radius: 4px;
-    rotate: 8deg;
-    background: rgb(255 255 255 / 0.7);
-  }
-  .stamp.out {
-    color: var(--cinnabar);
-  }
-  .scroll.off {
-    background: linear-gradient(#eceee9, #e2e5df);
-    cursor: default;
-  }
-  .scroll.off .nm {
-    color: var(--text-faint);
-  }
-  .scroll.rar3 {
-    border-color: #b89ad6;
-  }
-  .scroll.rar4 {
-    border-color: #d8b560;
-    box-shadow:
-      0 4px 8px rgb(var(--shade) / 0.14),
-      0 0 10px rgb(236 208 138 / 0.5);
-  }
-</style>

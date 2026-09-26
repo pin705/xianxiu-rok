@@ -203,6 +203,8 @@ export type World = {
   rule?: number // Thiên Mệnh Chọn Luật: luật của mùa này (RULES), phiếu chọn luật mùa sau (người → luật)
   votes?: Record<number, number>
   bets?: { pid: number; k: 'semi' | 'final' | 'third'; on: number; n: number; lost?: true }[] // Luận Kiếm Đặt Cược (world/bets.ts)
+  heroes?: { picks: number[][]; votes: Record<number, number>[] } // Lưu Danh Sử Sách (world/heroes.ts): ứng viên, phiếu theo hạng mục
+  paper?: Paper // Giới Báo (world/paper.ts)
   nextRally: number
   pts: Record<number, number>
   orders: Record<number, Order>
@@ -297,6 +299,15 @@ export type Ark = {
   // vòng playoff: bốn minh hạt giống (theo bảng giải), minh thắng / thua bán kết, [thắng, thua] của chung kết và tranh hạng ba
   cup?: { seeds: number[]; win: number[]; lose: number[]; final?: number[]; third?: number[] }
 }
+// Giới Báo: ngày của mốc chỉ số (base: người → chỉ số PAPER_KINDS lúc 0h), các số báo (mới trước), ai đã nhận quà đọc số hôm nay.
+// Mỗi số: ngày, bài dẫn đầu từng mục [mục, người, tên, phần tăng], tổng cả giới từng mục, người đã thích từng bài
+export type Issue = {
+  day: number
+  top: [k: number, pid: number, name: string, n: number][]
+  sum: number[]
+  likes: number[][]
+}
+export type Paper = { day: number; base: Record<number, number[]>; issues: Issue[]; read: number[] }
 // Một tước: ai giữ, phong lúc nào, tới lúc nào
 export type Title = { pid: number; at: number; until: number }
 export const freshWorld = (): World => ({
@@ -324,27 +335,6 @@ export function napBetween(w: World, a: number, b: number) {
   return !!x && !!y && x.id !== y.id && !!x.naps?.includes(y.id)
 }
 export const put = (w: World, al: Alliance): World => ({ ...w, allies: { ...w.allies, [al.id]: al } })
-// Người trong các minh vừa đổi (bản ghi minh, hay kết trận của minh mở / giải) — server báo họ hỏi lại
-export function allyTouched(prev: World, next: World): number[] {
-  const rallies = (w: World, aid: number) =>
-    Object.values(w.rallies)
-      .filter(r => r.ally === aid || w.allies[aid]?.naps?.includes(r.ally)) // kết trận minh ước cũng báo
-      .map(r => r.id)
-      .join()
-  const out = new Set<number>()
-  for (const al of [...Object.values(prev.allies), ...Object.values(next.allies)])
-    if (
-      prev.allies[al.id] !== next.allies[al.id] ||
-      (prev.rallies !== next.rallies && rallies(prev, al.id) !== rallies(next, al.id))
-    )
-      for (const pid of Object.keys(al.members)) out.add(Number(pid))
-  // Tranh Đoạt Linh Châu: ghi danh / hiệp mới / kết quả → người của các minh dự trận
-  if (prev.ark !== next.ark)
-    for (const x of [prev.ark, next.ark])
-      for (const id of [...(x?.signed ?? []), ...(x?.live ?? []).flatMap(f => [f.a, f.b])])
-        for (const pid of Object.keys(next.allies[id]?.members ?? {})) out.add(Number(pid))
-  return [...out]
-}
 export const allyOf = (w: World, pid: number) => Object.values(w.allies).find(a => a.members[pid] !== undefined)
 // Lễ nhập minh: lần đầu vào (hay lập) một tiên minh thì nhận quà qua thư, một lần mỗi tông môn
 export const welcome = (s: State, name: string, t: number): State =>

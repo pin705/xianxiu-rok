@@ -44,7 +44,7 @@
       {@render children?.()}
     </span>
     {#if state === 'held'}
-      <span class="stamp"><img src={tick} width="48" height="48" alt="" draggable="false" /></span>
+      <span class="tick"><img src={tick} width="48" height="48" alt="" draggable="false" /></span>
     {:else if state === 'done'}
       <span class="claim"
         >{#if ink}<Seal size={60}>{claim}</Seal>{:else}<Tag tone="gold" icon="star">{claim}</Tag>{/if}</span
@@ -89,7 +89,7 @@
     pointer-events: none;
     animation: glow 1.4s var(--ease) infinite;
   }
-  .stamp {
+  .tick {
     display: grid;
     padding-inline: var(--sp-2);
     animation: stamp 0.4s cubic-bezier(0.5, 0, 0.75, 0) both;

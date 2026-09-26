@@ -866,7 +866,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C1 | Action Points | ✅ hành lực săn yêu thú giới | P1 | S |
 | C2 | Barbarians (man tộc trên bản đồ chung) | ✅ yêu thú giới (6 con mỗi vùng ngoài / giữa, cấp 1–15), tốn hành lực; chưa rơi vật phẩm | **P0** | M |
 | C3 | Continuous attack / chain farming | ✅ săn liên hoàn yêu thú giới (25/09) | P2 | S / M |
-| C4 | Barbarian Buster, Clarion Call | 🟡 nhiệm vụ "hạ yêu thú cấp n"; Săn Yêu Lệnh, Trảm Yêu Lệnh, Liên Trảm Bất Hồi, Tông Môn Tranh Bá; chưa xếp hạng săn yêu | P2 | S |
+| C4 | Barbarian Buster, Clarion Call | ✅ nhiệm vụ "hạ yêu thú cấp n"; Săn Yêu Lệnh, Trảm Yêu Lệnh (chấm theo cấp, bảng xếp hạng tông môn + tiên minh), Liên Trảm Bất Hồi, Tông Môn Tranh Bá | P2 | S |
 | C5 | Barbarian Forts (cấp 1–6, kết trận) | ✅ yêu trại / yêu vương 3 cấp (vòng ngoài 12.000 hồi 8 giờ · giữa · tâm), kết trận, chia thưởng theo sát thương; chưa có cấp 4–6 | P1 | S–M |
 | C6 | Marauders & Encampments | ✅ Khai Giới Trảm Tà (`world/eve.ts`); chưa có trại lưu khấu | P2 | M |
 | C7 | Barbarian Camps & Keeps (KvK) | ❌ (ngoài phạm vi) | P2 | M |

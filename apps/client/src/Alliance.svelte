@@ -6,6 +6,8 @@
     ALLY_COST,
     ALLY_GIFT_LV,
     ALLY_HALL,
+    ALLY_MAX,
+    CHAT_HALL,
     ALLY_IDLE,
     ALLY_MAIL_COOL,
     ALLY_MAIL_LEN,
@@ -42,6 +44,7 @@
     type WorldAction,
   } from '@rok/rules/world'
   import type { Ack } from '@rok/protocol'
+  import type { Net } from './net'
   import { untrack, type Snippet } from 'svelte'
   import { Icon, artOf } from '@rok/art'
   import {
@@ -87,6 +90,7 @@
     onmap,
     onraid,
     list,
+    say,
     start = 'home',
   }: {
     me: number | null
@@ -97,6 +101,7 @@
     onmap?: (x: number, y: number) => void // tới dấu của minh trên bản đồ giới
     onraid?: (pid: number) => void // góp đội vào kết trận công sơn (mở bảng Tranh đoạt ở tông môn đó)
     list?: () => Promise<AllyRow[] | null> // các minh trong giới (minh ước)
+    say?: Net['say'] // chiêu mộ: đăng lời mời vào minh ở kênh Giới
     start?: ATab // thẻ mở đầu (test vẽ từng thẻ)
   } = $props()
   const g = useGame()
@@ -185,6 +190,17 @@
     const t = ms >= 3_600_000 ? L.ago(ms) : clock(ms) // còn lâu: "5 ngày 16 giờ"; sắp tới: đồng hồ
     return lg.done ? L.legion.next(lg.done + 1, t) : L.legion.at(t)
   })
+  // Chiêu mộ (bảng tuyển của RoK): trưởng lão / minh chủ đăng lời mời ở kênh Giới kèm mã "#a<mã minh>" — người chưa có minh
+  // chạm "Vào minh" ngay trong chat (Chat.svelte)
+  let posted = $state<string | null>(null)
+  async function recruit() {
+    if (!say || !ally) return
+    const r = await say(
+      'world',
+      `${L.ally.recruitText(ally.tag, ally.name, ally.people.length, ALLY_MAX)} #a${ally.id}`,
+    )
+    posted = r.ok ? L.ally.recruited : L.chat.err[r.err]
+  }
   const go = async (a: WorldAction, sound: 'reward' | 'tap' = 'tap') => {
     const ok = (await send(a)).ok
     if (ok) sfx(sound)
@@ -340,7 +356,11 @@
             variant={ally.closed ? 'gold' : 'ghost'}
             onclick={() => go({ type: 'allyOpen', open: false })}>{L.ally.closed}</Button
           >
+          {#if say && game.levels.chuDien >= CHAT_HALL}<Button size="sm" variant="ghost" icon="people" onclick={recruit}
+              >{L.ally.recruit}</Button
+            >{/if}
         </div>
+        {#if posted}<small class="t-tiny t-soft">{posted}</small>{/if}
         {#each ally.applicants as x (x.pid)}
           <div class="row" style:--gap="6px">
             <span class="grow stack" style:--gap="0"

@@ -1,14 +1,22 @@
 <script lang="ts">
   // Cuộn tranh treo: giấy trắng giữa hai trục gỗ. rar: phẩm (2 lam · 3 tím · 4 vàng — viền theo phẩm); off: chưa có (xám);
   // onclick: cả cuộn bấm được. Dùng cho trưởng lão, thẻ nhân vật, tranh trưng bày.
+  // Thẻ nhân vật (tuỳ chọn, dưới tranh là phần con): name viên giấy tên, sub dòng vàng (cấp · sao, ổ khoá), meter thanh
+  // kinh nghiệm 0..1, stamp dấu trạng thái đóng góc (stampTone good: lục · bad: son).
   import type { Snippet } from 'svelte'
   import { sfx } from '../lib'
+  import Meter from './Meter.svelte'
 
   let {
     rar = 0,
     off = false,
     label,
     title,
+    name,
+    sub,
+    meter,
+    stamp,
+    stampTone = 'good',
     onclick,
     children,
   }: {
@@ -16,10 +24,22 @@
     off?: boolean
     label?: string
     title?: string
+    name?: string
+    sub?: Snippet
+    meter?: number
+    stamp?: string
+    stampTone?: 'good' | 'bad'
     onclick?: (e: MouseEvent) => void
     children: Snippet
   } = $props()
 </script>
+
+{#snippet card()}
+  {#if name !== undefined}<b class="nm">{name}</b>{/if}
+  {#if sub}<small class="lvl t-num">{@render sub()}</small>{/if}
+  {#if meter !== undefined}<span class="bar"><Meter value={meter} tone="gold" size="xs" /></span>{/if}
+  {#if stamp}<span class="mark {stampTone}">{stamp}</span>{/if}
+{/snippet}
 
 {#if onclick}
   <button
@@ -32,10 +52,10 @@
     onclick={e => {
       sfx('tap')
       onclick(e)
-    }}>{@render children()}</button
+    }}>{@render children()}{@render card()}</button
   >
 {:else}
-  <div class="scroll rar{rar}" class:off {title}>{@render children()}</div>
+  <div class="scroll rar{rar}" class:off {title}>{@render children()}{@render card()}</div>
 {/if}
 
 <style>
@@ -47,7 +67,7 @@
     width: 100%;
     padding: 14px 6px 16px;
     color: var(--text);
-    background: linear-gradient(#fff, var(--paper2));
+    background: linear-gradient(#fff, color-mix(in srgb, var(--paper2) 60%, #fff));
     border: 1px solid var(--paper3);
     box-shadow: 0 4px 8px rgb(var(--shade) / 0.14);
     transition: transform var(--dur-1) var(--ease);
@@ -85,7 +105,54 @@
       0 0 10px rgb(var(--gold-glow) / 0.5);
   }
   .off {
-    background: linear-gradient(var(--paper2), var(--paper3));
+    /* xám rất nhạt: tranh chưa có vẫn đọc được là giấy */
+    background: linear-gradient(
+      color-mix(in srgb, var(--paper2) 75%, #fff),
+      color-mix(in srgb, var(--paper2) 88%, var(--paper3))
+    );
     cursor: default;
+  }
+  .nm {
+    max-width: 100%;
+    margin-top: 4px;
+    padding: 1px 8px 2px;
+    overflow: hidden;
+    font-size: var(--fs-2);
+    font-weight: 800;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    background: var(--paper2);
+    border-radius: 999px;
+  }
+  .off .nm {
+    color: var(--text-faint);
+  }
+  .lvl {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: var(--fs-1);
+    font-weight: 700;
+    color: var(--gold-d);
+  }
+  .bar {
+    width: 70%;
+  }
+  /* dấu trạng thái: triện lục (ở nhà) / son (đang đi) đóng nghiêng góc trên */
+  .mark {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--malachite);
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    rotate: 8deg;
+    background: rgb(255 255 255 / 0.7);
+  }
+  .mark.bad {
+    color: var(--cinnabar);
   }
 </style>

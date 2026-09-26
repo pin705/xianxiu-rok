@@ -11,12 +11,12 @@
   import type { Net } from './net'
   import { Icon, Portrait } from '@rok/art'
   import { Button, Capsule, FloatBar, Sheet, Speech, Tabs } from './ui'
-  import { L, LOOK, clock, coords, num } from './lib'
+  import { L, LOOK, coords, num } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
 
   type Api = Pick<Net, 'ask' | 'say' | 'report' | 'onChat' | 'unsay'>
-  type Tab = 'world' | 'ally' | 'dm'
+  type Tab = 'world' | 'ally' | 'camp' | 'dm' // camp: kênh phái (Chính / Tà phái của mình)
   let {
     me,
     ally = false,
@@ -42,7 +42,7 @@
   const game = $derived(g.game)
   const act = g.act
 
-  const tabs = $derived<Tab[]>(ally ? ['world', 'ally', 'dm'] : ['world', 'dm'])
+  const tabs = $derived<Tab[]>(ally ? ['world', 'ally', 'camp', 'dm'] : ['world', 'camp', 'dm'])
   let tab = $state<Tab>('world')
   let peer = $state<{ ch: Channel; name: string } | null>(null) // cuộc truyền âm / nhóm đang xem
   const ch = $derived<Channel | null>(tab !== 'dm' ? tab : (peer?.ch ?? null))
@@ -70,7 +70,7 @@
   const viewing = (c: string) => (open || inline) && tab === 'dm' && peer?.ch === c
   $effect(() => {
     if (!api) return
-    for (const c of ally ? (['world', 'ally'] as const) : (['world'] as const))
+    for (const c of ally ? (['world', 'ally', 'camp'] as const) : (['world', 'camp'] as const))
       void api.ask({ k: 'chat', ch: c }).then(list => list && put(c, list))
     void api.ask({ k: 'dms' }).then(list => list && (dms = list))
     void loadGroups()
@@ -145,7 +145,7 @@
     const id = Number(/^#q(\d{1,9}) /.exec(t)?.[1])
     return id ? (logs[ch ?? ''] ?? []).find(m => m.id === id) : undefined
   }
-  const ago = (at: number) => clock(Math.max(0, game.time - at)).replace(/:\d\d$/, '')
+  const ago = (at: number) => L.chat.ago(Math.max(0, g.now - at)) // "vừa xong", "5 phút", "2 giờ", "3 ngày"
   // thẻ trưởng lão chia sẻ trong tin: "#tl:<trưởng lão>:<cấp>:<sao>" — chat vẽ thẻ; mã (cả mã chiến báo) bỏ khỏi chữ
   const TL = /#tl:(\w+):(\d{1,3}):([1-6])/g
   const cards = (t: string) =>
@@ -157,6 +157,7 @@
       ? t
           .replace(TL, '')
           .replace(/#r\d{1,9}\b/g, '')
+          .replace(/#a\d{1,9}\b/g, '')
           .replace(/(^|\s)#hb(?=\s|$)/g, `$1${L.chat.packet}`)
           .replace(/^#q\d{1,9} /, '')
           .trim() // mã chiến báo có nút Xem trận riêng, mã trả lời vẽ thành trích dẫn
@@ -175,6 +176,12 @@
     const r = await act2({ type: 'packetSend', ally: ch === 'ally' })
     if (r.ok) await api.say(ch, '#hb')
     else toast(L.chat.err.bad)
+  }
+  // chiêu mộ: tin "#a<mã minh>" (đăng từ trang Tiên minh) — người chưa vào minh chạm "Vào minh" (minh đóng thì thành đơn xin vào)
+  const recruits = (t: string) => [...t.matchAll(/#a(\d{1,9})\b/g)].map(m => Number(m[1]))
+  async function join(id: number) {
+    if (!act2) return
+    toast((await act2({ type: 'allyJoin', id })).ok ? L.chat.joinSent : L.chat.err.bad)
   }
   // chiến báo chia sẻ trong tin: "#r<id>" (của chính người gửi)
   const shared = (t: string) => [...t.matchAll(/#r(\d{1,9})\b/g)].map(m => Number(m[1]))
@@ -267,7 +274,9 @@
           >{/if}
       </div>
     {/if}
-    {#if tab === 'world' && game.levels.chuDien < 3}<p class="t-small t-soft mt-2">{L.chat.locked}</p>{/if}
+    {#if (tab === 'world' || tab === 'camp') && game.levels.chuDien < 3}<p class="t-small t-soft mt-2">
+        {tab === 'camp' ? L.chat.campLocked : L.chat.locked}
+      </p>{/if}
     <!-- tin là bong bóng lời nói: người khác bên trái, mình bên phải tô son nhạt -->
     <ol class="scroll-box stack" style:--gap="6px" style:--max-h={inline ? '320px' : undefined}>
       {#each shown as m (m.id)}
@@ -305,6 +314,11 @@
             {/each}
             {#if act2 && !mine && hb(m.text)}
               <Capsule rar={4} icon="star" onclick={() => grab(m.pid)}>{L.chat.packetOpen}</Capsule>
+            {/if}
+            {#if act2 && !mine && !ally}
+              {#each recruits(m.text) as id (id)}
+                <Capsule rar={3} icon="people" onclick={() => join(id)}>{L.chat.joinAlly}</Capsule>
+              {/each}
             {/if}
             {#if onreplay}
               {#each shared(m.text) as id (id)}

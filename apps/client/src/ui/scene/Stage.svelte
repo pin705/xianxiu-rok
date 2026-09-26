@@ -25,7 +25,7 @@
   } = $props()
 </script>
 
-<div class="scroller" class:off={hidden} bind:this={scroller}>
+<div class="stage" class:off={hidden} bind:this={scroller}>
   <div class="space" bind:this={space} style:width="{width}px" style:height="{height}px">{@render hits?.()}</div>
 </div>
 {#if pins}
@@ -37,7 +37,7 @@
 
 <style>
   /* desktop: chừa cột trái (--rail), cảnh căn giữa phần còn lại — khớp sceneX() */
-  .scroller {
+  .stage {
     position: fixed;
     inset: 0 0 0 var(--rail);
     overflow-x: hidden;

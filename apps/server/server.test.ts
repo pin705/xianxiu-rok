@@ -610,7 +610,7 @@ test(
     // chat: kênh minh tới đúng người trong minh; lọc từ; tần suất; lặp lại; cấm chat
     const heard: { ch: string; text: string }[] = []
     cb.s.on('chat', m => heard.push(...m.ms.map(x => ({ ch: m.ch, text: x.text }))))
-    const say = (c: typeof ca, ch: 'world' | 'ally', text: string) =>
+    const say = (c: typeof ca, ch: 'world' | 'ally' | 'camp', text: string) =>
       c.s.timeout(5000).emitWithAck('say', { ch, text }) as Promise<{ ok: boolean; err?: string }>
     assert.ok((await say(ca, 'ally', 'Họp lúc 8h, đm đến đúng giờ')).ok)
     assert.deepEqual(await say(ca, 'ally', 'Họp lúc 8h, đm đến đúng giờ'), { ok: false, err: 'dup' })
@@ -658,6 +658,12 @@ test(
     assert.deepEqual(heard.at(-1), { ch: `g${grp.id}`, text: '' })
     assert.equal((await cb.ask({ k: 'chat', ch: `g${grp.id}` }))[0].text, '')
     assert.equal(await ca.s.timeout(5000).emitWithAck('unsay', { id: gm.id }), false, 'đã thu hồi rồi')
+    // kênh phái: cùng minh là cùng phái — tin ở kênh 'camp' tới người cùng phái, có lịch sử
+    await sleep(3100)
+    assert.ok((await say(ca, 'camp', 'Cả phái tập hợp ở Thiên Môn')).ok)
+    await until(() => heard.some(h => h.ch === 'camp'), 1500)
+    assert.equal(heard.find(h => h.ch === 'camp')?.text, 'Cả phái tập hợp ở Thiên Môn')
+    assert.equal((await ca.ask({ k: 'chat', ch: 'camp' })).at(-1)?.text, 'Cả phái tập hợp ở Thiên Môn')
     const prof = await cb.ask({ k: 'profile', pid: A.pid })
     assert.deepEqual([prof?.name, prof?.hall, prof?.ally?.tag, prof?.online], [state.name, 10, 'TVM', true])
     assert.ok(prof?.supply && prof.supply.get > 0, 'cùng minh: hồ sơ có Vận Linh Trận')
@@ -786,15 +792,18 @@ test(
     const w1 = await c.welcome
     assert.equal(w1.world.season, 1)
     const board = await c.ask({ k: 'season' })
-    const { camps, camp, stage, vote, bet, ...rest } = board as {
+    const { camps, camp, stage, vote, bet, heroes, ...rest } = board as {
       camps: [number, number]
       camp: 0 | 1
       stage: { n: number; m: string; score: [number, number]; mine: number }
       vote: { open: boolean; tally: number[] }
       bet: { open: unknown[]; mine: unknown[] }
+      heroes: { open: boolean; picks: unknown[]; mine: number[] }
     }
     assert.deepEqual(rest, { rows: [], me: null, fame: [] })
     assert.deepEqual(bet, { open: [], mine: [] }, 'Luận Kiếm Đặt Cược: đầu mùa chưa có playoff')
+    assert.deepEqual(heroes, { open: false, picks: [], mine: [0, 0, 0, 0] }, 'Lưu Danh Sử Sách: đầu mùa chưa bình chọn')
+    assert.deepEqual(await c.ask({ k: 'paper' }), { issues: [], gift: false }, 'Giới Báo: số đầu ra lúc 0h')
     assert.deepEqual(
       vote,
       { open: false, tally: [0, 0, 0] },

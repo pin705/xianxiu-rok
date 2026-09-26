@@ -111,7 +111,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Tu tiên hoá:** 5 **cảnh giới** Luyện Khí → Trúc Cơ → Kim Đan → Nguyên Anh → Hóa Thần ứng với 5 thời đại. Mốc chuyển là **độ kiếp** (mạnh hơn RoK vì có thử thách và cảnh sét). Mỗi cảnh giới một bộ mái/sơn môn: ngói → lưu ly → vàng → ngọc → mây.
 - **Game mình:** ✅/🟡
   - Có: cảnh giới và độ kiếp (màn đột phá riêng, `Result.svelte`); công trình đổi hình theo 5 bậc tầng (`tierOf` ở `packages/art/buildings.ts`): 1–5 mái ngói, 6–10 lưu ly xanh, 11–15 lưu ly vàng, 16–20 lưu ly chàm viền bạc, 21–25 bạch ngọc dát vàng trên vầng mây.
-  - Thiếu: quà riêng khi chuyển cảnh giới (ngoài thưởng nhiệm vụ, xem A1c).
+  - Có: quà riêng khi chuyển cảnh giới — tầng đột phá (sau độ kiếp) thư mừng thêm lễ đột phá (Kim Duyên, Thời Quang 8 giờ — `hallGift`).
 - **Ưu tiên:** P2 · **Công sức:** S–M (vẽ thêm 2 bộ mái trong `@rok/art`).
 
 #### A3. Civilization — Văn minh (phần liên quan tới thành)
@@ -933,7 +933,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 |---|---|---|---|---|
 | A1 | Tòa thị chính 1–25, trần cấp, mở khoá | ✅ Chủ điện 1–25 (+độ kiếp) | — | — |
 | A1b | Điều kiện phụ mỗi cấp CH (Tường N−1 + 1 nhà xoay vòng) | ❌ đã thử 25/09 rồi bỏ: nhịp hiện tại cân theo lối dồn Chủ điện — lệch 1: tầng 25 không tới trong 60 ngày (22); lệch 3: vẫn 24/25, sim tranh đoạt trung vị tầng 15, người chơi thường MH15 ngày 26. Muốn có thì phải chỉnh lại chi phí / thời gian xây cả chuỗi | P1 | S (+ chỉnh nhịp L) |
-| A1c | Thưởng mỗi cấp CH, "Era Breakthrough" | 🟡 qua nhiệm vụ chính tuyến | P1 | S |
+| A1c | Thưởng mỗi cấp CH, "Era Breakthrough" | ✅ thư quà mỗi tầng Chủ điện (`hallGift`) + lễ đột phá ở tầng chuyển cảnh giới (Kim Duyên, Thời Quang 8 giờ) + màn Mở khoá | P1 | S |
 | A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới, 5 bộ mái (cả tầng 16–25); quà mừng mỗi tầng Chủ điện + lễ đột phá cảnh giới (`hallGift`) | P2 | S–M |
 | A3 | Văn minh (kiến trúc + buff) | ✅ Chín đạo thống: 3 tiềm năng, đệ tử đặc trưng, trấn phái chi bảo trên núi, tổ sư + huy hiệu riêng, chọn lúc lập tông môn | P2 | M |
 | B0 | Bong bóng chạm thu tài nguyên | ✅ bong bóng trên công trình, chạm thu, phần chờ thu an toàn | P1 | M |

@@ -36,7 +36,7 @@
   {/each}
   {#each nodes as n, i (i)}
     <g
-      class="spot {n.tone}"
+      class="node {n.tone}"
       class:picked={picked === i}
       role="button"
       tabindex="0"
@@ -71,7 +71,7 @@
     stroke-width: 2;
     stroke-dasharray: 3 3;
   }
-  .spot {
+  .node {
     cursor: pointer;
   }
   .disc {

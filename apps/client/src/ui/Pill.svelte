@@ -1,14 +1,20 @@
 <script lang="ts">
   // Viên mực: nhãn số/chữ ngắn nền mực chữ trắng, nổi được trên tranh và cảnh (giá, số lượng, "+x/giờ").
-  // tone="red": viên son (cảnh báo, đang chờ).
+  // tone="red": viên son (cảnh báo, đang chờ); tone="accent": màu --accent của khung ngoài (lối chơi của đạo).
+  // big: viên lớn số to (tiền đang có ở đầu sạp chợ).
   import type { Snippet } from 'svelte'
   import { Icon, type IconName } from '@rok/art'
 
-  let { tone = 'ink', icon, children }: { tone?: 'ink' | 'red'; icon?: IconName; children: Snippet } = $props()
+  let {
+    tone = 'ink',
+    icon,
+    big = false,
+    children,
+  }: { tone?: 'ink' | 'red' | 'accent'; icon?: IconName; big?: boolean; children: Snippet } = $props()
 </script>
 
-<span class="pill {tone}"
-  >{#if icon}<Icon name={icon} size={13} />{/if}{@render children()}</span
+<span class="pill {tone}" class:big
+  >{#if icon}<Icon name={icon} size={big ? 20 : 13} />{/if}{@render children()}</span
 >
 
 <style>
@@ -30,5 +36,13 @@
   }
   .red {
     background: var(--cinnabar);
+  }
+  .accent {
+    background: var(--accent, var(--pill));
+  }
+  .big {
+    justify-self: start;
+    padding: 3px 12px 4px 6px;
+    font-size: var(--fs-4);
   }
 </style>

@@ -87,7 +87,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** khi chưa có minh, nút Liên minh mở hai tab là Tham gia (danh sách) và Tạo. Tab Tạo gồm ô tên, tag, chọn cờ, mô tả, chế độ, rồi xác nhận trả gem [chưa xác minh bố cục].
 - **Giữ chân:** cảm giác sở hữu. Cờ và tag là "áo đấu" của nhóm.
 - **Tu tiên hoá:** "Khai lập tiên minh". Minh kỳ ghép từ hoa văn vẽ tay (`emblems.ts`); tag 2–4 chữ.
-- **Game mình:** ✅ `allyFound`. Cần Chủ điện tầng 10 (`ALLY_HALL`), tốn 20.000 mỗi loại tài nguyên (`ALLY_COST`), tên 2–20 ký tự, tag 2–4 chữ hoa hoặc số, không trùng; chế độ gia nhập (tự do / duyệt đơn) đặt sau khi lập (`allyOpen`). Còn thiếu: cờ/huy hiệu riêng (client dùng chung huy hiệu `crest`), mô tả, ngôn ngữ.
+- **Game mình:** ✅ `allyFound`. Cần Chủ điện tầng 4 (`ALLY_HALL` — cùng lúc mở thẻ Tiên minh: giới mới chưa có minh nào thì người đầu tiên lập được ngay, trước đây phải tầng 10 nên thẻ Tiên minh thành ngõ cụt mấy ngày đầu), tốn 5.000 mỗi loại tài nguyên (`ALLY_COST`, vừa kho đầu game), tên 2–20 ký tự, tag 2–4 chữ hoa hoặc số, không trùng; chế độ gia nhập (tự do / duyệt đơn) đặt sau khi lập (`allyOpen`). Còn thiếu: cờ/huy hiệu riêng (client dùng chung huy hiệu `crest`), mô tả, ngôn ngữ.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### A2. Hồ sơ minh, đổi tên/tag/cờ, giải tán — **Alliance Profile / Rename / Disband**
@@ -409,7 +409,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** thêm tab trong khung chat; bảng threads có danh sách chủ đề.
 - **Giữ chân:** thảo luận có cấu trúc, ít trôi tin.
 - **Tu tiên hoá:** "Luận đạo bảng" (threads trong một giới).
-- **Game mình:** ⛔ liên server. ❌ chưa có bảng threads hay kênh phái (Chính / Tà) trong giới; phần này làm được.
+- **Game mình:** ⛔ liên server. ✅ **Kênh phái** (thẻ "Phái" trong khung chat, từ Chủ điện 3): người cùng Chính / Tà phái (Chính Tà Phân Tranh — cùng minh là cùng phái) nói chuyện riêng, có lịch sử, thu hồi, báo cáo như kênh giới (`channel` / `listeners` ở `talk.ts`, phòng `c0` / `c1`). ❌ chưa có bảng threads (Luận đạo bảng).
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### E5. Công cụ trong chat: chia sẻ, sửa tin — **Share Coordinates / Reports / Commanders; Recall / Edit / Quote**
@@ -496,7 +496,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang báo có các bài và nút thích.
 - **Giữ chân:** tò mò, danh tiếng.
 - **Tu tiên hoá:** "Tiên giới tân văn" hay "Giới báo".
-- **Game mình:** 🟡 có biên niên giới (lập tông môn, cướp thắng/thua, độ kiếp, mùa, yêu vương, chương Thiên Đạo Biên Niên, Luận Kiếm Minh Chiến) hiện trên bản đồ (`ChronArgs`), và thư Tổng kết mùa riêng từng người. Chưa có "báo" tổng hợp mỗi ngày (kỷ lục, chuyện các minh).
+- **Game mình:** ✅ **Giới Báo** (`world/paper.ts`, nút "Giới Báo" ở thẻ mùa trên bản đồ giới — `world/Paper.svelte`): 0h mỗi ngày server ra một số cho hôm trước — người dẫn đầu cả giới ở từng mục (Khoáng Vương: khai mỏ · Liệp Yêu: săn yêu · Chiến Thần: chiến công · Đạo Tặc: cướp thắng; theo phần tăng so với mốc 0h, không tính NPC) và tổng cả giới; giữ 7 số, chip chọn số cũ theo ngày; bấm Thích từng bài (mỗi bài một lần, hiện số lượt thích); đọc số hôm nay nhận quà nhỏ (Thời Quang 15 phút + kinh thư) mỗi ngày một lần. Biên niên giới vẫn hiện trên bản đồ (`ChronArgs`). Chưa có bài về chuyện các minh.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 ---
@@ -579,7 +579,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang Tổng quan vương quốc có bộ lọc, nút Di cư, yêu cầu và passport cần có.
 - **Giữ chân:** đổi môi trường mà không phải bỏ tài khoản.
 - **Tu tiên hoá:** "Phi độ giới"; "Chiêu Hiền Bảng" (tin tuyển).
-- **Game mình:** ⛔ PLAN ghi không chuyển server. Người mới vào giới được tới ngày 21; giới mới mở khi giới cũ đầy. Có thể làm **Chiêu Hiền Bảng cho tiên minh trong giới** (tin tuyển có yêu cầu).
+- **Game mình:** ⛔ PLAN ghi không chuyển server. Người mới vào giới được tới ngày 21; giới mới mở khi giới cũ đầy. ✅ **Chiêu mộ trong giới**: trưởng lão / minh chủ bấm "Chiêu mộ ở kênh Giới" (thẻ Thành viên, mục Cửa minh) — tin "📣 [hiệu] tên minh chiêu mộ đạo hữu (n/30 người)…" kèm mã `#a<mã minh>`; ở chat, người chưa có minh thấy nút "Vào minh" ngay dưới tin (minh duyệt đơn thì thành đơn xin vào) — `recruit` (Alliance.svelte), `recruits` / `join` (Chat.svelte). Chưa có bảng tin tuyển riêng có yêu cầu (lực chiến, cảnh giới).
 - **Ưu tiên:** P2 · **Công sức:** S (bảng tuyển trong giới).
 
 #### H7. Bảo vệ tân thủ và dịch chuyển tân thủ — **Beginner's Protection / Beginner Teleport**
@@ -860,7 +860,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 
 | # | Tính năng (tên gốc) | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|
-| A1 | Lập liên minh (Create Alliance) | ✅ lập tầng 10, 20k mỗi loại; thiếu cờ/huy hiệu riêng | P2 | S–M |
+| A1 | Lập liên minh (Create Alliance) | ✅ lập từ tầng 4 (lúc mở thẻ Tiên minh), 5k mỗi loại; thiếu cờ/huy hiệu riêng | P2 | S–M |
 | A2 | Hồ sơ minh, đổi tên/tag/cờ | 🟡 bố cáo, đổi tên / hiệu, giải tán; chưa có huy hiệu minh riêng | P2 | S |
 | A3 | Gia nhập tự do/duyệt, mời, passlist/blocklist | ✅ cửa minh vào tự do / duyệt đơn, mời từ hồ sơ; thiếu passlist/blocklist | P1 | S–M |
 | A4 | Sĩ số tối đa tăng dần | ✅ 30 → 40 theo Hộ Minh Đại Trận | P2 | S |
@@ -885,20 +885,20 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | E1 | Chat vương quốc | ✅ kênh giới, lọc từ, báo cáo; thiếu dịch | P1 | M |
 | E2 | Chat minh và thông báo | ✅ thiếu ghim, tin hệ thống, @nhắc | P1 | S |
 | E3 | Chat riêng và nhóm tự tạo | ✅ truyền âm 1-1 (Web Push khi offline) + nhóm chat tự tạo tới 20 người (25/09) | **P0** | M |
-| E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; ❌ threads / kênh phái trong giới (làm được) | P2 | M |
+| E4 | Kênh liên server, threads, kênh phe | ⛔ liên server; ✅ kênh phái (Chính / Tà) trong giới; ❌ threads | P2 | M |
 | E5 | Chia sẻ toạ độ/chiến báo/tướng; sửa, thu hồi tin | ✅ chia sẻ toạ độ, chiến báo (nút tới / xem trận), thẻ trưởng lão (`#tl:`), trả lời, thu hồi tin trong hạn; chưa sửa tin | **P0** | M |
 | E6 | Thư người chơi/thư minh/báo cáo do thám | ✅ thư minh (R4/R5 → hộp thư cả minh, 25/09); truyền âm thay thư 1-1; báo cáo do thám qua thư; chưa xoá / yêu thích thư | P1 | M |
 | F1 | Gửi tài nguyên (Trading Post) | ✅ Vận Linh Trận (25/09): hao tổn 35 → 8 %, trần ngày theo sức chứa kho hai bên | P2 | S–M |
 | G1 | Hồ sơ người chơi | ✅ hồ sơ chưởng môn (từ chat, minh, bản đồ, chân dung): truyền âm, chặn, mời, tiếp tế | P1 | M |
 | G2 | Bảng xếp hạng | ✅ 6 bảng (có chiến công) + mùa + Công Huân + phong thần; thiếu bảng riêng cho minh | P2 | S |
 | G3 | Bạn bè và chặn | ✅ chặn + kết giao đạo hữu (25/09) | P2 | S–M |
-| G4 | Báo vương quốc | 🟡 có biên niên giới | P2 | S |
+| G4 | Báo vương quốc | ✅ Giới Báo mỗi ngày (kỷ lục 4 mục, tổng cả giới, thích bài, quà đọc báo) + biên niên giới | P2 | S |
 | H1 | Vua và Lost Temple | ✅ Giới Chủ (minh chủ giữ Thiên Môn) | P1 | M |
 | H2 | Title vương quốc buff/debuff | ✅ sắc phong 4 phúc / 4 hoạ, giữ 24 giờ | P1 | M |
 | H3 | Buff vương quốc, quà của vua | ✅ ban phúc cả giới mỗi ngày + Thiên Ân lễ | P2 | S |
 | H4 | Kỹ năng vua, Vacation Permit, quản lý nhập cư | 🟡 Bế Quan Lệnh (`sect/seclude.ts`); chưa có kỹ năng vua / nhập cư | P2 (P1 cho Bế Quan) | M |
 | H5 | NAP, luật cộng đồng → minh ước | ✅ minh ước bất xâm phạm (đề nghị / nhận / huỷ) | P1 | S–M |
-| H6 | Di cư, bảng tuyển mộ | ⛔ di cư; bảng tuyển trong giới làm được | P2 | S |
+| H6 | Di cư, bảng tuyển mộ | ⛔ di cư; ✅ chiêu mộ qua kênh Giới (tin có nút Vào minh); chưa có bảng tuyển có yêu cầu | P2 | S |
 | H7 | Bảo vệ và dịch chuyển tân thủ | ✅ khiên 72 giờ, PvP từ tầng 6, sàn lực chiến 50% | — | — |
 | I1 | Điều kiện tấn công thành | ✅ | — | — |
 | I2 | Khiên chủ động, War Frenzy | ✅ Hộ Sơn Phù 8–72 giờ + sát khí 30 phút | P1 | S |

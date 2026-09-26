@@ -1311,6 +1311,17 @@ export const RULES: Partial<Record<Bonus, number>>[] = [
   { atk: 0.05, loot: 0.1 },
   { build: 0.1, train: 0.1 },
 ]
+// Lưu Danh Sử Sách (Hall of Fame của RoK): VOTE_DAYS ngày cuối mùa (cùng khung Thiên Mệnh Chọn Luật) cả giới bình chọn anh kiệt mùa ở
+// từng hạng mục — HERO_PICKS người dẫn đầu chỉ số mùa của hạng mục đó (chốt lúc mở bình chọn): chiến công, Công Huân, yêu thú hạ được,
+// tài nguyên khai mỏ. Hết mùa người nhiều phiếu nhất mỗi hạng mục được ghi vào Phong Thần Bảng và nhận HERO_GIFT
+export const HERO_KINDS = ['kp', 'honor', 'hunted', 'gathered'] as const
+export const HERO_PICKS = 5
+export const HERO_GIFT: Reward = { items: { kimDuyen: 2, thoiQuang480: 1 } }
+// Giới Báo (Kingdom Newspaper của RoK): 0h mỗi ngày ra một số báo — người dẫn đầu hôm trước ở từng mục (PAPER_KINDS: khai mỏ, săn yêu,
+// chiến công, cướp thắng) và tổng cả giới; giữ PAPER_KEEP số, bấm thích từng bài; đọc số hôm nay nhận PAPER_GIFT (mỗi ngày một lần)
+export const PAPER_KINDS = ['gathered', 'hunted', 'kp', 'raided'] as const
+export const PAPER_KEEP = 7
+export const PAPER_GIFT: Reward = { items: { thoiQuang15: 1, kinhThu500: 1 } }
 // Anh Linh Điện (Museum của Season of Conquest): trong mùa giới, từ Chủ điện RELIC_HALL, cung phụng di vật cho tối đa RELIC_MAX trưởng lão
 // bằng Phi Thăng Tệ — mỗi bậc (1–3, giá RELIC_COST) thêm RELIC_BONUS cho đội người đó dẫn; hết mùa (luân hồi) di vật tan, tệ không hoàn
 export const RELIC_HALL = 16
@@ -1544,10 +1555,11 @@ export const NPC_RES = 20_000
 
 // ---------- Tiên minh ----------
 
-// Lập từ tầng ALLY_HALL, tốn ALLY_COST mỗi loại. Tối đa ALLY_MAX người, 3 chức vị (thành viên · trưởng lão · minh chủ).
+// Lập từ tầng ALLY_HALL (cùng lúc mở thẻ Tiên minh — giới mới chưa có minh nào thì người đầu tiên lập được ngay, như RoK lập lúc nào
+// cũng được), tốn ALLY_COST mỗi loại (vừa kho đầu game). Tối đa ALLY_MAX người, 3 chức vị (thành viên · trưởng lão · minh chủ).
 // Giúp đỡ: mỗi việc nhờ được giúp tối đa ALLY_HELPS lần, mỗi lần bớt max(HELP_MIN, HELP_SHARE × thời gian việc).
-export const ALLY_HALL = 10
-export const ALLY_COST = 20_000
+export const ALLY_HALL = 4
+export const ALLY_COST = 5_000
 // Minh chủ đổi tên / hiệu tiên minh (như RoK): tốn ALLY_RENAME Minh khố, cách nhau ít nhất ALLY_RENAME_COOL
 // Minh trận thần thông (Alliance Skills của RoK): trưởng lão / minh chủ bật bằng Minh khố — cả minh được tăng ích trong hours giờ; hết hiệu
 // lực thêm ALLY_SKILL_COOL mới bật lại được

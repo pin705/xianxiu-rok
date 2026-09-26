@@ -35,6 +35,8 @@ import { redirectActions, type RedirectAction } from './redirect.ts'
 import { packetActions, type PacketAction } from './packet.ts'
 import { voteActions, type VoteAction } from './vote.ts'
 import { betActions, type BetAction } from './bets.ts'
+import { heroActions, type HeroAction } from './heroes.ts'
+import { paperActions, type PaperAction } from './paper.ts'
 import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
@@ -69,6 +71,8 @@ export type WorldAction =
   | PacketAction
   | VoteAction
   | BetAction
+  | HeroAction
+  | PaperAction
   | LoharAction
   | PotAction
   | ArkAction
@@ -102,6 +106,8 @@ const WORLD: WorldActions<WorldAction> = {
   ...packetActions,
   ...voteActions,
   ...betActions,
+  ...heroActions,
+  ...paperActions,
   ...loharActions,
   ...potActions,
   ...arkActions,
@@ -137,4 +143,26 @@ export function worldAct(
   if (secluded(s)) return no('secluded') // Bế Quan Lệnh: đang bế quan thì không làm gì với giới
   const m = map && { ...map, shut: shutGates(w, map.atlas, pid) } // cửa ải: tính theo phe người đang làm
   return (WORLD[a.type].run as WorldRun<WorldAction>)({ ps, w, pid, s, now, seed, map: m }, a)
+}
+
+// Người trong các minh vừa đổi (bản ghi minh, hay kết trận của minh mở / giải) — server báo họ hỏi lại
+export function allyTouched(prev: World, next: World): number[] {
+  const rallies = (w: World, aid: number) =>
+    Object.values(w.rallies)
+      .filter(r => r.ally === aid || w.allies[aid]?.naps?.includes(r.ally)) // kết trận minh ước cũng báo
+      .map(r => r.id)
+      .join()
+  const out = new Set<number>()
+  for (const al of [...Object.values(prev.allies), ...Object.values(next.allies)])
+    if (
+      prev.allies[al.id] !== next.allies[al.id] ||
+      (prev.rallies !== next.rallies && rallies(prev, al.id) !== rallies(next, al.id))
+    )
+      for (const pid of Object.keys(al.members)) out.add(Number(pid))
+  // Tranh Đoạt Linh Châu: ghi danh / hiệp mới / kết quả → người của các minh dự trận
+  if (prev.ark !== next.ark)
+    for (const x of [prev.ark, next.ark])
+      for (const id of [...(x?.signed ?? []), ...(x?.live ?? []).flatMap(f => [f.a, f.b])])
+        for (const pid of Object.keys(next.allies[id]?.members ?? {})) out.add(Number(pid))
+  return [...out]
 }

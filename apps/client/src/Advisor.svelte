@@ -74,7 +74,8 @@
     <Face look={LOOK.thanhPhong} size={54} />
     <Speech>
       <b class="t-small">{L.tips[k].title}</b>
-      <p class="t-small t-soft clamp" style:--lines="3">{L.tips[k].text}</p>
+      <!-- đủ chỗ cho cả lời khuyên (mẹo dài nhất ~150 chữ): cắt ngang giữa câu thì người chơi không đọc được hết -->
+      <p class="t-small t-soft clamp" style:--lines="6">{L.tips[k].text}</p>
       <div class="row" style:--gap="10px">
         <Button size="sm" variant="gold" onclick={() => go(k)}>{L.tips.go}</Button>
         <button class="t-link" onclick={() => done(k)}>{L.tips.later}</button>

@@ -1,7 +1,7 @@
-// Chat trong giới: kênh giới (từ Chủ điện CHAT_HALL), kênh tiên minh, truyền âm 1-1 — ai được nói, ai nghe, báo cáo tin.
+// Chat trong giới: kênh giới và kênh phái (từ Chủ điện CHAT_HALL), kênh tiên minh, truyền âm 1-1 — ai được nói, ai nghe, báo cáo tin.
 // Luật của tin (tần suất, lặp, lọc từ, cấm chat) ở chat.ts; tin ghi DB cùng commit như mọi thay đổi khác.
 import { CHAT_HALL } from '@rok/rules'
-import { allyOf, groupsOf } from '@rok/rules/world'
+import { allyOf, campOf, groupsOf, sideKey } from '@rok/rules/world'
 import type { Channel, Dm, GroupView, SayErr } from '@rok/protocol'
 import * as store from '../db/store.ts'
 import { dmNote } from './notify.ts'
@@ -13,13 +13,15 @@ export async function loadChat(w: World) {
   w.chat.load(rows, m)
 }
 
-// Khoá phòng của kênh với người này ('w' cả giới, 'a<id>' tiên minh, 'd<a>-<b>' truyền âm, a < b, 'g<id>' nhóm tự tạo); null:
+// Khoá phòng của kênh với người này ('w' cả giới, 'c<0|1>' phái, 'a<id>' tiên minh, 'd<a>-<b>' truyền âm, a < b, 'g<id>' nhóm
+// tự tạo); null:
 // chưa được vào.
 // Truyền âm với người chơi thật trong giới; gửi (send) thì phải từ tầng CHAT_HALL và người kia chưa chặn mình.
 export function channel(w: World, pid: number, ch: Channel, send = false) {
   const s = w.ps.get(pid)
   if (!s) return null
   if (ch === 'world') return s.levels.chuDien >= CHAT_HALL ? 'w' : null
+  if (ch === 'camp') return s.levels.chuDien >= CHAT_HALL ? `c${campOf(sideKey(w.shared, pid))}` : null
   if (ch[0] === 'g') {
     const g = w.shared.groups?.[Number(ch.slice(1))]
     return g?.members.includes(pid) && (!send || s.levels.chuDien >= CHAT_HALL) ? `g${g.id}` : null
@@ -34,9 +36,10 @@ export function channel(w: World, pid: number, ch: Channel, send = false) {
   const al = allyOf(w.shared, pid)
   return al ? `a${al.id}` : null
 }
-// người nhận của một phòng: cả giới, người trong minh, hay hai người truyền âm
+// người nhận của một phòng: cả giới, người cùng phái, người trong minh, hay hai người truyền âm
 function listeners(w: World, room: string) {
   if (room === 'w') return [...w.slots.values()]
+  if (room[0] === 'c') return [...w.slots.values()].filter(x => `c${campOf(sideKey(w.shared, x.id))}` === room)
   if (room[0] === 'd')
     return room
       .slice(1)
@@ -96,6 +99,8 @@ export function say(
   w.persist.schedule()
 }
 
+// Kênh theo chữ đầu của phòng (truyền âm do chOf đổi theo người nghe, nhóm 'g<id>' giữ mã)
+const ROOM_CH: Record<string, Channel> = { w: 'world', a: 'ally', c: 'camp' }
 // Thu hồi tin của mình (trong CHAT_RECALL): ghi lại chữ rỗng, báo người nghe phòng đó (client thay tin cùng mã)
 export function unsay(w: World, sock: Sock, id: number, ack: (ok: boolean) => void) {
   if (w.closing || w.lost || w.readOnly) return w.persist.deliver(() => ack(false))
@@ -108,7 +113,7 @@ export function unsay(w: World, sock: Sock, id: number, ack: (ok: boolean) => vo
   if (k >= 0) pend[k] = { ...hit.msg, ch: hit.room }
   else pend.push({ ...hit.msg, ch: hit.room })
   const to = listeners(w, hit.room)
-  const ch = (hit.room === 'w' ? 'world' : hit.room[0] === 'a' ? 'ally' : `g${hit.room.slice(1)}`) as Channel
+  const ch = ROOM_CH[hit.room[0]] ?? (`g${hit.room.slice(1)}` as Channel)
   w.persist.deliver(() => {
     for (const slot of to)
       for (const c of slot.conns) if (c.connected) c.emit('chat', { ch: chOf(hit.room, ch, slot.id), ms: [hit.msg] })

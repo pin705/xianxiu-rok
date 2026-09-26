@@ -316,7 +316,7 @@ Mỗi mục: **Mở khoá, lịch** · **Cơ chế** · **Tương tác** · **UI
 - **Vì sao hấp dẫn:** kết mùa có "lễ" và để lại dấu vết.
 - **Tu tiên hoá:** **Phong Thần Bảng** (đã có) + **Lưu Danh Sử Sách** (người chơi bình chọn anh kiệt mùa: minh chủ, người hộ pháp nhiều nhất, người nạp Linh
   Châu nhiều nhất…) + danh hiệu 1 mùa theo hạng.
-- **Game mình:** 🟡 — bảng phong thần top 3 × 10 mùa, thư kết mùa + tổng kết mùa (`yearbook`), thưởng hạng Công Huân top 10 (`honorPrize`), danh hiệu "Đệ nhất Công Huân · mùa N" (`State.crowns`), quà top 3 Cửu Thiên Luận Đạo Hội và phái thắng Chính Tà. Thiếu: bình chọn (Lưu Danh Sử Sách), danh hiệu cho các hạng khác.
+- **Game mình:** 🟡 — bảng phong thần top 3 × 10 mùa, thư kết mùa + tổng kết mùa (`yearbook`), thưởng hạng Công Huân top 10 (`honorPrize`), danh hiệu "Đệ nhất Công Huân · mùa N" (`State.crowns`), quà top 3 Cửu Thiên Luận Đạo Hội và phái thắng Chính Tà. Lưu Danh Sử Sách (`world/heroes.ts`, `HeroVote.svelte` ở tab Mùa của bảng xếp hạng): ba ngày cuối mùa server chốt 5 ứng viên mỗi hạng mục theo chỉ số mùa — Chiến Thần (chiến công), Công Thần (Công Huân), Liệp Yêu Vương (yêu thú hạ được), Khoáng Vương (tài nguyên khai mỏ), không tính NPC; cả giới bình chọn, đổi phiếu được, không tự bầu; hết mùa người nhiều phiếu nhất mỗi hạng mục nhận thư + quà (2 Kim Duyên Phù, Thời Quang 8 giờ) và được ghi dưới dòng mùa đó trên Bảng phong thần. Thiếu: danh hiệu cho các hạng khác.
 - **Ưu tiên:** P1 · **Công sức:** S.
 
 #### A14. Migration — di cư giữa các mùa
@@ -798,7 +798,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | A10 | Past Glory | Tu Bổ Thiên Môn | ✅ chương biên niên `repair` | P1 (trong A5) | S |
 | A11 | Coalition, Camp, Camp Treaty | Minh Ước, Hiệp Ước Thiên Môn | 🟡 minh ước: bất xâm phạm + chung kết trận + viện binh cho nhau; chưa Hiệp Ước Thiên Môn | P2 | M |
 | A12 | Crystal Tech, Crystal Mine, Bastions | Linh Tinh Trận Pháp, Ẩn Sĩ Động Phủ | ❌ | P2 | M |
-| A13 | Xếp hạng cuối mùa, Hall of Fame, danh hiệu mùa | Phong Thần Bảng + Lưu Danh Sử Sách | 🟡 top 3 phe × 10 mùa + thưởng hạng Công Huân top 10 + danh hiệu Đệ nhất Công Huân (`State.crowns`); chưa có bình chọn | P1 | S |
+| A13 | Xếp hạng cuối mùa, Hall of Fame, danh hiệu mùa | Phong Thần Bảng + Lưu Danh Sử Sách | 🟡 top 3 phe × 10 mùa + thưởng hạng Công Huân top 10 + danh hiệu Đệ nhất Công Huân (`State.crowns`) + Lưu Danh Sử Sách (bình chọn anh kiệt 4 hạng mục cuối mùa); chưa có danh hiệu cho các hạng khác | P1 | S |
 | A14 | Migration | — | ⛔ | — | — |
 | A15 | Vacation Permit, Rest Mode | Bế Quan Lệnh | ✅ Bế Quan Lệnh 3 / 7 / 14 ngày (`sect/seclude.ts`) | P2 | S |
 | B1 | The Lost Kingdom (Season 1–2) | Tranh Mạch Luật (mặc định) | ✅ | P0 (có) | — |

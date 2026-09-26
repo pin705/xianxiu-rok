@@ -1535,6 +1535,10 @@ export const en: Text = {
     accept: 'Accept invite',
     invite: 'Invite to alliance',
     gate: 'Membership',
+    recruit: 'Recruit in World chat',
+    recruited: 'Recruitment posted in World chat — sects without an alliance can tap "Join" right in the message.',
+    recruitText: (tag: string, name: string, n: number, max: number) =>
+      `📣 [${tag}] ${name} is recruiting (${n}/${max} members) — hold spirit veins and rally on demon kings with us!`,
     open: 'Open to all',
     closed: 'By approval',
     noApps: 'No applications.',
@@ -1851,9 +1855,20 @@ export const en: Text = {
     packet: '🧧 Red envelope',
     packetSend: (n: number) => `🧧 Envelope (${n})`,
     packetOpen: 'Open envelope',
+    joinAlly: 'Join',
+    // message time, short: under a minute "just now", then minutes / hours / days
+    ago: (ms: number) => {
+      if (ms < 60_000) return 'just now'
+      const [n, u] =
+        ms < 3_600_000 ? [ms / 60_000, 'm'] : ms < 86_400_000 ? [ms / 3_600_000, 'h'] : [ms / 86_400_000, 'd']
+      return `${Math.floor(n)}${u}`
+    },
+    joinSent: 'Joined (if the alliance approves members, your application was sent).',
     packetGot: (n: string) => `You got ${n} spirit stone!`,
     packetNone: 'This envelope is empty, expired, or you already opened it.',
     world: 'World',
+    camp: 'Camp',
+    campLocked: 'The camp channel (everyone in your Light / Darkness camp) opens at Main Hall 3',
     reply: 'Reply',
     replyTo: (name: string) => `Replying to ${name}`,
     cancel: 'Cancel',
@@ -2032,6 +2047,10 @@ export const en: Text = {
       party: (lv: number, waves: number, n: number): [string, string] => [
         `Primal Tribes · difficulty ${lv}`,
         `Your party of ${n} ${waves >= 5 ? 'cleared all five waves of beasts' : waves ? `cleared ${waves}/5 waves of beasts` : 'did not clear a wave'}. A reward for every member is below.`,
+      ],
+      hero: (kind: number, votes: number): [string, string] => [
+        `Annals of Fame · ${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King'][kind] ?? '?'}`,
+        `The realm voted you the season's ${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King'][kind] ?? '?'} (${votes} votes) — your name is written into the Hall of Immortals. Your reward is below.`,
       ],
       bet: (win: 0 | 1, tag: string, stage: 'semi' | 'final' | 'third', n: number): [string, string] => [
         win ? `League Bets · [${tag}] won` : `League Bets · refund [${tag}]`,
@@ -2691,7 +2710,7 @@ export const en: Text = {
   },
   tavern: {
     title: 'Hall of Worthies',
-    lore: 'Hang invitations for worthies from every land. Silver invitations bring ordinary guests, gold ones bring masters — some leave tokens, and ten tokens bring that master into your sect.',
+    lore: 'Silver invitations bring common guests, gold ones bring masters. Guests leave tokens — ten and they join you.',
     silver: 'Silver invitation',
     gold: 'Gold invitation',
     free: 'Free',
@@ -2937,6 +2956,35 @@ export const en: Text = {
     mine: (tag: string, n: number) => `[${tag}] · ${n} coins`,
     lost: (tag: string, n: number) => `[${tag}] lost · ${n} coins refunded after the final`,
     wait: 'Your bets',
+  },
+  paper: {
+    title: 'Realm Gazette',
+    open: 'Gazette',
+    line: "Every morning a new issue on yesterday's records across the realm.",
+    hint: "A new issue every morning: who led the realm yesterday in each category, and what the whole realm achieved. Tap Like on stories you enjoy; reading today's issue gives a small gift.",
+    none: 'The first issue comes out at midnight — the realm is taking notes.',
+    issue: (d: string) => `Issue of ${d}`,
+    heads: ['Ore King', 'Beast Hunter', 'God of War', 'Master Thief'],
+    story: [
+      (name: string, n: string) => `${name} gathered ${n} resources — the most in the realm yesterday.`,
+      (name: string, n: string) => `${name} slew ${n} beasts — the most in the realm yesterday.`,
+      (name: string, n: string) => `${name} earned ${n} merit — the most in the realm yesterday.`,
+      (name: string, n: string) => `${name} won ${n} raids — the most in the realm yesterday.`,
+    ],
+    quiet: 'The realm was quiet yesterday — nobody made the news.',
+    sum: ([a, b, c, d]: string[]) =>
+      `The realm yesterday: ${a} resources gathered · ${b} beasts slain · ${c} merit · ${d} raids won.`,
+    likes: (n: number) => `${n} likes`,
+    like: 'Like',
+    gift: 'Claim reading gift',
+  },
+  hero: {
+    title: 'Annals of Fame',
+    hint: "In the season's last three days the realm votes for the season's heroes in each category (the top five by season stats). When the season ends, whoever has the most votes is written into the Hall of Immortals and gets a reward. You can change your vote until the season ends, but not vote for yourself.",
+    kinds: ['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King'],
+    what: ['merit this season', 'Honor this season', 'beasts slain this season', 'resources gathered this season'],
+    votes: (n: number) => `${n} votes`,
+    fame: (kind: string, name: string) => `${kind}: ${name}`,
   },
   truyen: {
     title: 'Skill transmission',

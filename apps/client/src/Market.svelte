@@ -15,15 +15,14 @@
   import { GOODS, basePrice, goodOf, priceBand, sellCap, type Good, type WorldAction } from '@rok/rules/world'
   import type { Ack, Market } from '@rok/protocol'
   import type { Net } from './net'
-  import { Icon, artOf } from '@rok/art'
-  import { Button, Card, Section, Sheet, Slider, Tabs } from './ui'
+  import { Icon } from '@rok/art'
+  import { Art, Button, Cabinet, Card, Lot, Pill, Section, Sheet, Slider, Tabs } from './ui'
   import { L, clock, num, sfx } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
 
   let { api, send }: { api: Pick<Net, 'ask'> | null; send: (a: WorldAction) => Promise<Ack> } = $props()
   const g = useGame()
-  const stall = artOf('ui:ev-market')?.src
   const game = $derived(g.game)
   const now = $derived(g.now)
 
@@ -80,10 +79,10 @@
   {:else}
     <div class="stack">
       <!-- sạp chợ là tâm điểm: linh thạch đang có (viên mực), lượt mua và hạn mức treo bán hôm nay -->
-      <header class="stall">
-        {#if stall}<img src={stall} alt="" draggable="false" />{:else}<Icon name="linhThach" size={48} />{/if}
+      <header class="vista split" style:--gap="12px">
+        <Art art="ev-market" icon="linhThach" size={84} tilt={-3} lift />
         <div class="stack" style:--gap="4px">
-          <b class="coin t-num"><Icon name="linhThach" size={20} />{num(game.res.linhThach)}</b>
+          <Pill icon="linhThach" big>{num(game.res.linhThach)}</Pill>
           <small class="t-tiny t-soft">{L.market.left(buysLeft, num(capLeft))}</small>
         </div>
       </header>
@@ -120,19 +119,21 @@
           {/each}
         </div>
         <!-- kệ hàng: mỗi lô đứng trên ván gỗ, số lượng góc, giá là viên mực, người bán bấm xem hồ sơ -->
-        <ul class="shelf">
+        <Cabinet min={100}>
           {#each view.orders as o (o.id)}
-            {@const p = pct(o.good, o.n, o.price)}
             <li>
-              <span class="pic"
-                >{@render goodIcon(o.good, 44)}<b class="n t-num">×{num(o.n)}</b>{#if p}<small
-                    class="off t-num"
-                    class:up={p > 0}
-                    title={L.market.unit(p)}>{p > 0 ? '+' : ''}{p}%</small
-                  >{/if}</span
+              <span class="cab-pic">
+                <Lot
+                  icon={o.good}
+                  n="×{num(o.n)}"
+                  off={pct(o.good, o.n, o.price)}
+                  offTitle={L.market.unit(pct(o.good, o.n, o.price))}
+                />
+              </span>
+              <b class="t-tiny t-ellipsis w-full">{nameOf(o.good)}</b>
+              <button class="t-tiny t-ellipsis t-ref w-full" onclick={() => (social.profile = o.pid)}
+                >{L.market.by(o.name)}</button
               >
-              <b class="nm t-tiny">{nameOf(o.good)}</b>
-              <button class="who t-tiny" onclick={() => (social.profile = o.pid)}>{L.market.by(o.name)}</button>
               <Button
                 size="sm"
                 variant="ink"
@@ -140,13 +141,13 @@
                 label={L.market.buy}
                 disabled={buysLeft < 1 || game.res.linhThach < o.price}
                 onclick={() => act({ type: 'buy', id: o.id })}
-                ><span class="price t-num"><Icon name="linhThach" size={14} />{num(o.price)}</span></Button
+                ><Icon name="linhThach" size={14} /><span class="t-num">{num(o.price)}</span></Button
               >
             </li>
           {:else}
-            <li class="none t-small t-soft">{filter ? L.market.none : L.market.empty}</li>
+            <li class="span-all t-small t-soft">{filter ? L.market.none : L.market.empty}</li>
           {/each}
-        </ul>
+        </Cabinet>
       {:else if tab === 'sell'}
         {#if sale}
           <Section title={L.market.good}>
@@ -192,147 +193,24 @@
           <p class="t-small t-soft">{L.market.nothing}</p>
         {/if}
       {:else}
-        <ul class="shelf">
+        <Cabinet min={100}>
           {#each view.mine as o (o.id)}
             <li>
-              <span class="pic">{@render goodIcon(o.good, 44)}<b class="n t-num">×{num(o.n)}</b></span>
-              <b class="nm t-tiny">{nameOf(o.good)}</b>
-              <b class="price t-small t-num"><Icon name="linhThach" size={14} />{num(o.price)}</b>
+              <span class="cab-pic"><Lot icon={o.good} n="×{num(o.n)}" /></span>
+              <b class="t-tiny t-ellipsis w-full">{nameOf(o.good)}</b>
+              <b class="row justify-center t-small t-num" style:--gap="3px"
+                ><Icon name="linhThach" size={14} />{num(o.price)}</b
+              >
               <small class="t-tiny t-soft">{L.market.expires(clock(o.at + MARKET_TTL - now))}</small>
               <Button size="sm" variant="quiet" onclick={() => act({ type: 'cancel', id: o.id })}
                 >{L.market.cancel}</Button
               >
             </li>
           {:else}
-            <li class="none t-small t-soft">{L.market.mineNone}</li>
+            <li class="span-all t-small t-soft">{L.market.mineNone}</li>
           {/each}
-        </ul>
+        </Cabinet>
       {/if}
     </div>
   {/if}
 </Sheet>
-
-<style>
-  .stall {
-    display: grid;
-    grid-template-columns: 84px minmax(0, 1fr);
-    gap: 12px;
-    align-items: center;
-    padding: 6px 14px 8px 6px;
-    border: 0 solid transparent;
-    border-image: var(--sk-card);
-    background:
-      var(--img-mountains, linear-gradient(transparent, transparent)) right bottom / 300% auto no-repeat,
-      var(--paper2);
-    background-clip: padding-box;
-  }
-  .stall img {
-    width: 84px;
-    height: 84px;
-    object-fit: contain;
-    rotate: -3deg;
-    filter: drop-shadow(0 3px 5px rgb(var(--shade) / 0.25));
-  }
-  /* viên mực: số linh thạch trên nền mực, chữ trắng */
-  .coin {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    justify-self: start;
-    padding: 3px 12px 4px 6px;
-    font-size: var(--fs-4);
-    color: var(--silk);
-    background: color-mix(in srgb, var(--ink) 82%, transparent);
-    border-radius: 999px;
-  }
-  /* kệ gỗ (như tủ Túi đồ): vách hai bên, ván dưới mỗi món */
-  .shelf {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 14px 0;
-    margin: 0;
-    padding: 6px 8px 12px;
-    list-style: none;
-    background:
-      linear-gradient(90deg, color-mix(in srgb, var(--ochre) 45%, var(--lacquer2)), var(--lacquer2)) left top / 8px 100%
-        no-repeat,
-      linear-gradient(90deg, var(--lacquer2), color-mix(in srgb, var(--ochre) 45%, var(--lacquer2))) right top / 8px
-        100% no-repeat,
-      linear-gradient(var(--silk), color-mix(in srgb, var(--paper2) 45%, var(--silk)));
-    border-top: 8px solid color-mix(in srgb, var(--ochre) 45%, var(--lacquer2));
-    border-radius: 4px 4px 0 0;
-    box-shadow: 0 4px 10px rgb(var(--shade) / 0.18);
-  }
-  .shelf li {
-    display: grid;
-    align-content: start;
-    justify-items: center;
-    gap: 3px;
-    min-width: 0;
-    padding: 0 5px;
-    text-align: center;
-  }
-  .shelf li.none {
-    grid-column: 1 / -1;
-    padding: 12px;
-  }
-  .pic {
-    position: relative;
-    display: grid;
-    justify-items: center;
-    width: calc(100% + 10px);
-    padding: 6px 0 14px;
-    background: linear-gradient(
-        transparent calc(100% - 12px),
-        var(--ochre) calc(100% - 12px),
-        var(--lacquer2) calc(100% - 3px),
-        rgb(var(--shade) / 0.14) calc(100% - 3px)
-      )
-      no-repeat;
-  }
-  .n {
-    position: absolute;
-    right: calc(50% - 34px);
-    bottom: 12px;
-    font-size: 13px;
-    text-shadow:
-      0 0 3px white,
-      0 0 3px white;
-  }
-  /* rẻ hơn giá gốc: thẻ lục góc trên; đắt hơn: thẻ son */
-  .off {
-    position: absolute;
-    top: 2px;
-    left: calc(50% - 40px);
-    padding: 0 5px;
-    font-size: 11px;
-    color: var(--silk);
-    background: var(--malachite);
-    border-radius: 4px;
-  }
-  .off.up {
-    background: var(--cinnabar);
-  }
-  .nm {
-    max-width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .price {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-  }
-  .who {
-    max-width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: var(--azurite);
-    text-decoration: underline dotted;
-  }
-  .wrap {
-    flex-wrap: wrap;
-  }
-</style>

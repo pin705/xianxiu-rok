@@ -26,6 +26,7 @@
     goto = null,
     ongone,
     say,
+    ask,
   }: {
     info: WorldInfo | null
     me: number | null
@@ -40,6 +41,7 @@
     goto?: { x: number; y: number } | null // nhảy tới ô này (toạ độ trong chat, dấu của minh)
     ongone?: () => void // đã nhảy tới
     say?: Net['say'] // chia sẻ toạ độ vào chat
+    ask?: Net['ask'] // Giới Báo
   } = $props()
 
   const KEY = 'rok.map'
@@ -93,6 +95,7 @@
     onpick={p => (pick = p)}
     {toggle}
     {send}
+    {ask}
   />
   <TileSheet
     {info}

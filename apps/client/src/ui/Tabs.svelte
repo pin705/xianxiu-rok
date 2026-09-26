@@ -2,6 +2,7 @@
   // Thẻ chuyển trong bảng: thẻ kẹp sách bằng giấy dựng trên mép trang (đường mực đôi); thẻ đang mở trắng hơn,
   // cao hơn, liền vào trang, đầu thẻ một vệt son. look="switch": công tắc viên mực nổi trên cảnh (bản đồ), mục chọn tô son.
   // look="chips": hàng thẻ tre cuộn ngang, mỗi thẻ có tranh (art: ui:<art>) hoặc icon, dòng phụ, số chờ, khoá.
+  // fit (chips): chia đều bề ngang, không cuộn (ít thẻ, chữ ngắn).
   import { Icon, artOf, type IconName } from '@rok/art'
   import { sfx } from '../lib'
   import Badge from './Badge.svelte'
@@ -11,15 +12,17 @@
     value,
     onchange,
     look = 'folder',
+    fit = false,
   }: {
     items: readonly { id: T; label: string; art?: string; icon?: IconName; sub?: string; n?: number; lock?: boolean }[]
     value: T
     onchange: (id: T) => void
     look?: 'folder' | 'switch' | 'chips'
+    fit?: boolean
   } = $props()
 </script>
 
-<div class="tabs {look}" role="tablist">
+<div class="tabs {look}" class:fit role="tablist">
   {#each items as it (it.id)}
     <button
       role="tab"
@@ -185,6 +188,11 @@
   }
   .chips .on::after {
     display: none;
+  }
+  .chips.fit button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 2px;
   }
   .chips img {
     width: 34px;

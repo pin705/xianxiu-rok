@@ -10,6 +10,8 @@ import type {
   ArkRow,
   ArenaFoe,
   BetView,
+  HeroView,
+  PaperView,
   TourneyView,
   Good,
   MapSnap,
@@ -95,6 +97,7 @@ export type Query =
   | { k: 'friends' }
   | { k: 'shared'; pid: number; id: number }
   | { k: 'fest'; id: FestId } // bảng xếp hạng lễ (FEST_RANKED) lượt đang mở
+  | { k: 'paper' } // Giới Báo: các số báo gần đây
 // Đạo hữu đã kết giao: tên, cảnh giới, đang chơi không
 export type FriendView = { pid: number; name: string; hall: number; online: boolean }
 // Nhóm chat của mình: tên, người trong nhóm (tên theo state hiện tại), tin cuối
@@ -124,7 +127,13 @@ export type ArenaView = {
   cup?: TourneyView // Luận Kiếm Đại Hội mùa này (tuần cuối mùa)
 }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
-export type Fame = { season: number; at: number; top: { name: string; pts: number }[] }
+// heroes: anh kiệt mùa được bình chọn (Lưu Danh Sử Sách) — hạng mục k (HERO_KINDS), tên
+export type Fame = {
+  season: number
+  at: number
+  top: { name: string; pts: number }[]
+  heroes?: { k: number; name: string }[]
+}
 export type Season = {
   rows: { name: string; pts: number }[]
   me: { rank: number; pts: number } | null
@@ -144,9 +153,11 @@ export type Season = {
   // Thiên Mệnh Chọn Luật: luật mùa này, đang mở bỏ phiếu không, số phiếu từng luật, phiếu của mình
   vote?: { rule?: number; open: boolean; tally: number[]; mine?: number }
   bet?: BetView // Luận Kiếm Đặt Cược: trận playoff đang nhận cược, cược của mình
+  heroes?: HeroView // Lưu Danh Sử Sách: bình chọn anh kiệt mùa
 }
 // Chat: kênh giới (từ tầng 3), kênh tiên minh, truyền âm 1-1 với người chơi pid ('p<pid>'). Chữ đã lọc ở server.
-export type Channel = 'world' | 'ally' | `p${number}` | `g${number}` // g<id>: nhóm chat tự tạo
+// camp: kênh phái (Chính / Tà phái của mình — Chính Tà Phân Tranh) · g<id>: nhóm chat tự tạo
+export type Channel = 'world' | 'ally' | 'camp' | `p${number}` | `g${number}`
 export type ChatMsg = { id: number; pid: number; name: string; text: string; at: number }
 export type SayErr = 'rate' | 'dup' | 'muted' | 'locked' | 'bad' | 'unavailable'
 export type { AllyInfo, AllyRow, MapSnap, Rival }
@@ -172,6 +183,7 @@ export type Answer = {
   friends: FriendView[]
   shared: Report | null // chiến báo người khác chia sẻ vào kênh mình nghe được
   fest: FestView
+  paper: PaperView
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }

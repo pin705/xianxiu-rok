@@ -1,6 +1,7 @@
 <script lang="ts">
   // Tờ giấy ghim son: bùa ngày, cáo thị, lá thư, lệnh bài giấy… Nền giấy bùa, đinh son trên đầu, nghiêng nhẹ như ghim tay.
   // tilt: độ nghiêng (độ) — danh sách xen kẽ −1/1 cho tự nhiên; ready: viền son sáng (có thưởng chờ nhận); onclick: cả tờ bấm được.
+  // snug: lá hẹp trong lưới (lề ngang hẹp, cao bằng ô — các lá cùng hàng bằng nhau): bùa ngày đăng nhập.
   import type { Snippet } from 'svelte'
   import { sfx } from '../lib'
 
@@ -9,6 +10,7 @@
     pin = true,
     ready = false,
     dim = false,
+    snug = false,
     label,
     onclick,
     children,
@@ -17,6 +19,7 @@
     pin?: boolean
     ready?: boolean
     dim?: boolean
+    snug?: boolean
     label?: string
     onclick?: (e: MouseEvent) => void
     children: Snippet
@@ -30,6 +33,7 @@
     class:pin
     class:ready
     class:dim
+    class:snug
     style:rotate="{tilt}deg"
     aria-label={label}
     onclick={e => {
@@ -38,7 +42,7 @@
     }}>{@render children()}</button
   >
 {:else}
-  <div class="note" class:pin class:ready class:dim style:rotate="{tilt}deg">{@render children()}</div>
+  <div class="note" class:pin class:ready class:dim class:snug style:rotate="{tilt}deg">{@render children()}</div>
 {/if}
 
 <style>
@@ -78,5 +82,9 @@
   }
   button.note:active {
     transform: translateY(1px);
+  }
+  .snug {
+    height: 100%;
+    padding: 14px 4px 8px;
   }
 </style>

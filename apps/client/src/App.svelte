@@ -504,6 +504,7 @@
         goto={mapAt}
         ongone={() => (mapAt = null)}
         say={net?.say}
+        ask={net?.ask}
       />
     {:else if tab === 'baoKho'}
       <Vault onfocus={focus} />
@@ -516,6 +517,7 @@
         onmap={goMap}
         onraid={pid => openRivals(pid)}
         list={() => net?.ask({ k: 'allies' }) ?? Promise.resolve(null)}
+        say={net?.say}
       >
         {#snippet chat()}<Chat
             {me}

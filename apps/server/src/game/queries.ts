@@ -38,6 +38,8 @@ import {
   tourneyView,
   voteOpen,
   betView,
+  heroView,
+  paperView,
   voteTally,
 } from '@rok/rules/world'
 import type { Answer, FestView, Query, QueryOf } from '@rok/protocol'
@@ -106,7 +108,23 @@ const voteView = (w: World, pid: number) => ({
   ...(w.shared.votes?.[pid] !== undefined && { mine: w.shared.votes[pid] }),
 })
 // tab Mùa: phiếu chọn luật và Luận Kiếm Đặt Cược (trận playoff đang nhận cược, cược của người hỏi)
-const pollsOf = (w: World, pid: number) => ({ vote: voteView(w, pid), bet: betView(w.shared, pid) })
+const pollsOf = (w: World, pid: number) => ({
+  vote: voteView(w, pid),
+  bet: betView(w.shared, pid),
+  heroes: heroView(w.shared, w.ps, pid, w.map(w.now()).day), // Lưu Danh Sử Sách
+})
+
+// Truy vấn xã giao: truyền âm, nhóm chat, đạo hữu, Giới Báo
+const social = (w: World): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper'> => ({
+  dms: sock => dmsOf(w, sock.data.pid),
+  groups: sock => groupViews(w, sock.data.pid),
+  paper: sock => paperView(w.shared, sock.data.pid, w.now()),
+  friends: sock =>
+    (w.ps.get(sock.data.pid)?.friends ?? []).flatMap(pid => {
+      const s = w.ps.get(pid)
+      return s ? [{ pid, name: s.name, hall: s.levels.chuDien, online: !!w.slots.get(pid)?.conns.size }] : []
+    }),
+})
 
 export const answersOf = (w: World): Answers => ({
   rivals: (sock, q) => {
@@ -132,13 +150,7 @@ export const answersOf = (w: World): Answers => ({
     const crowns = w.ps.get(q.pid)?.crowns ?? [] // danh hiệu mùa (đệ nhất Công Huân)
     return p && { ...p, crown, boon: crown ? boonLeft(w.shared, now) : 0, invite, supply, crowns }
   },
-  dms: sock => dmsOf(w, sock.data.pid),
-  groups: sock => groupViews(w, sock.data.pid),
-  friends: sock =>
-    (w.ps.get(sock.data.pid)?.friends ?? []).flatMap(pid => {
-      const s = w.ps.get(pid)
-      return s ? [{ pid, name: s.name, hall: s.levels.chuDien, online: !!w.slots.get(pid)?.conns.size }] : []
-    }),
+  ...social(w),
   arena: sock => {
     const now = w.now()
     w.tick(now)

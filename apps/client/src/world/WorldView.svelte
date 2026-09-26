@@ -63,6 +63,8 @@
   import Minimap from './Minimap.svelte'
   import Holdings from './Holdings.svelte'
   import FirstLook from '../FirstLook.svelte'
+  import Paper from './Paper.svelte'
+  import type { Net } from '../net'
 
   let {
     info,
@@ -75,6 +77,7 @@
     onpick,
     toggle,
     send,
+    ask,
   }: {
     info: WorldInfo
     me: number | null
@@ -86,6 +89,7 @@
     onpick: (p: Pick) => void
     toggle?: Snippet // nút gạt Giới | Vùng (MapTab)
     send?: (a: WorldAction) => Promise<Ack> // Giới Chủ ban phúc
+    ask?: Net['ask'] // Giới Báo
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -113,6 +117,7 @@
   let scene = $state.raw<WorldScene>()
   let layer = $state<HTMLDivElement>()
   let chronOpen = $state(false)
+  let paperOpen = $state(false) // Giới Báo
   // thẻ mùa thu gọn (chỉ dòng mùa + Công Huân + nút): mặc định gọn — thẻ mở rộng che một phần ba bản đồ trên điện thoại;
   // người chơi mở ra thì nhớ theo máy
   const SLIM = 'rok.worldCard'
@@ -711,6 +716,13 @@
         </ol>
       {/if}
     {/if}
+    {#if !slim && ask}
+      <!-- Giới Báo: số báo mỗi sáng (kỷ lục hôm trước), cạnh dòng biên niên -->
+      <div class="row between" style:--gap="6px">
+        <small class="t-tiny t-soft">{L.paper.line}</small>
+        <Button size="sm" variant="ghost" icon="scroll" onclick={() => (paperOpen = true)}>{L.paper.open}</Button>
+      </div>
+    {/if}
     {#if !slim && snap?.chron.length}
       <button class="line-btn" onclick={() => (chronOpen = !chronOpen)} aria-expanded={chronOpen}>
         <small class="t-tiny"><b>{L.world.chron}:</b> {chronText(L, snap.chron.at(-1)!)}</small>
@@ -728,3 +740,4 @@
     {/if}
   </Card>
 </Dock>
+<Paper open={paperOpen} onclose={() => (paperOpen = false)} {ask} {send} />

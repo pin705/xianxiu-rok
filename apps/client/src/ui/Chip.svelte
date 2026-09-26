@@ -1,12 +1,25 @@
 <script lang="ts">
   // Thẻ tre nhỏ chọn một ô (trận đồ 1·2·3…): đang chọn nền trắng, viền son, vệt son trên đầu; bấm lại ô đang chọn vẫn gọi
-  // onclick (nạp lại). Xếp bằng .row.wrap.
+  // onclick (nạp lại). Xếp bằng .row.wrap. tab: thẻ trong role="tablist" (aria-selected thay cho aria-pressed).
   import type { Snippet } from 'svelte'
 
-  let { on = false, onclick, children }: { on?: boolean; onclick: () => void; children: Snippet } = $props()
+  let {
+    on = false,
+    tab = false,
+    onclick,
+    children,
+  }: { on?: boolean; tab?: boolean; onclick: () => void; children: Snippet } = $props()
 </script>
 
-<button type="button" class="chip" class:on aria-pressed={on} {onclick}>{@render children()}</button>
+<button
+  type="button"
+  class="chip"
+  class:on
+  role={tab ? 'tab' : undefined}
+  aria-selected={tab ? on : undefined}
+  aria-pressed={tab ? undefined : on}
+  {onclick}>{@render children()}</button
+>
 
 <style>
   .chip {

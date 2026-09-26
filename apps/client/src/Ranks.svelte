@@ -7,6 +7,7 @@
   import type { WorldAction } from '@rok/rules/world'
   import RuleVote from './RuleVote.svelte'
   import LeagueBet from './LeagueBet.svelte'
+  import HeroVote from './HeroVote.svelte'
   import type { Ranks } from './net'
   import { CAMP_STAGE_PTS } from '@rok/rules'
   import type { IconName } from '@rok/art'
@@ -102,6 +103,9 @@
     {#if sea.bet && (sea.bet.open.length || sea.bet.mine.length)}<div class="mt-2">
         <LeagueBet bet={sea.bet} {send} onbet={() => void season?.().then(d => (sea = d))} />
       </div>{/if}
+    {#if sea.heroes?.open}<div class="mt-2">
+        <HeroVote view={sea.heroes} {send} onvoted={() => void season?.().then(d => (sea = d))} />
+      </div>{/if}
     {#if sea.camps}
       <!-- Chính Tà Phân Tranh: hai tấm biển phái đối diện, phái mình viền son -->
       <div class="grid mt-2">
@@ -171,7 +175,11 @@
         {#each sea.fame as f (f.season)}
           <li class="t-small">
             <b style:width="64px">{L.rank.fameRow(f.season)}</b>
-            <span>{f.top.map(t => t.name).join(' · ') || L.rank.none}</span>
+            <span class="stack" style:--gap="0"
+              >{f.top.map(t => t.name).join(' · ') || L.rank.none}{#if f.heroes?.length}<small class="t-tiny t-soft"
+                  >{f.heroes.map(h => L.hero.fame(L.hero.kinds[h.k], h.name)).join(' · ')}</small
+                >{/if}</span
+            >
           </li>
         {/each}
       </ul>

@@ -27,7 +27,7 @@
     type State,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { Bag, Button, Card, Meter, Section, Sheet, fly } from './ui'
+  import { Bag, Board, Button, Card, Meter, Section, Sheet, fly } from './ui'
   import { L, clock, num, sfx } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
@@ -127,54 +127,58 @@
       {@const max = d.goals[d.goals.length - 1]}
       <Section title="{L.fest.names.nhatKhoa.name} · {L.daily.activity(Math.min(pts, max), max)}">
         <Meter value={Math.min(1, pts / max)} tone="gold" size="md" />
-        <ul class="stack mt-2 board">
-          {#each d.goals as goal, i (goal)}
-            {@const r = d.rewards[i]}
-            {@const got = !!s.fest.nhatKhoa?.got.includes(i)}
-            {@const ready = pts >= goal}
-            <li>
-              <Card tone={ready && !got ? 'glow' : 'silk'}>
-                <div class="row">
-                  <Icon name="star" size={24} />
-                  <span class="grow stack" style:--gap="3px"
-                    ><b class="t-small">{L.daily.chest(goal)}</b><Bag
-                      res={withHall(r.res, r.hallRes)}
-                      items={r.items}
-                      size="sm"
-                    /></span
-                  >
-                  {#if got}
-                    <span class="stamp" aria-label={L.mail.got}>{L.mail.got}</span>
-                  {:else}
-                    <Button
-                      variant="gold"
-                      size="sm"
-                      disabled={!ready}
-                      onclick={() => act({ type: 'fest', id: 'nhatKhoa', i }, 'win')}>{L.daily.open}</Button
+        <div class="mt-2">
+          <Board pinned>
+            {#each d.goals as goal, i (goal)}
+              {@const r = d.rewards[i]}
+              {@const got = !!s.fest.nhatKhoa?.got.includes(i)}
+              {@const ready = pts >= goal}
+              <li>
+                <Card tone={ready && !got ? 'glow' : 'silk'}>
+                  <div class="row">
+                    <Icon name="star" size={24} />
+                    <span class="grow stack" style:--gap="3px"
+                      ><b class="t-small">{L.daily.chest(goal)}</b><Bag
+                        res={withHall(r.res, r.hallRes)}
+                        items={r.items}
+                        size="sm"
+                      /></span
                     >
-                  {/if}
-                </div>
-              </Card>
-            </li>
-          {/each}
-        </ul>
-        <ul class="stack mt-2 board">
-          {#each d.tasks as t (t.m)}
-            {@const v = festProgress(s, 'nhatKhoa', t.m)}
-            <li class="row between t-small" class:done={v >= t.n}>
-              <span class="row" style:--gap="6px"
-                ><Icon name={v >= t.n ? 'check' : 'clock'} size={16} />{(L.fest.gain[t.m] ?? L.fest.task[t.m])(
-                  num(t.n),
-                )}</span
-              >
-              <span class="row" style:--gap="8px"
-                ><span class="t-num t-soft">{num(Math.min(v, t.n))}/{num(t.n)}</span><b class="t-gold"
-                  >{L.daily.pts(t.pts)}</b
-                ></span
-              >
-            </li>
-          {/each}
-        </ul>
+                    {#if got}
+                      <span class="stamp" aria-label={L.mail.got}>{L.mail.got}</span>
+                    {:else}
+                      <Button
+                        variant="gold"
+                        size="sm"
+                        disabled={!ready}
+                        onclick={() => act({ type: 'fest', id: 'nhatKhoa', i }, 'win')}>{L.daily.open}</Button
+                      >
+                    {/if}
+                  </div>
+                </Card>
+              </li>
+            {/each}
+          </Board>
+        </div>
+        <div class="mt-2">
+          <Board pinned>
+            {#each d.tasks as t (t.m)}
+              {@const v = festProgress(s, 'nhatKhoa', t.m)}
+              <li class="row between t-small" class:done={v >= t.n}>
+                <span class="row" style:--gap="6px"
+                  ><Icon name={v >= t.n ? 'check' : 'clock'} size={16} />{(L.fest.gain[t.m] ?? L.fest.task[t.m])(
+                    num(t.n),
+                  )}</span
+                >
+                <span class="row" style:--gap="8px"
+                  ><span class="t-num t-soft">{num(Math.min(v, t.n))}/{num(t.n)}</span><b class="t-gold"
+                    >{L.daily.pts(t.pts)}</b
+                  ></span
+                >
+              </li>
+            {/each}
+          </Board>
+        </div>
       </Section>
     {/if}
   {/if}
@@ -196,39 +200,41 @@
   <!-- Tông vụ (Side Quests của RoK): 4 dòng song song, mỗi dòng một việc; nhận xong hiện việc kế -->
   <Section title={L.side.title}>
     <p class="t-small t-soft">{L.side.hint}</p>
-    <ul class="stack mt-2 board">
-      {#each SIDE_LINES as line, i (line)}
-        {@const q = sideAt(s, i)}
-        {@const have = q ? sideProgress(s, q) : 0}
-        <li>
-          <Card tone={q && have >= q.n ? 'glow' : 'paper'}>
-            <div class="row">
-              <span class="grow stack" style:--gap="4px">
-                <small class="t-tiny t-gold t-strong">{L.side.lines[line]}</small>
-                {#if q}
-                  <b>{sideText(q)}</b>
-                  <Meter value={Math.min(have, q.n) / q.n} tone="gold" size="sm" />
-                  <span class="row t-small"
-                    ><b class="t-num">{num(Math.min(have, q.n))}/{num(q.n)}</b><Bag
-                      items={q.reward.items}
-                      size="sm"
-                    /></span
-                  >
-                {:else}
-                  <b class="t-good">{L.side.done}</b>
-                {/if}
-              </span>
-              {#if q}<Button
-                  variant="gold"
-                  size="sm"
-                  disabled={have < q.n}
-                  onclick={() => act({ type: 'side', line: i }, 'reward')}>{L.quest.claim}</Button
-                >{/if}
-            </div>
-          </Card>
-        </li>
-      {/each}
-    </ul>
+    <div class="mt-2">
+      <Board pinned>
+        {#each SIDE_LINES as line, i (line)}
+          {@const q = sideAt(s, i)}
+          {@const have = q ? sideProgress(s, q) : 0}
+          <li>
+            <Card tone={q && have >= q.n ? 'glow' : 'paper'}>
+              <div class="row">
+                <span class="grow stack" style:--gap="4px">
+                  <small class="t-tiny t-gold t-strong">{L.side.lines[line]}</small>
+                  {#if q}
+                    <b>{sideText(q)}</b>
+                    <Meter value={Math.min(have, q.n) / q.n} tone="gold" size="sm" />
+                    <span class="row t-small"
+                      ><b class="t-num">{num(Math.min(have, q.n))}/{num(q.n)}</b><Bag
+                        items={q.reward.items}
+                        size="sm"
+                      /></span
+                    >
+                  {:else}
+                    <b class="t-good">{L.side.done}</b>
+                  {/if}
+                </span>
+                {#if q}<Button
+                    variant="gold"
+                    size="sm"
+                    disabled={have < q.n}
+                    onclick={() => act({ type: 'side', line: i }, 'reward')}>{L.quest.claim}</Button
+                  >{/if}
+              </div>
+            </Card>
+          </li>
+        {/each}
+      </Board>
+    </div>
   </Section>
   {#if game.levels.chuDien >= DAILY_HALL}
     <!-- Sự kiện tuần: chủ đề đổi theo tuần, đủ mốc nhận quà, top của giới nhận thư lúc hết tuần -->
@@ -236,7 +242,7 @@
     <Section title="{L.event.title} · {L.event.theme[theme]}">
       {#snippet aside()}{L.event.pts(game.ev.pts)}{/snippet}
       <p class="t-small t-soft">{L.event.how[theme]} · {L.weekly.reset(nextWeek(now) - now)}</p>
-      <ul class="stack board">
+      <Board pinned>
         {#each EVENT_GOALS as goal, i (goal)}
           {@const r = EVENT_REWARDS[i]}
           {@const got = game.ev.got[i]}
@@ -268,7 +274,7 @@
             </Card>
           </li>
         {/each}
-      </ul>
+      </Board>
       <p class="t-small t-lore">{L.event.top}</p>
     </Section>
   {/if}
@@ -276,60 +282,23 @@
   <Section title={L.weekly.title}>
     {#snippet aside()}<Help k={9} />{/snippet}
     <p class="t-small t-soft">{L.weekly.reset(nextWeek(now) - now)}</p>
-    <ul class="stack mt-2 board">
-      {#each WEEKLY as w, i (w.id)}
-        {@render task(
-          L.weekly.task[w.id](w.n),
-          game.weekly.n[w.id],
-          w.n,
-          game.weekly.got[i],
-          weeklyDone(game, i),
-          perWeek,
-          () => act({ type: 'weekly', i }),
-        )}
-      {/each}
-    </ul>
+    <div class="mt-2">
+      <Board pinned>
+        {#each WEEKLY as w, i (w.id)}
+          {@render task(
+            L.weekly.task[w.id](w.n),
+            game.weekly.n[w.id],
+            w.n,
+            game.weekly.got[i],
+            weeklyDone(game, i),
+            perWeek,
+            () => act({ type: 'weekly', i }),
+          )}
+        {/each}
+      </Board>
+    </div>
     {@render chest(L.weekly.bonus, WEEKLY_BONUS, game.weekly.got.every(Boolean), game.weekly.bonus, () =>
       act({ type: 'weeklyBonus' }),
     )}
   </Section>
 </Sheet>
-
-<style>
-  /* ---------- Bảng bùa: mỗi việc một lá bùa ghim trên bảng gỗ, nhận xong đóng dấu son ---------- */
-  .board {
-    --gap: 14px;
-    padding: 16px 12px 14px;
-    background:
-      repeating-linear-gradient(90deg, rgb(0 0 0 / 0.05) 0 2px, transparent 2px 38px), linear-gradient(#9a6a42, #7a5030);
-    border: 6px solid #5c3a1f;
-    border-radius: 6px;
-    box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.3);
-  }
-  .board > li {
-    position: relative;
-  }
-  .board > li:nth-child(odd) {
-    rotate: -0.7deg;
-  }
-  .board > li:nth-child(even) {
-    rotate: 0.6deg;
-  }
-  .board > li::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: 50%;
-    z-index: 1;
-    width: 11px;
-    height: 11px;
-    translate: -50% 0;
-    background: radial-gradient(circle at 35% 35%, #f5a08c, #b3372a 55%, #6a1a12);
-    border-radius: 50%;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  }
-  .board :global(.card) {
-    background: linear-gradient(#fbf7e8, #f3ecd4);
-    box-shadow: 0 3px 6px rgb(0 0 0 / 0.28);
-  }
-</style>

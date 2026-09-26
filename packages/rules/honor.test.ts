@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   COIN_PER,
   COIN_SHOP,
+  HERO_GIFT,
   HONOR_KP,
   HONOR_TIERS,
   RELIC_BONUS,
@@ -16,7 +17,21 @@ import {
   seasonEnd,
   type State,
 } from './index.ts'
-import { addHonor, addKp, atlas, campOf, campPts, endSeason, freshWorld, type Players } from './world.ts'
+import {
+  addHonor,
+  addKp,
+  atlas,
+  campOf,
+  campPts,
+  endSeason,
+  freshWorld,
+  heroStep,
+  heroView,
+  heroWinners,
+  worldAct,
+  type Players,
+  type World,
+} from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
 const sect = (name: string, honor = 0): State => ({ ...newGame(T0, name), honor })
@@ -169,4 +184,71 @@ test('Anh Linh Điện (Museum): trong mùa giới, từ tầng 16, Phi Thăng T
     s = (apply(s, { type: 'relic', elder: e }, T0) as { state: State }).state
   assert.equal(relicError(s, 'loiChan'), 'limit', 'mỗi mùa tối đa 3 trưởng lão')
   assert.equal(seasonEnd(s, T0 + 1000, 1).relics, undefined, 'hết mùa di vật tan')
+})
+
+test('Lưu Danh Sử Sách: ba ngày cuối mùa chốt ứng viên theo chỉ số mùa, cả giới bình chọn (đổi phiếu được, không tự bầu); hết mùa anh kiệt có thư + quà', () => {
+  // 1–3 có Công Huân mùa này; 4 là NPC (bỏ); 5 chưa làm gì. Chiến công tính phần tăng từ đầu mùa (yb)
+  const ps: Players = new Map([
+    [
+      1,
+      { ...sect('A', 300), stats: { ...sect('A').stats, kp: 900 }, yb: { kp: 100, hunted: 0, raided: 0, gathered: 0 } },
+    ],
+    [2, { ...sect('B', 500), stats: { ...sect('B').stats, kp: 500 } }],
+    [3, sect('C', 100)],
+    [4, sect('NPC', 900)],
+    [5, sect('E')],
+  ])
+  let w: World = freshWorld()
+  assert.equal(heroStep(ps, w, 40, new Set([4])), w, 'chưa tới ba ngày cuối mùa')
+  w = heroStep(ps, w, 46, new Set([4]))
+  assert.deepEqual(w.heroes?.picks.slice(0, 2), [
+    [1, 2],
+    [2, 1, 3],
+  ])
+  assert.equal(heroStep(ps, w, 47, new Set([4])), w, 'chốt một lần mỗi mùa')
+  const vote = (pid: number, k: number, who: number, day = 46) => {
+    const r = worldAct(ps, pid, { type: 'heroVote', k, pid: who }, T0, 1, { atlas: atlas(7), phase: 3, day }, w)
+    if (!r.ok) return r.error
+    w = r.world
+    return null
+  }
+  assert.equal(vote(3, 1, 3), 'bad', 'không phải ứng viên hạng mục này')
+  assert.equal(vote(2, 1, 2), 'bad', 'không tự bầu')
+  assert.equal(vote(3, 1, 1, 40), 'locked', 'chưa mở bình chọn')
+  assert.equal(vote(3, 1, 1), null)
+  assert.equal(vote(3, 1, 2), null, 'đổi phiếu')
+  assert.equal(vote(5, 1, 3), null)
+  assert.equal(vote(1, 1, 3), null)
+  assert.equal(vote(5, 0, 1), null)
+  assert.deepEqual(
+    heroWinners(w).map(h => h && [h.pid, h.votes]),
+    [[1, 1], [3, 2], undefined, undefined],
+    'Công Thần: người 3 hai phiếu; hạng mục chưa ai bầu thì bỏ trống',
+  )
+  const v = heroView(w, ps, 5, 46)
+  assert.deepEqual(
+    [v.open, v.mine, v.picks[1].map(c => [c.pid, c.n])],
+    [
+      true,
+      [1, 3, 0, 0],
+      [
+        [2, 1],
+        [1, 0],
+        [3, 2],
+      ],
+    ],
+  )
+  // hết mùa: anh kiệt nhận thư hero + quà
+  const out = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, T0, 1, new Set([4]))
+  const got = (pid: number) => out.changed.get(pid)!.mail.filter(m => m.k === 'hero')
+  assert.deepEqual(
+    got(3).map(m => [m.a, m.gift]),
+    [[[1, 2], HERO_GIFT]],
+  )
+  assert.deepEqual(
+    got(1).map(m => m.a),
+    [[0, 1]],
+  )
+  assert.deepEqual(got(2), [])
+  assert.equal(out.world.heroes, undefined, 'mùa mới bình chọn lại')
 })

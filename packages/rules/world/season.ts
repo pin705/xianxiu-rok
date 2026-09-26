@@ -7,6 +7,7 @@ import {
   EVENT_PRIZES,
   EVENT_TOP,
   FEST_PRIZES,
+  HERO_GIFT,
   HONOR_RANKS,
   LEAGUE_PRIZES,
   MAX_LEVEL,
@@ -24,6 +25,7 @@ import { leagueRank } from './ark.ts'
 import { campOf, campTotal, type SeasonRow, seasonBoard } from './points.ts'
 import { voteWinner } from './vote.ts'
 import { betSettle } from './bets.ts'
+import { heroWinners } from './heroes.ts'
 
 // Hết mùa cho cả giới (trừ skip: NPC, server làm mới riêng): minh đứng đầu (người từ ASCEND_HALL) và ai ở tầng cao nhất phi thăng,
 // còn lại luân hồi một kiếp; ai cũng nhận thư kết quả. Phần chung làm mới, giữ tiên minh (bỏ các việc đang nhờ giúp).
@@ -48,6 +50,7 @@ export function endSeason(
   const won = camps[0] === camps[1] ? null : camps[0] > camps[1] ? 0 : 1 // Chính Tà Phân Tranh: phái thắng mùa
   const changed: Players = new Map()
   const paid = betSettle(ps, w, now, true).changed // Luận Kiếm Đặt Cược còn treo: hoàn tệ
+  const heroes = heroWinners(w) // Lưu Danh Sử Sách: anh kiệt mỗi hạng mục
   for (const [pid, s0] of ps) {
     if (skip.has(pid)) continue
     const s = advance(paid.get(pid) ?? s0, now) // việc xong lúc offline (Chủ điện vừa lên tầng…) cũng tính cho phi thăng, tổng kết
@@ -64,6 +67,9 @@ export function endSeason(
     // Chính Tà Phân Tranh: người phái thắng mùa có quà (thư trước thư kết mùa)
     if (won !== null && campOf(side) === won)
       x = mail(x, { at: now, k: 'camp', a: [won, camps[won], camps[won ? 0 : 1]], gift: CAMP_WIN })
+    heroes.forEach((h, k) => {
+      if (h?.pid === pid) x = mail(x, { at: now, k: 'hero', a: [k, h.votes], gift: HERO_GIFT })
+    })
     x = mail(x, { at: now, k: 'season', a: [season, rank.get(side) ?? 0, up ? 1 : 0] })
     // Tổng kết mùa: phần bộ đếm tăng trong mùa (so với lúc đầu mùa), rồi ghi mốc cho mùa sau
     const now4 = {

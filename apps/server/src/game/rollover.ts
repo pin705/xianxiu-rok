@@ -47,6 +47,9 @@ import {
   arkOf,
   arkStep,
   betSettle,
+  heroStep,
+  heroWinners,
+  paperStep,
   SEASON_DAYS,
   partyStep,
   aquizStep,
@@ -63,7 +66,9 @@ export function seasonEnd(w: World, now: number) {
   const season = w.info.season
   const r = endSeason(w.ps, w.shared, w.map(now), now, season, w.npc)
   const top = r.top.slice(0, 3).map(x => ({ name: x.name, pts: x.pts }))
-  w.fame = [{ season, at: now, top }, ...w.fame].slice(0, 10)
+  // Lưu Danh Sử Sách: anh kiệt được bình chọn mỗi hạng mục lên Phong Thần Bảng cùng top mùa
+  const heroes = heroWinners(w.shared).flatMap((h, k) => (h ? [{ k, name: w.ps.get(h.pid)?.name ?? '?' }] : []))
+  w.fame = [{ season, at: now, top, ...(heroes.length && { heroes }) }, ...w.fame].slice(0, 10)
   w.seed = randomInt(1, 2 ** 31)
   w.opened = now
   w.info = { ...w.info, season: season + 1, map: w.seed, opened: now }
@@ -200,6 +205,18 @@ export function allyEvents(w: World, now: number) {
   wallCheck(w, now)
   planCheck(w, now)
   tourneyCheck(w, now)
+  heroCheck(w, now)
+  paperCheck(w, now)
+}
+// Giới Báo: qua 0h thì ra số báo hôm trước (kỷ lục từng mục) và lấy mốc chỉ số mới
+function paperCheck(w: World, now: number) {
+  const next = paperStep(w.ps, w.shared, now, w.npc)
+  if (next !== w.shared) w.share(next)
+}
+// Lưu Danh Sử Sách: mở bình chọn (ba ngày cuối mùa) thì chốt ứng viên, một lần mỗi mùa
+function heroCheck(w: World, now: number) {
+  const next = heroStep(w.ps, w.shared, w.map(now).day, w.npc)
+  if (next !== w.shared) w.share(next)
 }
 // Luận Kiếm Đại Hội: tuần cuối mùa, mỗi ngày một vòng loại trực tiếp; có Kiếm Khôi thì ghi biên niên
 function tourneyCheck(w: World, now: number) {

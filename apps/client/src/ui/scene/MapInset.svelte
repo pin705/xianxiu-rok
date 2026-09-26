@@ -31,7 +31,7 @@
   }
 </script>
 
-<div class="inset">
+<div class="mini">
   {#if open}
     <div
       class="map"
@@ -67,7 +67,7 @@
 </div>
 
 <style>
-  .inset {
+  .mini {
     position: fixed;
     left: calc(var(--rail) + 12px);
     bottom: calc(var(--safe-b) + 128px);
@@ -133,7 +133,7 @@
       width: 168px;
       height: 168px;
     }
-    .inset {
+    .mini {
       top: calc(var(--top) + 16px);
       right: 16px;
       bottom: auto;

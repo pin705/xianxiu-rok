@@ -24,7 +24,7 @@ const Handshake = z.object({
 })
 // Khuôn Zod khớp kiểu của @rok/protocol (satisfies): giao kèo đổi mà quên sửa ở đây là lỗi biên dịch
 const Chan = z.union([
-  z.enum(['world', 'ally']),
+  z.enum(['world', 'ally', 'camp']),
   z.templateLiteral(['p', z.number().int().positive()]),
   z.templateLiteral(['g', z.number().int().positive()]),
 ]) satisfies z.ZodType<Channel>
@@ -42,6 +42,7 @@ const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('arena') }),
   z.object({ k: z.literal('honor') }),
   z.object({ k: z.literal('groups') }),
+  z.object({ k: z.literal('paper') }),
   z.object({ k: z.literal('friends') }),
   z.object({ k: z.literal('shared'), pid: z.number().int().positive(), id: z.number().int().positive() }),
   z.object({ k: z.literal('fest'), id: z.enum(FEST_IDS as [FestId, ...FestId[]]) }),

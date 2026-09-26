@@ -33,8 +33,8 @@
     type FestId,
     type Metric,
   } from '@rok/rules'
-  import { Icon, Portrait, artOf, type IconName } from '@rok/art'
-  import { Badge, Bag, Button, Card, Meter, Sheet, Tabs } from './ui'
+  import { Icon, Portrait, type IconName } from '@rok/art'
+  import { Badge, Bag, Banner, Button, Card, Chip, Entry, Meter, Note, Rail, Sheet, Tabs } from './ui'
   import { L, LOOK, num, seeFest, seenFests, sfx } from './lib'
   import { useGame } from './game'
   import Rescue from './Rescue.svelte'
@@ -200,7 +200,6 @@
     truyenDao: 'flag',
     manThuong: 'treasure',
   }
-  const fx = (n: string) => artOf(`ui:fx-${n}`)?.src
   // lịch 7 ngày (sự kiện tương lai chưa mở vẫn hiện để người chơi chuẩn bị, như Event Calendar của RoK)
   const cal = $derived(
     open ? festCalendar(s, now, 7).map(d => ({ ...d, ids: d.ids.filter(id => !FESTS[id].panel) })) : [],
@@ -221,6 +220,22 @@
   let season = $state(false) // đang xem Lịch giới
   let dayPick = $state<number | null>(null) // ngày đang xem của lễ có nhánh theo ngày (null: ngày mới mở nhất)
   const hasPass = $derived(s.levels.chuDien >= PASS_HALL)
+  // cột thẻ trái: Tu Tiên Lệnh, Lịch giới, rồi các sự kiện đang mở
+  type Tag = FestId | 'pass' | 'season'
+  const tags = $derived([
+    ...(hasPass
+      ? [{ id: 'pass' as Tag, label: L.pass.title, art: 'fx-pass', icon: 'scroll' as IconName, n: passReady(s).length }]
+      : []),
+    ...(opened ? [{ id: 'season' as Tag, label: L.scal.title, art: 'fx-calendar', icon: 'clock' as IconName }] : []),
+    ...list.map(id => ({
+      id: id as Tag,
+      label: L.fest.names[id].name,
+      art: `fx-${FX[id]}`,
+      icon: ICON[id],
+      n: waiting(id),
+      fresh: fresh(id),
+    })),
+  ])
   function choose(id: FestId) {
     pick = id
     show(null)
@@ -277,49 +292,17 @@
   }
 </script>
 
-{#snippet tag(
-  img: string | undefined,
-  icon: IconName,
-  label: string,
-  on: boolean,
-  n: number,
-  pick: () => void,
-  isNew = false,
-)}
-  <button role="tab" class="tag" class:on aria-selected={on} onclick={pick}>
-    <span class="pic">
-      {#if img}<img src={img} alt="" draggable="false" />{:else}<Icon name={icon} size={30} />{/if}
-    </span>
-    <span class="tn">{label}</span>
-    <Badge {n} fresh={isNew} />
-  </button>
-{/snippet}
-
 <Sheet {open} {onclose} title={L.fest.title}>
   <!-- bố cục trung tâm sự kiện của game: cột thẻ tranh bên trái (cuộn riêng, dính đầu), sự kiện đang chọn bên phải -->
-  <div class="fest">
-    {#if hasPass || opened || list.length}
-      <div class="rail" role="tablist">
-        {#if hasPass}
-          {@render tag(fx('pass'), 'scroll', L.pass.title, scroll, passReady(s).length, () => show('pass'))}
-        {/if}
-        {#if opened}
-          {@render tag(fx('calendar'), 'clock', L.scal.title, season, 0, () => show('season'))}
-        {/if}
-        {#each list as id (id)}
-          {@render tag(
-            fx(FX[id]),
-            ICON[id],
-            L.fest.names[id].name,
-            !scroll && !season && id === cur,
-            waiting(id),
-            () => choose(id),
-            fresh(id),
-          )}
-        {/each}
-      </div>
+  <div class="mt-2 items-start" class:split={tags.length > 0}>
+    {#if tags.length}
+      <Rail
+        items={tags}
+        value={scroll ? 'pass' : season ? 'season' : cur}
+        onchange={id => (id === 'pass' || id === 'season' ? show(id) : choose(id))}
+      />
     {/if}
-    <div class="pane">
+    <div class="stack">
       {#if season && opened}
         <SeasonCal {opened} {now} />
       {:else if scroll && hasPass}
@@ -331,13 +314,15 @@
         {#if cur && def}
           {@const f = s.fest[cur]!}
           <!-- băng rôn sự kiện: tranh thẻ lớn nghiêng bên phải, tên viết bút lông, đồng hồ kết thúc trên dải son -->
-          <header class="banner">
-            {#if fx(FX[cur])}<img class="art" src={fx(FX[cur])} alt="" draggable="false" />{/if}
-            <b class="name">{L.fest.names[cur].name}</b>
-            <small class="ends">{L.fest.ends(L.ago(Math.max(0, festEnds(s, cur, now) - now)))}</small>
+          <Banner
+            title={L.fest.names[cur].name}
+            art="fx-{FX[cur]}"
+            picSize={76}
+            band={L.fest.ends(L.ago(Math.max(0, festEnds(s, cur, now) - now)))}
+          >
             <p class="t-small t-lore">{L.fest.names[cur].desc}</p>
-          </header>
-          <div class="stack head">
+          </Banner>
+          <div class="stack mt-2 mb-3">
             {#if festStar(cur, f.key)}
               {@const star = festStar(cur, f.key)!}
               <!-- trưởng lão của đợt (MGE): top hạng nhận tín vật người này -->
@@ -353,18 +338,22 @@
 
           {#if def.kind === 'login'}
             <p class="t-small t-strong">{L.fest.days(Math.min(f.days, def.rewards.length), def.rewards.length)}</p>
-            <ul class="days">
+            <ul class="fill mt-2" style:--min="76px" style:--gap="14px 8px">
               {#each def.rewards as r, i (i)}
                 {@const done = festDone(s, cur, i)}
-                <li class="day" class:ready={done && !got(cur, i)} class:dim={!done}>
-                  <b class="t-small">{L.fest.day(i + 1)}</b>
-                  <Bag res={r.res} items={r.items} size="sm" />
-                  {#if r.elder}<small class="t-gold">{L.elders[r.elder].name}</small>{/if}
-                  {#if got(cur, i)}
-                    <span class="stamp">{L.fest.claimed}</span>
-                  {:else if done}
-                    <Button size="sm" variant="gold" onclick={() => claim(i)}>{L.fest.claim}</Button>
-                  {/if}
+                <li>
+                  <Note snug tilt={i % 2 ? 1 : -1.2} ready={done && !got(cur, i)} dim={!done}>
+                    <div class="stack justify-center t-center" style:--gap="4px">
+                      <b class="t-small">{L.fest.day(i + 1)}</b>
+                      <Bag res={r.res} items={r.items} size="sm" />
+                      {#if r.elder}<small class="t-gold">{L.elders[r.elder].name}</small>{/if}
+                      {#if got(cur, i)}
+                        <span class="stamp">{L.fest.claimed}</span>
+                      {:else if done}
+                        <Button size="sm" variant="gold" onclick={() => claim(i)}>{L.fest.claim}</Button>
+                      {/if}
+                    </div>
+                  </Note>
                 </li>
               {/each}
             </ul>
@@ -374,22 +363,19 @@
             {@const day = Math.min(dayPick ?? f.stage, days.at(-1) ?? 0)}
             {#if days.length > 1}
               <!-- nhánh theo ngày (Khai Sơn Thất Nhật): ngày chưa mở có khoá và giờ mở; chấm đỏ = quà chờ nhận trong ngày đó -->
-              <div class="chips" role="tablist">
+              <div class="scroller" role="tablist">
                 {#each days as d (d)}
                   {@const n = def.tasks.filter(
                     (t, i) => (t.day ?? 0) === d && festDone(s, cur, i) && !got(cur, i),
                   ).length}
-                  <button
-                    role="tab"
-                    class="chip"
-                    class:on={d === day}
-                    aria-selected={d === day}
-                    onclick={() => (dayPick = d)}
-                  >
-                    <b class="t-small">{L.fest.day(d + 1)}</b>
-                    {#if branches}<small class="t-tiny">{branches[d]}</small>{/if}
-                    {#if d > f.stage}<Icon name="lock" size={14} />{:else if n}<Badge {n} />{/if}
-                  </button>
+                  <Chip tab on={d === day} onclick={() => (dayPick = d)}>
+                    <span class="stack justify-center" style:--gap="1px">
+                      <b class="t-small">{L.fest.day(d + 1)}</b>
+                      {#if branches}<small class="t-tiny">{branches[d]}</small>{/if}
+                      {#if d > f.stage}<Icon name="lock" size={14} />{/if}
+                    </span>
+                    {#if d <= f.stage && n}<Badge {n} />{/if}
+                  </Chip>
                 {/each}
               </div>
               {#if day > f.stage}<p class="t-small t-soft">
@@ -397,7 +383,7 @@
                   {L.fest.opensIn(L.ago(Math.max(0, zeroOf(cur, f.stage) + day * DAY - now)))}
                 </p>{/if}
             {/if}
-            <ul class="stack rows">
+            <ul class="stack plain">
               {#each def.tasks as t, i (i)}
                 {@const v = festValue(s, cur, t.m)}
                 <li hidden={(t.day ?? 0) !== day && days.length > 1}>
@@ -424,7 +410,7 @@
             {#if def.chests}
               <!-- rương cuối theo số việc đã nhận quà -->
               {@const done = f.got.filter(k => k < def.tasks.length).length}
-              <h3 class="cal-h">{L.fest.chests}</h3>
+              <h3 class="t-body mt-4 mb-2">{L.fest.chests}</h3>
               <ol class="path">
                 {#each def.chests as c, k (k)}
                   {@const i = def.tasks.length + k}
@@ -472,19 +458,19 @@
             <Thief {s} onfight={onfight && ((e, a) => onfight(e, a, true))} {onreplay} />
           {:else if def.kind === 'shop'}
             <p class="row between">
-              <b class="pts t-num t-gold">{L.fest.tokens(num(festTokens(s, cur)), L.fest.tokenName[cur])}</b>
+              <b class="t-title t-num t-gold">{L.fest.tokens(num(festTokens(s, cur)), L.fest.tokenName[cur])}</b>
             </p>
             {#if cur === 'thonTrang'}<Rescue />{/if}
             {#if stage}
               <Card>
-                <ul class="today">
+                <ul class="plain">
                   {#each Object.entries(stage) as [m, v] (m)}
                     <li class="t-small">{L.fest.per(v ?? 0, L.fest.unit[m as Metric])}</li>
                   {/each}
                 </ul>
               </Card>
             {/if}
-            <ul class="stack rows">
+            <ul class="stack plain">
               {#each def.shop as it, i (i)}
                 {@const left = it.max - festBought(s, cur, i)}
                 <li>
@@ -507,7 +493,7 @@
             {#if def.kind === 'race'}<Race {s} />{/if}
             {#if def.kind === 'maze'}<Maze {s} onfight={onmaze} {onreplay} />{/if}
             <p class="row between">
-              <b class="pts t-num t-gold"
+              <b class="t-title t-num t-gold"
                 >{def.kind === 'drop'
                   ? L.fest.pouches(num(pts))
                   : def.kind === 'maze'
@@ -518,7 +504,7 @@
             {#if def.kind === 'drop'}
               <!-- lễ rơi đồ: việc nào có thể rơi Linh Nang, tỉ lệ -->
               <Card>
-                <ul class="today">
+                <ul class="plain">
                   {#each Object.entries(def.chance) as [src, p] (src)}
                     <li class="t-small">{L.fest.dropFrom[src as DropSrc](Math.round((p ?? 0) * 100))}</li>
                   {/each}
@@ -528,7 +514,7 @@
             {#if stage}
               <Card>
                 <p class="t-small t-strong">{L.fest.today}</p>
-                <ul class="today">
+                <ul class="plain">
                   {#each Object.entries(stage) as [m, v] (m)}
                     <li class="t-small">{L.fest.per(v ?? 0, L.fest.unit[m as Metric])}</li>
                   {/each}
@@ -561,7 +547,7 @@
             {#if board}
               <!-- bảng xếp hạng của lượt lễ (như Mightiest Governor): hết tuần top FEST_TOP nhận quà qua thư; lễ có ải thêm bảng ải hôm nay -->
               {@const rows = board.stage && !whole ? board.stage : board}
-              <h3 class="cal-h">{L.fest.board}</h3>
+              <h3 class="t-body mt-4 mb-2">{L.fest.board}</h3>
               {#if board.stage}
                 <Tabs
                   items={[
@@ -574,9 +560,9 @@
               {/if}
               <p class="t-tiny t-soft">{rows === board ? L.fest.boardHint(FEST_TOP) : L.fest.stageHint(FEST_TOP)}</p>
               {#if rows.me}<p class="t-small t-gold t-strong">{L.rank.me}: #{rows.me.rank} · {num(rows.me.pts)}</p>{/if}
-              <ol class="stack board" style:--gap="3px">
+              <ol class="ledger" style:--gap="3px">
                 {#each rows.top as r, k (r.pid)}
-                  <li class="row between t-small" class:me={k + 1 === rows.me?.rank}>
+                  <li class="between t-small" class:on={k + 1 === rows.me?.rank}>
                     <span class="row" style:--gap="6px"><i class="rank-no r{k + 1}">{k + 1}</i>{r.name}</span><b
                       class="t-num">{num(r.pts)}</b
                     >
@@ -586,14 +572,14 @@
               {#if !rows.top.length}<p class="t-small t-soft">{L.rank.none}</p>{/if}
               {#if board.allies}
                 <!-- bảng tiên minh (như Clarion Call): tổng điểm người trong minh -->
-                <h3 class="cal-h">{L.fest.allyBoard}</h3>
+                <h3 class="t-body mt-4 mb-2">{L.fest.allyBoard}</h3>
                 <p class="t-tiny t-soft">{L.fest.allyHint(FEST_ALLY_PRIZES.length)}</p>
                 {#if board.myAlly}<p class="t-small t-gold t-strong">
                     {L.fest.myAlly(board.myAlly.rank, num(board.myAlly.pts))}
                   </p>{/if}
-                <ol class="stack board" style:--gap="3px">
+                <ol class="ledger" style:--gap="3px">
                   {#each board.allies as r, k (r.id)}
-                    <li class="row between t-small" class:me={k + 1 === board.myAlly?.rank}>
+                    <li class="between t-small" class:on={k + 1 === board.myAlly?.rank}>
                       <span class="row" style:--gap="6px"><i class="rank-no r{k + 1}">{k + 1}</i>[{r.tag}]</span><b
                         class="t-num">{num(r.pts)}</b
                       >
@@ -607,21 +593,20 @@
         {/if}
       {/if}
       <!-- Lịch 7 ngày: hôm nay và các sự kiện sắp mở -->
-      <h3 class="cal-h">{L.fest.calendar}</h3>
-      <ul class="cal">
+      <h3 class="t-body mt-4 mb-2">{L.fest.calendar}</h3>
+      <ul class="ledger top">
         {#each cal as d, k (d.day)}
-          <li class:today={k === 0}>
-            <b class="wd">{k === 0 ? L.fest.todayShort : weekday(d.day)}</b>
-            <span class="evs">
+          <li>
+            <b class="label-col" class:t-bad={k === 0}>{k === 0 ? L.fest.todayShort : weekday(d.day)}</b>
+            <span class="row wrap" style:--gap="4px">
               {#each d.ids as id (id)}
-                <button
-                  class="ev"
-                  class:on={list.includes(id)}
+                <Entry
+                  art="fx-{FX[id]}"
+                  icon={ICON[id]}
+                  label={L.fest.names[id].name}
+                  on={list.includes(id)}
                   onclick={() => list.includes(id) && choose(id)}
-                  disabled={!list.includes(id)}
-                  >{#if fx(FX[id])}<img src={fx(FX[id])} alt="" />{:else}<Icon name={ICON[id]} size={14} />{/if}{L.fest
-                    .names[id].name}</button
-                >
+                />
               {:else}
                 <small class="t-soft">—</small>
               {/each}
@@ -632,304 +617,3 @@
     </div>
   </div>
 </Sheet>
-
-<style>
-  /* ---------- khung: cột thẻ tranh + sự kiện ---------- */
-  .fest {
-    display: grid;
-    grid-template-columns: 74px minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-    margin-top: var(--sp-2);
-  }
-  .fest:not(:has(.rail)) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .rail {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    display: grid;
-    gap: 10px;
-    max-height: min(68dvh, 620px);
-    padding: 4px 2px 12px;
-    overflow-y: auto;
-    scrollbar-width: none;
-    /* thanh gỗ dọc sau hàng thẻ */
-    background: linear-gradient(90deg, transparent 33px, #8a5c38 33px, #5c3a1f 39px, transparent 39px) 0 0 / 100% 100%
-      no-repeat;
-  }
-  .tag {
-    position: relative;
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-    color: var(--text-soft);
-  }
-  .tag .pic {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 60px;
-    height: 60px;
-    transition:
-      transform var(--dur-2) var(--spring),
-      filter var(--dur-2) var(--ease);
-    filter: saturate(0.75) drop-shadow(0 2px 3px rgb(0 0 0 / 0.2));
-  }
-  .tag img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  .tag :global(.badge) {
-    position: absolute;
-    top: -3px;
-    right: 1px;
-  }
-  .tn {
-    display: -webkit-box;
-    max-width: 74px;
-    padding: 1px 4px 2px;
-    overflow: hidden;
-    font-size: var(--fs-1);
-    font-weight: 800;
-    line-height: 1.15;
-    text-align: center;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    background: var(--paper);
-    border-radius: 4px;
-  }
-  .tag.on {
-    color: #fff;
-  }
-  .tag.on .pic {
-    transform: scale(1.08) rotate(-2deg);
-    filter: drop-shadow(0 0 0 var(--cinnabar)) drop-shadow(0 3px 6px rgb(0 0 0 / 0.3));
-  }
-  .tag.on .tn {
-    background: var(--cinnabar);
-    text-shadow: 0 1px 1px rgb(0 0 0 / 0.3);
-  }
-  .tag:active .pic {
-    transform: scale(0.94);
-  }
-  .pane {
-    display: grid;
-    gap: var(--sp-2);
-    min-width: 0;
-  }
-  /* ---------- băng rôn sự kiện ---------- */
-  .banner {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 76px;
-    gap: 4px 8px;
-    align-items: start;
-    padding: 12px 10px 12px 14px;
-    border: 0 solid transparent;
-    border-image: var(--sk-card);
-    background:
-      var(--img-mountains, linear-gradient(transparent, transparent)) right bottom / 320% auto no-repeat,
-      var(--paper2);
-    background-clip: padding-box;
-  }
-  .banner .art {
-    grid-area: 1 / 2 / 3 / 3;
-    width: 76px;
-    margin: -4px -4px 0 0;
-    rotate: 4deg;
-    filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.25));
-  }
-  .banner p {
-    grid-column: 1 / -1;
-  }
-  .banner .name {
-    font-size: var(--fs-6);
-    line-height: 1.1;
-  }
-  .ends {
-    justify-self: start;
-    padding: 1px 10px 2px;
-    font-size: var(--fs-1);
-    font-weight: 800;
-    color: #fff;
-    background: var(--cinnabar);
-    clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 50%, 100% 100%, 0 100%);
-  }
-  .board {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .board li {
-    padding: 3px 6px;
-    border-bottom: 1px dashed var(--paper3);
-  }
-  .board li.me {
-    font-weight: 800;
-    background: color-mix(in srgb, var(--cinnabar) 10%, transparent);
-    border-radius: 6px;
-  }
-  .cal-h {
-    margin: var(--sp-4) 0 var(--sp-2);
-    font-size: var(--fs-3);
-  }
-  .cal {
-    display: grid;
-    gap: 4px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-  .cal li {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--sp-2);
-    padding: 4px 0;
-    border-bottom: 1px dashed var(--paper3);
-  }
-  .cal li.today .wd {
-    color: var(--cinnabar);
-  }
-  .wd {
-    flex: none;
-    width: 64px;
-    font-size: var(--fs-2);
-  }
-  .evs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  .ev {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 1px 8px 2px 5px;
-    font-size: var(--fs-1);
-    color: var(--text-soft);
-    background: var(--paper2);
-    border: 1px solid var(--paper3);
-    border-radius: 999px;
-  }
-  .ev img {
-    width: 18px;
-    height: 18px;
-    margin: -2px 0;
-  }
-  .ev.on {
-    color: var(--text);
-    border-color: var(--gold);
-    cursor: pointer;
-  }
-  .chips {
-    display: flex;
-    gap: var(--sp-2);
-    padding-bottom: var(--sp-2);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  /* nhánh theo ngày: thẻ tre nhỏ, thẻ đang xem viền son + vệt son đầu */
-  .chip {
-    position: relative;
-    display: grid;
-    flex: none;
-    justify-items: center;
-    gap: 1px;
-    width: 76px;
-    padding: 8px 4px 6px;
-    font-size: var(--fs-1);
-    font-weight: 700;
-    line-height: 1.15;
-    text-align: center;
-    color: var(--text-faint);
-    background: var(--paper2);
-    border: 1px solid var(--paper3);
-    border-radius: 4px;
-  }
-  .chip.on {
-    color: var(--text);
-    background: var(--paper);
-    border-color: var(--cinnabar);
-    box-shadow: 0 2px 5px rgb(0 0 0 / 0.12);
-  }
-  .chip.on::before {
-    content: '';
-    position: absolute;
-    inset: 2px 6px auto;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--cinnabar);
-  }
-  .chip :global(.badge) {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-  }
-  .head {
-    margin: var(--sp-2) 0 var(--sp-3);
-  }
-  .name {
-    font-size: var(--fs-5);
-  }
-  /* lễ đăng nhập: mỗi ngày một lá bùa giấy ghim son trên dây, ngày chờ nhận sáng viền son */
-  .days {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-    gap: 14px 8px;
-    padding: 8px 0 0;
-    list-style: none;
-  }
-  .day {
-    position: relative;
-    display: grid;
-    align-content: start;
-    justify-items: center;
-    gap: 4px;
-    min-height: 118px;
-    padding: 14px 4px 8px;
-    text-align: center;
-    background: #fbf7ec;
-    border: 1px solid #d8cdb4;
-    border-radius: 3px;
-    box-shadow: 0 3px 6px rgb(0 0 0 / 0.14);
-  }
-  .day:nth-child(odd) {
-    rotate: -1.2deg;
-  }
-  .day:nth-child(even) {
-    rotate: 1deg;
-  }
-  .day::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: calc(50% - 6px);
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18);
-    box-shadow: 0 2px 2px rgb(0 0 0 / 0.3);
-  }
-  .day.ready {
-    border-color: var(--cinnabar);
-    box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--cinnabar) 35%, transparent),
-      0 0 14px rgb(var(--gold-glow) / 0.6);
-  }
-  .day.dim {
-    opacity: 0.62;
-  }
-  .rows,
-  .today {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-  .pts {
-    font-size: var(--fs-6);
-  }
-</style>

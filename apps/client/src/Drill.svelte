@@ -27,7 +27,7 @@
   <div class="mt-2">
     <Banner art="fx-train" picSize={72}>
       {#snippet lead()}
-        <p class="t-small t-lore clamp" style:--lines="3">{L.drill.lore}</p>
+        <p class="t-small t-lore clamp" style:--lines="6">{L.drill.lore}</p>
         <Band>{L.drill.every(DRILL_EVERY)}</Band>
       {/snippet}
     </Banner>

@@ -1528,6 +1528,10 @@ export const vi = {
     accept: 'Nhận lời mời',
     invite: 'Mời vào minh',
     gate: 'Cửa minh',
+    recruit: 'Chiêu mộ ở kênh Giới',
+    recruited: 'Đã đăng lời chiêu mộ ở kênh Giới — người chưa có minh chạm "Vào minh" ngay trong tin.',
+    recruitText: (tag: string, name: string, n: number, max: number) =>
+      `📣 [${tag}] ${name} chiêu mộ đạo hữu (${n}/${max} người) — cùng giữ linh mạch, kết trận hạ yêu vương!`,
     open: 'Vào tự do',
     closed: 'Duyệt đơn',
     noApps: 'Chưa có đơn xin vào.',
@@ -1851,9 +1855,20 @@ export const vi = {
     packet: '🧧 Lì xì',
     packetSend: (n: number) => `🧧 Lì xì (${n})`,
     packetOpen: 'Mở lì xì',
+    joinAlly: 'Vào minh',
+    // giờ tin nhắn, gọn: dưới 1 phút "vừa xong", rồi phút / giờ / ngày
+    ago: (ms: number) => {
+      if (ms < 60_000) return 'vừa xong'
+      const [n, u] =
+        ms < 3_600_000 ? [ms / 60_000, 'phút'] : ms < 86_400_000 ? [ms / 3_600_000, 'giờ'] : [ms / 86_400_000, 'ngày']
+      return `${Math.floor(n)} ${u}`
+    },
+    joinSent: 'Đã vào minh (minh duyệt đơn thì đơn đã gửi, chờ duyệt).',
     packetGot: (n: string) => `Mở được ${n} linh thạch!`,
     packetNone: 'Bao này đã mở hết, hết hạn, hoặc bạn đã mở rồi.',
     world: 'Giới',
+    camp: 'Phái',
+    campLocked: 'Kênh phái (người cùng Chính / Tà phái với bạn) mở khi Chủ điện đạt tầng 3',
     reply: 'Trả lời',
     replyTo: (name: string) => `Trả lời ${name}`,
     cancel: 'Bỏ',
@@ -2034,6 +2049,10 @@ export const vi = {
       party: (lv: number, waves: number, n: number): [string, string] => [
         `Man Hoang Cổ Tộc · độ khó ${lv}`,
         `Tổ đội ${n} người ${waves >= 5 ? 'đã quét sạch cả năm đợt hung thú' : waves ? `qua được ${waves}/5 đợt hung thú` : 'chưa qua được đợt nào'}. Quà cho mọi người trong đội ở dưới.`,
+      ],
+      hero: (kind: number, votes: number): [string, string] => [
+        `Lưu Danh Sử Sách · ${['Chiến Thần', 'Công Thần', 'Liệp Yêu Vương', 'Khoáng Vương'][kind] ?? '?'}`,
+        `Cả giới bình chọn bạn là ${['Chiến Thần', 'Công Thần', 'Liệp Yêu Vương', 'Khoáng Vương'][kind] ?? '?'} của mùa (${votes} phiếu) — tên bạn được ghi vào bảng phong thần. Quà vinh danh ở dưới.`,
       ],
       bet: (win: 0 | 1, tag: string, stage: 'semi' | 'final' | 'third', n: number): [string, string] => [
         win ? `Luận Kiếm Đặt Cược · trúng [${tag}]` : `Luận Kiếm Đặt Cược · hoàn cược [${tag}]`,
@@ -2700,7 +2719,7 @@ export const vi = {
   // Chiêu Hiền Đài (như Tavern của RoK — không bán)
   tavern: {
     title: 'Chiêu Hiền Đài',
-    lore: 'Treo thiếp mời hiền sĩ bốn phương. Thiếp bạc mời được khách thường, thiếp vàng mời được cao nhân — có khi để lại tín vật, đủ mười tín vật là người ấy nhập môn.',
+    lore: 'Thiếp bạc mời khách thường, thiếp vàng mời cao nhân. Khách để lại tín vật — đủ mười là nhập môn.',
     silver: 'Thiếp bạc',
     gold: 'Thiếp vàng',
     free: 'Miễn phí',
@@ -2953,6 +2972,35 @@ export const vi = {
     mine: (tag: string, n: number) => `[${tag}] · ${n} tệ`,
     lost: (tag: string, n: number) => `[${tag}] trượt · ${n} tệ hoàn sau chung kết`,
     wait: 'Cược của bạn',
+  },
+  paper: {
+    title: 'Giới Báo',
+    open: 'Giới Báo',
+    line: 'Mỗi sáng một số báo về kỷ lục hôm trước của cả giới.',
+    hint: 'Mỗi sáng một số báo: ai dẫn đầu cả giới hôm trước ở từng mục và cả giới đã làm được bao nhiêu. Thích bài nào thì bấm Thích; đọc số hôm nay nhận quà nhỏ.',
+    none: 'Số báo đầu tiên ra lúc 0h — giới đang ghi chép.',
+    issue: (d: string) => `Số ra ngày ${d}`,
+    heads: ['Khoáng Vương', 'Liệp Yêu', 'Chiến Thần', 'Đạo Tặc'],
+    story: [
+      (name: string, n: string) => `${name} khai mỏ mang về ${n} tài nguyên — nhiều nhất cả giới hôm qua.`,
+      (name: string, n: string) => `${name} hạ ${n} yêu thú — nhiều nhất cả giới hôm qua.`,
+      (name: string, n: string) => `${name} đoạt ${n} chiến công — nhiều nhất cả giới hôm qua.`,
+      (name: string, n: string) => `${name} cướp thắng ${n} trận — nhiều nhất cả giới hôm qua.`,
+    ],
+    quiet: 'Hôm qua giới yên ắng, chưa ai lên báo.',
+    sum: ([a, b, c, d]: string[]) =>
+      `Cả giới hôm qua: khai mỏ ${a} tài nguyên · hạ ${b} yêu thú · ${c} chiến công · ${d} trận cướp thắng.`,
+    likes: (n: number) => `${n} lượt thích`,
+    like: 'Thích',
+    gift: 'Nhận quà đọc báo',
+  },
+  hero: {
+    title: 'Lưu Danh Sử Sách',
+    hint: 'Ba ngày cuối mùa, cả giới bình chọn anh kiệt mùa ở từng hạng mục (năm người dẫn đầu chỉ số mùa). Hết mùa người nhiều phiếu nhất được ghi vào bảng phong thần và nhận quà. Đổi phiếu được tới hết mùa, không tự bầu mình.',
+    kinds: ['Chiến Thần', 'Công Thần', 'Liệp Yêu Vương', 'Khoáng Vương'],
+    what: ['chiến công mùa này', 'Công Huân mùa này', 'yêu thú hạ được mùa này', 'tài nguyên khai mỏ mùa này'],
+    votes: (n: number) => `${n} phiếu`,
+    fame: (kind: string, name: string) => `${kind}: ${name}`,
   },
   truyen: {
     title: 'Truyền công',

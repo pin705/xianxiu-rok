@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  ALLY_COST,
+  ALLY_HALL,
   BOOK,
   AQUIZ_N,
   AQUIZ_Q,
@@ -212,6 +214,8 @@ import {
   runesLeft,
   aquizQs,
   aquizStep,
+  paperStep,
+  paperView,
 } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -517,8 +521,13 @@ test('đi cướp trên bản đồ giới: theo đường qua cổng đang mở
   )
 })
 
-test('tiên minh: lập (tầng 10, tốn phí, tên/tag không trùng), vào, chức vị, rời (truyền minh chủ, giải tán), không cướp đồng minh', async () => {
-  const ps = world(sect('A', 10, { kiem3: 1100 }), sect('B', 10, { the1: 200 }), sect('C', 9), sect('D', 10))
+test('tiên minh: lập (từ tầng ALLY_HALL, tốn phí, tên/tag không trùng), vào, chức vị, rời (truyền minh chủ, giải tán), không cướp đồng minh', async () => {
+  const ps = world(
+    sect('A', 10, { kiem3: 1100 }),
+    sect('B', 10, { the1: 200 }),
+    sect('C', ALLY_HALL - 1),
+    sect('D', 10),
+  )
   let w = freshWorld()
   const act = (pid: number, a: Parameters<typeof worldAct>[2]) => {
     const r = worldAct(ps, pid, a, T0, 1, undefined, w)
@@ -527,10 +536,14 @@ test('tiên minh: lập (tầng 10, tốn phí, tên/tag không trùng), vào, c
     w = r.world
     return null
   }
-  assert.equal(act(3, { type: 'allyFound', name: 'Thanh Vân', tag: 'TV' }), 'locked', 'tầng 9 chưa lập được')
+  assert.equal(
+    act(3, { type: 'allyFound', name: 'Thanh Vân', tag: 'TV' }),
+    'locked',
+    'dưới tầng ALLY_HALL chưa lập được',
+  )
   const before = ps.get(1)!.res.linhThach
   assert.equal(act(1, { type: 'allyFound', name: 'Thanh Vân', tag: 'TV' }), null)
-  assert.equal(ps.get(1)!.res.linhThach, before - 20_000)
+  assert.equal(ps.get(1)!.res.linhThach, before - ALLY_COST)
   assert.equal(act(4, { type: 'allyFound', name: 'thanh vân', tag: 'XX' }), 'taken')
   assert.equal(parseWorldAction({ type: 'allyFound', name: '<script>', tag: 'TV' }), null)
   const aid = allyOf(w, 1)!.id
@@ -3131,4 +3144,46 @@ test('Thiên Mệnh Chọn Luật: 3 ngày cuối mùa bỏ phiếu luật mùa 
     .buffs.filter(b => b.src === 'rule')
     .map(b => [b.key, b.v])
   assert.deepEqual(buffs, Object.entries(RULES[2]))
+})
+
+test('Giới Báo: qua 0h ra số báo hôm trước — người dẫn đầu từng mục theo phần tăng, tổng cả giới; thích mỗi bài một lần; quà đọc số hôm nay', () => {
+  const stats = (s: State, x: Partial<State['stats']>): State => ({ ...s, stats: { ...s.stats, ...x } })
+  const ps = world(sect('A', 10), sect('B', 10), sect('NPC', 10))
+  let w: World = paperStep(ps, freshWorld(), T0, new Set([3]))
+  assert.deepEqual(
+    [w.paper?.issues, Object.keys(w.paper?.base ?? {})],
+    [[], ['1', '2']],
+    'lần đầu: chỉ lấy mốc, bỏ NPC',
+  )
+  assert.equal(paperStep(ps, w, T0 + 1000, new Set([3])), w, 'cùng ngày: không ra số')
+  ps.set(1, stats(ps.get(1)!, { gathered: 5000, hunted: 3 }))
+  ps.set(2, stats(ps.get(2)!, { gathered: 800, hunted: 9, raided: 2 }))
+  ps.set(3, stats(ps.get(3)!, { gathered: 99999 }))
+  w = paperStep(ps, w, T0 + DAY, new Set([3]))
+  const issue = w.paper!.issues[0]
+  assert.deepEqual(issue.top, [
+    [0, 1, 'A', 5000],
+    [1, 2, 'B', 9],
+    [3, 2, 'B', 2],
+  ])
+  assert.deepEqual(issue.sum, [5800, 12, 0, 2], 'tổng cả giới (bỏ NPC)')
+  const act = (pid: number, a: object, at = T0 + DAY) => {
+    const r = worldAct(ps, pid, a as never, at, 1, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  assert.equal(act(2, { type: 'paperLike', day: issue.day, i: 0 }), null)
+  assert.equal(act(2, { type: 'paperLike', day: issue.day, i: 0 }), 'claimed', 'mỗi bài thích một lần')
+  assert.equal(act(1, { type: 'paperLike', day: issue.day, i: 5 }), 'bad')
+  assert.equal(act(1, { type: 'paperLike', day: issue.day, i: 3 }), 'gone', 'số này chỉ có ba bài')
+  const had = ps.get(1)!.items.thoiQuang15 ?? 0
+  assert.equal(paperView(w, 1, T0 + DAY).gift, true)
+  assert.equal(act(1, { type: 'paperRead' }), null)
+  assert.equal(ps.get(1)!.items.thoiQuang15, had + 1)
+  assert.equal(act(1, { type: 'paperRead' }), 'claimed', 'mỗi ngày một lần')
+  assert.equal(act(2, { type: 'paperRead' }, T0 + 2 * DAY), 'locked', 'sang ngày mà server chưa ra số mới')
+  const v = paperView(w, 2, T0 + DAY)
+  assert.deepEqual([v.issues[0].likes, v.issues[0].mine, v.gift], [[1, 0, 0], [0], true])
 })

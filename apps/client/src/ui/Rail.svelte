@@ -5,7 +5,8 @@
   import { sfx } from '../lib'
   import Badge from './Badge.svelte'
 
-  type Item = { id: T; label: string; art?: string; icon: IconName; n?: number }
+  // n: quà chờ nhận (giọt son) · fresh: mục mới mở chưa ghé ("!" vàng)
+  type Item = { id: T; label: string; art?: string; icon: IconName; n?: number; fresh?: boolean }
   let { items, value, onchange }: { items: readonly Item[]; value: T | null; onchange: (id: T) => void } = $props()
 </script>
 
@@ -27,7 +28,7 @@
         >{#if src}<img {src} alt="" draggable="false" />{:else}<Icon name={it.icon} size={30} />{/if}</span
       >
       <span class="tn">{it.label}</span>
-      <Badge n={it.n ?? 0} />
+      <Badge n={it.n ?? 0} fresh={it.fresh} />
     </button>
   {/each}
 </div>

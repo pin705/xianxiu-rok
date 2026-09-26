@@ -16,7 +16,7 @@
     type UnitType,
   } from '@rok/rules'
   import { Icon, Portrait, paintedUrl, portraitRing, type Emblem, type MedalTone } from '@rok/art'
-  import { Bag, Button, Card, Medal, Meter, Stat } from './ui'
+  import { Bag, Button, Card, Cutin, Flash, Medal, Meter, Stat, Theater, Verdict } from './ui'
   import { Battle } from './world/battle'
   import { cssPerDU, mountScene } from './world/stage'
   import { EMBLEM, L, LOOK, num, reportName, sfx, type PanelTab } from './lib'
@@ -213,60 +213,51 @@
   const dead = $derived(report ? count(report.dead) : 0)
 </script>
 
-<dialog bind:this={dlg} class="replay paper" class:trib={report?.kind === 'trib'} aria-label={L.report.title} {onclose}>
-  <!-- svelte-ignore a11y_autofocus -->
-  <div class="stage" bind:this={host} tabindex="-1" autofocus></div>
-  {#if report && f}
-    <header class="row foe">
-      <Medal emblem={foeEmblem} {tone} size={46} />
-      <span class="stack" style:--gap="0"
-        ><b class="t-head">{foeName}</b>{#if report.kind === 'tower'}<small class="t-small t-bad t-strong"
-            >{L.tower.floor(f.b.level)}</small
-          >{:else if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small
-          >{/if}{#if rage && rageOn[1]}<span class="rage" title={L.report.rage}
-            ><Meter value={rage[1] / RAGE_MAX} tone="gold" size="xs" /></span
-          >{/if}</span
-      >
-    </header>
-
-    <div class="mid">
-      <p class="round row center">
+<Theater bind:dlg bind:host label={L.report.title} {onclose} rise={done}>
+  {#snippet top()}{#if report && f}
+      <header class="row">
+        <Medal emblem={foeEmblem} {tone} size={46} />
+        <span class="stack" style:--gap="0"
+          ><b class="t-head t-outline">{foeName}</b>{#if report.kind === 'tower'}<small class="t-small t-bad t-strong"
+              >{L.tower.floor(f.b.level)}</small
+            >{:else if f.b.level > 1}<small class="t-small t-bad t-strong">{L.lv(f.b.level)}</small
+            >{/if}{#if rage && rageOn[1]}<span class="mt-1" style:width="96px" title={L.report.rage}
+              ><Meter value={rage[1] / RAGE_MAX} tone="gold" size="xs" /></span
+            >{/if}</span
+        >
+      </header>
+    {/if}{/snippet}
+  {#snippet mid()}{#if report && f}
+      <p class="row center t-strong t-gold t-outline">
         <Icon name="swords" size={16} />{#if report.kind === 'trib'}{L.report.wave(fi + 1)} ·
         {/if}{L.report.round(r, MAX_ROUNDS)}
       </p>
-    </div>
+    {/if}{/snippet}
+  {#if report && f}
     <!-- Công pháp xuất chiêu: dải sơn mài quét ngang, chân dung trưởng lão, tên chiêu viết lớn -->
     {#key r}
       {#if cast[0] && f.a.elder}
-        <div class="cutin" style:--d="{pace * 1.7}s" aria-live="polite">
-          <span class="band"></span>
-          <span class="who" style:--ring="url({paintedUrl('ring', portraitRing, 100)})"
-            ><Portrait look={LOOK[f.a.elder]} size={88} /></span
-          >
-          <span class="stack name" style:--gap="0"
-            ><small class="t-strong">{L.elders[f.a.elder].name}</small><b class="skill">{L.elders[f.a.elder].skill}</b
-            >{#if f.a.deputy}<small class="t-strong depl"
-                >{L.army.deputy}: {L.elders[f.a.deputy].name} · {L.elders[f.a.deputy].skill}</small
-              >{/if}</span
-          >
-        </div>
+        {@const e = f.a.elder}
+        <Cutin
+          d={pace * 1.7}
+          ring="url({paintedUrl('ring', portraitRing, 100)})"
+          who={L.elders[e].name}
+          skill={L.elders[e].skill}
+          sub={f.a.deputy
+            ? `${L.army.deputy}: ${L.elders[f.a.deputy].name} · ${L.elders[f.a.deputy].skill}`
+            : undefined}>{#snippet pic()}<Portrait look={LOOK[e]} size={88} />{/snippet}</Cutin
+        >
       {/if}
       {#if cast[1]}
-        <div class="cutin foe" style:--d="{pace * 1.7}s" aria-live="polite">
-          <span class="band"></span>
-          <span class="who"><Medal emblem={foeEmblem} {tone} size={72} /></span>
-          <span class="stack name" style:--gap="0"
-            ><small class="t-strong">{foeName}</small><b class="skill">{L.report.foeSkill}</b></span
-          >
-        </div>
+        <Cutin foe d={pace * 1.7} who={foeName} skill={L.report.foeSkill}
+          >{#snippet pic()}<Medal emblem={foeEmblem} {tone} size={72} />{/snippet}</Cutin
+        >
       {/if}
     {/key}
     <!-- Độ kiếp sang đợt mới: huy hiệu lôi kiếp và tên đợt loang ra như mực -->
     {#key fi}
       {#if report.kind === 'trib' && fi > 0 && !done}
-        <div class="wave stack center">
-          <Medal emblem="thunder" tone="thunder" size={88} /><b class="t-title">{L.report.wave(fi + 1)}</b>
-        </div>
+        <Flash><Medal emblem="thunder" tone="thunder" size={88} /><b class="t-title">{L.report.wave(fi + 1)}</b></Flash>
       {/if}
     {/key}
     <p class="sr">
@@ -274,33 +265,29 @@
         .map((t, k) => `${L.units[t.type]} ${counts(1, r)[k]}`)
         .join(', ')}
     </p>
-
-    <header class="row ours">
-      {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={46} />{/if}
-      {#if f.a.deputy}<span class="dep"><Portrait look={LOOK[f.a.deputy]} size={30} /></span>{/if}
-      <span class="stack" style:--gap="0"
-        ><b class="t-head"
-          >{f.a.elder
-            ? f.a.deputy
-              ? L.army.duo(L.elders[f.a.elder].name, L.elders[f.a.deputy].name)
-              : L.elders[f.a.elder].name
-            : ''}</b
-        ><small class="t-small t-gold t-strong">{L.lv(f.a.level)}</small>{#if rage && rageOn[0]}<span
-            class="rage"
-            title={L.report.rage}><Meter value={rage[0] / RAGE_MAX} tone="gold" size="xs" /></span
-          >{/if}</span
-      >
-    </header>
-
-    {#if done}
-      <div class="verdict" class:lose={!report.win}>
-        <span class="splat"></span><Medal
-          emblem={report.win ? 'win' : 'lose'}
-          tone={report.win ? 'red' : 'ink'}
-          size={140}
-        />
-      </div>
-      <div class="result">
+    {#if done}<Verdict win={report.win} />{/if}
+  {/if}
+  {#snippet bottom()}{#if report && f}
+      <header class="row">
+        {#if f.a.elder}<Portrait look={LOOK[f.a.elder]} size={46} />{/if}
+        {#if f.a.deputy}<Portrait look={LOOK[f.a.deputy]} size={30} />{/if}
+        <span class="stack" style:--gap="0"
+          ><b class="t-head t-outline"
+            >{f.a.elder
+              ? f.a.deputy
+                ? L.army.duo(L.elders[f.a.elder].name, L.elders[f.a.deputy].name)
+                : L.elders[f.a.elder].name
+              : ''}</b
+          ><small class="t-small t-gold t-strong">{L.lv(f.a.level)}</small>{#if rage && rageOn[0]}<span
+              class="mt-1"
+              style:width="96px"
+              title={L.report.rage}><Meter value={rage[0] / RAGE_MAX} tone="gold" size="xs" /></span
+            >{/if}</span
+        >
+      </header>
+    {/if}{/snippet}
+  {#snippet foot()}{#if report && f}
+      {#if done}
         <Card tone={report.win ? 'glow' : 'paper'}>
           <div class="stack">
             {#if report.kind === 'thief'}
@@ -358,7 +345,7 @@
             {#if breakdown}
               <Button variant="quiet" size="sm" onclick={() => (detail = !detail)}>{L.report.detail}</Button>
               {#if detail}
-                <div class="detail">
+                <div class="grid inset">
                   {#each breakdown as b, side (side)}
                     <div class="stack" style:--gap="2px">
                       <b class="t-small">{side ? foeName : L.army.ours}</b>
@@ -388,297 +375,11 @@
               >{/if}
           </div>
         </Card>
-      </div>
-    {:else}
-      <div class="row center ctl">
-        <Button variant="ghost" size="sm" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</Button>
-        <Button size="sm" onclick={skip}>{L.report.skip}</Button>
-      </div>
-    {/if}
-  {/if}
-</dialog>
-
-<style>
-  .detail {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--sp-2);
-    padding: 8px;
-    background: color-mix(in srgb, var(--paper2, var(--paper)) 70%, transparent);
-    border-radius: 8px;
-  }
-  .replay {
-    width: 100vw;
-    height: 100dvh;
-    margin: 0;
-    padding: 0;
-  }
-  .replay::backdrop {
-    background: var(--paper2);
-  }
-  .stage {
-    position: absolute;
-    inset: 0;
-    outline: none;
-  }
-  /* mọi phần HTML nằm trên canvas */
-  /* :where: không cộng độ ưu tiên, để .mid / .cutin phía dưới đặt lại vị trí mà không cần !important */
-  .replay > :where(:not(.stage)) {
-    position: absolute;
-    z-index: 1;
-    left: 50%;
-    width: min(100% - 24px, calc(var(--col) - 24px));
-    translate: -50% 0;
-  }
-  .foe {
-    top: calc(var(--sp-3) + var(--safe-t));
-  }
-  .ours {
-    bottom: calc(64px + var(--safe-b));
-  }
-  .rage {
-    display: block;
-    width: 96px;
-    margin-top: 3px;
-  }
-  .mid {
-    top: 56%;
-    display: grid;
-    justify-items: center;
-    gap: var(--sp-2);
-    translate: -50% -50%;
-  }
-  .foe b,
-  .ours b,
-  .round {
-    -webkit-text-stroke: 3px var(--paper);
-    paint-order: stroke fill;
-  }
-  .round {
-    font-weight: 800;
-    color: var(--gold-d);
-  }
-  /* ---- Xuất chiêu: dải xiên quét ngang cả màn ---- */
-  .cutin {
-    top: 64%;
-    left: 0;
-    width: 100%;
-    height: 104px;
-    translate: 0 -50%;
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    padding-inline: max(var(--sp-4), calc(50% - var(--col) / 2 + var(--sp-4)));
-    pointer-events: none;
-    animation: cut-out var(--d) linear forwards;
-  }
-  .cutin.foe {
-    top: 30%;
-    flex-direction: row-reverse;
-    text-align: right;
-  }
-  /* dải chiêu thức: một nét mực quét ngang cả màn (địch: mực son), hai đầu bút khô tước sợi */
-  .band {
-    position: absolute;
-    inset: 8px -12px;
-    z-index: -1;
-    border: 0 solid transparent;
-    border-image: var(--sk-toast);
-    filter: drop-shadow(0 6px 10px rgb(var(--shade) / 0.4));
-    rotate: -3deg;
-    animation: band-in var(--d) var(--ease) both;
-  }
-  .foe .band {
-    border-image: var(--sk-toast-bad);
-    rotate: 3deg;
-    animation-name: band-in-r;
-  }
-  /* chân dung trong khung vàng vẽ tay */
-  .who {
-    position: relative;
-    display: grid;
-    place-items: center;
-    filter: drop-shadow(0 4px 8px rgb(var(--shade) / 0.45));
-    animation: slide-in var(--d) var(--spring) both;
-  }
-  .who::after {
-    content: '';
-    position: absolute;
-    inset: -8%;
-    background: var(--ring) center / 100% 100% no-repeat;
-    pointer-events: none;
-  }
-  .foe .who {
-    animation-name: slide-in-r;
-  }
-  .name {
-    color: var(--silk);
-    text-shadow: var(--text-shadow-inv);
-    animation: slide-in-r var(--d) var(--spring) both;
-  }
-  .foe .name {
-    animation-name: slide-in;
-  }
-  /* dòng phó trưởng lão dưới tên chiêu: xuống dòng trong bề ngang màn, không tràn mép */
-  .depl {
-    max-width: min(60vw, 360px);
-    font-size: var(--fs-1);
-  }
-  .skill {
-    padding-bottom: 6px;
-    font-size: min(var(--fs-7), 7.4vw);
-    white-space: nowrap;
-    font-style: italic;
-    font-weight: 900;
-    line-height: 1.1;
-    color: var(--gold-l);
-    background: var(--stroke-gold) left bottom / 100% 12px no-repeat;
-  }
-  @keyframes band-in {
-    0% {
-      clip-path: inset(0 100% 0 0);
-    }
-    16%,
-    82% {
-      clip-path: inset(0 0 0 0);
-    }
-    100% {
-      clip-path: inset(0 0 0 100%);
-    }
-  }
-  @keyframes band-in-r {
-    0% {
-      clip-path: inset(0 0 0 100%);
-    }
-    16%,
-    82% {
-      clip-path: inset(0 0 0 0);
-    }
-    100% {
-      clip-path: inset(0 100% 0 0);
-    }
-  }
-  @keyframes slide-in {
-    0%,
-    8% {
-      opacity: 0;
-      translate: -70px 0;
-    }
-    30%,
-    100% {
-      opacity: 1;
-      translate: 0 0;
-    }
-  }
-  @keyframes slide-in-r {
-    0%,
-    12% {
-      opacity: 0;
-      translate: 70px 0;
-    }
-    34%,
-    100% {
-      opacity: 1;
-      translate: 0 0;
-    }
-  }
-  @keyframes cut-out {
-    0%,
-    84% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-
-  /* ---- Đợt kiếp mới ---- */
-  /* neo mép dưới ngay trên nhãn lượt (tâm ở 56%): huy hiệu + tên đợt không đè chữ, màn cao hay thấp cũng vậy */
-  .wave {
-    bottom: calc(44% + 26px);
-    justify-items: center;
-    color: var(--silk);
-    text-shadow: 0 2px 10px rgb(0 0 0 / 0.6);
-    pointer-events: none;
-    animation: wave 1.6s var(--ease) forwards;
-  }
-  @keyframes wave {
-    0% {
-      opacity: 0;
-      scale: 1.25;
-      filter: blur(6px);
-    }
-    18%,
-    70% {
-      opacity: 1;
-      scale: 1;
-      filter: blur(0);
-    }
-    100% {
-      opacity: 0;
-      scale: 0.96;
-    }
-  }
-
-  /* ---- Dấu thắng/bại đóng xuống ---- */
-  .verdict {
-    top: 20%;
-    display: grid;
-    place-items: center;
-    pointer-events: none;
-    animation: slam 0.5s cubic-bezier(0.5, 0, 0.75, 0) both;
-  }
-  .verdict > :global(*) {
-    grid-area: 1 / 1;
-  }
-  .splat {
-    width: 260px;
-    height: 260px;
-    background: var(--cinnabar);
-    -webkit-mask: var(--blot-mask) center / contain no-repeat;
-    mask: var(--blot-mask) center / contain no-repeat;
-    opacity: 0.22;
-    animation: splat 0.7s var(--ease) 0.24s both;
-  }
-  .lose .splat {
-    background: var(--ink);
-  }
-  @keyframes slam {
-    0% {
-      opacity: 0;
-      scale: 2.8;
-      rotate: -14deg;
-    }
-    48% {
-      opacity: 1;
-      scale: 0.9;
-      rotate: 0deg;
-    }
-    70% {
-      scale: 1.04;
-    }
-    100% {
-      opacity: 1;
-      scale: 1;
-    }
-  }
-  @keyframes splat {
-    from {
-      scale: 0.2;
-      opacity: 0.5;
-    }
-  }
-  .ctl {
-    bottom: calc(var(--sp-4) + var(--safe-b));
-  }
-  .result {
-    bottom: calc(var(--sp-3) + var(--safe-b));
-    animation: rise var(--dur-3) var(--spring) 0.55s both;
-  }
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-  }
-</style>
+      {:else}
+        <div class="row center">
+          <Button variant="ghost" size="sm" onclick={() => (fast = !fast)}>{L.report.speed} ×{fast ? 2 : 1}</Button>
+          <Button size="sm" onclick={skip}>{L.report.skip}</Button>
+        </div>
+      {/if}
+    {/if}{/snippet}
+</Theater>
