@@ -6,11 +6,11 @@ import { advance, jobOf, shorten } from '../core/time.ts'
 import { revealNear } from '../core/fog.ts'
 import { type Buff, type Err, type JobKind, type State } from '../core/types.ts'
 import { BAG_IDS, HOUR } from '../core/util.ts'
-import { ELDER_MAX, BAG_USE_MAX, BAG, type ElderId, type BagId } from '../data.ts'
+import { ELDER_MAX, BAG_USE_MAX, BAG, RESOURCES, type ElderId, type BagId, type Res } from '../data.ts'
 import { elderLevel, spendAp } from '../core/stats.ts'
 import { burning, wallAt } from '../core/wall.ts'
 
-export type BagAction = { type: 'use'; item: BagId; n: number; job?: JobKind; elder?: ElderId }
+export type BagAction = { type: 'use'; item: BagId; n: number; job?: JobKind; elder?: ElderId; res?: Res } // res: Tuỳ Tâm Nang
 
 // Vì sao không dùng được (null: dùng được). Client dùng để tắt nút và nói lý do.
 export function useError(s: State, a: BagAction): Err | null {
@@ -32,6 +32,7 @@ export function useError(s: State, a: BagAction): Err | null {
   }
   if (d.use === 'shield' && (s.frenzy ?? 0) > s.time) return 'frenzy' // vừa đi cướp: chưa bật khiên được
   if (d.use === 'map' && !s.seat) return 'locked' // Sơn Hà Đồ: cần chỗ trên bản đồ giới
+  if (d.use === 'pick' && !a.res) return 'bad' // Tuỳ Tâm Nang: phải chọn loại tài nguyên
   if (d.use === 'douse' && (a.n !== 1 || !burning(s, s.time))) return 'empty' // Tức Hỏa Phù: chỉ khi núi đang cháy
   if (d.use === 'exp') {
     if (!a.elder || s.elders[a.elder] === undefined) return 'locked'
@@ -54,8 +55,16 @@ export const bagActions: Actions<BagAction> = {
       oneOf(BAG_IDS)(a.item) &&
       int(1, BAG_USE_MAX)(a.n) &&
       (a.job === undefined || oneOf(JOB_KINDS)(a.job)) &&
-      (a.elder === undefined || isElder(a.elder))
-        ? { type: 'use', item: a.item, n: a.n, ...(a.job && { job: a.job }), ...(a.elder && { elder: a.elder }) }
+      (a.elder === undefined || isElder(a.elder)) &&
+      (a.res === undefined || oneOf(RESOURCES)(a.res))
+        ? {
+            type: 'use',
+            item: a.item,
+            n: a.n,
+            ...(a.job && { job: a.job }),
+            ...(a.elder && { elder: a.elder }),
+            ...(a.res && { res: a.res }),
+          }
         : null,
     run: (s, a) => {
       const e = useError(s, a)
@@ -66,7 +75,10 @@ export const bagActions: Actions<BagAction> = {
         const sped = { ...st, stats: { ...st.stats, sped: (st.stats.sped ?? 0) + d.min * a.n } }
         return ok(advance(shorten(sped, a.job!, d.min * 60_000 * a.n), s.time))
       }
-      if (d.use === 'res') return ok({ ...st, res: { ...st.res, [d.res]: st.res[d.res] + d.n * a.n } })
+      if (d.use === 'res' || d.use === 'pick') {
+        const r = d.use === 'res' ? d.res : a.res! // nang tài nguyên: không tính vào sức chứa kho
+        return ok({ ...st, res: { ...st.res, [r]: st.res[r] + d.n * a.n } })
+      }
       if (d.use === 'buff') return ok({ ...st, buffs: extend(st, d.key, d.v, d.hours * HOUR * a.n) })
       if (d.use === 'shield') return ok({ ...st, shield: Math.max(st.shield, s.time) + d.hours * HOUR * a.n })
       if (d.use === 'builder') return ok({ ...st, builder2: Math.max(st.builder2 ?? 0, s.time) + d.hours * HOUR * a.n })

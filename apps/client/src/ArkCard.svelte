@@ -5,7 +5,7 @@
   import { arkAt, type ArkRow, type WorldAction } from '@rok/rules/world'
   import { weekOf } from '@rok/rules'
   import { artOf } from '@rok/art'
-  import { Button, Section, Tag } from './ui'
+  import { Art, Button, NodeMap, Section, Tag } from './ui'
   import { L, clock } from './lib'
   import { useGame } from './game'
 
@@ -86,29 +86,22 @@
         >{f.round < ARK_ROUNDS ? L.ark.round(f.round + 1, ARK_ROUNDS, clock(Math.max(0, next))) : L.ark.ended}</span
       >
     </p>
-    <svg viewBox="0 0 340 220" class="field" role="img" aria-label={L.ark.title}>
-      {#each EDGES as [x, y] (`${x}-${y}`)}
-        <line x1={at(x)[0]} y1={at(x)[1]} x2={at(y)[0]} y2={at(y)[1]} class="road" />
-      {/each}
-      {#each POS as _, node (node)}
-        {@const [cx, cy] = at(node)}
-        <g
-          class="node {tone(node)}"
-          class:picked={pick === node}
-          role="button"
-          tabindex="0"
-          aria-label={L.ark.nodes[node]}
-          onclick={() => (pick = node)}
-          onkeydown={e => e.key === 'Enter' && (pick = node)}
-        >
-          <circle {cx} {cy} r={radius(node)} />
-          {#if linked(node)}<circle {cx} {cy} r={radius(node) + 4} class="ring" />{/if}
-          <text x={cx} y={cy + 4} class="n">{count(node, side as 0 | 1)}·{count(node, side ? 0 : 1)}</text>
-          <text x={cx} y={cy < 100 ? cy - 25 : cy + radius(node) + 12} class="lbl">{L.ark.nodes[node]}</text>
-          {#if f.orb && f.orb.at === node}<circle cx={cx + 16} cy={cy - 16} r="7" class="orb" />{/if}
-        </g>
-      {/each}
-    </svg>
+    <NodeMap
+      label={L.ark.title}
+      nodes={POS.map((_, node) => ({
+        x: at(node)[0],
+        y: at(node)[1],
+        r: radius(node),
+        tone: tone(node),
+        label: L.ark.nodes[node],
+        text: `${count(node, side as 0 | 1)}·${count(node, side ? 0 : 1)}`,
+        ring: linked(node),
+        orb: f.orb?.at === node,
+      }))}
+      edges={EDGES as [number, number][]}
+      picked={pick}
+      onpick={node => (pick = node)}
+    />
     {#if mine}
       <p class="t-small">
         {mine.rest && mine.rest > f.round ? L.ark.resting : L.ark.me(L.ark.nodes[mine.at], L.ark.nodes[mine.to])}
@@ -125,7 +118,7 @@
       </div>
     {/if}
     {#if f.log.length}
-      <ol class="stack log" style:--gap="2px">
+      <ol class="stack plain mt-1" style:--gap="2px">
         {#each [...f.log].reverse().slice(0, 6) as e, i (i)}
           <li class="t-tiny"><span class="t-soft">{e[0]}·</span> {logText(e)}</li>
         {/each}
@@ -133,7 +126,7 @@
     {/if}
   {:else}
     <div class="row">
-      {#if fight}<img src={fight} alt="" width="72" height="72" draggable="false" />{/if}
+      {#if fight}<Art art="fx-battle" icon="swords" size={72} />{/if}
       <b class="grow t-small">{row?.signed ? L.ark.signed : L.ark.when(clock(Math.max(0, start - g.now)))}</b>
     </div>
     {#if officer}
@@ -153,7 +146,7 @@
     <!-- vòng playoff: bán kết 1–4, 2–3; chung kết và tranh hạng ba khi bán kết xong; bên thắng tô vàng -->
     {@const c = row.cup}
     <small class="t-tiny t-soft mt-2">{L.ark.cup.title}</small>
-    <ul class="stack league" style:--gap="1px">
+    <ul class="stack plain" style:--gap="1px">
       <li class="row between t-small">
         <span>{L.ark.cup.semi}</span>
         <span class="row" style:--gap="10px"
@@ -174,7 +167,7 @@
   {#if row?.league?.length}
     <!-- Cửu Thiên Luận Đạo Hội: bảng giải cả mùa, minh mình tô vàng -->
     <small class="t-tiny t-soft mt-2">{L.ark.league}</small>
-    <ol class="stack league" style:--gap="1px">
+    <ol class="stack plain" style:--gap="1px">
       {#each row.league as r, k (r.id)}
         <li class="row between t-small" class:t-gold={r.id === aid}>
           <span class="row" style:--gap="6px"><i class="rank-no r{k + 1}">{k + 1}</i>[{r.tag}]</span><span class="t-num"
@@ -185,73 +178,3 @@
     </ol>
   {/if}
 </Section>
-
-<style>
-  .field {
-    width: 100%;
-    max-width: 420px;
-    display: block;
-    margin: 4px auto;
-  }
-  .road {
-    stroke: rgb(var(--shade) / 0.35);
-    stroke-width: 3;
-    stroke-dasharray: 5 4;
-  }
-  .ring {
-    fill: none;
-    stroke: #c9a13a;
-    stroke-width: 2;
-    stroke-dasharray: 3 3;
-  }
-  .node {
-    cursor: pointer;
-  }
-  .node circle:first-child {
-    fill: #efe4c8;
-    stroke: #6b5a3a;
-    stroke-width: 2;
-  }
-  .node.ours circle:first-child {
-    fill: #cfe3d4;
-    stroke: #2f6f55;
-  }
-  .node.theirs circle:first-child {
-    fill: #f0cfc6;
-    stroke: #a8402e;
-  }
-  .node.picked circle:first-child {
-    stroke-width: 4;
-  }
-  .n {
-    font-size: 12px;
-    font-weight: 800;
-    text-anchor: middle;
-    fill: #2a241a;
-  }
-  .lbl {
-    font-size: 9px;
-    text-anchor: middle;
-    fill: #5a4a30;
-    /* viền màu giấy: chữ đọc được cả khi nằm trên đường */
-    paint-order: stroke;
-    stroke: var(--paper);
-    stroke-width: 3px;
-    stroke-linejoin: round;
-  }
-  .orb {
-    fill: #e8c24a;
-    stroke: #8a6a14;
-    stroke-width: 1.5;
-  }
-  .league {
-    list-style: none;
-    padding: 0;
-    margin: 2px 0 0;
-  }
-  .log {
-    list-style: none;
-    padding: 0;
-    margin: 4px 0 0;
-  }
-</style>

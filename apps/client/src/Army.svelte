@@ -25,7 +25,7 @@
     hospital,
   } from '@rok/rules'
   import { Portrait, paintedUrl, soldier } from '@rok/art'
-  import { Button, FirstTap, Meter, Section, Slider } from './ui'
+  import { Button, Cameo, Chip, Figure, FirstTap, Meter, Pill, Section, Slider } from './ui'
   import { L, LOOK, num } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
@@ -111,22 +111,18 @@
   }
 </script>
 
-<!-- một chân dung vòng ngọc (chọn chủ tướng / phó): viền son khi đang chọn, mờ + dấu son khi đang xuất chinh -->
+<!-- một chân dung vòng giấy (chọn chủ tướng / phó): viền son khi đang chọn, mờ + chữ son khi đang xuất chinh -->
 {#snippet face(e: ElderId, on: boolean, out: boolean, sub: string, label: string, pick: () => void)}
-  <button type="button" class="face" class:on disabled={out} aria-pressed={on} aria-label={label} onclick={pick}>
-    <span class="ring"><Portrait look={LOOK[e]} size={50} dim={out} /></span>
-    <b class="fn">{L.elders[e].name}</b>
-    <small class="t-tiny" class:t-soft={!out} class:t-bad={out}>{sub}</small>
-  </button>
+  <Cameo {on} disabled={out} {label} name={L.elders[e].name} {sub} bad={out} onclick={pick}
+    ><Portrait look={LOOK[e]} size={50} dim={out} /></Cameo
+  >
 {/snippet}
 
 <!-- trận đồ: ba thẻ tre + nút lưu -->
-<div class="presets">
+<div class="row wrap mt-2" style:--gap="6px">
   <small class="t-tiny t-soft">{L.army.presets}</small>
   {#each Array.from({ length: PRESETS }, (_, k) => k) as k (k)}
-    <button type="button" class="chip" class:on={slot === k} aria-pressed={slot === k} onclick={() => load(k)}
-      >{L.army.preset(k + 1)}</button
-    >
+    <Chip on={slot === k} onclick={() => load(k)}>{L.army.preset(k + 1)}</Chip>
   {/each}
   <Button
     size="sm"
@@ -140,7 +136,7 @@
 <Section title={L.army.elder}>
   {#snippet aside()}<Help k={1} />{/snippet}
   {#if idle.length}
-    <div class="faces">
+    <div class="scroller" style:--gap="6px">
       {#each idle as e (e)}
         {@const out = isMarching(game, e)}
         {@render face(
@@ -160,18 +156,8 @@
 {#if lead && game.levels.chuDien >= DEPUTY_HALL && idle.length > 1}
   {@const cur = game.pairs?.[lead]}
   <Section title={L.army.deputy}>
-    <div class="faces">
-      <button
-        type="button"
-        class="face"
-        class:on={!cur}
-        aria-pressed={!cur}
-        aria-label={L.army.noDeputy}
-        onclick={() => pair(null)}
-      >
-        <span class="ring empty"></span>
-        <small class="t-tiny t-soft">{L.army.noDeputy}</small>
-      </button>
+    <div class="scroller" style:--gap="6px">
+      <Cameo on={!cur} empty label={L.army.noDeputy} sub={L.army.noDeputy} onclick={() => pair(null)} />
       {#each idle.filter(e => e !== lead) as e (e)}
         {@const out = isMarching(game, e)}
         {@render face(
@@ -202,14 +188,14 @@
     {/if}
   {/snippet}
   {#if home.length}
-    <ul class="camp">
+    <ul class="ledger" style:--gap="10px">
       {#each home as u (u)}
         {@const n = army[u] ?? 0}
-        <li class:zero={!n}>
-          <span class="sold"><img src={fig(u)} alt="" draggable="false" /></span>
+        <li>
+          <Figure src={fig(u)} faded={!n} />
           <span class="grow">
             <span class="row between"
-              ><small class="t-small">{L.unit(u)}</small><b class="pill t-num">{num(n)}/{num(game.troops[u])}</b></span
+              ><small class="t-small">{L.unit(u)}</small><Pill>{num(n)}/{num(game.troops[u])}</Pill></span
             >
             <Slider value={n} max={game.troops[u]} label={L.unit(u)} onchange={v => set(u, v)} />
           </span>
@@ -224,23 +210,23 @@
 
 <!-- cán cân: Ta (chân dung chủ tướng) — thanh thắng thua — Địch -->
 {#if chance && foe !== undefined}
-  <div class="scale mt-4">
-    <span class="side">
+  <div class="trio mt-4">
+    <span class="row" style:--gap="6px">
       {#if lead}<Portrait look={LOOK[lead]} size={34} />{/if}
       <span class="stack" style:--gap="0"
         ><small class="t-tiny t-soft">{L.army.ours}</small><b class="t-num">{num(ours)}</b></span
       >
     </span>
-    <span class="mid">
+    <span class="stack justify-center t-center" style:--gap="4px">
       <Meter value={p} tone={verdict === 'weak' ? 'bad' : verdict === 'even' ? 'gold' : 'good'} size="lg" />
       <b
-        class="t-small verdict"
+        class="t-small"
         class:t-good={verdict === 'strong'}
         class:t-gold={verdict === 'even'}
         class:t-bad={verdict === 'weak'}>{L.army.verdict[verdict]} · {L.army.chance(Math.round(p * 100))}</b
       >
     </span>
-    <span class="side end">
+    <span class="row t-right" style:--gap="6px">
       <span class="stack" style:--gap="0"
         ><small class="t-tiny t-soft">{L.army.theirs}</small><b class="t-num">{num(foe)}</b></span
       >
@@ -280,158 +266,3 @@
     >
   </FirstTap>
 </div>
-
-<style>
-  /* ---------- trận đồ: thẻ tre ---------- */
-  .presets {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-top: var(--sp-2);
-  }
-  .chip {
-    position: relative;
-    min-width: 58px;
-    min-height: 34px;
-    padding: 4px 10px;
-    font-size: var(--fs-2);
-    font-weight: 800;
-    color: var(--text-soft);
-    background: var(--paper2);
-    border: 1px solid var(--paper3);
-    border-radius: 4px;
-  }
-  .chip.on {
-    color: var(--text);
-    background: var(--paper);
-    border-color: var(--cinnabar);
-    box-shadow: 0 2px 5px rgb(var(--shade) / 0.12);
-  }
-  .chip.on::before {
-    content: '';
-    position: absolute;
-    inset: 2px 6px auto;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--cinnabar);
-  }
-  /* ---------- hàng chân dung ---------- */
-  .faces {
-    display: flex;
-    gap: 6px;
-    padding: 2px 1px 4px;
-    overflow-x: auto;
-  }
-  .face {
-    display: grid;
-    flex: none;
-    justify-items: center;
-    align-content: start;
-    gap: 2px;
-    width: 84px;
-    padding: 4px 2px;
-    text-align: center;
-    color: var(--text);
-  }
-  .ring {
-    display: grid;
-    place-items: center;
-    width: 58px;
-    height: 58px;
-    border: 3px solid var(--paper3);
-    border-radius: 50%;
-    background: var(--paper);
-    transition: transform var(--dur-2) var(--spring);
-  }
-  .ring.empty {
-    border-style: dashed;
-  }
-  .face.on .ring {
-    border-color: var(--cinnabar);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cinnabar) 22%, transparent);
-    transform: scale(1.06);
-  }
-  .face:disabled {
-    cursor: default;
-  }
-  .fn {
-    max-width: 100%;
-    overflow: hidden;
-    font-size: var(--fs-1);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .face small {
-    display: -webkit-box;
-    overflow: hidden;
-    line-height: 1.15;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-  /* ---------- doanh trại: mỗi hàng một lính đứng trên nền đất, kẻ mực đứt ---------- */
-  .camp {
-    display: grid;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .camp li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 0;
-    border-bottom: 1px dashed var(--paper3);
-  }
-  .sold {
-    display: grid;
-    flex: none;
-    place-items: end center;
-    width: 50px;
-    height: 54px;
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--ochre) 35%, transparent), transparent) center
-      bottom / 46px 10px no-repeat;
-  }
-  .sold img {
-    width: 46px;
-    height: 50px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 2px rgb(var(--shade) / 0.2));
-  }
-  .zero .sold img {
-    filter: grayscale(1);
-    opacity: 0.55;
-  }
-  .pill {
-    padding: 0 9px 1px;
-    font-size: var(--fs-2);
-    color: var(--silk);
-    background: color-mix(in srgb, var(--ink) 80%, transparent);
-    border-radius: 999px;
-  }
-  /* ---------- cán cân ---------- */
-  .scale {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: center;
-  }
-  .side {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .side.end {
-    text-align: right;
-  }
-  .mid {
-    display: grid;
-    justify-items: center;
-    gap: 4px;
-    text-align: center;
-  }
-  .verdict {
-    line-height: 1.2;
-  }
-</style>

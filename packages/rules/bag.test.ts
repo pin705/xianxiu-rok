@@ -81,7 +81,7 @@ test('túi đồ: mọi vật phẩm có định nghĩa hợp lệ; cộng vào 
   for (const id of BAG_IDS) {
     const d = BAG[id]
     if (d.use === 'speed') assert.ok(d.min > 0)
-    if (d.use === 'res' || d.use === 'exp') assert.ok(d.n > 0)
+    if (d.use === 'res' || d.use === 'exp' || d.use === 'pick') assert.ok(d.n > 0)
     if (d.use === 'buff' || d.use === 'shield') assert.ok(d.hours > 0)
   }
   const items = addItems({ tuKhi: 1 }, { thoiQuang5: 2 })
@@ -138,4 +138,18 @@ test('Sơn Hà Đồ: tan 12 ô mê vụ chưa khai gần tông môn nhất; ch�
   const r = apply(s, { type: 'use', item: 'sonHa12', n: 1 }, t)
   assert.ok(r.ok)
   assert.equal(metric(r.state, 'explore'), before + 12, 'đúng 12 ô mới')
+})
+
+test('Tuỳ Tâm Nang (Resource Choice Chest): mở ra tự chọn loại tài nguyên, vượt sức chứa kho được; chưa chọn thì không mở', () => {
+  const s = withItems({ tuyTam5k: 3 })
+  assert.equal(useError(s, { type: 'use', item: 'tuyTam5k', n: 1 }), 'bad', 'phải chọn loại')
+  assert.equal(
+    apply(s, { type: 'use', item: 'tuyTam5k', n: 1, res: 'vang' } as never, T0).ok,
+    false,
+    'loại lạ bị từ chối',
+  )
+  const t = run(s, { type: 'use', item: 'tuyTam5k', n: 2, res: 'linhThao' })
+  assert.equal(t.res.linhThao, s.res.linhThao + 10_000)
+  assert.deepEqual([t.res.linhThach, t.res.linhKhoang], [s.res.linhThach, s.res.linhKhoang])
+  assert.equal(t.items.tuyTam5k, 1)
 })

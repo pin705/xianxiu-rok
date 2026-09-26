@@ -4,8 +4,7 @@
   import { RESOURCES, SUPPLY_HALL, type Bag } from '@rok/rules'
   import { afterTax, bagSum, type SupplyRoom, type WorldAction } from '@rok/rules/world'
   import type { Ack } from '@rok/protocol'
-  import { Icon, artOf } from '@rok/art'
-  import { Button, Section, Slider } from './ui'
+  import { Art, Button, Section, Slider } from './ui'
   import { L, num, sfx } from './lib'
   import { useGame } from './game'
 
@@ -52,12 +51,7 @@
     <p class="t-tiny t-soft">{L.supply.lore}</p>
     {#each RESOURCES as r (r)}
       <div class="row">
-        {#if artOf(`ui:res-${r}`)}<img
-            class="res"
-            src={artOf(`ui:res-${r}`)!.src}
-            alt=""
-            draggable="false"
-          />{:else}<Icon name={r} size={20} />{/if}
+        <Art art="res-{r}" icon={r} size={40} />
         <span class="grow">
           <Slider
             value={amount[r]}
@@ -69,7 +63,7 @@
             }}
           />
         </span>
-        <b class="t-small t-num n">{num(amount[r])}</b>
+        <b class="t-small t-num w-num">{num(amount[r])}</b>
       </div>
     {/each}
     <p class="row between t-tiny">
@@ -81,15 +75,3 @@
     <Button wide variant="gold" icon="arrow" disabled={!bagSum(amount) || over} onclick={go}>{L.supply.open}</Button>
   {/if}
 </Section>
-
-<style>
-  /* vật chứa vẽ tay của từng tài nguyên đứng đầu dòng kéo */
-  .res {
-    width: 40px;
-    height: 40px;
-  }
-  .n {
-    min-width: 5ch;
-    text-align: right;
-  }
-</style>

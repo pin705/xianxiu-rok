@@ -22,6 +22,9 @@ import {
   migrate,
   newGame,
   VIP_SHOP,
+  VIP_GIFTS,
+  VIP_LEVELS,
+  vipGiftError,
   vipGot,
   wheelElder,
   wheelFree,
@@ -794,4 +797,23 @@ test('Hoá Kiến Vi Binh (War and Peace): tuần thứ tư của mùa, Chủ đ
   const next = advance({ ...s, seasonAt: seasonAt + 49 * DAY }, seasonAt + 71 * DAY)
   assert.equal(festOpen(next, 'hoaKien', next.time), true)
   assert.equal(swapError(next, 'hoaKien', 2, 50), null)
+})
+
+test('Lễ vật tấn cấp (Special Privilege Chest): mỗi cấp Hương Hỏa một lễ vật mua đúng một lần bằng linh thạch (giá theo tầng Chủ điện)', () => {
+  const s0 = newGame(MON)
+  const s: State = {
+    ...s0,
+    levels: { ...s0.levels, chuDien: 10 },
+    res: { ...s0.res, linhThach: 10_000 },
+    vip: { ...s0.vip, pts: VIP_LEVELS[2] },
+  }
+  assert.equal(vipLevel(s), 2)
+  assert.equal(vipGiftError(s, 3), 'locked', 'chưa tới cấp')
+  assert.equal(vipGiftError(s, 0), 'bad')
+  const t = run(s, { type: 'vipGift', lv: 1 })
+  assert.equal(t.res.linhThach, 10_000 - VIP_GIFTS[1].price * 10)
+  assert.equal(t.items.tuyTam5k, 2)
+  assert.equal(vipGiftError(t, 1), 'claimed', 'mỗi cấp một lần')
+  assert.equal(vipGiftError({ ...t, res: { ...t.res, linhThach: 0 } }, 2), 'not_enough')
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(t)))?.vip.gifts, [1], 'save giữ lễ đã mua')
 })

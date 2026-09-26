@@ -16,6 +16,7 @@
     size = 72,
     look = 'paper',
     selected = false,
+    dim = false,
     onclick,
   }: {
     art: string // khoá ui:<art>
@@ -27,6 +28,7 @@
     size?: number
     look?: 'paper' | 'ink'
     selected?: boolean
+    dim?: boolean // ngăn chưa mở của công tắc tranh: mờ, bớt màu
     onclick: (e: MouseEvent) => void
   } = $props()
   const src = $derived(artOf(`ui:${art}`)?.src)
@@ -36,6 +38,7 @@
   type="button"
   class="tile {look}"
   class:selected
+  class:dim
   aria-pressed={selected || undefined}
   style:--size="{size}px"
   onclick={e => {
@@ -80,6 +83,10 @@
   /* đang chọn (công tắc bằng tranh: Thư / Chiến báo): tranh to hơn, nhãn tô son */
   .selected .pic {
     transform: scale(1.08) rotate(-2deg);
+  }
+  .dim {
+    opacity: 0.55;
+    filter: saturate(0.4);
   }
   .paper.selected .tl {
     color: var(--cinnabar);

@@ -798,7 +798,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** chọn đội trên bản đồ hoặc trong hàng đội → chạm đích mới.
 - **Vì sao giữ chân:** phản ứng nhanh trong giao tranh; sửa sai không mất trắng thời gian.
 - **Tu tiên hoá:** *Chuyển độn* — đổi hướng độn quang giữa không trung.
-- **Game mình:** 🟡 đội đang đi chỉ quay đầu về được (`turnAround` ở `world/spots.ts`); riêng đội săn đang về thì chuyển thẳng sang yêu thú giới khác (`huntChain`). Thiếu: đổi đích tuỳ ý giữa đường (tính đường mới từ vị trí nội suy `marchAt`).
+- **Game mình:** ✅ Đổi đích (`world/redirect.ts`): đội đang đi tới một điểm (chưa tới, không thuộc kết trận) chuyển sang điểm khác cùng việc — chiếm → chiếm, khai mỏ → khai mỏ, đánh yêu vương → đánh yêu vương, săn → săn — đi tiếp từ chỗ đang đứng; lộ trình ghi nối phần đã đi + đường mới (giờ xuất phát giữ nguyên) nên về nhà đi ngược đúng đường đã đi, đổi đích sát đích không rút ngắn đường về. Bảng điểm ở bản đồ giới có nút "Đổi đích tới đây" cho từng đội đang đi cùng việc. Vẫn có quay đầu giữa đường (`turnAround`) và săn liên hoàn từ đường về (`huntChain`). Chưa có đổi sang việc khác, chưa kéo thả trên bản đồ.
 - **Ưu tiên:** P2 · **Công sức:** M (tính lại đường từ vị trí giữa đường; đường đi qua cổng nên phải chọn cổng gần nhất).
 
 #### H3. Recall — gọi về
@@ -905,7 +905,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | G10 | Return to City | ✅ | P0 | — |
 | G11 | Kingdom Overview (danh sách linh địa theo phe) | ✅ Sơn Hà Xã Tắc Đồ (`Holdings.svelte`) | P1 | S |
 | H1 | March Speed | ✅ 12 giây/ô, công pháp Thần Hành, tốc theo hệ đệ tử | P0 | — |
-| H2 | Redirect giữa đường | 🟡 quay đầu giữa đường, săn liên hoàn từ đường về; chưa đổi đích tuỳ ý | P2 | M |
+| H2 | Redirect giữa đường | ✅ đổi đích sang điểm cùng việc từ chỗ đang đứng, quay đầu, săn liên hoàn | P2 | M |
 | H3 | Recall | ✅ mọi đội đang đi (quay đầu giữa đường, hoàn hành lực) + đội đóng / khai / viện binh | P1 | S |
 | H4 | Đóng quân ở ô trống | ✅ đóng trại ở ô trống đã khai (`world/encamp.ts`), phe khác đánh tan được | P2 | M |
 | H5 | Open-field battle / chặn đường | ❌ (cố ý, PLAN "Không làm") | P2 | L / M |

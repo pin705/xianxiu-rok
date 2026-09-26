@@ -31,6 +31,7 @@ import { groupActions, type GroupAction } from './groups.ts'
 import { robActions, type RobAction } from './rob.ts'
 import { bookActions, type BookAction } from './book.ts'
 import { thoiActions, type ThoiAction } from './thoi.ts'
+import { redirectActions, type RedirectAction } from './redirect.ts'
 import { loharActions, type LoharAction } from './lohar.ts'
 import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
@@ -61,6 +62,7 @@ export type WorldAction =
   | RobAction
   | BookAction
   | ThoiAction
+  | RedirectAction
   | LoharAction
   | PotAction
   | ArkAction
@@ -90,6 +92,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...robActions,
   ...bookActions,
   ...thoiActions,
+  ...redirectActions,
   ...loharActions,
   ...potActions,
   ...arkActions,

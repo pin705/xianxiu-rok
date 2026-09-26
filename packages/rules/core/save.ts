@@ -1,11 +1,11 @@
 // Tông môn mới và save cũ: newGame, nâng bản, kiểm khuôn.
 import { freshDaily, freshEv, freshWeekly } from './calendar.ts'
 import { festLogin, rollFest } from './fest.ts'
-import { freshVip, vipLogin } from './vip.ts'
+import { freshVip, validVip, vipLogin } from './vip.ts'
 import { type Tavern } from './types.ts'
 // lượt miễn phí đầu tiên mở ngay (thiếp bạc, thiếp vàng) — người mới vào là có quà
 const freshTavern = (now: number): Tavern => ({ silver: now, gold: now, pity: 0, last: null })
-import { obj } from './parse.ts'
+import { num, obj } from './parse.ts'
 import { buildTime } from './stats.ts'
 import { type Job, type State } from './types.ts'
 import { bag, IDS, troops } from './util.ts'
@@ -134,7 +134,6 @@ export function migrate(raw: unknown): State | null {
 
 // Save từ ngoài vào (nhập tay, file, bản sửa tay) có thể thiếu hay sai trường. Kiểm đủ khuôn trước khi chơi:
 // thiếu là từ chối (người chơi được báo "save không hợp lệ"), không để game vỡ lúc vẽ rồi kẹt vòng lặp lỗi.
-const num = (x: unknown) => typeof x === 'number' && Number.isFinite(x)
 const optNum = (v: unknown) => v === undefined || num(v)
 const isBag = (x: unknown) => obj(x) && RESOURCES.every(r => num(x[r]))
 const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >= 0)
@@ -262,8 +261,6 @@ const validLate = (s: any) =>
   (s.pass === undefined ||
     (obj(s.pass) && num(s.pass.xp) && [s.pass.got, s.pass.gold].every(a => Array.isArray(a) && a.every(num)))) &&
   (s.face === undefined || Object.hasOwn(ELDERS, s.face)) &&
-  (s.vip?.shop === undefined ||
-    (obj(s.vip.shop) && num(s.vip.shop.week) && obj(s.vip.shop.got) && Object.values(s.vip.shop.got).every(num))) &&
   (s.fallen === undefined || (obj(s.fallen) && obj(s.fallen.army) && num(s.fallen.until))) &&
   (s.wall === undefined ||
     (obj(s.wall) &&
@@ -296,8 +293,7 @@ const validFest = (s: any) =>
       Array.isArray(f.got) &&
       (f.sp === undefined || (Array.isArray(f.sp) && f.sp.every(num))),
   ) &&
-  obj(s.vip) &&
-  [s.vip.pts, s.vip.streak, s.vip.day, s.vip.chest].every(num) &&
+  validVip(s.vip) &&
   obj(s.tavern) &&
   [s.tavern.silver, s.tavern.gold, s.tavern.pity].every(num) &&
   (s.maze === undefined || validMaze(s.maze)) &&

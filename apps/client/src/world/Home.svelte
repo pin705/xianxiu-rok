@@ -2,7 +2,7 @@
   // Màn núi tông môn: cảnh WebGL (home.ts) + lớp cuộn gốc của trình duyệt (quán tính cuộn như app thật)
   // + nút chạm vô hình trên từng công trình (bàn phím, trình đọc màn hình) + lớp HTML biển tên, đồng hồ.
   // Lớp HTML dịch theo camera trong cùng khung hình với WebGL nên không lệch nhau.
-  import { Icon, Portrait, building, tierOf, type Kind } from '@rok/art'
+  import { Portrait, building, tierOf, type Kind } from '@rok/art'
   import {
     BUILDINGS,
     GUEST_HALL,
@@ -19,7 +19,7 @@
     type Res,
     type State,
   } from '@rok/rules'
-  import { Bubble, Hint, Plate, Pointer, Tag, fly } from '../ui'
+  import { Bubble, Hint, LevelUp, Pin, Plate, Pointer, Tag, Visitor, Yield, fly } from '../ui'
   import { L, LOOK, clock, num, progress } from '../lib'
   import { useGame } from '../game'
   import { Home, type Phase } from './home'
@@ -141,10 +141,8 @@
 >
   {#snippet hits(k)}
     {#if guest}
-      <button class="guest" style="left:{36 * k}px;top:{350 * k}px" aria-label={L.guest} onclick={meet}
-        ><Portrait look={LOOK.vanHac} size={Math.round(44 * k)} /><span class="gift" aria-hidden="true"
-          ><Icon name="star" size={14} /></span
-        ></button
+      <Visitor x={36 * k} y={350 * k} label={L.guest} onclick={meet}
+        ><Portrait look={LOOK.vanHac} size={Math.round(44 * k)} /></Visitor
       >
     {/if}
     {#if !still}
@@ -166,20 +164,21 @@
         {@const got = r && game.levels[id] > 0 ? yardOf(game, r) : 0}
         {#if r && got >= reapMin(r)}
           {@const [x, y, w] = SLOT[id]}
-          <button
-            class="reap"
-            class:over={game.res[r] >= storage(game)}
-            style="left:{(x + w * 0.3) * k}px;top:{(y - tops[id] * 0.7) * k}px"
-            aria-label={L.reap(L.res[r], num(got))}
-            onclick={e => reap(e, r)}><Icon name={r} size={22} /><b class="t-num">{num(got)}</b></button
-          >
+          <Yield
+            x={(x + w * 0.3) * k}
+            y={(y - tops[id] * 0.7) * k}
+            icon={r}
+            n={num(got)}
+            over={game.res[r] >= storage(game)}
+            label={L.reap(L.res[r], num(got))}
+            onclick={e => reap(e, r)}
+          />
         {/if}
       {/each}
     {/if}
   {/snippet}
   {#snippet pins(k)}
     {#if !still}
-      {@const at = (x: number, y: number) => `left:${x * k}px;top:${y * k}px`}
       {#each IDS as id (id)}
         {@const [x, y, w] = SLOT[id]}
         {@const lv = game.levels[id]}
@@ -192,121 +191,40 @@
         {@const hint = !job && !wj ? idle(id) : null}
         {@const by = bubbleY(id, h)}
         {#if locked}
-          <span class="pin" style={at(x, y - h * 0.4)}
-            ><Tag icon="lock" size="sm">{L.level(BUILDINGS[id].unlock)}</Tag></span
-          >
+          <Pin x={x * k} y={(y - h * 0.4) * k}><Tag icon="lock" size="sm">{L.level(BUILDINGS[id].unlock)}</Tag></Pin>
         {:else}
-          <span class="pin" style={at(x, y + 13)}><Plate name={L.b[id].name} level={lv} dim={!lv} /></span>
+          <Pin x={x * k} y={(y + 13) * k}><Plate name={L.b[id].name} level={lv} dim={!lv} /></Pin>
         {/if}
         {#if job}
-          <span class="pin" style={at(x, by)}
-            ><Bubble icon="hammer" time={clock(job.finishAt - now)} value={progress(job, now)} /></span
+          <Pin x={x * k} y={by * k}
+            ><Bubble icon="hammer" time={clock(job.finishAt - now)} value={progress(job, now)} /></Pin
           >
         {:else if wj}
-          <span class="pin" style={at(x, by)}>
+          <Pin x={x * k} y={by * k}>
             <Bubble
               icon={game.heal && id === 'danPhong' ? 'heal' : WORK_ICON[id as keyof typeof WORK_ICON]}
               time={clock(wj.finishAt - now)}
               value={progress(wj, now)}
             />
-          </span>
+          </Pin>
         {:else if hint}
-          <span class="pin" style={at(x + w * 0.3, y - h * 0.72)}><Hint icon={hint} size={26} tone="paper" /></span>
+          <Pin x={(x + w * 0.3) * k} y={(y - h * 0.72) * k}><Hint icon={hint} size={26} tone="paper" /></Pin>
         {:else if lv === 0 && !locked}
-          <span class="pin" style={at(x, y - h * 0.5)}><Hint icon="hammer" /></span>
+          <Pin x={x * k} y={(y - h * 0.5) * k}><Hint icon="hammer" /></Pin>
         {/if}
         {#if full}
           <!-- có bong bóng đồng hồ thì nhãn "Đầy" nằm ngay trên bong bóng, không đè nhau -->
-          <span class="pin" style={job || wj ? at(x, by - 26) : at(x, y - Math.min(h, 58) - 6)}
-            ><Tag tone="bad" size="sm">{L.full}</Tag></span
+          <Pin x={x * k} y={(job || wj ? by - 26 : y - Math.min(h, 58) - 6) * k}
+            ><Tag tone="bad" size="sm">{L.full}</Tag></Pin
           >
         {/if}
         {#if guide === id}
-          <span class="pin up" style={at(x, job || wj ? by - 26 : y - h - 18)}><Pointer /></span>
+          <Pin x={x * k} y={(job || wj ? by - 26 : y - h - 18) * k} at="up"><Pointer /></Pin>
         {/if}
         {#each bursts.filter(b => b.id === id) as b (b.t)}
-          <span class="pin" style={at(x, y - h - 6)}><b class="lvup">{L.level(b.level)}</b></span>
+          <Pin x={x * k} y={(y - h - 6) * k}><LevelUp>{L.level(b.level)}</LevelUp></Pin>
         {/each}
       {/each}
     {/if}
   {/snippet}
 </View>
-
-<style>
-  /* khách vân du: chân dung trong vòng giấy, nhún nhẹ, hộp quà nhỏ góc trên */
-  .guest {
-    position: absolute;
-    padding: 2px;
-    background: var(--paper);
-    border: 2px solid var(--gold-d);
-    border-radius: 50%;
-    box-shadow: 0 0 0 4px rgb(var(--gold-glow) / 0.45);
-    translate: -50% -50%;
-    animation: bob 1.8s ease-in-out infinite;
-    cursor: pointer;
-  }
-  .gift {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    display: grid;
-    place-items: center;
-    width: 20px;
-    height: 20px;
-    color: var(--text);
-    background: var(--gold-l);
-    border: 1px solid var(--gold-d);
-    border-radius: 50%;
-  }
-  /* bong bóng sản lượng chờ thu: viên giấy đuôi nhọn góc dưới, nhún nhẹ; viền son khi kho đã đầy (chạm không thu được) */
-  .reap {
-    position: absolute;
-    display: grid;
-    justify-items: center;
-    min-width: 44px;
-    padding: 3px 7px 2px;
-    color: var(--text);
-    font-size: var(--fs-1);
-    background: var(--paper);
-    border: 2px solid var(--gold-d);
-    border-radius: 14px 14px 14px 3px;
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--ink) 30%, transparent);
-    translate: -20% -100%;
-    animation: bob 1.8s ease-in-out infinite;
-    cursor: pointer;
-  }
-  .reap.over {
-    border-color: var(--bad);
-  }
-  @keyframes bob {
-    50% {
-      transform: translateY(-5px);
-    }
-  }
-  .up {
-    translate: -50% -100% !important;
-  }
-  .lvup {
-    display: block;
-    font-size: var(--fs-5);
-    font-weight: 900;
-    color: var(--silk);
-    -webkit-text-stroke: 3px var(--gold-d);
-    paint-order: stroke fill;
-    animation: lvup 1.6s var(--ease) forwards;
-  }
-  @keyframes lvup {
-    0% {
-      opacity: 0;
-      transform: translateY(8px) scale(0.6);
-    }
-    20% {
-      opacity: 1;
-      transform: translateY(0) scale(1.15);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-26px);
-    }
-  }
-</style>

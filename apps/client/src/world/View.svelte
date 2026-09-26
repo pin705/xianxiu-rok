@@ -11,6 +11,7 @@
   // dịch theo camera trong cùng khung hình với WebGL nên không lệch. k = px CSS mỗi DU.
   import { onMount, type Snippet } from 'svelte'
   import { cssPerDU, mountScene, sceneX } from './stage'
+  import { Stage } from '../ui'
 
   let {
     make,
@@ -104,64 +105,15 @@
   })
 </script>
 
-<div class="scroller" class:off={hidden} bind:this={scroller}>
-  <div class="space" bind:this={space} style:width="{400 * k}px" style:height="{height * k}px">{@render hits?.(k)}</div>
-</div>
-{#if pins}
-  <div class="overlay" class:off={hidden} aria-hidden="true">
-    <div class="vignette"></div>
-    <div class="layer" bind:this={layer} style:width="{400 * k}px">{@render pins(k)}</div>
-  </div>
-{/if}
-
-<style>
-  /* desktop: chừa cột trái (--rail), cảnh căn giữa phần còn lại — khớp sceneX() */
-  .scroller {
-    position: fixed;
-    inset: 0 0 0 var(--rail);
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .space {
-    position: relative;
-  }
-  .off {
-    visibility: hidden;
-  }
-  .overlay {
-    position: fixed;
-    inset: 0 0 0 var(--rail);
-    z-index: var(--z-overlay);
-    overflow: hidden;
-    pointer-events: none;
-  }
-  /* tối dần ra mép như khung tranh, kéo mắt vào giữa cảnh */
-  .vignette {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      ellipse 80% 70% at 50% 48%,
-      transparent 58%,
-      color-mix(in srgb, var(--ink) 26%, transparent) 100%
-    );
-  }
-  .layer {
-    position: relative;
-    height: 100%;
-    will-change: transform;
-  }
-  /* Ghim HTML theo toạ độ cảnh: style="left:…;top:…" */
-  .layer :global(.pin) {
-    position: absolute;
-    translate: -50% -50%;
-    white-space: nowrap;
-  }
-  .space :global(.hit) {
-    position: absolute;
-    border-radius: 12px;
-  }
-  .space :global(.hit:focus-visible) {
-    outline: 2px dashed var(--gold-l);
-  }
-</style>
+{#snippet hitLayer()}{@render hits?.(k)}{/snippet}
+{#snippet pinLayer()}{@render pins?.(k)}{/snippet}
+<Stage
+  width={400 * k}
+  height={height * k}
+  {hidden}
+  bind:scroller
+  bind:space
+  bind:layer
+  hits={hitLayer}
+  pins={pins ? pinLayer : undefined}
+/>

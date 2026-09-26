@@ -201,9 +201,9 @@
       <Section title={L.tower.shop}>
         {#snippet aside()}<b class="t-num t-gold">{L.tower.coins(num(coins))}</b>{/snippet}
         <p class="t-tiny t-soft">{L.tower.shopHint(TOWER_COIN, TOWER_CHEST_COIN)}</p>
-        <ul class="goods">
+        <ul class="fill plain" style:--min="140px">
           {#each TOWER_SHOP as x, i (i)}
-            <li class="good">
+            <li class="tray">
               {#if x.star}<Portrait look={LOOK[star]} size={40} /><b class="t-tiny"
                   >{L.tavern.tokens(L.elders[star].name, x.star)}</b
                 >
@@ -249,25 +249,3 @@
     </div>
   {/if}
 </Sheet>
-
-<style>
-  .goods {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: var(--sp-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .good {
-    display: grid;
-    justify-items: center;
-    align-content: space-between;
-    gap: 3px;
-    padding: 8px;
-    text-align: center;
-    background: var(--paper2);
-    border: 1.5px solid var(--paper3);
-    border-radius: 12px;
-  }
-</style>

@@ -4,7 +4,7 @@
   import { untrack } from 'svelte'
   import { MAP_W, snapClaims, territoryGrid, type Atlas, type MapSnap } from '@rok/rules/world'
   import { FOG_CELL, FOG_N, clear, type Fog } from '@rok/rules'
-  import { Icon } from '@rok/art'
+  import { MapInset } from '../ui'
   import { L } from '../lib'
   import { terrColor } from './territory'
 
@@ -77,129 +77,28 @@
       .filter(s => s.pid === me || allies.includes(s.pid))
       .map(s => ({ pid: s.pid, x: s.x, y: s.y, me: s.pid === me })),
   )
-  const pct = (v: number) => `${(v / MAP_W) * 100}%`
+  // khung đang nhìn cắt trong giới, theo tỉ lệ 0..1
+  const box = $derived({
+    x: Math.max(0, view.x) / MAP_W,
+    y: Math.max(0, view.y) / MAP_W,
+    w: (Math.min(MAP_W, view.x + view.w) - Math.max(0, view.x)) / MAP_W,
+    h: (Math.min(MAP_W, view.y + view.h) - Math.max(0, view.y)) / MAP_W,
+  })
   // chạm / kéo: đưa khung nhìn tới chỗ ngón tay
-  let dragging = false
-  function jump(e: PointerEvent) {
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const x = Math.floor(((e.clientX - r.left) / r.width) * MAP_W),
-      y = Math.floor(((e.clientY - r.top) / r.height) * MAP_W)
-    onjump(Math.min(MAP_W - 1, Math.max(0, x)), Math.min(MAP_W - 1, Math.max(0, y)))
-  }
+  const jump = (fx: number, fy: number) =>
+    onjump(
+      Math.min(MAP_W - 1, Math.max(0, Math.floor(fx * MAP_W))),
+      Math.min(MAP_W - 1, Math.max(0, Math.floor(fy * MAP_W))),
+    )
 </script>
 
-<div class="mini" class:shut={!open}>
-  {#if open}
-    <div
-      class="map"
-      role="button"
-      tabindex="-1"
-      aria-label={L.world.minimap}
-      onpointerdown={e => {
-        e.stopPropagation()
-        dragging = true
-        ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-        jump(e)
-      }}
-      onpointermove={e => dragging && jump(e)}
-      onpointerup={() => (dragging = false)}
-      onpointercancel={() => (dragging = false)}
-    >
-      <canvas bind:this={canvas} width={MAP_W} height={MAP_W}></canvas>
-      {#each dots as d (d.pid)}
-        <span class="dot" class:me={d.me} style:left={pct(d.x + 0.5)} style:top={pct(d.y + 0.5)}></span>
-      {/each}
-      <span
-        class="view"
-        style:left={pct(Math.max(0, view.x))}
-        style:top={pct(Math.max(0, view.y))}
-        style:width={pct(Math.min(MAP_W, view.x + view.w) - Math.max(0, view.x))}
-        style:height={pct(Math.min(MAP_W, view.y + view.h) - Math.max(0, view.y))}
-      ></span>
-    </div>
-  {/if}
-  <button
-    class="toggle"
-    aria-label={open ? L.world.minimapHide : L.world.minimap}
-    aria-expanded={open}
-    onclick={() => (open = !open)}><Icon name="globe" size={16} /></button
-  >
-</div>
-
-<style>
-  .mini {
-    position: fixed;
-    left: calc(var(--rail) + 12px);
-    bottom: calc(var(--safe-b) + 128px);
-    z-index: var(--z-page);
-    display: flex;
-    align-items: flex-end;
-    gap: 4px;
-  }
-  .map {
-    position: relative;
-    width: 116px;
-    height: 116px;
-    overflow: hidden;
-    border: 2px solid var(--rim, var(--ink3));
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgb(var(--shade) / 0.35);
-    touch-action: none;
-    cursor: crosshair;
-  }
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated;
-  }
-  .dot {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: var(--malachite);
-    border: 1px solid var(--paper);
-    border-radius: 50%;
-    translate: -50% -50%;
-    pointer-events: none;
-  }
-  .dot.me {
-    width: 9px;
-    height: 9px;
-    background: var(--gold-l);
-    border-color: var(--text);
-  }
-  .view {
-    position: absolute;
-    border: 1.5px solid var(--paper);
-    outline: 1px solid rgb(var(--shade) / 0.6);
-    pointer-events: none;
-  }
-  .toggle {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    color: var(--paper);
-    background: color-mix(in srgb, var(--ink) 78%, transparent);
-    border: 1px solid var(--gold-d);
-    border-radius: 50%;
-    cursor: pointer;
-  }
-  /* desktop: góc trên phải (dải chat nằm dưới giữa màn), nút thu ở bên trái bản đồ */
-  @media (min-width: 1024px) and (min-height: 600px) {
-    .map {
-      width: 168px;
-      height: 168px;
-    }
-    .mini {
-      top: calc(var(--top) + 16px);
-      right: 16px;
-      bottom: auto;
-      left: auto;
-      flex-direction: row-reverse;
-      align-items: flex-start;
-    }
-  }
-</style>
+<MapInset
+  bind:open
+  bind:canvas
+  px={MAP_W}
+  dots={dots.map(d => ({ id: d.pid, x: (d.x + 0.5) / MAP_W, y: (d.y + 0.5) / MAP_W, me: d.me }))}
+  view={box}
+  label={L.world.minimap}
+  hideLabel={L.world.minimapHide}
+  onpoint={jump}
+/>

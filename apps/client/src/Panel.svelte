@@ -40,8 +40,25 @@
     type Tier,
     type UnitType,
   } from '@rok/rules'
-  import { Icon, artOf, building, tierOf, type IconName, type Kind } from '@rok/art'
-  import { Bag, Button, Card, Confirm, Medal, Painting, Section, Sheet, Stat, Tabs, Tag, Toggle } from './ui'
+  import { Icon, building, tierOf, type IconName, type Kind } from '@rok/art'
+  import {
+    Altar,
+    Ascend,
+    Bag,
+    Button,
+    Card,
+    Confirm,
+    Medal,
+    Painting,
+    Seal,
+    Section,
+    Sheet,
+    Stat,
+    Tabs,
+    Tag,
+    Timer,
+    Toggle,
+  } from './ui'
   import FirstLook from './FirstLook.svelte'
   import Alchemy from './Alchemy.svelte'
   import ArmyPick from './Army.svelte'
@@ -120,9 +137,7 @@
   {#snippet art()}
     {#if id && tab !== 'upgrade'}
       {@const lv = Math.max(1, game.levels[id])}
-      <span class="art"
-        ><Painting key="panel:{id}:{tierOf(lv)}" make={() => building(id as Kind, lv).art} w={118} h={104} /></span
-      >
+      <Painting key="panel:{id}:{tierOf(lv)}" make={() => building(id as Kind, lv).art} w={118} h={104} />
     {/if}
   {/snippet}
   {#if id}
@@ -234,22 +249,22 @@
       {#snippet gains()}
         {#if d.makes}
           <Stat label={L.panel.output} tone="good">
-            <Icon name={d.makes} size={16} />{num(rate(game, d.makes))}{#if lv < MAX_LEVEL}<span class="to"
+            <Icon name={d.makes} size={16} />{num(rate(game, d.makes))}{#if lv < MAX_LEVEL}<span class="t-good"
                 >→ {num(rate(withLevel(id, next), d.makes))}</span
               >{/if}<small class="t-soft">{L.panel.perHour}</small>
           </Stat>
         {:else if id === 'tangBaoCac'}
           <Stat label={L.panel.capacity}
-            >{num(capAt(lv))}{#if lv < MAX_LEVEL}<span class="to">→ {num(capAt(next))}</span>{/if}</Stat
+            >{num(capAt(lv))}{#if lv < MAX_LEVEL}<span class="t-good">→ {num(capAt(next))}</span>{/if}</Stat
           >
         {:else if id === 'dienVoTruong'}
           <Stat label={L.panel.batch}
-            >{num(batch(game))}{#if lv < MAX_LEVEL}<span class="to">→ {num(batch(withLevel(id, next)))}</span
+            >{num(batch(game))}{#if lv < MAX_LEVEL}<span class="t-good">→ {num(batch(withLevel(id, next)))}</span
               >{/if}</Stat
           >
         {:else if id === 'danPhong'}
           <Stat label={L.panel.hospital}
-            >{num(hospital(game))}{#if lv < MAX_LEVEL}<span class="to">→ {num(hospital(withLevel(id, next)))}</span
+            >{num(hospital(game))}{#if lv < MAX_LEVEL}<span class="t-good">→ {num(hospital(withLevel(id, next)))}</span
               >{/if}</Stat
           >
         {:else if id === 'tangKinhCac'}
@@ -258,13 +273,13 @@
           <Stat label={L.panel.slots}>{marchSlots(game)}</Stat>
         {:else if id === 'hoSonDaiTran'}
           <Stat label={L.pvp.wall(lv)}
-            >+{Math.round(GUARD_STEP * lv * 100)}%{#if lv < MAX_LEVEL}<span class="to"
+            >+{Math.round(GUARD_STEP * lv * 100)}%{#if lv < MAX_LEVEL}<span class="t-good"
                 >→ +{Math.round(GUARD_STEP * next * 100)}%</span
               >{/if}</Stat
           >
         {:else if id === 'luyenKhiPhong'}
           <Stat label={L.panel.gearCap}
-            >{gearCap(game)}{#if lv < MAX_LEVEL}<span class="to">→ {gearCap(withLevel(id, next))}</span>{/if}</Stat
+            >{gearCap(game)}{#if lv < MAX_LEVEL}<span class="t-good">→ {gearCap(withLevel(id, next))}</span>{/if}</Stat
           >
         {/if}
         {#if lv < MAX_LEVEL}
@@ -289,7 +304,7 @@
             </p>{/if}
           <ul class="stack">
             {#each tr.waves as w, i (i)}
-              <li class="wave row">
+              <li class="wash row">
                 <Medal emblem="thunder" tone="thunder" size={34} pips={tr.tier} />
                 <span class="stack" style:--gap="0">
                   <b>{L.report.wave(i + 1)}</b>
@@ -335,28 +350,23 @@
       {:else if err === 'max_level'}
         <p class="mt-3 center t-gold t-strong">{L.panel.maxed}</p>
       {:else}
-        <div class="rite">
-          <div class="tiers">
-            <figure>
+        <div class="stack middle mt-3" style:--gap="var(--sp-3)">
+          <Ascend glow fromLabel={lv ? L.level(lv) : L.panel.notBuilt} toLabel={L.level(next)}>
+            {#snippet from()}
               <Painting
                 key="panel:{id}:{tierOf(Math.max(1, lv))}"
                 make={() => building(id as Kind, Math.max(1, lv)).art}
                 w={120}
                 h={96}
               />
-              <figcaption>{lv ? L.level(lv) : L.panel.notBuilt}</figcaption>
-            </figure>
-            <svg class="arrow" viewBox="0 0 60 24" aria-hidden="true"
-              ><path d="M4 14 C 18 4, 30 22, 46 11" /><path d="M40 5 L 52 10 L 42 18" /></svg
-            >
-            <figure class="nx">
+            {/snippet}
+            {#snippet to()}
               <Painting key="panel:{id}:{tierOf(next)}" make={() => building(id as Kind, next).art} w={132} h={106} />
-              <figcaption>{L.level(next)}</figcaption>
-            </figure>
-          </div>
-          <div class="gains">{@render gains()}</div>
+            {/snippet}
+          </Ascend>
+          <div class="row wrap justify-center" style:--gap="6px 18px">{@render gains()}</div>
           {#if need || err === 'queue_full'}
-            <div class="row wrap center-row">
+            <div class="row wrap justify-center">
               {#if need}
                 <Tag icon={hall >= need ? 'check' : 'cross'} tone={hall >= need ? 'good' : 'bad'}
                   >{L.panel.hall(need)}</Tag
@@ -369,36 +379,32 @@
             </div>
           {/if}
           <!-- lễ vật trên án son: mỗi tài nguyên một món, số đủ / thiếu -->
-          <div class="altar">
-            {#each Object.entries(c) as [r, v] (r)}
-              {@const have = game.res[r as keyof typeof game.res] ?? 0}
-              <span class="gift" class:short={have < (v ?? 0)}>
-                {#if artOf(`ui:res-${r}`)}<img src={artOf(`ui:res-${r}`)!.src} alt="" draggable="false" />{:else}<Icon
-                    name={r as IconName}
-                    size={40}
-                  />{/if}
-                <b class="t-num">{num(v ?? 0)}</b>
-                <small class="t-num">{L.panel.have(num(have))}</small>
-              </span>
-            {/each}
-          </div>
+          <Altar
+            items={Object.entries(c).map(([r, v]) => {
+              const have = game.res[r as keyof typeof game.res] ?? 0
+              return {
+                key: r,
+                art: `res-${r}`,
+                icon: r as IconName,
+                n: num(v ?? 0),
+                sub: L.panel.have(num(have)),
+                short: have < (v ?? 0),
+              }
+            })}
+          />
           {@render store(c)}
           <Refill cost={c} />
-          <div class="go">
-            <button class="seal" disabled={!!err} onclick={() => onupgrade(id)}>
-              <span>{lv ? L.panel.upgrade : L.panel.build}</span>
-            </button>
-            <span class="when">
-              <b class="t-num"><Icon name="clock" size={14} />{clock(buildTime(game, id, next))}</b>
-              <small
-                >{L.panel.doneAt(
-                  new Date(now + buildTime(game, id, next)).toLocaleTimeString(LANG, {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }),
-                )}</small
-              >
-            </span>
+          <div class="row justify-center mt-2" style:--gap="var(--sp-3)">
+            <Seal disabled={!!err} onclick={() => onupgrade(id)}>{lv ? L.panel.upgrade : L.panel.build}</Seal>
+            <Timer
+              time={clock(buildTime(game, id, next))}
+              sub={L.panel.doneAt(
+                new Date(now + buildTime(game, id, next)).toLocaleTimeString(LANG, {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+              )}
+            />
           </div>
           {#if id === 'chuDien' && unlocked(next).length}<p class="center t-tiny t-soft">
               {unlocked(next)[0].text}
@@ -440,175 +446,3 @@
     {/if}
   {/if}
 </Sheet>
-
-<style>
-  .art {
-    display: grid;
-    place-items: end center;
-    width: 118px;
-    height: 104px;
-  }
-  .to {
-    color: var(--good);
-  }
-  /* đợt lôi kiếp: dải mực tím loang nhạt */
-  .wave {
-    padding: var(--sp-2) 12px;
-    border: 0 solid transparent;
-    border-image: var(--sk-card-plain);
-    background: linear-gradient(90deg, rgb(138 115 207 / 0.18), transparent) padding-box;
-  }
-
-  /* ---------- Nghi lễ nâng cấp: hai tầng, lễ vật trên án son, nút ấn son ---------- */
-  .rite {
-    display: grid;
-    justify-items: center;
-    gap: var(--sp-3);
-    margin-top: var(--sp-3);
-  }
-  .tiers {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 2px;
-    width: 100%;
-  }
-  figure {
-    display: grid;
-    justify-items: center;
-    gap: 4px;
-    margin: 0;
-  }
-  figcaption {
-    font-size: var(--fs-2);
-    font-weight: 800;
-    color: var(--text-soft);
-  }
-  .nx :global(img) {
-    filter: drop-shadow(0 0 10px rgb(236 208 138 / 0.9)) drop-shadow(0 0 3px rgb(255 255 255 / 0.9));
-  }
-  .nx figcaption {
-    color: var(--cinnabar);
-  }
-  .arrow {
-    flex: none;
-    width: 52px;
-    margin-bottom: 44px;
-    fill: none;
-    stroke: var(--text);
-    stroke-width: 2.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .gains {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px 18px;
-  }
-  .center-row {
-    justify-content: center;
-  }
-  /* án son: mặt bàn sơn đỏ viền vàng, hai chân; lễ vật đứng trên mặt bàn */
-  .altar {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    gap: 18px;
-    width: 100%;
-    padding: 4px 20px 26px;
-    background:
-      linear-gradient(#c9a45a, #c9a45a) left 8px bottom 18px / calc(100% - 16px) 2px no-repeat,
-      linear-gradient(#c0443a, #7d2218) left 0 bottom 10px / 100% 12px no-repeat;
-  }
-  .altar::before,
-  .altar::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    width: 12px;
-    height: 12px;
-    background: linear-gradient(#8a2a20, #5a1510);
-    border-radius: 0 0 3px 3px;
-  }
-  .altar::before {
-    left: 26px;
-  }
-  .altar::after {
-    right: 26px;
-  }
-  .gift {
-    display: grid;
-    justify-items: center;
-    gap: 0;
-    min-width: 64px;
-  }
-  .gift img {
-    width: 52px;
-    height: 52px;
-    filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.25));
-  }
-  .gift b {
-    font-size: var(--fs-4);
-    font-weight: 900;
-  }
-  .gift small {
-    font-size: var(--fs-1);
-    color: var(--text-faint);
-  }
-  .gift.short b {
-    color: var(--cinnabar);
-  }
-  /* nút ấn son: tròn to, chữ trắng; giờ xong đặt cạnh */
-  .go {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-3);
-    margin-top: var(--sp-2);
-  }
-  .seal {
-    display: grid;
-    place-items: center;
-    width: 104px;
-    height: 104px;
-    padding: 12px;
-    font-size: var(--fs-4);
-    font-weight: 900;
-    line-height: 1.1;
-    color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
-    background: var(--ui-seal-img, radial-gradient(circle at 40% 35%, #e0604c, #a8352a 60%, #6e1f18)) center / 100% 100%
-      no-repeat;
-    border: 0;
-    border-radius: 50%;
-    filter: drop-shadow(0 6px 10px rgb(110 31 24 / 0.35));
-    transition: transform var(--dur-1) var(--ease);
-    cursor: pointer;
-  }
-  .seal:active {
-    transform: scale(0.94) rotate(-4deg);
-  }
-  .seal:disabled {
-    filter: grayscale(0.85) opacity(0.7);
-    cursor: default;
-  }
-  .when {
-    display: grid;
-    gap: 2px;
-    padding: 6px 12px;
-    background: var(--paper2);
-    border: 1px solid var(--paper3);
-    border-radius: 8px;
-  }
-  .when b {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: var(--fs-4);
-  }
-  .when small {
-    font-size: var(--fs-1);
-    color: var(--text-faint);
-  }
-</style>

@@ -17,6 +17,7 @@
   } from '@rok/rules'
   import { Icon, artOf } from '@rok/art'
   import { Bag, Button, Meter, Section, Sheet } from './ui'
+  import VipGifts from './VipGifts.svelte'
   import ItemCell from './ItemCell.svelte'
   import { itemName } from './bag'
   import { L, clock, num } from './lib'
@@ -128,6 +129,7 @@
       {/each}
     </ul>
   </Section>
+  <VipGifts />
 </Sheet>
 
 <style>

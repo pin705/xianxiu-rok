@@ -2,7 +2,7 @@
   // Cài đặt: âm thanh, ngôn ngữ, hướng dẫn, tài khoản, thông tin. Tiến độ nằm trên server (không còn xuất/nhập save).
   // Bố cục: mỗi nhóm một tấm bảng giấy khung đôi (Card), trong bảng là các hàng kẻ chấm — không xếp chồng từng thẻ rời.
   import { Icon } from '@rok/art'
-  import { Button, Card, Section, Sheet, Toggle } from './ui'
+  import { Button, Card, Fold, Section, Select, Sheet, Toggle } from './ui'
   import { SECLUDE_DAYS } from '@rok/rules'
   import { LOCALES, LOCALE_IDS, type Locale } from '@rok/i18n'
   import { L, LANG, calm, isMusicOn, setCalm, setLang, setMusicOn } from './lib'
@@ -58,12 +58,13 @@
       }}><Icon name="power" size={20} />{L.settings.calm}</Toggle
     >
     <!-- tên mỗi ngôn ngữ viết bằng chính ngôn ngữ đó: người đọc không hiểu ngôn ngữ đang hiện vẫn tìm được tiếng mình -->
-    <label class="lang row">
-      <Icon name="globe" size={20} />
-      <select aria-label="Language" value={LANG} onchange={e => setLang(e.currentTarget.value as Locale)}>
-        {#each LOCALE_IDS as id (id)}<option value={id}>{LOCALES[id].name}</option>{/each}
-      </select>
-    </label>
+    <Select
+      icon="globe"
+      label="Language"
+      value={LANG}
+      options={LOCALE_IDS.map(id => ({ id, label: LOCALES[id].name }))}
+      onchange={id => setLang(id as Locale)}
+    />
   </Card>
   <!-- Bế Quan Lệnh: nghỉ dài ngày, không ai cướp được (đang bế quan thì nút xuất quan ở HUD) -->
   <Section title={L.seclude.title}>
@@ -84,10 +85,7 @@
     <!-- cẩm nang: một tấm bảng, mỗi mục một hàng mở ra (không xếp chồng từng thẻ) -->
     <Card>
       {#each L.guide.items as [q, a] (q)}
-        <details>
-          <summary class="row t-strong"><span class="chev"><Icon name="arrow" size={14} /></span>{q}</summary>
-          <p class="t-small t-soft">{a}</p>
-        </details>
+        <Fold title={q}><p class="t-small t-soft">{a}</p></Fold>
       {/each}
     </Card>
   </Section>
@@ -105,65 +103,3 @@
     <p class="t-small t-soft">{L.settings.credits}</p>
   </Section>
 </Sheet>
-
-<style>
-  /* công tắc giảm chuyển động (data-calm trên <html>): như prefers-reduced-motion ở theme.css, cả hiệu ứng chuyển tab */
-  :global(:root[data-calm] *),
-  :global(:root[data-calm] *::before),
-  :global(:root[data-calm] *::after) {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  :global(:root[data-calm]::view-transition-group(*)),
-  :global(:root[data-calm]::view-transition-old(*)),
-  :global(:root[data-calm]::view-transition-new(*)) {
-    animation: none !important;
-  }
-  .lang {
-    min-height: 50px;
-    padding: 0 var(--sp-1);
-    background: var(--img-dots) left bottom / 12px 6px repeat-x;
-  }
-  /* ô chọn ngôn ngữ: nền giấy nhạt, gạch chân mực vẽ tay */
-  .lang select {
-    flex: 1;
-    min-height: 40px;
-    padding: 0 10px 4px;
-    font: inherit;
-    font-weight: 700;
-    color: inherit;
-    background: transparent;
-    border: 0 solid transparent;
-    border-image: var(--sk-field);
-    appearance: none;
-    -webkit-appearance: none;
-    cursor: pointer;
-  }
-  details {
-    padding: 8px 2px;
-    background: var(--img-dots) left bottom / 12px 6px repeat-x;
-  }
-  details:last-child {
-    background: none;
-  }
-  details p {
-    padding: 6px 0 2px 20px;
-  }
-  summary {
-    --gap: 6px;
-    cursor: pointer;
-    list-style: none;
-  }
-  summary::-webkit-details-marker {
-    display: none;
-  }
-  .chev {
-    display: grid;
-    color: var(--cinnabar);
-    transition: rotate var(--dur-2) var(--ease);
-  }
-  details[open] .chev {
-    rotate: 90deg;
-  }
-</style>

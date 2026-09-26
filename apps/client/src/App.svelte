@@ -16,7 +16,7 @@
     type Target,
   } from '@rok/rules'
   import type { MapSnap, Seen, WorldInfo } from '@rok/protocol'
-  import { Button, Card, Medal, Toasts, fly, type ToastItem } from './ui'
+  import { Button, Card, Medal, Toasts, Veil, fly, type ToastItem } from './ui'
   import Conn from './Conn.svelte'
   import Daily from './Daily.svelte'
   import Events from './Events.svelte'
@@ -454,7 +454,7 @@
 </script>
 
 {#snippet crashed(error: unknown)}
-  <div class="crash" role="alert">
+  <Veil tone="lacquer" role="alert">
     <Card>
       <div class="stack center" style:--gap="var(--sp-3)">
         <Medal emblem="crest" tone="red" size={72} />
@@ -464,7 +464,7 @@
         <small class="t-tiny t-faint t-ellipsis">{String(error)}</small>
       </div>
     </Card>
-  </div>
+  </Veil>
 {/snippet}
 
 <svelte:boundary failed={crashed} onerror={e => console.error(e)}>
@@ -687,16 +687,3 @@
 </svelte:boundary>
 <Conn {status} onretry={() => net?.retry()} onfresh={() => (status = 'nosect')} />
 
-<style>
-  .crash {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-toast);
-    display: grid;
-    place-items: center;
-    max-width: var(--col);
-    margin: 0 auto;
-    padding: var(--sp-5);
-    background: var(--lacquer);
-  }
-</style>

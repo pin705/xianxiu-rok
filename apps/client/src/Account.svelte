@@ -110,6 +110,7 @@
       {#if !info.email}
         <form class="stack mt-2" onsubmit={link}>
           <input
+            class="field"
             type="email"
             bind:value={email}
             autocomplete="email"
@@ -117,6 +118,7 @@
             aria-label={L.account.email}
           />
           <input
+            class="field"
             type="password"
             bind:value={pass}
             autocomplete="new-password"
@@ -131,6 +133,7 @@
       {:else}
         <form class="stack mt-2" onsubmit={change}>
           <input
+            class="field"
             type="password"
             bind:value={old}
             autocomplete="current-password"
@@ -138,6 +141,7 @@
             aria-label={L.account.old}
           />
           <input
+            class="field"
             type="password"
             bind:value={pass}
             autocomplete="new-password"
@@ -157,7 +161,7 @@
         <b class="t-small">{L.account.code}</b>
         <small class="t-small t-soft">{L.account.codeHint}</small>
         {#if code && code.until > now}
-          <p class="code t-num" aria-live="polite">{code.code.slice(0, 4)}-{code.code.slice(4)}</p>
+          <p class="t-head t-num t-code" aria-live="polite">{code.code.slice(0, 4)}-{code.code.slice(4)}</p>
           <small class="t-tiny t-soft">{L.account.codeLeft(clock(code.until - now))}</small>
         {:else}
           <Button size="sm" variant="ghost" disabled={busy} onclick={makeCode}>{L.account.makeCode}</Button>
@@ -169,7 +173,13 @@
       <form class="stack" onsubmit={renameSect}>
         <b class="t-small">{L.account.rename} · {g.game.name}</b>
         <small class="t-tiny t-soft">{L.account.renameHint(decrees)}</small>
-        <input bind:value={fresh} maxlength="20" placeholder={L.account.renameTo} aria-label={L.account.renameTo} />
+        <input
+          class="field"
+          bind:value={fresh}
+          maxlength="20"
+          placeholder={L.account.renameTo}
+          aria-label={L.account.renameTo}
+        />
         <Button variant="ghost" wide type="submit" disabled={busy || !decrees || [...fresh.trim()].length < 2}
           >{L.account.renameGo}</Button
         >
@@ -179,6 +189,7 @@
         <b class="t-small">{L.account.redeem}</b>
         <small class="t-tiny t-soft">{L.account.redeemHint}</small>
         <input
+          class="field"
           bind:value={gift}
           maxlength="32"
           autocapitalize="characters"
@@ -209,6 +220,7 @@
         {outHint}
       </p>
       {#if out === 'remove' && info.email}<input
+          class="field"
           type="password"
           bind:value={pass}
           autocomplete="current-password"
@@ -236,20 +248,3 @@
     {/if}
   {/if}
 </Section>
-
-<style>
-  input {
-    width: 100%;
-    padding: 8px 10px;
-    font: inherit;
-    border: 1.5px solid var(--rim, var(--ink3));
-    border-radius: var(--cut);
-    background: var(--paper);
-  }
-  .code {
-    font-size: var(--fs-5);
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    user-select: all;
-  }
-</style>

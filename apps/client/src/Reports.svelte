@@ -4,8 +4,8 @@
   // chiến báo là dòng gọn kẻ mực đứt có huy hiệu thắng / thua.
   import { mailText } from '@rok/i18n'
   import { RESOURCES, count, type ElderId, type Mail, type Report, type Res } from '@rok/rules'
-  import { Icon, Portrait, artOf } from '@rok/art'
-  import { Bag, Button, Card, IconButton, Medal, Sheet, Tile, fly } from './ui'
+  import { Icon, Portrait } from '@rok/art'
+  import { Art, Bag, Button, Card, IconButton, Medal, Sheet, Tile, fly } from './ui'
   import { L, LOOK, defended, num, reportName, sfx } from './lib'
   import { useGame } from './game'
 
@@ -38,7 +38,6 @@
     ['mail', 'ev-mail', L.mail.title, mails.filter(m => m.gift && !m.got).length],
     ['reports', 'ev-report', L.mail.reports, 0],
   ] as const)
-  const crane = artOf('ui:ev-mail')?.src // hạc ngậm thư vẽ tay đầu mỗi lá thư
   const total = (b?: Partial<Record<Res, number>>) => RESOURCES.reduce((n, x) => n + (b?.[x] ?? 0), 0)
   // Đệ tử địch hạ được (mọi cặp giao tranh): quân địch lúc vào trận trừ quân còn sau lượt cuối
   const kills = (r: Report) =>
@@ -64,18 +63,19 @@
 </script>
 
 <Sheet {open} {onclose} title={tab === 'mail' ? L.mail.title : L.report.title}>
-  <div class="doors">
+  <!-- hai ngăn: tranh đang mở rõ, ngăn kia mờ -->
+  <div class="grid justify-center">
     {#each doors as [id, art, label, n] (id)}
-      <span class="door" class:on={tab === id}
-        ><Tile
-          {art}
-          icon={id === 'mail' ? 'mail' : 'swords'}
-          {label}
-          {n}
-          size={64}
-          onclick={() => (picked = id)}
-        /></span
-      >
+      <Tile
+        {art}
+        icon={id === 'mail' ? 'mail' : 'swords'}
+        {label}
+        {n}
+        size={64}
+        selected={tab === id}
+        dim={tab !== id}
+        onclick={() => (picked = id)}
+      />
     {/each}
   </div>
   {#if tab === 'mail'}
@@ -99,15 +99,13 @@
         <li>
           <Card tone={m.gift && !m.got ? 'glow' : 'paper'}>
             <div class="stack" style:--gap="4px">
+              <!-- hạc ngậm thư vẽ tay đầu mỗi lá thư -->
               <span class="row"
-                >{#if crane}<img class="crane" src={crane} alt="" draggable="false" />{:else}<Icon
-                    name="mail"
-                    size={18}
-                  />{/if}<b class="grow">{title}</b><small class="t-tiny t-soft"
+                ><Art art="ev-mail" icon="mail" size={30} /><b class="grow">{title}</b><small class="t-tiny t-soft"
                   >{L.ago(Math.max(60_000, game.time - m.at))}</small
                 ></span
               >
-              <p class="t-small t-lore" style:white-space="pre-line">{body}</p>
+              <p class="t-small t-lore pre-line">{body}</p>
               {#if m.gift}
                 <div class="row between">
                   <span class="row wrap" style:--gap="6px"
@@ -146,10 +144,10 @@
     </ul>
   {:else}
     {#if !list.length}<p class="center t-lore mt-4">{L.report.none}</p>{/if}
-    <ul class="rows mt-2">
+    <ul class="ledger mt-2">
       {#each list as r (r.id)}
-        <li class="row">
-          <button class="grow row" aria-label={reportName(r)} onclick={() => onopen(r)}>
+        <li>
+          <button class="grow row t-left" aria-label={reportName(r)} onclick={() => onopen(r)}>
             <Medal emblem={r.win ? 'win' : 'lose'} tone={r.win ? 'red' : 'ink'} size={38} />
             <span class="grow stack" style:--gap="1px">
               <b>{reportName(r)}{r.f !== undefined ? ` · ${L.level(r.f + 1)}` : ''}</b>
@@ -168,29 +166,3 @@
     </ul>
   {/if}
 </Sheet>
-
-<style>
-  /* hai ngăn: tranh đang mở rõ, ngăn kia mờ */
-  .doors {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    justify-items: center;
-    gap: var(--sp-2);
-  }
-  .door:not(.on) {
-    opacity: 0.55;
-    filter: saturate(0.4);
-  }
-  .crane {
-    width: 30px;
-    height: 30px;
-    margin: -4px 0;
-  }
-  .rows li {
-    padding: 6px 2px;
-    border-bottom: 1px dashed var(--paper3);
-  }
-  .rows button {
-    text-align: left;
-  }
-</style>

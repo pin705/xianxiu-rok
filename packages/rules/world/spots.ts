@@ -37,6 +37,7 @@ import {
   fortBuffs,
   hold,
   marchAt,
+  walked,
   rebuild,
   ruinWindow,
   veinShut,
@@ -183,20 +184,6 @@ export const recallable = (m: March, t: number) =>
   (!!m.stay && (m.target.kind === 'spot' || m.target.kind === 'camp' || m.task === 'aid')) ||
   (!!m.mine && m.mine.end > t)
 
-// Đường đã đi tới phần f (0..1) của lộ trình: các điểm dừng đã qua + chỗ đang đứng
-function walked(path: { x: number; y: number }[], f: number) {
-  const seg = path.slice(1).map((p, k) => Math.hypot(p.x - path[k].x, p.y - path[k].y))
-  let d = Math.min(1, Math.max(0, f)) * seg.reduce((a, b) => a + b, 0)
-  for (let k = 0; k < seg.length; k++) {
-    if (d <= seg[k]) {
-      const u = seg[k] ? d / seg[k] : 0
-      const at = { x: path[k].x + (path[k + 1].x - path[k].x) * u, y: path[k].y + (path[k + 1].y - path[k].y) * u }
-      return [...path.slice(0, k + 1), at]
-    }
-    d -= seg[k]
-  }
-  return path
-}
 // Gọi về giữa đường (Recall của RoK): quay đầu từ chỗ đang đứng, về mất bằng thời gian đã đi, đi săn thì hoàn hành lực; bên
 // bị nhắm (cướp tông môn / cướp khoáng) thôi thấy đội kéo tới
 function turnAround(ps: Players, w: World, pid: number, s: State, m: March, t: number): WorldResult {

@@ -517,7 +517,7 @@ Xem 2.L.
 #### G4. Rương đặc quyền (Special Privilege Chest)
 - **Cơ chế:** mỗi cấp VIP có **một** rương mua được **một lần** bằng gem, giá giảm sâu [1 nguồn: gamerempire; giá/nội dung chưa xác minh]. Có thêm "VIP Special Bundles" trả tiền thật từ VIP 18 [1 nguồn].
 - **Tu tiên hoá:** "Lễ vật tấn cấp": lên mốc Hương Hỏa thì mở một lễ vật đổi bằng linh thạch (không tiền thật).
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** S.
+- **Game mình:** ✅ Lễ vật tấn cấp (`VIP_GIFTS`, `vipGift` ở `sect/vip.ts`, `VipGifts.svelte` trong bảng Hương Hỏa): mỗi cấp Hương Hỏa 1–12 một lễ vật mua đúng một lần bằng linh thạch, giá = giá gốc × tầng Chủ điện, quà đáng hơn giá nhiều (phù tăng tốc, Tuỳ Tâm Nang, Kim Duyên Phù…); cấp chưa tới có khoá, đã mua đóng dấu son · **Ưu tiên:** P2 · **Công sức:** S.
 
 #### G5. Buff theo cấp VIP (vĩnh viễn trong lúc giữ cấp)
 Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10/13/15 [1 nguồn, khớp một phần với riseofkingdomsguides]. Ô "—" = không có.
@@ -590,7 +590,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 #### H4. Resource choice chests, Reserves — Rương chọn tài nguyên, rương dự trữ
 - **Cơ chế:** rương cho **chọn** loại tài nguyên khi mở [chưa xác minh tên/mệnh giá]. "Level 6 Reserves" 5 000 gem ở VIP 17 [1 nguồn]. Cùng họ có "Level 5 Material Choice Chest" (nguyên liệu) [1 nguồn].
 - **Tu tiên hoá:** "Tuỳ Tâm Nang" (mở ra chọn linh thạch/thảo/khoáng).
-- **Game mình:** ❌ — hợp với vấn đề "kho lệch" mà Thương hội đang giải.
+- **Game mình:** ✅ Tuỳ Tâm Nang 1K / 5K / 20K / 100K (`use: 'pick'` trong `BagDef`, `BAG.tuyTam*`): dùng ở túi đồ thì chọn nhận linh thạch, linh thảo hay linh khoáng (không tính vào sức chứa kho — như nang tài nguyên); bán ở Thiên Môn Thương Điếm (100K) và Luận Kiếm Thương Điếm (20K).
 - **Ưu tiên:** P2 · **Công sức:** S (thêm `use: 'pick'` vào `BagDef`).
 
 #### H5. Enhanced Gathering — Tăng tốc thu thập
@@ -972,13 +972,13 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | G1 | Cấp VIP 0–19 + SVIP | ✅ Hương Hỏa 12 cấp (không bán) | P1 | M |
 | G2 | Điểm danh chuỗi 40→200/ngày | ✅ Hương Hỏa 40→200 điểm/ngày theo chuỗi | P1 | S |
 | G3 | Rương VIP hằng ngày (tượng từ VIP 10) | ✅ lễ vật Hương Hỏa mỗi ngày (theo cấp) | P1 | S |
-| G4 | Rương đặc quyền mỗi cấp | ❌ | P2 | S |
+| G4 | Rương đặc quyền mỗi cấp | ✅ Lễ vật tấn cấp (mỗi cấp Hương Hỏa một lần, linh thạch) | P2 | S |
 | G5 | Buff VIP vĩnh viễn | ✅ tăng ích Hương Hỏa theo cấp (có trần) | P1 | M |
 | G6 | VIP 19, SVIP, SVIP shop | ❌ | P2 | M |
 | H0 | Túi đồ, tab, dùng nhiều | ✅ | — | — |
 | H1–H2 | Tăng tốc chung + 4 loại riêng | ✅ (5 phút → 24 giờ) | — | — |
 | H3 | Gói tài nguyên | ✅ nang 1K–100K | — | — |
-| H4 | Rương chọn tài nguyên | ❌ | P2 | S |
+| H4 | Rương chọn tài nguyên | ✅ Tuỳ Tâm Nang (chọn loại khi mở) | P2 | S |
 | H5 | Tăng thu thập 50 % | ✅ Khai Linh Phù 8/24 giờ (`gather`) | P2 | S |
 | H6–H7 | Tăng sản lượng, tăng công/thủ | ✅ Tụ Linh, Chiến Ý, Kim Cương, Hộ Thể Phù | — | — |
 | H8 | Mở rộng quân | ✅ trận dung (`capOf`) + Khuếch Trận Kỳ +10 % | P2 | S |

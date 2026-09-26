@@ -507,6 +507,7 @@ export type SpeedJob = 'build' | 'train' | 'study' | 'heal'
 export type BagDef =
   | { use: 'speed'; job?: SpeedJob; min: number }
   | { use: 'res'; res: Res; n: number }
+  | { use: 'pick'; n: number } // Tuỳ Tâm Nang: mở ra chọn một loại tài nguyên (linh thạch / thảo / khoáng), mỗi nang n
   | { use: 'buff'; key: Bonus; v: number; hours: number }
   | { use: 'shield'; hours: number }
   | { use: 'exp'; n: number }
@@ -534,6 +535,11 @@ const packs = <P extends string>(prefix: P, res: Res) =>
     `${P}${1 | 5 | 20 | 100}k`,
     BagDef
   >
+const choice = <P extends string>(prefix: P) =>
+  Object.fromEntries(PACK_N.map(n => [`${prefix}${n / 1000}k`, { use: 'pick', n }])) as Record<
+    `${P}${1 | 5 | 20 | 100}k`,
+    BagDef
+  >
 const bag = {
   ...speeds('thoiQuang'), // Thời Quang Phù — việc nào cũng được
   ...speeds('loBan', 'build'), // Lỗ Ban Phù — xây
@@ -543,6 +549,7 @@ const bag = {
   ...packs('thachNang', 'linhThach'),
   ...packs('thaoNang', 'linhThao'),
   ...packs('khoangNang', 'linhKhoang'),
+  ...choice('tuyTam'), // Tuỳ Tâm Nang — mở ra chọn loại tài nguyên (Resource Choice Chest)
   tuLinh8: { use: 'buff', key: 'prod', v: 0.5, hours: 8 }, // Tụ Linh Phù: sản lượng +50 %
   tuLinh24: { use: 'buff', key: 'prod', v: 0.5, hours: 24 },
   khaiLinh8: { use: 'buff', key: 'gather', v: 0.5, hours: 8 }, // Khai Linh Phù: khai mỏ nhanh +50 % (Enhanced Gathering)
@@ -593,6 +600,7 @@ export const BAG_FAMILIES = [
   'thachNang',
   'thaoNang',
   'khoangNang',
+  'tuyTam',
   'kinhThu',
   'nganDuyen',
   'kimDuyen',
@@ -1299,6 +1307,7 @@ export const COIN_SHOP: { reward: Reward; price: number }[] = [
   { reward: { items: { canKhon: 1 } }, price: 45 },
   { reward: { items: { tapDich48: 1 } }, price: 50 },
   { reward: { items: { caiDanh: 1 } }, price: 20 },
+  { reward: { items: { tuyTam100k: 1 } }, price: 20 },
 ]
 export const HONOR_TIERS: { n: number; reward: Reward }[] = [
   { n: 50, reward: { items: { thoiQuang60: 2, thachNang5k: 1 } } },
@@ -1474,6 +1483,7 @@ export const KY_SHOP: { item: ItemId; n: number; price: number; week: number }[]
   { item: 'chienY', n: 1, price: 120, week: 2 },
   { item: 'kinhThu8k', n: 1, price: 250, week: 1 },
   { item: 'kimDuyen', n: 1, price: 400, week: 1 },
+  { item: 'tuyTam20k', n: 1, price: 150, week: 3 },
 ]
 export const ARENA_TOP = 10 // thư quà hạng tuần: hạng 1 · 2–3 · 4–10
 // Luận Kiếm Đại Hội (Sunset Canyon Tournament của RoK): từ ngày TOURNEY_DAY của mùa giới (tuần cuối), TOURNEY_N người điểm Luận Kiếm Đài
@@ -2239,6 +2249,23 @@ export const VIP_CHEST: Reward[] = VIP_LEVELS.map((_, i) => ({
   },
 }))
 
+// Lễ vật tấn cấp (Special Privilege Chest của RoK): mỗi cấp Hương Hỏa một lễ vật mua đúng một lần, giá = price × tầng Chủ điện linh
+// thạch (không tiền thật), quà đáng hơn giá nhiều; chỉ số theo cấp (0 bỏ trống)
+export const VIP_GIFTS: { price: number; reward: Reward }[] = [
+  { price: 0, reward: {} },
+  { price: 300, reward: { items: { thoiQuang60: 2, tuyTam5k: 2 } } },
+  { price: 500, reward: { items: { nganDuyen: 2, thoiQuang60: 2 } } },
+  { price: 800, reward: { items: { tapDich48: 1, loBan180: 1 } } },
+  { price: 1200, reward: { items: { thoiQuang180: 2, tuyTam20k: 2 } } },
+  { price: 1600, reward: { items: { kimDuyen: 1, hoSon24: 1 } } },
+  { price: 2000, reward: { items: { thoiQuang480: 1, kinhThu8k: 2 } } },
+  { price: 2500, reward: { items: { kimDuyen: 2, tuyTam20k: 3 } } },
+  { price: 3000, reward: { items: { thoiQuang480: 2, luyenBinh480: 1 } } },
+  { price: 3600, reward: { items: { kimDuyen: 3, huongHoa200: 1 } } },
+  { price: 4200, reward: { items: { thoiQuang1440: 1, tuyTam100k: 1 } } },
+  { price: 5000, reward: { items: { kimDuyen: 4, thoiQuang480: 2 } } },
+  { price: 6000, reward: { items: { kimDuyen: 5, thoiQuang1440: 2 } } },
+]
 // Hương Hỏa Các (VIP Store của RoK, mua bằng tài nguyên — không bán tiền thật): món mở từ cấp Hương Hỏa `lv`, mỗi tuần mua tối
 // đa `week` lần (thứ Hai làm mới như RoK), giá = price × tầng Chủ điện bằng một loại tài nguyên — rẻ hơn Thương nhân vân du,
 // vài món chỉ bán ở đây (Tạp Dịch Lệnh, Di Sơn / Càn Khôn Phù, Kim Duyên Phù)

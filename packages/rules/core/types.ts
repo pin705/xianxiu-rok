@@ -176,6 +176,7 @@ export type Vip = {
   day: number
   chest: number
   shop?: { week: number; got: Partial<Record<string, number>> } // Hương Hỏa Các: số lần đã mua từng món trong tuần `week`
+  gifts?: number[] // Lễ vật tấn cấp đã mua (theo cấp Hương Hỏa)
 }
 // Chiêu Hiền Đài: lúc lượt miễn phí kế tiếp của mỗi loại thiếp, số lần mở thiếp vàng từ lần bảo hiểm trước,
 // và phần quà lần mở gần nhất (server điền — client hiện sau khi nhận patch)

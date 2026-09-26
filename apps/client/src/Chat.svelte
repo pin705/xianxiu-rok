@@ -10,7 +10,7 @@
   import { ELDERS, RARITY, type ElderId, type Report } from '@rok/rules'
   import type { Net } from './net'
   import { Icon, Portrait } from '@rok/art'
-  import { Button, Sheet, Tabs } from './ui'
+  import { Button, Capsule, FloatBar, Sheet, Speech, Tabs } from './ui'
   import { L, LOOK, clock, coords } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
@@ -188,21 +188,21 @@
     }}
   />
   {#if tab === 'dm' && !peer}
-    <ul class="log stack" style:--gap="4px">
+    <ul class="ledger scroll-box" style:--max-h={inline ? '320px' : undefined}>
       <!-- đạo hữu (đang chơi trước), nhóm chat tự tạo, rồi các cuộc truyền âm -->
       {#if friends.length}
-        <li class="row wrap" style:--gap="4px">
+        <li class="wrap" style:--gap="4px">
           <small class="t-tiny t-soft">{L.chat.friends}</small>
           {#each [...friends].sort((a, b) => Number(b.online) - Number(a.online)) as f (f.pid)}
-            <button class="friend" class:on={f.online} onclick={() => openDm(f)}>{f.name}</button>
+            <Capsule dot={f.online} onclick={() => openDm(f)}>{f.name}</Capsule>
           {/each}
         </li>
       {/if}
       {#each groups as x (x.id)}
         <li>
-          <button class="msg" onclick={() => openPeer({ ch: `g${x.id}`, name: x.name })}>
+          <button class="w-full t-left" onclick={() => openPeer({ ch: `g${x.id}`, name: x.name })}>
             <b class="t-small"><Icon name="people" size={12} /> {x.name}</b>{#if unread.includes(`g${x.id}`)}<span
-                class="new"
+                class="lamp alert"
                 aria-hidden="true"
               ></span>{/if}
             <span class="t-small t-soft"
@@ -213,8 +213,8 @@
       {/each}
       {#each dms.filter(d => !game.blocks.includes(d.pid)) as d (d.pid)}
         <li>
-          <button class="msg" onclick={() => openDm(d)}>
-            <b class="t-small">{d.name}</b>{#if unread.includes(`p${d.pid}`)}<span class="new" aria-hidden="true"
+          <button class="w-full t-left" onclick={() => openDm(d)}>
+            <b class="t-small">{d.name}</b>{#if unread.includes(`p${d.pid}`)}<span class="lamp alert" aria-hidden="true"
               ></span>{/if}
             <span class="t-small t-soft">{plain(d.last.text)}</span>
             <small class="t-tiny t-faint">{ago(d.last.at)}</small>
@@ -226,7 +226,7 @@
     {#if act2}
       <form class="row mt-2" onsubmit={newGroup}>
         <input
-          class="grow"
+          class="field grow"
           bind:value={groupName}
           maxlength="20"
           placeholder={L.chat.groupName}
@@ -239,7 +239,7 @@
       <small class="t-tiny t-soft">{L.chat.groupHint}</small>
     {/if}
   {:else}
-    {#if peer}<button class="back" onclick={() => (peer = null)}
+    {#if peer}<button class="row t-small mt-2" style:--gap="4px" onclick={() => (peer = null)}
         ><Icon name="back" size={14} />{L.chat.back} · <b>{peer.name}</b></button
       >{/if}
     {#if group}
@@ -252,41 +252,47 @@
       </div>
     {/if}
     {#if tab === 'world' && game.levels.chuDien < 3}<p class="t-small t-soft mt-2">{L.chat.locked}</p>{/if}
-    <ol class="log talk stack" style:--gap="6px">
+    <!-- tin là bong bóng lời nói: người khác bên trái, mình bên phải tô son nhạt -->
+    <ol class="scroll-box stack" style:--gap="6px" style:--max-h={inline ? '320px' : undefined}>
       {#each shown as m (m.id)}
-        <li>
-          <button class="msg" class:mine={m.pid === me} onclick={() => (pick = pick?.id === m.id ? null : m)}>
-            {#if quoteOf(m.text)}{@const q = quoteOf(m.text)!}<span class="quote t-tiny"
+        {@const mine = m.pid === me}
+        <li class="stack" class:justify-end={mine} style:--gap="2px">
+          <Speech fit {mine} side={mine ? 'right' : 'left'} onclick={() => (pick = pick?.id === m.id ? null : m)}>
+            {#if quoteOf(m.text)}{@const q = quoteOf(m.text)!}<span class="quote t-tiny t-ellipsis"
                 ><Icon name="back" size={10} /> {q.name}: {plain(q.text)}</span
               >{/if}
-            <b class="t-small">{m.name}</b> <span class="t-small" class:gone={!m.text}>{plain(m.text)}</span>
-            <small class="t-tiny t-faint">{ago(m.at)}</small>
-          </button>
-          {#if onmap}
-            {#each coords(m.text) as c, k (k)}
-              <button
-                class="coord"
-                onclick={() => {
-                  open = false
-                  onmap(c.x, c.y)
-                }}><Icon name="flag" size={12} />{L.chat.goto(c.x, c.y)}</button
-              >
-            {/each}
-          {/if}
-          {#each cards(m.text) as c, k (k)}
-            <span class="elder rar{RARITY[c.e]}"
-              ><Portrait look={LOOK[c.e]} size={28} /><b class="t-small">{L.elders[c.e].name}</b><small class="t-tiny"
-                >{L.lv(c.lv)} {'★'.repeat(c.star)}</small
-              ></span
+            <b class="t-tiny" class:t-gold={mine}>{m.name}</b>
+            <span
+              ><span class="t-small" class:t-faint={!m.text} class:t-italic={!m.text}>{plain(m.text)}</span>
+              <small class="t-tiny t-faint">{ago(m.at)}</small></span
             >
-          {/each}
-          {#if onreplay}
-            {#each shared(m.text) as id (id)}
-              <button class="coord" onclick={() => watch(m, id)}
-                ><Icon name="swords" size={12} />{L.report.watch}</button
+          </Speech>
+          <span class="row wrap" class:justify-end={mine} style:--gap="6px">
+            {#if onmap}
+              {#each coords(m.text) as c, k (k)}
+                <Capsule
+                  tone="azure"
+                  icon="flag"
+                  onclick={() => {
+                    open = false
+                    onmap(c.x, c.y)
+                  }}>{L.chat.goto(c.x, c.y)}</Capsule
+                >
+              {/each}
+            {/if}
+            {#each cards(m.text) as c, k (k)}
+              <Capsule rar={RARITY[c.e]}
+                >{#snippet pic()}<Portrait look={LOOK[c.e]} size={28} />{/snippet}<b class="t-small"
+                  >{L.elders[c.e].name}</b
+                ><small class="t-tiny">{L.lv(c.lv)} {'★'.repeat(c.star)}</small></Capsule
               >
             {/each}
-          {/if}
+            {#if onreplay}
+              {#each shared(m.text) as id (id)}
+                <Capsule tone="azure" icon="swords" onclick={() => watch(m, id)}>{L.report.watch}</Capsule>
+              {/each}
+            {/if}
+          </span>
           {#if pick?.id === m.id && m.text}
             <div class="row wrap" style:--gap="6px">
               <Button
@@ -331,225 +337,40 @@
       {#if !shown.length}<li class="t-small t-soft">{L.chat.empty}</li>{/if}
     </ol>
     {#if reply}
-      <p class="row replying t-tiny">
+      <p class="row quote on t-tiny">
         <Icon name="back" size={10} /><span class="grow t-ellipsis"
           >{L.chat.replyTo(reply.name)}: {plain(reply.text)}</span
         >
-        <button class="x" aria-label={L.chat.cancel} onclick={() => (reply = null)}>×</button>
+        <button class="glyph-btn" aria-label={L.chat.cancel} onclick={() => (reply = null)}>×</button>
       </p>
     {/if}
     {#if emoji}
-      <div class="row wrap emojis" style:--gap="2px">
-        {#each EMOJI as e (e)}<button class="emo" onclick={() => (text += e)}>{e}</button>{/each}
+      <div class="row wrap" style:--gap="2px">
+        {#each EMOJI as e (e)}<button class="glyph-btn" onclick={() => (text += e)}>{e}</button>{/each}
       </div>
     {/if}
     <form class="row" onsubmit={send}>
-      <button type="button" class="emo" aria-label={L.chat.emoji} aria-pressed={emoji} onclick={() => (emoji = !emoji)}
-        >😀</button
+      <button
+        type="button"
+        class="glyph-btn"
+        aria-label={L.chat.emoji}
+        aria-pressed={emoji}
+        onclick={() => (emoji = !emoji)}>😀</button
       >
-      <input class="grow" bind:value={text} maxlength="200" placeholder={L.chat.say} aria-label={L.chat.say} />
+      <input class="field grow" bind:value={text} maxlength="200" placeholder={L.chat.say} aria-label={L.chat.say} />
       <Button size="sm" type="submit" disabled={!text.trim()}>{L.chat.send}</Button>
     </form>
   {/if}
 {/snippet}
 
 {#if inline}
-  <div class="inline stack">{@render body()}</div>
+  <div class="stack">{@render body()}</div>
 {:else}
-  <button class="strip" class:narrow onclick={() => (open = true)} aria-label={L.chat.world}>
-    <Icon name="mail" size={14} />{#if unread.length}<span class="new" aria-hidden="true"></span>{/if}
+  <FloatBar {narrow} onclick={() => (open = true)} label={L.chat.world}>
+    <Icon name="mail" size={14} />{#if unread.length}<span class="lamp alert" aria-hidden="true"></span>{/if}
     {#if last}<b>{last.name}:</b> <span class="t-ellipsis">{plain(last.text)}</span>{:else}<span class="t-soft"
         >{L.chat.empty}</span
       >{/if}
-  </button>
+  </FloatBar>
   <Sheet {open} onclose={() => (open = false)} title={L.chat[tab]}>{@render body()}</Sheet>
 {/if}
-
-<style>
-  .quote {
-    display: block;
-    margin-bottom: 2px;
-    padding-left: 6px;
-    border-left: 2px solid var(--paper3);
-    color: var(--text-soft);
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .gone {
-    font-style: italic;
-    color: var(--text-faint);
-  }
-  .replying {
-    padding: 2px 6px;
-    border-left: 2px solid var(--gold);
-    background: var(--paper2);
-  }
-  .x {
-    padding: 0 6px;
-    font-size: var(--fs-3);
-  }
-  .emo {
-    min-width: 32px;
-    min-height: 32px;
-    font-size: 18px;
-    line-height: 1;
-  }
-  .elder {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin: 2px 0 0 6px;
-    padding: 2px 8px 2px 2px;
-    border: 1.5px solid var(--paper3);
-    border-radius: 999px;
-    background: var(--paper2);
-  }
-  .rar2 {
-    border-color: var(--azurite);
-  }
-  .rar3 {
-    border-color: #9b73c4;
-  }
-  .rar4 {
-    border-color: var(--gold-d, #9a6b16);
-  }
-  .friend {
-    padding: 2px 8px;
-    font: inherit;
-    font-size: var(--fs-1);
-    color: var(--text);
-    background: color-mix(in srgb, var(--paper2) 80%, transparent);
-    border: 1px solid var(--line, rgb(var(--shade) / 0.2));
-    border-radius: 999px;
-    cursor: pointer;
-  }
-  .friend.on::before {
-    content: '●';
-    margin-right: 3px;
-    color: var(--malachite);
-  }
-  .strip {
-    position: fixed;
-    left: 50%;
-    bottom: calc(var(--safe-b) + var(--nav-h, 88px));
-    z-index: var(--z-hud);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: min(92vw, calc(var(--col) - 24px));
-    padding: 6px 12px;
-    font-size: 13px;
-    color: var(--text);
-    text-align: left;
-    white-space: nowrap;
-    /* nền giấy mờ thay viên mực đen: hoà vào tranh thủy mặc, không thành vệt tối đè ngang cảnh */
-    background: color-mix(in srgb, var(--paper2) 78%, transparent);
-    border: 1px solid color-mix(in srgb, var(--paper3) 80%, transparent);
-    box-shadow: 0 1px 4px rgb(var(--shade) / 0.15);
-    border-radius: 999px;
-    translate: -50% 0;
-    cursor: pointer;
-  }
-  .strip.narrow {
-    left: 12px;
-    width: min(calc(100vw - 110px), calc(var(--col) - 110px));
-    translate: 0 0;
-  }
-  @media (min-width: 1024px) and (min-height: 600px) {
-    .strip.narrow {
-      left: calc(var(--rail) + 16px);
-    }
-  }
-  .log {
-    max-height: 50vh;
-    margin: var(--sp-2) 0;
-    overflow-y: auto;
-  }
-  .inline .log {
-    max-height: 320px;
-  }
-  .msg {
-    display: block;
-    width: 100%;
-    padding: 4px 0;
-    text-align: left;
-    background: none;
-    border: 0;
-    cursor: pointer;
-  }
-  .log:not(.talk) > li {
-    border-bottom: 1px dashed var(--paper3);
-  }
-  /* bong bóng lời nói: giấy trắng viền mực, góc nhọn phía người nói */
-  .talk .msg {
-    width: auto;
-    max-width: 88%;
-    padding: 5px 11px 6px;
-    background: rgb(255 255 255 / 0.92);
-    border: 1.5px solid var(--rim, var(--ink3));
-    border-radius: 14px 14px 14px 4px;
-    box-shadow: 0 2px 6px rgb(var(--shade) / 0.12);
-  }
-  .talk .msg > b {
-    display: block;
-    font-size: var(--fs-1);
-  }
-  .talk .msg.mine {
-    margin-left: auto;
-    background: color-mix(in srgb, var(--cinnabar) 9%, var(--paper));
-    border-radius: 14px 14px 4px 14px;
-  }
-  .talk > li:has(.mine) {
-    display: grid;
-    justify-items: end;
-  }
-  .mine b {
-    color: var(--gold-d);
-  }
-  .new {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    margin: 0 4px;
-    border-radius: 50%;
-    background: var(--cinnabar);
-  }
-  .back {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: var(--sp-2);
-    padding: 4px 0;
-    font: inherit;
-    font-size: var(--fs-2);
-    color: inherit;
-    background: none;
-    border: 0;
-    cursor: pointer;
-  }
-  .coord {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    min-height: 28px;
-    margin: 0 6px 2px 0;
-    padding: 2px 10px;
-    font: inherit;
-    font-size: var(--fs-1);
-    font-weight: 700;
-    color: var(--azurite);
-    background: color-mix(in srgb, var(--azurite) 12%, transparent);
-    border: 0;
-    border-radius: 999px;
-    cursor: pointer;
-  }
-  input {
-    min-width: 0;
-    padding: 8px 10px;
-    font: inherit;
-    border: 1.5px solid var(--rim, var(--ink3));
-    border-radius: var(--cut);
-    background: var(--paper);
-  }
-</style>

@@ -37,8 +37,9 @@
   let k = $state(0)
   // xem hết hay đóng giữa chừng đều coi như đã xem
   function done() {
+    if (shut) return // đóng bằng nút rồi hộp thoại còn báo đóng lần nữa
     shut = true
-    write(KEY, [...seen().filter(Boolean), id].join(','))
+    write(KEY, [...new Set([...seen().filter(Boolean), id])].join(','))
   }
   const next = () => (k < 2 ? (k += 1) : done())
   const pic = $derived(artOf(`ui:${PICS[id][k][0]}`)?.src)

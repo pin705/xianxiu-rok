@@ -115,14 +115,3 @@
     </Card>
   {/if}
 </Section>
-
-<style>
-  .field {
-    width: 100%;
-    min-width: 0;
-    padding: 8px 10px;
-    border: 1.5px solid var(--rim, var(--ink3));
-    border-radius: var(--cut);
-    background: var(--paper);
-  }
-</style>

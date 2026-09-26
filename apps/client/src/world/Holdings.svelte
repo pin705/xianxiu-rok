@@ -53,10 +53,10 @@
   />
   <Toggle checked={only} onchange={v => (only = v)}>{L.world.mineOnly}</Toggle>
   <!-- sổ địa bạ: mỗi điểm một dòng kẻ mực đứt — huy hiệu loại, tên + cấp + toạ độ, phe giữ, tăng ích; điểm minh mình tô son -->
-  <ul class="rows">
+  <ul class="ledger mt-2">
     {#each rows as p (p.i)}
       {@const sp = spots.get(p.i)}
-      <li class="row" class:mine={sp?.side === side}>
+      <li class:on={sp?.side === side}>
         <Medal emblem={EMBLEM.spot[p.kind]} tone="spot" size={36} pips={p.lv} dim={shut(p)} />
         <span class="grow stack" style:--gap="1px">
           <b class="t-small"
@@ -80,16 +80,3 @@
     {/each}
   </ul>
 </Sheet>
-
-<style>
-  .rows {
-    margin-top: var(--sp-2);
-  }
-  .rows li {
-    padding: 6px 4px;
-    border-bottom: 1px dashed var(--paper3);
-  }
-  .rows li.mine {
-    background: color-mix(in srgb, var(--cinnabar) 8%, transparent);
-  }
-</style>

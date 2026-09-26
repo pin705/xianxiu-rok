@@ -18,8 +18,8 @@
     type PillId,
     isMarching,
   } from '@rok/rules'
-  import { Icon, Portrait, artOf } from '@rok/art'
-  import { Button, Card, Page, Section } from './ui'
+  import { Icon, Portrait } from '@rok/art'
+  import { Art, Button, Card, Goods, Page, Pill, Plaque, Section, Shelf } from './ui'
   import Items from './Items.svelte'
   import Achievements from './Achievements.svelte'
   import { L, LOOK, clock, num, sfx, type PanelTab } from './lib'
@@ -42,7 +42,6 @@
   $effect(() => {
     if (using) qty = 1
   })
-  const vessel = (r: string) => artOf(`ui:res-${r}`)?.src
   const qtys = (have: number) => [...new Set([1, 5, 10, have])].filter(k => k >= 1 && k <= have)
   const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge'] // luyện đan không rút ngắn bằng đan được
   const jobs = $derived(JOBS.filter(k => jobOf(game, k)))
@@ -78,49 +77,46 @@
 <Page title={L.baoKho.title} icon="baoKho">
   <!-- ba vật chứa tài nguyên trên kệ: sản lượng mỗi giờ viên mực, sức chứa trên biển gỗ -->
   <Section title={L.baoKho.rates}>
-    <div class="vessels">
+    <div class="grid ledge" style:--cols="3" style:--ledge="38px">
       {#each RESOURCES as r (r)}
-        <span class="vessel" aria-label="{L.res[r]}: {num(rate(game, r))}{L.panel.perHour}">
-          <span class="vp"
-            >{#if vessel(r)}<img src={vessel(r)} alt="" draggable="false" />{:else}<Icon
-                name={r}
-                size={44}
-              />{/if}</span
-          >
-          <b class="pill t-num">+{num(rate(game, r))}<small>{L.panel.perHour}</small></b>
+        <span
+          class="stack justify-center t-center"
+          style:--gap="3px"
+          aria-label="{L.res[r]}: {num(rate(game, r))}{L.panel.perHour}"
+        >
+          <Art art="res-{r}" icon={r} size={76} />
+          <span class="mt-2"><Pill>+{num(rate(game, r))}{L.panel.perHour}</Pill></span>
           <small class="t-tiny">{L.res[r]}</small>
         </span>
       {/each}
     </div>
-    <p class="cap t-small"><span class="t-soft">{L.panel.capacity}</span> <b class="t-num">{num(storage(game))}</b></p>
+    <p class="t-small t-center">
+      <span class="t-soft">{L.panel.capacity}</span> <b class="t-num">{num(storage(game))}</b>
+    </p>
   </Section>
   <Section title={L.bag.title}>
     <Items />
   </Section>
   <Section title={L.baoKho.pills}>
-    <ul class="shelf">
+    <Shelf row={84} min={62}>
       {#each PILL_IDS as p (p)}
         {@const n = game.items[p] ?? 0}
-        <li>
-          <button
-            type="button"
-            class="jar"
-            class:on={pick === p}
-            class:none={!n}
-            aria-pressed={pick === p}
-            aria-label={L.pills[p].name}
-            onclick={() => {
-              pick = pick === p ? null : p
-              using = null
-            }}
-          >
-            <Icon name={p} size={44} />
-            <b class="qty t-num">×{n}</b>
-            {#if p === 'ngungThan' && focus}<i class="lit"></i>{/if}
-          </button>
-        </li>
+        <Goods
+          look="jar"
+          icon={p}
+          size={44}
+          n="×{n}"
+          on={pick === p}
+          faded={!n}
+          dot={p === 'ngungThan' && !!focus}
+          label={L.pills[p].name}
+          onclick={() => {
+            pick = pick === p ? null : p
+            using = null
+          }}
+        />
       {/each}
-    </ul>
+    </Shelf>
     {#if pick}
       {@const p = pick}
       {@const n = game.items[p] ?? 0}
@@ -132,7 +128,7 @@
             <span class="grow stack" style:--gap="2px"
               ><b>{L.pills[p].name}</b><small class="t-small t-soft">{L.pills[p].desc}</small></span
             >
-            <b class="t-num big">×{n}</b>
+            <b class="t-num t-head">×{n}</b>
           </div>
           {#if n && mode === 'auto'}
             <p class="t-small t-soft t-lore">{L.baoKho.auto}</p>
@@ -213,159 +209,8 @@
 
   <!-- thành tích: biển số — số to, nhãn nhỏ -->
   <Section title={L.baoKho.stats}>
-    <ul class="plaques">
-      {#each stats as [k, v] (k)}<li>
-          <b class="t-num">{num(v)}</b><small class="t-tiny">{L.baoKho.stat[k]}</small>
-        </li>{/each}
-    </ul>
+    <div class="grid" style:--cols="3">
+      {#each stats as [k, v] (k)}<Plaque value={num(v)} sub={L.baoKho.stat[k]} />{/each}
+    </div>
   </Section>
 </Page>
-
-<style>
-  .vessels {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    padding: 6px 8px 0;
-    /* kệ gỗ dưới ba vật chứa */
-    background: linear-gradient(var(--ochre), var(--lacquer2)) left bottom 38px / 100% 7px no-repeat;
-  }
-  .vessel {
-    display: grid;
-    justify-items: center;
-    gap: 3px;
-    text-align: center;
-  }
-  .vp {
-    display: grid;
-    place-items: end center;
-    width: 76px;
-    height: 70px;
-    margin-bottom: 8px;
-  }
-  .vp img {
-    width: 76px;
-    height: 70px;
-    object-fit: contain;
-    filter: drop-shadow(0 3px 4px rgb(var(--shade) / 0.22));
-  }
-  .pill {
-    padding: 0 9px 1px;
-    font-size: var(--fs-2);
-    white-space: nowrap;
-    color: var(--silk);
-    background: color-mix(in srgb, var(--ink) 80%, transparent);
-    border-radius: 999px;
-  }
-  .pill small {
-    font-size: var(--fs-1);
-    opacity: 0.8;
-  }
-  .cap {
-    margin: 0;
-    text-align: center;
-  }
-  /* tủ đan: kệ gỗ nhiều tầng như túi đồ, mỗi lọ một ô */
-  .shelf {
-    --row: 84px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
-    grid-auto-rows: var(--row);
-    align-items: end;
-    justify-items: center;
-    gap: 0 var(--sp-2);
-    margin: 0;
-    padding: 6px 14px 0;
-    list-style: none;
-    background:
-      linear-gradient(
-          transparent calc(var(--row) - 14px),
-          var(--ochre) calc(var(--row) - 14px),
-          var(--lacquer2) calc(var(--row) - 5px),
-          rgb(var(--shade) / 0.14) calc(var(--row) - 5px),
-          transparent var(--row)
-        )
-        0 6px / 100% var(--row) repeat-y,
-      linear-gradient(90deg, var(--lacquer2), var(--lacquer)) left top / 8px 100% no-repeat,
-      linear-gradient(90deg, var(--lacquer), var(--lacquer2)) right top / 8px 100% no-repeat,
-      linear-gradient(var(--silk), var(--paper));
-    border-top: 8px solid var(--lacquer2);
-    border-radius: 4px 4px 0 0;
-    box-shadow: 0 4px 10px rgb(var(--shade) / 0.18);
-  }
-  .shelf li {
-    padding-bottom: 14px;
-  }
-  .jar {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 56px;
-    height: 58px;
-    border-radius: 8px;
-    transition: transform var(--dur-1) var(--ease);
-  }
-  .jar :global(.icon) {
-    filter: drop-shadow(0 3px 3px rgb(var(--shade) / 0.25));
-  }
-  .jar:active {
-    transform: scale(0.94);
-  }
-  .jar.on {
-    background: radial-gradient(closest-side, rgb(var(--gold-glow) / 0.8), transparent);
-    transform: translateY(-3px);
-  }
-  .jar.none :global(.icon) {
-    filter: grayscale(1);
-    opacity: 0.5;
-  }
-  .qty {
-    position: absolute;
-    right: -4px;
-    bottom: 0;
-    padding: 0 6px 1px;
-    font-size: var(--fs-1);
-    color: var(--silk);
-    background: color-mix(in srgb, var(--ink) 80%, transparent);
-    border-radius: 999px;
-  }
-  /* Ngưng Thần đang hiệu lực: chấm lục */
-  .lit {
-    position: absolute;
-    top: 0;
-    right: 2px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--malachite);
-    box-shadow: 0 0 0 2px var(--paper);
-  }
-  .big {
-    font-size: var(--fs-5);
-  }
-  .plaques {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .plaques li {
-    display: grid;
-    justify-items: center;
-    gap: 1px;
-    padding: 8px 4px 7px;
-    text-align: center;
-    background: var(--silk);
-    border: 1px solid var(--paper3);
-    border-radius: 3px;
-  }
-  .plaques b {
-    font-size: var(--fs-5);
-    line-height: 1.1;
-  }
-  .plaques small {
-    line-height: 1.15;
-  }
-</style>

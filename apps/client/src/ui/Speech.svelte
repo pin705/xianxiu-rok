@@ -1,16 +1,28 @@
 <script lang="ts">
   // Bong bóng lời nói: giấy trắng viền mực, đuôi chỉ về người nói. side: phía người nói (trái: người khác, phải: mình);
-  // mine: tô son nhạt (lời của mình).
+  // mine: tô son nhạt (lời của mình). fit: rộng theo chữ (tối đa 88%), dạt về phía người nói. onclick: cả bong bóng bấm được.
   import type { Snippet } from 'svelte'
 
   let {
     side = 'left',
     mine = false,
+    fit = false,
+    onclick,
     children,
-  }: { side?: 'left' | 'right'; mine?: boolean; children: Snippet } = $props()
+  }: {
+    side?: 'left' | 'right'
+    mine?: boolean
+    fit?: boolean
+    onclick?: () => void
+    children: Snippet
+  } = $props()
 </script>
 
-<div class="speech {side}" class:mine>{@render children()}</div>
+{#if onclick}
+  <button type="button" class="speech {side}" class:mine class:fit {onclick}>{@render children()}</button>
+{:else}
+  <div class="speech {side}" class:mine class:fit>{@render children()}</div>
+{/if}
 
 <style>
   .speech {
@@ -46,6 +58,16 @@
     right: -7.5px;
     border-right: 1.5px solid var(--rim, var(--ink3));
     transform: rotate(-45deg);
+  }
+  button.speech {
+    text-align: left;
+  }
+  .fit {
+    width: fit-content;
+    max-width: 88%;
+  }
+  .fit.right {
+    margin-left: auto;
   }
   .mine {
     background: color-mix(in srgb, var(--cinnabar) 8%, white);

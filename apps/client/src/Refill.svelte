@@ -54,7 +54,7 @@
 </script>
 
 {#if short.length}
-  <ul class="refill stack">
+  <ul class="stack plain warn mt-2">
     {#each short as { r, n } (r)}
       {@const p = plan(r, n)}
       {@const sw = swap(r, n)}
@@ -83,17 +83,3 @@
     {/each}
   </ul>
 {/if}
-
-<style>
-  .refill {
-    margin: var(--sp-2) 0 0;
-    padding: var(--sp-2) var(--sp-3);
-    list-style: none;
-    background: color-mix(in srgb, var(--cinnabar) 7%, transparent);
-    border: 1px dashed color-mix(in srgb, var(--cinnabar) 45%, transparent);
-    border-radius: 10px;
-  }
-  .wrap {
-    flex-wrap: wrap;
-  }
-</style>

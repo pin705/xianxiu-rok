@@ -15,8 +15,7 @@
     type BuildingId,
     type State,
   } from '@rok/rules'
-  import { Portrait, artOf } from '@rok/art'
-  import { Button } from './ui'
+  import { Button, Corner, Face, Speech } from './ui'
   import { L, LOOK, TABS, read, write, type PanelTab, type Tab } from './lib'
   import { social } from './social.svelte'
 
@@ -55,7 +54,6 @@
     { k: 'arena', when: hall(PVP_HALL) },
     { k: 'merchant', when: s => s.levels.tangBaoCac >= MERCHANT_HALL },
   ]
-  const ring = artOf('ui:frame-portrait')?.src // khung ngọc vẽ tay quanh chân dung cố vấn
   let seen = $state<string[]>((read('rok.tips') ?? '').split(',').filter(Boolean))
   const tip = $derived(TIPS.find(t => !seen.includes(t.k) && t.when(game)))
   function done(k: Tip) {
@@ -72,103 +70,15 @@
 {#if tip}
   {@const k = tip.k}
   <!-- cố vấn như game: chân dung trong khung ngọc đứng góc, lời nói trong bong bóng giấy có đuôi chỉ về người nói -->
-  <aside class="advisor" aria-label={L.tips.who}>
-    <span class="face"
-      ><Portrait look={LOOK.thanhPhong} size={54} />{#if ring}<img src={ring} alt="" draggable="false" />{/if}</span
-    >
-    <div class="bubble">
+  <Corner label={L.tips.who}>
+    <Face look={LOOK.thanhPhong} size={54} />
+    <Speech>
       <b class="t-small">{L.tips[k].title}</b>
-      <p class="t-small">{L.tips[k].text}</p>
+      <p class="t-small t-soft clamp" style:--lines="3">{L.tips[k].text}</p>
       <div class="row" style:--gap="10px">
         <Button size="sm" variant="gold" onclick={() => go(k)}>{L.tips.go}</Button>
-        <button class="later" onclick={() => done(k)}>{L.tips.later}</button>
+        <button class="t-link" onclick={() => done(k)}>{L.tips.later}</button>
       </div>
-    </div>
-  </aside>
+    </Speech>
+  </Corner>
 {/if}
-
-<style>
-  /* điện thoại: trái, trên dải chat, chừa cột nút bên phải (tạp dịch, giúp đỡ) */
-  .advisor {
-    position: fixed;
-    left: 8px;
-    bottom: calc(var(--safe-b) + var(--nav-h, 88px) + 44px);
-    z-index: var(--z-hud);
-    display: flex;
-    gap: 12px;
-    align-items: flex-end;
-    width: min(calc(100vw - 96px), calc(var(--col) - 96px), 330px);
-    pointer-events: none;
-    animation: rise 0.4s var(--ease);
-  }
-  .face {
-    position: relative;
-    display: grid;
-    flex: none;
-    place-items: center;
-    width: 62px;
-    height: 62px;
-    filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.3));
-  }
-  .face img {
-    position: absolute;
-    inset: -8px;
-    width: 78px;
-    height: 78px;
-  }
-  .bubble {
-    position: relative;
-    display: grid;
-    flex: 1;
-    gap: 3px;
-    min-width: 0;
-    padding: 9px 12px 10px;
-    color: var(--text);
-    pointer-events: auto;
-    background: rgb(255 255 255 / 0.96);
-    border: 1.5px solid var(--rim, var(--ink3));
-    border-radius: 14px 14px 14px 4px;
-    box-shadow: 0 6px 16px rgb(var(--shade) / 0.25);
-  }
-  /* đuôi bong bóng chỉ về chân dung */
-  .bubble::before {
-    content: '';
-    position: absolute;
-    left: -7.5px;
-    bottom: 14px;
-    width: 12px;
-    height: 12px;
-    background: rgb(255 255 255 / 0.96);
-    border-bottom: 1.5px solid var(--rim, var(--ink3));
-    border-left: 1.5px solid var(--rim, var(--ink3));
-    transform: rotate(45deg);
-  }
-  .bubble p {
-    display: -webkit-box;
-    overflow: hidden;
-    color: var(--text-soft);
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
-  .later {
-    font-size: var(--fs-2);
-    font-weight: 700;
-    color: var(--text-faint);
-    text-decoration: underline dotted;
-    text-underline-offset: 3px;
-  }
-  @keyframes rise {
-    from {
-      opacity: 0;
-      translate: 0 12px;
-    }
-  }
-  @media (min-width: 1024px) and (min-height: 600px) {
-    .advisor {
-      left: calc(var(--rail) + 24px);
-      bottom: var(--sp-5);
-      width: min(520px, 100% - var(--rail) - 140px);
-    }
-  }
-</style>

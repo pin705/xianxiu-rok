@@ -8,6 +8,7 @@ export const GOOD_ICONS = [
   'tuLinh', 'thanHanh', 'chienY', 'kimCuong', 'hoThe', // phù tăng ích: sản lượng / hành quân / công / thủ / sinh lực
   'hoSon', // phù hộ sơn: khiên
   'thachNang', 'thaoNang', 'khoangNang', // nang tài nguyên
+  'tuyTam', // Tuỳ Tâm Nang: mở ra chọn loại tài nguyên
   'kinhThu', // kinh thư: kinh nghiệm trưởng lão
   'tapDich', // Tạp Dịch Lệnh: thuê tạp dịch thứ hai
   'huongHoa', // Hương Hỏa Lệnh: điểm Hương Hỏa
@@ -222,6 +223,7 @@ const DRAW: Record<GoodIcon, (g: G) => void> = {
   thachNang: g => pouch(g, C.azuriteL, C.azuriteD, crystal(C.spirit, C.azuriteD), 210),
   thaoNang: g => pouch(g, C.malachiteL, C.malachiteD, sprout, 220),
   khoangNang: g => pouch(g, '#a597d8', '#4e3f93', crystal('#c9bbf6', '#6a58b8'), 230),
+  tuyTam: g => pouch(g, C.goldL, C.goldD, crystal(C.spirit, C.malachiteD), 410),
   kinhThu: book,
   nganDuyen: g => invite(g, '#dfe6ec', '#7d8a96', 240),
   kimDuyen: g => invite(g, C.goldL, C.goldD, 250),

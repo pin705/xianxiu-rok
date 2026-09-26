@@ -30,6 +30,7 @@ export function pickTarget(x: unknown): Target | null {
   return null
 }
 export const obj = (x: unknown): x is Record<string, any> => !!x && typeof x === 'object' && !Array.isArray(x)
+export const num = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x)
 export const isId = int(1, Number.MAX_SAFE_INTEGER) // mã (người chơi, minh, lệnh…): số nguyên ≥ 1
 // Chữ người chơi gõ: chuẩn hoá Unicode, gộp khoảng trắng
 export const cleanText = (x: unknown) => (typeof x === 'string' ? x.normalize('NFC').trim().replace(/\s+/g, ' ') : '')

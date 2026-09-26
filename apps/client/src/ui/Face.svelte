@@ -1,6 +1,6 @@
 <script lang="ts">
   // Chân dung trong vòng ngọc vẽ tay (ui:frame-portrait): hồ sơ, cố vấn, đấu trường, danh sách người.
-  // Tắt art thì chỉ còn chân dung tròn. on: vòng son (đang chọn).
+  // Tắt art thì chỉ còn chân dung tròn. on: vòng son (đang chọn). ring: tranh vòng khác (khung hồ sơ đặc biệt).
   import { Portrait, artOf, type Look } from '@rok/art'
 
   let {
@@ -8,8 +8,8 @@
     size = 54,
     dim = false,
     on = false,
-  }: { look: Look; size?: number; dim?: boolean; on?: boolean } = $props()
-  const ring = artOf('ui:frame-portrait')?.src
+    ring = artOf('ui:frame-portrait')?.src,
+  }: { look: Look; size?: number; dim?: boolean; on?: boolean; ring?: string } = $props()
 </script>
 
 <span class="face" class:on style:--size="{size}px"

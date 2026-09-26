@@ -16,8 +16,8 @@
     type Target,
   } from '@rok/rules'
   import { recallable } from '@rok/rules/world'
-  import { Icon, Portrait, type Emblem } from '@rok/art'
-  import { Button, Card, Medal, Tag, Tile } from '../ui'
+  import { Portrait, type Emblem } from '@rok/art'
+  import { Beacon, Button, Caption, Card, Dock, Medal, Pin, Tag, Tile } from '../ui'
   import { EMBLEM, L, LOOK, clock, marchDoing, marchName } from '../lib'
   import { MAP, MAP_H, MapScene } from './map'
   import View from './View.svelte'
@@ -109,42 +109,44 @@
       {@const edge = Math.min(n.x, 400 - n.x) * k < n.name.length * 3.6 + 6}
       {@const half = edge ? Math.min(n.name.length * 3.6, 50) : n.name.length * 3.6}
       {@const dx = Math.max(0, half - n.x * k + 6) - Math.max(0, half - (400 - n.x) * k + 6)}
-      <span class="pin node {st}" class:hot style="left:{n.x * k}px;top:{(n.y + MAP.top) * k}px">
-        <span class="disc">
+      <Pin x={n.x * k} y={(n.y + MAP.top) * k}>
+        <Beacon
+          label={n.name}
+          badge={n.lv ??
+            (n.t.kind === 'realm'
+              ? `${game.realms[n.t.i]}/5`
+              : n.t.kind === 'tower' && game.tower
+                ? game.tower
+                : undefined)}
+          mark={st === 'locked' ? 'lock' : st === 'done' ? 'check' : undefined}
+          {hot}
+          dim={st === 'locked'}
+          wrap={edge}
+          shift={dx}
+          sub={st === 'cool' ? clock((game.cool[coolKey(n.t)] ?? 0) - now) : undefined}
+        >
           <Medal emblem={n.emblem} tone={n.t.kind as MedalTone} size={36} dim={st === 'locked' || st === 'cool'} />
-          {#if n.lv}<b class="lv">{n.lv}</b>{/if}
-          {#if n.t.kind === 'realm'}<b class="lv">{game.realms[n.t.i]}/5</b>{/if}
-          {#if n.t.kind === 'tower' && game.tower}<b class="lv">{game.tower}</b>{/if}
-          {#if st === 'locked'}<span class="mark"><Icon name="lock" size={11} /></span>{:else if st === 'done'}<span
-              class="mark ok"><Icon name="check" size={12} /></span
-            >{/if}
-        </span>
-        <span class="label" class:wrap={edge} style:translate="{dx}px 0">{n.name}</span>
-        {#if st === 'cool'}<span class="label t-num" style:translate="{dx}px 0"
-            >{clock((game.cool[coolKey(n.t)] ?? 0) - now)}</span
-          >{/if}
-      </span>
+        </Beacon>
+      </Pin>
     {/each}
-    <span class="pin" style="left:{200 * k}px;top:{(MAP.top + 948) * k}px"
-      ><span class="label home">{game.name}</span></span
-    >
+    <Pin x={200 * k} y={(MAP.top + 948) * k}><Caption size="lg" tone="red">{game.name}</Caption></Pin>
   {/snippet}
 </View>
 
-<div class="top row">
+<Dock at="top" fade class="row">
   {#if toggle}{@render toggle()}{/if}
   <!-- điện thoại hẹp: chỉ "0/2" (đủ chỗ cho nút gạt + hai nút), chữ đủ đọc bằng trình đọc màn hình -->
-  <span class="grow slots" title={L.map.slots(game.marches.length, marchSlots(game))}
+  <span class="grow" title={L.map.slots(game.marches.length, marchSlots(game))}
     ><Tag icon="flag"
-      ><span class="long">{L.map.slots(game.marches.length, marchSlots(game))}</span><span
-        class="short"
+      ><span class="sr-narrow">{L.map.slots(game.marches.length, marchSlots(game))}</span><span
+        class="only-narrow"
         aria-hidden="true">{game.marches.length}/{marchSlots(game)}</span
       ></Tag
     ></span
   >
-</div>
+</Dock>
 <!-- lối tắt cột phải như cột biểu tượng bản đồ của game: tranh đóng khung, nhãn viên mực -->
-<div class="side">
+<Dock at="side">
   {#if game.levels.chuDien >= PVP_HALL}<Tile
       art="fx-battle"
       icon="swords"
@@ -154,201 +156,50 @@
       onclick={onrivals}
     />{/if}
   <Tile art="ev-report" icon="scroll" label={L.report.title} n={unread} size={54} look="ink" onclick={onreports} />
-</div>
+</Dock>
 
 {#if game.marches.length}
-  <ul class="marches stack">
-    {#each game.marches as m (m.id)}
-      {@const out = now < m.arriveAt}
-      {@const back = onrecall && recallable(m, now)}
-      <li>
-        <Card
-          tone="silk"
-          onclick={() =>
-            m.target.kind === 'pvp'
-              ? onrivals()
-              : m.target.kind === 'spot' || m.target.kind === 'trib' || m.target.kind === 'flag'
-                ? undefined
-                : onpick(m.target)}
-        >
-          <span class="row">
-            <Portrait look={LOOK[m.elder]} size={30} />
-            <span class="grow stack" style:--gap="0"
-              ><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft">{marchDoing(m, now)}</small></span
-            >
-            {#if !back || out}
-              <b class="t-num t-gold"
-                >{clock(
-                  (out ? m.arriveAt : m.mine && m.mine.end > now ? m.mine.end : m.returnAt || m.arriveAt) - now,
-                )}</b
+  <Dock at="foot">
+    <ul class="stack">
+      {#each game.marches as m (m.id)}
+        {@const out = now < m.arriveAt}
+        {@const back = onrecall && recallable(m, now)}
+        <li>
+          <Card
+            tone="silk"
+            onclick={() =>
+              m.target.kind === 'pvp'
+                ? onrivals()
+                : m.target.kind === 'spot' || m.target.kind === 'trib' || m.target.kind === 'flag'
+                  ? undefined
+                  : onpick(m.target)}
+          >
+            <span class="row">
+              <Portrait look={LOOK[m.elder]} size={30} />
+              <span class="grow stack" style:--gap="0"
+                ><b class="t-small">{marchName(m)}</b><small class="t-tiny t-soft">{marchDoing(m, now)}</small></span
               >
-            {/if}
-            {#if back}
-              <Button
-                size="sm"
-                variant="ghost"
-                onclick={e => {
-                  e.stopPropagation()
-                  onrecall?.(m.id)
-                }}>{L.world.recall}</Button
-              >
-            {/if}
-          </span>
-        </Card>
-      </li>
-    {/each}
-  </ul>
+              {#if !back || out}
+                <b class="t-num t-gold"
+                  >{clock(
+                    (out ? m.arriveAt : m.mine && m.mine.end > now ? m.mine.end : m.returnAt || m.arriveAt) - now,
+                  )}</b
+                >
+              {/if}
+              {#if back}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onclick={e => {
+                    e.stopPropagation()
+                    onrecall?.(m.id)
+                  }}>{L.world.recall}</Button
+                >
+              {/if}
+            </span>
+          </Card>
+        </li>
+      {/each}
+    </ul>
+  </Dock>
 {/if}
-
-<style>
-  .node {
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-  }
-  .disc {
-    position: relative;
-    display: grid;
-  }
-  .hot .disc::before {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px var(--gold);
-    animation: halo 1.6s var(--ease) infinite;
-  }
-  @keyframes halo {
-    from {
-      opacity: 0.9;
-      transform: scale(0.8);
-    }
-    to {
-      opacity: 0;
-      transform: scale(1.4);
-    }
-  }
-  /* cấp: giọt son viền vàng; dấu khoá / đã chinh phục: đĩa lụa, đĩa vàng vẽ tay */
-  .lv {
-    position: absolute;
-    top: -7px;
-    right: -12px;
-    min-width: 20px;
-    padding: 0 5px 1px;
-    font-size: var(--fs-1);
-    font-weight: 800;
-    line-height: 17px;
-    text-align: center;
-    color: var(--silk);
-    border: 0 solid transparent;
-    border-image: var(--sk-badge);
-  }
-  .mark {
-    position: absolute;
-    right: -5px;
-    bottom: -3px;
-    display: grid;
-    place-items: center;
-    width: 20px;
-    height: 20px;
-    color: var(--text);
-    background: var(--img-disc-silk) center / 100% 100% no-repeat;
-  }
-  .ok {
-    color: var(--text);
-    background-image: var(--img-disc-gold);
-  }
-  .label {
-    font-size: var(--fs-2);
-    font-weight: 800;
-    color: var(--text);
-    -webkit-text-stroke: 3px var(--paper);
-    paint-order: stroke fill;
-  }
-  .label.wrap {
-    width: 100px;
-    white-space: normal;
-    text-align: center;
-    line-height: 1.15;
-  }
-  .locked .label {
-    opacity: 0.6;
-  }
-  .home {
-    font-size: var(--fs-3);
-    color: var(--cinnabar);
-  }
-  .top {
-    position: fixed;
-    top: calc(142px + var(--safe-t));
-    left: 50%;
-    z-index: var(--z-page);
-    width: min(100%, var(--col));
-    padding: 0 var(--sp-3);
-    translate: -50% 0;
-    pointer-events: none;
-  }
-  /* :global — nút gạt, Button là component khác: * có phạm vi thì không trúng, chạm xuyên xuống bản đồ */
-  .top > :global(*) {
-    pointer-events: auto;
-  }
-  /* dải giấy mờ dần sau hàng nút: nhãn mục tiêu cuộn qua thì chìm dần, không bị cắt ngang giữa chữ */
-  .top::before {
-    content: '';
-    position: absolute;
-    inset: -14px 0 -22px;
-    z-index: -1;
-    background: linear-gradient(color-mix(in srgb, var(--paper) 88%, transparent) 55%, transparent);
-  }
-  .side {
-    position: fixed;
-    top: calc(196px + var(--safe-t));
-    right: max(8px, (100% - var(--col)) / 2 + 8px);
-    z-index: var(--z-page);
-    display: grid;
-    gap: 10px;
-    width: 72px;
-  }
-  .slots .short {
-    display: none;
-  }
-  @media (max-width: 480px) {
-    .slots .long {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-    }
-    .slots .short {
-      display: inline;
-    }
-  }
-  .marches {
-    position: fixed;
-    bottom: calc(100px + var(--safe-b));
-    left: 50%;
-    z-index: var(--z-page);
-    width: min(100% - 24px, 456px);
-    translate: -50% 0;
-  }
-  /* desktop: căn theo vùng bản đồ (bên phải cột trái), không có thanh tab dưới */
-  @media (min-width: 1024px) and (min-height: 600px) {
-    .top,
-    .marches {
-      left: calc(var(--rail) + (100% - var(--rail)) / 2);
-    }
-    .top {
-      top: calc(var(--top) + var(--sp-4));
-      width: min(100% - var(--rail), 640px);
-    }
-    .marches {
-      bottom: var(--sp-5);
-      width: min(100% - var(--rail) - 48px, 520px);
-    }
-    .side {
-      top: calc(var(--top) + 76px);
-      right: 20px;
-    }
-  }
-</style>

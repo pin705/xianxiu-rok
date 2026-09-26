@@ -3027,3 +3027,37 @@ test('Luận Kiếm Đài · Thượng Tầng (Lost Canyon): từ tầng 16 đ�
   )
   assert.deepEqual(arenaBoard(ps, wk), [], 'bảng tầng dưới')
 })
+
+test('đổi đích giữa đường (Redirect): đội đang đi đổi sang điểm khác cùng việc, đi tiếp từ chỗ đang đứng; về nhà theo đúng đường đã đi', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const r0 = a.regions[0]
+  const seat = { x: r0.cx, y: r0.cy }
+  const mines = a.points
+    .filter(p => p.kind === 'mine' && p.region === 0)
+    .sort((x, y) => Math.hypot(y.x - seat.x, y.y - seat.y) - Math.hypot(x.x - seat.x, x.y - seat.y))
+  const [far, near] = [mines[0], mines.at(-1)!]
+  const vein = a.points.find(p => p.kind === 'vein' && p.region === 0)!
+  const ps = world({ ...sect('Chuyển Độn', 10, { kiem3: 500 }), seat })
+  let w = freshWorld()
+  const act = (x: Parameters<typeof worldAct>[2], at: number) => {
+    const r = worldAct(ps, 1, x, at, 9, map, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  assert.equal(act({ type: 'go', i: far.i, task: 'gather', elder: 'thanhPhong', army: { kiem3: 500 } }, T0), null)
+  const m0 = ps.get(1)!.marches[0]
+  const mid = Math.round((m0.startAt + m0.arriveAt) / 2)
+  assert.equal(act({ type: 'redirect', id: m0.id, i: vein.i }, mid), 'bad', 'khác việc (khai → chiếm)')
+  assert.equal(act({ type: 'redirect', id: m0.id, i: far.i }, mid), 'bad', 'đích cũ')
+  assert.equal(act({ type: 'redirect', id: m0.id, i: near.i }, mid), null)
+  const m1 = ps.get(1)!.marches[0]
+  assert.equal(m1.target.i, near.i)
+  assert.equal(m1.startAt, m0.startAt, 'giờ xuất phát giữ nguyên')
+  assert.ok(m1.arriveAt > mid)
+  assert.deepEqual(m1.path![0], m0.path![0], 'lộ trình nối từ nhà')
+  assert.deepEqual([m1.path!.at(-1)!.x, m1.path!.at(-1)!.y], [near.x, near.y])
+  assert.equal(act({ type: 'redirect', id: m1.id, i: far.i }, m1.arriveAt + 1), 'bad', 'tới nơi rồi')
+})

@@ -27,7 +27,9 @@
 <div class="plate" class:ink>
   <b class="t-ellipsis">{name}</b>
   <span class="realm"><img src={lotus} width="18" height="18" alt="" draggable="false" />{realm}</span>
-  <button class="vip" onclick={onvip} aria-label={vipLabel}>{vip}{#if dot}<Badge dot />{/if}</button>
+  <button class="vip" onclick={onvip} aria-label={vipLabel}
+    >{vip}{#if dot}<Badge dot />{/if}</button
+  >
 </div>
 
 <style>

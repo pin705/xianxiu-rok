@@ -1,12 +1,28 @@
 <script lang="ts">
   // Tủ gỗ nhiều tầng kệ: đồ vật (con trực tiếp) đứng trên ván, mỗi hàng cao `row` px, mỗi ô tối thiểu `min` px.
-  // Dùng cho túi đồ, tủ đan, kệ hàng, kệ bí kíp — không vẽ lại kệ trong từng màn.
+  // Dùng cho túi đồ, tủ đan, kệ hàng, kệ bí kíp — không vẽ lại kệ trong từng màn. cols: số ô cố định mỗi tầng (thay min).
   import type { Snippet } from 'svelte'
 
-  let { row = 86, min = 64, children }: { row?: number; min?: number; children: Snippet } = $props()
+  let {
+    row = 86,
+    min = 64,
+    cols,
+    label,
+    children,
+  }: { row?: number; min?: number; cols?: number; label?: string; children: Snippet } = $props()
 </script>
 
-<div class="shelf" style:--row="{row}px" style:--min="{min}px">{@render children()}</div>
+<div
+  class="shelf"
+  class:cols={!!cols}
+  style:--row="{row}px"
+  style:--min="{min}px"
+  style:--cols={cols}
+  role={label ? 'group' : undefined}
+  aria-label={label}
+>
+  {@render children()}
+</div>
 
 <style>
   .shelf {
@@ -30,6 +46,9 @@
       color-mix(in srgb, var(--paper2) 70%, var(--wood-l) 12%);
     border-top: 8px solid var(--wood-d);
     border-radius: 4px 4px 0 0;
+  }
+  .cols {
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   }
   .shelf > :global(*) {
     padding-bottom: 12px;

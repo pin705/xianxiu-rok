@@ -234,6 +234,20 @@
   const chainable = $derived(
     game.marches.find(m => m.task === 'hunt' && m.returnAt > now && m.back && count(m.back) > 0),
   )
+  // đổi đích: đội của mình đang đi tới điểm khác cùng việc (chưa tới, không thuộc kết trận) — chuyển tới điểm đang xem
+  const redirects = (task: string) =>
+    game.marches.filter(
+      m =>
+        m.path &&
+        m.target.kind === 'spot' &&
+        m.target.i !== point?.i &&
+        m.task === task &&
+        m.arriveAt > now &&
+        !m.returnAt &&
+        !m.back &&
+        !m.stay &&
+        m.rally === undefined,
+    )
   const marker = $derived(!!ally && me !== null && (ally.members[me] ?? -9) >= 0) // dấu của minh: từ R3
   const markHere = $derived(pos ? ally?.marks?.find(m => m.x === pos.x && m.y === pos.y) : undefined)
   let markText = $state('')
@@ -568,6 +582,16 @@
           >{L.world.chain(num(count(chainable.back ?? {})))}</Button
         >
       {/if}
+      {#each redirects(task) as m (m.id)}
+        <Button
+          wide
+          variant="ghost"
+          icon="arrow"
+          disabled={busy}
+          onclick={async () => (await send({ type: 'redirect', id: m.id, i: point.i })).ok && sent()}
+          >{L.world.redirect(L.elders[m.elder].name)}</Button
+        >
+      {/each}
       <ArmyPick
         field
         foe={slice ? might(slice) : undefined}
@@ -961,7 +985,7 @@
       {#if marker}
         <div class="row mt-2">
           <input
-            class="grow"
+            class="grow field"
             bind:value={markText}
             maxlength="20"
             aria-label={L.world.markText}
@@ -984,14 +1008,3 @@
     </Section>
   {/if}
 </Sheet>
-
-<style>
-  input {
-    min-width: 0;
-    padding: 6px 10px;
-    font: inherit;
-    border: 1.5px solid var(--rim, var(--ink3));
-    border-radius: var(--cut);
-    background: var(--paper);
-  }
-</style>

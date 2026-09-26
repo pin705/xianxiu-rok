@@ -1,17 +1,19 @@
 <script lang="ts">
   // Ấn son tròn: nút hành động lớn (nâng cấp, tuyển, luyện…) hoặc dấu ghi số (cấp, tầng) đè góc tranh.
-  // Có onclick → nút; không → dấu tĩnh. size: đường kính px.
+  // Có onclick → nút; không → dấu tĩnh. size: đường kính px. big: dấu tĩnh số to đóng xuống như ấn (tầng vừa mở khoá).
   import type { Snippet } from 'svelte'
   import { sfx } from '../lib'
 
   let {
     size = 104,
+    big = false,
     disabled = false,
     label,
     onclick,
     children,
   }: {
     size?: number
+    big?: boolean
     disabled?: boolean
     label?: string
     onclick?: (e: MouseEvent) => void
@@ -32,7 +34,7 @@
     }}>{@render children()}</button
   >
 {:else}
-  <span class="seal still" style:--size="{size}px" aria-label={label}>{@render children()}</span>
+  <span class="seal still" class:big style:--size="{size}px" aria-label={label}>{@render children()}</span>
 {/if}
 
 <style>
@@ -68,5 +70,21 @@
   }
   .still {
     rotate: -8deg;
+  }
+  .big {
+    font-size: calc(var(--size) * 0.4);
+    rotate: 0deg;
+    animation: stamp 0.45s var(--spring) both;
+  }
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: scale(1.8) rotate(-12deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .big {
+      animation: none;
+    }
   }
 </style>

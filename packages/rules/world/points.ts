@@ -380,6 +380,20 @@ export function orderBuffs(map: MapCtx, al: Alliance | undefined): Buff[] {
   if (map.day === undefined || !o || o.n !== thoiAt(map.day).n) return []
   return [{ ...ALLY_ORDERS[o.k], until: 0, src: 'order' }]
 }
+// Đường đã đi tới phần f (0..1) của lộ trình: các điểm dừng đã qua + chỗ đang đứng
+export function walked(path: { x: number; y: number }[], f: number) {
+  const seg = path.slice(1).map((p, k) => Math.hypot(p.x - path[k].x, p.y - path[k].y))
+  let d = Math.min(1, Math.max(0, f)) * seg.reduce((a, b) => a + b, 0)
+  for (let k = 0; k < seg.length; k++) {
+    if (d <= seg[k]) {
+      const u = seg[k] ? d / seg[k] : 0
+      const at = { x: path[k].x + (path[k + 1].x - path[k].x) * u, y: path[k].y + (path[k + 1].y - path[k].y) * u }
+      return [...path.slice(0, k + 1), at]
+    }
+    d -= seg[k]
+  }
+  return path
+}
 // Vị trí (ô) của đội lúc t theo đường đi (đi: path; về: path ngược); không có đường thì null
 export function marchAt(m: March, t: number): Pos | null {
   const path = m.path

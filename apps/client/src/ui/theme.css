@@ -68,8 +68,16 @@
   --pin: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18); /* đinh ghim son */
   --pill: rgb(31 27 23 / 0.8); /* viên mực: nhãn nổi trên cảnh/tranh */
   --pill-fg: #f5f5f1;
-  --lacquer: linear-gradient(#c0443a, #7d2218); /* mặt án sơn son */
+  --pill-hot: #ff9c86; /* số trên viên mực khi đầy/báo (son sáng đọc được trên nền mực) */
+  --mist: 243 244 240; /* sương trắng (kênh rgb): nền HUD mờ dần xuống cảnh — rgb(var(--mist) / 0.9) */
+  --jade: #3f7f6f; /* ngọc lam lục: dải yên tĩnh (bế quan) */
+  --altar-top: linear-gradient(
+    #c0443a,
+    #7d2218
+  ); /* mặt án sơn son (--lacquer là màu sơn mài tối của bảng màu, theme.ts ghi đè) */
   --gilt: #c9a45a; /* chỉ vàng viền án, vành đồng */
+  --stone: radial-gradient(ellipse at 50% 30%, #fbfbf8, #d4d7cf 55%, #a3a89f); /* bệ đá xám (Podium) */
+  --thunder-wash: rgb(138 115 207 / 0.18); /* mực tím lôi kiếp loang nhạt (.wash) */
   --rar2: var(--azurite); /* phẩm: lam · tím · vàng */
   --rar3: #7a47a6;
   --rar4: #9a6b16;
@@ -166,6 +174,19 @@ dialog::backdrop {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+/* công tắc giảm chuyển động trong Cài đặt (data-calm trên <html>): như trên, cả hiệu ứng chuyển tab */
+:root[data-calm] *,
+:root[data-calm] *::before,
+:root[data-calm] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+:root[data-calm]::view-transition-group(*),
+:root[data-calm]::view-transition-old(*),
+:root[data-calm]::view-transition-new(*) {
+  animation: none !important;
 }
 
 /* ---------- Chuyển tab: vết mực loang từ chỗ chạm (View Transitions; trình duyệt cũ thì chuyển ngay) ---------- */
@@ -306,6 +327,10 @@ dialog::backdrop {
   justify-content: flex-end;
   justify-items: end;
 }
+/* con của lưới đứng giữa theo chiều ngang (không co cột như .justify-center) */
+.middle {
+  justify-items: center;
+}
 .self-start {
   align-self: start;
   justify-self: start;
@@ -347,6 +372,16 @@ dialog::backdrop {
 .t-right {
   text-align: right;
 }
+.t-left {
+  text-align: left;
+}
+.t-italic {
+  font-style: italic;
+}
+/* giữ xuống dòng của chữ (thư, lời dài soạn sẵn) */
+.pre-line {
+  white-space: pre-line;
+}
 .nowrap {
   white-space: nowrap;
 }
@@ -367,6 +402,22 @@ dialog::backdrop {
 @media (max-width: 480px) {
   .hidden-narrow {
     display: none;
+  }
+}
+/* điện thoại hẹp: .sr-narrow thành chữ cho trình đọc màn hình (ẩn khỏi mắt), .only-narrow chỉ hiện trên máy hẹp */
+.only-narrow {
+  display: none;
+}
+@media (max-width: 480px) {
+  .only-narrow {
+    display: inline;
+  }
+  .sr-narrow {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 
@@ -429,6 +480,30 @@ dialog::backdrop {
   --good: var(--good-inv);
   --bad: var(--bad-inv);
   --gold-d: var(--gold-l);
+}
+/* nút chữ phụ gạch chấm (Để sau, bỏ qua) — đặt lên <button> */
+.t-link {
+  font-size: var(--fs-2);
+  font-weight: 700;
+  color: var(--text-faint);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+/* cỡ chữ thân (tiêu đề mục nhỏ trong bảng) · số to (tổng, giờ) · số rất to (đồng hồ chính) */
+.t-body {
+  font-size: var(--fs-3);
+}
+.t-big {
+  font-size: var(--fs-4);
+}
+.t-giant {
+  font-size: var(--fs-7);
+  line-height: 1;
+}
+/* ô số canh phải, rộng tối thiểu 5 chữ: cột số các dòng thẳng hàng */
+.w-num {
+  min-width: 5ch;
+  text-align: right;
 }
 .sr {
   position: absolute;
@@ -496,6 +571,10 @@ dialog::backdrop {
 .path > li.hit::after {
   background: var(--cinnabar);
 }
+/* .path.slim: mốc là dòng thấp (không phải thẻ) — đẩy dòng xuống cho hạt mốc canh giữa */
+.path.slim > li {
+  padding-top: 7px;
+}
 /* sổ kẻ: danh sách dòng gọn ngăn bằng nét mực đứt (thay cho chồng thẻ); li.on: dòng nổi bật (của mình, đang bật) */
 .ledger {
   display: grid;
@@ -552,6 +631,201 @@ dialog::backdrop {
 .rank-no.r3 {
   background: radial-gradient(circle at 35% 30%, #e7b089, #9a5a33 70%);
 }
+.field {
+  /* ô nhập chữ trên giấy (input, textarea): viền mực, góc vát */
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1.5px solid var(--rim, var(--ink3));
+  border-radius: var(--cut);
+  background: var(--paper);
+}
+/* chữ in hoa (hiệu minh, mã) */
+.t-upper {
+  text-transform: uppercase;
+}
+/* mã để chép (mã chuyển máy, mã quà): chữ giãn cách, chạm một lần chọn cả mã */
+.t-code {
+  letter-spacing: 0.12em;
+  user-select: all;
+  -webkit-user-select: all;
+}
+/* nét mực đứt phía trên: ngăn nhóm nút / dòng cuối khỏi phần trên */
+.ruled-top {
+  padding-top: 8px;
+  border-top: 1px dashed var(--paper3);
+}
+/* thẻ khung đôi trên nền giấy đậm, dãy núi mờ góc dưới phải (danh thiếp, đầu hồ sơ) */
+.vista {
+  padding: 10px 12px 12px 8px;
+  border: 0 solid transparent;
+  border-image: var(--sk-card);
+  background:
+    var(--img-mountains, linear-gradient(transparent, transparent)) right bottom / 300% auto no-repeat,
+    var(--paper2);
+  background-clip: padding-box;
+}
+/* một dòng kẻ mực đứt đứng riêng (trong .path, danh sách tự dựng); .on: nền son nhạt (có thưởng chờ nhận) */
+.ruled {
+  padding: 6px 8px 8px;
+  border-bottom: 1px dashed var(--paper3);
+}
+.ruled.on {
+  background: color-mix(in srgb, var(--cinnabar) 8%, transparent);
+  border-radius: 6px;
+}
+/* đèn trạng thái: chấm mực nhỏ, .on lục (đang chơi, đang bật) */
+.lamp {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink3);
+}
+.lamp.on {
+  background: var(--malachite);
+}
+/* .lamp.alert: chấm son đứng trong dòng chữ (có tin chưa đọc) */
+.lamp.alert {
+  display: inline-block;
+  margin: 0 4px;
+  background: var(--cinnabar);
+}
+/* trích dẫn: vạch mực trái, chữ nhạt (tin được trả lời); .on: vạch vàng trên giấy đậm (đang trả lời tin này) */
+.quote {
+  padding-left: 6px;
+  color: var(--text-soft);
+  border-left: 2px solid var(--paper3);
+}
+.quote.on {
+  padding: 2px 6px;
+  color: inherit;
+  border-left-color: var(--gold);
+  background: var(--paper2);
+}
+/* hộp cuộn dọc cao tối đa --max-h (mặc định nửa màn), cách trên dưới một khoảng (log tin, danh sách dài) */
+.scroll-box {
+  max-height: var(--max-h, 50vh);
+  margin-block: var(--sp-2);
+  overflow-y: auto;
+}
+/* nút một ký tự (emoji, ×): ô vuông 32px chữ to */
+.glyph-btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  font-size: 18px;
+  line-height: 1;
+}
+/* chữ bấm được (nút trần) có biểu tượng đầu: đậm, vàng đậm — Công Huân, Giới Chủ trên thẻ mùa */
+.t-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 700;
+  color: var(--gold-d);
+}
+/* nút trần cả dòng, chữ canh trái: chạm một dòng tóm tắt để mở/thu chi tiết bên dưới */
+.line-btn {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  text-align: left;
+}
+/* khay giấy: một món bày trong quầy đổi (hình / túi quà, giá, nút) — xếp bằng .fill */
+.tray {
+  display: grid;
+  justify-items: center;
+  align-content: space-between;
+  gap: 3px;
+  padding: 8px;
+  text-align: center;
+  background: var(--paper2);
+  border: 1.5px solid var(--paper3);
+  border-radius: 12px;
+}
+/* chữ gạch nét cọ son bên dưới (tiêu đề cột, món đang chọn) */
+.brush {
+  padding: 0 6px 5px;
+  background: var(--stroke-red) no-repeat center bottom / 100% 6px;
+}
+/* dòng việc đang chờ (xây, tuyển, luyện…): nền ánh vàng nhạt dần, kẻ mực đứt trên dưới; tranh đầu dòng lấn lề */
+.busy-row {
+  padding: 6px 8px 6px 4px;
+  background: linear-gradient(90deg, rgb(var(--gold-glow) / 0.28), transparent 70%);
+  border-top: 1px dashed var(--paper3);
+  border-bottom: 1px dashed var(--paper3);
+}
+.busy-row > img {
+  margin: -4px 0;
+}
+/* khung nhắc thiếu (thiếu tài nguyên, cần làm trước): nền son nhạt, viền son đứt */
+.warn {
+  padding: var(--sp-2) var(--sp-3);
+  background: color-mix(in srgb, var(--cinnabar) 7%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--cinnabar) 45%, transparent);
+  border-radius: 10px;
+}
+/* dòng loang màu (đợt lôi kiếp…): khung giấy mảnh, nền --wash nhạt dần sang phải */
+.wash {
+  padding: var(--sp-2) 12px;
+  border: 0 solid transparent;
+  border-image: var(--sk-card-plain);
+  background: linear-gradient(90deg, var(--wash, var(--thunder-wash)), transparent) padding-box;
+}
+
+/* kệ một ván: ván gỗ ngang dưới hàng đồ vật (vật chứa tài nguyên, lệnh bài treo); --ledge: khoảng từ ván tới đáy hàng */
+.ledge {
+  padding-top: 6px;
+  background: linear-gradient(var(--ochre), var(--lacquer2)) left bottom var(--ledge, 0px) / 100% 7px no-repeat;
+}
+
+/* dòng mốc trên .path (số mốc · quà · dấu son / nút), kẻ mực đứt dưới; số mốc (con đầu) rộng tối thiểu --at */
+.path > li > .mile {
+  display: flex;
+  align-items: center;
+  gap: var(--gap, var(--sp-2));
+  min-height: 44px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--paper3);
+}
+.mile > :first-child {
+  min-width: var(--at, 4.5ch);
+}
+/* sổ kẻ có dòng bấm được (chạm tên: hồ sơ): nút trải cả dòng, chữ canh trái */
+.ledger > li > button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--gap, var(--sp-2));
+  min-width: 0;
+  text-align: left;
+}
+
+/* sân khấu nhỏ giữa bảng: đồ vật đứng giữa, lớp trang trí (Rays) tràn ra bị cắt; cao --h */
+.spot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: var(--h, 118px);
+  overflow: hidden;
+}
+
+/* đồng tiền hạng cỡ lớn (số trận thắng hôm nay…) */
+.rank-no.lg {
+  min-width: 54px;
+  height: 54px;
+  font-size: var(--fs-6);
+}
+
+/* ba cột: hai bên co, giữa giãn (cán cân Ta — Địch, "trước — giữa — sau") */
+.trio {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--gap, 10px);
+  align-items: center;
+}
 
 /* ---------- Máy tính bảng dọc, điện thoại ngang lớn: cột rộng hơn ---------- */
 @media (min-width: 700px) {
@@ -574,4 +848,113 @@ dialog::backdrop {
     --rail: 300px;
     --top: 84px;
   }
+}
+
+/* ---------- Nhóm D (sự kiện, bảng HUD): lớp đồ vật thêm khi chuyển màn ---------- */
+.mb-3 {
+  margin-bottom: var(--sp-3);
+}
+/* lịch: cột ngày kẻ viền trái, mỗi dòng một tờ lịch .leaf (đầu tờ son, số ngày to) + việc trong ngày;
+   li.today: tờ son nghiêng, chữ đậm · li.past: mờ */
+.almanac {
+  display: grid;
+  margin: 0;
+  padding: 0 0 0 4px;
+  list-style: none;
+  border-left: 2px solid var(--paper3);
+}
+.almanac > li {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 5px 0 5px 6px;
+  border-bottom: 1px dashed var(--paper3);
+}
+.almanac > li.today {
+  font-weight: 800;
+}
+.almanac > li.past {
+  opacity: 0.5;
+}
+.leaf {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  padding-top: 6px;
+  font-size: var(--fs-4);
+  font-weight: 900;
+  line-height: 1;
+  background:
+    linear-gradient(var(--cinnabar), var(--cinnabar)) top / 100% 7px no-repeat,
+    var(--silk);
+  border: 1px solid var(--paper3);
+  border-radius: 3px;
+  box-shadow: 0 2px 3px rgb(var(--shade) / 0.12);
+}
+.almanac > li.today > .leaf {
+  color: var(--silk);
+  background: var(--cinnabar);
+  border-color: var(--cinnabar);
+  rotate: -4deg;
+}
+/* dấu tích: đĩa lục tròn chữ trắng đầu dòng việc đã xong (đặt Icon check bên trong) */
+.tick-dot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--silk);
+  background: var(--malachite);
+  border-radius: 50%;
+}
+/* sổ kẻ: dòng có thưởng chờ nhận (ánh vàng nhạt dần), dòng cuối không kẻ */
+.ledger > li.gold {
+  background: linear-gradient(90deg, rgb(var(--gold-glow) / 0.35), transparent);
+}
+.ledger.open-end > li:last-child {
+  border-bottom: 0;
+}
+/* đồng tiền bậc (thành tựu): đĩa mực viền mảnh; .on son (chờ nhận), .full vàng (đạt hết bậc) */
+.tier-coin {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font-size: var(--fs-2);
+  font-style: normal;
+  font-weight: 900;
+  color: var(--text-soft);
+  background: var(--silk);
+  border: 2px solid var(--ink3);
+  border-radius: 50%;
+}
+.tier-coin.on {
+  color: var(--silk);
+  background: var(--cinnabar);
+  border-color: var(--cinnabar);
+}
+.tier-coin.full {
+  color: var(--silk);
+  text-shadow: 0 1px 1px rgb(var(--shade) / 0.4);
+  background: radial-gradient(circle at 35% 30%, var(--gold-l), var(--gold) 70%);
+  border-color: var(--gold-d);
+}
+/* sổ kẻ dòng nhiều tầng (tên, thanh, quà): các món bám đầu dòng */
+.ledger.top > li {
+  align-items: flex-start;
+}
+/* đĩa biểu tượng viền màu: vòng tròn giấy, viền và hình tô màu --c (mỗi nguồn / hệ một màu khoáng) */
+.ring-ic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--c, var(--ink3));
+  background: var(--silk);
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
 }

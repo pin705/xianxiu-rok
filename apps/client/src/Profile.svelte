@@ -3,10 +3,10 @@
   // Cảnh giới, lực chiến, tiên minh, chỗ ngồi (tới xem trên bản đồ), chiến tích; truyền âm, chặn.
   import type { Ack, GroupView, Profile } from '@rok/protocol'
   import { ELDER_IDS, FRAMES, TITLES, TITLE_IDS, frameOpen, type TitleId } from '@rok/rules'
-  import { DAO_TONES, Icon, Portrait, artOf, paintedUrl, portraitRing } from '@rok/art'
+  import { DAO_TONES, Portrait, artOf, paintedUrl, portraitRing } from '@rok/art'
   import type { WorldAction } from '@rok/rules/world'
   import type { Net } from './net'
-  import { Button, Card, Medal, Sheet, Tag } from './ui'
+  import { BigStat, Button, Card, Face, Medal, Orb, Plaque, Sheet, Tag } from './ui'
   import { L, LOOK, MASTER, num } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
@@ -27,7 +27,6 @@
   } = $props()
   const g = useGame()
   const jade = artOf('ui:frame-portrait')?.src
-  const ui = (n: string) => artOf(`ui:${n}`)?.src // kiếm thế lực vẽ tay; tắt art thì về Icon
   const game = $derived(g.game)
 
   let p = $state.raw<Profile | null>(null)
@@ -71,18 +70,15 @@
 
 <Sheet open={social.profile !== null} onclose={close} title={p?.name ?? '…'} sub={p ? L.realm(p.hall) : undefined}>
   <!-- chân dung (chưa chọn: chưởng môn) trong khung: khung thường là vòng ngọc vẽ tay, khung đặc biệt vẽ bằng code -->
-  {#snippet art()}<span class="framed"
-      ><Portrait look={face ? LOOK[face] : MASTER} size={62} /><img
-        class="ring"
-        src={frame === 'basic' && jade ? jade : paintedUrl(`ring:${frame}`, () => portraitRing(frame), 76)}
-        alt=""
-        draggable="false"
-      /></span
-    >{/snippet}
+  {#snippet art()}<Face
+      look={face ? LOOK[face] : MASTER}
+      size={62}
+      ring={frame === 'basic' && jade ? jade : paintedUrl(`ring:${frame}`, () => portraitRing(frame), 76)}
+    />{/snippet}
   {#if p}
     <div class="stack">
       <!-- danh thiếp chưởng môn: ấn minh bên trái (chưa vào minh: ấn mờ), minh · trạng thái · đạo · tước hiệu bên phải -->
-      <div class="card-id">
+      <div class="vista split items-start" style:--gap="12px">
         <Medal emblem="crest" tone={p.ally ? 'gold' : 'ink'} size={48} dim={!p.ally} />
         <div class="stack" style:--gap="4px">
           <b class="t-small"
@@ -91,7 +87,7 @@
               >{/if}</b
           >
           <span class="row" style:--gap="5px"
-            ><i class="dot" class:on={p.online}></i><small class="t-tiny t-soft"
+            ><i class="lamp" class:on={p.online}></i><small class="t-tiny t-soft"
               >{p.online ? L.ally.online : L.profile.offline}</small
             ></span
           >
@@ -111,13 +107,10 @@
         </div>
       </div>
       <!-- chiến tích: lưới biển số (thế lực to nhất, trên cùng) -->
-      <div class="might">
-        {#if ui('power')}<img src={ui('power')} alt="" draggable="false" />{:else}<Icon name="power" size={30} />{/if}
-        <span class="stack" style:--gap="0"><small>{L.power}</small><b class="t-num">{num(p.power)}</b></span>
-      </div>
-      <div class="plaques">
+      <BigStat art="power" icon="power" label={L.power} value={num(p.power)} />
+      <div class="grid" style:--cols="3" style:--gap="6px">
         {#each stats as [k, v] (k)}
-          <span><b class="t-num">{v}</b><small>{k}</small></span>
+          <Plaque label={k} value={v} />
         {/each}
       </div>
       {#if p.pid === me}
@@ -127,46 +120,34 @@
             <b class="t-small">{L.profile.face}</b>
             <small class="t-tiny t-soft">{L.profile.faceHint}</small>
             <div class="row wrap" style:--gap="6px">
-              <button
-                class="face"
-                class:on={!game.face}
-                aria-pressed={!game.face}
-                aria-label={L.profile.master}
-                onclick={() => g.act({ type: 'face', elder: null }, 'tap')}><Portrait look={MASTER} size={40} /></button
+              <Orb on={!game.face} label={L.profile.master} onclick={() => g.act({ type: 'face', elder: null }, 'tap')}
+                ><Portrait look={MASTER} size={40} /></Orb
               >
-              {#each owned as e (e)}<button
-                  class="face"
-                  class:on={game.face === e}
-                  aria-pressed={game.face === e}
-                  aria-label={L.elders[e].name}
-                  onclick={() => g.act({ type: 'face', elder: e }, 'tap')}><Portrait look={LOOK[e]} size={40} /></button
+              {#each owned as e (e)}<Orb
+                  on={game.face === e}
+                  label={L.elders[e].name}
+                  onclick={() => g.act({ type: 'face', elder: e }, 'tap')}><Portrait look={LOOK[e]} size={40} /></Orb
                 >{/each}
             </div>
             <b class="t-small">{L.profile.frame}</b>
             <div class="row wrap" style:--gap="6px">
               {#each FRAMES as fr (fr)}
                 {@const open = frameOpen(game, fr)}
-                <button
-                  class="face"
-                  class:on={(game.frame ?? 'basic') === fr}
+                <Orb
+                  on={(game.frame ?? 'basic') === fr}
                   disabled={!open}
-                  aria-pressed={(game.frame ?? 'basic') === fr}
-                  aria-label={L.profile.frames[fr]}
+                  lock={!open}
+                  label={L.profile.frames[fr]}
                   title={open ? L.profile.frames[fr] : L.profile.frameNeed[fr]}
                   onclick={() => g.act({ type: 'frame', id: fr }, 'tap')}
-                  ><img
-                    src={paintedUrl(`ring:${fr}`, () => portraitRing(fr), 40)}
-                    alt=""
-                    width="40"
-                    height="40"
-                  />{#if !open}<Icon name="lock" size={14} />{/if}</button
+                  ><img src={paintedUrl(`ring:${fr}`, () => portraitRing(fr), 40)} alt="" width="40" height="40" /></Orb
                 >
               {/each}
             </div>
           </div></Card
         >
       {/if}
-      <div class="acts row wrap">
+      <div class="ruled-top row wrap" style:--gap="6px">
         {#if p.seat && onmap}
           {@const seat = p.seat}
           <Button
@@ -266,114 +247,3 @@
     <p class="t-small t-soft">…</p>
   {/if}
 </Sheet>
-
-<style>
-  /* danh thiếp: giấy trắng khung đôi, núi mờ đáy, cờ minh treo trái */
-  .card-id {
-    display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-    padding: 10px 12px 12px 8px;
-    border: 0 solid transparent;
-    border-image: var(--sk-card);
-    background:
-      var(--img-mountains, linear-gradient(transparent, transparent)) right bottom / 300% auto no-repeat,
-      var(--paper2);
-    background-clip: padding-box;
-  }
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--ink3);
-  }
-  .dot.on {
-    background: var(--malachite);
-  }
-  /* thế lực: kiếm cắm đá vẽ tay + số lớn trên dải son */
-  .might {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 12px 4px 4px;
-    border-bottom: 2px solid var(--cinnabar);
-  }
-  .might img {
-    width: 54px;
-    height: 54px;
-    margin: -6px 0;
-  }
-  .might small {
-    font-size: var(--fs-1);
-    color: var(--text-soft);
-  }
-  .might b {
-    font-size: var(--fs-6);
-    line-height: 1.1;
-  }
-  /* sáu biển số nhỏ: số trên, nhãn dưới */
-  .plaques {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-  }
-  .plaques > span {
-    display: grid;
-    align-content: start;
-    justify-items: center;
-    gap: 1px;
-    padding: 5px 4px 6px;
-    text-align: center;
-    background: rgb(255 255 255 / 0.7);
-    border: 1px solid var(--paper3);
-    border-top: 2px solid var(--rim, var(--ink3));
-    border-radius: 3px;
-  }
-  .plaques b {
-    font-size: var(--fs-4);
-  }
-  .plaques small {
-    font-size: var(--fs-1);
-    line-height: 1.15;
-    color: var(--text-soft);
-  }
-  .acts {
-    --gap: 6px;
-    padding-top: 8px;
-    border-top: 1px dashed var(--paper3);
-  }
-  .face {
-    display: grid;
-    place-items: center;
-    padding: 2px;
-    border: 2px solid transparent;
-    border-radius: 50%;
-    background: none;
-    cursor: pointer;
-  }
-  .face:disabled {
-    position: relative;
-    opacity: 0.5;
-    cursor: default;
-  }
-  .face :global(svg),
-  .face :global(.icon) {
-    position: absolute;
-  }
-  .framed {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-  }
-  .ring {
-    position: absolute;
-    width: 76px;
-    height: 76px;
-    pointer-events: none;
-  }
-  .face.on {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 2px rgb(var(--shade) / 0.12);
-  }
-</style>

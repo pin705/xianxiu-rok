@@ -953,7 +953,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Later Tutorials**: hướng dẫn cách chơi vào từ hồ sơ ✔[21]. Hướng dẫn hoạt hình cho sự kiện khó ✔[14]. Hướng dẫn cửa hàng công trạng ✔[12].
 - **Tu tiên hoá:** lần đầu mở một tính năng (Tranh đoạt, Tiên minh, Bản đồ Giới, Độ kiếp) → 3 thẻ giấy lật ngang, mỗi thẻ một hình và một câu. Xem lại được trong Cẩm nang.
-- **Game mình:** 🟡. Tính năng vừa mở có Mộc Thanh Phong giới thiệu một câu + "Đi tới" (`Advisor.svelte`) và màn Mở khoá (`Unlocks.svelte`); nút "?" mở đúng mục Cẩm nang 12 mục (`Help.svelte`). Chưa có bộ thẻ "lần đầu" có hình cho Tranh đoạt, Tiên minh, bản đồ Giới.
+- **Game mình:** ✅ Tính năng vừa mở có Mộc Thanh Phong giới thiệu một câu + "Đi tới" (`Advisor.svelte`) và màn Mở khoá (`Unlocks.svelte`); nút "?" mở đúng mục Cẩm nang 12 mục (`Help.svelte`). Thẻ "lần đầu" (`FirstLook.svelte`): lần đầu mở bản đồ Giới, Tiên minh, Tranh đoạt, Độ kiếp hiện ba thẻ giấy ghim son, mỗi thẻ một tranh và một câu, lật bằng Tiếp; xem hết hay đóng giữa chừng đều nhớ trên máy. Chưa có nút xem lại bộ thẻ trong Cẩm nang.
 - **Ưu tiên:** P1 · **Công sức:** S
 
 ### G. Tiện lợi (QoL)
@@ -1291,7 +1291,7 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | D5 Dải "Tạ lễ" liệt kê vật phẩm nhận được | ✅ `GiftStrip.svelte` | P1 | S |
 | E1 Bổ sung chấm: Tiên minh có người xin giúp, chat chưa đọc, sự kiện có mốc nhận | ✅ | P1 | S |
 | F2 Mũi tên dẫn trong bảng cho lần đầu (Tuyển, Xuất quân, Độ kiếp) | ✅ Tuyển, Xuất quân (`FirstTap`) | P1 | S |
-| F5 Thẻ "lần đầu" khi mở tính năng mới (Tranh đoạt, Tiên minh, Giới) | 🟡 | P1 | S |
+| F5 Thẻ "lần đầu" khi mở tính năng mới (Tranh đoạt, Tiên minh, Giới) | ✅ ba thẻ tranh + một câu cho Giới, Tiên minh, Tranh đoạt, Độ kiếp (`FirstLook.svelte`) | P1 | S |
 | H4 Soát tương phản chữ vàng trên giấy | 🟡 | P1 | S |
 | H6 Giảm độ phủ HUD trên điện thoại từ ~35% xuống ≤28% | 🟡 | P1 | S |
 | A8 + C22 Cột sự kiện + trang Sự kiện có Hoàng lịch 7 ngày | ✅ | P1 | M |

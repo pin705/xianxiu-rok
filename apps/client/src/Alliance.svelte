@@ -44,7 +44,23 @@
   import type { Ack } from '@rok/protocol'
   import { untrack, type Snippet } from 'svelte'
   import { Icon, artOf } from '@rok/art'
-  import { Button, Card, Confirm, Medal, Meter, Page, Section, Tabs, Tag, Tile } from './ui'
+  import {
+    Art,
+    Banner,
+    Button,
+    Card,
+    Confirm,
+    Medal,
+    Meter,
+    Note,
+    Page,
+    Pennant,
+    Plaque,
+    Section,
+    Tabs,
+    Tag,
+    Tile,
+  } from './ui'
   import { L, clock, num, sfx } from './lib'
   import { useGame } from './game'
   import AllyTech from './AllyTech.svelte'
@@ -180,16 +196,14 @@
   <FirstLook id="ally" />
   {#if !ally}
     <!-- chưa có minh: sảnh trống — ba người đứng chờ, cờ chưa có hiệu, lời dẫn trong sảnh -->
-    <header class="hall">
-      <span class="flag"
-        >{#if ui('ally-people')}<img class="crowd" src={ui('ally-people')} alt="" draggable="false" />{:else}<Medal
+    <Banner picLeft picSize={84}>
+      {#snippet pic()}{#if ui('ally-people')}<Art art="ally-people" icon="people" size={84} />{:else}<Medal
             emblem="crest"
             tone="gold"
             size={46}
-          />{/if}</span
-      >
-      <p class="t-lore t-small">{L.ally.intro}</p>
-    </header>
+          />{/if}{/snippet}
+      {#snippet lead()}<p class="t-lore t-small">{L.ally.intro}</p>{/snippet}
+    </Banner>
     <Section title={L.ally.list}>
       {#if rows && !rows.length}<p class="t-small t-soft">{L.ally.none}</p>{/if}
       <ul class="stack">
@@ -197,9 +211,7 @@
           <li>
             <Card>
               <span class="row">
-                {#if ui('ally-banner')}<span class="flag mini"
-                    ><img src={ui('ally-banner')} alt="" draggable="false" /><b class="flagtag">{r.tag}</b></span
-                  >{:else}<Medal emblem="crest" tone="gold" size={34} />{/if}
+                <Pennant tag={r.tag} mini />
                 <span class="grow stack" style:--gap="1px"
                   ><b>{r.name} [{r.tag}]</b><small class="t-small t-soft"
                     >{L.ally.members(r.n, r.max)} · {L.power} {num(r.power)}</small
@@ -226,14 +238,8 @@
           go({ type: 'allyFound', name, tag }, 'reward')
         }}
       >
-        <input bind:value={name} maxlength="20" placeholder={L.ally.name} aria-label={L.ally.name} />
-        <input
-          bind:value={tag}
-          maxlength="4"
-          placeholder={L.ally.tag}
-          aria-label={L.ally.tag}
-          style:text-transform="uppercase"
-        />
+        <input class="field" bind:value={name} maxlength="20" placeholder={L.ally.name} aria-label={L.ally.name} />
+        <input bind:value={tag} maxlength="4" placeholder={L.ally.tag} aria-label={L.ally.tag} class="field t-upper" />
         <Button
           variant="gold"
           wide
@@ -247,42 +253,36 @@
     </Section>
   {:else}
     <!-- sảnh minh: cờ minh treo (hiệu minh trong đĩa trắng), tên và ba tấm biển số liệu trên nền núi -->
-    <header class="hall">
-      <span class="flag">
-        {#if ui('ally-banner')}<img src={ui('ally-banner')} alt="" draggable="false" />{:else}<Medal
-            emblem="crest"
-            tone="gold"
-            size={46}
-          />{/if}
-        {#if ui('ally-banner')}<b class="flagtag">{ally.tag}</b>{/if}
-      </span>
-      <div class="hall-id">
-        <b class="hall-name">{ally.name} <span class="t-soft">[{ally.tag}]</span></b>
+    <Banner title={ally.name} note="[{ally.tag}]" picLeft picSize={72}>
+      {#snippet pic()}<Pennant tag={ally.tag} />{/snippet}
+      {#snippet lead()}
         <small class="t-small t-soft"
           >{L.ally.members(ally.people.length, seatsOf(ally))} · {myRole === -9 ? '' : L.ally.role(myRole)}</small
         >
-        <div class="stats">
-          <span title={L.guild.creditHint}
-            ><small>{L.guild.credit}</small><b class="t-num">{num(game.contrib?.credit ?? 0)}</b></span
+        <div class="grid mt-1" style:--cols="3" style:--gap="6px">
+          <span class="stack" title={L.guild.creditHint}
+            ><Plaque label={L.guild.credit} value={num(game.contrib?.credit ?? 0)} /></span
           >
-          <span title={L.guild.fundHint}
-            ><small>{L.guild.fund}</small><b class="t-num">{num(ally.fund ?? 0)}</b>{#if ally.terr}<small class="t-good"
-                >{L.guild.terrFund(num(ally.terr), num(ally.terr * TERR_FUND))}</small
-              >{/if}</span
+          <span class="stack" title={L.guild.fundHint}
+            ><Plaque label={L.guild.fund} value={num(ally.fund ?? 0)}
+              >{#if ally.terr}<small class="t-tiny t-good"
+                  >{L.guild.terrFund(num(ally.terr), num(ally.terr * TERR_FUND))}</small
+                >{/if}</Plaque
+            ></span
           >
-          <span title={L.guild.giftHint}
-            ><small>{L.guild.gift}</small><b class="t-num" aria-label={L.guild.giftLv(gift)}>{gift}</b><Meter
-              value={giftPart}
-              size="xs"
-              tone="gold"
-            /></span
+          <span class="stack" title={L.guild.giftHint}
+            ><Plaque label={L.guild.gift}
+              ><b class="t-num t-big" aria-label={L.guild.giftLv(gift)}>{gift}</b><span class="w-full"
+                ><Meter value={giftPart} size="xs" tone="gold" /></span
+              ></Plaque
+            ></span
           >
         </div>
-      </div>
-    </header>
+      {/snippet}
+    </Banner>
 
     <!-- lối vào như menu tiên minh của RoK: ô hình + tên + dòng phụ, chấm đỏ khi lượt cung phụng đầy (đang phí lượt hồi) -->
-    <div class="tiles">
+    <div class="grid mt-3" style:--cols="3">
       <Tile
         art="ally-tech"
         icon="shield"
@@ -363,14 +363,14 @@
     {#if atab === 'home'}
       <Section title={L.ally.notice}>
         {#if editing !== null}
-          <textarea bind:value={editing} maxlength="200" rows="3" aria-label={L.ally.notice}></textarea>
+          <textarea class="field" bind:value={editing} maxlength="200" rows="3" aria-label={L.ally.notice}></textarea>
           <Button
             size="sm"
             onclick={async () => (await go({ type: 'allyNotice', text: editing ?? '' })) && (editing = null)}
             >{L.ally.save}</Button
           >
         {:else}
-          <p class="note t-small t-lore">{ally.notice || L.ally.noNotice}</p>
+          <Note tilt={-0.6}><p class="t-small t-lore">{ally.notice || L.ally.noNotice}</p></Note>
           {#if myRole >= 1}<Button size="sm" variant="ghost" onclick={() => (editing = ally?.notice ?? '')}
               >{L.ally.edit}</Button
             >{/if}
@@ -384,7 +384,8 @@
       {#if myRole >= 1}
         <Section title={L.ally.mail}>
           <p class="t-tiny t-soft">{L.ally.mailHint}</p>
-          <textarea bind:value={letter} maxlength={ALLY_MAIL_LEN} rows="3" aria-label={L.ally.mail}></textarea>
+          <textarea class="field" bind:value={letter} maxlength={ALLY_MAIL_LEN} rows="3" aria-label={L.ally.mail}
+          ></textarea>
           {#if mailWait > 0}<small class="t-tiny t-soft">{L.ally.mailWait(clock(mailWait))}</small>{/if}
           {#if mailed}<small class="t-tiny t-good">{L.ally.mailSent}</small>{/if}
           <Button size="sm" variant="gold" icon="mail" disabled={!letter.trim() || mailWait > 0} onclick={sendMail}
@@ -405,13 +406,19 @@
               if (await go({ type: 'allyRename', name: newName, tag: newTag }, 'reward')) newName = newTag = ''
             }}
           >
-            <input bind:value={newName} maxlength="20" placeholder={L.ally.name} aria-label={L.ally.name} />
+            <input
+              class="field"
+              bind:value={newName}
+              maxlength="20"
+              placeholder={L.ally.name}
+              aria-label={L.ally.name}
+            />
             <input
               bind:value={newTag}
               maxlength="4"
               placeholder={L.ally.tag}
               aria-label={L.ally.tag}
-              style:text-transform="uppercase"
+              class="field t-upper"
             />
             {#if wait > 0}<small class="t-tiny t-soft">{L.ally.renameWait(clock(wait))}</small>{/if}
             <Button
@@ -462,7 +469,7 @@
             <li>
               <Card onclick={p.pid !== me ? () => (pick = pick === p.pid ? null : p.pid) : undefined} label={p.name}>
                 <span class="row">
-                  <span class="dot" class:on={p.online} title={p.online ? L.ally.online : ''}></span>
+                  <span class="lamp" class:on={p.online} title={p.online ? L.ally.online : ''}></span>
                   <span class="grow stack" style:--gap="0"
                     ><b class="t-small">{p.name}</b><small class="t-tiny t-soft"
                       >{L.realm(p.hall)} · {L.power}
@@ -679,151 +686,3 @@
       </div>{/if}
   {/if}
 </Page>
-
-<style>
-  input,
-  textarea {
-    width: 100%;
-    padding: 8px 10px;
-    font: inherit;
-    border: 1.5px solid var(--rim, var(--ink3));
-    border-radius: var(--cut);
-    background: var(--paper);
-  }
-  .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--ink3);
-  }
-  .on {
-    background: var(--malachite);
-  }
-  /* ---------- sảnh minh ---------- */
-  .hall {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 14px;
-    align-items: center;
-    padding: 6px 14px 12px 8px;
-    border: 0 solid transparent;
-    border-image: var(--sk-card);
-    background:
-      var(--img-mountains, linear-gradient(transparent, transparent)) right bottom / 300% auto no-repeat,
-      var(--paper2);
-    background-clip: padding-box;
-  }
-  .flag {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 72px;
-  }
-  .flag img {
-    width: 72px;
-    height: auto;
-    margin-top: -14px;
-    filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.25));
-    transform-origin: 50% 0;
-    animation: sway 5s ease-in-out infinite;
-  }
-  /* hiệu minh viết trong đĩa trắng của cờ */
-  .flagtag {
-    position: absolute;
-    top: 32%;
-    left: 50%;
-    translate: -50% -50%;
-    max-width: 42px;
-    overflow: hidden;
-    font-size: 12px;
-    font-weight: 900;
-    color: var(--cinnabar);
-  }
-  .flag img.crowd {
-    width: 84px;
-    margin: 4px 0 0;
-    animation: none;
-  }
-  .flag.mini {
-    width: 34px;
-  }
-  .flag.mini img {
-    width: 34px;
-    margin: -4px 0 0;
-    animation: none;
-  }
-  .flag.mini .flagtag {
-    top: 30%;
-    font-size: 8px;
-  }
-  @keyframes sway {
-    50% {
-      rotate: 1.5deg;
-    }
-  }
-  .hall-id {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-  }
-  .hall-name {
-    font-size: var(--fs-6);
-    line-height: 1.1;
-  }
-  .hall-name span {
-    font-size: var(--fs-3);
-  }
-  /* ba tấm biển gỗ nhỏ: cống hiến · minh khố · minh lễ */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 6px;
-  }
-  .stats > span {
-    display: grid;
-    align-content: start;
-    gap: 1px;
-    padding: 4px 6px 5px;
-    text-align: center;
-    background: rgb(255 255 255 / 0.7);
-    border: 1px solid var(--paper3);
-    border-top: 2px solid var(--rim, var(--ink3));
-    border-radius: 3px;
-  }
-  .stats small {
-    font-size: var(--fs-1);
-    color: var(--text-soft);
-  }
-  .stats b {
-    font-size: var(--fs-3);
-  }
-  /* ---------- lối vào: tranh đóng khung, nhãn giấy ---------- */
-  .tiles {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--sp-2);
-    margin-top: var(--sp-3);
-  }
-  /* bố cáo: tờ giấy ghim son */
-  .note {
-    position: relative;
-    padding: 12px 14px;
-    background: #fbf7ec;
-    border: 1px solid #d8cdb4;
-    border-radius: 3px;
-    box-shadow: 0 3px 6px rgb(0 0 0 / 0.12);
-    rotate: -0.6deg;
-  }
-  .note::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: calc(50% - 6px);
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18);
-    box-shadow: 0 2px 2px rgb(0 0 0 / 0.3);
-  }
-</style>

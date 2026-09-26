@@ -1403,6 +1403,7 @@ export const vi = {
       'Chỉ chiếm được lúc mở. Phe giữ lúc đóng cửa: điểm mùa theo giờ giữ, người đang đóng quân nhận Công Huân theo phút; rồi quân về.',
     minimap: 'Bản đồ nhỏ — chạm để tới',
     chain: (n: string) => `Đánh liên hoàn · đội săn đang về (${n} đệ tử)`,
+    redirect: (elder: string) => `Đổi đích tới đây: đội ${elder} đang đi`,
     less: 'Thu gọn thẻ mùa',
     more: 'Mở rộng thẻ mùa',
     minimapHide: 'Thu bản đồ nhỏ',
@@ -2708,6 +2709,8 @@ export const vi = {
   },
   // Hương Hỏa (như VIP của RoK — không bán)
   vip: {
+    gifts: 'Lễ vật tấn cấp',
+    giftsLore: 'Mỗi cấp Hương Hỏa một lễ vật, mua đúng một lần bằng linh thạch — quà đáng hơn giá nhiều.',
     title: 'Hương Hỏa',
     short: (n: number) => `Hương Hỏa ${n}`,
     level: (n: number) => `Hương Hỏa cấp ${n}`,
@@ -3434,6 +3437,7 @@ export const vi = {
     owned: (n: number) => `Có ${n}`,
     pickJob: 'Dùng cho việc nào?',
     pickElder: 'Cho trưởng lão nào?',
+    pickRes: 'Nhận loại tài nguyên nào?',
     noJob: 'Không có việc nào đang chờ mà phù này rút ngắn được.',
     left: (t: string) => `Còn ${t}`,
     speedTitle: 'Tăng tốc',
@@ -3468,6 +3472,10 @@ export const vi = {
       thachNang: { name: 'Linh Thạch Nang', desc: 'Mở ra nhận linh thạch (không tính vào sức chứa kho).' },
       thaoNang: { name: 'Linh Thảo Nang', desc: 'Mở ra nhận linh thảo (không tính vào sức chứa kho).' },
       khoangNang: { name: 'Linh Khoáng Nang', desc: 'Mở ra nhận linh khoáng (không tính vào sức chứa kho).' },
+      tuyTam: {
+        name: 'Tuỳ Tâm Nang',
+        desc: 'Mở ra tự chọn nhận linh thạch, linh thảo hay linh khoáng (không tính vào sức chứa kho).',
+      },
       kinhThu: { name: 'Tâm Đắc Kinh Thư', desc: 'Tâm đắc của tiền bối: một trưởng lão nhận thêm kinh nghiệm.' },
       nganDuyen: { name: 'Ngân Duyên Phù', desc: 'Một lần mở thiếp bạc ở Chiêu Hiền Đài.' },
       kimDuyen: { name: 'Kim Duyên Phù', desc: 'Một lần mở thiếp vàng ở Chiêu Hiền Đài.' },

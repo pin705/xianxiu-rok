@@ -39,7 +39,21 @@
   } from '@rok/rules'
   import type { Ack, WorldInfo } from '@rok/protocol'
   import { Icon } from '@rok/art'
-  import { Badge, Bag, Button, Card, IconButton } from '../ui'
+  import {
+    Badge,
+    Bag,
+    Button,
+    Caption,
+    Card,
+    Dock,
+    Expander,
+    IconButton,
+    Marker,
+    NameTag,
+    Overlay,
+    Pin,
+    Ping,
+  } from '../ui'
   import { L, clock, keyBlocked, num } from '../lib'
   import { mountScene, railPx } from './stage'
   import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Layer, type Pick, type Rel } from './worldmap'
@@ -411,9 +425,9 @@
   }
 </script>
 
-<div
-  class="touch"
-  bind:this={layer}
+<Overlay
+  touch
+  bind:el={layer}
   role="application"
   aria-label={L.world.toggle.world}
   onpointerdown={pointerdown}
@@ -421,43 +435,35 @@
   onpointerup={pointerup}
   onpointercancel={pointerup}
   onwheel={wheel}
-></div>
-<div class="pins" aria-hidden="true">
+/>
+<Overlay aria-hidden="true">
   {#each pins as p (p.s.pid)}
     {@const tag = p.s.aid ? snap?.allies?.find(a => a.id === p.s.aid)?.tag : undefined}
-    <span class="pin" class:mine={p.s.pid === me} style="left:{p.x}px;top:{p.y + 18}px"
-      >{tag ? `[${tag}] ` : ''}{p.s.name}</span
-    >
+    <NameTag x={p.x} y={p.y + 18} mine={p.s.pid === me}>{tag ? `[${tag}] ` : ''}{p.s.name}</NameTag>
   {/each}
   {#each terrTags as t (t.aid)}
     {@const p = onScreen(t.x, t.y)}
-    {#if p}<span
-        class="terr"
-        class:ours={t.aid === side}
-        style="left:{p.x}px;top:{p.y}px;--c:#{t.color.toString(16).padStart(6, '0')}">[{t.tag}]</span
+    <!-- hiệu tiên minh giữa lãnh thổ khi thu nhỏ (toàn cảnh giới): chữ màu lãnh thổ viền giấy, minh mình to hơn -->
+    {#if p}<Pin x={p.x} y={p.y}
+        ><Caption size={t.aid === side ? 'lg' : 'md'} color="#{t.color.toString(16).padStart(6, '0')}" spaced
+          >[{t.tag}]</Caption
+        ></Pin
       >{/if}
   {/each}
-</div>
+</Overlay>
 
-<div class="marks">
+<!-- dấu của minh: cờ son + lời ghi, bấm được (chọn vật ở ô đó); ghi nhớ của mình: sao vàng -->
+<Overlay>
   {#each marks as m (`${m.x},${m.y}`)}
     {@const p = onScreen(m.x, m.y)}
-    {#if p}
-      <button class="mark" style="left:{p.x}px;top:{p.y}px" onclick={() => pickAt(m.x, m.y)}
-        ><Icon name="flag" size={16} /><span>{m.text}</span></button
-      >
-    {/if}
+    {#if p}<Marker x={p.x} y={p.y} icon="flag" text={m.text} onclick={() => pickAt(m.x, m.y)} />{/if}
   {/each}
   {#each game.pins ?? [] as m (`p${m.x},${m.y}`)}
     {@const p = onScreen(m.x, m.y)}
-    {#if p}
-      <button class="mark pin" style="left:{p.x}px;top:{p.y}px" onclick={() => pickAt(m.x, m.y)}
-        ><Icon name="star" size={14} /><span>{m.text}</span></button
-      >
-    {/if}
+    {#if p}<Marker x={p.x} y={p.y} icon="star" tone="gold" text={m.text} onclick={() => pickAt(m.x, m.y)} />{/if}
   {/each}
-  {#if pingAt}<span class="ping" style="left:{pingAt.x}px;top:{pingAt.y}px" aria-hidden="true"></span>{/if}
-</div>
+  {#if pingAt}<Ping x={pingAt.x} y={pingAt.y} />{/if}
+</Overlay>
 
 <Minimap
   atlas={atlas(info.map)}
@@ -488,10 +494,10 @@
 />
 
 <!-- công cụ bản đồ (góc phải dưới): lớp tình hình (chấm vàng khi có lớp đang tắt), Toàn giới / Phóng gần -->
-<div class="tools">
+<Dock at="tools">
   {#if layering}
     <Card tone="silk">
-      <div class="row wrap layers" style:--gap="4px">
+      <div class="row wrap justify-end" style:--gap="4px">
         {#each LAYERS as k (k)}
           <Button
             size="sm"
@@ -507,16 +513,16 @@
     >{#if hide.length}<Badge dot />{/if}</IconButton
   >
   <IconButton icon={far ? 'plus' : 'minus'} label={far ? L.world.near : L.world.whole} onclick={whole} />
-</div>
+</Dock>
 
-<div class="top stack" style:--gap="6px" bind:this={topCard}>
+<Dock at="top" class="stack" --gap="6px" bind:el={topCard}>
   {#if toggle}<div class="row">{@render toggle()}</div>{/if}
   <Card tone="silk">
     <div class="row">
       <span class="grow stack" style:--gap="0">
         <b class="t-small">{L.rank.fameRow(info.season)} · {L.world.day(day, SEASON_DAYS)} · {L.world.phase[phase]}</b>
         <!-- Công Huân mùa: điểm của mình, chấm son khi có mốc nhận được -->
-        <button class="lord t-tiny" onclick={() => (social.honor = true)}
+        <button class="t-action t-tiny" onclick={() => (social.honor = true)}
           ><Icon name="star" size={12} />{L.honor.chip(num(game.honor ?? 0))}{#if honorReady}<Badge dot />{/if}</button
         >
         {#if send && ((game.items.baoDo ?? 0) > 0 || game.digs?.length)}
@@ -534,7 +540,7 @@
               >{/if}</span
           >
         {/if}
-        {#if lordSeat}<button class="lord t-tiny" onclick={() => (social.profile = lordSeat.pid)}
+        {#if lordSeat}<button class="t-action t-tiny" onclick={() => (social.profile = lordSeat.pid)}
             ><Icon name="flag" size={12} />{L.lord.now(lordSeat.name)}</button
           >{/if}
         {#if !slim && snap?.bless && snap.bless.until > now}<small class="t-tiny t-gold"
@@ -560,15 +566,9 @@
         ><Icon name="globe" size={14} />{L.world.find}</Button
       >
       <Button size="sm" variant="ghost" label={L.world.you} onclick={() => (cam = clamp(home(Math.max(cam.z, 0.7))))}
-        ><Icon name="flag" size={14} /><span class="lbl">{L.world.you}</span></Button
+        ><Icon name="flag" size={14} /><span class="hidden-narrow">{L.world.you}</span></Button
       >
-      <button
-        class="fold"
-        class:open={!slim}
-        aria-label={slim ? L.world.more : L.world.less}
-        aria-expanded={!slim}
-        onclick={fold}><Icon name="arrow" size={14} /></button
-      >
+      <Expander open={!slim} label={slim ? L.world.more : L.world.less} onclick={fold} />
     </div>
     {#if !slim}
       <!-- Thiên Thời: thời ngũ hành đang chạy (tăng ích cả giới); chỉ lệnh riêng cho thời này ẩn sau một nút cho thẻ gọn -->
@@ -612,7 +612,7 @@
         >{/if}
     {/if}
     {#if finding}
-      <div class="stack find" style:--gap="6px">
+      <div class="stack" style:--gap="6px">
         <div class="row wrap" style:--gap="4px">
           {#each ['wild', 'mine', 'vein', 'boss'] as const as k (k)}
             <Button size="sm" variant={want.kind === k ? 'gold' : 'ghost'} onclick={() => (want = { ...want, kind: k })}
@@ -654,7 +654,7 @@
       {@const b = snap.book}
       {@const g = BOOK[b.ch]}
       <!-- Thiên Đạo Biên Niên (Monument): chương đang mở của cả giới, chạm để xem mọi chương -->
-      <button class="chron" onclick={() => (bookOpen = !bookOpen)} aria-expanded={bookOpen}>
+      <button class="line-btn" onclick={() => (bookOpen = !bookOpen)} aria-expanded={bookOpen}>
         <small class="t-tiny"
           ><b>{L.book.title}:</b>
           {g
@@ -712,7 +712,7 @@
       {/if}
     {/if}
     {#if !slim && snap?.chron.length}
-      <button class="chron" onclick={() => (chronOpen = !chronOpen)} aria-expanded={chronOpen}>
+      <button class="line-btn" onclick={() => (chronOpen = !chronOpen)} aria-expanded={chronOpen}>
         <small class="t-tiny"><b>{L.world.chron}:</b> {chronText(L, snap.chron.at(-1)!)}</small>
       </button>
       {#if chronOpen}
@@ -727,185 +727,4 @@
       {/if}
     {/if}
   </Card>
-</div>
-
-<style>
-  .touch {
-    position: fixed;
-    inset: 0 0 0 var(--rail);
-    touch-action: none;
-    cursor: grab;
-  }
-  .pins {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-overlay);
-    overflow: hidden;
-    pointer-events: none;
-  }
-  .pin {
-    position: absolute;
-    translate: -50% 0;
-    padding: 0 5px;
-    font-size: var(--fs-1);
-    font-weight: 700;
-    color: var(--silk);
-    white-space: nowrap;
-    background: color-mix(in srgb, var(--ink) 62%, transparent);
-    border-radius: 6px;
-  }
-  /* hiệu tiên minh giữa lãnh thổ khi thu nhỏ (toàn cảnh giới): chữ màu lãnh thổ viền giấy, minh mình to hơn */
-  .terr {
-    position: absolute;
-    translate: -50% -50%;
-    font-size: var(--fs-2);
-    font-weight: 800;
-    color: var(--c);
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    -webkit-text-stroke: 3px rgb(246 238 220 / 0.92);
-    paint-order: stroke fill;
-  }
-  .ours {
-    font-size: var(--fs-3);
-  }
-  .mine {
-    color: var(--ink); /* chữ mực trên nền vàng (màu gốc, không theo chữ ngà của giao diện tối) */
-    background: color-mix(in srgb, var(--gold-l) 85%, transparent);
-  }
-  /* dấu của minh: cờ son + lời ghi, bấm được (chọn vật ở ô đó) */
-  .marks {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-overlay);
-    overflow: hidden;
-    pointer-events: none;
-  }
-  .mark {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 1px 6px 1px 2px;
-    font: inherit;
-    font-size: var(--fs-1);
-    font-weight: 700;
-    color: var(--silk);
-    white-space: nowrap;
-    background: color-mix(in srgb, var(--cinnabar) 82%, var(--ink));
-    border: 1px solid var(--gold-l);
-    border-radius: 8px;
-    translate: -50% -100%;
-    pointer-events: auto;
-    cursor: pointer;
-  }
-  .mark.pin {
-    color: var(--text);
-    background: color-mix(in srgb, var(--gold-l) 90%, transparent);
-    border-color: var(--gold-d);
-  }
-  .ping {
-    position: absolute;
-    width: 44px;
-    height: 44px;
-    border: 3px solid var(--cinnabar);
-    border-radius: 50%;
-    translate: -50% -50%;
-    animation: ping 1s var(--ease) infinite;
-  }
-  @keyframes ping {
-    from {
-      scale: 0.4;
-      opacity: 1;
-    }
-    to {
-      scale: 1.6;
-      opacity: 0;
-    }
-  }
-  /* cùng chỗ với thanh trên của bản đồ vùng (MapView) */
-  .top {
-    position: fixed;
-    top: calc(142px + var(--safe-t));
-    left: 50%;
-    z-index: var(--z-page);
-    width: min(100%, var(--col));
-    padding: 0 var(--sp-3);
-    translate: -50% 0;
-    pointer-events: none;
-  }
-  .top > :global(*) {
-    pointer-events: auto;
-  }
-  .tools {
-    position: fixed;
-    right: var(--sp-3);
-    bottom: calc(var(--safe-b) + 150px);
-    z-index: var(--z-page);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    pointer-events: none;
-  }
-  .tools > :global(*) {
-    pointer-events: auto;
-  }
-  .layers {
-    justify-content: flex-end;
-    max-width: 230px;
-  }
-  @media (min-width: 1024px) and (min-height: 600px) {
-    .tools {
-      bottom: calc(var(--safe-b) + 24px);
-    }
-    .top {
-      top: calc(var(--top) + var(--sp-4));
-      left: calc(var(--rail) + (100% - var(--rail)) / 2);
-      width: min(100% - var(--rail), 640px);
-    }
-  }
-  .lord {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 0;
-    font: inherit;
-    font-weight: 700;
-    color: var(--gold-d);
-    background: none;
-    border: 0;
-    cursor: pointer;
-  }
-  /* điện thoại hẹp: "Tông môn của bạn" chỉ còn icon (tên vẫn đọc được qua label) — chừa chỗ cho dòng mùa */
-  @media (max-width: 480px) {
-    .lbl {
-      display: none;
-    }
-  }
-  .fold {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    color: var(--text-soft);
-    background: none;
-    border: 0;
-    rotate: 90deg;
-    transition: rotate var(--dur-2) var(--ease);
-    cursor: pointer;
-  }
-  .fold.open {
-    rotate: -90deg;
-  }
-  .chron {
-    display: block;
-    width: 100%;
-    margin-top: 4px;
-    text-align: left;
-    background: none;
-    border: 0;
-    cursor: pointer;
-  }
-</style>
+</Dock>

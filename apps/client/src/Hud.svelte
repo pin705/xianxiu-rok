@@ -43,8 +43,28 @@
   import { useGame } from './game'
   import { social } from './social.svelte'
   import { helpsOf, legionAt, type AllyInfo } from '@rok/rules/world'
-  import { Icon, Portrait, artOf, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon } from '@rok/art'
-  import { Badge, Bag, IconButton, Meter, Tag } from './ui'
+  import { artOf, emblemArt, type IconName, paintedUrl, portraitRing, tabIcon } from '@rok/art'
+  import {
+    Alarm,
+    Avatar,
+    Badge,
+    Bag,
+    EventTile,
+    HelpDisc,
+    HudFrame,
+    HudSide,
+    IconButton,
+    NamePlate,
+    NavBadge,
+    NavBar,
+    PowerPill,
+    QuestNote,
+    ResPill,
+    RunList,
+    TopBar,
+    Worker,
+    WorkerSlot,
+  } from './ui'
   import {
     L,
     LOOK,
@@ -106,7 +126,6 @@
   // tài nguyên, ô tranh sự kiện, chú thợ, huy hiệu menu trên dải mây); thiếu tranh (?art=0, mất mạng lần đầu) thì giữ HUD cũ.
   const ui = (n: string) => artOf(`ui:${n}`)?.src
   const ink = !!ui('nav-tongMon')
-  const uiVars = ink ? `--ui-ribbon:url(${ui('ribbon')});--ui-seal:url(${ui('seal')})` : undefined
   const ready = $derived(dailyReady(game) + festReady(game, now, 'daily') + sideReady(game))
   const fests = $derived(festReady(game, now) + passReady(game).length) // chấm đỏ Sự kiện: cả quà Tu Tiên Lệnh
   // chấm trên tab: Bảo khố = thành tựu chờ nhận; Môn hạ còn chấm khi Chiêu Hiền Đài có lượt miễn phí
@@ -168,6 +187,9 @@
     hint2 = true
     setTimeout(() => (hint2 = false), 4000)
   }
+  const slot2 = $derived(
+    rent2 ? (game.queue[1] ? clock(game.queue[1].finishAt - now) : L.builder.idle) : L.builder.rent,
+  )
   const live = $derived(questOf(game))
   const liveProg = $derived(
     live && live.k !== 'build' && live.k !== 'hunt' && live.k !== 'sect' ? questProgress(game, live) : null,
@@ -273,6 +295,12 @@
     if (!game.brew && game.levels.danPhong > 0) idle('pi', 'cauldron', 'danPhong', 'alchemy', L.alchemy.brew)
     return out.sort((a, b) => a.end - b.end)
   })
+  const runItems = $derived(
+    runs.map(r => {
+      const time = r.end ? clock(r.end - now) : L.builder.idle
+      return { ...r, time, idle: !r.end, label: `${r.text}: ${time}` }
+    }),
+  )
 
   // Số chạy mượt khi tăng/giảm
   const powerT = Tween.of(() => power(game), { duration: 700 })
@@ -288,1440 +316,247 @@
   const resT = RESOURCES.map(r => Tween.of(() => game.res[r], { duration: 450 }))
 </script>
 
-<div class="hud" class:ink style={uiVars}>
-  <header class="topbar" class:strip={!ink}>
-    <div class="who">
+<HudFrame {ink}>
+  <TopBar {ink}>
+    {#snippet avatar()}
       <!-- chân dung: chạm xem hồ sơ của mình (như RoK; chưa vào giới thì xem xếp hạng); vòng khiên xanh khi được bảo hộ -->
-      <button
-        class="avatar"
-        class:shielded={game.shield > now}
+      <Avatar
+        {ink}
+        look={game.face ? LOOK[game.face] : MASTER}
+        frame={game.frame && game.frame !== 'basic'
+          ? paintedUrl(`ring:${game.frame}`, () => portraitRing(game.frame), 62)
+          : (ui('frame-portrait') ?? paintedUrl('ring', portraitRing, 62))}
+        shield={game.shield > now ? L.pvp.shield(clock(game.shield - now)) : undefined}
+        label={me !== null ? L.profile.mine : L.rank.open}
         onclick={() => (me !== null ? (social.profile = me) : onranks())}
-        aria-label={me !== null ? L.profile.mine : L.rank.open}
-      >
-        <Portrait look={game.face ? LOOK[game.face] : MASTER} size={50} /><img
-          class="frame"
-          src={game.frame && game.frame !== 'basic'
-            ? paintedUrl(`ring:${game.frame}`, () => portraitRing(game.frame), 62)
-            : (ui('frame-portrait') ?? paintedUrl('ring', portraitRing, 62))}
-          alt=""
-          draggable="false"
-        />
-        {#if game.shield > now}<span class="shield" title={L.pvp.shield(clock(game.shield - now))}
-            ><Icon name="shield" size={18} /></span
-          >{/if}
-      </button>
-      <div class="grow id">
-        <b class="t-ellipsis">{game.name}</b>
-        <span class="realm"
-          ><img
-            src={paintedUrl('lotus', () => emblemArt('lotus'), 18)}
-            width="18"
-            height="18"
-            alt=""
-            draggable="false"
-          />{L.realm(hall)}</span
-        >
-        <!-- Hương Hỏa (VIP): chấm son khi lễ vật hôm nay chưa nhận -->
-        <button class="vip" onclick={() => (vipOpen = true)} aria-label={L.vip.level(vipLevel(game))}
-          >{L.vip.short(vipLevel(game))}{#if game.vip && game.vip.chest !== dayOf(now)}<Badge dot />{/if}</button
-        >
-      </div>
-      <button class="pow" title={L.power} onclick={() => (powOpen = true)}
-        ><Icon name="power" size={14} /><span class="sr">{L.power}</span>{num(
-          Math.round(powerT.current),
-        )}{#if powUp}{#key powUp.t}<span class="float up" aria-hidden="true">+{num(powUp.n)}</span>{/key}{/if}</button
-      >
+      />
+    {/snippet}
+    {#snippet name()}
+      <!-- Hương Hỏa (VIP): chấm son khi lễ vật hôm nay chưa nhận -->
+      <NamePlate
+        {ink}
+        name={game.name}
+        realm={L.realm(hall)}
+        lotus={paintedUrl('lotus', () => emblemArt('lotus'), 18)}
+        vip={L.vip.short(vipLevel(game))}
+        vipLabel={L.vip.level(vipLevel(game))}
+        dot={!!game.vip && game.vip.chest !== dayOf(now)}
+        onvip={() => (vipOpen = true)}
+      />
+    {/snippet}
+    {#snippet power()}
+      <PowerPill
+        {ink}
+        label={L.power}
+        value={num(Math.round(powerT.current))}
+        up={powUp && { text: `+${num(powUp.n)}`, key: powUp.t }}
+        onclick={() => (powOpen = true)}
+      />
+    {/snippet}
+    {#snippet tools()}
       <IconButton icon="mail" label="{L.mail.title}{letters ? ` (${letters})` : ''}" size={34} onclick={onmail}
         ><Badge n={letters} /></IconButton
       >
       <IconButton icon="gear" label={L.settings.open} size={34} onclick={onsettings} />
+    {/snippet}
+    {#snippet boosts()}
       <!-- dải tăng ích (khiên, phù, đan…) dưới cụm nút, chạm để xem từng nguồn và hạn -->
-      <span class="boosts"><Buffs /></span>
-    </div>
-    <ul class="res">
+      <Buffs />
+    {/snippet}
+    {#snippet res()}
+      <!-- chạm viên: bảng tài nguyên (sản lượng, sức chứa, mở nang, đổi ở Thương hội) -->
       {#each RESOURCES as r, i (r)}
-        {@const full = game.res[r] >= cap}
-        <li
-          class:full
-          data-res={r}
+        <ResPill
+          {ink}
+          id={r}
+          icon={r}
+          img={ui(`res-${r}`)}
+          name={L.res[r]}
+          value={num(Math.round(resT[i].current))}
+          ratio={game.res[r] / cap}
+          full={game.res[r] >= cap}
+          fullLabel={L.full}
           title="{L.res[r]}: {num(game.res[r])} / {num(cap)} · +{num(rate(game, r))}{L.panel.perHour}"
-        >
-          {#if ui(`res-${r}`)}<img class="vessel" src={ui(`res-${r}`)} alt="" draggable="false" />{:else}<Icon
-              name={r}
-              size={22}
-            />{/if}
-          <span class="stack">
-            <b class="t-num">{num(Math.round(resT[i].current))}<span class="sr"> {L.res[r]}</span></b>
-            <Meter value={game.res[r] / cap} tone={full ? 'bad' : 'spirit'} size="xs" />
-          </span>
-          {#if full}<em>{L.full}</em>{/if}
-          <!-- chạm ô: bảng tài nguyên (sản lượng, sức chứa, mở nang, đổi ở Thương hội) -->
-          <button class="rb" aria-label="{L.res[r]}: {num(game.res[r])} / {num(cap)}" onclick={() => (resOpen = r)}
-          ></button>
-          {#if gain && gain.bag[r] && now - gain.t < 1400}
-            {#key gain.t}<span class="float">+{num(gain.bag[r] ?? 0)}</span>{/key}
-          {/if}
-        </li>
+          label="{L.res[r]}: {num(game.res[r])} / {num(cap)}"
+          gain={gain && gain.bag[r] && now - gain.t < 1400 ? { text: `+${num(gain.bag[r] ?? 0)}`, key: gain.t } : null}
+          onclick={() => (resOpen = r)}
+        />
       {/each}
-    </ul>
+    {/snippet}
     <!-- Bế Quan Lệnh: đang bế quan — nói rõ vì sao không làm được gì, xuất quan ngay tại đây -->
     {#if game.seclude && game.seclude.until > now}
-      <div class="alarm calm" role="status">
-        <Icon name="shield" size={18} />
-        <span class="grow"
-          ><b>{L.seclude.on(clock(game.seclude.until - now))}</b><br /><small>{L.seclude.onHint}</small></span
-        >
-        <button class="shieldup" onclick={() => g.act({ type: 'unseclude' }, 'tap')}>{L.seclude.off}</button>
-      </div>
+      <Alarm
+        tone="calm"
+        icon="shield"
+        title={L.seclude.on(clock(game.seclude.until - now))}
+        hint={L.seclude.onHint}
+        actions={[{ label: L.seclude.off, onclick: () => g.act({ type: 'unseclude' }, 'tap') }]}
+      />
     {/if}
     <!-- Linh hỏa thiêu sơn (thành cháy của RoK): núi đang cháy, trận lực tụt — dập lửa / tu bổ ngay tại đây -->
     {#if burning(game, now)}
-      <div class="alarm" role="alert">
-        <Icon name="shield" size={18} />
-        <span class="grow"
-          ><b>{L.wall.alarm(Math.round((wallHp(game, now) / wallMax(game)) * 100), clock(game.wall!.fire - now))}</b><br
-          /><small>{L.wall.alarmHint}</small></span
-        >
-        {#if game.items.tucHoa}
-          <button class="shieldup" onclick={() => g.act({ type: 'use', item: 'tucHoa', n: 1 }, 'reward')}
-            >{L.wall.douse(game.items.tucHoa)}</button
-          >
-        {:else if mendReady(game, now)}
-          <button class="shieldup" onclick={() => g.act({ type: 'mend' }, 'tap')}>{L.wall.mend}</button>
-        {/if}
-      </div>
+      <Alarm
+        icon="shield"
+        title={L.wall.alarm(Math.round((wallHp(game, now) / wallMax(game)) * 100), clock(game.wall!.fire - now))}
+        hint={L.wall.alarmHint}
+        actions={game.items.tucHoa
+          ? [
+              {
+                label: L.wall.douse(game.items.tucHoa),
+                onclick: () => g.act({ type: 'use', item: 'tucHoa', n: 1 }, 'reward'),
+              },
+            ]
+          : mendReady(game, now)
+            ? [{ label: L.wall.mend, onclick: () => g.act({ type: 'mend' }, 'tap') }]
+            : []}
+      />
     {/if}
     <!-- Tháp canh (như RoK): đội địch đang kéo tới — thẻ son ở mọi tab, bật khiên ngay tại đây -->
     {#each incoming as x (`${x.pid}:${x.id}`)}
       {@const digger = game.marches.find(
         m => m.target.kind === 'spot' && m.target.i === x.spot && m.mine && m.mine.end > now,
       )}
-      <div class="alarm" role="alert">
-        <Icon name="swords" size={18} />
-        <span class="grow"
-          ><b
-            >{x.spot !== undefined
-              ? L.pvp.robIncoming(x.foe)
-              : x.n > 1
-                ? L.pvp.incomingRally(x.foe, x.n)
-                : L.pvp.incoming(x.foe)}</b
-          >
-          <span class="t-num">{clock(x.at - now)}</span><br /><small
-            >{x.spot !== undefined ? L.pvp.robIncomingHint : L.pvp.incomingHint}</small
-          ></span
-        >
-        {#if digger}<button class="shieldup" onclick={() => onrecall(digger.id)}>{L.world.recall}</button>{/if}
-        {#if ward && x.spot === undefined}
-          <button
-            class="shieldup"
-            disabled={(game.frenzy ?? 0) > now}
-            onclick={() => g.act({ type: 'use', item: ward, n: 1 }, 'reward')}>{L.pvp.shieldUp}</button
-          >
-        {/if}
-      </div>
+      <Alarm
+        icon="swords"
+        title={x.spot !== undefined
+          ? L.pvp.robIncoming(x.foe)
+          : x.n > 1
+            ? L.pvp.incomingRally(x.foe, x.n)
+            : L.pvp.incoming(x.foe)}
+        time={clock(x.at - now)}
+        hint={x.spot !== undefined ? L.pvp.robIncomingHint : L.pvp.incomingHint}
+        actions={[
+          ...(digger ? [{ label: L.world.recall, onclick: () => onrecall(digger.id) }] : []),
+          ...(ward && x.spot === undefined
+            ? [
+                {
+                  label: L.pvp.shieldUp,
+                  disabled: (game.frenzy ?? 0) > now,
+                  onclick: () => g.act({ type: 'use', item: ward, n: 1 }, 'reward'),
+                },
+              ]
+            : []),
+        ]}
+      />
     {/each}
     <!-- Ma Triều Công Sơn: minh đã ghi danh, từ 15 phút trước đợt đầu tới hết đợt cuối — nhắc kéo viện binh, chữa thương -->
     {#if legion}
-      <button class="alarm legion" onclick={e => ontab('tienMinh', e)}>
-        <Icon name="shield" size={18} />
-        <span class="grow"
-          ><b>{L.legion.next(legion.k + 1, clock(legion.at - now))}</b><br /><small>{L.legion.alarm}</small></span
-        >
-      </button>
+      <Alarm
+        tone="legion"
+        icon="shield"
+        title={L.legion.next(legion.k + 1, clock(legion.at - now))}
+        hint={L.legion.alarm}
+        onclick={e => ontab('tienMinh', e)}
+      />
     {/if}
-  </header>
+  </TopBar>
 
-  <!-- màn hẹp: chỉ ở tab Tông môn; desktop: luôn nằm trong cột trái (CSS .away) -->
+  <!-- màn hẹp: chỉ ở tab Tông môn; desktop: luôn nằm trong cột trái -->
   {#if !storm}
-    <div class="side" class:away={tab !== 'tongMon'}>
-      {#if quest}
-        <button class="quest" class:done class:enter={!held} onclick={done ? claim : onquest}>
-          <span class="stack grow" style:--gap="3px">
-            <small class="row"
-              >{L.quest.title}{#if prog}<b class="t-num">{num(Math.min(prog[0], prog[1]))}/{num(prog[1])}</b
-                >{/if}</small
-            >
-            <b class="qt">{L.quest.text(quest)}</b>
-            <Bag res={quest.reward} items={quest.items} size="sm" />
-          </span>
-          {#if held}
-            <span class="stamp"
-              ><img
-                src={paintedUrl('tick', () => emblemArt('tick'), 48)}
-                width="48"
-                height="48"
-                alt=""
-                draggable="false"
-              /></span
-            >
-          {:else if done}
-            <span class="claim"
-              >{#if ink}<span class="qseal">{L.quest.claim}</span>{:else}<Tag tone="gold" icon="star"
-                  >{L.quest.claim}</Tag
-                >{/if}</span
-            >
-          {:else}
-            <span class="go"><Icon name="arrow" size={16} /></span>
-          {/if}
-        </button>
-      {:else}
-        <p class="quest t-small t-lore">{L.quest.allDone}</p>
-      {/if}
-      <!-- trung tâm sự kiện: luôn có (sự kiện tân thủ từ ngày đầu), chấm đỏ = quà chờ nhận -->
-      {#snippet tile(img: string, label: string, n: number, go: () => void)}
-        <button class="tile" class:ready={n > 0} onclick={go} aria-label="{label}{n ? ` (${n})` : ''}"
-          ><img src={img} alt="" draggable="false" /><span class="tn">{label}</span><Badge {n} /></button
-        >
-      {/snippet}
-      {#if ink}
-        <span class="tiles">
-          {@render tile(ui('ev-fest')!, L.fest.button, fests, onfests)}
-          {#if hall >= PVP_HALL}{@render tile(ui('ev-arena')!, L.arena.title, duels, () => (social.arena = true))}{/if}
-          {#if hall >= DAILY_HALL}{@render tile(ui('ev-daily')!, L.daily.button, ready, ondaily)}{/if}
-          {#if hall >= DAILY_HALL && isWeekend(now)}<span class="wk">{L.weekend.tag}</span>{/if}
-        </span>
-      {:else}
-        <span class="daily" class:ready={fests > 0}>
-          <IconButton icon="star" label="{L.fest.button}{fests ? ` (${fests})` : ''}" size={46} onclick={onfests}
-            ><Badge n={fests} /></IconButton
-          >
-        </span>
-        <!-- Luận Kiếm Đài: từ tầng mở Tranh đoạt, chấm đỏ = còn lượt hôm nay -->
-        {#if hall >= PVP_HALL}
-          <span class="daily" class:ready={duels > 0}>
-            <IconButton
-              icon="swords"
-              label="{L.arena.title}{duels ? ` (${duels})` : ''}"
-              size={46}
-              onclick={() => (social.arena = true)}><Badge n={duels} /></IconButton
-            >
-          </span>
-        {/if}
-        {#if hall >= DAILY_HALL}
-          <span class="daily" class:ready={ready > 0}>
-            <IconButton icon="scroll" label="{L.daily.button}{ready ? ` (${ready})` : ''}" size={46} onclick={ondaily}
-              ><Badge n={ready} /></IconButton
-            >
-            <!-- sự kiện cuối tuần đang diễn ra: nhãn vàng ngay dưới nút nhiệm vụ (chi tiết trong bảng nhiệm vụ) -->
-            {#if isWeekend(now)}<Tag tone="gold" size="sm" icon="star">{L.weekend.tag}</Tag>{/if}
-          </span>
-        {/if}
-      {/if}
-      <section class="runs" aria-label={L.activity.title}>
-        <h3>{L.activity.title}</h3>
-        {#each runs as r (r.key)}
-          <button
-            class="run"
-            class:idle={!r.end}
-            onclick={r.go}
-            aria-label="{r.text}: {r.end ? clock(r.end - now) : L.builder.idle}"
-            ><Icon name={r.icon} size={16} /><span class="grow t-ellipsis">{r.text}</span><b class="t-num"
-              >{r.end ? clock(r.end - now) : L.builder.idle}</b
-            ></button
+    <HudSide {ink} away={tab !== 'tongMon'}>
+      {#snippet note()}
+        {#if quest}
+          <QuestNote
+            {ink}
+            title={L.quest.title}
+            prog={prog ? `${num(Math.min(prog[0], prog[1]))}/${num(prog[1])}` : undefined}
+            text={L.quest.text(quest)}
+            state={held ? 'held' : done ? 'done' : 'todo'}
+            tick={paintedUrl('tick', () => emblemArt('tick'), 48)}
+            claim={L.quest.claim}
+            onclick={done ? claim : onquest}><Bag res={quest.reward} items={quest.items} size="sm" /></QuestNote
           >
         {:else}
-          <p class="t-small">{L.activity.empty}</p>
-        {/each}
-      </section>
-    </div>
+          <QuestNote {ink} empty={L.quest.allDone} />
+        {/if}
+      {/snippet}
+      {#snippet events()}
+        <!-- trung tâm sự kiện: luôn có (sự kiện tân thủ từ ngày đầu), chấm đỏ = quà chờ nhận -->
+        <EventTile {ink} img={ui('ev-fest')} icon="star" label={L.fest.button} n={fests} onclick={onfests} />
+        <!-- Luận Kiếm Đài: từ tầng mở Tranh đoạt, chấm đỏ = còn lượt hôm nay -->
+        {#if hall >= PVP_HALL}
+          <EventTile
+            {ink}
+            img={ui('ev-arena')}
+            icon="swords"
+            label={L.arena.title}
+            n={duels}
+            onclick={() => (social.arena = true)}
+          />
+        {/if}
+        <!-- sự kiện cuối tuần đang diễn ra: nhãn dưới nút nhiệm vụ ngày (chi tiết trong bảng nhiệm vụ) -->
+        {#if hall >= DAILY_HALL}
+          <EventTile
+            {ink}
+            img={ui('ev-daily')}
+            icon="scroll"
+            label={L.daily.button}
+            n={ready}
+            tag={isWeekend(now) ? L.weekend.tag : undefined}
+            onclick={ondaily}
+          />
+        {/if}
+      {/snippet}
+      {#snippet jobs()}
+        <RunList {ink} title={L.activity.title} empty={L.activity.empty} items={runItems} />
+      {/snippet}
+    </HudSide>
 
-    <button
-      class="builder"
-      class:away={tab !== 'tongMon'}
-      class:idle={!job}
+    <Worker
+      {ink}
+      img={ui('worker')}
+      away={tab !== 'tongMon'}
+      idle={!job}
+      {ring}
+      time={job ? clock(job.finishAt - now) : L.builder.idle}
+      label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}"
+      dot={!!job && (game.builder2 ?? 0) > now && game.queue.length < 2}
       onclick={onbuilder}
-      aria-label="{L.builder.label}: {job ? clock(job.finishAt - now) : L.builder.idle}"
-    >
-      {#if ink}
-        <img class="worker" src={ui('worker')} alt="" draggable="false" />
-      {:else}
-        <svg class="ring" viewBox="0 0 60 60" aria-hidden="true">
-          <circle class="rbg" cx="30" cy="30" r="26" />
-          <circle class="rfg" cx="30" cy="30" r="26" stroke-dasharray="{ring * 163.4} 163.4" />
-        </svg>
-        <Icon name="hammer" size={24} />
-      {/if}
-      <span class="btime">{job ? clock(job.finishAt - now) : L.builder.idle}</span>
-      <!-- tạp dịch thứ hai (Tạp Dịch Lệnh) đang rảnh: chấm son nhắc xây thêm một công trình -->
-      {#if job && (game.builder2 ?? 0) > now && game.queue.length < 2}<Badge dot />{/if}
-    </button>
+    />
     <!-- ô tạp dịch thứ hai (như hàng xây thứ hai của RoK) -->
-    <button
-      class="builder2"
-      class:away={tab !== 'tongMon'}
-      class:locked={!rent2}
+    <WorkerSlot
+      away={tab !== 'tongMon'}
+      locked={!rent2}
+      text={slot2}
+      label="{L.builder.second}: {slot2}"
+      hint={hint2 ? L.builder.rentHint(L.bag.family.tapDich.name) : undefined}
       onclick={second}
-      aria-label="{L.builder.second}: {rent2
-        ? game.queue[1]
-          ? clock(game.queue[1].finishAt - now)
-          : L.builder.idle
-        : L.builder.rent}"
-    >
-      <Icon name={rent2 ? 'hammer' : 'lock'} size={14} />
-      <span class="b2t"
-        >{rent2 ? (game.queue[1] ? clock(game.queue[1].finishAt - now) : L.builder.idle) : L.builder.rent}</span
-      >
-    </button>
-    {#if hint2}<small class="b2hint" class:away={tab !== 'tongMon'} role="status"
-        >{L.builder.rentHint(L.bag.family.tapDich.name)}</small
-      >{/if}
+    />
   {/if}
 
   {#if helpable && onhelp && !storm}
-    <button
-      class="helpall"
+    <HelpDisc
+      n={helpable}
+      label={L.ally.helpAll(helpable)}
       onclick={async () => {
         await onhelp()
         sfx('reward')
       }}
-      aria-label={L.ally.helpAll(helpable)}><Icon name="people" size={26} /><Badge n={helpable} /></button
-    >
+    />
   {/if}
 
-  <nav class="tabs" class:strip={!ink}>
+  <NavBar {ink}>
     {#each TABS as t (t.id)}
       {@const on = t.id === tab}
       {@const locked = hall < t.unlock}
-      {@const fresh = !locked && !visited.includes(t.id)}
-      <button
-        class:on
-        class:locked
-        disabled={locked}
-        data-tab={t.id}
-        aria-current={on ? 'page' : undefined}
+      <NavBadge
+        {ink}
+        id={t.id}
+        img={ui(`nav-${t.id}`) ?? paintedUrl(`tab:${t.id}`, () => tabIcon(t.id), 44)}
+        label={L.tabs[t.id]}
+        {on}
+        {locked}
+        sub={locked ? (t.unlock > 15 ? L.soonTag : L.level(t.unlock)) : undefined}
         onclick={e => !on && ontab(t.id, e)}
+        >{#if !on}<Badge
+            n={tabCount[t.id] ?? 0}
+            dot={t.id === 'monHa' && (hurt || tavernReady)}
+            fresh={!locked && !visited.includes(t.id)}
+          />{/if}</NavBadge
       >
-        <span class="medal">
-          <img
-            src={ui(`nav-${t.id}`) ?? paintedUrl(`tab:${t.id}`, () => tabIcon(t.id), 44)}
-            width="40"
-            height="40"
-            alt=""
-            draggable="false"
-          />
-          {#if locked}<span class="lk"><Icon name="lock" size={10} /></span>{/if}
-          {#if !on}<Badge n={tabCount[t.id] ?? 0} dot={t.id === 'monHa' && (hurt || tavernReady)} {fresh} />{/if}
-        </span>
-        <span class="tl">{L.tabs[t.id]}</span>
-        {#if locked}<small>{t.unlock > 15 ? L.soonTag : L.level(t.unlock)}</small>{/if}
-      </button>
     {/each}
-  </nav>
-</div>
+  </NavBar>
+</HudFrame>
 <ResSheet res={resOpen} onclose={() => (resOpen = null)} {onfocus} />
 <VipSheet open={vipOpen} onclose={() => (vipOpen = false)} />
 <PowerSheet open={powOpen} {game} onclose={() => (powOpen = false)} {onfocus} {ontab} />
-
-<style>
-  .hud {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-hud);
-    max-width: var(--col);
-    margin: 0 auto;
-    pointer-events: none;
-  }
-  .topbar,
-  .quest,
-  .daily,
-  .builder,
-  .builder2,
-  .tabs {
-    pointer-events: auto;
-  }
-
-  /* Ván trên: gỗ sơn mài vân ngang, chỉ vàng đôi kẻ tay, ke góc đồng */
-  .topbar {
-    display: grid;
-    gap: var(--sp-2);
-    padding: calc(var(--sp-2) + var(--safe-t)) 20px 18px;
-    filter: drop-shadow(0 4px 10px rgb(var(--shade) / 0.18));
-  }
-  /* điện thoại: chân dung, tên cao hai hàng; hàng dưới của cụm nút là dải tăng ích */
-  .who {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto auto;
-    grid-template-rows: 34px auto;
-    gap: 2px var(--sp-2);
-    align-items: center;
-  }
-  .avatar,
-  .id {
-    grid-row: span 2;
-  }
-  .boosts {
-    grid-column: 3 / -1;
-    justify-self: end;
-    min-height: 22px;
-  }
-  .avatar {
-    position: relative;
-    display: grid;
-    flex: none;
-    place-items: center;
-    width: 56px;
-    height: 56px;
-    padding: 0;
-    background: none;
-    border: 0;
-    border-radius: 50%;
-    cursor: pointer;
-  }
-  .shielded {
-    box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--malachite) 70%, transparent),
-      0 0 10px color-mix(in srgb, var(--malachite) 50%, transparent);
-  }
-  .shield {
-    position: absolute;
-    right: -4px;
-    bottom: -4px;
-    line-height: 0;
-  }
-  .frame {
-    position: absolute;
-    inset: -3px;
-    width: 62px;
-    height: 62px;
-    pointer-events: none;
-  }
-  .id {
-    display: grid;
-    line-height: 1.2;
-  }
-  .id b {
-    font-size: var(--fs-4);
-    font-weight: 800;
-  }
-  .realm {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: var(--fs-2);
-    font-weight: 700;
-    color: var(--cinnabar);
-  }
-  .pow {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 13px 6px 11px;
-    font-weight: 800;
-    color: var(--text);
-    border: 0 solid transparent;
-    border-image: var(--sk-tag-silk);
-  }
-  /* ô tài nguyên: viên giấy viền mực */
-  .res {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-  }
-  .res li {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-    padding: 5px 12px 7px 7px;
-    border: 0 solid transparent;
-    border-image: var(--sk-capsule);
-  }
-  .res .stack {
-    flex: 1;
-    min-width: 0;
-    --gap: 4px;
-  }
-  .rb {
-    position: absolute;
-    inset: 0;
-    cursor: pointer;
-    background: none;
-    border: 0;
-  }
-  /* Tháp canh: thẻ son nhấp nháy viền khi có đội địch kéo tới */
-  .alarm {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    padding: 6px 10px;
-    font-size: var(--fs-2);
-    color: var(--silk);
-    pointer-events: auto;
-    background: color-mix(in srgb, var(--cinnabar) 88%, var(--ink));
-    border: 1.5px solid var(--gold-l);
-    border-radius: 10px;
-    animation: alarm 1.2s var(--ease) infinite;
-  }
-  /* bế quan: dải lam lục yên tĩnh, không nhấp nháy như báo động */
-  .alarm.calm {
-    background: color-mix(in srgb, var(--jade, #3f7f6f) 85%, var(--ink));
-    animation: none;
-  }
-  .alarm small {
-    opacity: 0.85;
-  }
-  /* Ma triều: chàm sẫm (không phải đội người đang kéo tới), chạm sang tab Tiên minh */
-  .legion {
-    width: 100%;
-    font: inherit;
-    font-size: var(--fs-2);
-    text-align: left;
-    cursor: pointer;
-    background: color-mix(in srgb, var(--indigo) 86%, var(--ink));
-    animation: none;
-  }
-  .shieldup {
-    flex: none;
-    padding: 4px 10px;
-    font-weight: 800;
-    color: var(--text);
-    background: var(--gold-l);
-    border: 0;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  .shieldup:disabled {
-    opacity: 0.5;
-  }
-  @keyframes alarm {
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 color-mix(in srgb, var(--cinnabar) 60%, transparent);
-    }
-    50% {
-      box-shadow: 0 0 0 5px color-mix(in srgb, var(--cinnabar) 0%, transparent);
-    }
-  }
-  /* Hương Hỏa: nhãn vàng nhỏ dưới cảnh giới, như huy hiệu VIP cạnh chân dung của RoK */
-  .vip {
-    position: relative;
-    justify-self: start;
-    width: max-content;
-    min-height: 22px;
-    margin-top: 2px;
-    padding: 1px 10px 2px;
-    font-size: var(--fs-1);
-    font-weight: 800;
-    color: var(--gold-d);
-    background: color-mix(in srgb, var(--paper) 70%, transparent);
-    border: 1px solid color-mix(in srgb, var(--rim, var(--ink3)) 80%, transparent);
-    border-radius: 999px;
-    cursor: pointer;
-  }
-  .vip :global(.badge) {
-    position: absolute;
-    top: -4px;
-    right: -6px;
-  }
-  .res b {
-    font-size: var(--fs-4);
-    line-height: 1;
-  }
-  .full b {
-    color: var(--cinnabar);
-  }
-  em {
-    position: absolute;
-    top: -9px;
-    right: 2px;
-    padding: 1px 7px 2px;
-    font: 800 var(--fs-1) / 1.4 var(--font);
-    font-style: normal;
-    color: var(--silk);
-    border: 0 solid transparent;
-    border-image: var(--sk-tag-red);
-  }
-  .float {
-    position: absolute;
-    left: 30px;
-    font-size: var(--fs-4);
-    font-weight: 900;
-    color: var(--gold-d);
-    -webkit-text-stroke: 3px var(--paper);
-    paint-order: stroke fill;
-    pointer-events: none;
-    animation: float 1.4s var(--ease) forwards;
-  }
-  .float.up {
-    left: 50%;
-    top: 100%;
-    font-size: var(--fs-3);
-    color: var(--malachite);
-    white-space: nowrap;
-    translate: -50% 0;
-  }
-  @keyframes float {
-    from {
-      opacity: 1;
-      transform: translateY(16px) scale(1.25);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(-16px);
-    }
-  }
-
-  /* Thẻ nhiệm vụ giấy bên trái, nút nhiệm vụ ngày bên phải */
-  .side {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--sp-2);
-    padding: var(--sp-2) var(--sp-3) 0;
-  }
-  .quest {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    max-width: 80%;
-    padding: 11px 12px 13px 15px;
-    text-align: left;
-    color: var(--text);
-    border: 0 solid transparent;
-    border-image: var(--sk-card);
-    filter: drop-shadow(0 4px 8px rgb(var(--shade) / 0.3));
-  }
-  .quest small {
-    --gap: 6px;
-    font-size: var(--fs-1);
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    color: var(--cinnabar);
-  }
-  .qt {
-    font-size: var(--fs-3);
-    font-weight: 800;
-    line-height: 1.25;
-  }
-  .done {
-    border-image: var(--sk-card-glow);
-    filter: drop-shadow(0 0 12px rgb(var(--gold-glow) / 0.75));
-  }
-  .claim {
-    pointer-events: none;
-    animation: glow 1.4s var(--ease) infinite;
-  }
-  .stamp {
-    display: grid;
-    padding-inline: var(--sp-2);
-    animation: stamp 0.4s cubic-bezier(0.5, 0, 0.75, 0) both;
-  }
-  @keyframes stamp {
-    0% {
-      opacity: 0;
-      scale: 2.6;
-      rotate: -16deg;
-    }
-    60% {
-      opacity: 1;
-      scale: 0.92;
-      rotate: 0deg;
-    }
-    100% {
-      opacity: 1;
-      scale: 1;
-    }
-  }
-  .enter {
-    animation: enter var(--dur-3) var(--spring);
-  }
-  @keyframes enter {
-    from {
-      opacity: 0;
-      translate: -14px 0;
-    }
-  }
-  .go {
-    display: grid;
-    flex: none;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    color: var(--cinnabar);
-    background: var(--img-disc-paper) center / 100% 100% no-repeat;
-  }
-  .daily {
-    display: grid;
-    justify-items: end;
-    gap: 4px;
-    white-space: nowrap;
-  }
-  .daily.ready :global(.ib) {
-    animation: glow 1.6s var(--ease) infinite;
-    border-radius: 50%;
-  }
-  @keyframes glow {
-    0% {
-      filter: drop-shadow(0 0 0 rgb(var(--gold-glow) / 0.9));
-    }
-    60%,
-    100% {
-      filter: drop-shadow(0 0 9px rgb(var(--gold-glow) / 0));
-    }
-  }
-
-  /* Nút tạp dịch: đĩa lụa lam lục vòng vàng vẽ tay, vòng tiến độ linh khí */
-  .builder {
-    position: absolute;
-    right: var(--sp-3);
-    bottom: calc(112px + var(--safe-b));
-    display: grid;
-    place-items: center;
-    width: 66px;
-    height: 66px;
-    color: var(--text);
-    background: var(--img-disc-silk) center / 100% 100% no-repeat;
-  }
-  .builder:active {
-    transform: scale(0.94);
-  }
-  /* tạp dịch thứ hai: đĩa nhỏ gắn góc trên-trái nút tạp dịch (không đè dải chat); chưa thuê thì mờ, có khoá */
-  .builder2 {
-    position: absolute;
-    right: calc(var(--sp-3) + 50px);
-    bottom: calc(166px + var(--safe-b));
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    color: var(--text);
-    background: var(--img-disc-silk) center / 100% 100% no-repeat;
-  }
-  .builder2.locked {
-    opacity: 0.72;
-  }
-  .builder2:active {
-    transform: scale(0.94);
-  }
-  .b2t {
-    font-size: var(--fs-1);
-    font-weight: 700;
-    line-height: 1;
-  }
-  .b2hint {
-    position: absolute;
-    right: var(--sp-3);
-    bottom: calc(216px + var(--safe-b));
-    max-width: 240px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    background: var(--paper);
-    color: var(--ink);
-    font-size: var(--fs-1);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 30%);
-  }
-  /* giúp đỡ đồng minh: đĩa vàng nổi trên nút tạp dịch, mọi tab */
-  .helpall {
-    position: absolute;
-    right: calc(var(--sp-3) + 8px);
-    bottom: calc(190px + var(--safe-b));
-    display: grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    color: var(--text);
-    pointer-events: auto;
-    background: var(--img-disc-gold) center / 100% 100% no-repeat;
-    border: 0;
-    animation: glow 1.6s var(--ease) infinite;
-    cursor: pointer;
-  }
-  .helpall:active {
-    transform: scale(0.94);
-  }
-  .builder.idle {
-    animation: glow 1.6s var(--ease) infinite;
-  }
-  .ring {
-    position: absolute;
-    inset: 5px;
-    rotate: -90deg;
-  }
-  .rbg,
-  .rfg {
-    fill: none;
-    stroke-width: 3.5;
-  }
-  .rbg {
-    stroke: color-mix(in srgb, var(--ivory) 15%, transparent);
-  }
-  .rfg {
-    stroke: var(--spirit);
-    stroke-linecap: round;
-    transition: stroke-dasharray 0.25s linear;
-  }
-  .btime {
-    position: absolute;
-    bottom: -9px;
-    left: 50%;
-    padding: 2px 10px 3px;
-    font: 800 var(--fs-1) / 1.4 var(--font);
-    font-variant-numeric: tabular-nums lining-nums;
-    color: var(--text);
-    white-space: nowrap;
-    border: 0 solid transparent;
-    border-image: var(--sk-tag-silk);
-    translate: -50% 0;
-  }
-  .idle .btime {
-    color: var(--silk);
-    border-image: var(--sk-tag-red);
-  }
-
-  /* Dải tab: giấy bồi lụa lam lục; tab đang mở nhô lên, icon toả ánh vàng nhạt, tên màu son gạch nét son */
-  .tabs {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    padding: 12px 14px calc(14px + var(--safe-b));
-    filter: drop-shadow(0 -4px 10px rgb(var(--shade) / 0.18));
-  }
-  .tabs button {
-    display: grid;
-    justify-items: center;
-    gap: 1px;
-    font-size: var(--fs-2);
-    font-weight: 700;
-    color: var(--text-soft);
-  }
-  .medal {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    transition:
-      transform var(--dur-2) var(--spring),
-      filter var(--dur-2) var(--ease);
-  }
-  .medal img {
-    display: block;
-    opacity: 0.85;
-    filter: saturate(0.85);
-  }
-  .on .medal {
-    transform: translateY(-7px) scale(1.14);
-    filter: drop-shadow(0 0 7px rgb(201 161 74 / 0.55));
-  }
-  .on .medal img {
-    opacity: 1;
-    filter: none;
-  }
-  .on .tl {
-    padding: 0 6px 5px;
-    font-weight: 800;
-    color: var(--cinnabar);
-    background: var(--stroke-red) no-repeat center bottom / 100% 5px;
-  }
-  .locked .medal img {
-    opacity: 0.55;
-    filter: grayscale(1);
-  }
-  .lk {
-    position: absolute;
-    right: -2px;
-    bottom: -2px;
-    display: grid;
-    place-items: center;
-    width: 19px;
-    height: 19px;
-    color: var(--text);
-    background: var(--img-disc-silk) center / 100% 100% no-repeat;
-  }
-  .tabs small {
-    font-size: var(--fs-1);
-    color: var(--text-faint);
-  }
-  .away {
-    display: none;
-  }
-  /* Điện thoại: dải "Đang diễn ra" dưới thẻ nhiệm vụ — chip biểu tượng + đồng hồ, chip "Rảnh" son nhấp nháy;
-     cột phải là các đĩa (Sự kiện, Nhiệm vụ ngày) xếp dọc như cột biểu tượng của RoK */
-  .side {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: start;
-    justify-items: start;
-  }
-  /* điện thoại: cột nhiệm vụ chỉ ở tab Tông môn (desktop luôn hiện trong cột trái — xem @media dưới) */
-  .side.away {
-    display: none;
-  }
-  .side > .quest {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .side > .daily {
-    grid-column: 2;
-  }
-  .runs {
-    grid-column: 1;
-    grid-row: 2 / span 2;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    max-width: 100%;
-  }
-  .runs h3,
-  .runs > p {
-    display: none;
-  }
-  .run {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 9px 3px 6px;
-    font-size: var(--fs-2);
-    color: var(--text);
-    pointer-events: auto;
-    background: color-mix(in srgb, var(--paper2) 90%, transparent);
-    border: 1px solid var(--paper3);
-    border-radius: 999px;
-    box-shadow: 0 1px 3px rgb(var(--shade) / 0.18);
-  }
-  .run span {
-    display: none;
-  }
-  .run b {
-    color: var(--gold-d);
-  }
-  .run.idle {
-    border-color: var(--cinnabar);
-    animation: nudge 1.8s var(--ease) infinite;
-  }
-  .run.idle b {
-    color: var(--cinnabar);
-  }
-  /* màn hẹp: nhà rảnh chỉ còn icon viền son (chữ "Rảnh" nằm trong aria-label) — ba viên cùng ghi "Rảnh" đè lên cảnh, rối mắt */
-  @media (max-width: 1023px), (max-height: 599px) {
-    .run.idle {
-      padding: 4px 7px;
-    }
-    .run.idle b {
-      display: none;
-    }
-  }
-  @keyframes nudge {
-    0%,
-    70%,
-    100% {
-      transform: none;
-    }
-    80% {
-      transform: translateY(-2px);
-    }
-  }
-  /* điện thoại rất hẹp (320px): nút nhận thưởng xuống dòng, phần thưởng dàn ngang — thẻ không cao lên che biển tên Chủ điện */
-  @media (max-width: 360px) {
-    .quest {
-      flex-wrap: wrap;
-      row-gap: 6px;
-    }
-    .quest > .stack {
-      flex-basis: 100%;
-    }
-  }
-
-  /* ---------- Desktop: thanh trên một hàng, cột trái dọc (điều hướng, nhiệm vụ, tạp dịch) ---------- */
-  @media (min-width: 1024px) and (min-height: 600px) {
-    .hud {
-      max-width: none;
-    }
-    .topbar {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-4);
-      height: var(--top);
-      padding: 0 28px;
-    }
-    .who {
-      display: contents;
-    }
-    .id {
-      width: calc(var(--rail) - 120px);
-    }
-    .res {
-      flex: 1;
-      max-width: 640px;
-      margin: 0 auto;
-      gap: var(--sp-3);
-      order: 2;
-    }
-    .pow {
-      order: 3;
-    }
-    /* thư, cài đặt về cuối hàng; dải tăng ích (con cuối) ngay sau tên */
-    .who > :global(:nth-last-child(2)),
-    .who > :global(:nth-last-child(3)) {
-      order: 4;
-    }
-    .boosts {
-      order: 1;
-    }
-
-    .tabs {
-      top: var(--top);
-      right: auto;
-      bottom: 0;
-      width: var(--rail);
-      grid-template-columns: 1fr;
-      grid-auto-rows: 58px;
-      align-content: start;
-      gap: 2px;
-      padding: var(--sp-4) var(--sp-4) 0;
-      filter: drop-shadow(4px 0 10px rgb(var(--shade) / 0.18));
-    }
-    .tabs button {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
-      padding: 0 var(--sp-3);
-      font-size: var(--fs-4);
-      border-radius: 10px;
-      transition: background var(--dur-2) var(--ease);
-    }
-    .tabs button:not(:disabled):hover {
-      background: color-mix(in srgb, var(--azurite-l) 18%, transparent);
-    }
-    .on .medal {
-      transform: scale(1.12);
-    }
-    .tabs small {
-      margin-left: auto;
-      font-size: var(--fs-1);
-    }
-
-    .side,
-    .side.away {
-      position: absolute;
-      top: calc(var(--top) + var(--sp-4) + 5 * 60px + var(--sp-4));
-      left: 0;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      bottom: 0;
-      justify-content: flex-start;
-      width: var(--rail);
-      padding: 0 var(--sp-4) var(--sp-4);
-      overflow-y: auto;
-      scrollbar-width: thin;
-    }
-    .quest {
-      max-width: none;
-      cursor: pointer;
-    }
-    .quest:hover:not(.done) {
-      filter: drop-shadow(0 4px 12px rgb(var(--gold-glow) / 0.35));
-    }
-    .daily {
-      align-self: flex-start;
-      justify-items: start;
-    }
-    .runs {
-      display: grid;
-      gap: 2px;
-      margin-top: var(--sp-3);
-      color: var(--text-soft);
-    }
-    .runs h3 {
-      margin-bottom: var(--sp-1);
-      font-size: var(--fs-1);
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--cinnabar);
-    }
-    .run {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-2);
-      min-width: 0;
-      padding: 7px var(--sp-2);
-      font-size: var(--fs-2);
-      text-align: left;
-      color: var(--text);
-      background: none;
-      border: 0;
-      border-radius: 8px;
-      box-shadow: none;
-    }
-    .run span {
-      display: block;
-    }
-    .run:hover {
-      background: color-mix(in srgb, var(--azurite-l) 18%, transparent);
-    }
-    .run b {
-      color: var(--gold-d);
-    }
-    /* góc dưới phải vùng cảnh, tránh ngăn kéo đang mở */
-    .builder,
-    .builder.away {
-      right: calc(var(--sp-5) + var(--dockw, 0px));
-      bottom: var(--sp-5);
-      display: grid;
-      transition: right var(--dur-2) var(--ease);
-    }
-  }
-
-  /* ---------- Giao diện đồ vật (concept sáng tạo 27/9): cụm nổi trên cảnh, không thanh kín bề ngang ---------- */
-  .ink .topbar {
-    padding-bottom: 26px;
-    background: linear-gradient(rgb(243 244 240 / 0.94), rgb(243 244 240 / 0.7) 62%, transparent);
-    filter: none;
-    pointer-events: none; /* phần sương mờ dưới đáy là trang trí: chạm xuyên xuống (nút gạt bản đồ, đầu trang) */
-  }
-  .ink .topbar > * {
-    pointer-events: auto;
-  }
-  .ink .avatar {
-    width: 60px;
-    height: 60px;
-  }
-  .ink .frame {
-    inset: -10px;
-    width: 80px;
-    height: 80px;
-  }
-  .ink .id b {
-    font-size: var(--fs-5);
-    text-shadow:
-      0 0 3px #fff,
-      0 0 6px #fff;
-  }
-  /* cảnh giới trên dải lụa đỏ */
-  .ink .realm {
-    justify-self: start;
-    padding: 1px 16px 3px;
-    font-size: var(--fs-1);
-    font-weight: 800;
-    color: #fff;
-    text-shadow: 0 1px 1px rgb(0 0 0 / 0.35);
-    background: var(--ui-ribbon) center / 100% 100% no-repeat;
-  }
-  .ink .realm img {
-    display: none;
-  }
-  /* thế lực, tài nguyên: viên mực đen chữ trắng, vật chứa vẽ tay đè mép trái */
-  .ink .pow,
-  .ink .res li {
-    color: #f5f5f1;
-    background: rgb(31 27 23 / 0.8);
-    border: 1px solid rgb(255 255 255 / 0.18);
-    border-image-source: none; /* không viết border-image: none — bộ nén CSS biến thành `border-image:;` */
-    border-radius: 999px;
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
-  }
-  .ink .pow {
-    padding: 4px 12px 5px 10px;
-  }
-  .ink .res {
-    gap: 10px;
-    padding-left: 10px;
-  }
-  .ink .res li {
-    padding: 4px 10px 5px 34px;
-  }
-  .ink .res b {
-    font-size: var(--fs-3);
-  }
-  .vessel {
-    position: absolute;
-    top: 50%;
-    left: -12px;
-    width: 44px;
-    height: 44px;
-    translate: 0 -50%;
-    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.3));
-    pointer-events: none;
-  }
-  .ink .full b {
-    color: #ff9c86;
-  }
-  /* nhiệm vụ: tờ cáo thị ghim đinh son */
-  .ink .quest {
-    position: relative;
-    rotate: -1.2deg;
-    filter: drop-shadow(0 6px 10px rgb(var(--shade) / 0.3));
-  }
-  .ink .quest::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: 50%;
-    width: 13px;
-    height: 13px;
-    translate: -50% 0;
-    background: radial-gradient(circle at 35% 35%, #f5a08c, #b3372a 55%, #6a1a12);
-    border-radius: 50%;
-    box-shadow: 0 2px 3px rgb(0 0 0 / 0.35);
-  }
-  /* nhiệm vụ: chữ đủ chỗ (không ngắt từng chữ), nhận thưởng là dấu son đóng ở góc tờ cáo thị */
-  .ink .quest {
-    width: min(236px, 62vw);
-    max-width: none;
-    padding-right: 16px;
-  }
-  .ink .qt {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-  .ink .claim {
-    position: absolute;
-    right: -12px;
-    bottom: -14px;
-    animation: none;
-  }
-  .qseal {
-    display: grid;
-    place-items: center;
-    width: 60px;
-    height: 60px;
-    padding: 0 8px 2px;
-    font-size: 11px;
-    font-weight: 900;
-    line-height: 1.1;
-    text-align: center;
-    color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-    background: var(--ui-seal) center / contain no-repeat;
-    rotate: -8deg;
-    filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.3));
-    animation: throb 1.4s var(--ease) infinite;
-  }
-  @keyframes throb {
-    50% {
-      scale: 1.08;
-    }
-  }
-  .ink .go {
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    opacity: 0.55;
-  }
-  /* cuối tuần: dải lụa son nhỏ dưới hàng tranh (không tràn sang cảnh) */
-  .wk {
-    align-self: start;
-    width: 64px;
-    padding: 2px 4px 8px;
-    font-size: 10.5px;
-    font-weight: 800;
-    line-height: 1.15;
-    text-align: center;
-    color: #fff;
-    background: var(--cinnabar);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%);
-    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.25));
-  }
-  /* điện thoại: không có dải "Đang diễn ra" — cảnh đã có bong bóng đồng hồ và dấu nhà rảnh ngay trên từng công trình
-     (dải chip đè lên biển tên); desktop vẫn liệt kê ở cột trái */
-  @media (max-width: 1023px), (max-height: 599px) {
-    .ink .runs {
-      display: none;
-    }
-    /* thanh trên: tên tông môn trọn hàng, thế lực xuống dưới cụm nút */
-    .ink .who {
-      grid-template-columns: auto 1fr auto auto;
-      grid-template-rows: 34px auto auto;
-    }
-    .ink .avatar,
-    .ink .id {
-      grid-row: 1 / span 3;
-    }
-    .ink .pow {
-      grid-column: 3 / -1;
-      grid-row: 2;
-      justify-self: end;
-    }
-    .ink .boosts {
-      grid-column: 3 / -1;
-      grid-row: 3;
-    }
-  }
-  .ink .realm {
-    white-space: nowrap;
-  }
-  /* cột phải: ô tranh sự kiện, nhãn mực dưới tranh */
-  .tiles {
-    display: grid;
-    justify-items: center;
-    gap: 8px;
-  }
-  .tile {
-    position: relative;
-    display: grid;
-    justify-items: center;
-    gap: 1px;
-    width: 64px;
-    pointer-events: auto;
-  }
-  .tile img {
-    width: 60px;
-    height: 60px;
-    filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.28));
-    transition: transform var(--dur-1) var(--ease);
-  }
-  .tile:active img {
-    transform: scale(0.94);
-  }
-  .tn {
-    max-width: 78px;
-    padding: 0 7px 1px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1.25;
-    text-align: center;
-    color: #f5f5f1;
-    background: rgb(31 27 23 / 0.8);
-    border-radius: 999px;
-  }
-  .tile :global(.badge) {
-    position: absolute;
-    top: -4px;
-    right: -2px;
-  }
-  .tile.ready img {
-    animation: glow 1.6s var(--ease) infinite;
-  }
-  /* tạp dịch: chú thợ cầm búa, thẻ giờ viên mực */
-  .ink .builder {
-    width: 72px;
-    height: 84px;
-    background: none;
-  }
-  .worker {
-    width: 70px;
-    height: 70px;
-    margin-top: -10px;
-    filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.3));
-  }
-  .ink .builder.idle .worker {
-    animation: bob 1.8s var(--ease) infinite;
-  }
-  @keyframes bob {
-    0%,
-    100% {
-      translate: 0 0;
-    }
-    50% {
-      translate: 0 -3px;
-    }
-  }
-  .ink .btime {
-    bottom: -2px;
-    color: #f5f5f1;
-    background: rgb(31 27 23 / 0.82);
-    border-image-source: none; /* không viết border-image: none — bộ nén CSS biến thành `border-image:;` */
-    border-radius: 999px;
-  }
-  .ink .idle .btime {
-    background: var(--cinnabar);
-  }
-  /* menu: huy hiệu tranh trên dải mây, nhãn lụa đỏ; mục đang mở nhô lên trên dấu son */
-  .ink .tabs {
-    padding: 22px 8px calc(10px + var(--safe-b));
-    background: linear-gradient(transparent, rgb(243 244 240 / 0.88) 42%, rgb(243 244 240 / 0.97));
-    filter: none;
-  }
-  .ink .medal {
-    width: 62px;
-    height: 62px;
-  }
-  .ink .medal img {
-    width: 60px;
-    height: 60px;
-    opacity: 1;
-    filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.25));
-  }
-  .ink .on .medal {
-    transform: translateY(-10px) scale(1.12);
-    filter: none;
-  }
-  .ink .on .medal::before {
-    content: '';
-    position: absolute;
-    inset: -7px;
-    z-index: -1;
-    background: var(--ui-seal) center / contain no-repeat;
-    opacity: 0.92;
-  }
-  .ink .tl {
-    margin-top: -9px;
-    padding: 1px 12px 3px;
-    white-space: nowrap;
-    font-size: 11px;
-    font-weight: 800;
-    color: #fff;
-    text-shadow: 0 1px 1px rgb(0 0 0 / 0.35);
-    background: var(--ui-ribbon) center / 100% 100% no-repeat;
-  }
-  .ink .on .tl {
-    padding: 1px 14px 3px;
-    color: #fff;
-    background: var(--ui-ribbon) center / 100% 100% no-repeat;
-  }
-  .ink .locked .medal img {
-    opacity: 0.6;
-    filter: grayscale(1);
-  }
-  .ink .locked .tl {
-    filter: grayscale(0.85);
-  }
-  /* thanh chat nằm trên dải menu (cao hơn thanh tab cũ) */
-  :global(html:has(.hud.ink)) {
-    --nav-h: 122px;
-  }
-  @media (min-width: 1024px) and (min-height: 600px) {
-    :global(html:has(.hud.ink)) {
-      --nav-h: 0px;
-    }
-    /* desktop: thanh trên và cột trái cần nền (cảnh không phủ tới) — giấy sương viền kép */
-    .ink .topbar,
-    .ink .tabs {
-      background: var(--paper) var(--paper-tex);
-      background-size: 128px;
-      border: 0 solid transparent;
-      border-image: var(--sk-strip);
-    }
-    .ink .topbar {
-      padding-bottom: 0;
-    }
-    .ink .medal,
-    .ink .medal img {
-      width: 46px;
-      height: 46px;
-    }
-    .ink .on .medal {
-      transform: scale(1.1);
-    }
-    .ink .tl,
-    .ink .on .tl {
-      margin: 0;
-      padding: 0;
-      font-size: var(--fs-4);
-      color: var(--text);
-      text-shadow: none;
-      background: none;
-    }
-    .ink .on .tl {
-      color: var(--cinnabar);
-    }
-    .tiles {
-      grid-auto-flow: column;
-      justify-content: start;
-    }
-  }
-</style>
