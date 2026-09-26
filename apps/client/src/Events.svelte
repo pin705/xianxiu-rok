@@ -35,7 +35,7 @@
   } from '@rok/rules'
   import { Icon, Portrait, artOf, type IconName } from '@rok/art'
   import { Badge, Bag, Button, Card, Meter, Sheet, Tabs } from './ui'
-  import { L, LOOK, num, sfx } from './lib'
+  import { L, LOOK, num, seeFest, seenFests, sfx } from './lib'
   import { useGame } from './game'
   import Rescue from './Rescue.svelte'
   import type { FestView } from '@rok/protocol'
@@ -46,6 +46,8 @@
   import Delve from './Delve.svelte'
   import Thief from './Thief.svelte'
   import Wish from './Wish.svelte'
+  import Cards from './Cards.svelte'
+  import Swap from './Swap.svelte'
   import Race from './Race.svelte'
   import Maze from './Maze.svelte'
   import Pass from './Pass.svelte'
@@ -93,6 +95,8 @@
     tichCoc: 'cauldron',
     tamBao: 'globe',
     khaiDien: 'star',
+    hoaKien: 'swords',
+    truyenCong: 'scroll',
     gioiChu: 'swords',
     yeuHoang: 'skull',
     linhDia: 'bolt',
@@ -119,6 +123,7 @@
     daTac: 'skull',
     tocChien: 'bolt',
     meCanh: 'kimDuyen',
+    phienBai: 'scroll',
     nguyenTieu: 'star',
     xuanHoi: 'star',
     trienLam: 'scroll',
@@ -148,6 +153,8 @@
     tichCoc: 'cauldron',
     tamBao: 'treasure',
     khaiDien: 'login',
+    hoaKien: 'train',
+    truyenCong: 'scroll',
     gioiChu: 'battle',
     yeuHoang: 'demon',
     linhDia: 'bolt',
@@ -174,6 +181,7 @@
     daTac: 'demon',
     tocChien: 'bolt',
     meCanh: 'treasure',
+    phienBai: 'love',
     nguyenTieu: 'moon',
     xuanHoi: 'spring',
     trienLam: 'treasure',
@@ -214,6 +222,15 @@
     season = k === 'season'
   }
   const cur = $derived(pick && list.includes(pick) ? pick : (list[0] ?? null))
+  // lượt lễ mới mở chưa xem: dấu "!" vàng trên thẻ; mở tới thì thôi
+  let seen = $state(seenFests())
+  const fresh = (id: FestId) => !seen.includes(`${id}:${s.fest[id]?.key ?? 0}`)
+  $effect(() => {
+    if (open && cur && !scroll && !season && fresh(cur)) {
+      seeFest(cur, s.fest[cur]?.key ?? 0)
+      seen = seenFests()
+    }
+  })
   const def = $derived(cur ? FESTS[cur] : null)
   const stage = $derived(
     cur && (def?.kind === 'points' || def?.kind === 'shop')
@@ -242,13 +259,21 @@
   }
 </script>
 
-{#snippet tag(img: string | undefined, icon: IconName, label: string, on: boolean, n: number, pick: () => void)}
+{#snippet tag(
+  img: string | undefined,
+  icon: IconName,
+  label: string,
+  on: boolean,
+  n: number,
+  pick: () => void,
+  isNew = false,
+)}
   <button role="tab" class="tag" class:on aria-selected={on} onclick={pick}>
     <span class="pic">
       {#if img}<img src={img} alt="" draggable="false" />{:else}<Icon name={icon} size={30} />{/if}
     </span>
     <span class="tn">{label}</span>
-    {#if n}<Badge {n} />{/if}
+    <Badge {n} fresh={isNew} />
   </button>
 {/snippet}
 
@@ -264,8 +289,14 @@
           {@render tag(fx('calendar'), 'clock', L.scal.title, season, 0, () => show('season'))}
         {/if}
         {#each list as id (id)}
-          {@render tag(fx(FX[id]), ICON[id], L.fest.names[id].name, !scroll && !season && id === cur, waiting(id), () =>
-            choose(id),
+          {@render tag(
+            fx(FX[id]),
+            ICON[id],
+            L.fest.names[id].name,
+            !scroll && !season && id === cur,
+            waiting(id),
+            () => choose(id),
+            fresh(id),
           )}
         {/each}
       </div>
@@ -418,6 +449,10 @@
             <Egg id={cur} />
           {:else if def.kind === 'dig'}
             <Delve id={cur} />
+          {:else if def.kind === 'cards'}
+            <Cards id={cur} />
+          {:else if def.kind === 'swap'}
+            <Swap id={cur} />
           {:else if def.kind === 'wish'}
             <Wish id={cur} />
           {:else if def.kind === 'thief'}

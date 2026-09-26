@@ -850,7 +850,7 @@ export const en: Text = {
   },
   scal: {
     title: 'Season Calendar',
-    hint: "The realm's 49-day season: map phases opening, Chronicle chapter deadlines, the Spirit Orb battle every Sunday evening, and the season's end.",
+    hint: "The realm's 49-day season: map phases opening, Chronicle chapter deadlines, the Spirit Orb battle every Sunday evening, Tides of War, Light & Dark stages, season events and the season's end.",
     week: (n: number) => `Week ${n}`,
     day: (n: number) => `Day ${n}`,
     none: 'Today',
@@ -860,6 +860,9 @@ export const en: Text = {
     semi: 'Nine Heavens League semifinal 20:00',
     final: 'Nine Heavens League final 20:00',
     end: 'Season ends: ascension / rebirth, ranking rewards',
+    eve: (name: string) => `${name} (until the gates open)`,
+    stage: (n: number, what: string) => `Light & Dark stage ${n}: ${what}`,
+    tourney: (round: string) => `Canyon Tournament · ${round}`,
   },
   trial: {
     diffs: ['Easy', 'Normal', 'Hard', 'Nightmare', 'Hell'],
@@ -1394,6 +1397,13 @@ export const en: Text = {
     rallyHint: 'Open the World map and tap the point to join — every army arrives together and fights as one.',
     siege: (name: string) => `siege of ${name}`,
     veinBuff: (fx: string) => `Holder: ${fx} for the whole alliance`,
+    contestOpen: (t: string) => `Contest open · ${t} left`,
+    contestSafe: (t: string) => `Protected · next contest in ${t}`,
+    ctlBy: 'Controlled by',
+    holdLeft: (name: string, t: string) => `${name} must hold ${t} more to take control`,
+    contestHint:
+      'Garrison it for 4 straight hours to take control (and its buff). A controlled vein can only be contested during its contest period — every 3 days, open for 12 hours.',
+    shrines: ['Black Tortoise Shrine', 'Vermilion Bird Shrine', 'Azure Dragon Shrine', 'White Tiger Shrine'],
     firstTake: 'Not captured yet this season — the first alliance to take it gets a reward',
     ruinOpen: (t: string) => `Open · ${t} left`,
     ruinOpens: (t: string) => `Opens in ${t}`,
@@ -1427,6 +1437,7 @@ export const en: Text = {
           : `Chronicle of Heaven: "${en.book.names[ch] ?? ch + 1}" ran out of time`,
       war: (a: string, b: string, wa: number, wb: number) => `Alliance Sword War: [${a}] ${wa} – ${wb} [${b}]`,
       cup: (tag: string) => `[${tag}] are this season's Nine Heavens League champions`,
+      duel: (name: string) => `${name} is crowned Sword Champion of the Canyon Tournament`,
       unknown: () => 'Something stirred in the world',
     } satisfies ChronTexts,
   },
@@ -1558,6 +1569,9 @@ export const en: Text = {
     kick: 'Remove from alliance',
     leave: 'Leave alliance',
     leaveSure: 'Leave the alliance? Your help requests will be cancelled.',
+    disband: 'Disband alliance',
+    disbandSure:
+      'Disband the alliance? Everyone leaves; the treasury, territory and alliance buildings are lost for good.',
     online: 'Online',
     help: 'Help',
     helpHint: (max: number) =>
@@ -1714,6 +1728,7 @@ export const en: Text = {
     row: (a: string, b: string, wa: number, wb: number) => `[${a}] ${wa} – ${wb} [${b}]`,
   },
   arena: {
+    upper: 'Upper Canyon — from level 16: tier-5 virtual troops, separate matchmaking and weekly board',
     ticket: (n: number) => `Use a Duel Token (+1 attempt) · ${n} left`,
     title: 'Sword Arena',
     lore: 'Pit your elders’ lineup against other sects: illusory disciples, no losses, no resources at stake. Relay battle — the winning team fights on with what it has left.',
@@ -2065,6 +2080,22 @@ export const en: Text = {
       supply: (who: string): [string, string] => [
         `Supplies from ${who}`,
         `Your ally ${who} sent resources through the Spirit Conduit. Collect them below.`,
+      ],
+      tourney: (place: number): [string, string] => [
+        (
+          {
+            1: 'Sword Champion · Canyon Tournament',
+            2: 'Canyon Tournament · runner-up',
+            3: 'Canyon Tournament · semifinalist',
+          } as Record<number, string>
+        )[place] ?? 'Canyon Tournament · quarterfinalist',
+        place === 1
+          ? "Your sect is the Sword Champion — winner of this season's Canyon Tournament, recorded in the realm chronicle. Rewards are below."
+          : "This season's Canyon Tournament is over. Rewards for your finish are below.",
+      ],
+      allyGone: (name: string): [string, string] => [
+        `${name} has been disbanded`,
+        `The leader disbanded the alliance ${name}. Your sect keeps everything it owns — find a new alliance in the Alliance tab.`,
       ],
       allyWelcome: (name: string): [string, string] => [
         `Welcome to ${name}`,
@@ -2643,6 +2674,7 @@ export const en: Text = {
       speed: 'Time Flies — minutes of speed-ups used',
       raid: 'Contender — raids won',
       gather: 'Mountain Breaker — resources gathered',
+      power: 'Might Across the Realm — power',
     } satisfies Record<AchId, string>,
   },
   tavern: {
@@ -2751,6 +2783,144 @@ export const en: Text = {
     scoring: 'Scoring…',
     done: "Today's quiz is over — results arrive by mail.",
     tiers: (a: string) => `Alliance correct-answer milestones: ${a}`,
+  },
+  story: {
+    title: 'Chronicle',
+    lock: (lv: number) => `Unlocks at elder level ${lv}`,
+    text: {
+      thanhPhong: [
+        'The night the Mystic Heaven Sect fell, three thousand disciples scattered. Thanh Phong stood in the ruined gate and drove his sword into the stone: "While one remains, the sect remains."',
+        'He buried his master beneath the pine behind the mountain and returns once a year with a cup of thin wine. He has never wept — only his blade wears a little thinner each year.',
+        'When you arrived, only the wind was left on the mountain. Thanh Phong handed you the sect seal and bowed for the first time in thirty years: "From now on, this sword follows you."',
+      ],
+      thachKien: [
+        'Black Wind Fort once blocked the roads of three provinces. Thach Kien never lost — until the northern pass, where a child with a wooden sword stood before the caravan.',
+        'He disbanded the fort, gave every coin back to the villages he had robbed, and kept only his axe. "Debts are repaid, lives are answered" — the only saying he knows.',
+        'People ask why a former bandit guards a sect. Thach Kien laughs: "One lost fight is enough to learn whose back you stand behind."',
+      ],
+      nhuYen: [
+        'A hundred years ago, Nhu Yen sealed herself inside the Verdant Secret Realm to trap the fire serpent burning the spirit forest.',
+        "The seal kept her young, but everyone she knew turned to dust. Free at last, she searched every stele and never found her sect's name.",
+        'She stays to teach, showing disciples how to hold fire in the palm without letting it burn them — a lesson that took her a century.',
+      ],
+      loiChan: [
+        'The Myriad Poison Valley kept Loi Chan in a snake pit for seven years to force out his sword manual. He never said a word.',
+        'One stormy night, lightning shattered the prison door. From the thunder he learned what no manual teaches: strike before you think.',
+        "As the sect's enforcer he is stricter than anyone. Disciples fear the thunder in his blade, yet no one has ever been wrongly punished.",
+      ],
+      vanHac: [
+        'Van Hac was once a court physician in the mortal palace. He left the very night he was ordered to brew poison.',
+        'He lived hidden in the Crimson Blaze, refining pills in lava for passing travelers, never taking a coin.',
+        'Now with the sect, he says his furnace cooks for a hundred mouths — "more fun than saving people one at a time".',
+      ],
+      hanBang: [
+        'No one knows how long Han Bang slept in the frozen plains. She woke remembering one name and the bell of a vanished temple.',
+        'She searched every realm for that temple and found only snow on old foundations. Where she lingers, ice blooms into flowers.',
+        'At the sect she hung a small bell in the Main Hall. Whenever the wind rings it, she smiles — for the first time in a thousand years.',
+      ],
+      bachVoNhai: [
+        'Bach Vo Nhai lost exactly one duel — to a man with no sword. He went into the Thunder Pool, vowing to hone his blade until it could cut lightning.',
+        'For a century lightning frayed his white robes, but his blade shone like the moon. He cut the thunder at last — and realized that man was long gone.',
+        'He follows the sect to pass on a single sword form — "a sword not to beat anyone, but so no one must lose as I did".',
+      ],
+      macSau: [
+        'Mac Sau has guarded the thirtieth floor of the Heaven Tower through many sect masters. Climbers call her cold as stone; no one has seen her smile.',
+        'She keeps a promise to someone long dead: let no one past the thirtieth floor until they can survive what lies above.',
+        'The day you cleared the thirtieth floor, Mac Sau came down after you. Disciples swear she smiled on the last step — but no one dares be sure.',
+      ],
+      hoacThienCuong: [
+        'Hoac Thien Cuong was born in a forge and grew up among hammers and flame. At sixteen he leapt into Chaos fire to temper his body.',
+        'It burned three days and nights; he walked out with skin harder than forged iron, yet his hands still tremble holding a child.',
+        'As mountain guard he stands at the gate whenever foes come. He fears no pain — only having no one left behind him to protect.',
+      ],
+      toMiNuong: [
+        'To Mi Nuong has wandered nine realms and never stayed anywhere longer than a season. The world is wide, she says; sitting still is a waste.',
+        'She loves markets, festivals and the squabbling of disciples. Wherever it grows too quiet, she moves on.',
+        'The sect is noisy enough for her to lose track of time. "I\'ll leave when you lot stop being lively," she says — three seasons ago.',
+      ],
+      diepCoThanh: [
+        'Diep Co Thanh climbed the Heaven Tower alone, carrying nothing but a sword and a gourd of wine.',
+        'On the forty-fifth floor he sat down to wait for a worthy rival — so long that moss grew on the steps around him.',
+        'He came down the mountain with you because of one line: "Worthy rivals aren\'t waited for — they\'re found together." Since then his gourd pours two cups.',
+      ],
+      huyenMinh: [
+        'Huyen Minh the Ancestor is the last living soul of the primordial age. He sleeps at the bottom of the rift so as not to wake old calamities.',
+        'Whenever he wakes, the world freezes. Knowing this, he chose to sleep — a hundred years, a thousand, with no one calling.',
+        "Until the sect's bell echoed down into the rift. He woke, and this time the ice did not spread — only an old smile remained.",
+      ],
+    } as Record<ElderId, [string, string, string]>,
+  },
+  tourney: {
+    title: 'Canyon Tournament',
+    hint: (from: number, to: number) =>
+      `The season's final week (days ${from}–${to}): the 16 sects with the most Arena points meet in single elimination with their defense lineups, one round a day. The winner is the Sword Champion.`,
+    round: (n: number) => ({ 2: 'Final', 4: 'Semifinals', 8: 'Quarterfinals' })[n] ?? `Round of ${n}`,
+    watch: 'Watch',
+    champ: (name: string) => `Sword Champion: ${name}`,
+    none: 'Not enough sects entered this season.',
+    wait: 'Not played',
+  },
+  order: {
+    title: 'Alliance directive',
+    hint: (thoi: string, d: number) =>
+      `Each Tide, an officer or the leader issues one directive for the whole alliance. Now: ${thoi}, ${d} days left.`,
+    names: ['General Mobilization', 'Hold the Line', 'Pioneer', 'Stockpile', 'Forced March', 'Field Medics'],
+    by: (name: string) => `Issued by ${name}`,
+    none: 'No directive this Tide yet — waiting for an officer or the leader.',
+  },
+  first: {
+    title: { world: 'World Map', ally: 'Alliance', pvp: 'Plunder', trib: 'Tribulation' },
+    cards: {
+      world: [
+        'The realm has 25 regions; gates between them open as the season advances. Send spirit cranes to clear the fog and move your mountain somewhere better.',
+        'Take veins and gate eyes with your alliance — hold for 4 hours to take control, earning buffs and season points for everyone.',
+        'Hunt world beasts and rally against beast kings together. Gathering teams can be robbed by other sects — watch your Watchtower.',
+      ],
+      ally: [
+        'Join an alliance: allies tap Help to speed up your work, and helping them back earns contribution.',
+        'Rally against beast kings, hold veins and raise banners to claim territory — things no sect manages alone.',
+        'Alliance gifts, the Contribution Hall, directives and alliance technology: the stronger the alliance, the more each member gets.',
+      ],
+      pvp: [
+        "Plunder: raid sects with power close to yours for resources. The protected storehouse keeps most of the defender's stock.",
+        'Lose a defense and you get a shield; attack someone and your shield breaks. Going away for long? Use a Mountain Ward.',
+        'Battle reports record every fight: replay each round and take revenge on whoever just raided you.',
+      ],
+      trib: [
+        'Tribulation: at a realm threshold, send a team to endure the heavenly lightning — survive it and your Main Hall rises to a new level.',
+        'The tribulation cloud gathers openly on the map: allies can come to guard you, enemies can disrupt it.',
+        'Bring strong elders and breakthrough pills; if you fail, wait for the cloud to gather again and retry.',
+      ],
+    },
+    next: 'Next',
+    done: 'Got it',
+  },
+  truyen: {
+    title: 'Skill transmission',
+    hint: (n: number) =>
+      `Swap learned skill tiers with an elder of the same rarity and skill count. You have ${n} Transmission Talismans.`,
+    mine: (t: string) => `Current tiers: ${t}`,
+    tiers: (t: string) => `Tiers ${t}`,
+    go: (n: number) => `Transmit · ${n} talismans`,
+    sure: (a: string, b: string) => `Swap all learned skill tiers of ${a} and ${b}? Talismans spent are not refunded.`,
+    none: 'No elder of the same rarity and skill count to swap with yet.',
+  },
+  swap: {
+    row: (from: string, to: string) => `${from} → ${to}`,
+    have: (n: number) => `Own ${n}`,
+    left: (n: number, max: number) => `${n}/${max} left to trade`,
+    go: (n: number) => `Trade ${n}`,
+    none: "No Builder's Talismans to trade yet.",
+    full: 'Limit reached',
+  },
+  cards: {
+    game: (n: number, of: number) => `Game ${n}/${of}`,
+    free: (n: number) => `${n} free flips left this game`,
+    cost: (n: number) => `${n} tokens per flip`,
+    pairs: 'Pair prizes',
+    done: 'Match all 6 pairs: game prize',
+    over: 'All games for this event are played.',
+    match: 'Pair matched!',
   },
   maze: {
     teams: (n: number, of: number) => `Teams entering (${n}/${of})`,
@@ -3075,6 +3245,10 @@ export const en: Text = {
         name: 'Hundred-Flavour Feast',
         desc: 'A thanksgiving feast: five days of hunts, chain hunts, gathering and healing for points and chests.',
       },
+      phienBai: {
+        name: 'Card King',
+        desc: 'Three days of fortune cards: 12 face-down cards hide 6 prize pairs. The first 2 flips of each game are free, then each flip costs a Fortune Token; flip two matching cards in a row to win that pair, otherwise they turn back — remember where they were. Match all 6 pairs for a game prize, up to 10 games.',
+      },
       meCanh: {
         name: 'Golden Kingdom',
         desc: 'Five days in the golden labyrinth: one run a day through 10 floors with up to 3 phantom teams (no real losses, no healing except at springs). Open tiles next to opened ones: demon soldiers, chests, shrines (pick a blessing), springs, traps — defeat the chief to go down. Your best floor opens milestone chests.',
@@ -3126,6 +3300,14 @@ export const en: Text = {
       khaiDien: {
         name: 'Season Sign-In',
         desc: "Celebrating the realm's new season: in its first 14 days, each day you log in opens one more gift — for everyone in the realm; the seventh holds two Gold Fate Talismans.",
+      },
+      hoaKien: {
+        name: 'War and Peace',
+        desc: "Mid-season, while alliances clash: sects with a level-25 Main Hall trade spare Builder's Talismans for Drill Talismans of the same value — up to 200 of each value per season.",
+      },
+      truyenCong: {
+        name: 'Commander Swap',
+        desc: 'Three days of skill transmission: event tasks give Transmission Talismans; open an elder in Disciples to swap learned skill tiers between two elders of the same rarity and skill count — no investment is ever wasted.',
       },
       tamBao: {
         name: 'Treasure Hunt',
@@ -3206,6 +3388,7 @@ export const en: Text = {
       linhNoan: 'Spirit Hammer',
       khaoCo: 'Spirit Pick',
       nguyenThu: 'Wishing Coin',
+      phienBai: 'Fortune Token',
       trienLam: 'Relic',
       haChi: 'Summer Blossom',
     } as Partial<Record<FestId, string>>,
@@ -3305,6 +3488,10 @@ export const en: Text = {
       baoDo: {
         name: 'Treasure Map Fragment',
         desc: 'A piece of a treasure map. Collect 7 and assemble them on the world map: a dig site appears near your sect — send a team to dig it up.',
+      },
+      truyenCong: {
+        name: 'Transmission Talisman',
+        desc: 'The fee for skill transmission during the Transmission Assembly: swap learned skill tiers between two elders of the same rarity (elder panel under Disciples).',
       },
       diSon: {
         name: 'Mountain-Shift Talisman',

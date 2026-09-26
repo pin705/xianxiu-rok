@@ -97,7 +97,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trong Cài đặt minh có các ô sửa, kèm giá gem.
 - **Giữ chân:** thấp, nhưng thiếu nó thì minh sáp nhập phải giải tán rồi lập lại.
 - **Tu tiên hoá:** "Cải danh minh hiệu".
-- **Game mình:** 🟡 có bố cáo (`allyNotice` ≤ 200 ký tự, từ R4), thư minh (`allyMail`), minh chủ đổi tên / hiệu (`allyRename`: 500 Minh khố, 7 ngày một lần, không trùng minh khác). Chưa có huy hiệu minh riêng, chưa có nút giải tán: minh chỉ giải tán khi người cuối cùng rời.
+- **Game mình:** 🟡 có bố cáo (`allyNotice` ≤ 200 ký tự, từ R4), thư minh (`allyMail`), minh chủ đổi tên / hiệu (`allyRename`: 500 Minh khố, 7 ngày một lần, không trùng minh khác), minh chủ giải tán minh (`allyDisband`, hỏi lại; mọi người trong minh nhận thư báo). Chưa có huy hiệu minh riêng.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### A3. Tìm và gia nhập (tự do / xét duyệt, lời mời, danh sách ưu tiên/chặn) — **Join settings, Invitations, Passlist/Blocklist**
@@ -365,7 +365,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng Directive có nút Ban lệnh (officer); thành viên thấy buff đang chạy.
 - **Giữ chân:** lãnh đạo có công cụ; chiến đấu có phần thưởng riêng.
 - **Tu tiên hoá:** "Minh lệnh", ví dụ "Tổng động viên: +x% công khi đánh trận nhãn trong 2 giờ".
-- **Game mình:** 🟡 có chỉ lệnh nhưng mỗi tông môn tự chọn: Thiên Thời (`world/thoi.ts`) mỗi 4 ngày cho chọn 1 trong 3 tăng ích tới hết thời; Công Huân (có phần từ chiến công) ra Phi Thăng Tệ đổi ở Thiên Môn Thương Điếm. Chưa có minh lệnh do minh chủ / R4 ban cho cả minh.
+- **Game mình:** ✅ Thiên Thời (`world/thoi.ts`) mỗi 4 ngày: mỗi tông môn chọn 1 trong 3 chỉ lệnh riêng, và **Minh lệnh** — đường chủ / minh chủ ban một lệnh cho cả minh tới hết thời (Tổng Động Viên công +3 %, Kiên Thủ thủ +3 %, Khai Hoang khai mỏ +10 %, Tích Trữ sản lượng +5 %, Cấp Hành hành quân +5 %, Cứu Thương chữa thương +10 %; `allyOrder`, `orderBuffs`, `AllyOrder.svelte`); Minh trận thần thông bật bằng Minh khố; Công Huân (có phần từ chiến công) ra Phi Thăng Tệ đổi ở Thiên Môn Thương Điếm. Chưa có thời gian hồi chống nhảy minh để ăn lệnh.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 ---
@@ -861,7 +861,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | # | Tính năng (tên gốc) | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|
 | A1 | Lập liên minh (Create Alliance) | ✅ lập tầng 10, 20k mỗi loại; thiếu cờ/huy hiệu riêng | P2 | S–M |
-| A2 | Hồ sơ minh, đổi tên/tag/cờ | 🟡 có bố cáo; không đổi tên/tag | P2 | S |
+| A2 | Hồ sơ minh, đổi tên/tag/cờ | 🟡 bố cáo, đổi tên / hiệu, giải tán; chưa có huy hiệu minh riêng | P2 | S |
 | A3 | Gia nhập tự do/duyệt, mời, passlist/blocklist | ✅ cửa minh vào tự do / duyệt đơn, mời từ hồ sơ; thiếu passlist/blocklist | P1 | S–M |
 | A4 | Sĩ số tối đa tăng dần | ✅ 30 → 40 theo Hộ Minh Đại Trận | P2 | S |
 | A5 | Cấp bậc R1–R5 và quyền | ✅ R1 Ngoại môn … R4 Đường chủ, R5 Minh chủ (25/09); dấu bản đồ từ R3 | P1 | S |
@@ -881,7 +881,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | D1 | Kết trận và tab Chiến tranh | ✅ điểm, yêu vương và tông môn (kết trận công sơn, 25/09); danh sách kết trận + nút góp đội ở trang Tiên minh | P1 | M |
 | D2 | Viện binh và đồn trú | ✅ 3 đội nhà đồng minh, hộ pháp độ kiếp | P2 | S |
 | D3 | Đánh dấu bản đồ cho minh | ✅ 5 dấu của minh + ghi nhớ cá nhân | **P0** | S |
-| D4 | Mệnh lệnh minh, cửa hàng chiến công | 🟡 chỉ lệnh Thiên Thời (mỗi tông môn tự chọn), Thiên Môn Thương Điếm (Phi Thăng Tệ từ Công Huân); chưa có minh lệnh | P2 | M |
+| D4 | Mệnh lệnh minh, cửa hàng chiến công | ✅ Minh lệnh mỗi thời Thiên Thời (đường chủ / minh chủ ban), Minh trận thần thông, Thiên Môn Thương Điếm | P2 | M |
 | E1 | Chat vương quốc | ✅ kênh giới, lọc từ, báo cáo; thiếu dịch | P1 | M |
 | E2 | Chat minh và thông báo | ✅ thiếu ghim, tin hệ thống, @nhắc | P1 | S |
 | E3 | Chat riêng và nhóm tự tạo | ✅ truyền âm 1-1 (Web Push khi offline) + nhóm chat tự tạo tới 20 người (25/09) | **P0** | M |

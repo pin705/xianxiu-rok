@@ -51,6 +51,7 @@ import {
   aquizStep,
   wallStep,
   planStep,
+  tourneyStep,
 } from '@rok/rules/world'
 import { npcState } from '@rok/rules/bot'
 import type { World } from './world.ts'
@@ -154,10 +155,11 @@ export function rollWeek(w: World, now: number) {
     }
   })
   // Luận Kiếm Đài: top tuần cũ nhận quà (điểm đài của tuần cũ còn nguyên — mỗi người tự nén lúc sang tuần)
-  arenaTop(w.ps, week).forEach((pid, i) => {
-    const s = w.ps.get(pid)!
-    w.commit(w.slots.get(pid)!, mail(s, { at: now, k: 'arenaTop', a: [i + 1], gift: arenaPrize(i) }))
-  })
+  for (const top of arenaTop(w.ps, week))
+    top.forEach((pid, i) => {
+      const s = w.ps.get(pid)!
+      w.commit(w.slots.get(pid)!, mail(s, { at: now, k: 'arenaTop', a: [i + 1], gift: arenaPrize(i) }))
+    })
   w.week = weekOf(now)
   w.persist.worldDirty = true
   w.persist.schedule()
@@ -196,6 +198,20 @@ export function allyEvents(w: World, now: number) {
   partyCheck(w, now)
   wallCheck(w, now)
   planCheck(w, now)
+  tourneyCheck(w, now)
+}
+// Luận Kiếm Đại Hội: tuần cuối mùa, mỗi ngày một vòng loại trực tiếp; có Kiếm Khôi thì ghi biên niên
+function tourneyCheck(w: World, now: number) {
+  const r = tourneyStep(w.ps, w.shared, dayIn(w.opened, now), now, randomInt(1, 2 ** 31), w.npc)
+  if (r.world === w.shared) return
+  const champ = r.world.tourney?.champ
+  if (champ !== undefined && w.shared.tourney?.champ === undefined)
+    w.record({ at: now, k: 'duel', a: [w.ps.get(champ)?.name ?? '?'] })
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
 }
 // Minh sự lịch: PLAN_WARN trước giờ nhắc người đã bấm tham gia (Web Push)
 function planCheck(w: World, now: number) {

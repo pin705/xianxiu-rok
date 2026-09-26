@@ -119,6 +119,7 @@ export type Alliance = {
   skills?: Partial<Record<AllySkillId, number>> // Minh trận thần thông: hiệu lực tới lúc này
   named?: number // lần đổi tên / hiệu gần nhất
   quiz?: { at: number; by: number; done?: boolean; mine?: number[] } // Luận Đạo Vấn Đáp (world/aquiz.ts); mine: chỉ ở AllyInfo
+  order?: { n: number; k: number; by: number } // Minh lệnh của thời Thiên Thời thứ n: lệnh ALLY_ORDERS[k], ai ban
 }
 // Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
 export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
@@ -144,6 +145,7 @@ export type Spot = {
   dmg?: Record<number, number>
   lohar?: { by: number; until: number } // Yêu Vương Tuần Sơn: ai triệu hồi, tới lúc nào
   tamed?: 1 // hộ trận linh thú đã bị đánh bại (mùa này chiếm không phải đánh nữa)
+  ctl?: number // linh mạch: phe kiểm soát (đã giữ đủ VEIN_HOLD) — nhận tăng ích, ngoài kỳ tranh chấp được bảo hộ
 }
 // Kết trận: người trong minh góp đội, mọi đội tới cùng lúc `at` rồi đánh như một bên — điểm i (chiếm / đánh yêu vương),
 // hay tông môn người chơi i (công sơn, foe: tên lúc mở)
@@ -185,11 +187,16 @@ export type Group = { id: number; name: string; owner: number; members: number[]
 // Vận Linh Trận trong ngày của một người: đã gửi (trước hao tổn), đã nhận (sau hao tổn)
 export type Supply = { day: number; sent: number; got: number }
 // pts: điểm mùa đã chốt theo phe (sideKey) — phần đang giữ tính thêm ở seasonPts
+// Luận Kiếm Đại Hội của mùa (world/tourney.ts): người theo thứ tự hạt giống, các trận theo vòng (a đánh b; win: a thắng; rep: mã
+// chiến báo của a — cả giới xem lại), Kiếm Khôi
+type Game = { r: number; a: number; b: number; win?: boolean; rep?: number }
+export type Tourney = { seeds: number[]; games: Game[]; champ?: number }
 export type World = {
   allies: Record<number, Alliance>
   nextAlly: number
   spots: Record<number, Spot>
   rallies: Record<number, Rally>
+  tourney?: Tourney // Luận Kiếm Đại Hội (tuần cuối mùa)
   nextRally: number
   pts: Record<number, number>
   orders: Record<number, Order>
@@ -366,21 +373,8 @@ export const dropIncoming = (s: State, pid: number, id: number): State =>
   s.incoming?.some(x => x.pid === pid && x.id === id)
     ? { ...s, incoming: s.incoming.filter(x => !(x.pid === pid && x.id === id)) }
     : s
-export const turnBack = (s: State, m: March, at: number): State => ({
-  ...s,
-  marches: s.marches.map(x =>
-    x.id === m.id
-      ? {
-          ...m,
-          stay: false,
-          back: m.army,
-          hurt: m.hurt ?? {},
-          gain: noGain(),
-          returnAt: at + (at - m.startAt),
-        }
-      : x,
-  ),
-})
+export const turnBack = (s: State, m: March, at: number): State =>
+  withMarch(s, { ...m, stay: false, back: m.army, hurt: m.hurt ?? {}, gain: noGain(), returnAt: at + (at - m.startAt) })
 // Phe của một người: tiên minh (mã > 0) hoặc chính mình (−mã người chơi)
 export const sideKey = (w: World, pid: number) => allyOf(w, pid)?.id ?? -pid
 // Tên một phe: tiên minh "[tag] tên" (side > 0) hoặc người đi một mình (side = -pid)

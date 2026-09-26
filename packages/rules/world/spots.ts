@@ -7,17 +7,7 @@ import { apOf, spendAp } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Buff, type March, type State } from '../core/types.ts'
 import { compact, noGain } from '../core/util.ts'
-import {
-  AP_HUNT,
-  BOSSES,
-  GARRISON_MAX,
-  RALLY_MAX,
-  RALLY_WAIT,
-  TIDE_PROD,
-  VEIN_CAP,
-  type Bonus,
-  type ElderId,
-} from '../data.ts'
+import { AP_HUNT, BOSSES, GARRISON_MAX, RALLY_MAX, RALLY_WAIT, TIDE_PROD, type Bonus, type ElderId } from '../data.ts'
 import {
   allyOf,
   farErr,
@@ -49,9 +39,11 @@ import {
   marchAt,
   rebuild,
   ruinWindow,
+  veinShut,
   TASK_OF,
   spotOf,
   thoiBuffs,
+  orderBuffs,
   veinBuffs,
 } from './points.ts'
 
@@ -139,6 +131,7 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
   if (TASK_OF[p.kind] !== a.task) return no('bad')
   if ((p.kind === 'gate' && p.lv > map.phase) || (p.kind === 'heaven' && map.phase < 3)) return no('locked') // trận nhãn mở theo pha mùa
   if (!ruinWindow(map.atlas, p, t).open) return no('locked') // di tích: chỉ lúc mở cửa
+  if (a.task === 'take' && veinShut(map.atlas, p, w.spots[a.i], sideKey(w, pid), t)) return no('locked') // linh mạch đang bảo hộ
   if (!s.seat) return no('far')
   const r = route(map.atlas, s.seat, p, map.phase, map.shut)
   if (!r) return no(farErr(map, s.seat, p))
@@ -294,6 +287,7 @@ function rallyAct(
   const task = rally?.task ?? (p && rallyTask(p))
   if (!p || !task) return no('bad')
   if (!ruinWindow(map.atlas, p, t).open) return no('locked')
+  if (task === 'take' && veinShut(map.atlas, p, w.spots[i], al.id, t)) return no('locked') // linh mạch đang bảo hộ
   const r = route(map.atlas, s.seat, p, map.phase, map.shut)
   if (!r) return no(farErr(map, s.seat, p))
   const ms = routeMs(s, r.len, a.army)
@@ -329,14 +323,14 @@ function rallyAct(
 
 // Buff của bản đồ giới cho mỗi tông môn: linh mạch phe mình đang giữ (cả minh), linh triều ở vùng mình. Trả về state cần đổi.
 export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Players {
-  // linh mạch: tổng từng loại tăng ích theo phe (mỗi loại tối đa VEIN_CAP)
+  // linh mạch: mỗi loại tăng ích lấy mức cao nhất trong các điểm phe đang giữ (không cộng dồn)
   const veins = new Map<number, Map<Bonus, number>>()
   for (const [k, sp] of Object.entries(w.spots)) {
     const p = map.atlas.points[Number(k)]
-    if (p?.kind !== 'vein' || sp.own === undefined) continue
-    const m = veins.get(sp.own) ?? new Map<Bonus, number>()
-    for (const b of veinBuffs(p)) m.set(b.key, (m.get(b.key) ?? 0) + b.v)
-    veins.set(sp.own, m)
+    if (p?.kind !== 'vein' || sp.ctl === undefined) continue // tăng ích cho phe kiểm soát (kỳ tranh chấp)
+    const m = veins.get(sp.ctl) ?? new Map<Bonus, number>()
+    for (const b of veinBuffs(p)) m.set(b.key, Math.max(m.get(b.key) ?? 0, b.v))
+    veins.set(sp.ctl, m)
   }
   const t = tide(map.atlas, at)
   const changed: Players = new Map()
@@ -348,6 +342,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     b.src === 'bless' ||
     b.src === 'eve' ||
     b.src === 'thoi' ||
+    b.src === 'order' ||
     b.src === 'fort' ||
     b.src === 'askill' ||
     b.src.startsWith('tide')
@@ -355,7 +350,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     const want: Buff[] = [
       ...[...(veins.get(sideKey(w, pid)) ?? [])].map(([key, v]) => ({
         key,
-        v: Math.round(Math.min(VEIN_CAP, v) * 1000) / 1000,
+        v,
         until: 0,
         src: 'vein',
       })),
@@ -369,6 +364,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
       ...blessBuffs(w, at), // Giới Chủ ban phúc cả giới
       ...eveBuffs(w, pid, at), // Khai Giới Trảm Tà: minh đứng đầu giới vận
       ...thoiBuffs(map, s), // Thiên Thời: thời đang chạy + chỉ lệnh đã chọn
+      ...orderBuffs(map, allyOf(w, pid)), // Minh lệnh của thời
       ...fortBuffs(w, pid, at), // Tổng đà của minh
     ]
     const keep = s.buffs.filter(b => !mapped(b))

@@ -108,7 +108,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** biểu tượng thánh địa có cờ minh giữ, trạng thái "Đang tranh chấp / Bảo hộ còn …"; bảng thánh địa trong minh liệt kê buff đang có.
 - **Vì sao giữ chân:** buff thấy ngay trên chỉ số, lịch 3 ngày tạo nhịp "trận cuối tuần" đều đặn.
 - **Tu tiên hoá:** *Linh địa* các loại: linh mạch (sản lượng), *kiếm trủng* (công), *linh tuyền* (chữa thương), *ngộ đạo thạch* (nghiên cứu)…
-- **Game mình:** 🟡 linh mạch (57 điểm: 2/vùng ngoài, 3/vùng giữa, 1 ở tâm) chiếm bằng đóng quân, tăng ích nhiều loại theo cấp (`veinBuffs`), cùng loại **cộng dồn** tới 30 %; chiếm lần đầu trong mùa cả minh có quà (`firstTake`). Thiếu: kỳ tranh chấp 3 ngày / giữ 4 giờ (chỉ Cổ Di Tích / Huyết Tế Đàn mở theo giờ — `world/ruins.ts`), luật tử trận riêng. Có hộ trận linh thú giữ điểm chưa thuần phục (`GUARDIANS`, `guardSide`): phải đánh bại mới chiếm lần đầu trong mùa.
+- **Game mình:** ✅ linh mạch (57 điểm: 2/vùng ngoài, 3/vùng giữa, 1 ở tâm) chiếm bằng đóng quân; **kỳ tranh chấp** (`contestWindow`, `contestStep`, `veinShut` ở `world/points.ts`): phe đóng quân giữ liên tục 4 giờ thì thành phe kiểm soát và nhận tăng ích; linh mạch đã có phe kiểm soát chỉ tranh được trong kỳ — 3 ngày một kỳ, mở 12 giờ, lệch giờ riêng từng điểm; ngoài kỳ là bảo hộ (phe khác xuất quân bị chặn, đội đang đi tới thì quay về), phe kiểm soát rút quân vẫn giữ quyền tới khi phe khác giữ đủ 4 giờ trong một kỳ. Bảng điểm ghi phe kiểm soát, “Bảo hộ · kỳ tranh chấp sau …” / “Kỳ tranh chấp đang mở · còn …”, “X giữ thêm … để kiểm soát”. Tăng ích nhiều loại theo cấp (`veinBuffs`), cùng loại **không cộng dồn** — lấy mức cao nhất như RoK (`worldBuffs`); chiếm lần đầu trong mùa cả minh có quà (`firstTake`). Thiếu: luật tử trận riêng. Có hộ trận linh thú giữ điểm chưa thuần phục (`GUARDIANS`, `guardSide`): phải đánh bại mới chiếm lần đầu trong mùa.
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### A6. Sanctum — thánh đường (zone 1)
@@ -149,7 +149,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
   - Shrine of War: công **+3 %** và tốc luyện quân **+10 %** [5][12][14].
   Hộ vệ quanh Shrine 30.000 quân T3 (C12) [9][12]; luật "một nửa trọng thương chết" chỉ một nguồn và vênh với FAQ (xem A5) [12][B-FAQ-CAS].
 - **Tu tiên hoá:** *Thần miếu tứ tượng*: Huyền Vũ miếu (thủ + máu), Chu Tước miếu (công kết trận + khai mỏ), Thanh Long miếu (hồi linh lực + chữa thương), Bạch Hổ miếu (công + tuyển đệ tử).
-- **Game mình:** 🟡 chỉ linh mạch cấp 3 ở tâm (một điểm) có buff kép sản lượng + công +8 % (`veinBuffs`); linh mạch cấp 2 ở vòng giữa mỗi điểm một loại. Thiếu: bộ thần miếu buff kép ở vòng giữa.
+- **Game mình:** ✅ Thần miếu tứ tượng: mỗi vùng giữa một linh mạch là miếu (8 miếu, mỗi loại 2 — `shrineOf`, `SHRINES`), buff kép cho phe giữ: Huyền Vũ Miếu thủ + sinh lực +3 %, Chu Tước Miếu khai mỏ + trận dung +5 % (thay công kết trận), Thanh Long Miếu chữa thương + chỗ nằm thương binh +20 % (thay hồi hành lực), Bạch Hổ Miếu công +3 % + tuyển +10 %; tên miếu hiện ở bảng điểm và Sơn Hà Xã Tắc Đồ. Linh mạch tâm vẫn sản lượng + công +8 %.
 - **Ưu tiên:** P1 · **Công sức:** S–M.
 
 #### A9. Lost Temple & King — đền cổ ở tâm và ngôi vua
@@ -850,10 +850,10 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | A2 | Zones 1–2–3 | ✅ 16 vùng ngoài / 8 giữa / 1 tâm | P0 | — |
 | A3 | Passes Lv.1–3 | ✅ 40 cổng trận nhãn mở theo pha; phe giữ chặn đường phe khác (trừ minh ước); chưa có NPC giữ | P1 | M |
 | A4 | Alliance Territory (Fortress, Flags) | ✅ lãnh thổ + trận kỳ (phá / đóng giữ cờ) + Tổng đà | P1 (theo vùng) / P2 (cờ từng ô) | M / L |
-| A5 | Holy Sites — luật chung (kỳ 3 ngày, giữ 4 giờ, không cộng dồn, NPC giữ) | 🟡 linh mạch nhiều loại tăng ích, quà chiếm lần đầu; luôn mở, cộng dồn tới 30 %, không NPC giữ | P1 | M |
+| A5 | Holy Sites — luật chung (kỳ 3 ngày, giữ 4 giờ, không cộng dồn, NPC giữ) | ✅ kỳ tranh chấp 3 ngày (mở 12 giờ), giữ 4 giờ thì kiểm soát, ngoài kỳ bảo hộ, cùng loại không cộng dồn, hộ trận linh thú, quà chiếm lần đầu; chưa có luật tử trận riêng | P1 | M |
 | A6 | Sanctum (4 loại buff) | ✅ linh mạch cấp 1: sản lượng / xây / tuyển / chữa (25/09) | P1 | S |
 | A7 | Altar (6 loại buff) | ✅ linh mạch cấp 2: công / thủ / sinh lực / hành quân (25/09) | P1 | S |
-| A8 | Shrine (4 loại buff kép) | 🟡 chỉ linh mạch tâm có buff kép (sản lượng + công) | P1 | S–M |
+| A8 | Shrine (4 loại buff kép) | ✅ thần miếu tứ tượng: 8 miếu vòng giữa, 4 loại buff kép | P1 | S–M |
 | A9 | Lost Temple & King (tước hiệu, buff vương quốc) | ✅ Thiên Môn + Giới Chủ: sắc phong, ban phúc cả giới, Thiên Ân lễ (`world/lord.ts`) | P2 | M |
 | A10 | Monument (dòng thời gian, mục tiêu chung, thưởng mốc) | ✅ Thiên Đạo Biên Niên: 13 chương mục tiêu chung + quà (`world/book.ts`), chương xong sớm mở pha sớm, bảng đóng góp + quà công đầu | P1 | M |
 | A11 | Eve of the Crusade & Lost Kingdom | ❌ (cố ý: không liên server); phần PvE Eve: Khai Giới Trảm Tà (C6) | P2 | M |
@@ -861,8 +861,8 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | B2 | Scout Camp & scouts | ✅ linh điểu | P2 | M |
 | B3 | Mysterious Caves | ✅ động phủ cổ tu | P2 | S |
 | B4 | Tribal Villages | ✅ thôn trang | P2 | S |
-| B5 | Scouting enemies (báo cáo trinh sát) | 🟡 Do thám tông môn (`world/spy.ts`: linh điểu, tốn linh thạch, báo cáo thư); chưa dò quân ở điểm | P1 | S |
-| B6 | Anti-scouting & Watchtower / cảnh báo | 🟡 Tháp canh báo đội địch đang tới; chưa có vật phẩm chống dò thám | P1 / P2 | S |
+| B5 | Scouting enemies (báo cáo trinh sát) | ✅ Do thám tông môn và linh địa (`world/spy.ts`, `spySpot`: số đội, đệ tử, lực chiến đang đóng); chưa có báo cáo giả | P1 | S |
+| B6 | Anti-scouting & Watchtower / cảnh báo | ✅ Tháp canh báo đội địch đang tới; Ẩn Tung Phù 8/24 giờ chống do thám; chưa có báo cáo giả | P1 / P2 | S |
 | C1 | Action Points | ✅ hành lực săn yêu thú giới | P1 | S |
 | C2 | Barbarians (man tộc trên bản đồ chung) | ✅ yêu thú giới (6 con mỗi vùng ngoài / giữa, cấp 1–15), tốn hành lực; chưa rơi vật phẩm | **P0** | M |
 | C3 | Continuous attack / chain farming | ✅ săn liên hoàn yêu thú giới (25/09) | P2 | S / M |

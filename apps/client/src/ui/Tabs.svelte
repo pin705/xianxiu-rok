@@ -1,7 +1,10 @@
 <script lang="ts" generics="T extends string">
   // Thẻ chuyển trong bảng: thẻ kẹp sách bằng giấy dựng trên mép trang (đường mực đôi); thẻ đang mở trắng hơn,
   // cao hơn, liền vào trang, đầu thẻ một vệt son. look="switch": công tắc viên mực nổi trên cảnh (bản đồ), mục chọn tô son.
+  // look="chips": hàng thẻ tre cuộn ngang, mỗi thẻ có tranh (art: ui:<art>) hoặc icon, dòng phụ, số chờ, khoá.
+  import { Icon, artOf, type IconName } from '@rok/art'
   import { sfx } from '../lib'
+  import Badge from './Badge.svelte'
 
   let {
     items,
@@ -9,10 +12,10 @@
     onchange,
     look = 'folder',
   }: {
-    items: readonly { id: T; label: string }[]
+    items: readonly { id: T; label: string; art?: string; icon?: IconName; sub?: string; n?: number; lock?: boolean }[]
     value: T
     onchange: (id: T) => void
-    look?: 'folder' | 'switch'
+    look?: 'folder' | 'switch' | 'chips'
   } = $props()
 </script>
 
@@ -26,7 +29,14 @@
         if (it.id === value) return
         sfx('tap')
         onchange(it.id)
-      }}><span>{it.label}</span></button
+      }}
+      >{#if look === 'chips'}{@const src = it.art ? artOf(`ui:${it.art}`)?.src : undefined}{#if src}<img
+            {src}
+            alt=""
+            draggable="false"
+          />{:else if it.icon}<Icon name={it.icon} size={22} />{/if}{/if}<span>{it.label}</span>{#if it.sub}<small
+          >{it.sub}</small
+        >{/if}{#if it.lock}<Icon name="lock" size={13} />{/if}{#if it.n}<Badge n={it.n} />{/if}</button
     >
   {/each}
 </div>
@@ -135,5 +145,55 @@
   .switch .on::before,
   .switch .on::after {
     display: none;
+  }
+  /* ---------- thẻ tre có tranh, cuộn ngang ---------- */
+  .chips {
+    display: flex;
+    gap: var(--sp-2);
+    margin: var(--sp-2) 0 0;
+    padding: 4px 2px 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: none;
+  }
+  .chips button,
+  .chips .on {
+    flex: none;
+    display: grid;
+    justify-items: center;
+    gap: 1px;
+    min-width: 72px;
+    min-height: 0;
+    margin: 0;
+    padding: 8px 6px 6px;
+    font-size: var(--fs-1);
+    white-space: normal;
+    color: var(--text-faint);
+    background: var(--paper2);
+    border: 1px solid var(--paper3);
+    border-radius: 4px;
+    box-shadow: none;
+  }
+  .chips .on {
+    color: var(--text);
+    background: var(--paper);
+    border-color: var(--cinnabar);
+    box-shadow: 0 2px 5px rgb(0 0 0 / 0.12);
+  }
+  .chips .on::before {
+    inset: 2px 6px auto;
+  }
+  .chips .on::after {
+    display: none;
+  }
+  .chips img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+  }
+  .chips small {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-faint);
   }
 </style>

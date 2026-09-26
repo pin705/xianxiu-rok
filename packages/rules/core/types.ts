@@ -244,6 +244,8 @@ export type MailArgs = {
   legion: [pts: number, waves: number] // Ma Triều Công Sơn xong: điểm của mình, số đợt giữ được
   legionTop: [rank: number] // minh mình đứng hạng rank Ma Triều Công Sơn
   allyWelcome: [name: string] // lễ nhập minh lần đầu
+  allyGone: [name: string] // minh chủ giải tán tiên minh name
+  tourney: [place: number] // Luận Kiếm Đại Hội: chỗ đứng (1, 2, 3 = bán kết, 5 = tứ kết)
   supply: [who: string] // đồng minh who gửi tài nguyên qua Vận Linh Trận (ở phần quà)
   allyMail: [who: string, tag: string, text: string] // thư minh: R4 / minh chủ who của minh tag gửi cả minh
   honorTop: [rank: number, n: number] // hết mùa: hạng Công Huân cá nhân, điểm

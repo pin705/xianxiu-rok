@@ -29,6 +29,7 @@ export type ChronArgs = {
   book: [ch: number, ok: 0 | 1] // chương Thiên Đạo Biên Niên: xong / hụt
   war: [a: string, b: string, wa: number, wb: number] // Luận Kiếm Minh Chiến: hiệu hai minh và số cặp thắng
   cup: [tag: string] // quán quân Cửu Thiên Luận Đạo Hội
+  duel: [name: string] // Kiếm Khôi: vô địch Luận Kiếm Đại Hội
 }
 export type ChronKind = keyof ChronArgs
 export type Chron = { [K in ChronKind]: { at: number; k: K; a: ChronArgs[K] } }[ChronKind]
@@ -70,6 +71,9 @@ export type SpotView = {
   lohar?: string // Yêu Vương Tuần Sơn: tên người triệu hồi
   loharUntil?: number
   tamed?: 1 // hộ trận linh thú đã bị đánh bại (mùa này)
+  ctl?: string // linh mạch: tên phe kiểm soát
+  ctlSide?: number
+  since?: number // lúc phe đang đóng quân chiếm được (tính giờ giữ để kiểm soát)
 }
 // lord: Giới Chủ · book: Thiên Đạo Biên Niên (chương đang mở và tiến độ)
 export type MapSnap = {
@@ -147,6 +151,8 @@ export function mapOf(
       until: sp.until,
       ...lohar,
       ...(sp.tamed && { tamed: 1 as const }),
+      ...(sp.ctl !== undefined && { ctl: sideName(w, ps, sp.ctl), ctlSide: sp.ctl }),
+      ...(sp.since !== undefined && { since: sp.since }),
     })
   }
   const allies = Object.values(w.allies).map(al => ({ id: al.id, tag: al.tag }))

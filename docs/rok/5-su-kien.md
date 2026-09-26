@@ -532,7 +532,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 #### C22. War and Peace
 - **Cơ chế:** người CH25 đổi tăng tốc xây sang tăng tốc luyện (tối đa 200 cái mỗi mệnh giá). Thường chạy trong KvK.
 - **Tu tiên hoá:** "Hoá Kiến Vi Binh" (đổi Lỗ Ban Phù sang Luyện Binh Phù cho người tầng 25).
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** S.
+- **Game mình:** ✅ Hoá Kiến Vi Binh (lễ `hoaKien` tuần thứ tư mỗi mùa giới, Chủ điện 25, kiểu `swap` — `swap` ở `sect/fest.ts`, `Swap.svelte`): mỗi mệnh giá một dòng, kéo chọn số lá, đổi Lỗ Ban Phù sang Luyện Binh Phù cùng mệnh giá, mỗi mệnh giá tối đa 200 lá mỗi mùa · **Ưu tiên:** P2 · **Công sức:** S.
 
 #### C23. Cornucopia / Ghost Parade / Lotus War — liên trảm không về thành
 - **Nhịp:** 5–7 ngày, chạy trong chuỗi Lễ Tạ ơn, Halloween, Thất Tịch.
@@ -848,7 +848,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   - Có tướng riêng của đợt (lần đầu: Mehmed, Julius Caesar, Tào Tháo).
   - Hiện trên lịch khoảng 3 ngày trước khi mở; không có lịch cố định.
 - **Tu tiên hoá:** "Phiên Bài Kỳ Ngộ".
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** S.
+- **Game mình:** ✅ Phiên Bài Kỳ Ngộ (lễ `phienBai` 3 ngày mỗi 21 ngày, kiểu `cards` — `flip` ở `sect/fest.ts`, `cardsAt` ở `core/fest.ts`, `Cards.svelte`): 12 lá úp 6 đôi quà; lá úp chưa rõ rút mặt lúc lật theo mầm server trong số mặt còn thiếu (mỗi mặt đúng hai lá — như xáo sẵn cả bộ, không cần giữ bộ bài bí mật); 2 lá đầu mỗi ván miễn phí, sau đó tốn Kỳ Ngộ Lệnh; lật liền hai lá giống thì ghép nhận quà đôi, không giống thì úp lại; lật hết 6 đôi thêm quà ván, tối đa 10 ván. Chưa có: tướng riêng của đợt · **Ưu tiên:** P2 · **Công sức:** S.
 
 #### F6. Holy Knight's Treasure — đập trứng
 - **Cơ chế:** chọn trước một **món chủ lực** vào bảng quà (7,5 % mỗi quả); đập trứng bằng gem. Rương mốc theo tổng số trứng, không reset
@@ -1222,7 +1222,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 
 | # | Sự kiện RoK | Tu tiên hoá | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|---|
-| — | Event Center (màn sự kiện, chấm đỏ) | Trung tâm Sự kiện | 🟡 có chip + chấm đỏ + đếm ngược; thiếu nhãn "Mới", lịch sử, ảnh bìa | P0 | S |
+| — | Event Center (màn sự kiện, chấm đỏ) | Trung tâm Sự kiện | ✅ cột thẻ tranh bên trái, chấm đỏ đếm quà, dấu "!" vàng cho lượt lễ mới mở chưa xem (New), băng rôn tranh + đếm ngược; chưa có lịch sử lễ đã qua | P0 | S |
 | — | Event Calendar (lưới 7 ngày, báo trước ~3 ngày) | Lịch giới | ✅ lịch 7 ngày | P0 | M |
 | A1 | Create Your Own History | Khai Sơn Thất Nhật | 🟡 Khai Sơn Thất Nhật 5 nhánh mở theo ngày + rương; chưa gắn ngày mở giới | P0 | M |
 | A2 | Hero Returns | Tông Lệnh Bảo Khố | ✅ | P0 | S |
@@ -1253,7 +1253,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | C19 | Complete Plan | Nhật Khóa Tu Hành | 🟡 | P2 | S |
 | C20 | Artisan's Forge | Khai Lò Luyện Khí | ✅ `khaiLo` | P2 | S |
 | C21 | Lucky Stall + Lucky Spin | Cát Tường Hạ Giá | ❌ | P2 | S–M |
-| C22 | War and Peace | Hoá Kiến Vi Binh | ❌ | P2 | S |
+| C22 | War and Peace | Hoá Kiến Vi Binh | ✅ đổi phù xây → phù luyện binh, 200 lá mỗi mệnh giá mỗi mùa | P2 | S |
 | C23 | Cornucopia / Ghost Parade / Lotus War | Liên Trảm Bất Hồi | ✅ fest `lienTram` (điểm cao cho săn liên hoàn — chỉ số `chain`) | P1 | S–M |
 | D1 | Lohar's Trial | Yêu Tướng Thử Luyện | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
 | D2 | Arms Training | Luận Võ Liên Hoàn | ✅ (25/09) mỗi ngày một phiên, công pháp cho giáo đầu mỗi 3 thắng | P1 | M |
@@ -1278,7 +1278,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | F2 | Wheel of Fortune | Thiên Cơ Luân | ✅ Thiên Cơ Luân (`thienCo`), lượt thêm bằng lệnh kiếm được | — | — |
 | F3 | Esmeralda's House | Bói Quẻ Thiên Cơ | ❌ | P2 | S |
 | F4 | Esmeralda's Prayer / Collection / Treasures | Nguyện Thụ Cầu Duyên | ✅ cây 12 quà cạn dần, đủ 4 đặc biệt thì viên mãn | P2 | S–M |
-| F5 | Card King | Phiên Bài Kỳ Ngộ | ❌ | P2 | S |
+| F5 | Card King | Phiên Bài Kỳ Ngộ | ✅ 12 lá 6 đôi, 2 lá miễn phí mỗi ván, 10 ván | P2 | S |
 | F6 | Holy Knight's Treasure | Linh Noãn Kỳ Bảo | ✅ món chủ lực 7,5 %, 9 quả, rương mốc | P2 | S |
 | F7 | Garden of Infinity | Vạn Hoa Viên | ✅ bàn 20 ô, quà ô / vòng / mốc; chưa có Kim Xúc Xắc | P2 | M |
 | F8 | Hunt for History | Khảo Cổ Động Phủ | ✅ tầng 16 ô, giải tối thượng chọn trước, tầng 5 quý hơn, rương mốc | P2 | S–M |

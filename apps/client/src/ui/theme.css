@@ -59,6 +59,21 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --spring: cubic-bezier(0.3, 1.45, 0.5, 1);
 
+  /* Đồ vật (bộ giao diện "đồ vật trên nền sương" — màn không tự đặt màu, chỉ dùng các biến này qua component ui/) */
+  --wood: #8a5c38; /* gỗ kệ, bảng, trục tranh */
+  --wood-l: #9a6a42;
+  --wood-d: #5c3a1f;
+  --talisman: #fbf7ec; /* giấy bùa / cáo thị ghim son */
+  --talisman-edge: #d8cdb4;
+  --pin: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18); /* đinh ghim son */
+  --pill: rgb(31 27 23 / 0.8); /* viên mực: nhãn nổi trên cảnh/tranh */
+  --pill-fg: #f5f5f1;
+  --lacquer: linear-gradient(#c0443a, #7d2218); /* mặt án sơn son */
+  --gilt: #c9a45a; /* chỉ vàng viền án, vành đồng */
+  --rar2: var(--azurite); /* phẩm: lam · tím · vàng */
+  --rar3: #7a47a6;
+  --rar4: #9a6b16;
+
   /* Lớp */
   --z-overlay: 2;
   --z-page: 4;
@@ -250,6 +265,110 @@ dialog::backdrop {
 .mt-4 {
   margin-top: var(--sp-4);
 }
+/* Màn KHÔNG có CSS riêng (architecture.test.ts chặn): bố cục ghép bằng các lớp dưới đây, tham số qua biến
+   (style:--cols, --min, --gap, --lines) — biến là tham số, không phải luật CSS. Cần kiểu mới: thêm vào đây hoặc ui/. */
+.mt-1 {
+  margin-top: var(--sp-1);
+}
+.mt-5 {
+  margin-top: var(--sp-5);
+}
+.fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--min, 96px), 1fr));
+  gap: var(--gap, var(--sp-2));
+}
+.split {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--gap, var(--sp-3));
+  align-items: var(--align, center);
+}
+.split.end-side {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.plain {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.items-start {
+  align-items: start;
+}
+.items-end {
+  align-items: end;
+}
+.justify-center {
+  justify-content: center;
+  justify-items: center;
+}
+.justify-end {
+  justify-content: flex-end;
+  justify-items: end;
+}
+.self-start {
+  align-self: start;
+  justify-self: start;
+}
+.self-center {
+  align-self: center;
+  justify-self: center;
+}
+.self-end {
+  justify-self: end;
+}
+.span-all {
+  grid-column: 1 / -1;
+}
+.w-full {
+  width: 100%;
+}
+.rel {
+  position: relative;
+}
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+/* hàng cuộn ngang (thẻ, huy hiệu) không lộ thanh cuộn */
+.scroller {
+  display: flex;
+  gap: var(--gap, var(--sp-2));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.scroller > * {
+  flex: none;
+}
+.t-center {
+  text-align: center;
+}
+.t-right {
+  text-align: right;
+}
+.nowrap {
+  white-space: nowrap;
+}
+/* cắt chữ dài còn --lines dòng (mặc định 2) */
+.clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: var(--lines, 2);
+  line-clamp: var(--lines, 2);
+  -webkit-box-orient: vertical;
+}
+.dim {
+  opacity: 0.55;
+}
+.hidden-narrow {
+  display: revert;
+}
+@media (max-width: 480px) {
+  .hidden-narrow {
+    display: none;
+  }
+}
 
 /* ---------- Chữ ---------- */
 
@@ -376,6 +495,30 @@ dialog::backdrop {
 }
 .path > li.hit::after {
   background: var(--cinnabar);
+}
+/* sổ kẻ: danh sách dòng gọn ngăn bằng nét mực đứt (thay cho chồng thẻ); li.on: dòng nổi bật (của mình, đang bật) */
+.ledger {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ledger > li {
+  display: flex;
+  align-items: center;
+  gap: var(--gap, var(--sp-2));
+  min-width: 0;
+  padding: 7px 6px;
+  border-bottom: 1px dashed var(--paper3);
+}
+.ledger > li.on {
+  font-weight: 800;
+  background: color-mix(in srgb, var(--cinnabar) 9%, transparent);
+  border-radius: 6px;
+}
+.ledger > li.good {
+  background: color-mix(in srgb, var(--malachite) 10%, transparent);
+  border-radius: 6px;
 }
 /* số hạng: ba hạng đầu là đồng tiền vàng / bạc / đồng, còn lại số mực */
 .rank-no {

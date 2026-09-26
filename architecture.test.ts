@@ -74,3 +74,113 @@ test('rules: chỉ import xuống (core ← sect ← world), tính năng không 
     }
   assert.deepEqual(bad, [])
 })
+
+// Màn không có CSS riêng: mọi giao diện là component / lớp / biến trong apps/client/src/ui (bộ giao diện dùng lại).
+// Màn chỉ ghép: không khối <style>, không `style:` tự đặt kiểu — trừ biến tham số (style:--gap, --cols…) và vị trí tính từ
+// dữ liệu (left/top/width/height/translate/rotate: ghim nhãn trên cảnh, thanh theo tỉ lệ). Cần kiểu mới → thêm vào ui/.
+// PENDING: các màn còn CSS cũ đang chờ chuyển sang ui/ — chỉ được bớt, không được thêm (chuyển xong thì xoá khỏi danh sách).
+const GEOM = new Set(['left', 'top', 'right', 'bottom', 'width', 'height', 'translate', 'rotate', 'transform'])
+const PENDING = new Set<string>([
+  'Account.svelte',
+  'Achievements.svelte',
+  'Advisor.svelte',
+  'Alchemy.svelte',
+  'Alliance.svelte',
+  'AllyMob.svelte',
+  'AllyPlans.svelte',
+  'AllyQuiz.svelte',
+  'AllyShop.svelte',
+  'AllySkills.svelte',
+  'AllyTech.svelte',
+  'App.svelte',
+  'Arena.svelte',
+  'ArkCard.svelte',
+  'Army.svelte',
+  'AwaySummary.svelte',
+  'Buffs.svelte',
+  'Chat.svelte',
+  'Conn.svelte',
+  'Daily.svelte',
+  'DaoChoose.svelte',
+  'DaoPick.svelte',
+  'Delve.svelte',
+  'Dice.svelte',
+  'Disciples.svelte',
+  'Drill.svelte',
+  'Egg.svelte',
+  'ElderReveal.svelte',
+  'ElderStory.svelte',
+  'Events.svelte',
+  'Forge.svelte',
+  'GiftStrip.svelte',
+  'Guard.svelte',
+  'Help.svelte',
+  'Honor.svelte',
+  'Hud.svelte',
+  'ItemCell.svelte',
+  'Items.svelte',
+  'JobRow.svelte',
+  'Library.svelte',
+  'Market.svelte',
+  'Maze.svelte',
+  'Merchant.svelte',
+  'Panel.svelte',
+  'Pass.svelte',
+  'PowerSheet.svelte',
+  'Profile.svelte',
+  'Quiz.svelte',
+  'Ranks.svelte',
+  'Refill.svelte',
+  'Replay.svelte',
+  'Reports.svelte',
+  'ResSheet.svelte',
+  'Rescue.svelte',
+  'Result.svelte',
+  'Rivals.svelte',
+  'SeasonCal.svelte',
+  'Settings.svelte',
+  'SpeedUp.svelte',
+  'Supply.svelte',
+  'Target.svelte',
+  'Tavern.svelte',
+  'Thief.svelte',
+  'TileSheet.svelte',
+  'Title.svelte',
+  'Trade.svelte',
+  'Train.svelte',
+  'Trial.svelte',
+  'Unlocks.svelte',
+  'Vault.svelte',
+  'VipSheet.svelte',
+  'Wheel.svelte',
+  'Wish.svelte',
+  'world/Holdings.svelte',
+  'world/Home.svelte',
+  'world/MapView.svelte',
+  'world/Minimap.svelte',
+  'world/View.svelte',
+  'world/WorldView.svelte',
+])
+function screenStyle(src: string): string[] {
+  const out: string[] = []
+  if (/<style[\s>]/.test(src)) out.push('<style>')
+  for (const m of src.matchAll(/\bstyle:([a-z-]+)/g))
+    if (!m[1].startsWith('--') && !GEOM.has(m[1])) out.push(`style:${m[1]}`)
+  for (const m of src.matchAll(/\bstyle="([^"{]*)"/g)) if (/(^|;)\s*[a-z]/.test(m[1])) out.push(`style="${m[1]}"`)
+  return out
+}
+test('màn không tự viết CSS: mọi kiểu nằm trong apps/client/src/ui', () => {
+  const dir = join(root, 'apps/client/src')
+  const files = readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter(
+    f => f.endsWith('.svelte') && !f.startsWith('ui/'),
+  )
+  const bad: string[] = []
+  const done: string[] = []
+  for (const f of files) {
+    const hits = screenStyle(readFileSync(join(dir, f), 'utf8'))
+    if (hits.length && !PENDING.has(f))
+      bad.push(`${f}: ${[...new Set(hits)].join(', ')} — dùng component/lớp trong ui/`)
+    if (!hits.length && PENDING.has(f)) done.push(`${f}: đã sạch — xoá khỏi PENDING trong architecture.test.ts`)
+  }
+  assert.deepEqual([...bad, ...done], [])
+})

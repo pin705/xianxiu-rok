@@ -7,6 +7,7 @@
     RUNE_KINDS,
     RUNE_TIERS,
     SPY_COST,
+    VEIN_HOLD,
     AP_HUNT,
     AP_MAX,
     BEATS,
@@ -71,6 +72,7 @@
     regionOf,
     route,
     ruinWindow,
+    contestWindow,
     veinBuffs,
     weather,
     TASK_OF,
@@ -89,7 +91,7 @@
   import ArmyPick from './Army.svelte'
   import Help from './Help.svelte'
   import { Bag, Button, Card, Medal, Meter, Section, Sheet, Stat, Tabs, Tag } from './ui'
-  import { EMBLEM, L, clock, marchDoing, num, sfx, spotName } from './lib'
+  import { EMBLEM, L, clock, marchDoing, num, pointName, sfx, spotName } from './lib'
   import type { Pick } from './world/worldmap'
   import { useGame } from './game'
   import { social } from './social.svelte'
@@ -165,7 +167,7 @@
     if (point)
       return point.kind === 'ruin' || point.kind === 'altar'
         ? spotName(point.kind)
-        : `${spotName(point.kind)} · ${L.lv(point.lv)}`
+        : `${pointName(point)} · ${L.lv(point.lv)}`
     if (march) return snap?.seats.find(s => s.pid === march.pid)?.name ?? ''
     if (site) return site.kind === 'village' ? L.world.explore.village : L.world.explore.cave
     return pick?.kind === 'tile' ? regionName(regionOf(atlas, pick)) : ''
@@ -422,6 +424,20 @@
               if (r.ok) sfx('tap')
             }}>{L.world.spySpot(num(SPY_COST * (point.lv + 5)))}</Button
           >
+        {/if}
+        {#if point.kind === 'vein'}
+          <!-- kỳ tranh chấp: phe kiểm soát nhận tăng ích; có phe kiểm soát thì ngoài kỳ là bảo hộ -->
+          {@const cw = contestWindow(atlas, point, now)}
+          {#if spot?.ctl}<Stat label={L.world.ctlBy}>{spot.ctl}</Stat>{/if}
+          {#if spot?.ctl}<Tag icon={cw.open ? 'swords' : 'shield'} tone={cw.open ? 'bad' : 'good'}
+              >{cw.open ? L.world.contestOpen(L.ago(cw.end - now)) : L.world.contestSafe(L.ago(cw.start - now))}</Tag
+            >{/if}
+          {#if spot?.own && spot.side !== spot.ctlSide && spot.since !== undefined}
+            {@const from = spot.ctlSide === undefined ? spot.since : Math.max(spot.since, cw.start)}
+            <small class="t-tiny t-gold">{L.world.holdLeft(spot.own, L.ago(Math.max(0, from + VEIN_HOLD - now)))}</small
+            >
+          {/if}
+          <small class="t-tiny t-soft">{L.world.contestHint}</small>
         {/if}
         {#if point.kind === 'vein'}<small class="t-small t-good"
             >{L.world.veinBuff(

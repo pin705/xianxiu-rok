@@ -51,7 +51,7 @@ import {
   type World,
 } from './base.ts'
 import { addArmy, carryOf, combine, split, flipRounds } from './fight.ts'
-import { bank, claimsOf, eveAdd, guardSide, hold, ownerAt, ruinWindow, spotOf, bossSlice, wildSide } from './points.ts'
+import { bank, claimsOf, eveAdd, guardSide, hold, ownerAt, closedTo, spotOf, bossSlice, wildSide } from './points.ts'
 
 type Arrived = { changed: Players; world: World }
 
@@ -69,7 +69,7 @@ export function spotArrive(ps: Players, w: World, map: MapCtx, group: Party, at:
       ? back()
       : hitBoss(ps, w, map, group, sp, at)
   if (m.task === 'hunt') return (sp.until ?? 0) > at ? back() : hunt(w, map, group[0], at) // người khác vừa hạ: về
-  if (!ruinWindow(map.atlas, map.atlas.points[m.target.i], at).open) return back() // di tích đã đóng cửa: về
+  if (closedTo(map.atlas, map.atlas.points[m.target.i], sp, sideKey(w, group[0][0]), at)) return back() // đóng cửa / bảo hộ: về
   const r = take(ps, w, map, group, sp, at)
   return r ? firstTake(ps, r, map, m.target.i, at) : back()
 }

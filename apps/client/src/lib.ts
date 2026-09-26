@@ -18,7 +18,7 @@ import {
   type State,
   type UnitType,
 } from '@rok/rules'
-import { MAP_W } from '@rok/rules/world'
+import { MAP_W, shrineOf, type Point } from '@rok/rules/world'
 import type { Net } from './net'
 import { FALLBACK, LOCALES, loadText, pick, type Locale, type Text } from '@rok/i18n'
 
@@ -210,6 +210,8 @@ export function suggestNames(n: number) {
 
 export const spotName = (kind?: string) =>
   L.world.point[(kind ?? 'vein') as keyof typeof L.world.point] ?? L.world.point.vein
+// Tên một điểm trên bản đồ giới: thần miếu có tên riêng (Huyền Vũ Miếu…), điểm khác theo loại
+export const pointName = (p: Point) => (shrineOf(p) >= 0 ? L.world.shrines[shrineOf(p)] : spotName(p.kind))
 export function reportName(r: Report) {
   if (r.kind === 'trib') return L.trib.title
   if (r.kind === 'pvp' || r.kind === 'arena') return r.foe ?? L.pvp.kind
@@ -252,6 +254,10 @@ export const keyBlocked = (e: KeyboardEvent) =>
 
 export const visitedTabs = (): string[] => (read('rok.tabs') ?? 'tongMon').split(',')
 export const visitTab = (id: string) => write('rok.tabs', [...new Set([...visitedTabs(), id])].join(','))
+// Sự kiện đã xem ở trung tâm sự kiện, mỗi lễ một mục "id:lượt" — lượt mới mở chưa xem thì thẻ có dấu "!" vàng (New của RoK)
+export const seenFests = (): string[] => (read('rok.fests') ?? '').split(',')
+export const seeFest = (id: string, key: number) =>
+  write('rok.fests', [...seenFests().filter(k => k && !k.startsWith(`${id}:`)), `${id}:${key}`].join(','))
 
 // Bản online: tiến độ nằm trên server. Save offline của P1 không chuyển sang được (không kiểm được gian lận — PLAN §An toàn):
 // dọn một lần, báo cho người chơi biết. true: vừa dọn một save cũ.

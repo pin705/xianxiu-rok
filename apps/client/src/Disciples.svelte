@@ -44,6 +44,8 @@
   } from '@rok/rules'
   import Tavern from './Tavern.svelte'
   import { Icon, Portrait } from '@rok/art'
+  import ElderStory from './ElderStory.svelte'
+  import ElderSwap from './ElderSwap.svelte'
   import { Button, Card, Medal, Meter, Page, Section, Sheet, Tabs, Tag } from './ui'
   import { EMBLEM, L, LOOK, clock, num, unitName, type PanelTab } from './lib'
   import Help from './Help.svelte'
@@ -310,6 +312,7 @@
           >
         </Card>
       {/if}
+      <ElderSwap elder={e} />
     </Section>
     {@const g = gearOf(game, e)}
     {@const busy = isMarching(game, e)}
@@ -420,6 +423,7 @@
         >
       {/if}
     </Section>
+    <ElderStory elder={e} {lv} />
     {#if game.items.boiNguyen && lv < ELDER_MAX}
       <div class="mt-4">
         <Button variant="gold" wide icon="boiNguyen" onclick={() => act({ type: 'feed', elder: e, n: 1 }, 'reward')}

@@ -13,6 +13,9 @@ import {
   ALTAR_OPEN,
   RUIN_EVERY,
   RUIN_OPEN,
+  VEIN_EVERY,
+  VEIN_HOLD,
+  VEIN_OPEN,
   SEASON_ALTAR,
   SEASON_GATE,
   SEASON_HEAVEN,
@@ -28,6 +31,8 @@ import {
   TERR_POINT,
   TERR_SEAT,
   TYPES,
+  SHRINES,
+  ALLY_ORDERS,
   VEIN_BUFF,
   EVE_BUFF,
   thoiAt,
@@ -123,19 +128,51 @@ export function bossSlice(a: Atlas, i: number): Side | null {
 export function ruinWindow(a: Atlas, p: Point, t: number): { open: boolean; start: number; end: number } {
   if (p.kind !== 'ruin' && p.kind !== 'altar') return { open: true, start: -Infinity, end: Infinity }
   const [every, len] = p.kind === 'altar' ? [ALTAR_EVERY, ALTAR_OPEN] : [RUIN_EVERY, RUIN_OPEN]
+  return windowAt(a, p, t, every, len)
+}
+function windowAt(a: Atlas, p: Point, t: number, every: number, len: number) {
   const off = ((a.seed * 7919 + p.i * 104_729) >>> 0) % every
   const start = Math.floor((t - off) / every) * every + off
   return t < start + len
     ? { open: true, start, end: start + len }
     : { open: false, start: start + every, end: start + every + len }
 }
+// Kỳ tranh chấp của một linh mạch: cửa sổ đang mở chứa lúc t, hay cửa sổ kế tiếp (lệch giờ riêng từng điểm)
+export const contestWindow = (a: Atlas, p: Point, t: number) => windowAt(a, p, t, VEIN_EVERY, VEIN_OPEN)
+// Linh mạch đang bảo hộ với phe side: đã có phe kiểm soát khác, ngoài kỳ tranh chấp, side cũng không đang đóng quân ở đó
+export const veinShut = (a: Atlas, p: Point, sp: Spot | undefined, side: number, t: number) =>
+  p.kind === 'vein' && sp?.ctl !== undefined && sp.ctl !== side && sp.own !== side && !contestWindow(a, p, t).open
+// Đội tới chiếm phải quay về: di tích đã đóng cửa, hay linh mạch đang bảo hộ với phe side
+export const closedTo = (a: Atlas, p: Point, sp: Spot | undefined, side: number, t: number) =>
+  !ruinWindow(a, p, t).open || veinShut(a, p, sp, side, t)
+// Phe đang đóng quân giữ liên tục VEIN_HOLD thì thành phe kiểm soát: linh mạch chưa ai kiểm soát tính từ lúc chiếm, đã có phe kiểm soát
+// thì chỉ tính phần giữ trong kỳ tranh chấp gần nhất (đang mở hay vừa đóng)
+export function contestStep(w: World, map: MapCtx, now: number): World {
+  let next = w
+  for (const [k, sp] of Object.entries(w.spots)) {
+    const p = map.atlas.points[Number(k)]
+    if (p?.kind !== 'vein' || sp.own === undefined || sp.own === sp.ctl || sp.since === undefined) continue
+    const cur = contestWindow(map.atlas, p, now)
+    const win = cur.open ? cur : { start: cur.start - VEIN_EVERY, end: cur.end - VEIN_EVERY }
+    const held = sp.ctl === undefined ? now - sp.since : Math.min(now, win.end) - Math.max(sp.since, win.start)
+    if (held >= VEIN_HOLD) next = setSpot(next, Number(k), { ...sp, ctl: sp.own })
+  }
+  return next
+}
 // Tăng ích linh mạch cho phe giữ (Sanctum / Altar / Shrine của RoK): cấp 1 một trong sản lượng · xây · tuyển · chữa; cấp 2 một
-// trong công · thủ · sinh lực · hành quân; cấp 3 (tâm) sản lượng + công — theo số thứ tự điểm, độ lớn VEIN_BUFF theo cấp
+// trong công · thủ · sinh lực · hành quân, trừ thần miếu (buff kép SHRINES); cấp 3 (tâm) sản lượng + công — theo số thứ tự
+// điểm, độ lớn VEIN_BUFF theo cấp
 const VEIN_KEYS: Bonus[][] = [
   ['prod', 'build', 'train', 'heal'],
   ['atk', 'def', 'hp', 'march'],
 ]
+// Thần miếu: linh mạch vòng giữa có số thứ tự chia hết cho 3 — ba linh mạch của một vùng giữa đặt liền nhau nên mỗi vùng đúng
+// một miếu; loại miếu (chỉ số trong SHRINES) theo số vùng — tám vùng giữa, mỗi loại hai miếu. −1: không phải miếu
+export const shrineOf = (p: Point) =>
+  p.kind === 'vein' && p.lv === 2 && p.i % 3 === 0 ? p.region % SHRINES.length : -1
 export function veinBuffs(p: Point): { key: Bonus; v: number }[] {
+  const k = shrineOf(p)
+  if (k >= 0) return SHRINES[k]
   const v = VEIN_BUFF[p.lv - 1] ?? 0
   if (p.lv >= 3)
     return [
@@ -158,7 +195,12 @@ export const bank = (w: World, side: number, pts: number): World =>
 // Đặt lại điểm i lúc at; đổi phe giữ thì chốt điểm mùa cho phe cũ theo số giờ đã giữ
 export function hold(w: World, map: MapCtx | undefined, i: number, sp: Spot, at: number): World {
   const old = w.spots[i]
-  const next = setSpot(w, i, old?.tamed ? { ...sp, tamed: 1 } : sp) // linh thú đã thuần phục thì giữ vậy cả mùa
+  // linh thú đã thuần phục thì giữ vậy cả mùa; phe kiểm soát linh mạch giữ nguyên tới khi phe khác giữ đủ (contestStep)
+  const next = setSpot(w, i, {
+    ...sp,
+    ...(old?.tamed && { tamed: 1 as const }),
+    ...(old?.ctl !== undefined && { ctl: old.ctl }),
+  })
   if (!map || old?.own === undefined || old.own === sp.own) return next
   return bank(next, old.own, ((at - (old.since ?? at)) / HOUR) * seasonRate(map.atlas.points[i]))
 }
@@ -332,6 +374,12 @@ export function thoiBuffs(map: MapCtx, s: State): Buff[] {
   }))
 }
 
+// Minh lệnh của thời đang chạy (minh của người đó ban)
+export function orderBuffs(map: MapCtx, al: Alliance | undefined): Buff[] {
+  const o = al?.order
+  if (map.day === undefined || !o || o.n !== thoiAt(map.day).n) return []
+  return [{ ...ALLY_ORDERS[o.k], until: 0, src: 'order' }]
+}
 // Vị trí (ô) của đội lúc t theo đường đi (đi: path; về: path ngược); không có đường thì null
 export function marchAt(m: March, t: number): Pos | null {
   const path = m.path

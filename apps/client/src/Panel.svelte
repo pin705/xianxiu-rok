@@ -42,6 +42,7 @@
   } from '@rok/rules'
   import { Icon, artOf, building, tierOf, type IconName, type Kind } from '@rok/art'
   import { Bag, Button, Card, Confirm, Medal, Painting, Section, Sheet, Stat, Tabs, Tag, Toggle } from './ui'
+  import FirstLook from './FirstLook.svelte'
   import Alchemy from './Alchemy.svelte'
   import ArmyPick from './Army.svelte'
   import Forge from './Forge.svelte'
@@ -280,6 +281,7 @@
         {@const tp = tribPill(game, true)}
         {@const cloud = game.marches.find(m => m.target.kind === 'trib')}
         <Section title={L.trib.title}>
+          <FirstLook id="trib" />
           {#snippet aside()}<Help k={4} />{/snippet}
           <p class="t-small t-lore">{L.trib.lore(L.realmName(tr.hall + 1))}</p>
           {#if game.seat}<p class="t-small t-soft">

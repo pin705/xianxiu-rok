@@ -20,7 +20,7 @@ import {
   PVP_HALL,
   type Reward,
 } from '../data.ts'
-import { arenaN, arenaOf, arenaSide, duel, lineupOf } from '../sect/arena.ts'
+import { arenaN, arenaOf, arenaSide, arenaUpper, duel, lineupOf } from '../sect/arena.ts'
 import { elo, type Players, type WorldActions } from './base.ts'
 
 // Đội hình thủ người khác thấy trước (trưởng lão, hệ, cấp, số đệ tử ảo)
@@ -38,13 +38,13 @@ const foeRow = (pid: number, s: State, t: number): ArenaFoe => ({
   pts: arenaOf(s, t).pts,
   lineup: lineupOf(s).map(x => ({ ...x, lv: elderLevel(s.elders[x.elder]), n: arenaN(s, x.elder) })),
 })
-// MATCH_PICK người ngẫu nhiên trong MATCH_POOL người điểm đài gần mình nhất (đã tới tầng mở Tranh đoạt)
+// MATCH_PICK người ngẫu nhiên trong MATCH_POOL người điểm đài gần mình nhất (đã tới tầng mở Tranh đoạt, cùng tầng đài)
 export function arenaFoes(ps: Players, pid: number, t: number, rand: () => number): ArenaFoe[] {
   const me = ps.get(pid)
   if (!me || me.levels.chuDien < PVP_HALL) return []
   const mine = arenaOf(me, t).pts
   const pool = [...ps]
-    .filter(([id, s]) => id !== pid && s.levels.chuDien >= PVP_HALL)
+    .filter(([id, s]) => id !== pid && s.levels.chuDien >= PVP_HALL && arenaUpper(s) === arenaUpper(me))
     .sort((a, b) => Math.abs(arenaOf(a[1], t).pts - mine) - Math.abs(arenaOf(b[1], t).pts - mine) || a[0] - b[0])
     .slice(0, MATCH_POOL)
   for (let i = pool.length - 1; i > 0; i--) {
@@ -53,16 +53,18 @@ export function arenaFoes(ps: Players, pid: number, t: number, rand: () => numbe
   }
   return pool.slice(0, MATCH_PICK).map(([id, s]) => foeRow(id, s, t))
 }
-// Bảng tuần: người có đài tuần này, điểm cao trước
-export const arenaBoard = (ps: Players, week: number) =>
+// Bảng tuần của một tầng đài (upper: Thượng Tầng): người có đài tuần này, điểm cao trước
+export const arenaBoard = (ps: Players, week: number, upper = false) =>
   [...ps]
-    .filter(([, s]) => s.arena?.week === week && s.arena.log.length)
+    .filter(([, s]) => s.arena?.week === week && s.arena.log.length && arenaUpper(s) === upper)
     .sort((a, b) => b[1].arena!.pts - a[1].arena!.pts || a[0] - b[0])
-// Thư quà hết tuần theo hạng (0: hạng 1): hạng 1 · 2–3 · 4–10
+// Thư quà hết tuần theo hạng (0: hạng 1): hạng 1 · 2–3 · 4–10 — mỗi tầng đài một bảng
 export const arenaTop = (ps: Players, week: number) =>
-  arenaBoard(ps, week)
-    .slice(0, ARENA_TOP)
-    .map(([id]) => id)
+  [false, true].map(upper =>
+    arenaBoard(ps, week, upper)
+      .slice(0, ARENA_TOP)
+      .map(([id]) => id),
+  )
 export const arenaPrize = (rank: number): Reward => ARENA_PRIZES[rank === 0 ? 0 : rank < 3 ? 1 : 2]
 
 export type ArenaFight = { type: 'arena'; pid: number; revenge?: boolean }
@@ -93,6 +95,7 @@ export const arenaActions: WorldActions<ArenaFight> = {
       const foe = ps.get(a.pid)
       if (!foe || a.pid === pid) return no('gone')
       if (foe.levels.chuDien < PVP_HALL) return no('weak')
+      if (!a.revenge && arenaUpper(foe) !== arenaUpper(s)) return no('bad') // khác tầng đài
       const def = advance(foe, t)
       const A = lineupOf(s),
         D = lineupOf(def)

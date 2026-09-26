@@ -22,6 +22,7 @@
   import { Icon, Portrait } from '@rok/art'
   import ArmyPick from './Army.svelte'
   import { Button, Card, Medal, Section, Sheet, Tag } from './ui'
+  import FirstLook from './FirstLook.svelte'
   import { EMBLEM, L, LOOK, clock, num } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
@@ -99,6 +100,7 @@
     : `${L.pvp.pts(game.pvp.pts)} · ${L.pvp.record(game.pvp.win, game.pvp.loss)}`}
 >
   {#snippet art()}<Medal emblem="crest" tone="pvp" size={62} />{/snippet}
+  {#if game.levels.chuDien >= PVP_HALL}<FirstLook id="pvp" />{/if}
   {#if game.levels.chuDien < PVP_HALL}
     <Tag icon="lock" tone="bad">{L.pvp.locked}</Tag>
   {:else if pick}

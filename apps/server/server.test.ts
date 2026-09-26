@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import postgres from 'postgres'
 import { io, type Socket } from 'socket.io-client'
-import { DAY, DAY_OFFSET, dayOf, expAt, type Action, type State } from '@rok/rules'
+import { DAY, DAY_OFFSET, VEIN_HOLD, dayOf, expAt, type Action, type State } from '@rok/rules'
 import { atlas, regionOf } from '@rok/rules/world'
 import type { Ack, Answer, ClientToServer, Push, Query, QueryOf, Refuse, ServerToClient, Welcome } from '@rok/protocol'
 import { buildServer } from './src/app.ts'
@@ -719,8 +719,10 @@ test(
     await api(n, '/dev/warp', { min: Math.ceil((m.arriveAt - now0) / 60_000) + 1 }, A.token)
     const held = await c.push(p => !!p.p.marches?.some(x => x.id === m.id && x.stay))
     assert.ok(held)
+    // kỳ tranh chấp: giữ liên tục VEIN_HOLD mới thành phe kiểm soát, có tăng ích
+    await api(n, '/dev/warp', { min: VEIN_HOLD / 60_000 + 1 }, A.token)
     const buffed = await c.push(p => !!p.p.buffs?.some(b => b.src === 'vein'), 8000)
-    assert.ok(buffed, 'giữ linh mạch: sản lượng tăng')
+    assert.ok(buffed, 'giữ đủ 4 giờ: phe kiểm soát được tăng ích')
     const map = await c.ask({ k: 'map' })
     assert.equal(map.spots.find(s => s.i === vein!.i)?.n, 1)
     assert.ok((await c.act({ type: 'recall', id: m.id })).ok)

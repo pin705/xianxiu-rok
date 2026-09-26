@@ -64,6 +64,7 @@ import {
 } from './index.ts'
 import {
   guardSide,
+  contestWindow,
   raidChance,
   regionOf,
   scout,
@@ -385,8 +386,9 @@ export function npcHold(s: State, a: Atlas, w: World): WorldAction | null {
     const g = w.spots[i]?.tamed ? null : guardSide(a, i)
     return !g || raidChance(s, e, army, g) >= 0.7
   }
+  const open = (i: number) => w.spots[i]?.ctl === undefined || contestWindow(a, a.points[i], s.time).open // không đang bảo hộ
   const vein = a.points.find(
-    p => p.kind === 'vein' && p.region === region && w.spots[p.i]?.own === undefined && ok(p.i),
+    p => p.kind === 'vein' && p.region === region && w.spots[p.i]?.own === undefined && open(p.i) && ok(p.i),
   )
   return vein && Object.keys(army).length ? { type: 'go', i: vein.i, task: 'take', elder: e, army } : null
 }

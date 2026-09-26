@@ -17,6 +17,10 @@ import {
   type ElderId,
   cranes,
   SPY_COST,
+  VEIN_HOLD,
+  TOURNEY_DAY,
+  DAY,
+  VEIN_EVERY,
   FORT_BUFFS,
   FORT_BUILD,
   FORT_COST,
@@ -81,6 +85,8 @@ import {
   apply,
   arenaOf,
   lineupOf,
+  arenaSide,
+  arenaUpper,
   cost,
   count,
   eventOf,
@@ -118,6 +124,10 @@ import {
   MAP_W,
   advanceAll,
   veinBuffs,
+  contestStep,
+  tourneyStep,
+  contestWindow,
+  shrineOf,
   groupsOf,
   officeBuffs,
   tribeBank,
@@ -793,7 +803,7 @@ test('Luận Kiếm Đài: đội hình thủ (tự xếp nếu chưa đặt), t
   assert.equal(act(1, { type: 'arena', pid: 2 }), 'limit', 'hết lượt trong ngày')
   assert.equal(act(1, { type: 'arena', pid: 2 }, T0 + 24 * HOUR), null, 'ngày mới đủ lượt lại')
   assert.deepEqual(
-    arenaBoard(ps, a.week).map(([id]) => id),
+    arenaBoard(ps, a.week, true).map(([id]) => id), // tầng 16: bảng Thượng Tầng
     [1, 2],
   )
   // rương ngày theo bậc: một lần mỗi ngày
@@ -1343,8 +1353,15 @@ test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác
   // chiếm lần đầu trong mùa: cả minh nhận quà, mỗi điểm một lần
   assert.deepEqual(w.firsts, [vein.i])
   assert.deepEqual([ps.get(1)!.mail.at(-1)!.k, ps.get(3)!.mail.at(-1)!.k], ['firstTake', 'firstTake'])
-  // buff linh mạch cho cả minh (A và C), B không có — loại buff theo điểm (cấp 1: sản lượng / xây / tuyển / chữa)
-  for (const [k, v] of worldBuffs(ps, w, map, m.arriveAt)) ps.set(k, v)
+  // buff linh mạch cho phe kiểm soát: chiếm rồi phải giữ đủ VEIN_HOLD (kỳ tranh chấp) — cả minh (A và C), B không có; loại buff
+  // theo điểm (cấp 1: sản lượng / xây / tuyển / chữa)
+  assert.ok(
+    ![...worldBuffs(ps, w, map, m.arriveAt).values()].some(x => x.buffs.some(b => b.src === 'vein')),
+    'chưa giữ đủ: chưa kiểm soát',
+  )
+  const held = contestStep(w, map, m.arriveAt + VEIN_HOLD)
+  assert.equal(held.spots[vein.i].ctl, 1)
+  for (const [k, v] of worldBuffs(ps, held, map, m.arriveAt + VEIN_HOLD)) ps.set(k, v)
   assert.ok(ps.get(1)!.buffs.some(b => b.src === 'vein') && ps.get(3)!.buffs.some(b => b.src === 'vein'))
   assert.deepEqual(
     ps
@@ -1383,15 +1400,17 @@ test('điểm trên bản đồ: chiếm linh mạch và đóng quân, phe khác
     garrison(ps, vein.i).map(([p]) => p),
     [2],
   )
-  for (const [k, v] of worldBuffs(ps, w, map, mb.arriveAt)) ps.set(k, v)
+  const tb = mb.arriveAt + VEIN_HOLD
+  w = contestStep(w, map, tb) // B giữ đủ: thành phe kiểm soát
+  for (const [k, v] of worldBuffs(ps, w, map, tb)) ps.set(k, v)
   assert.ok(
     !ps.get(1)!.buffs.some(b => b.src === 'vein') && ps.get(2)!.buffs.some(b => b.src === 'vein'),
-    'buff theo người giữ',
+    'buff theo phe kiểm soát',
   )
-  // B gọi về: điểm trống
-  assert.equal(act(2, { type: 'recall', id: mb.id }, mb.arriveAt + 1000), null)
-  assert.equal(w.spots[vein.i].own, undefined)
-  assert.equal(act(2, { type: 'recall', id: mb.id }, mb.arriveAt + 2000), 'bad', 'đang về rồi')
+  // B gọi về: điểm trống nhưng B vẫn kiểm soát (bảo hộ ngoài kỳ tranh chấp)
+  assert.equal(act(2, { type: 'recall', id: mb.id }, tb + 1000), null)
+  assert.deepEqual([w.spots[vein.i].own, w.spots[vein.i].ctl], [undefined, -2])
+  assert.equal(act(2, { type: 'recall', id: mb.id }, tb + 2000), 'bad', 'đang về rồi')
 })
 
 test('khai mỏ: mang về theo sức mang, hết giờ khai rồi về; gọi về sớm thì chia theo thời gian, phần còn lại trả mỏ', async () => {
@@ -2825,4 +2844,186 @@ test('phù văn: sinh quanh linh địa theo mầm + chu kỳ 12 giờ; xuất q
   assert.ok(!runesLeft(w, a, m.arriveAt).some(r => r.i === rune.i), 'đã nhặt: biến khỏi bản đồ')
   assert.equal(err(go(2)), 'gone', 'người sau không nhặt lại được')
   assert.ok(!mapOf(ps, m.arriveAt, new Set(), [], w, a).runes?.some(r => r.i === rune.i))
+})
+
+test('thần miếu tứ tượng (Shrine): mỗi vùng giữa đúng một linh mạch là miếu, tăng ích kép, đủ bốn loại; cùng loại không cộng dồn', () => {
+  for (const seed of [777, 1, 42]) {
+    const a = atlas(seed)
+    for (const r of a.regions.filter(x => x.ring === 1)) {
+      const veins = a.points.filter(p => p.kind === 'vein' && p.region === r.i)
+      if (veins.length === 3) assert.equal(veins.filter(p => shrineOf(p) >= 0).length, 1, `vùng ${r.i} (seed ${seed})`)
+    }
+    assert.ok(
+      a.points.every(p => shrineOf(p) < 0 || (p.kind === 'vein' && p.lv === 2)),
+      'chỉ linh mạch vòng giữa',
+    )
+    assert.ok(
+      a.points.every(p => shrineOf(p) < 0 || veinBuffs(p).length === 2),
+      'buff kép',
+    )
+  }
+  const a = atlas(777)
+  const kinds = a.points.map(shrineOf).filter(k => k >= 0)
+  assert.deepEqual(
+    [0, 1, 2, 3].map(k => kinds.filter(x => x === k).length),
+    [2, 2, 2, 2],
+    'bốn loại, mỗi loại hai miếu',
+  )
+  // phe giữ hai linh mạch cùng loại tăng ích + linh mạch tâm: mỗi loại lấy mức cao nhất
+  const lv1 = a.points.filter(p => p.kind === 'vein' && p.lv === 1)
+  const [x, y] = lv1.filter(p => veinBuffs(p)[0].key === 'prod')
+  const heart = a.points.find(p => p.kind === 'vein' && p.lv === 3)!
+  const ps = world(sect('A', 10))
+  const own = (...pts: typeof lv1) => ({
+    ...freshWorld(),
+    spots: Object.fromEntries(pts.map(p => [p.i, { own: -1, ctl: -1, since: T0 }])),
+  })
+  const buffs = (w: ReturnType<typeof freshWorld>) =>
+    Object.fromEntries(
+      worldBuffs(ps, w, { atlas: a, phase: 3 }, T0)
+        .get(1)!
+        .buffs.filter(b => b.src === 'vein')
+        .map(b => [b.key, b.v]),
+    )
+  assert.deepEqual(buffs(own(x, y)), { prod: 0.03 }, 'hai điểm sản lượng cấp 1: vẫn 3 %')
+  assert.deepEqual(buffs(own(x, y, heart)), { prod: 0.08, atk: 0.08 })
+})
+
+test('giải tán tiên minh (Disband): chỉ minh chủ; mọi người khác nhận thư báo, minh biến mất', () => {
+  const ps = world(sect('A', 10), sect('B', 10), sect('C', 10))
+  let w = freshWorld()
+  const act = (pid: number, x: Parameters<typeof worldAct>[2]) => {
+    const r = worldAct(ps, pid, x, T0, 7 + pid, undefined, w)
+    if (!r.ok) return r.error
+    for (const [k, v] of r.changed) ps.set(k, v)
+    w = r.world
+    return null
+  }
+  act(1, { type: 'allyFound', name: 'Vạn Kiếm', tag: 'VK' })
+  act(2, { type: 'allyJoin', id: 1 })
+  act(3, { type: 'allyJoin', id: 1 })
+  assert.equal(act(2, { type: 'allyDisband' }), 'locked', 'không phải minh chủ')
+  assert.equal(act(1, { type: 'allyDisband' }), null)
+  assert.equal(w.allies[1], undefined)
+  assert.deepEqual([ps.get(2)!.mail.at(-1)!.k, ps.get(3)!.mail.at(-1)!.k], ['allyGone', 'allyGone'])
+  assert.equal(act(1, { type: 'allyDisband' }), 'locked', 'không còn minh')
+})
+
+test('kỳ tranh chấp linh mạch (Holy Sites): phe kiểm soát được bảo hộ ngoài kỳ; trong kỳ phe khác chiếm và giữ đủ 4 giờ thì thay', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const v = a.points.find(p => p.kind === 'vein' && p.region === 0)!
+  const near = { x: v.x + 2, y: v.y }
+  const ps = world({ ...sect('A', 10), seat: near }, { ...sect('B', 10, { kiem3: 800 }), seat: near })
+  let w: World = { ...freshWorld(), spots: { [v.i]: { ctl: -1, tamed: 1 } } } // A (một mình) đang kiểm soát, không đóng quân
+  const W = contestWindow(a, v, T0)
+  const go = (t: number) =>
+    worldAct(ps, 2, { type: 'go', i: v.i, task: 'take', elder: 'thanhPhong', army: { kiem3: 800 } }, t, 3, map, w)
+  const out = W.open ? W.end + HOUR : W.start - HOUR // ngoài kỳ
+  const inn = W.open ? Math.max(T0, W.start) : W.start + HOUR // trong kỳ
+  assert.deepEqual(go(out), { ok: false, error: 'locked' }, 'đang bảo hộ')
+  const r = go(inn)
+  assert.ok(r.ok)
+  for (const [k, x] of r.changed) ps.set(k, x)
+  w = r.world
+  const m = ps.get(2)!.marches[0]
+  const step = (t: number) => {
+    const x = advanceAll(ps, w, t, map)
+    for (const [k, y] of x.changed) ps.set(k, y)
+    w = x.world
+  }
+  step(m.arriveAt)
+  assert.deepEqual([w.spots[v.i].own, w.spots[v.i].ctl], [-2, -1], 'B chiếm nhưng A vẫn kiểm soát')
+  step(m.arriveAt + VEIN_HOLD - HOUR)
+  assert.equal(w.spots[v.i].ctl, -1, 'chưa đủ 4 giờ')
+  step(m.arriveAt + VEIN_HOLD)
+  assert.equal(w.spots[v.i].ctl, -2, 'giữ đủ trong kỳ: B kiểm soát')
+  // tính bù: bước chạy sau khi kỳ đã đóng vẫn xét phần giữ trong kỳ vừa rồi; chiếm muộn (còn 2 giờ) thì không đủ
+  const late = { ...w, spots: { [v.i]: { ctl: -1, tamed: 1 as const, own: -2, since: W.end - 2 * HOUR } } }
+  const early = { ...w, spots: { [v.i]: { ctl: -1, tamed: 1 as const, own: -2, since: W.start + HOUR } } }
+  assert.equal(contestStep(early, map, W.end + HOUR).spots[v.i].ctl, -2)
+  assert.equal(contestStep(late, map, W.end + HOUR).spots[v.i].ctl, -1)
+  assert.equal(contestStep(late, map, W.start + VEIN_EVERY + VEIN_HOLD).spots[v.i].ctl, -2, 'giữ tiếp sang kỳ sau')
+})
+
+test('Luận Kiếm Đại Hội (Sunset Canyon Tournament): tuần cuối mùa, top điểm đài vào nhánh loại trực tiếp, mỗi ngày một vòng, quà theo chỗ đứng', () => {
+  // 5 người đủ tầng + 1 NPC điểm cao nhất (bỏ qua): nhánh 4 người (luỹ thừa của 2), hạt giống theo điểm đài
+  const ss = [1100, 1300, 1000, 1250, 1200, 1500].map((pts, k) => {
+    const s = sect(`Kiếm ${k + 1}`, 12)
+    return { ...s, arena: { lineup: [], pts, week: weekOf(T0), day: dayOf(T0), left: 5, chest: -1, log: [] } }
+  })
+  const ps = world(...ss)
+  const skip = new Set([6])
+  let w = freshWorld()
+  const step = (day: number) => {
+    const r = tourneyStep(ps, w, day, T0 + day * DAY, 99 + day, skip)
+    for (const [k, x] of r.changed) ps.set(k, x)
+    w = r.world
+    return r
+  }
+  assert.equal(step(TOURNEY_DAY - 1).world.tourney, undefined, 'chưa tới tuần cuối')
+  step(TOURNEY_DAY)
+  const t = w.tourney!
+  assert.deepEqual(t.seeds, [2, 4, 5, 1], 'top 4 theo điểm, bỏ NPC')
+  assert.deepEqual(
+    t.games.filter(g => g.r === 0).map(g => [g.a, g.b]),
+    [
+      [2, 1],
+      [4, 5],
+    ],
+    'hạt giống 1 gặp 4, 2 gặp 3',
+  )
+  assert.ok(t.games.filter(g => g.r === 0).every(g => g.win !== undefined && g.rep !== undefined))
+  const g0 = t.games[0]
+  assert.equal(ps.get(g0.a)!.reports.find(r => r.id === g0.rep)?.kind, 'arena', 'chiến báo của bên đánh')
+  const fin = t.games.find(g => g.r === 1)!
+  assert.equal(fin.win, undefined, 'chung kết để hôm sau')
+  step(TOURNEY_DAY + 1)
+  const champ = w.tourney!.champ!
+  assert.ok([fin.a, fin.b].includes(champ))
+  const place = (pid: number) =>
+    ps
+      .get(pid)!
+      .mail.filter(m => m.k === 'tourney')
+      .map(m => m.a?.[0])[0]
+  const places = [1, 2, 4, 5].map(place).sort()
+  assert.deepEqual(places, [1, 2, 3, 3])
+  assert.equal(
+    ps.get(3)!.mail.some(m => m.k === 'tourney'),
+    false,
+    'không vào giải',
+  )
+  assert.equal(step(TOURNEY_DAY + 2).changed.size, 0, 'xong giải thì thôi')
+})
+
+test('Luận Kiếm Đài · Thượng Tầng (Lost Canyon): từ tầng 16 đệ tử ảo bậc 5, ghép đối thủ và bảng tuần riêng với tầng dưới', () => {
+  const up = { ...sect('Trên', 16), elders: { thanhPhong: expAt(30) } }
+  const low = { ...sect('Dưới', 12), elders: { thanhPhong: expAt(30) } }
+  const up2 = { ...sect('Trên Nữa', 18), elders: { thanhPhong: expAt(20) } }
+  const ps = world(up, low, up2)
+  assert.deepEqual([arenaUpper(up), arenaUpper(low)], [true, false])
+  assert.deepEqual(
+    [up, low].map(x => arenaSide(x, lineupOf(x)[0]).troops[0].tier),
+    [5, 3],
+    'bậc đệ tử ảo theo tầng đài',
+  )
+  assert.deepEqual(
+    arenaFoes(ps, 1, T0, () => 0.5).map(f => f.pid),
+    [3],
+    'chỉ ghép người cùng tầng đài',
+  )
+  const r = worldAct(ps, 1, { type: 'arena', pid: 2 }, T0, 99, undefined, freshWorld())
+  assert.deepEqual(r, { ok: false, error: 'bad' }, 'khác tầng đài')
+  const ok = worldAct(ps, 1, { type: 'arena', pid: 3 }, T0, 99, undefined, freshWorld())
+  assert.ok(ok.ok)
+  for (const [k, x] of ok.changed) ps.set(k, x)
+  const wk = weekOf(T0)
+  assert.deepEqual(
+    arenaBoard(ps, wk, true)
+      .map(([id]) => id)
+      .sort(),
+    [1, 3],
+    'bảng Thượng Tầng',
+  )
+  assert.deepEqual(arenaBoard(ps, wk), [], 'bảng tầng dưới')
 })

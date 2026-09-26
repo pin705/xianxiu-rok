@@ -28,6 +28,7 @@ import { tribeStep } from './tribe.ts'
 import { eveStep } from './eve.ts'
 import { loharStep } from './lohar.ts'
 import { campStep } from './camp.ts'
+import { contestStep } from './points.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
 // ponytail: quét mọi hành quân của giới (~1k), đổi sang heap nếu giới to lên nhiều.
@@ -143,8 +144,8 @@ export function advanceAll(ps: Players, w: World, now: number, map?: MapCtx): { 
   return { changed, world: w }
 }
 // Việc theo giờ của giới, lần lượt (mỗi bước đọc cả giới như lúc đó): Cổ Di Tích / Huyết Tế Đàn hết giờ mở (chốt, trả quân) ·
-// kho minh (lãnh thổ sinh Minh khố) · Khai Giới Trảm Tà (cổng mở: chốt giới vận) · Phá Yêu Trại hết khung (quà top minh) ·
-// Minh khoáng quá hạn
+// kho minh (lãnh thổ sinh Minh khố) · Khai Giới Trảm Tà (cổng mở: chốt giới vận) · kỳ tranh chấp linh mạch (phe giữ đủ thành phe
+// kiểm soát) · Phá Yêu Trại hết khung (quà top minh) · Minh khoáng quá hạn
 type Step = (x: World) => { changed: Players; world: World }
 const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
   ...(map
@@ -154,6 +155,7 @@ const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
         (x: World) => eveStep(view(), x, map, now),
         (x: World) => ({ changed: new Map(), world: loharStep(x, map, now) }),
         (x: World) => campStep(view(), x, map, now),
+        (x: World) => ({ changed: new Map(), world: contestStep(x, map, now) }),
       ]
     : []),
   x => mineExpire(view(), x, now),

@@ -15,6 +15,7 @@ import {
   boneOf,
   THOI,
   THOI_DAYS,
+  ALLY_ORDERS,
   thoiAt,
   apply,
   eveFrags,
@@ -226,4 +227,35 @@ test('Yêu Vương Tuần Sơn: yêu thú giới cấp cao rơi yêu cốt; đ�
   const late = loharStep(w, map, T0 + LOHAR_TIME)
   assert.equal(late.spots[boss.i].lohar, undefined)
   assert.ok((late.spots[boss.i].hp ?? 0) <= BOSSES[boss.lv]!.str)
+})
+
+test('Minh lệnh (Alliance Directives): mỗi thời Thiên Thời đường chủ / minh chủ ban một lệnh cho cả minh, người thường không ban được', () => {
+  const a = atlas(777)
+  const ps: Players = new Map([
+    [1, sect('Minh Chủ', { x: 3, y: 3 })],
+    [2, sect('Đệ Tử', { x: 5, y: 3 })],
+    [3, sect('Người Ngoài', { x: 7, y: 3 })],
+  ])
+  let w: World = { ...freshWorld(), allies: { 1: ally(1, { 1: 2, 2: 0 }) } }
+  const map = (day: number) => ({ atlas: a, phase: 1, day })
+  const order = (pid: number, k: number, day: number) => {
+    const r = worldAct(ps, pid, { type: 'allyOrder', k }, T0, 1, map(day), w)
+    if (r.ok) w = r.world
+    return r.ok ? null : r.error
+  }
+  assert.equal(order(2, 0, 1), 'locked', 'người thường')
+  assert.equal(order(3, 0, 1), 'locked', 'không có minh')
+  assert.equal(order(1, 2, 1), null)
+  assert.equal(order(1, 0, 2), 'claimed', 'một thời một lệnh')
+  const buffs = worldBuffs(ps, w, map(1), T0)
+  for (const pid of [1, 2])
+    assert.deepEqual(
+      buffs
+        .get(pid)!
+        .buffs.filter(b => b.src === 'order')
+        .map(b => [b.key, b.v]),
+      [[ALLY_ORDERS[2].key, ALLY_ORDERS[2].v]],
+    )
+  assert.ok(!buffs.get(3)!.buffs.some(b => b.src === 'order'))
+  assert.equal(order(1, 1, THOI_DAYS), null, 'thời mới ban lại được')
 })

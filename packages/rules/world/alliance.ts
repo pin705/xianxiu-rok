@@ -1,6 +1,7 @@
 // Tiên minh: lập, vào, chức vị, bố cáo, nhờ giúp / giúp việc, viện binh (đóng quân ở nhà đồng minh).
 import { no } from '../core/action.ts'
 import { fieldError, launch } from '../core/battle.ts'
+import { mail } from '../core/mail.ts'
 import { cleanText, isId, int, isElder, JOB_KINDS, oneOf, pickArmy } from '../core/parse.ts'
 import { power } from '../core/stats.ts'
 import { advance, hasten, jobOf } from '../core/time.ts'
@@ -153,6 +154,7 @@ export type AllianceAction =
   | { type: 'allyRename'; name: string; tag: string } // minh chủ đổi tên / hiệu
   | { type: 'allyJoin'; id: number }
   | { type: 'allyLeave' }
+  | { type: 'allyDisband' } // minh chủ giải tán minh
   | { type: 'allyKick'; pid: number }
   | { type: 'allyRole'; pid: number; role: Role }
   | { type: 'allyNotice'; text: string }
@@ -229,6 +231,20 @@ export const allianceActions: WorldActions<AllianceAction> = {
     run: ({ w, pid }) => {
       const mine = allyOf(w, pid)
       return mine ? { ok: true, changed: new Map(), world: leave(w, mine, pid) } : no('locked')
+    },
+  },
+  // Giải tán (Disband của RoK): chỉ minh chủ; mọi người trong minh nhận thư báo, minh biến mất như khi người cuối cùng rời
+  allyDisband: {
+    pick: () => ({ type: 'allyDisband' }),
+    run: ({ w, pid, ps, now }) => {
+      const al = allyOf(w, pid)
+      if (!al || al.members[pid] !== 2) return no('locked')
+      const changed: Players = new Map()
+      for (const m of Object.keys(al.members).map(Number)) {
+        const st = ps.get(m)
+        if (st && m !== pid) changed.set(m, mail(st, { at: now, k: 'allyGone', a: [al.name] }))
+      }
+      return { ok: true, changed, world: drop(w, al.id) }
     },
   },
   allyKick: {

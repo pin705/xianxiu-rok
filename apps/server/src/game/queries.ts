@@ -1,7 +1,16 @@
 // Truy vấn chỉ đọc của client: mỗi khoá một hàm, trả đúng kiểu Answer[k] (@rok/protocol). Thêm truy vấn: thêm khoá vào
 // Query/Answer ở protocol — thiếu hàm ở đây là lỗi biên dịch.
 import type { Report } from '@rok/rules'
-import { CAMP_STAGE_DAYS, FEST_ALLY, FEST_RANKED, FEST_STAGED, festAt, weekOf, type FestId } from '@rok/rules'
+import {
+  CAMP_STAGE_DAYS,
+  FEST_ALLY,
+  FEST_RANKED,
+  FEST_STAGED,
+  arenaUpper,
+  festAt,
+  weekOf,
+  type FestId,
+} from '@rok/rules'
 import {
   allyInfo,
   allyOf,
@@ -26,6 +35,7 @@ import {
   stageGain,
   stageMetric,
   stageScore,
+  tourneyView,
 } from '@rok/rules/world'
 import type { Answer, FestView, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
@@ -115,12 +125,13 @@ export const answersOf = (w: World): Answers => ({
   arena: sock => {
     const now = w.now()
     w.tick(now)
-    const board = arenaBoard(w.ps, weekOf(now))
+    const board = arenaBoard(w.ps, weekOf(now), arenaUpper(w.ps.get(sock.data.pid))) // bảng của tầng đài mình
     const k = board.findIndex(([pid]) => pid === sock.data.pid)
     return {
       foes: arenaFoes(w.ps, sock.data.pid, now, Math.random),
       board: board.slice(0, ARENA_ROWS).map(([pid, s]) => ({ pid, name: s.name, pts: s.arena!.pts })),
       rank: k < 0 ? null : k + 1,
+      cup: tourneyView(w.shared, w.ps),
     }
   },
   honor: sock => {
@@ -162,9 +173,11 @@ export const answersOf = (w: World): Answers => ({
     return w.snapshot(now)
   },
   fest: (sock, q) => festView(w, sock.data.pid, q.id),
-  // Chiến báo người khác chia sẻ: chỉ khi trong kênh mình nghe được có tin của chính người đó mang mã "#r<id>"
+  // Chiến báo người khác chia sẻ: chỉ khi trong kênh mình nghe được có tin của chính người đó mang mã "#r<id>", hay là trận
+  // Luận Kiếm Đại Hội (cả giới xem được)
   shared: async (sock, q) => {
-    if (!sharedIn(w, sock.data.pid, q.pid, q.id)) return null
+    const cup = w.shared.tourney?.games.some(g => g.a === q.pid && g.rep === q.id)
+    if (!cup && !sharedIn(w, sock.data.pid, q.pid, q.id)) return null
     const mem = [...(w.persist.inflight?.reports ?? []), ...w.persist.pending.reports].find(
       r => r.pid === q.pid && r.id === q.id,
     )

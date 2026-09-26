@@ -250,7 +250,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - Trong các nguồn đã đọc không thấy hệ "Commander Chronicle" riêng; gần nhất là Stories / Trust và Museum (mục 2.13).
 - *Giữ chân:* gắn cảm xúc với nhân vật; tướng cũ được "làm mới".
 - **Tu tiên hoá:** "Liệt truyện trưởng lão" kèm "hảo cảm / tâm cảnh" (mở truyện, đổi y phục).
-- **Game mình:** 🟡 — mỗi trưởng lão có tên, danh hiệu, phẩm, một câu lời dẫn, tên công pháp, chân dung vẽ tay (chọn làm chân dung chưởng môn được, `face`) và dòng "cách thu nhận"; có màn thu nhận (`ElderReveal.svelte`). Danh sách Môn hạ sắp được theo cấp / phẩm / sao, đã thu nhận lên trước. Chưa có truyện, hảo cảm, lọc / yêu thích.
+- **Game mình:** 🟡 — mỗi trưởng lão có tên, danh hiệu, phẩm, một câu lời dẫn, tên công pháp, chân dung vẽ tay (chọn làm chân dung chưởng môn được, `face`) và dòng "cách thu nhận"; có màn thu nhận (`ElderReveal.svelte`). Danh sách Môn hạ sắp được theo cấp / phẩm / sao, đã thu nhận lên trước. Liệt truyện ba chương mở theo cấp (`ELDER_STORY_LV`, `ElderStory.svelte`). Chưa có hảo cảm, lọc / yêu thích.
 - **Ưu tiên:** P2 · **Công sức:** S–M.
 
 #### 2.13 Museum (Season of Conquest)
@@ -272,7 +272,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* sự kiện dùng "vé đổi" để chuyển tiến độ kỹ năng từ tướng này sang tướng khác. Giá 2–120 vé tuỳ chênh lệch kỹ năng; shop gem bán 120 vé mỗi sự kiện với giá 12.000 gem; gói Fresh Faces 12 vé giá 5 USD, mua tối đa 10 lần (codexhelper, 1 nguồn).
 - *Giữ chân:* giảm hối tiếc khi đầu tư nhầm tướng; người chơi dám nuôi tướng mới.
 - **Tu tiên hoá:** **Truyền công** — chuyển tu vi công pháp từ trưởng lão này sang trưởng lão khác.
-- **Game mình:** ❌ — tín vật (hồn ấn), sao và tầng công pháp đã ngộ (`skl`) gắn riêng từng trưởng lão, không chuyển được; nay đã có ngộ công pháp theo tầng (2.7) nên truyền công bắt đầu có ích.
+- **Game mình:** ✅ Truyền Công Đại Hội (lễ `truyenCong` 3 ngày mỗi 28 ngày, Chủ điện ≥ 10): việc trong lễ cho Truyền Công Phù; trong lễ, bảng trưởng lão ở Môn hạ có thẻ Truyền công — đổi toàn bộ tầng công pháp đã ngộ (`skl`) với một trưởng lão cùng phẩm, cùng số tâm pháp, tốn 2 + 4 × chênh lệch số tầng phù, hỏi lại trước khi đổi; trưởng lão đang dẫn đội thì chờ về (`truyen` ở `sect/tavern.ts`, `ElderSwap.svelte`). Tín vật, sao vẫn gắn riêng từng người.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### 2.15 Tướng Prime và Artifact
@@ -688,9 +688,9 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.9 | Expertise | ✅ công pháp đủ cấp mở Tinh thông (`expertOf`) | P2 | M |
 | 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | ✅/🟡 3 cây riêng từng trưởng lão (Công / Thủ / Đạo mạch, mở tầng theo điểm đã cộng), điểm = cấp − 1 + 2 mỗi sao, Tẩy Tủy Đan; chưa lưu bộ | P1 | L |
 | 2.11 | Cặp tướng chính / phụ | ✅ phó trưởng lão (tâm pháp + công pháp nửa sức) | P0 | M |
-| 2.12 | Truyện tướng, Trust, giao diện danh sách | 🟡 tên, danh hiệu, lời dẫn, chân dung; chưa có truyện / hảo cảm | P2 | S–M |
+| 2.12 | Truyện tướng, Trust, giao diện danh sách | ✅/🟡 Liệt truyện: mỗi trưởng lão ba chương mở theo cấp 10 / 20 / 30 (hai thứ tiếng), tên, danh hiệu, lời dẫn, chân dung; chưa có hảo cảm / đổi y phục | P2 | S–M |
 | 2.13 | Museum (buff tướng theo mùa) | ❌ | P2 | M |
-| 2.14 | Đổi tướng (Commander Swap) | ❌ | P2 | S |
+| 2.14 | Đổi tướng (Commander Swap) | ✅ Truyền công trong Truyền Công Đại Hội | P2 | S |
 | 2.15 | Tướng Prime, Artifact | ❌ | P2 | M |
 | 2.16 | Lò rèn: 8 ô, nguyên liệu, bản vẽ, bộ | 🟡 9 pháp bảo tất định, 1 món mỗi trưởng lão | P1 | L |
 | 2.17 | Tinh luyện, thức tỉnh, Iconic I–V | ❌ | P2 | M |

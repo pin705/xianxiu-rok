@@ -192,7 +192,9 @@ try {
   )
     await sleep(200)
   const a = await tab()
-  await a.js(`localStorage.setItem('rok.lang', 'vi'); localStorage.setItem('rok.save', '{}'); location.reload()`) // save P1 cũ: phải được dọn
+  await a.js(
+    `localStorage.setItem('rok.lang', 'vi'); localStorage.setItem('rok.save', '{}'); localStorage.setItem('rok.first', 'world,ally,pvp,trib'); location.reload()`,
+  ) // save P1 cũ: phải được dọn · thẻ "lần đầu" coi như đã xem
   for (const sel of ['button.cover', '.skip button', '.choose > .btn', 'form button[type=submit]']) {
     assert.ok(await a.until(`!!document.querySelector('${sel}')`), `màn mở đầu thiếu ${sel}`)
     await a.js(`document.querySelector('${sel}').click()`)

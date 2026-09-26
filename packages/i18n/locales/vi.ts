@@ -835,7 +835,7 @@ export const vi = {
   // Lịch giới: lịch theo ngày của mùa
   scal: {
     title: 'Lịch giới',
-    hint: 'Mùa 49 ngày của giới: pha bản đồ mở dần, hạn các chương Thiên Đạo Biên Niên, trận Tranh Đoạt Linh Châu mỗi tối Chủ nhật, và ngày hết mùa.',
+    hint: 'Mùa 49 ngày của giới: pha bản đồ mở dần, hạn các chương Thiên Đạo Biên Niên, trận Tranh Đoạt Linh Châu mỗi tối Chủ nhật, thời Thiên Thời, chặng Chính Tà, lễ theo ngày mùa và ngày hết mùa.',
     week: (n: number) => `Tuần ${n}`,
     day: (n: number) => `Ngày ${n}`,
     none: 'Hôm nay',
@@ -845,6 +845,9 @@ export const vi = {
     semi: 'Bán kết Cửu Thiên Luận Đạo Hội 20h',
     final: 'Chung kết Cửu Thiên Luận Đạo Hội 20h',
     end: 'Hết mùa: phi thăng / luân hồi, quà xếp hạng',
+    eve: (name: string) => `${name} (tới lúc cổng mở)`,
+    stage: (n: number, what: string) => `Chặng Chính Tà ${n}: ${what}`,
+    tourney: (round: string) => `Luận Kiếm Đại Hội · ${round}`,
   },
   // Thí Luyện Yêu Hoàng (Karuak Ceremony)
   trial: {
@@ -1386,6 +1389,13 @@ export const vi = {
     rallyHint: 'Mở bản đồ Giới, chạm vào điểm để góp đội — mọi đội tới cùng lúc và đánh như một.',
     siege: (name: string) => `công sơn ${name}`,
     veinBuff: (fx: string) => `Phe giữ: ${fx} cho cả minh`,
+    contestOpen: (t: string) => `Kỳ tranh chấp đang mở · còn ${t}`,
+    contestSafe: (t: string) => `Bảo hộ · kỳ tranh chấp sau ${t}`,
+    ctlBy: 'Kiểm soát',
+    holdLeft: (name: string, t: string) => `${name} giữ thêm ${t} để kiểm soát`,
+    contestHint:
+      'Đóng quân giữ liên tục 4 giờ để kiểm soát (nhận tăng ích). Linh mạch có phe kiểm soát chỉ tranh được trong kỳ tranh chấp — 3 ngày một kỳ, mở 12 giờ.',
+    shrines: ['Huyền Vũ Miếu', 'Chu Tước Miếu', 'Thanh Long Miếu', 'Bạch Hổ Miếu'], // thần miếu (SHRINES)
     firstTake: 'Chưa ai chiếm trong mùa này — minh chiếm đầu tiên nhận quà',
     ruinOpen: (t: string) => `Đang mở · còn ${t}`,
     ruinOpens: (t: string) => `Mở sau ${t}`,
@@ -1420,6 +1430,7 @@ export const vi = {
           : `Thiên Đạo Biên Niên: chương "${vi.book.names[ch] ?? ch + 1}" hụt hạn`,
       war: (a: string, b: string, wa: number, wb: number) => `Luận Kiếm Minh Chiến: [${a}] ${wa} – ${wb} [${b}]`,
       cup: (tag: string) => `[${tag}] đoạt ngôi quán quân Cửu Thiên Luận Đạo Hội mùa này`,
+      duel: (name: string) => `${name} đoạt danh hiệu Kiếm Khôi — vô địch Luận Kiếm Đại Hội`,
       unknown: () => 'Giới có biến',
     } satisfies ChronTexts,
   },
@@ -1551,6 +1562,9 @@ export const vi = {
     kick: 'Mời ra khỏi minh',
     leave: 'Rời tiên minh',
     leaveSure: 'Rời tiên minh? Lời nhờ giúp của bạn sẽ bị huỷ.',
+    disband: 'Giải tán tiên minh',
+    disbandSure:
+      'Giải tán tiên minh? Mọi người rời minh, minh khố, lãnh thổ và công trình minh mất hết — không hoàn lại được.',
     online: 'Đang chơi',
     help: 'Giúp đỡ',
     helpHint: (max: number) =>
@@ -1714,6 +1728,7 @@ export const vi = {
   },
   // Luận Kiếm Đài (Sunset Canyon bất đồng bộ)
   arena: {
+    upper: 'Thượng Tầng — từ tầng 16: đệ tử ảo bậc 5, ghép đối thủ và bảng tuần riêng',
     ticket: (n: number) => `Dùng Luận Kiếm Lệnh (+1 lượt) · còn ${n}`,
     title: 'Luận Kiếm Đài',
     lore: 'Đấu đội hình trưởng lão với các tông môn khác: đệ tử ảo, không mất quân, không mất tài nguyên. Trận xa luân — đội thắng đánh tiếp với quân còn lại.',
@@ -2067,6 +2082,22 @@ export const vi = {
       supply: (who: string): [string, string] => [
         `Tiếp tế từ ${who}`,
         `Đồng minh ${who} gửi tài nguyên qua Vận Linh Trận. Nhận ở dưới.`,
+      ],
+      tourney: (place: number): [string, string] => [
+        (
+          {
+            1: 'Kiếm Khôi · Luận Kiếm Đại Hội',
+            2: 'Luận Kiếm Đại Hội · á quân',
+            3: 'Luận Kiếm Đại Hội · vào bán kết',
+          } as Record<number, string>
+        )[place] ?? 'Luận Kiếm Đại Hội · vào tứ kết',
+        place === 1
+          ? 'Tông môn đoạt danh hiệu Kiếm Khôi — vô địch Luận Kiếm Đại Hội mùa này, cả giới đã ghi tên vào biên niên. Quà ở dưới.'
+          : 'Luận Kiếm Đại Hội mùa này đã khép lại. Quà theo chỗ đứng của tông môn ở dưới.',
+      ],
+      allyGone: (name: string): [string, string] => [
+        `Tiên minh ${name} đã giải tán`,
+        `Minh chủ đã giải tán tiên minh ${name}. Tông môn vẫn giữ nguyên mọi thứ của mình — tìm minh mới ở tab Tiên minh.`,
       ],
       allyWelcome: (name: string): [string, string] => [
         `Lễ nhập minh · ${name}`,
@@ -2651,6 +2682,7 @@ export const vi = {
       speed: 'Quang Âm Như Tiễn — phút tăng tốc đã dùng',
       raid: 'Tranh Hùng Thiên Hạ — lần cướp thắng',
       gather: 'Khai Sơn Phá Thạch — tài nguyên khai mỏ',
+      power: 'Uy Chấn Bát Phương — thế lực',
     } satisfies Record<AchId, string>,
   },
   // Chiêu Hiền Đài (như Tavern của RoK — không bán)
@@ -2766,6 +2798,145 @@ export const vi = {
     scoring: 'Đang chấm…',
     done: 'Phiên hôm nay đã xong — kết quả gửi qua thư.',
     tiers: (a: string) => `Mốc câu đúng cả minh: ${a}`,
+  },
+  // Liệt truyện trưởng lão (Commander Stories của RoK): ba chương mỗi người, mở theo cấp (ELDER_STORY_LV)
+  story: {
+    title: 'Liệt truyện',
+    lock: (lv: number) => `Mở khi trưởng lão cấp ${lv}`,
+    text: {
+      thanhPhong: [
+        'Ngày Huyền Thiên Tông bị vây, ba nghìn đệ tử tản đi trong một đêm. Thanh Phong đứng giữa sơn môn đổ nát, cắm kiếm xuống đá: "Còn một người, tông môn còn."',
+        'Hắn chôn sư phụ dưới gốc tùng sau núi, mỗi năm tới một lần, rót chén rượu nhạt. Chưa từng khóc — chỉ có lưỡi kiếm mỗi năm lại mòn thêm một chút.',
+        'Khi bạn đến, núi chỉ còn gió. Thanh Phong trao lại ấn chưởng môn, cúi đầu lần đầu tiên sau ba mươi năm: "Từ nay, kiếm này theo người."',
+      ],
+      thachKien: [
+        'Hắc Phong Trại từng chặn đường ba châu. Thạch Kiên chưa thua ai — cho tới trận ở cửa ải phía bắc, khi một đứa trẻ cầm kiếm gỗ đứng chắn xe hàng.',
+        'Hắn giải tán trại, chia hết vàng bạc cho dân làng bị cướp năm xưa, chỉ giữ lại cây rìu. "Nợ thì trả, mạng thì đền" — câu duy nhất hắn thuộc.',
+        'Người trong giới hỏi sao cựu thổ phỉ lại làm hộ pháp. Thạch Kiên cười lớn: "Thua một trận là đủ biết mình đứng sau lưng ai."',
+      ],
+      nhuYen: [
+        'Trăm năm trước, Như Yên tự phong mình trong Thanh Mộc Bí Cảnh để nhốt con hoả xà đang thiêu rụi rừng linh mộc.',
+        'Phong ấn giữ nàng trẻ mãi, nhưng người quen đã hoá bụi. Ra khỏi bí cảnh, nàng tìm mãi không thấy tên sư môn trên bia đá nào.',
+        'Nàng ở lại truyền công, dạy đệ tử giữ lửa trong lòng bàn tay mà không để lửa thiêu chính mình — bài học trăm năm nàng mới hiểu.',
+      ],
+      loiChan: [
+        'Vạn Độc Cốc giam Lôi Chấn trong hang rắn bảy năm, ép hắn truyền kiếm phổ. Hắn không nói một chữ.',
+        'Đêm giông, sét đánh vỡ cửa ngục. Hắn học được từ tiếng sấm điều mà kiếm phổ nào cũng không có: ra kiếm trước khi nghĩ.',
+        'Làm chấp pháp, hắn nghiêm hơn ai hết. Đệ tử phạm lỗi sợ tiếng sấm trong kiếm hắn, nhưng chưa ai bị hắn trách oan.',
+      ],
+      vanHac: [
+        'Vân Hạc từng là ngự y trong hoàng cung phàm trần, bỏ đi đúng đêm được lệnh luyện độc dược.',
+        'Lão ẩn cư giữa lửa Xích Viêm, dùng dung nham luyện đan cứu người qua đường, không lấy của ai một đồng.',
+        'Theo tông môn, lão bảo lò đan của mình giờ nấu cho cả trăm miệng ăn — "vui hơn cứu từng người một".',
+      ],
+      hanBang: [
+        'Không ai biết Hàn Băng ngủ trong băng nguyên từ bao giờ. Khi tỉnh dậy, nàng chỉ nhớ một cái tên và tiếng chuông của một ngôi chùa đã mất.',
+        'Nàng đi khắp giới tìm ngôi chùa ấy, chỉ thấy tuyết phủ những nền móng cũ. Nơi nàng đứng lâu, băng mọc thành hoa.',
+        'Ở lại tông môn, nàng cho treo một quả chuông nhỏ trên Chủ điện. Mỗi lần gió lay chuông, nàng mỉm cười — lần đầu sau nghìn năm.',
+      ],
+      bachVoNhai: [
+        'Bạch Vô Nhai thua đúng một trận trong đời — trước một người không cầm kiếm. Từ đó hắn vào Lôi Trì, thề mài kiếm tới khi chém được sấm.',
+        'Trăm năm, sấm sét bào áo trắng thành sợi, nhưng lưỡi kiếm sáng như trăng. Hắn chém được sấm, rồi chợt nhận ra người năm xưa đã không còn.',
+        'Hắn theo tông môn để truyền lại một kiếm cho người sau — "kiếm không để thắng ai, để không ai phải thua như ta".',
+      ],
+      macSau: [
+        'Mạc Sầu canh tầng ba mươi Thông Thiên Tháp qua bao đời chưởng môn. Người leo tháp bảo nàng lạnh như đá, chưa từng cười.',
+        'Nàng giữ lời hứa với một người đã khuất: không để ai qua tầng ba mươi khi chưa đủ sức sống sót ở tầng trên.',
+        'Ngày bạn qua được tầng ba mươi, Mạc Sầu xuống tháp theo. Đệ tử kháo nhau thấy nàng khẽ cười ở bậc cuối — nhưng không ai dám chắc.',
+      ],
+      hoacThienCuong: [
+        'Hoắc Thiên Cương sinh ra trong lò rèn, lớn lên giữa búa và lửa. Năm mười sáu tuổi hắn nhảy vào lửa Hỗn Độn để tôi thân.',
+        'Lửa đốt ba ngày ba đêm; khi bước ra, da hắn cứng hơn sắt nung, nhưng tay vẫn run khi bế một đứa trẻ.',
+        'Làm hộ sơn, hắn đứng trước cổng núi mỗi khi có địch. Hắn nói không sợ đau — chỉ sợ sau lưng mình không còn ai để giữ.',
+      ],
+      toMiNuong: [
+        'Tô Mị Nương đi qua chín giới, ở đâu cũng không quá một mùa. Nàng bảo trời đất rộng, ngồi yên một chỗ thì phí.',
+        'Nàng thích chợ phiên, lễ hội, tiếng cãi nhau của đệ tử. Nơi nào im lặng quá, nàng lại đi.',
+        'Tông môn ồn ào đủ để nàng quên thời gian. "Khi nào các ngươi hết náo nhiệt thì ta mới đi" — nói vậy, nhưng nàng đã ở ba mùa.',
+      ],
+      diepCoThanh: [
+        'Diệp Cô Thành leo Thông Thiên Tháp một mình, không mang gì ngoài một thanh kiếm và bình rượu.',
+        'Tới tầng bốn mươi lăm, hắn ngồi lại chờ đối thủ xứng tầm. Chờ lâu tới mức rêu mọc lên bậc đá quanh chỗ ngồi.',
+        'Hắn theo bạn xuống núi vì một câu: "Đối thủ xứng tầm không ngồi chờ, phải cùng đi tìm." Từ đó bình rượu của hắn có thêm một chén.',
+      ],
+      huyenMinh: [
+        'Huyền Minh Lão Tổ là người cuối cùng của thời thượng cổ còn sống. Lão ngủ dưới đáy vực giữa giới để khỏi đánh thức tai kiếp cũ.',
+        'Mỗi lần lão tỉnh, trời đất đóng băng. Lão biết vậy, nên thà ngủ — trăm năm, nghìn năm, không ai gọi.',
+        'Cho tới khi tiếng chuông tông môn vọng xuống đáy vực. Lão tỉnh, lần này băng không lan ra — chỉ đọng lại một nụ cười già nua.',
+      ],
+    } as Record<ElderId, [string, string, string]>,
+  },
+  tourney: {
+    title: 'Luận Kiếm Đại Hội',
+    hint: (from: number, to: number) =>
+      `Tuần cuối mùa (ngày ${from}–${to}): 16 tông môn điểm Luận Kiếm Đài cao nhất vào đấu loại trực tiếp bằng đội hình thủ, mỗi ngày một vòng. Vô địch là Kiếm Khôi.`,
+    round: (n: number) => ({ 2: 'Chung kết', 4: 'Bán kết', 8: 'Tứ kết' })[n] ?? `Vòng ${n}`,
+    watch: 'Xem',
+    champ: (name: string) => `Kiếm Khôi: ${name}`,
+    none: 'Mùa này chưa đủ tông môn vào giải.',
+    wait: 'Chưa đấu',
+  },
+  order: {
+    title: 'Minh lệnh',
+    hint: (thoi: string, d: number) =>
+      `Mỗi thời Thiên Thời đường chủ / minh chủ ban một lệnh cho cả minh. Đang là ${thoi}, còn ${d} ngày.`,
+    names: ['Tổng Động Viên', 'Kiên Thủ Lệnh', 'Khai Hoang Lệnh', 'Tích Trữ Lệnh', 'Cấp Hành Lệnh', 'Cứu Thương Lệnh'],
+    by: (name: string) => `${name} ban lệnh`,
+    none: 'Thời này chưa có minh lệnh — chờ đường chủ / minh chủ ban.',
+  },
+  first: {
+    title: { world: 'Bản đồ Giới', ally: 'Tiên minh', pvp: 'Tranh đoạt', trib: 'Độ kiếp' },
+    cards: {
+      world: [
+        'Giới rộng 25 vùng: cổng giữa các vùng mở dần theo pha mùa. Thả linh điểu khai mê vụ, dời núi tới nơi tốt hơn.',
+        'Chiếm linh mạch, trận nhãn cùng tiên minh — giữ đủ 4 giờ thì kiểm soát, cả minh được tăng ích và điểm mùa.',
+        'Săn yêu thú giới, cùng minh kết trận hạ yêu vương. Đội khai mỏ có thể bị tông môn khác cướp — để ý Tháp canh.',
+      ],
+      ally: [
+        'Vào tiên minh: đồng minh bấm giúp rút ngắn việc của bạn, bạn giúp lại thì được cống hiến.',
+        'Cùng kết trận hạ yêu vương, giữ linh mạch, dựng trận kỳ mở lãnh thổ — một mình khó làm được.',
+        'Minh lễ, Cống Hiến Các, Minh lệnh, Hộ Minh Đại Trận: minh càng mạnh, mỗi người càng được nhiều.',
+      ],
+      pvp: [
+        'Tranh đoạt: cướp tài nguyên của tông môn có lực chiến gần mình. Kho bảo hộ giữ lại phần lớn cho bên thủ.',
+        'Thủ thua thì được khiên; đi cướp thì khiên tan. Vắng lâu thì bật Hộ Sơn Phù.',
+        'Chiến báo ghi mọi trận: xem lại từng lượt, báo thù kẻ vừa cướp mình.',
+      ],
+      trib: [
+        'Độ kiếp: tới ngưỡng cảnh giới, đưa đội ra chịu thiên lôi — vượt được thì Chủ điện lên tầng mới.',
+        'Kiếp vân tụ công khai trên bản đồ: đồng minh tới hộ pháp làm nhẹ kiếp, kẻ thù có thể phá.',
+        'Chuẩn bị trưởng lão mạnh, đan phá cảnh / độ kiếp; thất bại thì chờ tụ lại rồi thử lần nữa.',
+      ],
+    },
+    next: 'Tiếp',
+    done: 'Đã hiểu',
+  },
+  truyen: {
+    title: 'Truyền công',
+    hint: (n: number) =>
+      `Đổi tầng công pháp đã ngộ với một trưởng lão cùng phẩm, cùng số tâm pháp. Có ${n} Truyền Công Phù.`,
+    mine: (t: string) => `Tầng hiện tại: ${t}`,
+    tiers: (t: string) => `Tầng ${t}`,
+    go: (n: number) => `Truyền công · ${n} phù`,
+    sure: (a: string, b: string) => `Đổi toàn bộ tầng công pháp của ${a} và ${b}? Phù đã tiêu không hoàn lại.`,
+    none: 'Chưa có trưởng lão cùng phẩm, cùng số tâm pháp để truyền công.',
+  },
+  swap: {
+    row: (from: string, to: string) => `${from} → ${to}`,
+    have: (n: number) => `Có ${n}`,
+    left: (n: number, max: number) => `Còn đổi ${n}/${max}`,
+    go: (n: number) => `Đổi ${n}`,
+    none: 'Chưa có Lỗ Ban Phù để đổi.',
+    full: 'Đã đổi đủ',
+  },
+  cards: {
+    game: (n: number, of: number) => `Ván ${n}/${of}`,
+    free: (n: number) => `Còn ${n} lá miễn phí ván này`,
+    cost: (n: number) => `Mỗi lá ${n} lệnh`,
+    pairs: 'Quà các đôi',
+    done: 'Lật hết 6 đôi: thêm quà ván',
+    over: 'Đã chơi hết số ván của lượt lễ này.',
+    match: 'Ghép được một đôi!',
   },
   maze: {
     teams: (n: number, of: number) => `Đội vào mê cảnh (${n}/${of})`,
@@ -3090,6 +3261,10 @@ export const vi = {
         name: 'Bách Vị Tiên Yến',
         desc: 'Tiệc tạ ơn trăm vị: năm ngày săn yêu, săn liên hoàn, khai mỏ, chữa thương ra điểm, đủ mốc mở rương.',
       },
+      phienBai: {
+        name: 'Phiên Bài Kỳ Ngộ',
+        desc: 'Ba ngày lật bài kỳ ngộ: 12 lá úp là 6 đôi quà. Mỗi ván 2 lá đầu lật miễn phí, lá sau tốn Kỳ Ngộ Lệnh; lật liền hai lá giống nhau thì nhận quà đôi đó, không giống thì úp lại — nhớ vị trí mà ghép. Lật hết 6 đôi được quà ván, tối đa 10 ván.',
+      },
       meCanh: {
         name: 'Hoàng Kim Mê Cảnh',
         desc: 'Năm ngày mê cảnh hoàng kim: mỗi ngày một lượt đi mê cung 10 tầng bằng tối đa 3 đội ảo (không mất quân thật, không hồi giữa đường trừ suối linh). Mở ô kề ô đã mở: yêu binh, bảo rương, thần đàn (chọn phúc), suối linh, bẫy — hạ thủ lĩnh để xuống tầng. Kỷ lục số tầng mở rương mốc.',
@@ -3141,6 +3316,14 @@ export const vi = {
       khaiDien: {
         name: 'Khánh Điển Khai Tông',
         desc: 'Mừng giới mở mùa mới: 14 ngày đầu mùa, mỗi ngày vào núi mở thêm một phần lễ — ai trong giới cũng có, phần thứ bảy có hai Kim Duyên Phù.',
+      },
+      hoaKien: {
+        name: 'Hoá Kiến Vi Binh',
+        desc: 'Giữa mùa giới, lúc các tiên minh giao tranh: tông môn đã dựng Chủ điện tầng 25 đổi Lỗ Ban Phù thừa sang Luyện Binh Phù cùng mệnh giá — mỗi mệnh giá tối đa 200 lá mỗi mùa.',
+      },
+      truyenCong: {
+        name: 'Truyền Công Đại Hội',
+        desc: 'Ba ngày truyền công: làm việc trong lễ nhận Truyền Công Phù; mở bảng trưởng lão ở Môn hạ để đổi tầng công pháp đã ngộ giữa hai trưởng lão cùng phẩm, cùng số tâm pháp — nuôi nhầm người cũng không phí công.',
       },
       tamBao: {
         name: 'Tầm Bảo Kỳ Ngộ',
@@ -3221,6 +3404,7 @@ export const vi = {
       linhNoan: 'Linh Chuỳ',
       khaoCo: 'Linh Cuốc',
       nguyenThu: 'Nguyện Tiền',
+      phienBai: 'Kỳ Ngộ Lệnh',
       trienLam: 'Cổ Vật',
       haChi: 'Hạ Hoa',
     } as Partial<Record<FestId, string>>,
@@ -3322,6 +3506,10 @@ export const vi = {
       baoDo: {
         name: 'Tàng Bảo Đồ tàn phiến',
         desc: 'Một mảnh bản đồ kho báu. Gom đủ 7 mảnh thì ghép ở bản đồ giới: hiện một điểm đào gần tông môn, xuất quân tới đào nhận quà.',
+      },
+      truyenCong: {
+        name: 'Truyền Công Phù',
+        desc: 'Phí truyền công trong Truyền Công Đại Hội: đổi tầng công pháp đã ngộ giữa hai trưởng lão cùng phẩm (bảng trưởng lão ở Môn hạ).',
       },
       diSon: {
         name: 'Di Sơn Phù',

@@ -15,6 +15,7 @@
     dot = false,
     size = 72,
     look = 'paper',
+    selected = false,
     onclick,
   }: {
     art: string // khoá ui:<art>
@@ -25,6 +26,7 @@
     dot?: boolean
     size?: number
     look?: 'paper' | 'ink'
+    selected?: boolean
     onclick: (e: MouseEvent) => void
   } = $props()
   const src = $derived(artOf(`ui:${art}`)?.src)
@@ -33,6 +35,8 @@
 <button
   type="button"
   class="tile {look}"
+  class:selected
+  aria-pressed={selected || undefined}
   style:--size="{size}px"
   onclick={e => {
     sfx('tap')
@@ -72,6 +76,13 @@
     height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.22));
+  }
+  /* đang chọn (công tắc bằng tranh: Thư / Chiến báo): tranh to hơn, nhãn tô son */
+  .selected .pic {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  .paper.selected .tl {
+    color: var(--cinnabar);
   }
   .tile:active .pic {
     transform: scale(0.94);

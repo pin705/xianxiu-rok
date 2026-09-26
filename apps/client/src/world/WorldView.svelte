@@ -48,6 +48,7 @@
   import { terrColor } from './territory'
   import Minimap from './Minimap.svelte'
   import Holdings from './Holdings.svelte'
+  import FirstLook from '../FirstLook.svelte'
 
   let {
     info,
@@ -469,6 +470,7 @@
   onjump={jumpTo}
 />
 
+<FirstLook id="world" />
 <Holdings
   open={overview}
   atlas={atlas(info.map)}

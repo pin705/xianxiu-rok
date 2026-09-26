@@ -20,6 +20,7 @@ const TAB_OF = {
   rename: 'other',
   veil: 'buff',
   frag: 'other',
+  swap: 'other',
 } as const satisfies Record<(typeof BAG)[BagId]['use'], BagTab>
 export const BAG_TABS: BagTab[] = ['speed', 'res', 'buff', 'other']
 export const tabOf = (id: BagId): BagTab => TAB_OF[BAG[id].use]
@@ -34,7 +35,8 @@ export function denom(id: BagId) {
     d.use === 'douse' ||
     d.use === 'move' ||
     d.use === 'rename' ||
-    d.use === 'frag'
+    d.use === 'frag' ||
+    d.use === 'swap'
     ? ''
     : L.bag.denom.n(d.n)
 }

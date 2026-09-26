@@ -114,7 +114,7 @@
             >
           </Card>
         {/each}
-      {:else if def.use !== 'key' && def.use !== 'ticket' && def.use !== 'frag'}
+      {:else if def.use !== 'key' && def.use !== 'ticket' && def.use !== 'frag' && def.use !== 'swap'}
         <!-- thiếp Chiêu Hiền Đài: mở ở Chiêu Hiền Đài (tab Môn hạ); tàn phiến Tàng Bảo Đồ: ghép ở bản đồ giới — mô tả đã nói -->
         <Button wide onclick={() => use()}>{n > 1 ? L.bag.useAll(n) : L.bag.use}</Button>
       {/if}

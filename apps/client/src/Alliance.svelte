@@ -51,6 +51,8 @@
   import AllyShop from './AllyShop.svelte'
   import AllyQuiz from './AllyQuiz.svelte'
   import AllySkills from './AllySkills.svelte'
+  import AllyOrder from './AllyOrder.svelte'
+  import FirstLook from './FirstLook.svelte'
   import AllyMob from './AllyMob.svelte'
   import AllyPot from './AllyPot.svelte'
   import ArkCard from './ArkCard.svelte'
@@ -175,6 +177,7 @@
 </script>
 
 <Page title={L.ally.title} icon="tienMinh">
+  <FirstLook id="ally" />
   {#if !ally}
     <!-- chưa có minh: sảnh trống — ba người đứng chờ, cờ chưa có hiệu, lời dẫn trong sảnh -->
     <header class="hall">
@@ -375,6 +378,7 @@
       </Section>
 
       <AllySkills {ally} officer={myRole >= 1} {go} />
+      <AllyOrder {ally} officer={myRole >= 1} {go} />
       <AllyQuiz {ally} officer={myRole >= 1} {go} />
 
       {#if myRole >= 1}
@@ -664,6 +668,14 @@
             <Button variant="quiet" wide onclick={ask}><Icon name="back" size={16} />{L.ally.leave}</Button>
           {/snippet}
         </Confirm>
+        {#if myRole === 2}
+          <!-- minh chủ: giải tán cả minh (mọi người nhận thư) -->
+          <Confirm warn={L.ally.disbandSure} label={L.ally.disband} onconfirm={() => go({ type: 'allyDisband' })}>
+            {#snippet trigger(ask)}
+              <Button variant="quiet" wide onclick={ask}><Icon name="close" size={16} />{L.ally.disband}</Button>
+            {/snippet}
+          </Confirm>
+        {/if}
       </div>{/if}
   {/if}
 </Page>

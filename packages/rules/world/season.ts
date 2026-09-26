@@ -84,7 +84,10 @@ export function endSeason(
   }
   // hàng đang treo trên chợ: trả về qua thư (thư giữ qua luân hồi)
   for (const [k, v] of unsold(new Map([...ps, ...changed]), w, Object.values(w.orders)).changed) changed.set(k, v)
-  const allies = Object.fromEntries(Object.entries(w.allies).map(([k, a]) => [k, { ...a, helps: [] }]))
+  // minh giữ sang mùa sau, bỏ lời nhờ giúp và Minh lệnh (thời Thiên Thời đếm lại từ đầu mùa)
+  const allies = Object.fromEntries(
+    Object.entries(w.allies).map(([k, a]) => [k, { ...a, helps: [], order: undefined }]),
+  )
   return {
     changed,
     world: { ...freshWorld(), allies, nextAlly: w.nextAlly, nextRally: w.nextRally, nextOrder: w.nextOrder },

@@ -12,6 +12,7 @@
     arenaBand,
     arenaN,
     arenaOf,
+    arenaUpper,
     elderLevel,
     lineupOf,
     marchSlots,
@@ -25,7 +26,8 @@
   import type { Ack, ArenaView } from '@rok/protocol'
   import type { Net } from './net'
   import { Icon, Portrait, artOf, type IconName } from '@rok/art'
-  import { Bag, Button, Medal, Sheet } from './ui'
+  import { Bag, Button, Medal, Sheet, Tag } from './ui'
+  import Tourney from './Tourney.svelte'
   import { L, LOOK, MASTER, num, sfx } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
@@ -126,6 +128,7 @@
         </p>
       </header>
       <p class="lore t-tiny t-lore" title={L.arena.lore}>{L.arena.lore}</p>
+      {#if arenaUpper(game)}<Tag icon="star" tone="gold">{L.arena.upper}</Tag>{/if}
       <!-- hết lượt mà còn Luận Kiếm Lệnh (từ Nhật Khóa): thêm một lượt -->
       {#if a.left < 1 && (game.items.luanKiem ?? 0) > 0}<Button
           size="sm"
@@ -326,6 +329,7 @@
             </li>
           {/each}
         </ol>
+        <Tourney cup={view?.cup} {api} {me} {onreplay} />
       {/if}
     </div>
   {/if}

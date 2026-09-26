@@ -532,7 +532,7 @@
   - Power cộng từ nhà, nghiên cứu, quân, tướng; hiện khắp nơi (hồ sơ, bảng xếp hạng). Mục tiêu F2P hay được nhắc là 40 triệu power **[1 nguồn]** [50].
   - Sự kiện **Zenith of Power** (kỷ niệm 2025): mỗi 5 triệu power tăng thêm được một huy hiệu, tối đa 20 **[1 nguồn]** [51]. Thưởng tượng huyền thoại và giao diện thành "Sands of Eternity" — **skin có chỉ số +16% công quân**.
 - **Tu tiên hoá:** đã có "Thế lực". Thêm mốc thế lực có quà (cosmetic và tài nguyên, không chỉ số).
-- **Game mình:** 🟡. Thế lực trên HUD ("+N" bay lên khi tăng), "thế lực tăng thêm" trong bảng công trình, bảng Thế lực chia 5 nguồn có nút "Tăng" (`PowerSheet.svelte`, `powerParts`), xếp hạng lực chiến / cảnh giới / chiến công / tranh đoạt / tháp / sự kiện tuần / mùa. Mốc thế lực có quà mới có một mốc 20.000 ở Tân Thủ Chi Lộ; chưa có mốc thế lực dài hạn.
+- **Game mình:** ✅. Thế lực trên HUD ("+N" bay lên khi tăng), "thế lực tăng thêm" trong bảng công trình, bảng Thế lực chia 5 nguồn có nút "Tăng" (`PowerSheet.svelte`, `powerParts`), xếp hạng lực chiến / cảnh giới / chiến công / tranh đoạt / tháp / sự kiện tuần / mùa. Mốc thế lực có quà: một mốc 20.000 ở Tân Thủ Chi Lộ và chuỗi thành tựu dài hạn Uy Chấn Bát Phương (thế lực 5 N · 20 N · 50 N · 120 N · 250 N, quà theo bậc — `ACHS.power`).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### C14 · Push notifications — thông báo đẩy
@@ -954,7 +954,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | A3 Counselor → Thanh Phong dẫn đường (+ trận mở màn: M) | 🟡 trưởng lão dẫn đường (Mộc Thanh Phong); chưa có trận mở màn | P1 | S / M |
 | A9 Thợ thứ hai → tạp dịch thứ hai (thuê 2 ngày; vĩnh viễn bằng Công đức) | ✅ Tạp Dịch Lệnh (thuê 48 giờ, không vĩnh viễn) | P1 | S / M |
 | C12 Mã quà + quà liên kết email | ✅ mã quà tặng + quà gắn email | P1 | S |
-| C14 Thông báo đẩy thêm loại + chọn loại | 🟡 7 loại, tắt được từng loại, có nhắc khiên / kho / chuỗi Hương Hỏa; chưa nhắc Nhật Khóa, sự kiện | P1 | S |
+| C14 Thông báo đẩy thêm loại + chọn loại | ✅ tắt được từng loại; nhắc việc dài xong, đội về, bị cướp / đội địch đang tới, khiên sắp hết, kho sắp đầy, chuỗi Hương Hỏa, rương Nhật Khóa chưa nhận (trước 0h), lễ tích điểm sắp đóng (`notify.ts`) | P1 | S |
 | D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | ✅/🟡 Tông Môn Tranh Bá (6 ải, bảng từng ải + cả lượt, trưởng lão của đợt); sự kiện tuần cũ chưa gộp | P1 | S |
 | D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | 🟡 tổng kết mùa + lễ theo lịch; chưa có điểm danh đầu mùa, mời người cũ | P1 | S / M |
 | F3 Growth Fund → **Quỹ Tiên Lộ** | ❌ (P4) | P1 | S |
@@ -963,7 +963,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | A1 Civilizations → **Đạo thống** | ✅ | P1 | M |
 | B4 Achievements → **Công tích bảng** + ấn vẽ tay | ✅ Thành tựu 15 chuỗi × 5 bậc có thưởng; chưa có ấn vẽ tay | P1 | M |
 | B6 Monument → **Thiên Đạo Bia** (mục tiêu chung của giới) | ✅ Thiên Đạo Biên Niên (13 chương, quà cả giới, mở pha sớm theo chương, công đầu từng chương) | P1 | M |
-| B7 / D10 Lịch theo tuổi vương quốc → **Lịch giới** + trung tâm sự kiện | 🟡 trung tâm sự kiện + lịch 7 ngày tới; nội dung theo ngày mùa (Khai Giới, Thiên Thời, chặng Chính Tà) chưa vào lịch sự kiện | P1 | M |
+| B7 / D10 Lịch theo tuổi vương quốc → **Lịch giới** + trung tâm sự kiện | ✅ trung tâm sự kiện + lịch 7 ngày tới; Lịch giới 49 ngày (`SeasonCal.svelte`): pha bản đồ, hạn chương, Tranh Đoạt Linh Châu, Khai Giới Trảm Tà, thời Thiên Thời, chặng Chính Tà, lễ theo ngày mùa, hết mùa | P1 | M |
 | C1 Tavern → **Chiêu Hiền Đài** (thiếp miễn phí, pity tất định, không bán) | ✅ Chiêu Hiền Đài | P1 | M |
 | C11 Quà / điểm / cửa hàng liên minh → **Cống hiến**, **Minh lễ** | ✅ cống hiến + Cống Hiến Các + Minh lễ | P1 | M |
 | F1 Gems → Tiên ngọc (chỉ cosmetic / pass / tiện lợi có trần) | ❌ (P4) | P1 | M |
@@ -977,7 +977,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | C5 Mysterious Merchant → **Vân Du Tán Tu** | ✅ Thương nhân vân du | P2 | S |
 | C9 Peerless Scholar → Vấn Đạo Đài | ✅ | P2 | S |
 | C10 Kingdom Newspaper → Giới báo | 🟡 biên niên giới (có tin theo tên người chơi); chưa có tán thưởng | P2 | S |
-| C13 Power + mốc → mốc thế lực có quà | 🟡 thế lực, bảng Thế lực, xếp hạng; chưa có mốc thế lực dài hạn | P2 | S |
+| C13 Power + mốc → mốc thế lực có quà | ✅ thế lực, bảng Thế lực, xếp hạng; chuỗi thành tựu thế lực 5 bậc (Uy Chấn Bát Phương) | P2 | S |
 | D4 Lohar's Trial → Yêu triều | ✅ Yêu Vương Tuần Sơn (yêu cốt) + Luận Võ Liên Hoàn | P2 | S |
 | F11 Quà minh từ nạp → Minh lễ từ cosmetic | ❌ | P2 | S |
 | A6 Thời đại → hình công trình tầng 16–25 | ✅ đủ 5 bậc hình (tới tầng 25) | P2 | M |

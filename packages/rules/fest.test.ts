@@ -31,6 +31,9 @@ import {
   digAt,
   delveError,
   wishAt,
+  cardsAt,
+  flipError,
+  swapError,
   weekOf,
   weekStart,
   festEnded,
@@ -532,6 +535,40 @@ test('Thế Lực Bạo Tăng: điểm = thế lực tăng thêm trong lượt (
   assert.equal(festError(s, 'chinhChien', 4), 'not_done', 'nhánh ngày 2 chưa đủ 5 con')
 })
 
+test('Phiên Bài Kỳ Ngộ: lá úp rút mặt theo mầm server (client chờ), mỗi mặt đúng hai lá; lật liền hai lá giống thì ghép nhận quà đôi; 2 lá đầu mỗi ván miễn phí; lật hết thì quà ván, ván mới', () => {
+  const d = FESTS.phienBai
+  assert.equal(d.kind, 'cards')
+  if (d.kind !== 'cards') return
+  let t = MON
+  const base = { ...newGame(MON), levels: { ...newGame(MON).levels, chuDien: 7 } }
+  while (!festOpen(advance(base, t), 'phienBai', t)) t += DAY
+  let s: State = { ...advance(base, t), seed: 555 }
+  const c0 = run({ ...s, seed: 0 }, { type: 'flip', id: 'phienBai', i: 0 })
+  assert.equal(cardsAt(c0, 'phienBai').cards[0], 0, 'client chờ server rút mặt')
+  s = run(s, { type: 'flip', id: 'phienBai', i: 0 })
+  s = run(s, { type: 'flip', id: 'phienBai', i: 1 })
+  assert.equal(flipError(s, 'phienBai', 2), 'not_enough', 'hết 2 lá miễn phí, chưa có lệnh')
+  // nhiều lệnh: lật hết bằng trí nhớ hoàn hảo — ghép khi đã biết vị trí mặt trùng
+  s = { ...s, stats: { ...s.stats, hunted: (s.stats.hunted ?? 0) + 2000 } }
+  const kim = s.items.kimDuyen ?? 0
+  for (let step = 0; step < 60 && cardsAt(s, 'phienBai').games === 0; step++) {
+    const { cards, pending } = cardsAt(s, 'phienBai')
+    const face = (k: number) => cards[k] % 10
+    let i = -1
+    if (pending >= 0) i = cards.findIndex((x, k) => k !== pending && x > 0 && x < 10 && face(k) === face(pending))
+    if (i < 0) {
+      const known = cards.findIndex((x, k) => x > 0 && x < 10 && cards.some((y, j) => j !== k && y === x))
+      i = pending < 0 && known >= 0 ? known : cards.findIndex((x, k) => x === 0 && k !== pending)
+    }
+    if (i < 0) i = cards.findIndex((x, k) => x < 10 && k !== pending)
+    s = run(s, { type: 'flip', id: 'phienBai', i })
+  }
+  const after = cardsAt(s, 'phienBai')
+  assert.equal(after.games, 1, 'lật hết 6 đôi: xong một ván')
+  assert.deepEqual(after.cards, Array(12).fill(0), 'ván mới úp hết')
+  assert.ok((s.items.kimDuyen ?? 0) >= kim + (d.pairs[0].items!.kimDuyen ?? 0), 'quà đôi đầu')
+})
+
 test('Hương Hỏa Các: món mở theo cấp, mỗi tuần mua có hạn (thứ Hai làm mới), giá nhân tầng Chủ điện', () => {
   const rich = { linhThach: 1e6, linhThao: 1e6, linhKhoang: 1e6 }
   let s: State = { ...newGame(MON), res: rich, levels: { ...newGame(MON).levels, chuDien: 5 } }
@@ -731,4 +768,30 @@ test('Giới Chủ Tranh Phong: 7 ngày đầu mùa, điểm = thế lực tăng
     festBoard(new Map([[1, s]]), 'gioiChu', key).map(([p]) => p),
     [1],
   )
+})
+
+test('Hoá Kiến Vi Binh (War and Peace): tuần thứ tư của mùa, Chủ điện 25 — đổi Lỗ Ban Phù sang Luyện Binh Phù cùng mệnh giá, mỗi mệnh giá tối đa 200 lá mỗi mùa', () => {
+  const seasonAt = MON - 22 * DAY
+  const base = newGame(MON - 60 * DAY)
+  const items = addItems(base.items, { loBan60: 250, loBan5: 3 })
+  const at = (hall: number, from = seasonAt) =>
+    advance({ ...base, seasonAt: from, items, levels: { ...base.levels, chuDien: hall } }, MON)
+  assert.equal(festOpen(at(24), 'hoaKien', MON), false, 'dưới tầng 25')
+  assert.equal(festOpen(at(25, MON - 5 * DAY), 'hoaKien', MON), false, 'ngoài tuần thứ tư của mùa')
+  let s = at(25)
+  assert.equal(festOpen(s, 'hoaKien', MON), true)
+  const had = s.items.luyenBinh60 ?? 0
+  s = run(s, { type: 'swap', id: 'hoaKien', i: 2, n: 150 })
+  assert.equal(s.items.loBan60, 100)
+  assert.equal(s.items.luyenBinh60, had + 150)
+  assert.equal(swapError(s, 'hoaKien', 2, 51), 'limit', 'quá 200 lá mệnh giá 60 phút')
+  s = run(s, { type: 'swap', id: 'hoaKien', i: 2, n: 50 })
+  assert.equal(swapError(s, 'hoaKien', 0, 4), 'not_enough')
+  s = run(s, { type: 'swap', id: 'hoaKien', i: 0, n: 3 })
+  assert.equal(s.items.loBan5, 0)
+  assert.deepEqual(s.fest.hoaKien!.sp, [3, 0, 200, 0, 0, 0])
+  // mùa sau: hạn mức mới
+  const next = advance({ ...s, seasonAt: seasonAt + 49 * DAY }, seasonAt + 71 * DAY)
+  assert.equal(festOpen(next, 'hoaKien', next.time), true)
+  assert.equal(swapError(next, 'hoaKien', 2, 50), null)
 })

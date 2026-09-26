@@ -568,13 +568,13 @@ File 5 có nhắc "World of Alliances" — phiên này không thấy nguồn nà
 - **Hấp dẫn:** đấu trường hằng ngày có "đích" là giải lớn; server cổ vũ người của mình.
 - **Tu tiên hoá:** **Luận Kiếm Đại Hội** — tuần 7 của mùa: top 16 Luận Kiếm Đài của giới vào nhánh loại trực tiếp (xa luân), mọi trận phát lại cho cả giới
   xem; vô địch nhận danh hiệu "Kiếm Khôi mùa N".
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** S.
+- **Game mình:** ✅ Luận Kiếm Đại Hội (`world/tourney.ts`, `tourneyCheck` ở server rollover, `Tourney.svelte` trong thẻ Bảng tuần của Luận Kiếm Đài): từ ngày 43 của mùa, 16 tông môn điểm đài cao nhất (đủ tầng Tranh đoạt, có đội hình, không phải NPC; ít người thì lấy luỹ thừa của 2 lớn nhất) vào nhánh loại trực tiếp — hạt giống 1 và 2 chỉ gặp ở chung kết; mỗi ngày một vòng bằng đội hình thủ (đệ tử ảo, xa luân); mọi trận có nút Xem cho cả giới; xong chung kết quà theo chỗ đứng (Kiếm Khôi · á quân · bán kết · tứ kết) qua thư, biên niên giới ghi Kiếm Khôi; Lịch giới ghi các vòng. Chưa có danh hiệu hiện trên hồ sơ · **Ưu tiên:** P2 · **Công sức:** S.
 
 #### D3. Lost Canyon
 - **RoK:** bản của vương quốc đã vào SoC: tới 6 đạo, mỗi đạo sức chứa 150.000, tự điền quân T5 (1.0.84) [P84]; artifact của Warriors Unbound có hiệu lực ở
   đây [40].
 - **Tu tiên hoá:** **Luận Kiếm Đài · Thượng Tầng** — bảng riêng từ tầng 16 (Nguyên Anh): đệ tử ảo bậc 5, số đội theo cảnh giới (4–5).
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** S.
+- **Game mình:** ✅ Thượng Tầng (`arenaUpper`, `ARENA_UPPER` / `ARENA_UPPER_TIER`): tông môn từ Chủ điện 16 đấu bằng đệ tử ảo bậc 5, chỉ ghép với người cùng tầng đài (đánh khác tầng bị chặn, trừ phục thù), bảng tuần và quà hạng tuần riêng mỗi tầng; trang Luận Kiếm Đài có nhãn Thượng Tầng; số đội theo số đội xuất quân của cảnh giới · **Ưu tiên:** P2 · **Công sức:** S.
 
 #### D4. Champions of Olympia — 5v5
 - **Mở khoá, lịch:** tuần cách tuần, thứ Bảy – Chủ nhật, xen kẽ với Ark [18]; cấp mở khoá: chưa xác minh.
@@ -822,8 +822,8 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | C3 | Osiris League + Bets + xem trực tiếp | Cửu Thiên Luận Đạo Hội | 🟡 bảng giải cả mùa + playoff 4 minh (`leagueBoard`, `cupSetup`); chưa có cược, xem trực tiếp | P2 | M |
 | C4 | Canyon Clash | Luận Kiếm Minh Chiến | ✅ Luận Kiếm Minh Chiến | P1 | S–M |
 | D1 | Sunset Canyon | Luận Kiếm Đài (xa luân chiến) | ✅ Luận Kiếm Đài | **P0** | M |
-| D2 | Sunset Canyon Tournament | Luận Kiếm Đại Hội | ❌ | P2 | S |
-| D3 | Lost Canyon | Luận Kiếm Đài · Thượng Tầng | ❌ | P2 | S |
+| D2 | Sunset Canyon Tournament | Luận Kiếm Đại Hội | ✅ tuần cuối mùa, top 16 đài loại trực tiếp, xem lại mọi trận, quà theo chỗ đứng | P2 | S |
+| D3 | Lost Canyon | Luận Kiếm Đài · Thượng Tầng | ✅ từ tầng 16: đệ tử ảo bậc 5, ghép và bảng tuần riêng | P2 | S |
 | D4 | Champions of Olympia | Tiên Môn Đại Bỉ (bất đồng bộ, 3 hiệp × 5 cờ) | ⛔ thời gian thực → ❌ | P2 | M |
 | D5 | Tempest Clash | Vân Chu Hội Chiến | ⛔ → ❌ | P2 | S |
 | D6 | War of the Ruins (+ Triarch Trouble) | Cổ Khư Loạn Chiến | ⛔ → ❌ | P2 | M |

@@ -1,7 +1,21 @@
 <script lang="ts">
   // Lịch giới (lịch theo ngày của mùa 49 ngày): pha bản đồ mở (sớm hơn nếu cả giới xong chương Thiên Đạo Biên Niên), hạn từng chương,
-  // Tranh Đoạt Linh Châu mỗi tối Chủ nhật (hai tuần cuối là bán kết / chung kết Cửu Thiên), hết mùa. Chia theo tuần; hôm nay tô vàng.
-  import { ARK_ROUND, ARK_ROUNDS, BOOK, DAY, weekOf } from '@rok/rules'
+  // Tranh Đoạt Linh Châu mỗi tối Chủ nhật (hai tuần cuối là bán kết / chung kết Cửu Thiên), Khai Giới Trảm Tà, thời Thiên Thời, chặng
+  // Chính Tà, lễ theo ngày mùa, hết mùa. Chia theo tuần; hôm nay tô vàng.
+  import {
+    ARK_ROUND,
+    ARK_ROUNDS,
+    BOOK,
+    CAMP_STAGES,
+    CAMP_STAGE_DAYS,
+    DAY,
+    FESTS,
+    FEST_IDS,
+    THOI_DAYS,
+    TOURNEY_DAY,
+    thoiAt,
+    weekOf,
+  } from '@rok/rules'
   import { PHASES, PHASE_CH, SEASON_DAYS, arkAt } from '@rok/rules/world'
   import { artOf } from '@rok/art'
   import { L } from './lib'
@@ -13,6 +27,17 @@
   // mỗi ngày của mùa: các việc đáng nhớ
   const days = $derived.by(() => {
     const out: string[][] = Array.from({ length: SEASON_DAYS }, () => [])
+    out[0].push(L.scal.eve(L.eve.title))
+    for (let d = 0; d < SEASON_DAYS; d += THOI_DAYS) out[d].push(L.thoi.names[thoiAt(d).el])
+    for (let d = 0, n = 0; d < SEASON_DAYS; d += CAMP_STAGE_DAYS, n++) {
+      const m = CAMP_STAGES[n % CAMP_STAGES.length] as keyof typeof L.camp.what
+      out[d].push(L.scal.stage(n + 1, L.camp.what[m]))
+    }
+    for (const id of FEST_IDS) {
+      const w = FESTS[id].window
+      if (w.kind === 'season') out[w.from]?.push(L.fest.names[id].name)
+    }
+    ;[16, 8, 4, 2].forEach((n, r) => out[TOURNEY_DAY + r]?.push(L.scal.tourney(L.tourney.round(n))))
     PHASES.forEach((d, k) => k && out[d]?.push(L.scal.phase(L.world.phase[k], PHASE_CH[k] + 1)))
     BOOK.forEach((b, k) => out[b.day]?.push(L.scal.chapter(k + 1, L.book.names[k])))
     // trận Linh Châu: mỗi tối Chủ nhật trong mùa; hai trận cuối xong trước khi hết mùa là playoff

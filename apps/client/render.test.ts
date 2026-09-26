@@ -975,6 +975,8 @@ test('tiên minh, chat', async () => {
       const quiz = paint('Quiz', { game: s }, `${label}, Vấn Đạo Đài`)
       if (s.levels.chuDien >= 3) assert.ok(quiz.includes(L.quiz.step(1, 5)), 'câu đầu hôm nay')
       assert.equal(L.quiz.q.length, QUIZ_KEY.length, 'mỗi đáp án một câu hỏi')
+      for (const e of Object.keys(L.elders))
+        assert.equal(L.story.text[e as keyof typeof L.story.text]?.length, 3, `liệt truyện ${e}`)
       social.quiz = false
       // màn Mở khoá: Chủ điện lên tầng mở tab + bản đồ + chat (tầng 3), Tranh đoạt (tầng 6) — mỗi mục một huy hiệu
       for (const hall of [3, 6]) {

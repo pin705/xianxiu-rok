@@ -4,7 +4,7 @@
   import { cellOf, clear, type Fog } from '@rok/rules'
   import { veinBuffs, type Atlas, type MapSnap } from '@rok/rules/world'
   import { Button, Medal, Sheet, Tabs, Toggle } from '../ui'
-  import { EMBLEM, L, spotName } from '../lib'
+  import { EMBLEM, L, pointName, spotName } from '../lib'
 
   let {
     open,
@@ -60,13 +60,14 @@
         <Medal emblem={EMBLEM.spot[p.kind]} tone="spot" size={36} pips={p.lv} dim={shut(p)} />
         <span class="grow stack" style:--gap="1px">
           <b class="t-small"
-            >{spotName(p.kind)} · {L.lv(p.lv)}
+            >{pointName(p)} · {L.lv(p.lv)}
             <span class="t-soft t-num">({p.x},{p.y})</span>{#if fog && !clear(fog, cellOf(p).cx, cellOf(p).cy, now)}
               <span class="t-tiny t-soft">· {L.world.inFog}</span>{/if}</b
           >
           <small class="t-tiny" class:t-gold={sp?.side === side} class:t-soft={!sp?.own}
             >{shut(p) ? L.world.shut : (sp?.own ?? L.world.nobody)}{#if sp?.n}
-              · {L.world.troopsAt(sp.n)}{/if}</small
+              · {L.world.troopsAt(sp.n)}{/if}{#if sp?.ctl && sp.ctlSide !== sp.side}
+              · {L.world.ctlBy} {sp.ctl}{/if}</small
           >
           {#if p.kind === 'vein'}<small class="t-tiny t-good"
               >{veinBuffs(p)

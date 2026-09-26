@@ -26,6 +26,13 @@ import {
   lead,
   newGame,
   tavernFree,
+  truyenCost,
+  truyenError,
+  advance,
+  festOpen,
+  festWindow,
+  FESTS,
+  DAY,
   type State,
 } from './index.ts'
 
@@ -151,4 +158,38 @@ test('Ngộ công pháp: tín vật riêng, giá theo số lần đã ngộ, m�
   // lưu / nạp giữ tầng; save hỏng bị từ chối
   assert.deepEqual(migrate(JSON.parse(JSON.stringify(max)))?.skl, { thanhPhong: [5, 5, 5] })
   assert.equal(migrate({ ...JSON.parse(JSON.stringify(max)), skl: { thanhPhong: [5, 5] } }), null)
+})
+
+test('Truyền công (Commander Swap): trong Truyền Công Đại Hội đổi tầng công pháp giữa hai trưởng lão cùng phẩm, giá theo chênh lệch tầng', () => {
+  let t = T0
+  while (festWindow({}, FESTS.truyenCong, t)) t += DAY
+  while (!festWindow({}, FESTS.truyenCong, t)) t += DAY // ngày đầu lượt lễ kế tiếp
+  const base = newGame(T0)
+  const at = (time: number, n: number): State =>
+    advance(
+      {
+        ...base,
+        levels: { ...base.levels, chuDien: 10 },
+        elders: { thanhPhong: 0, thachKien: 0, loiChan: 0 },
+        skl: { thanhPhong: [5, 3, 1] },
+        items: addItems(base.items, { truyenCong: n }),
+      },
+      time,
+    )
+  assert.equal(truyenError(at(t - DAY, 99), 'thanhPhong', 'thachKien'), 'locked', 'ngoài lễ')
+  let s = at(t, 20)
+  assert.ok(festOpen(s, 'truyenCong', t))
+  assert.equal(truyenCost(s, 'thanhPhong', 'thachKien'), 2 + 4 * 6, 'chênh sáu tầng')
+  assert.equal(truyenError(s, 'thanhPhong', 'loiChan'), 'bad', 'khác phẩm')
+  assert.equal(truyenError(s, 'thanhPhong', 'thachKien'), 'not_enough')
+  s = run(at(t, 30), { type: 'truyen', a: 'thanhPhong', b: 'thachKien' })
+  assert.deepEqual(
+    [skillLv(s, 'thanhPhong'), skillLv(s, 'thachKien')],
+    [
+      [1, 1, 1],
+      [5, 3, 1],
+    ],
+  )
+  assert.equal(s.items.truyenCong, 4)
+  assert.equal(truyenError(s, 'thachKien', 'nhuYen'), 'locked', 'chưa thu nhận')
 })

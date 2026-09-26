@@ -14,6 +14,8 @@ import {
   ARENA_CHEST,
   ARENA_STEP,
   ARENA_TIER,
+  ARENA_UPPER,
+  ARENA_UPPER_TIER,
   ARENA_TRIES,
   ELDERS,
   KY_CHEST,
@@ -57,8 +59,10 @@ const bare = (s: State): State => ({
   dao: undefined,
 })
 export const arenaN = (s: State, e: ElderId) => ARENA_BASE + ARENA_STEP * elderLevel(s.elders[e])
+// Thượng Tầng: từ Chủ điện ARENA_UPPER — đệ tử ảo bậc cao hơn, ghép và xếp hạng riêng
+export const arenaUpper = (s?: State) => (s?.levels.chuDien ?? 0) >= ARENA_UPPER
 export const arenaSide = (s: State, t: ArenaTeam): Side =>
-  sideOf(bare(s), t.elder, { [`${t.type}${ARENA_TIER}`]: arenaN(s, t.elder) })
+  sideOf(bare(s), t.elder, { [`${t.type}${arenaUpper(s) ? ARENA_UPPER_TIER : ARENA_TIER}`]: arenaN(s, t.elder) })
 
 // Trận xa luân: đội đầu hai bên đấu; bên thắng đi tiếp với quân còn lại, gặp đội kế của bên kia; hết lượt chưa phân thắng
 // bại thì cả hai đội rút. Bên còn đội thắng; cả hai cùng hết (hay cùng còn) thì so phần quân còn, bằng nhau bên thủ thắng.

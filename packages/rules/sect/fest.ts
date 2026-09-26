@@ -4,6 +4,7 @@ import { grant } from '../core/battle.ts'
 import { dayOf } from '../core/calendar.ts'
 import {
   FEST_IDS,
+  cardsAt,
   diceAt,
   digAt,
   festEnds,
@@ -23,14 +24,27 @@ import {
 } from '../core/fest.ts'
 import { int, oneOf } from '../core/parse.ts'
 import { type Err, type State } from '../core/types.ts'
-import { nextSeed } from '../core/util.ts'
-import { FESTS, NHAT_KHOA_DAY, PASS_CHEST, RACE_LATE, RACE_MS, RACE_RUNS, type FestDef, type FestId } from '../data.ts'
+import { addItems, nextSeed } from '../core/util.ts'
+import {
+  FESTS,
+  NHAT_KHOA_DAY,
+  PASS_CHEST,
+  RACE_LATE,
+  RACE_MS,
+  RACE_RUNS,
+  SPEED_MIN,
+  type BagId,
+  type FestDef,
+  type FestId,
+} from '../data.ts'
 
 export type FestAction =
   | { type: 'fest'; id: FestId; i: number }
+  | { type: 'flip'; id: FestId; i: number } // lật bài: lật lá i
   | { type: 'race' } // Trảm Yêu Tốc Chiến: bắt đầu lượt đua
   | { type: 'spin'; id: FestId; n: 1 | 10; pick?: number } // pick: món chủ lực đã chọn (đập trứng)
   | { type: 'delve'; id: FestId; cell: number; pick: number } // khảo cổ: cuốc ô cell, giải tối thượng đã chọn
+  | { type: 'swap'; id: FestId; i: number; n: number } // đổi phù: n lá mệnh giá SPEED_MIN[i]
 
 // Một lượt quay: ô theo trọng số từ mầm; lượt thứ pity, 2·pity… (k: số lượt đã quay trước đó) chắc trúng ô đầu
 function wheelPick(d: Extract<FestDef, { kind: 'wheel' }>, seed: number, k: number): number {
@@ -142,6 +156,50 @@ export function festError(s: State, id: FestId, i: number): Err | null {
   return festDone(s, id, i) ? null : 'not_done'
 }
 
+// Lật bài: lá i lật được (chưa ghép, không phải lá đang chờ), còn ván, còn lá miễn phí hay đủ lệnh
+export function flipError(s: State, id: FestId, i: number): Err | null {
+  const d = FESTS[id]
+  if (d.kind !== 'cards' || !festOpen(s, id, s.time)) return 'locked'
+  const c = cardsAt(s, id)
+  if (c.games >= d.games) return 'limit'
+  if (i > 11 || c.cards[i] > 10 || c.pending === i) return 'bad'
+  return c.flips < d.free || festTokens(s, id) >= d.cost ? null : 'not_enough'
+}
+// Lật một lá: lá úp chưa rõ thì rút mặt trong số mặt còn thiếu (mỗi mặt hai lá — như xáo sẵn cả bộ); lá thứ hai của cặp giống lá
+// đang chờ thì ghép, nhận quà đôi; lật hết 6 đôi thì quà ván và ván mới
+function flip(s: State, id: FestId, d: Extract<FestDef, { kind: 'cards' }>, i: number): State {
+  const f = s.fest[id]!
+  const c = cardsAt(s, id)
+  const cards = [...c.cards]
+  let seed = s.seed
+  if (!cards[i]) {
+    const left = [1, 2, 3, 4, 5, 6].flatMap(k => Array(2 - cards.filter(x => x % 10 === k).length).fill(k))
+    cards[i] = left[Math.floor(((seed >>> 0) / 2 ** 32) * left.length)]
+    seed = nextSeed(seed)
+  }
+  let st: State = s
+  let pending = i
+  if (c.pending >= 0) {
+    pending = -1
+    if (cards[c.pending] === cards[i]) {
+      st = grant(st, d.pairs[cards[i] - 1])
+      cards[i] += 10
+      cards[c.pending] += 10
+    }
+  }
+  let games = c.games
+  const paid = c.flips >= d.free ? 1 : 0
+  let flips = c.flips + 1
+  if (cards.every(x => x > 10)) {
+    st = grant(st, d.done)
+    games += 1
+    cards.fill(0)
+    flips = 0
+  }
+  const next = { ...f, sp: [...cards, pending + 1, flips, games], days: f.days + paid }
+  return { ...st, seed, fest: { ...st.fest, [id]: next } }
+}
+
 // Trảm Yêu Tốc Chiến: bắt đầu một lượt đua (còn lượt hôm nay, không đang đua, không quá sát giờ đóng lễ)
 export function raceError(s: State): Err | null {
   if (FESTS.tocChien.kind !== 'race' || !festOpen(s, 'tocChien', s.time)) return 'locked'
@@ -151,7 +209,34 @@ export function raceError(s: State): Err | null {
   return festEnds(s, 'tocChien', s.time) - s.time < RACE_LATE ? 'locked' : null
 }
 
+// Đổi phù (Hoá Kiến Vi Binh): mã hai loại phù cùng mệnh giá i; đổi được khi lễ mở, còn hạn mức mệnh giá đó và đủ phù trong túi
+const swapIds = (d: Extract<FestDef, { kind: 'swap' }>, i: number) =>
+  [`${d.from}${SPEED_MIN[i]}`, `${d.to}${SPEED_MIN[i]}`] as [BagId, BagId]
+export function swapError(s: State, id: FestId, i: number, n: number): Err | null {
+  const d = FESTS[id]
+  if (d.kind !== 'swap' || !festOpen(s, id, s.time)) return 'locked'
+  if (!SPEED_MIN[i] || n < 1) return 'bad'
+  if ((s.fest[id]?.sp?.[i] ?? 0) + n > d.max) return 'limit'
+  return (s.items[swapIds(d, i)[0]] ?? 0) >= n ? null : 'not_enough'
+}
+
 export const festActions: Actions<FestAction> = {
+  swap: {
+    pick: a =>
+      oneOf(FEST_IDS)(a.id) && int(0, 5)(a.i) && int(1, 200)(a.n)
+        ? { type: 'swap', id: a.id, i: a.i as number, n: a.n as number }
+        : null,
+    run: (s, a) => {
+      const e = swapError(s, a.id, a.i, a.n)
+      if (e) return no(e)
+      const d = FESTS[a.id] as Extract<FestDef, { kind: 'swap' }>
+      const f = s.fest[a.id]!
+      const [from, to] = swapIds(d, a.i)
+      const sp = SPEED_MIN.map((_, k) => (f.sp?.[k] ?? 0) + (k === a.i ? a.n : 0)) // lá đã đổi mỗi mệnh giá
+      const items = addItems(s.items, { [from]: -a.n, [to]: a.n })
+      return ok({ ...s, items, fest: { ...s.fest, [a.id]: { ...f, sp } } })
+    },
+  },
   fest: {
     pick: a => (oneOf(FEST_IDS)(a.id) && int(0, 99)(a.i) ? { type: 'fest', id: a.id, i: a.i } : null),
     run: (s, a) => {
@@ -164,6 +249,17 @@ export const festActions: Actions<FestAction> = {
       // rương mốc 60 của Nhật Khóa = một hôm "mở rương ngày" cho nhiệm vụ tuần
       if (a.id !== 'nhatKhoa' || a.i !== NHAT_KHOA_DAY) return ok(st)
       return ok({ ...st, weekly: { ...st.weekly, n: { ...st.weekly.n, days: st.weekly.n.days + 1 } } })
+    },
+  },
+  flip: {
+    pick: a => (oneOf(FEST_IDS)(a.id) && int(0, 11)(a.i) ? { type: 'flip', id: a.id, i: a.i } : null),
+    run: (s, a) => {
+      const e = flipError(s, a.id, a.i)
+      if (e) return no(e)
+      const d = FESTS[a.id]
+      // lá úp chưa rõ: mặt rút bằng mầm server — client chờ; lá đã lộ thì tất định
+      if (!s.seed && !cardsAt(s, a.id).cards[a.i]) return ok(s)
+      return ok(d.kind === 'cards' ? flip(s, a.id, d, a.i) : s)
     },
   },
   race: {

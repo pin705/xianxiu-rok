@@ -1,15 +1,17 @@
 // Chiêu Hiền Đài (như Tavern của RoK, không bán): mở thiếp bạc / vàng (miễn phí theo giờ hoặc bằng thiếp trong túi),
-// thu nhận trưởng lão bằng tín vật, nâng sao trưởng lão, ngộ công pháp (tầng ngẫu nhiên, mầm server).
+// thu nhận trưởng lão bằng tín vật, nâng sao trưởng lão, ngộ công pháp (tầng ngẫu nhiên, mầm server), truyền công.
 // Phần quà rút bằng mầm của server; client có mầm 0 (ẩn) nên chỉ trừ thiếp — quà tới cùng patch của server.
 import { no, ok, use, type Actions } from '../core/action.ts'
 import { grant } from '../core/battle.ts'
 import { int, isElder, oneOf } from '../core/parse.ts'
-import { elderLevel, skillLv } from '../core/stats.ts'
+import { festOpen } from '../core/fest.ts'
+import { elderLevel, isMarching, skillLv } from '../core/stats.ts'
 import { type Err, type State, type Tavern } from '../core/types.ts'
 import { addBag, addItems, bag, nextSeed } from '../core/util.ts'
 import {
   ELDERS,
   GOLD_PITY,
+  RARITY,
   SKILL_COST,
   SKILL_MAX,
   STAR_COST,
@@ -19,6 +21,8 @@ import {
   TAVERN_HALL,
   TAVERN_POOL,
   TOKEN_SUMMON,
+  TRUYEN_MIN,
+  TRUYEN_PER,
   type ElderId,
   type Reward,
   type TavernKind,
@@ -29,6 +33,7 @@ export type TavernAction =
   | { type: 'recruit'; elder: ElderId }
   | { type: 'star'; elder: ElderId }
   | { type: 'ngo'; elder: ElderId } // ngộ công pháp
+  | { type: 'truyen'; a: ElderId; b: ElderId } // truyền công: đổi tầng công pháp của a và b
 
 const KINDS = Object.keys(TAVERN) as TavernKind[]
 // Lần miễn phí đang có không (để dành tối đa một lượt): lúc lượt kế <= bây giờ
@@ -45,6 +50,19 @@ export function ngoError(s: State, e: ElderId): Err | null {
   if (s.elders[e] === undefined) return 'locked'
   if (!ngoOpen(s, e).length) return 'max_level'
   return (s.tokens[e] ?? 0) < ngoCost(s, e) ? 'not_enough' : null
+}
+
+// Truyền công: hai trưởng lão đổi được cho nhau (cùng phẩm, cùng số tâm pháp), giá theo chênh lệch số tầng đã ngộ
+export const truyenPair = (a: ElderId, b: ElderId) =>
+  a !== b && RARITY[a] === RARITY[b] && ELDERS[a].passives.length === ELDERS[b].passives.length
+const ngoCount = (s: State, e: ElderId) => skillLv(s, e).reduce((n, x) => n + x - 1, 0)
+export const truyenCost = (s: State, a: ElderId, b: ElderId) =>
+  TRUYEN_MIN + TRUYEN_PER * Math.abs(ngoCount(s, a) - ngoCount(s, b))
+export function truyenError(s: State, a: ElderId, b: ElderId): Err | null {
+  if (!festOpen(s, 'truyenCong', s.time) || s.elders[a] === undefined || s.elders[b] === undefined) return 'locked'
+  if (!truyenPair(a, b) || skillLv(s, a).join() === skillLv(s, b).join()) return 'bad'
+  if (isMarching(s, a) || isMarching(s, b)) return 'busy' // đội đang đi mang theo công pháp lúc xuất quân
+  return (s.items.truyenCong ?? 0) >= truyenCost(s, a, b) ? null : 'not_enough'
 }
 
 export function drawError(s: State, k: TavernKind, n: number): Err | null {
@@ -145,6 +163,15 @@ export const tavernActions: Actions<TavernAction> = {
         skl: { ...s.skl, [a.elder]: lv },
         tokens: { ...s.tokens, [a.elder]: s.tokens[a.elder]! - ngoCost(s, a.elder) },
       })
+    },
+  },
+  truyen: {
+    pick: a => (isElder(a.a) && isElder(a.b) ? { type: 'truyen', a: a.a, b: a.b } : null),
+    run: (s, a) => {
+      const e = truyenError(s, a.a, a.b)
+      if (e) return no(e)
+      const items = addItems(s.items, { truyenCong: -truyenCost(s, a.a, a.b) })
+      return ok({ ...s, items, skl: { ...s.skl, [a.a]: skillLv(s, a.b), [a.b]: skillLv(s, a.a) } })
     },
   },
   star: {
