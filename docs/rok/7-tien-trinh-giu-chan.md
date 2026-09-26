@@ -955,7 +955,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | A9 Thợ thứ hai → tạp dịch thứ hai (thuê 2 ngày; vĩnh viễn bằng Công đức) | ✅ Tạp Dịch Lệnh (thuê 48 giờ, không vĩnh viễn) | P1 | S / M |
 | C12 Mã quà + quà liên kết email | ✅ mã quà tặng + quà gắn email | P1 | S |
 | C14 Thông báo đẩy thêm loại + chọn loại | 🟡 7 loại, tắt được từng loại, có nhắc khiên / kho / chuỗi Hương Hỏa; chưa nhắc Nhật Khóa, sự kiện | P1 | S |
-| D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | 🟡 Tông Môn Tranh Bá (6 giai đoạn); chưa xếp hạng, sự kiện tuần cũ chưa gộp | P1 | S |
+| D1 MGE → Tông Môn Tranh Bá (gộp với sự kiện tuần) | ✅/🟡 Tông Môn Tranh Bá (6 ải, bảng từng ải + cả lượt, trưởng lão của đợt); sự kiện tuần cũ chưa gộp | P1 | S |
 | D9 Kỷ niệm → Khánh điển đầu mùa (điểm danh mọi người, tổng kết mùa, mời người cũ) | 🟡 tổng kết mùa + lễ theo lịch; chưa có điểm danh đầu mùa, mời người cũ | P1 | S / M |
 | F3 Growth Fund → **Quỹ Tiên Lộ** | ❌ (P4) | P1 | S |
 | F4 Supply Depot → **Nguyệt Lệnh** | ❌ (P4) | P1 | S |
@@ -967,7 +967,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | C1 Tavern → **Chiêu Hiền Đài** (thiếp miễn phí, pity tất định, không bán) | ✅ Chiêu Hiền Đài | P1 | M |
 | C11 Quà / điểm / cửa hàng liên minh → **Cống hiến**, **Minh lễ** | ✅ cống hiến + Cống Hiến Các + Minh lễ | P1 | M |
 | F1 Gems → Tiên ngọc (chỉ cosmetic / pass / tiện lợi có trần) | ❌ (P4) | P1 | M |
-| F5 Lucerne Scroll / pass → **Tu Tiên Lệnh** | ❌ (kế hoạch) | P1 | M |
+| F5 Lucerne Scroll / pass → **Tu Tiên Lệnh** | ✅ Tu Tiên Lệnh (bản thường + Kim Lệnh theo Hương Hỏa) | P1 | M |
 | F12 Cosmetic → Sơn môn cảnh sắc, pháp tướng | ❌ (kế hoạch) | P1 | M |
 | A2 Đổi nền văn minh → Cải tu đạo thống | ✅ (7 ngày một lần) | P2 | S |
 | A5 Quà lên cấp TTC → Đột phá chi lễ | ✅ qua nhiệm vụ | P2 | S |

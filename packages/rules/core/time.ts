@@ -2,7 +2,7 @@
 import { addGain, admit, battle, coolKey } from './battle.ts'
 import { rollDay } from './calendar.ts'
 import { festDrop, rollFest } from './fest.ts'
-import { rate, storage, unitOf, wildRate, yardCap } from './stats.ts'
+import { rate, storage, unitOf, wildRate } from './stats.ts'
 import { type Job, type JobKind, type State, type TrainJob } from './types.ts'
 import { addItems, count, HOUR, minus, plus, noGain } from './util.ts'
 import { RESOURCES, TRAIN_PTS, hallGift, type Bag } from '../data.ts'
@@ -16,19 +16,17 @@ function accrue(s: State, t: number): State {
   const carry = { ...s.carry }
   const yard: Bag = { ...(s.yard ?? { linhThach: 0, linhThao: 0, linhKhoang: 0 }) }
   for (const r of RESOURCES) {
-    // linh khí tự nhiên: thẳng vào kho
-    const total = wildRate(s, r) * dt + carry[r]
-    const gained = Math.floor(total / HOUR)
-    if (res[r] + gained >= cap) {
-      res[r] = Math.max(res[r], cap) // đầy kho thì ngừng, nhưng không cắt phần đang vượt
-      carry[r] = 0
-    } else {
-      res[r] += gained
-      carry[r] = total % HOUR
-    }
-    // sản lượng công trình: nằm ở công trình chờ chạm thu (collect), đầy YARD_HOURS giờ thì ngừng
-    const made = ((rate(s, r) - wildRate(s, r)) * dt) / HOUR
-    if (made > 0) yard[r] = Math.max(yard[r], Math.min(yardCap(s, r), yard[r] + made))
+    // Linh khí tự nhiên vào thẳng kho, sản lượng công trình nằm ở công trình chờ chạm thu (yard, đơn vị × ms như carry). Kho cộng
+    // phần chờ thu chạm sức chứa thì cả hai ngừng (đầy kho thì ngừng sản xuất) — tính theo số ms nguyên còn chạy được tới lúc đầy,
+    // nên kết quả không phụ thuộc số lần gọi advance
+    const wild = wildRate(s, r),
+      made = rate(s, r) - wild
+    const room = cap * HOUR - res[r] * HOUR - carry[r] - yard[r]
+    const run = Math.max(0, Math.min(dt, Math.floor(room / (wild + made))))
+    const total = wild * run + carry[r]
+    res[r] += Math.floor(total / HOUR)
+    carry[r] = total % HOUR
+    yard[r] += made * run
   }
   return { ...s, time: t, res, carry, ...((s.yard || RESOURCES.some(r => yard[r] > 0)) && { yard }) }
 }

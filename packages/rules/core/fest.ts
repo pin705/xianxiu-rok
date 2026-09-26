@@ -98,16 +98,19 @@ export function festWindow(
   return i < w.len ? { key: Math.floor(k / w.every), stage: i, endAt: at(day - i + w.len) } : null
 }
 
+// Lễ may rủi (vòng quà, bàn xúc xắc): kiếm lệnh từ việc trong lễ, mỗi ngày một lượt miễn phí, kết quả theo mầm server
+export const luck = (d: FestDef): d is Extract<FestDef, { kind: 'wheel' | 'dice' }> =>
+  d.kind === 'wheel' || d.kind === 'dice'
 const used = (d: FestDef): Metric[] => {
   if (d.kind === 'tasks' || d.kind === 'activity') return [...new Set(d.tasks.map(x => x.m))]
-  return d.kind === 'points' || d.kind === 'shop' || d.kind === 'wheel'
+  return d.kind === 'points' || d.kind === 'shop' || luck(d)
     ? [...new Set(d.stages.flatMap(st => Object.keys(st) as Metric[]))]
     : []
 }
 const snap = (s: State, d: FestDef) => Object.fromEntries(used(d).map(m => [m, metric(s, m)])) as Fest['base']
 // Điểm giai đoạn đang chạy (chưa dồn vào bank)
 function stagePts(s: State, d: FestDef, f: Fest) {
-  if (d.kind !== 'points' && d.kind !== 'shop' && d.kind !== 'wheel') return 0
+  if (d.kind !== 'points' && d.kind !== 'shop' && !luck(d)) return 0
   const w = d.stages[Math.min(f.stage, d.stages.length - 1)]
   return sum(
     (Object.keys(w) as Metric[]).map(m => Math.floor((w[m] ?? 0) * Math.max(0, metric(s, m) - (f.base[m] ?? 0)))),
@@ -236,13 +239,20 @@ export const festBought = (s: State, id: FestId, i: number) => s.fest[id]?.got.f
 export function festTokens(s: State, id: FestId) {
   const d = FESTS[id]
   const f = s.fest[id]
-  // vòng quà: got — các ô đã quay trúng, days — số lượt miễn phí đã dùng
-  if (d.kind === 'wheel') return festPoints(s, id) - d.cost * ((f?.got.length ?? 0) - (f?.days ?? 0))
+  // vòng quà / bàn xúc xắc: got — các ô trúng / mặt đã đổ, days — số lượt miễn phí đã dùng
+  if (luck(d)) return festPoints(s, id) - d.cost * ((f?.got.length ?? 0) - (f?.days ?? 0))
   if (d.kind !== 'shop') return 0
   return festPoints(s, id) - sum((f?.got ?? []).map(i => d.shop[i]?.price ?? 0))
 }
 // Vòng quà: hôm nay còn lượt miễn phí (last — ngày đã quay miễn phí), trưởng lão chủ lễ của lượt lễ này
 export const wheelFree = (s: State, id: FestId, t: number) => festOpen(s, id, t) && s.fest[id]?.last !== dayOf(t)
+// Bàn xúc xắc: ô đang đứng và số vòng đã đi (got — các mặt đã đổ)
+export function diceAt(s: State, id: FestId) {
+  const d = FESTS[id]
+  const n = sum(s.fest[id]?.got ?? [])
+  const len = d.kind === 'dice' ? d.board.length : 1
+  return { pos: n % len, laps: Math.floor(n / len) }
+}
 export function wheelElder(s: State, id: FestId) {
   const d = FESTS[id]
   return d.kind === 'wheel' ? d.elders[(s.fest[id]?.key ?? 0) % d.elders.length] : undefined
@@ -260,7 +270,7 @@ export function festDone(s: State, id: FestId, i: number) {
     return !!c && f.got.filter(k => k < d.tasks.length).length >= c.need
   }
   if (d.kind === 'shop') return !!d.shop[i] && festTokens(s, id) >= d.shop[i].price
-  if (d.kind === 'wheel') return false // vòng quà: không có quà nhận, chỉ quay
+  if (luck(d)) return false // vòng quà, bàn xúc xắc: không có quà nhận, chỉ quay / đổ
   return i < d.goals.length && festPoints(s, id) >= d.goals[i] // tích điểm, hoạt lực
 }
 // Đã nhận hết (kho đổi: đổi đủ max lần)
@@ -271,7 +281,7 @@ export function festGot(s: State, id: FestId, i: number) {
 export const festRewards = (id: FestId) => {
   const d = FESTS[id]
   if (d.kind === 'shop') return d.shop.map(x => x.reward)
-  if (d.kind === 'wheel') return []
+  if (luck(d)) return []
   return d.kind === 'tasks' ? [...d.tasks.map(x => x.reward), ...(d.chests ?? []).map(c => c.reward)] : d.rewards
 }
 // Số quà đang chờ nhận ở mọi sự kiện đang mở của một bảng — chấm đỏ trên nút Sự kiện (bảng mặc định) hay Nhiệm vụ ngày
@@ -279,7 +289,7 @@ export const festRewards = (id: FestId) => {
 export const festReady = (s: State, t: number, panel?: 'daily') =>
   FEST_IDS.filter(id => FESTS[id].panel === panel && festOpen(s, id, t)).reduce((n, id) => {
     const k = festRewards(id).filter((_, i) => festDone(s, id, i) && !festGot(s, id, i)).length
-    if (FESTS[id].kind === 'wheel') return n + (wheelFree(s, id, t) ? 1 : 0) // chấm đỏ: còn lượt quay miễn phí
+    if (luck(FESTS[id])) return n + (wheelFree(s, id, t) ? 1 : 0) // chấm đỏ: còn lượt quay / đổ miễn phí
     return n + (FESTS[id].kind === 'shop' ? Math.min(1, k) : k)
   }, 0)
 

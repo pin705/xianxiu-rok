@@ -320,6 +320,96 @@ dialog::backdrop {
   white-space: nowrap;
 }
 
+/* ---------- Đồ vật dùng chung (bảng nào cũng dùng — không vẽ lại từng màn) ---------- */
+/* dấu son "Đã nhận": khung vuông mực đỏ, nghiêng như đóng tay */
+.stamp {
+  flex: none;
+  padding: 3px 7px;
+  font-size: var(--fs-1);
+  font-weight: 900;
+  white-space: nowrap;
+  color: var(--cinnabar);
+  border: 2px solid currentColor;
+  border-radius: 5px;
+  rotate: -10deg;
+  opacity: 0.9;
+}
+/* đường mốc thưởng: mỗi mốc một hạt mực trên sợi chỉ dọc (mốc đạt: hạt son, sợi chỉ tô son tới đó) */
+.path {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0 0 0 26px;
+  list-style: none;
+}
+.path > li {
+  position: relative;
+}
+.path > li::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: -19px;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--rim, var(--ink3));
+  border-radius: 50%;
+  background: var(--paper);
+}
+.path > li::after {
+  content: '';
+  position: absolute;
+  top: 28px;
+  bottom: calc(-16px - var(--sp-2));
+  left: -14px;
+  width: 2px;
+  background: var(--paper3);
+}
+.path > li:last-child::after {
+  display: none;
+}
+.path > li.hit::before {
+  border-color: var(--cinnabar);
+  background: var(--cinnabar);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cinnabar) 22%, transparent);
+}
+.path > li.hit::after {
+  background: var(--cinnabar);
+}
+/* số hạng: ba hạng đầu là đồng tiền vàng / bạc / đồng, còn lại số mực */
+.rank-no {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  font-size: var(--fs-2);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-soft);
+}
+.rank-no.r1,
+.rank-no.r2,
+.rank-no.r3 {
+  color: #fff;
+  border-radius: 50%;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.4);
+  box-shadow:
+    inset 0 -2px 0 rgb(0 0 0 / 0.18),
+    0 1px 2px rgb(0 0 0 / 0.25);
+}
+.rank-no.r1 {
+  background: radial-gradient(circle at 35% 30%, #f3d27a, #b8862b 70%);
+}
+.rank-no.r2 {
+  background: radial-gradient(circle at 35% 30%, #e4e6e8, #8e959b 70%);
+}
+.rank-no.r3 {
+  background: radial-gradient(circle at 35% 30%, #e7b089, #9a5a33 70%);
+}
+
 /* ---------- Máy tính bảng dọc, điện thoại ngang lớn: cột rộng hơn ---------- */
 @media (min-width: 700px) {
   :root {

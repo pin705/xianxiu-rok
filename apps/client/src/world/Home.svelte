@@ -11,12 +11,16 @@
     count,
     guestAt,
     guestGift,
+    rate,
     storage,
+    wildRate,
+    yardOf,
     type BuildingId,
+    type Res,
     type State,
   } from '@rok/rules'
   import { Bubble, Hint, Plate, Pointer, Tag, fly } from '../ui'
-  import { L, LOOK, clock, progress } from '../lib'
+  import { L, LOOK, clock, num, progress } from '../lib'
   import { useGame } from '../game'
   import { Home, type Phase } from './home'
   import { HOME, SLOT } from './layout'
@@ -54,6 +58,13 @@
   function meet(e: MouseEvent) {
     const gift = guestGift(game)
     if (g.act({ type: 'guest' }, 'reward')) fly(e.currentTarget as Element, gift.items ?? {})
+  }
+
+  // Sản lượng chờ thu (như RoK): bong bóng trên công trình tài nguyên khi đã đủ 5 phút sản lượng; chạm là thu, tài nguyên bay lên HUD
+  const reapMin = (r: Res) => Math.max(1, Math.round((rate(game, r) - wildRate(game, r)) / 12))
+  function reap(e: MouseEvent, r: Res) {
+    const n = Math.min(yardOf(game, r), Math.floor(storage(game) - game.res[r]))
+    if (g.act({ type: 'collect', res: r }, 'reward')) fly(e.currentTarget as Element, { [r]: n })
   }
 
   const hour = $derived(new Date(now).getHours())
@@ -150,6 +161,20 @@
           onclick={() => onselect?.(id)}
         ></button>
       {/each}
+      {#each IDS as id (id)}
+        {@const r = BUILDINGS[id].makes}
+        {@const got = r && game.levels[id] > 0 ? yardOf(game, r) : 0}
+        {#if r && got >= reapMin(r)}
+          {@const [x, y, w] = SLOT[id]}
+          <button
+            class="reap"
+            class:over={game.res[r] >= storage(game)}
+            style="left:{(x + w * 0.3) * k}px;top:{(y - tops[id] * 0.7) * k}px"
+            aria-label={L.reap(L.res[r], num(got))}
+            onclick={e => reap(e, r)}><Icon name={r} size={22} /><b class="t-num">{num(got)}</b></button
+          >
+        {/if}
+      {/each}
     {/if}
   {/snippet}
   {#snippet pins(k)}
@@ -163,7 +188,7 @@
         {@const job = game.queue.find(j => j.building === id)}
         {@const wj = !job ? work(id) : null}
         {@const makes = BUILDINGS[id].makes}
-        {@const full = !!makes && lv > 0 && game.res[makes] >= storage(game)}
+        {@const full = !!makes && lv > 0 && game.res[makes] + yardOf(game, makes) >= storage(game) - 1}
         {@const hint = !job && !wj ? idle(id) : null}
         {@const by = bubbleY(id, h)}
         {#if locked}
@@ -232,6 +257,26 @@
     background: var(--gold-l);
     border: 1px solid var(--gold-d);
     border-radius: 50%;
+  }
+  /* bong bóng sản lượng chờ thu: viên giấy đuôi nhọn góc dưới, nhún nhẹ; viền son khi kho đã đầy (chạm không thu được) */
+  .reap {
+    position: absolute;
+    display: grid;
+    justify-items: center;
+    min-width: 44px;
+    padding: 3px 7px 2px;
+    color: var(--text);
+    font-size: var(--fs-1);
+    background: var(--paper);
+    border: 2px solid var(--gold-d);
+    border-radius: 14px 14px 14px 3px;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--ink) 30%, transparent);
+    translate: -20% -100%;
+    animation: bob 1.8s ease-in-out infinite;
+    cursor: pointer;
+  }
+  .reap.over {
+    border-color: var(--bad);
   }
   @keyframes bob {
     50% {

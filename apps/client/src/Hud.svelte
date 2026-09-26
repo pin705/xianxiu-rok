@@ -455,7 +455,11 @@
               /></span
             >
           {:else if done}
-            <span class="claim"><Tag tone="gold" icon="star">{L.quest.claim}</Tag></span>
+            <span class="claim"
+              >{#if ink}<span class="qseal">{L.quest.claim}</span>{:else}<Tag tone="gold" icon="star"
+                  >{L.quest.claim}</Tag
+                >{/if}</span
+            >
           {:else}
             <span class="go"><Icon name="arrow" size={16} /></span>
           {/if}
@@ -474,7 +478,7 @@
           {@render tile(ui('ev-fest')!, L.fest.button, fests, onfests)}
           {#if hall >= PVP_HALL}{@render tile(ui('ev-arena')!, L.arena.title, duels, () => (social.arena = true))}{/if}
           {#if hall >= DAILY_HALL}{@render tile(ui('ev-daily')!, L.daily.button, ready, ondaily)}{/if}
-          {#if hall >= DAILY_HALL && isWeekend(now)}<Tag tone="gold" size="sm" icon="star">{L.weekend.tag}</Tag>{/if}
+          {#if hall >= DAILY_HALL && isWeekend(now)}<span class="wk">{L.weekend.tag}</span>{/if}
         </span>
       {:else}
         <span class="daily" class:ready={fests > 0}>
@@ -1453,6 +1457,94 @@
     background: radial-gradient(circle at 35% 35%, #f5a08c, #b3372a 55%, #6a1a12);
     border-radius: 50%;
     box-shadow: 0 2px 3px rgb(0 0 0 / 0.35);
+  }
+  /* nhiệm vụ: chữ đủ chỗ (không ngắt từng chữ), nhận thưởng là dấu son đóng ở góc tờ cáo thị */
+  .ink .quest {
+    width: min(236px, 62vw);
+    max-width: none;
+    padding-right: 16px;
+  }
+  .ink .qt {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .ink .claim {
+    position: absolute;
+    right: -12px;
+    bottom: -14px;
+    animation: none;
+  }
+  .qseal {
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    padding: 0 8px 2px;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1.1;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    background: var(--ui-seal) center / contain no-repeat;
+    rotate: -8deg;
+    filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.3));
+    animation: throb 1.4s var(--ease) infinite;
+  }
+  @keyframes throb {
+    50% {
+      scale: 1.08;
+    }
+  }
+  .ink .go {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    opacity: 0.55;
+  }
+  /* cuối tuần: dải lụa son nhỏ dưới hàng tranh (không tràn sang cảnh) */
+  .wk {
+    width: 64px;
+    padding: 2px 4px 8px;
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1.15;
+    text-align: center;
+    color: #fff;
+    background: var(--cinnabar);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%);
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.25));
+  }
+  /* điện thoại: không có dải "Đang diễn ra" — cảnh đã có bong bóng đồng hồ và dấu nhà rảnh ngay trên từng công trình
+     (dải chip đè lên biển tên); desktop vẫn liệt kê ở cột trái */
+  @media (max-width: 1023px), (max-height: 599px) {
+    .ink .runs {
+      display: none;
+    }
+    /* thanh trên: tên tông môn trọn hàng, thế lực xuống dưới cụm nút */
+    .ink .who {
+      grid-template-columns: auto 1fr auto auto;
+      grid-template-rows: 34px auto auto;
+    }
+    .ink .avatar,
+    .ink .id {
+      grid-row: 1 / span 3;
+    }
+    .ink .pow {
+      grid-column: 3 / -1;
+      grid-row: 2;
+      justify-self: end;
+    }
+    .ink .boosts {
+      grid-column: 3 / -1;
+      grid-row: 3;
+    }
+  }
+  .ink .realm {
+    white-space: nowrap;
   }
   /* cột phải: ô tranh sự kiện, nhãn mực dưới tranh */
   .tiles {

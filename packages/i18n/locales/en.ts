@@ -169,6 +169,7 @@ export const en: Text = {
     go: 'Raise',
   },
   full: 'Full',
+  reap: (what: string, n: string) => `Collect ${n} ${what}`,
   sound: { on: 'Mute', off: 'Unmute' },
   res,
   b: {
@@ -2417,6 +2418,7 @@ export const en: Text = {
     title: 'Out of Seclusion',
     for: (d: string) => `You were away for ${d}.`,
     got: 'Gathered',
+    yard: 'Waiting on your mountain — tap the bubbles over buildings to collect',
     done: 'Completed',
     trained: (n: number) => `${plural(n, 'disciple')} joined`,
     healed: (n: number) => `${n} wounded recovered`,
@@ -2710,6 +2712,15 @@ export const en: Text = {
           ? `${Math.round(ms / 3_600_000)}h`
           : `${Math.max(1, Math.ceil(ms / 60_000))}m`,
   },
+  dice: {
+    free: 'Free roll',
+    roll: (cost: number) => `Roll · ${cost} tokens`,
+    rolling: 'The dice are rolling…',
+    got: (face: number) => `Rolled ${face} — prize from the square you landed on`,
+    lap: 'Passed Start: lap prize',
+    laps: (n: number) => `${n} laps done`,
+    start: 'Start',
+  },
   wheel: {
     free: 'Free spin',
     spin: (cost: number) => `Spin · ${cost} tokens`,
@@ -2879,6 +2890,10 @@ export const en: Text = {
         name: 'Boundless Insight',
         desc: 'The Scripture Pavilion opens wide for two days: mastering techniques scores big.',
       },
+      linhNoan: {
+        name: 'Spirit Egg Treasure',
+        desc: 'Three days on the spirit-egg board: roll the dice to move around 20 squares, collect the prize where you land, plus a lap prize each time you pass Start. One free roll a day; hunting, winning battles, building, training and gathering earn Spirit Egg Tokens for more rolls.',
+      },
       yeuHoang: {
         name: 'Demon King Trial',
         desc: 'Four days of trials: pick a difficulty once (Easy → Hell, locked in), then fight through 50 gates with your real troops — each fight costs action points, every 10th gate is an elite demon general. Each cleared gate is worth points equal to the difficulty tier (Easy 1 … Hell 5): harder means fewer fights for the same milestones.',
@@ -2970,6 +2985,7 @@ export const en: Text = {
       thucSon: 'Shushan Tokens',
       ngaMi: 'Emei Tokens',
       thonTrang: 'Warden Tokens',
+      linhNoan: 'Spirit Egg Token',
     } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Exchange · ${price}`,
     left: (n: number, max: number) => `${n}/${max} left`,

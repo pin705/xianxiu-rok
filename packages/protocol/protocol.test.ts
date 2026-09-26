@@ -29,6 +29,7 @@ function history() {
   const beasts = BEASTS.map((_, i) => i).reverse()
   // một lượt: mỗi nhóm thử lần lượt, dừng ở thao tác đầu tiên được nhận; false khi không làm được gì
   const round = () => {
+    tryDo({ type: 'collect' }) // chạm thu sản lượng ở công trình
     let acted = tryDo({ type: 'claim' })
     if (IDS.some(id => tryDo({ type: 'upgrade', building: id }))) acted = true
     if (!s.train && s.levels.dienVoTruong && units.some(u => tryDo({ type: 'train', unit: u, n: 40 }))) acted = true

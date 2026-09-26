@@ -43,7 +43,7 @@
   } from '@rok/rules/world'
   import type { Ack } from '@rok/protocol'
   import { untrack, type Snippet } from 'svelte'
-  import { Icon } from '@rok/art'
+  import { Icon, artOf } from '@rok/art'
   import { Button, Card, Confirm, Medal, Meter, Page, Section, Tabs, Tag } from './ui'
   import { L, clock, num, sfx } from './lib'
   import { useGame } from './game'
@@ -58,6 +58,7 @@
   import { social } from './social.svelte'
 
   type ATab = 'home' | 'people' | 'war' | 'chat'
+  const ui = (n: string) => artOf(`ui:${n}`)?.src // đồ vật vẽ tay của sảnh minh (cờ, đỉnh đồng, trống trận…)
   let {
     me,
     ally,
@@ -182,7 +183,9 @@
           <li>
             <Card>
               <span class="row">
-                <Medal emblem="crest" tone="gold" size={34} />
+                {#if ui('ally-banner')}<span class="flag mini"
+                    ><img src={ui('ally-banner')} alt="" draggable="false" /><b class="flagtag">{r.tag}</b></span
+                  >{:else}<Medal emblem="crest" tone="gold" size={34} />{/if}
                 <span class="grow stack" style:--gap="1px"
                   ><b>{r.name} [{r.tag}]</b><small class="t-small t-soft"
                     >{L.ally.members(r.n, r.max)} · {L.power} {num(r.power)}</small
@@ -229,52 +232,66 @@
       </form>
     </Section>
   {:else}
-    <Card tone="silk">
-      <span class="row">
-        <Medal emblem="crest" tone="gold" size={46} />
-        <span class="grow stack" style:--gap="1px"
-          ><b class="t-head">{ally.name} [{ally.tag}]</b><small class="t-small t-soft"
-            >{L.ally.members(ally.people.length, seatsOf(ally))} · {myRole === -9 ? '' : L.ally.role(myRole)}</small
-          ></span
-        >
-      </span>
-      <div class="stats mt-2">
-        <span title={L.guild.creditHint}
-          ><small class="t-tiny t-soft">{L.guild.credit}</small><b class="t-num">{num(game.contrib?.credit ?? 0)}</b
-          ></span
-        >
-        <span title={L.guild.fundHint}
-          ><small class="t-tiny t-soft">{L.guild.fund}</small><b class="t-num">{num(ally.fund ?? 0)}</b
-          >{#if ally.terr}<small class="t-tiny t-good"
-              >{L.guild.terrFund(num(ally.terr), num(ally.terr * TERR_FUND))}</small
-            >{/if}</span
-        >
-        <span title={L.guild.giftHint}
-          ><small class="t-tiny t-soft">{L.guild.gift}</small><b>{L.guild.giftLv(gift)}</b><Meter
-            value={giftPart}
-            size="xs"
+    <!-- sảnh minh: cờ minh treo (hiệu minh trong đĩa trắng), tên và ba tấm biển số liệu trên nền núi -->
+    <header class="hall">
+      <span class="flag">
+        {#if ui('ally-banner')}<img src={ui('ally-banner')} alt="" draggable="false" />{:else}<Medal
+            emblem="crest"
             tone="gold"
-          /></span
+            size={46}
+          />{/if}
+        {#if ui('ally-banner')}<b class="flagtag">{ally.tag}</b>{/if}
+      </span>
+      <div class="hall-id">
+        <b class="hall-name">{ally.name} <span class="t-soft">[{ally.tag}]</span></b>
+        <small class="t-small t-soft"
+          >{L.ally.members(ally.people.length, seatsOf(ally))} · {myRole === -9 ? '' : L.ally.role(myRole)}</small
         >
+        <div class="stats">
+          <span title={L.guild.creditHint}
+            ><small>{L.guild.credit}</small><b class="t-num">{num(game.contrib?.credit ?? 0)}</b></span
+          >
+          <span title={L.guild.fundHint}
+            ><small>{L.guild.fund}</small><b class="t-num">{num(ally.fund ?? 0)}</b>{#if ally.terr}<small class="t-good"
+                >{L.guild.terrFund(num(ally.terr), num(ally.terr * TERR_FUND))}</small
+              >{/if}</span
+          >
+          <span title={L.guild.giftHint}
+            ><small>{L.guild.gift}</small><b class="t-num" aria-label={L.guild.giftLv(gift)}>{gift}</b><Meter
+              value={giftPart}
+              size="xs"
+              tone="gold"
+            /></span
+          >
+        </div>
       </div>
-    </Card>
+    </header>
 
     <!-- lối vào như menu tiên minh của RoK: ô hình + tên + dòng phụ, chấm đỏ khi lượt cung phụng đầy (đang phí lượt hồi) -->
     <div class="tiles">
       <button type="button" class="tile" onclick={() => (sheet = 'tech')}>
         {#if left >= DONATE_MAX}<span class="dot-red" aria-hidden="true"></span>{/if}
-        <Icon name="shield" size={30} />
+        {#if ui('ally-tech')}<img src={ui('ally-tech')} alt="" draggable="false" />{:else}<Icon
+            name="shield"
+            size={30}
+          />{/if}
         <b class="t-small">{L.guild.tech}</b>
         <small class="t-tiny t-soft">{L.guild.left(left)}</small>
       </button>
       <button type="button" class="tile" onclick={() => (sheet = 'mob')}>
         {#if mobReady}<span class="dot-red" aria-hidden="true"></span>{/if}
-        <Icon name="scroll" size={30} />
+        {#if ui('ally-mob')}<img src={ui('ally-mob')} alt="" draggable="false" />{:else}<Icon
+            name="scroll"
+            size={30}
+          />{/if}
         <b class="t-small">{L.mob.title}</b>
         <small class="t-tiny t-soft">{L.mob.pts(num(boardOf(ally, g.now).pts))}</small>
       </button>
       <button type="button" class="tile" onclick={() => (sheet = 'shop')}>
-        <Icon name="hoSon" size={30} />
+        {#if ui('ally-shop')}<img src={ui('ally-shop')} alt="" draggable="false" />{:else}<Icon
+            name="hoSon"
+            size={30}
+          />{/if}
         <b class="t-small">{L.guild.shop}</b>
         <small class="t-tiny t-soft">{L.guild.credit} {num(game.contrib?.credit ?? 0)}</small>
       </button>
@@ -342,7 +359,7 @@
             >{L.ally.save}</Button
           >
         {:else}
-          <p class="t-small t-lore">{ally.notice || L.ally.noNotice}</p>
+          <p class="note t-small t-lore">{ally.notice || L.ally.noNotice}</p>
           {#if myRole >= 1}<Button size="sm" variant="ghost" onclick={() => (editing = ally?.notice ?? '')}
               >{L.ally.edit}</Button
             >{/if}
@@ -661,35 +678,153 @@
   .on {
     background: var(--malachite);
   }
+  /* ---------- sảnh minh ---------- */
+  .hall {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 6px 14px 12px 8px;
+    border: 0 solid transparent;
+    border-image: var(--sk-card);
+    background:
+      var(--img-mountains, linear-gradient(transparent, transparent)) right bottom / 300% auto no-repeat,
+      var(--paper2);
+    background-clip: padding-box;
+  }
+  .flag {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 72px;
+  }
+  .flag img {
+    width: 72px;
+    height: auto;
+    margin-top: -14px;
+    filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.25));
+    transform-origin: 50% 0;
+    animation: sway 5s ease-in-out infinite;
+  }
+  /* hiệu minh viết trong đĩa trắng của cờ */
+  .flagtag {
+    position: absolute;
+    top: 32%;
+    left: 50%;
+    translate: -50% -50%;
+    max-width: 42px;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--cinnabar);
+  }
+  .flag.mini {
+    width: 34px;
+  }
+  .flag.mini img {
+    width: 34px;
+    margin: -4px 0 0;
+    animation: none;
+  }
+  .flag.mini .flagtag {
+    top: 30%;
+    font-size: 8px;
+  }
+  @keyframes sway {
+    50% {
+      rotate: 1.5deg;
+    }
+  }
+  .hall-id {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .hall-name {
+    font-size: var(--fs-6);
+    line-height: 1.1;
+  }
+  .hall-name span {
+    font-size: var(--fs-3);
+  }
+  /* ba tấm biển gỗ nhỏ: cống hiến · minh khố · minh lễ */
   .stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--sp-2);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 6px;
   }
   .stats > span {
     display: grid;
+    align-content: start;
     gap: 1px;
+    padding: 4px 6px 5px;
+    text-align: center;
+    background: rgb(255 255 255 / 0.7);
+    border: 1px solid var(--paper3);
+    border-top: 2px solid var(--rim, var(--ink3));
+    border-radius: 3px;
   }
+  .stats small {
+    font-size: var(--fs-1);
+    color: var(--text-soft);
+  }
+  .stats b {
+    font-size: var(--fs-3);
+  }
+  /* ---------- lối vào: tranh đóng khung, nhãn giấy ---------- */
   .tiles {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--sp-2);
+    margin-top: var(--sp-3);
   }
   .tile {
     position: relative;
     display: grid;
     justify-items: center;
     gap: 2px;
-    padding: 10px 8px;
+    padding: 0 2px 4px;
     font: inherit;
     color: inherit;
-    background: var(--paper2);
-    border: 1.5px solid var(--paper3);
-    border-radius: 12px;
     cursor: pointer;
   }
-  .tile:active {
-    transform: scale(0.97);
+  .tile img {
+    width: 76px;
+    height: 76px;
+    filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.22));
+    transition: transform var(--dur-1) var(--ease);
+  }
+  .tile:active img {
+    transform: scale(0.94);
+  }
+  /* tên lối vào: chữ mực đậm trên nét cọ son (xuống dòng vẫn đẹp, không như dải lụa bị kéo cao) */
+  .tile b {
+    padding: 0 6px 6px;
+    line-height: 1.2;
+    text-align: center;
+    background: var(--stroke-red) no-repeat center bottom / 100% 6px;
+  }
+  /* bố cáo: tờ giấy ghim son */
+  .note {
+    position: relative;
+    padding: 12px 14px;
+    background: #fbf7ec;
+    border: 1px solid #d8cdb4;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgb(0 0 0 / 0.12);
+    rotate: -0.6deg;
+  }
+  .note::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: calc(50% - 6px);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f07a62, var(--cinnabar) 60%, #6e1f18);
+    box-shadow: 0 2px 2px rgb(0 0 0 / 0.3);
   }
   .dot-red {
     position: absolute;

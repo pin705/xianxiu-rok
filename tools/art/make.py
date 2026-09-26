@@ -369,9 +369,11 @@ def ui():
     if not os.path.exists(X.raw(f'sheet-{sid}')): continue
     k = X.raw(f'sheet-{sid}') + '.png'
     X.key_magenta(X.raw(f'sheet-{sid}'), k)
+    # tờ tranh đóng khung: lòng khung tách mất (nền giấy trùng màu nền / tô hồng) thì khung và cảnh rời nhau khi cắt → bồi giấy trước
+    if any(d.startswith(P.TILE) for _, d in items): X.fill_inside(Image.open(k)).save(k)
     for name, im in X.cut_sheet(k, items, name_ok := True).items():
-      side = 192 if name.startswith(('nav-', 'frame-', 'sundial', 'ev-')) else 144
-      X.save(f'ui:{name}', X.fit_square(im, side, 0.02, im.width / im.height if name in ('ribbon', 'signboard', 'back') else 1.0), 'ui')
+      side = 192 if name.startswith(('nav-', 'frame-', 'sundial', 'ev-', 'fx-', 'ally-', 'rank-', 'power')) else 144
+      X.save(f'ui:{name}', X.fit_square(im, side, 0.02, im.width / im.height if name in ('ribbon', 'signboard', 'back', 'ally-banner') else 1.0), 'ui')
   # núi mờ đáy bảng: cắt từ dải núi xa đã vẽ (không tốn tiền), nhạt thành vệt mực loang
   far = os.path.join(X.ART, 'scene', 'far1.webp')
   if os.path.exists(far):

@@ -18,9 +18,6 @@ export const BASE_CAP = 2000 // sức chứa mỗi loại khi chưa có Tàng B�
 // Linh khí tự nhiên của núi: mỗi loại 60/giờ dù chưa có công trình nào. Không có nó, người dồn hết tài nguyên nâng
 // Chủ điện trước khi xây Linh điền/Khoáng mạch sẽ kẹt vĩnh viễn (xây hai nhà đó cần chính thảo/khoáng đã cạn).
 export const BASE_RATE = 60
-// Sản lượng công trình (phần trên linh khí tự nhiên) nằm ở công trình chờ chạm thu như RoK — tối đa YARD_HOURS giờ, cướp không lấy được;
-// thu vào kho tới sức chứa, phần thừa nằm lại
-export const YARD_HOURS = 12
 export const CAP_GROWTH = 1.3 // mỗi tầng Tàng Bảo Các
 export const COST_GROWTH = 1.6 // mỗi tầng công trình
 export const TIME_GROWTH = 1.7
@@ -2222,6 +2219,13 @@ export type FestDef = { window: FestWindow; hall?: number; panel?: 'daily' } & (
       elders: ElderId[] // trưởng lão chủ lễ, đổi mỗi lượt lễ
       slots: { w: number; r?: Reward; token?: number }[] // token: số tín vật của trưởng lão chủ lễ
     }
+  | {
+      kind: 'dice' // bàn cờ xúc xắc (Holy Knight's Treasure): đổ đi quanh bàn, ô dừng ra quà, qua Khởi điểm thêm quà vòng
+      stages: Partial<Record<Metric, number>>[]
+      cost: number // lệnh mỗi lượt đổ thêm (mỗi ngày một lượt miễn phí)
+      board: Reward[] // các ô quanh bàn; ô 0 là Khởi điểm
+      lap: Reward
+    }
 )
 const fests = {
   // Nhật Khóa (Daily Objectives của RoK): làm mới 0h giờ VN mỗi ngày; mỗi việc xong cộng điểm hoạt lực, 5 rương theo mốc.
@@ -2731,6 +2735,38 @@ const fests = {
   },
   // Thiên Cơ Luân (Wheel of Fortune của RoK, không bán): 3 ngày, hai tuần một lần — quay vòng 12 ô theo trọng số (mầm của
   // server). Ô tín vật là của trưởng lão chủ lễ (một trong bốn Tiên phẩm, đổi mỗi lượt lễ). Mỗi ngày một lượt miễn phí; lượt thêm
+  // Linh Noãn Kỳ Bảo (Holy Knight's Treasure): 3 ngày mỗi 14 ngày — đổ xúc xắc đi quanh bàn 20 ô, dừng ô nào nhận quà ô đó, qua Khởi
+  // điểm thêm quà vòng; mỗi ngày một lượt miễn phí, lượt thêm tốn Linh Noãn Lệnh kiếm từ việc trong lễ (mặt xúc xắc theo mầm server)
+  linhNoan: {
+    window: { kind: 'cycle', every: 14, len: 3, offset: 0 },
+    hall: 6,
+    kind: 'dice',
+    stages: [{ hunt: 2, win: 2, build: 5, train: 0.02, gather: 0.0005 }],
+    cost: 10,
+    board: [
+      { items: { kimDuyen: 1 } },
+      { items: { thoiQuang15: 2 } },
+      { items: { thachNang5k: 1 } },
+      { items: { kinhThu500: 2 } },
+      { items: { thaoNang5k: 1 } },
+      { items: { nganDuyen: 1 } },
+      { items: { thoiQuang60: 1 } },
+      { items: { khoangNang5k: 1 } },
+      { items: { luyenBinh60: 1 } },
+      { items: { kinhThu2k: 1 } },
+      { items: { thoiQuang180: 1 } },
+      { items: { thachNang5k: 2 } },
+      { items: { loBan60: 1 } },
+      { items: { thoiQuang15: 3 } },
+      { items: { nganDuyen: 2 } },
+      { items: { thaoNang5k: 2 } },
+      { items: { dieuThu60: 1 } },
+      { items: { khoangNang5k: 2 } },
+      { items: { thoiQuang60: 2 } },
+      { items: { chienY: 1 } },
+    ],
+    lap: { items: { nganDuyen: 2, thoiQuang180: 1 } },
+  },
   // tốn Thiên Cơ Lệnh kiếm từ săn yêu, thắng trận, tăng tốc, khai mỏ, mở thiếp; cứ 30 lượt thì lượt đó chắc trúng ô lớn nhất.
   thienCo: {
     window: { kind: 'cycle', every: 14, len: 3, offset: 10 },

@@ -69,7 +69,7 @@
           >
         </span>
         {#if got}
-          <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
+          <span class="stamp" aria-label={L.mail.got}>{L.mail.got}</span>
         {:else}
           <Button
             variant="gold"
@@ -100,7 +100,7 @@
         <Icon name="star" size={30} />
         <span class="grow stack" style:--gap="4px"><b>{title}</b><Bag {items} size="sm" named /></span>
         {#if opened}
-          <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
+          <span class="stamp" aria-label={L.mail.got}>{L.mail.got}</span>
         {:else}
           <Button
             variant="gold"
@@ -144,7 +144,7 @@
                     /></span
                   >
                   {#if got}
-                    <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
+                    <span class="stamp" aria-label={L.mail.got}>{L.mail.got}</span>
                   {:else}
                     <Button
                       variant="gold"
@@ -253,7 +253,7 @@
                     >{/if}
                 </span>
                 {#if got}
-                  <span class="sealed" aria-label={L.mail.got}>{L.mail.got}</span>
+                  <span class="stamp" aria-label={L.mail.got}>{L.mail.got}</span>
                 {:else}
                   <Button
                     variant="gold"
@@ -331,16 +331,5 @@
   .board :global(.card) {
     background: linear-gradient(#fbf7e8, #f3ecd4);
     box-shadow: 0 3px 6px rgb(0 0 0 / 0.28);
-  }
-  .sealed {
-    flex: none;
-    padding: 3px 7px;
-    font-size: var(--fs-1);
-    font-weight: 900;
-    color: var(--cinnabar);
-    border: 2px solid currentColor;
-    border-radius: 5px;
-    rotate: -10deg;
-    opacity: 0.9;
   }
 </style>

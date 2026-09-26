@@ -817,9 +817,9 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | B14 | Shifting Gears | Cơ Quan Khôi Lỗi | ❌ | P2 | L |
 | B15 | Keener Blades | Tinh Binh Luận Kiếm | ❌ | P2 | L |
 | B16 | Blood Moon Rising, Sea of Strife, Mighty Assembly, Song of Troy | — | ❌ | P2 | — |
-| C1 | Ark of Osiris (Golden) | Tranh Đoạt Linh Châu (theo hiệp) | 🟡 bản giản lược 5 ô / 6 hiệp (`world/ark.ts`) | P1 | L (giản lược M) |
+| C1 | Ark of Osiris (Golden) | Tranh Đoạt Linh Châu (theo hiệp) | ✅/🟡 chiến trường 11 ô như Ark, 8 hiệp giải tất định (`world/ark.ts`); chưa điều quân từng hiệp | P1 | L (giản lược M) |
 | C2 | Ark of Osiris (Silver) | Tán Tu Tranh Châu | ❌ | P2 | S |
-| C3 | Osiris League + Bets + xem trực tiếp | Cửu Thiên Luận Đạo Hội | 🟡 bảng giải cả mùa (`leagueBoard`); chưa có playoff / cược | P2 | M |
+| C3 | Osiris League + Bets + xem trực tiếp | Cửu Thiên Luận Đạo Hội | 🟡 bảng giải cả mùa + playoff 4 minh (`leagueBoard`, `cupSetup`); chưa có cược, xem trực tiếp | P2 | M |
 | C4 | Canyon Clash | Luận Kiếm Minh Chiến | ✅ Luận Kiếm Minh Chiến | P1 | S–M |
 | D1 | Sunset Canyon | Luận Kiếm Đài (xa luân chiến) | ✅ Luận Kiếm Đài | **P0** | M |
 | D2 | Sunset Canyon Tournament | Luận Kiếm Đại Hội | ❌ | P2 | S |
@@ -830,7 +830,7 @@ Mùa đài và ngày trận theo tuần lịch (thứ Hai / thứ Bảy), không
 | E1 | Radiant Rivalry | "Thắng chuẩn bị = quyền mở cổng" trong giới | ⛔ liên server | P2 | S |
 | E2 | Clash of Divine Isles | — | ⛔ | — | — |
 | E3 | Golden Kingdom (PvE, file 5) | — | — | — | — |
-| F1 | Lucerne Scrolls | Tu Tiên Lệnh | ❌ (P4) | P1 | M |
+| F1 | Lucerne Scrolls | Tu Tiên Lệnh | ✅ Tu Tiên Lệnh: bản thường + Kim Lệnh mở theo Hương Hỏa (`sect/pass.ts`) | P1 | M |
 
 **Thứ tự đề xuất trong mảng này:** A5 Thiên Đạo Biên Niên + D1 Luận Kiếm Đài (song song) → A6 Công Huân + A13 thưởng hạng cá nhân (S) → C4 Luận Kiếm Minh
 Chiến → A7 Cổ Di Tích + A2 Khai Giới Trảm Tà → B8 / B12 (luật mùa đầu tiên) → C1 Tranh Đoạt Linh Châu → A8 thành tựu và tiền tệ mùa → phần còn lại.

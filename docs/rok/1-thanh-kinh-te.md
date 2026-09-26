@@ -131,7 +131,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **UI/UX:** icon lương/gỗ/đá/vàng nổi trên mái nhà khi có hàng. Chạm là tài nguyên bay về thanh trên, số chạy, có tiếng. Chạm một nhà thì thu mọi nhà cùng loại [chưa xác minh].
 - **Vì sao hấp dẫn:** thói quen chạm có thưởng ngay. Tạo nhịp "vào thu một vòng" mỗi phiên.
 - **Tu tiên hoá:** "Linh khí kết tinh": trên Tụ Linh Trận/Linh điền/Khoáng mạch nổi viên linh châu, chạm là châu bay về ô tài nguyên. Có thể giữ cơ chế tự chảy vào kho (hợp "thời gian lười") và chỉ thêm **phần thưởng chạm**: mỗi 4–8 giờ kết một viên "linh châu thượng phẩm" = 30 phút sản lượng, không chạm thì không tích thêm.
-- **Game mình:** 🟡 Tài nguyên tự cộng vào kho (`advance`); kho đầy thì công trình hiện nhãn "Đầy", chạm ô tài nguyên mở bảng nguồn thu (`ResSheet.svelte`). Chưa có thao tác chạm thu; gần nhất là Vân Du Khách mỗi 3 giờ ghé núi, chạm nhận quà (`sect/guest.ts`).
+- **Game mình:** ✅ Sản lượng công trình nằm ở công trình (`yard`, `accrue` ở `core/time.ts`) — bong bóng giấy trên Tụ Linh Trận / Linh điền / Khoáng mạch khi đủ 5 phút sản lượng, chạm là thu (`collect` ở `sect/buildings.ts`), tài nguyên bay lên HUD (`Home.svelte`); phần chờ thu cướp không lấy được; kho + phần chờ thu chạm sức chứa thì ngừng sản xuất và công trình hiện "Đầy"; linh khí tự nhiên (60/giờ) vẫn vào thẳng kho; màn Xuất quan báo phần chờ thu. Bot / phân đà vào núi là thu hết.
 - **Ưu tiên:** P1 · **Công sức:** M (cần kho riêng từng nhà hoặc phần thưởng chạm; ảnh hưởng PvP và sim).
 
 #### B1. Farm — Nông trại (lương)
@@ -934,9 +934,9 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | A1 | Tòa thị chính 1–25, trần cấp, mở khoá | ✅ Chủ điện 1–25 (+độ kiếp) | — | — |
 | A1b | Điều kiện phụ mỗi cấp CH (Tường N−1 + 1 nhà xoay vòng) | ❌ đã thử 25/09 rồi bỏ: nhịp hiện tại cân theo lối dồn Chủ điện — lệch 1: tầng 25 không tới trong 60 ngày (22); lệch 3: vẫn 24/25, sim tranh đoạt trung vị tầng 15, người chơi thường MH15 ngày 26. Muốn có thì phải chỉnh lại chi phí / thời gian xây cả chuỗi | P1 | S (+ chỉnh nhịp L) |
 | A1c | Thưởng mỗi cấp CH, "Era Breakthrough" | 🟡 qua nhiệm vụ chính tuyến | P1 | S |
-| A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới, 5 bộ mái (cả tầng 16–25); 🟡 chưa có quà chuyển cảnh giới | P2 | S–M |
+| A2 | 5 thời đại, thành đổi diện mạo | ✅ 5 cảnh giới, 5 bộ mái (cả tầng 16–25); quà mừng mỗi tầng Chủ điện + lễ đột phá cảnh giới (`hallGift`) | P2 | S–M |
 | A3 | Văn minh (kiến trúc + buff) | ✅ Chín đạo thống: 3 tiềm năng, đệ tử đặc trưng, trấn phái chi bảo trên núi, tổ sư + huy hiệu riêng, chọn lúc lập tông môn | P2 | M |
-| B0 | Bong bóng chạm thu tài nguyên | 🟡 tự cộng vào kho, chưa có chạm thu | P1 | M |
+| B0 | Bong bóng chạm thu tài nguyên | ✅ bong bóng trên công trình, chạm thu, phần chờ thu an toàn | P1 | M |
 | B1–B4 | 4 bản mỗi công trình tài nguyên | 🟡 1 bản mỗi loại | P2 | M |
 | B4 | Tài nguyên mở muộn (đá CH 4, vàng CH 10) | ❌ 3 loại có từ đầu | P2 | L |
 | B5 | Nhà kho: bảo hộ lượng tuyệt đối theo cấp | 🟡 bảo hộ 45 % sức chứa, phẳng | P1 | S |
@@ -996,11 +996,11 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | H20 | Bản đồ xoá sương | ✅ Sơn Hà Đồ (`BAG.sonHa12`) | P2 | — |
 | H21 | Hộ chiếu di cư | ⛔ | — | — |
 | H22 | Đổi văn minh | ✅ cải tu đạo thống (7 ngày một lần) | P2 | — |
-| H23 | Đổi tên, khung hồ sơ | 🟡 Cải Danh Lệnh, đổi chân dung; chưa có khung hồ sơ | P2 | S |
+| H23 | Đổi tên, khung hồ sơ | ✅ Cải Danh Lệnh, đổi chân dung, khung chân dung theo thành tích (`FRAMES`) | P2 | S |
 | H24 | Coin sự kiện | ✅ Tông Môn Lệnh, lệnh bài Danh Môn Tuần Lễ | P2 | S |
 | I2 | SVIP shop (đồ ngắm) | ❌ | P2 | M |
 | I3 | Cửa hàng liên minh + điểm cá nhân + Reclaim | ✅ Cống Hiến Các (cống hiến + Minh khố); chưa có Reclaim | P1 | M |
-| I5 | Cửa hàng viễn chinh | 🟡 tháp/bí cảnh + rương ngày Tĩnh tọa ngộ đạo; chưa có tiền tệ | P1 | S–M |
+| I5 | Cửa hàng viễn chinh | ✅ Trấn Tháp Các: Tháp Lệnh từ tầng tháp + rương ngày, hàng giới hạn tuần | P1 | S–M |
 | I6 | Cửa hàng Sunset Canyon | ✅ Luận Kiếm Thương Điếm (Kiếm Ý) | P2 | — |
 | I7 | Cửa hàng/tiền tệ KvK | ✅ Công Huân → Phi Thăng Tệ, Thiên Môn Thương Điếm (`coinBuy`) | P2 | — |
 | I8 | Cửa hàng sự kiện | ✅ Tông Lệnh Bảo Khố, Danh Môn Tuần Lễ (đổi lệnh bài) | P2 | S |

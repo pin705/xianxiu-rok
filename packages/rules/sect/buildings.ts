@@ -2,10 +2,10 @@
 import { no, ok, pay, use, type Actions } from '../core/action.ts'
 import { bump } from '../core/calendar.ts'
 import { int, JOB_KINDS, oneOf } from '../core/parse.ts'
-import { buildTime, cost, storage, tradeKeep } from '../core/stats.ts'
+import { buildTime, cost, storage, tradeKeep, yardOf } from '../core/stats.ts'
 import { advance, jobOf, shorten } from '../core/time.ts'
 import { type Err, type JobKind, type State } from '../core/types.ts'
-import { afford, IDS } from '../core/util.ts'
+import { afford, HOUR, IDS } from '../core/util.ts'
 import {
   BUILDINGS,
   MAX_LEVEL,
@@ -52,16 +52,16 @@ export const buildingActions: Actions<BuildingAction> = {
     pick: a =>
       a.res === undefined || oneOf(RESOURCES)(a.res) ? { type: 'collect', ...(a.res && { res: a.res }) } : null,
     run: (s, a) => {
-      if (!s.yard) return no('empty')
+      const rs = a.res ? [a.res] : RESOURCES
+      if (!s.yard || rs.every(r => yardOf(s, r) < 1)) return no('empty')
       const cap = storage(s)
       const res = { ...s.res },
         yard = { ...s.yard }
-      for (const r of a.res ? [a.res] : RESOURCES) {
-        const n = Math.floor(Math.min(yard[r], cap - res[r]))
-        if (n > 0) [res[r], yard[r]] = [res[r] + n, yard[r] - n]
+      for (const r of rs) {
+        const n = Math.min(yardOf(s, r), Math.floor(cap - res[r]))
+        if (n > 0) [res[r], yard[r]] = [res[r] + n, yard[r] - n * HOUR]
       }
-      if (RESOURCES.every(r => res[r] === s.res[r])) return no(RESOURCES.some(r => s.yard![r] >= 1) ? 'full' : 'empty')
-      return ok({ ...s, res, yard })
+      return rs.some(r => res[r] !== s.res[r]) ? ok({ ...s, res, yard }) : no('full')
     },
   },
   speed: {

@@ -3552,38 +3552,113 @@
       "frame": [1028, 2602, 1024, 512]
     }
   },
+  "ui:ally-banner": {
+    "src": "ui/ui-ally-banner.webp?v=26cee01906"
+  },
+  "ui:ally-gift": {
+    "src": "ui/ui-ally-gift.webp?v=109cb18c2d"
+  },
+  "ui:ally-mob": {
+    "src": "ui/ui-ally-mob.webp?v=08a388e665"
+  },
+  "ui:ally-people": {
+    "src": "ui/ui-ally-people.webp?v=ac91fbfa4e"
+  },
+  "ui:ally-shop": {
+    "src": "ui/ui-ally-shop.webp?v=347c709d47"
+  },
+  "ui:ally-tech": {
+    "src": "ui/ui-ally-tech.webp?v=b2004f963a"
+  },
+  "ui:ally-war": {
+    "src": "ui/ui-ally-war.webp?v=8c3d379ae3"
+  },
   "ui:back": {
     "src": "ui/ui-back.webp?v=19a5b65172"
   },
   "ui:ev-arena": {
-    "src": "ui/ui-ev-arena.webp?v=c50eb9ccc2"
+    "src": "ui/ui-ev-arena.webp?v=ff98772091"
   },
   "ui:ev-daily": {
-    "src": "ui/ui-ev-daily.webp?v=5fe04512bd"
+    "src": "ui/ui-ev-daily.webp?v=9ef5135eb7"
   },
   "ui:ev-fest": {
-    "src": "ui/ui-ev-fest.webp?v=e898da1b6f"
+    "src": "ui/ui-ev-fest.webp?v=186aa2a14a"
   },
   "ui:ev-help": {
-    "src": "ui/ui-ev-help.webp?v=6569e51d5d"
+    "src": "ui/ui-ev-help.webp?v=0c661823cf"
   },
   "ui:ev-mail": {
-    "src": "ui/ui-ev-mail.webp?v=599eb9c306"
+    "src": "ui/ui-ev-mail.webp?v=da381ec6fc"
   },
   "ui:ev-market": {
-    "src": "ui/ui-ev-market.webp?v=5df53c03fe"
+    "src": "ui/ui-ev-market.webp?v=a9edbe3e15"
   },
   "ui:ev-report": {
-    "src": "ui/ui-ev-report.webp?v=65f78eb424"
+    "src": "ui/ui-ev-report.webp?v=a138406b42"
   },
   "ui:ev-tavern": {
-    "src": "ui/ui-ev-tavern.webp?v=8541413db4"
+    "src": "ui/ui-ev-tavern.webp?v=c316cee6a3"
   },
   "ui:ev-vip": {
-    "src": "ui/ui-ev-vip.webp?v=3e521e702f"
+    "src": "ui/ui-ev-vip.webp?v=0176778f17"
   },
   "ui:frame-portrait": {
     "src": "ui/ui-frame-portrait.webp?v=876119a0a8"
+  },
+  "ui:fx-battle": {
+    "src": "ui/ui-fx-battle.webp?v=286ebc88a9"
+  },
+  "ui:fx-bolt": {
+    "src": "ui/ui-fx-bolt.webp?v=a95c209173"
+  },
+  "ui:fx-build": {
+    "src": "ui/ui-fx-build.webp?v=4760dd9a0f"
+  },
+  "ui:fx-calendar": {
+    "src": "ui/ui-fx-calendar.webp?v=d832b178be"
+  },
+  "ui:fx-cauldron": {
+    "src": "ui/ui-fx-cauldron.webp?v=9ca8f90e76"
+  },
+  "ui:fx-clock": {
+    "src": "ui/ui-fx-clock.webp?v=ca2328485f"
+  },
+  "ui:fx-demon": {
+    "src": "ui/ui-fx-demon.webp?v=5e75036a3b"
+  },
+  "ui:fx-explore": {
+    "src": "ui/ui-fx-explore.webp?v=fe68980fe3"
+  },
+  "ui:fx-flag": {
+    "src": "ui/ui-fx-flag.webp?v=4b7cae1766"
+  },
+  "ui:fx-login": {
+    "src": "ui/ui-fx-login.webp?v=cd49474675"
+  },
+  "ui:fx-love": {
+    "src": "ui/ui-fx-love.webp?v=ef768db5fe"
+  },
+  "ui:fx-moon": {
+    "src": "ui/ui-fx-moon.webp?v=a2dc45850e"
+  },
+  "ui:fx-pass": {
+    "src": "ui/ui-fx-pass.webp?v=661fbeccf3"
+  },
+  "ui:fx-scroll": {
+    "src": "ui/ui-fx-scroll.webp?v=34aaf9b3aa"
+  },
+  "ui:fx-shield": {
+    "src": "ui/ui-fx-shield.webp?v=cf23afa7b1"
+  },
+  "ui:fx-spring": {
+    "src": "ui/ui-fx-spring.webp?v=91e55c74ee"
+  },
+  "ui:fx-train": {
+    "src": "ui/ui-fx-train.webp?v=686b886d5d"
+  },
+  "ui:fx-treasure": {
+    "src": "ui/ui-fx-treasure.webp?v=d0f560f4ed"
   },
   "ui:mountains": {
     "src": "ui/ui-mountains.webp?v=8c6d40f2d5"
@@ -3602,6 +3677,12 @@
   },
   "ui:nav-tongMon": {
     "src": "ui/ui-nav-tongMon.webp?v=8c55f41439"
+  },
+  "ui:power": {
+    "src": "ui/ui-power.webp?v=2b7ddf8790"
+  },
+  "ui:rank-cup": {
+    "src": "ui/ui-rank-cup.webp?v=6456c5c486"
   },
   "ui:res-linhKhoang": {
     "src": "ui/ui-res-linhKhoang.webp?v=dd40e569bf"

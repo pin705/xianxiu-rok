@@ -4,11 +4,13 @@ import { grant } from '../core/battle.ts'
 import { dayOf } from '../core/calendar.ts'
 import {
   FEST_IDS,
+  diceAt,
   festDone,
   festGot,
   festOpen,
   festRewards,
   festTokens,
+  luck,
   passXp,
   wheelElder,
   wheelFree,
@@ -28,9 +30,22 @@ function wheelPick(d: Extract<FestDef, { kind: 'wheel' }>, seed: number, k: numb
   return i < 0 ? d.slots.length - 1 : i
 }
 
+// Bàn xúc xắc: mặt 1–6 theo mầm, đi từ ô đang đứng, nhận quà ô dừng; qua Khởi điểm thì thêm quà vòng
+function roll(s: State, id: FestId, d: Extract<FestDef, { kind: 'dice' }>): State {
+  const f = s.fest[id]!
+  const free = wheelFree(s, id, s.time)
+  const face = 1 + Math.floor(((s.seed >>> 0) / 2 ** 32) * 6)
+  const { pos } = diceAt(s, id)
+  let st = grant(s, d.board[(pos + face) % d.board.length])
+  if (pos + face >= d.board.length) st = grant(st, d.lap)
+  const next = { ...f, got: [...f.got, face], days: f.days + (free ? 1 : 0), last: free ? dayOf(s.time) : f.last }
+  return { ...st, seed: nextSeed(s.seed), fest: { ...st.fest, [id]: next } }
+}
+
 export function spinError(s: State, id: FestId, n: number): Err | null {
   const d = FESTS[id]
-  if (d.kind !== 'wheel' || !festOpen(s, id, s.time)) return 'locked'
+  if (!luck(d) || !festOpen(s, id, s.time)) return 'locked'
+  if (d.kind === 'dice' && n !== 1) return 'bad' // xúc xắc: đổ từng lượt
   const paid = n - (wheelFree(s, id, s.time) ? 1 : 0)
   return festTokens(s, id) >= d.cost * paid ? null : 'not_enough'
 }
@@ -56,15 +71,17 @@ export const festActions: Actions<FestAction> = {
       return ok({ ...st, weekly: { ...st.weekly, n: { ...st.weekly.n, days: st.weekly.n.days + 1 } } })
     },
   },
-  // Quay vòng quà n lượt (lượt miễn phí hôm nay dùng trước). Ô trúng rút bằng mầm của server: client (mầm 0) chưa đổi gì,
-  // quà và các ô trúng (got) tới cùng patch của server
+  // Quay vòng quà n lượt / đổ xúc xắc một lượt (lượt miễn phí hôm nay dùng trước). Ô trúng / mặt xúc xắc rút bằng mầm của server:
+  // client (mầm 0) chưa đổi gì, quà và got tới cùng patch của server
   spin: {
     pick: a => (oneOf(FEST_IDS)(a.id) && (a.n === 1 || a.n === 10) ? { type: 'spin', id: a.id, n: a.n } : null),
     run: (s, a) => {
       const e = spinError(s, a.id, a.n)
       if (e) return no(e)
       if (!s.seed) return ok(s)
-      const d = FESTS[a.id] as Extract<FestDef, { kind: 'wheel' }>
+      const dd = FESTS[a.id]
+      if (dd.kind === 'dice') return ok(roll(s, a.id, dd))
+      const d = dd as Extract<FestDef, { kind: 'wheel' }>
       const f = s.fest[a.id]!
       const free = wheelFree(s, a.id, s.time)
       const elder = wheelElder(s, a.id)!

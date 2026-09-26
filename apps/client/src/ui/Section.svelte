@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Mục trong bảng: tiêu đề gạch chân bằng một nét bút, phần phụ (aside) bên phải.
+  // Mục trong bảng: hạt son hình thoi + tiêu đề, đường mực đôi chạy tới mép (như vạch chia mục của game), phần phụ (aside) bên phải.
   import type { Snippet } from 'svelte'
 
   let { title, aside, children }: { title: string; aside?: Snippet; children?: Snippet } = $props()
@@ -23,20 +23,38 @@
   header {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     gap: var(--sp-2);
   }
   h3 {
-    padding: 0 18px 7px 1px;
+    display: flex;
+    flex: 1 1 60%;
+    align-items: center;
+    gap: 8px;
     font-size: var(--fs-4);
     font-weight: 800;
     line-height: 1.15;
     color: var(--text);
-    background: var(--stroke-ink) no-repeat left bottom / 100% 7px;
   }
-  :global(.on-dark) h3 {
-    background-image: var(--stroke-gold);
+  h3::before {
+    content: '';
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 1px;
+    background: var(--cinnabar);
+    transform: rotate(45deg);
+  }
+  h3::after {
+    content: '';
+    flex: 1;
+    min-width: 24px;
+    height: 4px;
+    margin-top: 2px;
+    border-block: 1px solid var(--rim, var(--ink3));
+    border-bottom-color: var(--paper3);
+    opacity: 0.7;
   }
   .aside {
     display: flex;

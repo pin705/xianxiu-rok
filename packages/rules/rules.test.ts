@@ -38,6 +38,7 @@ import {
   DAO_UNITS,
   UNIT_SPEED,
   storage,
+  yardOf,
   storeNeed,
   WEEKLY,
   WEEKLY_BONUS,
@@ -136,9 +137,14 @@ test('sản lượng tính từ lúc xây xong và không phụ thuộc số l�
   for (let t = T0; t <= end; t += 250) stepped = advance(stepped, t)
   const once = advance(s, end)
   assert.deepEqual(stepped, once)
-  // trước khi xây xong chỉ có linh khí tự nhiên, sau đó cộng thêm sản lượng của trận
+  // linh khí tự nhiên chảy thẳng vào kho; sản lượng của trận (từ lúc xây xong) nằm ở công trình, chạm thu mới vào kho
   const bt = buildTime(s, 'tuLinhTran', 1)
-  assert.equal(once.res.linhThach, 1000 + Math.floor((BASE_RATE * bt + (BASE_RATE + 600) * (HOUR - bt)) / HOUR))
+  assert.equal(once.res.linhThach, 1000 + BASE_RATE)
+  const made = Math.floor((600 * (HOUR - bt)) / HOUR)
+  assert.equal(yardOf(once, 'linhThach'), made)
+  const got = run(once, { type: 'collect', res: 'linhThach' })
+  assert.deepEqual([got.res.linhThach, yardOf(got, 'linhThach')], [1000 + BASE_RATE + made, 0])
+  assert.equal(err(got, { type: 'collect' }), 'empty')
 })
 
 test('không bao giờ kẹt vì tiêu sạch: linh khí tự nhiên đủ xây lại công trình tài nguyên', () => {
@@ -148,9 +154,15 @@ test('không bao giờ kẹt vì tiêu sạch: linh khí tự nhiên đủ xây 
   assert.equal(err(later, { type: 'upgrade', building: 'linhDien' }), null)
 })
 
-test('đầy kho thì ngừng sản xuất', () => {
+test('đầy kho thì ngừng sản xuất: kho cộng phần chờ thu chạm sức chứa; thu hết vào kho; kho bị vượt (quà) thì phần chờ thu nằm lại', () => {
   const s = advance(up(newGame(T0), 'tuLinhTran'), T0 + 100 * HOUR)
-  assert.equal(s.res.linhThach, storage(s))
+  const cap = storage(s)
+  assert.ok(s.res.linhThach + yardOf(s, 'linhThach') >= cap - 1 && s.res.linhThach + yardOf(s, 'linhThach') <= cap)
+  assert.deepEqual(advance(s, T0 + 200 * HOUR).res, s.res, 'đầy rồi thì đứng')
+  const got = run(s, { type: 'collect' })
+  assert.equal(got.res.linhThach, s.res.linhThach + yardOf(s, 'linhThach'))
+  assert.equal(err({ ...s, res: { ...s.res, linhThach: cap } }, { type: 'collect', res: 'linhThach' }), 'full')
+  assert.equal(err(s, { type: 'collect', res: 'linhKhoang' }), 'empty', 'Khoáng mạch chưa xây: không có gì chờ thu')
 })
 
 test('đồng hồ lùi không đổi gì', () => {

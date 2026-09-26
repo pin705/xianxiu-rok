@@ -685,8 +685,8 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.6 | Sao 1–6, tượng sao, may mắn | ✅ sao 1–6 bằng tín vật (tất định, không may rủi) | P1 | M |
 | 2.7 | Tượng tướng, nâng kỹ năng ngẫu nhiên, Skill Reset | 🟡 tín vật: thu nhận + nâng sao (mỗi sao: công pháp +5 %, công / máu +3 %); chưa có tầng công pháp nâng bằng tín vật (ngẫu nhiên) / reset kỹ năng | P1 | M |
 | 2.8 | Kỹ năng chủ động theo nộ, bị động, trạng thái | ✅ chân nguyên (tụ theo lượt + khi mất máu) | P0 | M |
-| 2.9 | Expertise | ❌ | P2 | M |
-| 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | 🟡 8 điểm, 3 nhánh chung, Tẩy Tủy Đan | P1 | L |
+| 2.9 | Expertise | ✅ công pháp đủ cấp mở Tinh thông (`expertOf`) | P2 | M |
+| 2.10 | Thiên phú 74 điểm, 3 cây, lưu bộ | ✅/🟡 3 cây riêng từng trưởng lão (Công / Thủ / Đạo mạch, mở tầng theo điểm đã cộng), điểm = cấp − 1 + 2 mỗi sao, Tẩy Tủy Đan; chưa lưu bộ | P1 | L |
 | 2.11 | Cặp tướng chính / phụ | ✅ phó trưởng lão (tâm pháp + công pháp nửa sức) | P0 | M |
 | 2.12 | Truyện tướng, Trust, giao diện danh sách | 🟡 tên, danh hiệu, lời dẫn, chân dung; chưa có truyện / hảo cảm | P2 | S–M |
 | 2.13 | Museum (buff tướng theo mùa) | ❌ | P2 | M |

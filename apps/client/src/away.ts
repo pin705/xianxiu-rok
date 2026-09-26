@@ -1,5 +1,5 @@
 // Xuất quan: so lát state lúc rời game (server lưu khi kết nối cuối đóng) với state lúc quay lại. null: vắng chưa tới 1 phút.
-import { IDS, RESOURCES, TECH_IDS, storage, type State } from '@rok/rules'
+import { IDS, RESOURCES, TECH_IDS, storage, yardOf, type State } from '@rok/rules'
 import type { Seen } from '@rok/protocol'
 import { L } from './lib'
 
@@ -21,6 +21,7 @@ export function summarize(before: Seen, after: State) {
       d('brewed') && L.away.brewed(d('brewed')),
       (d('won') || d('lost')) && L.away.battles(d('won'), d('lost')),
     ].filter(Boolean) as string[],
-    full: RESOURCES.some(r => after.res[r] >= storage(after)),
+    yard: RESOURCES.map(r => ({ r, n: yardOf(after, r) })).filter(g => g.n > 0), // sản lượng nằm ở công trình, chưa thu
+    full: RESOURCES.some(r => after.res[r] + yardOf(after, r) >= storage(after) - 1),
   }
 }

@@ -168,6 +168,7 @@ export const vi = {
     go: 'Tăng',
   },
   full: 'Đầy',
+  reap: (what: string, n: string) => `Thu ${n} ${what}`, // bong bóng sản lượng trên công trình
   sound: { on: 'Tắt âm thanh', off: 'Bật âm thanh' },
   res,
   b: {
@@ -2422,6 +2423,7 @@ export const vi = {
     title: 'Xuất quan',
     for: (d: string) => `Bạn đã rời tông môn ${d}.`,
     got: 'Thu được',
+    yard: 'Chờ thu trên núi — chạm bong bóng trên công trình để thu',
     done: 'Hoàn thành',
     trained: (n: number) => `${n} đệ tử nhập môn`,
     healed: (n: number) => `${n} thương binh bình phục`,
@@ -2725,6 +2727,15 @@ export const vi = {
           : `${Math.max(1, Math.ceil(ms / 60_000))}p`,
   },
   // Trung tâm sự kiện (như Events của RoK)
+  dice: {
+    free: 'Đổ miễn phí',
+    roll: (cost: number) => `Đổ · ${cost} lệnh`,
+    rolling: 'Xúc xắc đang lăn…',
+    got: (face: number) => `Đổ được ${face} — nhận quà ô dừng`,
+    lap: 'Qua Khởi điểm: thêm quà vòng',
+    laps: (n: number) => `Đã đi ${n} vòng`,
+    start: 'Khởi điểm',
+  },
   wheel: {
     free: 'Quay miễn phí',
     spin: (cost: number) => `Quay · ${cost} lệnh`,
@@ -2894,6 +2905,10 @@ export const vi = {
         name: 'Tàng Kinh Ngộ Đạo',
         desc: 'Hai ngày Tàng Kinh Các mở rộng cửa: lĩnh ngộ công pháp được nhiều điểm.',
       },
+      linhNoan: {
+        name: 'Linh Noãn Kỳ Bảo',
+        desc: 'Ba ngày bàn cờ linh noãn: đổ xúc xắc đi quanh bàn 20 ô, dừng ô nào nhận quà ô đó, mỗi lần qua Khởi điểm thêm quà vòng. Mỗi ngày một lượt miễn phí; săn yêu, thắng trận, xây, tuyển, khai mỏ ra Linh Noãn Lệnh để đổ thêm.',
+      },
       yeuHoang: {
         name: 'Thí Luyện Yêu Hoàng',
         desc: 'Bốn ngày thí luyện: chọn độ khó một lần (Dễ → Địa ngục, chọn rồi không đổi), rồi đánh lần lượt 50 cửa bằng quân thật — mỗi trận tốn hành lực, cửa thứ 10, 20… là yêu tướng tinh anh. Mỗi cửa qua được điểm bằng bậc độ khó (Dễ 1 … Địa ngục 5): khó hơn thì ít trận hơn cho cùng mốc quà.',
@@ -2985,6 +3000,7 @@ export const vi = {
       ngaMi: 'Nga Mi Lệnh',
       trungThu: 'Nguyệt Bính',
       thonTrang: 'Hộ Thôn Lệnh',
+      linhNoan: 'Linh Noãn Lệnh',
     } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Đổi · ${price}`,
     left: (n: number, max: number) => `Còn ${n}/${max}`,

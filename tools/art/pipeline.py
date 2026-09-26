@@ -43,6 +43,17 @@ def key_magenta(src, dst=None):
   if dst: im.save(dst)
   return im
 
+def fill_inside(im, color=(243, 244, 240)):
+  """tranh đóng khung: lòng khung bị tách mất khi model tô nền giấy trùng màu nền (hoặc tô hồng cả lòng) → bồi lại giấy
+  vào mọi lỗ kín trong hình (vùng trong suốt không thông ra mép ảnh)"""
+  a = np.asarray(im).astype(np.float32) / 255
+  inside = ndimage.binary_fill_holes(ndimage.binary_closing(a[..., 3] > 0.25, iterations=3))  # vá chỗ hở của nét khung mảnh
+  k = a[..., 3:4]
+  over = a[..., :3] * k + np.array(color, np.float32) / 255 * (1 - k)
+  a[..., :3] = np.where(inside[..., None], over, a[..., :3])
+  a[..., 3] = np.where(inside, 1, a[..., 3])
+  return Image.fromarray((a * 255).astype(np.uint8), 'RGBA')
+
 def trim(im, thr=10):
   box = im.getchannel('A').point(lambda v: 255 if v > thr else 0).getbbox()
   return im.crop(box) if box else im

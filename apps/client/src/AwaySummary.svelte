@@ -14,6 +14,10 @@
       <p class="t-small t-strong t-soft mt-2">{L.away.got}</p>
       <Bag res={Object.fromEntries(away.gains.map(g => [g.r, g.n]))} />
     {/if}
+    {#if away.yard.length}
+      <p class="t-small t-strong t-soft mt-2">{L.away.yard}</p>
+      <Bag res={Object.fromEntries(away.yard.map(g => [g.r, g.n]))} />
+    {/if}
     {#if away.done.length || away.techs.length || away.misc.length}
       <p class="t-small t-strong t-soft mt-3">{L.away.done}</p>
       <ul class="stack mt-2" style:--gap="4px">

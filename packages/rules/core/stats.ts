@@ -8,6 +8,7 @@ import {
   ELDER_IDS,
   GEAR_IDS,
   grow,
+  HOUR,
   IDS,
   plus,
   rateLevels,
@@ -17,7 +18,6 @@ import {
 import {
   BASE_CAP,
   BASE_RATE,
-  YARD_HOURS,
   DAOS,
   STRATS,
   DEPUTY_HALL,
@@ -163,7 +163,7 @@ export const baseRate = (s: State, r: Res) =>
 export const rate = (s: State, r: Res) => Math.round(baseRate(s, r) * (1 + bonus(s, 'prod') + bonus(s, `prod.${r}`)))
 // Linh khí tự nhiên (BASE_RATE, cùng tăng ích) chảy thẳng vào kho; phần còn lại của rate là sản lượng công trình, chờ chạm thu
 export const wildRate = (s: State, r: Res) => Math.round(BASE_RATE * (1 + bonus(s, 'prod') + bonus(s, `prod.${r}`)))
-export const yardCap = (s: State, r: Res) => (rate(s, r) - wildRate(s, r)) * YARD_HOURS
+export const yardOf = (s: State, r: Res) => Math.floor((s.yard?.[r] ?? 0) / HOUR)
 
 // Tốc của một đội trên bản đồ Giới: hệ chậm nhất có mặt (đội trống: 1)
 // Tốc cả đội = hệ chậm nhất; hệ đệ tử đặc trưng của tông môn s (DAO_UNITS.speed) nhanh hơn. Đội rỗng: 1.15

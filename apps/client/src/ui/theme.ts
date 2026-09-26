@@ -129,6 +129,8 @@ export async function applyTheme() {
   if (mountains) root.setProperty('--img-mountains', `url(${mountains})`)
   const seal = artOf('ui:seal')?.src // nút ấn son vẽ tay (nâng cấp…)
   if (seal) root.setProperty('--ui-seal-img', `url(${seal})`)
+  const ribbon = artOf('ui:ribbon')?.src // dải lụa son đuôi én: nhãn tên dưới tranh (sảnh minh, danh sách…)
+  if (ribbon) root.setProperty('--ui-ribbon-img', `url(${ribbon})`)
   const P = PIGMENT
   const vars: Record<string, Promise<string>> = {
     '--paper-tex': img('paper', () => paper(256)),
