@@ -976,7 +976,7 @@ Xếp theo ưu tiên, rồi theo công sức. "Đang làm" = có trong working t
 | C4 Cửa hàng VIP → cửa hàng Công đức / cống hiến | ✅ Hương Hỏa Các | P2 | S |
 | C5 Mysterious Merchant → **Vân Du Tán Tu** | ✅ Thương nhân vân du | P2 | S |
 | C9 Peerless Scholar → Vấn Đạo Đài | ✅ | P2 | S |
-| C10 Kingdom Newspaper → Giới báo | 🟡 biên niên giới (có tin theo tên người chơi); chưa có tán thưởng | P2 | S |
+| C10 Kingdom Newspaper → Giới báo | ✅ Giới Báo mỗi ngày (`world/paper.ts`): bài dẫn đầu từng mục, tổng cả giới, thích mỗi bài một lần (tán thưởng), quà đọc số hôm nay; cùng biên niên giới | P2 | S |
 | C13 Power + mốc → mốc thế lực có quà | ✅ thế lực, bảng Thế lực, xếp hạng; chuỗi thành tựu thế lực 5 bậc (Uy Chấn Bát Phương) | P2 | S |
 | D4 Lohar's Trial → Yêu triều | ✅ Yêu Vương Tuần Sơn (yêu cốt) + Luận Võ Liên Hoàn | P2 | S |
 | F11 Quà minh từ nạp → Minh lễ từ cosmetic | ❌ | P2 | S |

@@ -3,10 +3,12 @@
 // Hai bất biến:
 //   1. mầm ngẫu nhiên (seed) không bao giờ rời server — mọi seed gửi đi đều là 0 (rules: mầm 0 = ẩn, không tự giải trận)
 //   2. chiến báo (reports) không nằm trong state gửi đi — đi riêng qua `rep` và truy vấn `reports` (state nhỏ, patch nhỏ)
-import type { Action, Err, FestId, March, Report, State } from '@rok/rules'
+import type { Action, Err, FestId, March, MysticMode, Report, State } from '@rok/rules'
 import type {
   AllyInfo,
   AllyRow,
+  ArkFight,
+  Chron,
   ArkRow,
   ArenaFoe,
   BetView,
@@ -103,6 +105,8 @@ export type Query =
   | { k: 'board' } // Luận Đạo Bảng: các chủ đề
   | { k: 'topic'; id: number } // một chủ đề đủ lời
   | { k: 'search'; q: string } // Tìm đạo hữu theo tên (không phân biệt hoa thường, dấu)
+  | { k: 'news' } // tin lớn toàn giới gần nhất (dải mực trên núi)
+  | { k: 'arkWatch' } // khán giả: mọi trận Tranh Đoạt Linh Châu đang diễn (+ trận Tán Tu Tranh Châu gần nhất)
 // Người tìm được theo tên: tên, tầng Chủ điện, hiệu tiên minh (nếu có)
 export type FoundView = { pid: number; name: string; hall: number; tag?: string }
 // Đạo hữu đã kết giao: tên, cảnh giới, đang chơi không
@@ -133,6 +137,16 @@ export type ArenaView = {
   board: { pid: number; name: string; pts: number }[]
   rank: number | null
   cup?: TourneyView // Luận Kiếm Đại Hội mùa này (tuần cuối mùa)
+  royale: { q: number; mine: boolean } // Cổ Khư Loạn Chiến: số người đang chờ, mình có trong hàng không
+  daibi: { q: number; mine: boolean } // Tiên Môn Đại Bỉ: số người đang chờ, mình có trong hàng không
+  silver: { q: number; mine: boolean } // Tán Tu Tranh Châu: số người đang chờ, mình có trong hàng không
+  vanchu: { q: number; mine: boolean } // Vân Chu Hội Chiến: số người đang chờ, mình có trong hàng không
+  // Huyễn Vực Bí Cảnh: số người chờ mỗi độ khó, hàng mình đang đứng, bảng phá đảo nhanh nhất tuần
+  mystic: {
+    q: Record<MysticMode, number>
+    mine: MysticMode | null
+    board: Record<MysticMode, { names: string[]; rounds: number }[]>
+  }
 }
 // Bảng điểm mùa (theo phe: tiên minh hoặc người đi một mình), phe của mình, bảng phong thần các mùa trước
 // heroes: anh kiệt mùa được bình chọn (Lưu Danh Sử Sách) — hạng mục k (HERO_KINDS), tên
@@ -148,6 +162,8 @@ export type Season = {
   fame: Fame[]
   camps?: [number, number] // Chính Tà Phân Tranh: điểm mùa Chính phái, Tà phái
   camp?: 0 | 1 // phái của mình
+  four?: number[] // Tứ Tượng Tranh Hùng (mùa có luật): điểm mùa bốn phe
+  fourMine?: number // phe của mình (0–3)
   // chặng thi đua đang chạy: thứ tự (từ 0), việc, lúc hết, điểm hai phái, phần mình góp, số chặng mỗi phái đã thắng, chặng vừa xong
   stage?: {
     n: number
@@ -196,6 +212,8 @@ export type Answer = {
   board: BoardRow[]
   topic: Topic | null // chủ đề đã bị xoá / rơi khỏi bảng
   search: FoundView[]
+  arkWatch: ArkFight[]
+  news: Chron[]
 }
 export type QueryOf<K extends Query['k']> = Extract<Query, { k: K }>
 export type Market = { orders: OrderView[]; mine: OrderView[]; day: Trades }

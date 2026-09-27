@@ -26,6 +26,7 @@ const TAB_OF = {
   packet: 'other',
   token: 'other',
   reset: 'other',
+  awaken: 'other',
 } as const satisfies Record<(typeof BAG)[BagId]['use'], BagTab>
 export const BAG_TABS: BagTab[] = ['speed', 'res', 'buff', 'other']
 export const tabOf = (id: BagId): BagTab => TAB_OF[BAG[id].use]
@@ -44,7 +45,8 @@ export function denom(id: BagId) {
     d.use === 'frag' ||
     d.use === 'swap' ||
     d.use === 'packet' ||
-    d.use === 'reset'
+    d.use === 'reset' ||
+    d.use === 'awaken'
     ? ''
     : L.bag.denom.n(d.n)
 }

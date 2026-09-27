@@ -281,7 +281,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *Cơ chế:* bản làm lại hạng huyền thoại của tướng cũ: Sun Tzu Prime, Belisarius Prime, Joan of Arc Prime, Hermann Prime, Ragnar Lodbrok Prime; Scipio và Boudica có bản Legendary. Artifact là vật riêng của tướng; ví dụ Megingjörð của Prime Ragnar làm mọi kỹ năng của ông áp cho mọi loại quân (bản 1.0.87).
 - *Giữ chân:* tướng người chơi đã yêu được "hồi sinh" mạnh hơn.
 - **Tu tiên hoá:** "Chân thân / chuyển thế" của trưởng lão cũ; "bản mệnh pháp bảo".
-- **Game mình:** ❌
+- **Game mình:** ✅ **Chân Thân** (`prime` / `primeError` ở `sect/elders.ts`, mục Chân Thân trong trang trưởng lão): trưởng lão đã Bản Mệnh Thần Thông (mọi công pháp tột tầng), đủ 6 sao và cấp 30 chuyển thế bằng 100 tín vật của chính người đó — sức công pháp +15 % (`PRIME_SKILL`) và **bản mệnh pháp bảo**: công pháp áp cho mọi hệ đệ tử (như Megingjörð của Ragnar Prime; `skillOf`). Khác RoK: một bậc Chân Thân chung cho mọi trưởng lão thay vì bản Prime riêng từng người.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 ### B. Trang bị và đội hình
@@ -315,7 +315,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   - Thứ tự nâng hay khuyên: phụ kiện (máu toàn quân) trước, rồi vũ khí và găng.
 - *Giữ chân:* nơi tiêu tài nguyên cuối game; hiệu ứng Iconic V tạo cảm giác "thần khí".
 - **Tu tiên hoá:** **Tế luyện** (tinh luyện) và **Khai linh / thức tỉnh khí linh** (Iconic) bằng "Khí Linh Tinh".
-- **Game mình:** ❌ — chỉ nâng cấp tuyến tính.
+- **Game mình:** ✅ (Khai linh; chưa có Tế luyện may rủi) **Khai Linh I–V** (`awaken` ở `sect/forge.ts`, `Awaken.svelte` dưới đe Luyện Khí Phòng): pháp bảo luyện tới cấp 2 × (tầng kế) thì khai linh được một tầng bằng Khí Linh Tinh (1 / 2 / 3 / 4 / 6), chắc chắn thành công; mỗi tầng tăng ích của pháp bảo +10 %, tầng V mở hiệu ứng riêng theo ô (binh khí: sức công pháp +5 %, hộ thân: máu +3 %, linh bảo: thủ +3 %). Khí Linh Tinh (vật phẩm mới `khiTinh`) đổi ở cửa hàng Luận Kiếm Đài và Thiên Môn Thương Điếm. Tháo / đeo giữ nguyên tầng.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### 2.18 Đội hình, Armament, Inscription
@@ -330,7 +330,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* chọn đội hình ngay ở màn tạo đội; tab Armament có các ô và bảng inscription.
 - *Giữ chân:* thêm một lớp tối ưu; RNG của inscription.
 - **Tu tiên hoá:** **Trận pháp** — Phong Thỉ (Wedge), Phương Viên (Hollow Square), Nhạn Hành (Echelon), Tam Tài (Delta), cùng Yển Nguyệt, Hạc Dực, Trường Xà; armament là **trận khí** (trận kỳ ~ Flag, trận đồ ~ Scroll, trận bàn, pháp chung); inscription là **trận văn**; State Forum là **Vân Du Đường** (vân du, sai phái đệ tử).
-- **Game mình:** ❌ — PLAN §4: trận đánh gộp theo nhóm, không có đội hình hay vị trí; chỉ thêm khi người chơi đòi.
+- **Game mình:** ✅ (giản lược, không có vị trí trên sân) **Trận Pháp** (`sect/formation.ts`, `core/form.ts`, `Formation.svelte` — mở từ Diễn võ trường và bảng chọn đội): 7 trận Phong Thỉ · Phương Viên (tầng 10) · Nhạn Hành · Yển Nguyệt (14) · Hạc Dực · Trường Xà (18) · Tam Tài (22), mỗi trận một tăng ích gốc có đánh đổi (`FORMS`, vd Phong Thỉ công +3 % thủ −2 %). Tông môn bày một trận (`s.form`): mọi đội xuất quân mang trận lúc đi (`m.form`, gắn trong `launch`), thủ nhà theo trận đang bày; tăng ích cộng trong `sideOf` (`formBonus`). **Trận khí** 4 ô mỗi trận — trận kỳ (công), trận đồ (thủ), trận bàn (máu), pháp chung (công pháp) — phẩm Phàm / Linh / Huyền / Địa, chỉ đeo vào trận nó thuộc; **trận văn** phẩm + 1 dòng: thường / hiếm (công · thủ · máu · công pháp) và một dòng đặc biệt riêng từng trận (Phá Trận, Bất Động, Liên Châu…). **Vân Du Đường** (State Forum): vân du tốn 10 hành lực, 20 lần / ngày, 40 % ra trận khí (mầm server), còn lại Hiền Sĩ Lệnh; luyện hoá trận khí thừa ra lệnh, đổi rương Huyền / Địa phẩm chắc chắn; túi 60 món, giữ qua luân hồi (trận chỉ tính khi Chủ điện còn đủ tầng). Khác RoK: một trận cho cả tông môn thay vì chọn từng đội, không bảo hiểm trận văn, không đổi trận khí sang trận khác · **Ưu tiên:** P2 · **Công sức:** L.
 - **Ưu tiên:** P2 · **Công sức:** L.
 
 #### 2.19 Lưu cấu hình đội
@@ -691,10 +691,10 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.12 | Truyện tướng, Trust, giao diện danh sách | ✅/🟡 Liệt truyện: mỗi trưởng lão ba chương mở theo cấp 10 / 20 / 30 (hai thứ tiếng), tên, danh hiệu, lời dẫn, chân dung; chưa có hảo cảm / đổi y phục | P2 | S–M |
 | 2.13 | Museum (buff tướng theo mùa) | ✅ Anh Linh Điện: di vật 3 bậc cho tối đa 3 trưởng lão mỗi mùa (Phi Thăng Tệ) | P2 | M |
 | 2.14 | Đổi tướng (Commander Swap) | ✅ Truyền công trong Truyền Công Đại Hội | P2 | S |
-| 2.15 | Tướng Prime, Artifact | ❌ | P2 | M |
+| 2.15 | Tướng Prime, Artifact | ✅ Chân Thân + bản mệnh pháp bảo (`prime`) | P2 | M |
 | 2.16 | Lò rèn: 8 ô, nguyên liệu, bản vẽ, bộ | 🟡 9 pháp bảo tất định, 3 ô mỗi trưởng lão, 3 bộ theo hệ có thưởng bộ; không nguyên liệu / bản vẽ (cố ý) | P1 | L |
-| 2.17 | Tinh luyện, thức tỉnh, Iconic I–V | ❌ | P2 | M |
-| 2.18 | Đội hình, Armament, Inscription | ❌ (PLAN §4 để sau) | P2 | L |
+| 2.17 | Tinh luyện, thức tỉnh, Iconic I–V | ✅ Khai Linh I–V bằng Khí Linh Tinh (`awaken`); chưa có tế luyện may rủi | P2 | M |
+| 2.18 | Đội hình, Armament, Inscription | ✅ Trận Pháp: 7 trận + trận khí 4 ô + trận văn + Vân Du Đường (`sect/formation.ts`) | P2 | L |
 | 2.19 | Lưu cấu hình đội | ✅ Trận đồ (3 ô lưu trưởng lão + đệ tử) | P2 | S |
 | 2.20 | Loại quân thứ 4 (công thành) | ❌ | P2 | M |
 | 2.20 | Khắc chế giữa các loại quân | ✅ 3 hệ ×1,3 / ×0,8 | — | — |
@@ -723,7 +723,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.41 | Man tộc, pháo đài, AP | ✅ yêu thú giới, yêu trại, hành lực | P2 | S |
 | 2.42 | Academy — cây Quân sự | 🟡 Tàng Kinh Các 32 môn, hàng cuối (tầng 25) quân sự cuối game | P1 | M |
 | 2.43 | Academy — cây Kinh tế | 🟡 | P2 | M |
-| 2.44 | Crystal Tech, công nghệ liên minh | 🟡 Hộ Minh Đại Trận (công nghệ minh); chưa có Crystal Tech | P2 | M |
+| 2.44 | Crystal Tech, công nghệ liên minh | ✅ Hộ Minh Đại Trận (công nghệ minh) + Linh Tinh Trận Pháp (cây công nghệ mùa, `sect/crystal.ts`) | P2 | M |
 | 2.45 | Trải nghiệm chiến đấu (thấy trận, điều khiển, bảng điểm) | 🟡 có trình diễn, thiếu điều khiển | P0 | theo mục |
 
 **5 khoảng cách lớn nhất** (ưu tiên cao, khác biệt rõ nhất với cảm giác RoK):

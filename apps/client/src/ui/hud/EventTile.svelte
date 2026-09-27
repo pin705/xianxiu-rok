@@ -27,12 +27,12 @@
 </script>
 
 {#if ink}
-  <button class="tile" class:ready={n > 0} {onclick} aria-label={aria}
+  <button class="tile" class:ready={n > 0} class:pulse={n > 0} {onclick} aria-label={aria}
     ><img src={img} alt="" draggable="false" /><span class="tn">{label}</span><Badge {n} /></button
   >
   {#if tag}<span class="wk">{tag}</span>{/if}
 {:else}
-  <span class="daily" class:ready={n > 0}>
+  <span class="daily" class:ready={n > 0} class:pulse={n > 0}>
     <IconButton {icon} label={aria} size={46} {onclick}><Badge {n} /></IconButton>
     {#if tag}<Tag tone="gold" size="sm" icon="star">{tag}</Tag>{/if}
   </span>
@@ -47,7 +47,6 @@
     pointer-events: auto;
   }
   .daily.ready :global(.ib) {
-    animation: glow 1.6s var(--ease) infinite;
     border-radius: 50%;
   }
   .tile {
@@ -86,9 +85,6 @@
     top: -4px;
     right: -2px;
   }
-  .tile.ready img {
-    animation: glow 1.6s var(--ease) infinite;
-  }
   /* cuối tuần: dải lụa son nhỏ dưới hàng tranh (không tràn sang cảnh) */
   .wk {
     align-self: start;
@@ -102,15 +98,6 @@
     background: var(--cinnabar);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%);
     filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.25));
-  }
-  @keyframes glow {
-    0% {
-      filter: drop-shadow(0 0 0 rgb(var(--gold-glow) / 0.9));
-    }
-    60%,
-    100% {
-      filter: drop-shadow(0 0 9px rgb(var(--gold-glow) / 0));
-    }
   }
   @media (min-width: 1024px) and (min-height: 600px) {
     .daily {

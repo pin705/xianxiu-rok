@@ -1,33 +1,25 @@
 // Tranh Đoạt Linh Châu (Ark of Osiris giản lược — doc 6 mục 3.2): tiên minh đấu tiên minh trên chiến trường 11 ô theo hiệp.
 // Ghi danh cả tuần (trưởng lão / minh chủ); 20h Chủ nhật server dựng trận (arkStep), mỗi ARK_ROUND giải một hiệp tất định: đội đi
 // theo lệnh đứng, ô có hai bên thì đánh, chiếm / giữ ra điểm, Linh Châu hộ tống về Tiểu Trận mình giữ. Hết hiệp cuối: quà + điểm minh chiến.
-import { fight, type Side } from '../combat.ts'
 import { no } from '../core/action.ts'
 import { weekOf } from '../core/calendar.ts'
-import { int } from '../core/parse.ts'
+import { int, oneOf } from '../core/parse.ts'
 import { power } from '../core/stats.ts'
 import type { State } from '../core/types.ts'
 import { DAY } from '../core/util.ts'
 import {
   ARK_ADJ,
   ARK_CENTER,
-  ARK_CHARGE,
   ARK_DAY,
-  ARK_HOLD,
-  ARK_HOLD_DEF,
   ARK_HOME,
   ARK_HOUR,
   ARK_LOSE,
   ARK_MAX,
   ARK_MIN,
-  ARK_OBELISKS,
-  ARK_ORB_AT,
-  ARK_OUTPOSTS,
   ARK_ROUND,
   ARK_ROUNDS,
-  ARK_SHRINE,
-  ARK_SHRINES,
-  ARK_TAKE,
+  ARK_SKILLS,
+  type ArkSkill,
   ARK_WIN,
   DAY_OFFSET,
   LEAGUE_LOSE,
@@ -36,7 +28,6 @@ import {
   PVP_HALL,
   PVP_START,
 } from '../data.ts'
-import { arenaSide, lineupOf } from '../sect/arena.ts'
 import { mail } from '../sect/inbox.ts'
 import {
   allyOf,
@@ -44,12 +35,11 @@ import {
   type Alliance,
   type Ark,
   type ArkFight,
-  type ArkUnit,
   type Players,
   type World,
   type WorldActions,
 } from './base.ts'
-import { combine } from './fight.ts'
+import { arkRound } from './fight.ts'
 
 // Lúc dựng trận tuần wk (20h Chủ nhật giờ VN); hiệp r (1..ARK_ROUNDS) giải lúc start + r × ARK_ROUND
 export const arkAt = (wk: number) => (wk * 7 + 4 + ARK_DAY) * DAY - DAY_OFFSET + ARK_HOUR * 3_600_000
@@ -62,40 +52,11 @@ const warriors = (al: Alliance, ps: Players) =>
     .filter(p => (ps.get(p)?.levels.chuDien ?? 0) >= PVP_HALL)
     .sort((x, y) => power(ps.get(y)!) - power(ps.get(x)!) || x - y)
     .slice(0, ARK_MAX)
-// Ô kế tiếp trên đường ngắn nhất from → to (không đi qua Linh Đài bên kia). Tụ Linh Nhãn phe mình giữ nối thẳng với nhau
-// (đứng ở một nhãn thì một hiệp tới nhãn kia)
-function hop(from: number, to: number, side: 0 | 1, own: (0 | 1 | null)[] = []): number {
-  if (from === to) return from
-  const ban = home(side ? 0 : 1)
-  const prev = new Map<number, number>([[from, from]])
-  const queue = [from]
-  const link = (x: number) =>
-    ARK_OBELISKS.includes(x) && own[x] === side
-      ? [...ARK_ADJ[x], ...ARK_OBELISKS.filter(y => y !== x && own[y] === side)]
-      : ARK_ADJ[x]
-  while (queue.length) {
-    const x = queue.shift()!
-    for (const y of link(x))
-      if (y !== ban && !prev.has(y)) {
-        prev.set(y, x)
-        queue.push(y)
-      }
-  }
-  let at = to
-  while (prev.get(at) !== from && prev.has(at)) at = prev.get(at)!
-  return prev.has(at) ? at : from
-}
-// Đội của một người trên chiến trường: đội đầu đội hình Luận Kiếm Đài, quân còn lại n ([] = đủ)
-function sideOfUnit(ps: Players, u: ArkUnit): Side | null {
-  const s = ps.get(u.pid)
-  const team = s && lineupOf(s)[0]
-  if (!s || !team) return null
-  const full = arenaSide(s, team)
-  return u.n.length ? { ...full, troops: full.troops.map((t, k) => ({ ...t, n: u.n[k] ?? t.n })) } : full
-}
-const strength = (ps: Players, u: ArkUnit) => sideOfUnit(ps, u)?.troops.reduce((n, t) => n + t.n, 0) ?? 0
-
-export type ArkAction = { type: 'arkSign' } | { type: 'arkUnsign' } | { type: 'arkOrder'; to: number; all?: boolean }
+export type ArkAction =
+  | { type: 'arkSign' }
+  | { type: 'arkUnsign' }
+  | { type: 'arkOrder'; to: number; all?: boolean }
+  | { type: 'arkSkill'; k: ArkSkill }
 const officer = (w: World, pid: number) => {
   const al = allyOf(w, pid)
   return al && al.members[pid] >= 1 ? al : undefined
@@ -125,6 +86,25 @@ export const arkActions: WorldActions<ArkAction> = {
       }
     },
   },
+  // chiến pháp (người điều phối — trưởng lão / minh chủ của chính minh đang đánh): mỗi trận mỗi chiến pháp một lần, hiệu lực hiệp kế
+  arkSkill: {
+    pick: a => (oneOf(Object.keys(ARK_SKILLS))(a.k) ? { type: 'arkSkill', k: a.k as ArkSkill } : null),
+    run: ({ w, pid }, a) => {
+      const ark = arkOf(w)
+      const k = ark.live.findIndex(f => f.units.some(u => u.pid === pid))
+      if (k < 0) return no('locked')
+      const f = ark.live[k]
+      const me = f.units.find(u => u.pid === pid)!
+      if (officer(w, pid)?.id !== (me.side ? f.b : f.a)) return no('locked')
+      if (f.round >= ARK_ROUNDS) return no('gone')
+      const used = f.used ?? [[], []]
+      if (used[me.side].includes(a.k)) return no('claimed')
+      const nu: [ArkSkill[], ArkSkill[]] = me.side ? [used[0], [...used[1], a.k]] : [[...used[0], a.k], used[1]]
+      const buffs = [...(f.buffs ?? []), { side: me.side, k: a.k, r: f.round + 1 }]
+      const live = ark.live.map((x, j) => (j === k ? { ...f, used: nu, buffs } : x))
+      return { ok: true, changed: new Map(), world: { ...w, ark: { ...ark, live } } }
+    },
+  },
   // lệnh đứng: đội mình (hay cả minh — trưởng lão / minh chủ) tới ô `to` (mọi ô trừ Linh Đài bên kia)
   arkOrder: {
     pick: a =>
@@ -149,7 +129,14 @@ export const arkActions: WorldActions<ArkAction> = {
 // Dựng một trận: đội ở Linh Đài mình, lệnh mặc định tới Trung Điện
 function setup(ps: Players, A: Alliance, B: Alliance): ArkFight {
   const units = ([A, B] as const).flatMap((al, side) =>
-    warriors(al, ps).map(pid => ({ pid, side: side as 0 | 1, at: home(side as 0 | 1), to: ARK_CENTER, n: [] })),
+    warriors(al, ps).map(pid => ({
+      pid,
+      side: side as 0 | 1,
+      at: home(side as 0 | 1),
+      to: ARK_CENTER,
+      n: [],
+      nm: ps.get(pid)?.name,
+    })),
   )
   return {
     a: A.id,
@@ -165,99 +152,6 @@ function setup(ps: Players, A: Alliance, B: Alliance): ArkFight {
     orb: null,
     log: [],
   }
-}
-
-// Một hiệp r: đi → đánh → chiếm / giữ → Linh Châu. seed: mầm của server (tất định từ đây)
-export function arkRound(ps: Players, f0: ArkFight, seed: number): ArkFight {
-  const r = f0.round + 1
-  const f: ArkFight = { ...f0, round: r, pts: [...f0.pts], own: [...f0.own], log: [...f0.log] }
-  const orb = f0.orb && { ...f0.orb }
-  const active = (u: ArkUnit) => !u.rest || u.rest < r
-  // Linh Châu về Trung Điện sau một hiệp nạp
-  if (orb?.back !== undefined && orb.back <= r - 1)
-    Object.assign(orb, { at: ARK_CENTER, back: undefined, by: undefined })
-  // 1. đi: người mang Châu tới Tiểu Trận mình giữ chưa nạp gần nhất; còn lại theo lệnh
-  const goal = (u: ArkUnit) => {
-    if (orb?.by !== u.pid) return u.to
-    const ok = ARK_OUTPOSTS.filter(x => f.own[x] === u.side && !f.charged[u.side].includes(x))
-    const far = (x: number) => Number(hop(u.at, x, u.side, f0.own) !== x)
-    return ok.sort((x, y) => far(x) - far(y))[0] ?? u.at
-  }
-  let units = f0.units.map(u => (active(u) ? { ...u, at: hop(u.at, goal(u), u.side, f0.own), rest: undefined } : u))
-  if (orb?.by !== undefined) orb.at = units.find(u => u.pid === orb.by)?.at ?? orb.at
-  // 2. đánh ở mỗi ô có hai bên (bên giữ ô được thêm thủ, mỗi Linh Tháp phe mình giữ thêm công); bên thua về Linh Đài, nghỉ hết hiệp sau
-  for (let node = 0; node < ARK_ADJ.length; node++) {
-    const here = [0, 1].map(sd => units.filter(u => active(u) && u.at === node && u.side === sd && sideOfUnit(ps, u)))
-    if (!here[0].length || !here[1].length) continue
-    const sides = here.map((us, sd) => {
-      const parts = us.map(u => sideOfUnit(ps, u)!)
-      const c = combine(parts)
-      const k = f.own[node] === sd ? 1 + ARK_HOLD_DEF : 1
-      const atk = 1 + ARK_SHRINE * ARK_SHRINES.filter(x => f.own[x] === sd).length
-      return { ...c, side: { ...c.side, troops: c.side.troops.map(t => ({ ...t, def: t.def * k, atk: t.atk * atk })) } }
-    })
-    const res = fight(sides[0].side, sides[1].side, (seed + r * 7919 + node * 104_729) >>> 0)
-    const last = res.rounds.at(-1)?.n ?? sides.map(x => x.side.troops.map(t => t.n))
-    // bên thắng: bên duy nhất còn quân; hoà (hết lượt, hai bên còn quân — hay cùng hết) thì bên đang giữ ô thắng, ô trống thì không ai lui
-    const alive = last.map(n => n.some(x => x > 0))
-    let win: 0 | 1 | null = f.own[node]
-    if (alive[0] !== alive[1]) win = alive[0] ? 0 : 1
-    if (win !== null) f.log.push([r, 'win', win, node])
-    const after = new Map<number, ArkUnit>()
-    const dropped = orb?.by !== undefined && here.some(us => us.some(u => u.pid === orb.by))
-    here.forEach((us, sd) =>
-      us.forEach((u, j) => {
-        const from = sides[sd].at[j]
-        const n = (sideOfUnit(ps, u)?.troops ?? []).map((_, g) => last[sd][from + g])
-        const lost = (win !== null && sd !== win) || !n.some(x => x > 0)
-        after.set(u.pid, lost ? { ...u, at: home(u.side), n: [], rest: r + 1 } : { ...u, n })
-        if (lost && orb?.by === u.pid) Object.assign(orb, { by: undefined, at: node }) // Châu rơi tại ô
-      }),
-    )
-    if (dropped && orb?.by === undefined) f.log.push([r, 'drop', win === 0 ? 1 : 0, node])
-    units = units.map(u => after.get(u.pid) ?? u)
-  }
-  // 3. chiếm (ô chỉ còn một bên) — lần đầu mỗi bên mỗi ô ra điểm; giữ mỗi hiệp ra điểm
-  for (const node of ARK_ADJ.keys()) {
-    if (node === ARK_HOME[0] || node === ARK_HOME[1]) continue
-    const sd = [0, 1].filter(x => units.some(u => active(u) && u.at === node && u.side === x))
-    if (sd.length === 1 && f.own[node] !== sd[0]) {
-      const s1 = sd[0] as 0 | 1
-      f.own[node] = s1
-      const first = !f.taken[s1].includes(node)
-      if (first) f.taken = s1 ? [f.taken[0], [...f.taken[1], node]] : [[...f.taken[0], node], f.taken[1]]
-      f.pts[s1] += first ? ARK_TAKE[node] : 0
-      f.log.push([r, 'take', s1, node, first ? ARK_TAKE[node] : 0])
-    }
-    const o = f.own[node]
-    if (o !== null) f.pts[o] += ARK_HOLD[node]
-  }
-  // 4. Linh Châu: hiện ở Trung Điện; ai giữ ô Châu nằm (không ai mang) thì đội mạnh nhất ở đó nhặt; tới ô nạp được thì nạp
-  let o2 = orb
-  if (!o2 && r === ARK_ORB_AT) {
-    o2 = { at: ARK_CENTER, n: 0 }
-    f.log.push([r, 'orb', 0, ARK_CENTER])
-  }
-  if (o2 && o2.by === undefined && o2.back === undefined) {
-    const holder = f.own[o2.at]
-    const pick = units
-      .filter(u => active(u) && u.at === o2!.at && u.side === holder)
-      .sort((x, y) => strength(ps, y) - strength(ps, x) || x.pid - y.pid)[0]
-    if (pick) o2.by = pick.pid
-  }
-  const carrier = o2?.by !== undefined ? units.find(u => u.pid === o2!.by) : undefined
-  if (o2 && carrier && ARK_OUTPOSTS.includes(carrier.at) && f.own[carrier.at] === carrier.side) {
-    if (!f.charged[carrier.side].includes(carrier.at)) {
-      const pts = Math.round(ARK_CHARGE * 1.5 ** o2.n)
-      f.pts[carrier.side] += pts
-      f.charged = carrier.side
-        ? [f.charged[0], [...f.charged[1], carrier.at]]
-        : [[...f.charged[0], carrier.at], f.charged[1]]
-      f.log.push([r, 'charge', carrier.side, carrier.at, pts])
-      o2 = { at: carrier.at, n: o2.n + 1, back: r }
-    }
-  }
-  return { ...f, units, orb: o2 ?? null }
 }
 
 type Cup = NonNullable<Ark['cup']>
@@ -362,9 +256,12 @@ export function arkStep(ps: Players, w: World, now: number, seed: number, end?: 
     for (const u of f.units) {
       const s: State | undefined = changed.get(u.pid) ?? ps.get(u.pid)
       const win = u.side === 0 ? aWins : !aWins
-      const a = [win ? 1 : 0, u.side ? f.an : f.bn, f.pts[u.side], f.pts[u.side ? 0 : 1]] as [
+      const rank = 1 + f.units.filter(v => v.side === u.side && (v.sc ?? 0) > (u.sc ?? 0)).length // hạng công huân trong bên mình
+      const a = [win ? 1 : 0, u.side ? f.an : f.bn, f.pts[u.side], f.pts[u.side ? 0 : 1], u.sc ?? 0, rank] as [
         0 | 1,
         string,
+        number,
+        number,
         number,
         number,
       ]

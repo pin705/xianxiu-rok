@@ -7,6 +7,8 @@ import {
   type DailyId,
   type DrillMod,
   type StratId,
+  type FormId,
+  type HermitId,
   type ElderId,
   type GearId,
   type ItemId,
@@ -36,7 +38,7 @@ export type HealJob = { troops: Army; startAt: number; finishAt: number }
 export type StudyJob = { tech: TechId; level: number; startAt: number; finishAt: number }
 export type BrewJob = { pill: PillId; n: number; startAt: number; finishAt: number }
 export type ForgeJob = { gear: GearId; level: number; startAt: number; finishAt: number }
-export type Gear = { lv: number; on?: ElderId } // on: trưởng lão đang đeo
+export type Gear = { lv: number; on?: ElderId; aw?: number } // on: trưởng lão đang đeo · aw: tầng khai linh (Iconic)
 export type Talent = number[] // điểm đã cộng mỗi nút thiên phú (TALENT_NODES)
 // until: lúc hết (due() gỡ đúng giờ, nên sản lượng trước/sau tính đúng); 0 = giữ tới khi server gỡ. src: nguồn, mỗi nguồn một buff
 export type Buff = { key: Bonus; v: number; until: number; src: string }
@@ -65,6 +67,8 @@ export type March = {
   rune?: { i: number; cyc: number; k: number; t: number } // đi nhặt phù văn thứ i của chu kỳ cyc (loại k, phẩm t)
   goods?: { i: number; cyc: number; t: number } // đi nhặt kiện hàng rơi thứ i của chu kỳ cyc (phẩm t) — Thương Đội Gặp Nạn
   rally?: number // thuộc kết trận này (mọi đội cùng tới lúc hẹn, đánh như một bên)
+  pup?: number // Cơ Quan Khôi Lỗi: khôi lỗi phá trận mang theo (dùng hết trong trận)
+  form?: FormId // trận pháp lúc xuất quân
   spot?: string // loại điểm (để hiện tên): vein, mine, boss, gate, heaven
   stay?: boolean // đang đóng quân ở điểm (chỉ về khi bị đánh bật hoặc gọi về)
   mine?: { end: number; amount: number; res: Res } // đang khai mỏ tới end, mang về amount
@@ -197,6 +201,8 @@ export type Daily = { day: number; n: Record<DailyId, number>; got: boolean[]; b
 export type Weekly = { week: number; n: Record<WeeklyId, number>; got: boolean[]; bonus: boolean }
 export type Ev = { week: number; pts: number; got: boolean[] } // sự kiện tuần: điểm, mốc đã nhận
 export type Foe = { pid: number; name: string; at: number } // ai đã đánh mình (báo thù)
+// Trận khí (Armament của RoK): mã, trận, ô (0 trận kỳ · 1 trận đồ · 2 trận bàn · 3 pháp chung), phẩm (0–3), các dòng trận văn (INS)
+export type Arm = { id: number; f: FormId; slot: number; q: number; ins: number[] }
 // Cống hiến trong tiên minh: điểm cống hiến đang có (mua ở Cống Hiến Các, giữ cả khi đổi minh), lúc lượt cung phụng hồi đầy,
 // ngày (dayOf) và số cống hiến đã nhận từ giúp đỡ trong ngày đó
 export type Contrib = { credit: number; full: number; day: number; helped: number }
@@ -274,6 +280,16 @@ export type State = {
   elders: Partial<Record<ElderId, number>> // trưởng lão đã thu nhận → kinh nghiệm
   talents: Partial<Record<ElderId, Talent>> // điểm thiên phú đã cộng (của bộ đang dùng)
   convoyDay?: number // ngày (giờ VN) đã hộ tống Linh Thương — mỗi ngày một chuyến
+  assaultDay?: number // ngày (giờ VN) đã vào trận Vây Công Yêu Vương — mỗi ngày một lượt (thua thì được trả)
+  divine?: { elder: ElderId; season: number } // Thần Binh: trưởng lão cầm, mùa (seasonAt lúc gắn)
+  aux?: Partial<Record<ElderId, ElderId[]>> // Mượn Pháp: trưởng lão dẫn đội → người cho mượn tâm pháp
+  royale?: { day: number; n: number; pts: number } // Cổ Khư Loạn Chiến: ngày (giờ VN), lượt đã vào hôm đó, điểm cộng dồn
+  daibi?: { day: number; n: number; win: number } // Tiên Môn Đại Bỉ: ngày (giờ VN), lượt đã vào hôm đó, số trận thắng
+  silver?: { day: number; n: number; win: number } // Tán Tu Tranh Châu: ngày (giờ VN), lượt đã vào hôm đó, số trận thắng
+  vanchu?: { day: number; n: number; win: number } // Vân Chu Hội Chiến: ngày (giờ VN), lượt đã vào hôm đó, số trận thắng
+  mystic?: { day: number; n: number; win: number } // Huyễn Vực Bí Cảnh: ngày (giờ VN), lượt hôm đó, số lần phá đảo
+  // Viễn Chinh: sao từng màn (bit: thắng · còn quân · không đội ngã), huân chương đã kiếm / đã tiêu, ngày mở rương, tuần và số đã đổi mỗi món
+  vc?: { stars: number[]; medals: number; spent: number; chest: number; week?: number; n?: number[] }
   tpage?: Partial<Record<ElderId, { at: number; pages: Talent[] }>> // lưu bộ thiên phú: bộ đang dùng + các bộ đã lưu
   gear: Partial<Record<GearId, Gear>>
   buffs: Buff[]
@@ -327,6 +343,8 @@ export type State = {
   coinSpent?: number // Phi Thăng Tệ đã tiêu ở Thiên Môn Thương Điếm
   seclude?: { until: number; shield: number } // Bế Quan Lệnh: bế quan tới until (shield: khiên trước khi bế quan, xuất quan thì trả)
   secludeAt?: number // xuất quan rồi: tới lúc này mới bế quan lại
+  prime?: ElderId[] // Chân Thân: trưởng lão đã chuyển thế (bản mệnh pháp bảo)
+  auto?: { heal?: boolean } // Tự vận hành: tự chữa thương binh vừa về khi Đan phòng rảnh và đủ tài nguyên
   quiz?: { day: number; n: number; right: number; last?: boolean } // Vấn Đạo Đài hôm nay: đã trả lời n câu, đúng right, câu vừa rồi đúng không
   ascended: number[] // các mùa đã phi thăng (danh hiệu)
   fest: Partial<Record<FestId, Fest>> // trung tâm sự kiện
@@ -357,6 +375,25 @@ export type State = {
   drill?: Drill // Luận Võ Liên Hoàn hôm nay
   maze?: Maze // Hoàng Kim Mê Cảnh hôm nay (sect/maze.ts)
   strat?: StratId // chiến lược mùa này (luân hồi: chọn lại)
+  folio?: { p: (number | null)[]; at: number[] } // Binh Thư Phong Vân: trang cài ở từng ô (null: trống), lúc đổi từng ô
+  puppet?: number // Cơ Quan Khôi Lỗi: khôi lỗi phá trận đang ở nhà
+  elite?: Partial<Record<UnitType, number>> // Tinh Binh Luận Kiếm: cấp tinh binh bậc 5 từng hệ
+  form?: FormId // trận pháp đang bày (mọi đội xuất quân mang theo, thủ nhà theo)
+  arms?: Arm[] // trận khí trong túi (cả món đang đeo)
+  armOn?: Partial<Record<FormId, (number | null)[]>> // mã trận khí đeo ở 4 ô của từng trận
+  armCoin?: number // Hiền Sĩ Lệnh (Vân Du Đường)
+  vandu?: { day: number; n: number } // vân du: ngày (giờ VN), số lần hôm đó
+  formStars?: number[] // Trận Đồ Diễn Luyện: mục tiêu đã đạt từng màn (bit: thắng · còn quân · đúng trận)
+  ctech?: number[] // Linh Tinh Trận Pháp: tầng từng trận (CTECH) trong mùa
+  ctechSpent?: number // linh tinh đã tiêu trong mùa
+  ctechGot?: number // linh tinh thêm ngoài Công Huân (Thí Luyện Yêu Hoàng trong mùa)
+  // Ẩn Sĩ Động Phủ: ngày (giờ VN) và số lần nộp việc hôm đó, hảo cảm từng ẩn sĩ, việc đang nhận (mã việc, mốc chỉ số lúc nhận)
+  hermit?: {
+    day: number
+    n: number
+    fav: Partial<Record<HermitId, number>>
+    jobs: Partial<Record<HermitId, { t: number; base: number }>>
+  }
   guestAt?: number // Vân Du Khách kế tiếp ghé núi lúc này (chưa có: born + GUEST_EVERY)
   guests?: number // số lần đã nhận quà khách (xoay vòng GUEST_GIFTS)
   fog?: Fog // mê vụ đã khai (chưa có: chỉ quanh tông môn)

@@ -39,6 +39,8 @@
   import Rivals from './Rivals.svelte'
   import Replay from './Replay.svelte'
   import Opening from './Opening.svelte'
+  import NewsSweep from './NewsSweep.svelte'
+  import Overlays from './Overlays.svelte'
   import Reports from './Reports.svelte'
   import Result, { type Outcome } from './Result.svelte'
   import Home from './world/Home.svelte'
@@ -523,6 +525,7 @@
         {#snippet chat()}<Chat
             {me}
             ally
+            notice={ally?.notice ?? ''}
             api={net ?? null}
             toast={t => toast(t)}
             inline
@@ -532,9 +535,11 @@
           />{/snippet}
       </Alliance>
     {/if}
+    {#if tab === 'tongMon'}<NewsSweep api={net ?? null} onmap={() => (tab = 'banDo')} />{/if}
     {#if tab === 'banDo' || tab === 'tongMon'}<Chat
         {me}
         ally={!!ally}
+        notice={ally?.notice ?? ''}
         api={net ?? null}
         toast={t => toast(t)}
         onmap={goMap}
@@ -547,6 +552,13 @@
     <Market api={net ?? null} send={sendWorld} />
     <Honor api={net ?? null} />
     <Drill onfight={() => fightNow({ type: 'drillFight' })} onreplay={r => (replay = r)} />
+    <Overlays
+      api={net ?? null}
+      onfests={() => (festsOpen = true)}
+      onally={() => (tab = 'tienMinh')}
+      ally={!!ally}
+      send={sendWorld}
+    />
     <Quiz />
     <Unlocks onfocus={id => focus(id)} ontab={switchTab} hold={!!replay || !!outcome || !!storm} />
     {#if tab === 'tongMon' && !selected && !storm}<Advisor

@@ -9,6 +9,7 @@ import { advance } from '../core/time.ts'
 import {
   BANISH_COOL,
   DECREE_COOL,
+  TREATY_MAX,
   DECREE_MAX,
   BLESSINGS,
   BLESS_TIME,
@@ -51,6 +52,7 @@ export type LordAction =
   | { type: 'boon'; pid: number } // ban Thiên Ân lễ cho một người
   | { type: 'banish'; pid: number } // Phóng Trục: đẩy tông môn người đó ra vùng ngoài
   | { type: 'decree'; text: string } // ban chiếu cho cả giới
+  | { type: 'treaty'; with: number[] } // Hiệp Ước Thiên Môn: các minh (đang có minh ước) được chia phần phi thăng
 // Thiên Ân lễ còn ban được trong tuần của lúc t
 export const boonLeft = (w: World, t: number) => (w.boon?.week === weekOf(t) ? w.boon.left : GIFT_WEEK)
 const isTitle = oneOf(TITLE_IDS)
@@ -105,6 +107,23 @@ export const lordActions: WorldActions<LordAction> = {
         ok: true,
         world: { ...w, boon: { week: weekOf(now), left: left - 1 } },
         changed: new Map([[a.pid, got]]),
+      }
+    },
+  },
+  treaty: {
+    pick: a =>
+      Array.isArray(a.with) && a.with.length <= TREATY_MAX && a.with.every(isId)
+        ? { type: 'treaty', with: [...new Set(a.with as number[])] }
+        : null,
+    run: ({ ps, w, pid, map, now }, a) => {
+      if (!map || lordOf(w, ps, map, now) !== pid) return no('locked')
+      const mine = allyOf(w, pid)
+      if (!mine || !a.with.every(id => id !== mine.id && mine.naps?.includes(id) && w.allies[id])) return no('bad') // chỉ minh ước
+      const { treaty: _, ...rest } = w
+      return {
+        ok: true,
+        world: a.with.length ? { ...w, treaty: { by: mine.id, with: a.with, at: now } } : rest,
+        changed: new Map(),
       }
     },
   },

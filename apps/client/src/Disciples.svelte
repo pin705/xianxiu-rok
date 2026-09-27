@@ -26,6 +26,13 @@
     expAt,
     gearSets,
     gearsOf,
+    auxOf,
+    auxSlots,
+    divineOf,
+    DIVINE_HALL,
+    PRIME_LV,
+    PRIME_TOKENS,
+    primeError,
     hospital,
     talentPoints,
     talentUsed,
@@ -410,6 +417,58 @@
         </p>
       {/each}
     </Section>
+    <!-- Chân Thân (Prime) + bản mệnh pháp bảo: trưởng lão tột bậc chuyển thế -->
+    {@const primeErr = primeError(game, e)}
+    <Section title={L.prime.title}>
+      <p class="t-small t-soft">{L.prime.hint(PRIME_LV, PRIME_TOKENS)}</p>
+      {#if game.prime?.includes(e)}<Tag tone="gold" icon="star">{L.prime.done}</Tag>
+      {:else}
+        <ul class="row wrap plain" style:--gap="6px">
+          {#each [expertOf(game, e), (game.stars?.[e] ?? 1) >= STAR_MAX, elderLevel(game.elders[e]) >= PRIME_LV, (game.tokens[e] ?? 0) >= PRIME_TOKENS] as met, i (i)}
+            <li><Tag tone={met ? 'good' : 'plain'} size="sm">{met ? '✓' : '○'} {L.prime.need[i]}</Tag></li>
+          {/each}
+        </ul>
+        <Button
+          size="sm"
+          variant="gold"
+          icon="star"
+          disabled={!!primeErr}
+          onclick={() => act({ type: 'prime', elder: e }, 'reward')}>{L.prime.go}</Button
+        >
+      {/if}
+    </Section>
+    <!-- Thần Binh mùa (Warriors Unbound) và Mượn Pháp (Siege of Orléans): chỉ trong mùa giới -->
+    {#if game.seasonAt !== undefined && game.levels.chuDien >= DIVINE_HALL}
+      {@const holder = divineOf(game)}
+      <Section title={L.divine.title}>
+        <p class="t-small t-soft">{L.divine.hint}</p>
+        {#if holder === e}<Tag tone="gold" icon="star">{L.divine.held}</Tag>
+        {:else if holder}<small class="t-small t-soft">{L.divine.other(L.elders[holder].name)}</small>
+        {:else}<Button size="sm" variant="gold" icon="star" onclick={() => act({ type: 'divine', elder: e }, 'reward')}
+            >{L.divine.bind}</Button
+          >{/if}
+      </Section>
+    {/if}
+    {#if auxSlots(game) > 0}
+      {@const lent = auxOf(game, e)}
+      <Section title={L.aux.title}>
+        {#snippet aside()}{L.aux.slots(lent.length, auxSlots(game))}{/snippet}
+        <p class="t-small t-soft">{L.aux.hint}</p>
+        <div class="row wrap" style:--gap="4px">
+          {#each ELDER_IDS.filter(x => x !== e && game.elders[x] !== undefined) as x (x)}
+            {@const on = lent.includes(x)}
+            <Button
+              size="sm"
+              variant={on ? 'gold' : 'ghost'}
+              disabled={busy || (!on && lent.length >= auxSlots(game))}
+              onclick={() =>
+                act({ type: 'aux', elder: e, others: on ? lent.filter(y => y !== x) : [...lent, x] }, 'reward')}
+              >{L.elders[x].name}</Button
+            >
+          {/each}
+        </div>
+      </Section>
+    {/if}
     {@const pts = talentPoints(game, e) - talentUsed(game, e)}
     {@const tal = game.talents[e] ?? []}
     <!-- Linh căn ba mạch: chọn cây, mỗi tầng hai nút (điểm / tối đa, hiệu lực), tầng chưa mở ghi cần bao nhiêu điểm trong cây -->

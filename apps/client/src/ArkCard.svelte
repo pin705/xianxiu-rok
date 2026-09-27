@@ -1,13 +1,15 @@
 <script lang="ts">
   // Tranh Đoạt Linh Châu (Ark of Osiris giản lược): ghi danh; trong trận — sơ đồ 11 ô (phe giữ, số đội hai bên, Linh Châu, Tụ Linh
   // Nhãn phe mình đã nối), điểm hai minh, đồng hồ hiệp, đội của mình và lệnh đứng (chạm ô rồi "Tới đây"), nhật ký hiệp; sau trận — kết quả
-  import { ARK_ADJ, ARK_CENTER, ARK_HOME, ARK_OBELISKS, ARK_ROUND, ARK_ROUNDS } from '@rok/rules'
+  import { ARK_ROUND, ARK_ROUNDS, ARK_SKILLS, type ArkSkill } from '@rok/rules'
   import { arkAt, type ArkRow, type WorldAction } from '@rok/rules/world'
   import { weekOf } from '@rok/rules'
   import { artOf } from '@rok/art'
-  import { Art, Button, NodeMap, Section, Tag } from './ui'
+  import { Art, Button, Section, Tag } from './ui'
+  import ArkMap, { arkLogText } from './ArkMap.svelte'
   import { L, clock } from './lib'
   import { useGame } from './game'
+  import { social } from './social.svelte'
 
   let {
     row,
@@ -27,43 +29,10 @@
   const f = $derived(row?.live ?? null)
   const mine = $derived(f?.units.find(u => u.pid === me))
   const side = $derived(f?.b === aid ? 1 : 0)
-  // sơ đồ 3 cột giữa hai Linh Đài: Tụ Linh Nhãn ở bốn góc, Linh Tháp hai bên, Tiểu Trận trên / dưới, Trung Điện giữa — minh mình
-  // luôn bên trái (bên B xem thì lật qua tâm: ô x ở chỗ ô 10 − x)
-  const POS = [
-    [24, 110],
-    [97, 45],
-    [97, 110],
-    [97, 175],
-    [170, 45],
-    [170, 110],
-    [170, 175],
-    [243, 45],
-    [243, 110],
-    [243, 175],
-    [316, 110],
-  ]
-  const at = (node: number) => (side === 1 ? POS[POS.length - 1 - node] : POS[node])
-  const EDGES = ARK_ADJ.flatMap((ys, x) => ys.filter(y => y > x).map(y => [x, y]))
-  const radius = (node: number) => (node === ARK_CENTER ? 24 : node === ARK_HOME[0] || node === ARK_HOME[1] ? 21 : 18)
-  // Tụ Linh Nhãn phe mình giữ (từ hai nhãn): nối thẳng với nhau — vòng vàng quanh ô
-  const linked = (node: number) =>
-    ARK_OBELISKS.includes(node) && f?.own[node] === side && ARK_OBELISKS.filter(x => f?.own[x] === side).length > 1
   let pick = $state<number | null>(null)
   const start = $derived(arkAt(weekOf(g.now)))
   const next = $derived(f ? start + (f.round + 1) * ARK_ROUND - g.now : 0)
-  const count = (node: number, sd: 0 | 1) => f?.units.filter(u => u.at === node && u.side === sd).length ?? 0
-  const tone = (node: number) => (f?.own[node] === null ? 'free' : f?.own[node] === side ? 'ours' : 'theirs')
   const tag = (sd: 0 | 1) => (f ? (sd === 0 ? f.an : f.bn) : '')
-  // một dòng nhật ký hiệp
-  const logText = (e: NonNullable<typeof f>['log'][number]) => {
-    const [, k, sd, node, pts] = e
-    const who = `[${tag(sd)}]`
-    const where = L.ark.nodes[node]
-    if (k === 'take') return L.ark.log.take(who, where, pts ?? 0)
-    if (k === 'win') return L.ark.log.win(who, where)
-    if (k === 'charge') return L.ark.log.charge(who, where, pts ?? 0)
-    return k === 'drop' ? L.ark.log.drop(who, where) : L.ark.log.orb()
-  }
 </script>
 
 {#snippet vs(tags: Record<number, string>, a: number, b: number, won: number[] = [])}
@@ -86,27 +55,33 @@
         >{f.round < ARK_ROUNDS ? L.ark.round(f.round + 1, ARK_ROUNDS, clock(Math.max(0, next))) : L.ark.ended}</span
       >
     </p>
-    <NodeMap
-      label={L.ark.title}
-      nodes={POS.map((_, node) => ({
-        x: at(node)[0],
-        y: at(node)[1],
-        r: radius(node),
-        tone: tone(node),
-        label: L.ark.nodes[node],
-        text: `${count(node, side as 0 | 1)}·${count(node, side ? 0 : 1)}`,
-        ring: linked(node),
-        orb: f.orb?.at === node,
-      }))}
-      edges={EDGES as [number, number][]}
-      picked={pick}
-      onpick={node => (pick = node)}
-    />
+    <ArkMap {f} side={side as 0 | 1} picked={pick} onpick={node => (pick = node)} />
     {#if mine}
       <p class="t-small">
         {mine.rest && mine.rest > f.round ? L.ark.resting : L.ark.me(L.ark.nodes[mine.at], L.ark.nodes[mine.to])}
         {#if f.orb?.by === me}<Tag tone="gold">{L.ark.carrying}</Tag>{/if}
       </p>
+      <small class="t-tiny t-gold">{L.ark.sc(mine.sc ?? 0)}</small>
+    {/if}
+    {#if officer && mine && f.round < ARK_ROUNDS}
+      <!-- chiến pháp: mỗi trận mỗi cái một lần, hiệu lực cả minh ở hiệp kế -->
+      <b class="t-small">{L.ark.skillTitle}</b>
+      <div class="row wrap" style:--gap="6px">
+        {#each Object.keys(ARK_SKILLS) as ArkSkill[] as k (k)}
+          {@const used = f.used?.[side]?.includes(k)}
+          {@const on = f.buffs?.find(b => b.side === side && b.k === k)}
+          <Button
+            size="sm"
+            variant={used ? 'ghost' : 'gold'}
+            disabled={used}
+            onclick={() => go({ type: 'arkSkill', k }, 'reward')}
+            >{L.ark.skills[k][0]}{on ? ` · ${L.ark.skillOn(on.r)}` : used ? ` · ${L.ark.skillUsed}` : ''}</Button
+          >
+        {/each}
+      </div>
+      <small class="t-tiny t-soft"
+        >{(Object.keys(ARK_SKILLS) as ArkSkill[]).map(k => L.ark.skills[k].join(': ')).join(' · ')}</small
+      >
     {/if}
     {#if pick !== null && mine && f.round < ARK_ROUNDS}
       <div class="row wrap" style:--gap="6px">
@@ -120,7 +95,7 @@
     {#if f.log.length}
       <ol class="stack plain mt-1" style:--gap="2px">
         {#each [...f.log].reverse().slice(0, 6) as e, i (i)}
-          <li class="t-tiny"><span class="t-soft">{e[0]}·</span> {logText(e)}</li>
+          <li class="t-tiny"><span class="t-soft">{e[0]}·</span> {arkLogText(f, e)}</li>
         {/each}
       </ol>
     {/if}
@@ -141,6 +116,9 @@
     {#each row?.last ?? [] as r (r.a)}
       <small class="t-small t-strong">{L.ark.last(r.an, r.bn, r.wa, r.wb)}</small>
     {/each}
+  {/if}
+  {#if g.now >= start && g.now < start + (ARK_ROUNDS + 1) * ARK_ROUND}
+    <Button size="sm" variant="ghost" icon="globe" onclick={() => (social.arkWatch = true)}>{L.ark.watchOpen}</Button>
   {/if}
   {#if row?.cup}
     <!-- vòng playoff: bán kết 1–4, 2–3; chung kết và tranh hạng ba khi bán kết xong; bên thắng tô vàng -->

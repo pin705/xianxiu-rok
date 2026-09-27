@@ -24,7 +24,7 @@
     type Army,
   } from '@rok/rules'
   import { Icon } from '@rok/art'
-  import { Art, Bag, Banner, Button, Medal, Meter, Section, Shelf, Stepper, Tag, Ware } from './ui'
+  import { Art, Bag, Banner, Button, Medal, Meter, Section, Shelf, Stepper, Tag, Toggle, Ware } from './ui'
   import JobRow from './JobRow.svelte'
   import { EMBLEM, L, clock, num } from './lib'
   import { useGame } from './game'
@@ -126,6 +126,10 @@
   {#snippet aside()}{L.alchemy.bed(hurt, beds)}{/snippet}
   {#if game.heal}<JobRow kind="heal" label={L.alchemy.healing(count(game.heal.troops))} />{/if}
   <Meter value={beds ? hurt / beds : 0} size="sm" tone={hurt >= beds ? 'bad' : 'good'} label={L.alchemy.wounded} />
+  <!-- tự vận hành: tự chữa thương binh vừa về -->
+  <Toggle checked={!!game.auto?.heal} onchange={on => act({ type: 'autoHeal', on }, 'tap')}
+    ><small class="t-small">{L.alchemy.auto}</small></Toggle
+  >
   {#if hurt}
     {@render mat(game.wounded)}
     {#if hurt >= beds}<p class="t-small t-bad">{L.alchemy.overflow}</p>{/if}

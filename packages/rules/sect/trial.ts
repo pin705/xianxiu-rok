@@ -12,6 +12,7 @@ import {
   MAIN_SHARE,
   TOWER_STR,
   TRIAL_AP,
+  TRIAL_CRYSTAL,
   TRIAL_DIFF,
   TRIAL_ELITE,
   TRIAL_EXP,
@@ -93,6 +94,7 @@ export const trialActions: Actions<TrialAction> = {
         ...st,
         stats: { ...st.stats, trial: (st.stats.trial ?? 0) + 1 + tr.d }, // điểm Thí Luyện: độ khó càng cao càng nhiều
         trial: { ...tr, gate: tr.gate + 1 },
+        ...(st.seasonAt !== undefined && { ctechGot: (st.ctechGot ?? 0) + TRIAL_CRYSTAL * (1 + tr.d) }), // linh tinh mùa
       })
     },
   },

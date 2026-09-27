@@ -28,6 +28,9 @@
     office: ['rank', L.buffs.src.office],
     title: ['rank', L.buffs.src.title],
     bless: ['star', L.buffs.src.bless],
+    holm: ['swords', L.buffs.src.holm],
+    rule: ['scroll', L.buffs.src.rule],
+    order: ['flag', L.buffs.src.order],
   }
   function head(src: string): [IconName, string] {
     const phu = src.startsWith('phu.') ? phuOf(src.slice(4)) : undefined

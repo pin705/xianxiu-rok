@@ -331,7 +331,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - "Biên niên" (đã có trên bản đồ Giới). Thêm: tin lớn (ai đột phá Kim Đan, ai chiếm linh mạch, minh nào hạ yêu vương) chạy **một lần** như một nét mực quét ngang phía trên núi.
   - Tối đa 1 tin mỗi phút, tắt được trong Cài đặt. Chạm → mở Biên niên.
-- **Game mình:** 🟡. Biên niên (dòng mới nhất, mở rộng 8 dòng) chỉ nằm trong thẻ mùa bản đồ Giới, ẩn khi thẻ thu gọn (`WorldView.svelte`). Chưa có tin lớn quét ngang trên núi.
+- **Game mình:** ✅ Biên niên trong thẻ mùa bản đồ Giới (`WorldView.svelte`) + **tin lớn quét ngang trên núi** (`NewsSweep.svelte`, `ui/Sweep`, truy vấn `news`): đột phá, hạ yêu vương, minh chiến, quán quân, chương biên niên, sang mùa — mỗi phút tối đa một tin, mỗi tin một lần (mốc nhớ trên máy), tắt được trong Cài đặt; chạm → bản đồ giới.
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### A17 · Quick Help: nút giúp nhanh
@@ -700,7 +700,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Menu *Campaign* chứa Expedition (màn tuyến tính, 3 sao theo mục tiêu, cửa hàng huân chương, làm mới hằng ngày) ✔[28], Sunset Canyon ✔[34]…
   - Từ 1.0.88 mỗi chế độ trong Campaign hiện điều kiện mở, thưởng chính, tiến độ ✔[20]. Không để khoảng trống cho chế độ chưa mở ✔[22].
 - **Tu tiên hoá:** một thẻ **"Thí luyện"** trên bản đồ Vùng gom: bí cảnh (x/5), Thông Thiên Tháp (tầng kỷ lục), yêu thú (cấp tiếp theo). Mỗi mục có điều kiện mở và thưởng lần đầu.
-- **Game mình:** 🟡. Yêu thú, bí cảnh, Thông Thiên Tháp là huy hiệu trên bản đồ Vùng (cấp / tiến độ / đồng hồ hồi); Luận Võ Liên Hoàn ở Diễn võ trường, Luận Kiếm Đài có nút trên HUD. Đã rõ, nhưng chưa có thẻ "Thí luyện" nhìn tổng.
+- **Game mình:** ✅ thẻ **Thí Luyện** (`Trials.svelte`, ô "Thí luyện" ở cột phải bản đồ Vùng): tám chế độ PvE một chỗ — yêu thú vùng (cấp đã hạ), bí cảnh (tầng đã qua), Thông Thiên Tháp (kỷ lục), Luận Võ Liên Hoàn (hôm nay), Thí Luyện Yêu Hoàng (lễ mở / cửa), Trận Đồ Diễn Luyện (mục tiêu), Huyễn Vực Bí Cảnh (số lần phá đảo), Man Hoang Cổ Tộc (lượt hôm nay) — điều kiện mở ghi đỏ, nút Tới mở đúng nơi chơi.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C25 · Alliance Hub: trang liên minh
@@ -777,7 +777,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Chat**: xem A15. Thêm: lobby chat cho giai đoạn lập đội của một số chế độ ✔[22]. Kênh Lost Kingdom thành dạng chủ đề trả lời theo luồng ✔[14]. Dịch tự động: chưa xác minh.
 - **Tu tiên hoá:** Sheet chat (đã có), thêm: gửi thẻ chiến báo / thẻ vị trí / thẻ trưởng lão, ghim bố cáo của trưởng minh.
-- **Game mình:** 🟡. Kênh Giới / Minh / Truyền âm (1-1, nhóm chat, đạo hữu), chia sẻ chiến báo (nút "Xem trận") và toạ độ (nút Tới), thẻ trưởng lão (chia sẻ từ Môn hạ, chat vẽ thẻ chân dung), chặn, báo cáo (`Chat.svelte`). Chưa ghim bố cáo trong kênh minh.
+- **Game mình:** 🟡. Kênh Giới / Minh / Truyền âm (1-1, nhóm chat, đạo hữu), chia sẻ chiến báo (nút "Xem trận") và toạ độ (nút Tới), thẻ trưởng lão (chia sẻ từ Môn hạ, chat vẽ thẻ chân dung), chặn, báo cáo (`Chat.svelte`); bố cáo của minh chủ ghim đầu kênh minh (prop `notice`).
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C34 · Governor Profile: hồ sơ thống đốc
@@ -1011,7 +1011,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - thương binh về thì tự vào hàng chữa nếu Đan phòng rảnh (tuỳ chọn);
   - thưởng nhiệm vụ ngày tự nhận lúc qua ngày, gửi vào thư.
   - Không tự động những việc là "quyết định" (nâng gì, đánh ai).
-- **Game mình:** ❌ Chưa tự chữa thương khi đội về, chưa tự nhận thưởng ngày khi qua ngày. Chỉ có vài việc tự động nhỏ: việc mới tự nhờ minh giúp (`newHelps`), Độ Kiếp Đan tự dùng khi độ kiếp.
+- **Game mình:** ✅ **Tự chữa** (công tắc ở Đan phòng, `autoHeal` ở `core/stats.ts` gọi trong `admit` và khi đợt chữa xong): thương binh vừa về tự vào đợt chữa khi Đan phòng rảnh và đủ tài nguyên — không thì chờ như thường. **Rương Nhật Khóa** đủ điểm mà chưa mở tự gửi thư (quà gộp, thư `dailyLeft`) khi qua ngày (`rollFest`). Cùng các việc tự động sẵn có: việc mới tự nhờ minh giúp (`newHelps`), Độ Kiếp Đan tự dùng khi độ kiếp. Không tự động việc là quyết định (nâng gì, đánh ai).
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### G9 · Bulk Actions: thao tác hàng loạt
@@ -1303,10 +1303,10 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | F1 Trưởng lão dẫn đường nói chuyện ở 5–6 mốc đầu | ✅ | P1 | M |
 | A3 Điểm danh sơn môn / chuỗi 7 ngày | ✅ Hương Hỏa | P2 | S |
 | A10 Chương nhiệm vụ có tên, thẻ thu gọn | 🟡 6 chương theo cảnh giới (`QUEST_CHAPTERS`, tên ở thẻ nhiệm vụ); chưa thu gọn | P2 | S |
-| A16 Tin lớn toàn giới quét ngang trên núi (tắt được) | 🟡 | P2 | S |
-| C5 Bù tài nguyên + "xong lúc" ở Diễn võ trường | 🟡 | P2 | S |
-| C7 Cảnh báo Đan phòng sắp đầy ngay ở màn xuất quân (cần kiểm lại) | 🟡 | P2 | S |
-| C30 + G9 Tổng thời gian tụ khí, "Dùng ×N" | 🟡 | P2 | S |
+| A16 Tin lớn toàn giới quét ngang trên núi (tắt được) | ✅ `NewsSweep.svelte` | P2 | S |
+| C5 Bù tài nguyên + "xong lúc" ở Diễn võ trường | ✅ `Refill.svelte` + "Tuyển xong lúc" (`Train.svelte`) | P2 | S |
+| C7 Cảnh báo Đan phòng sắp đầy ngay ở màn xuất quân | ✅ màn chọn đội cảnh báo khi chỗ trống Đan phòng < nửa đội (`Army.svelte`) | P2 | S |
+| C30 + G9 Tổng thời gian tụ khí, "Dùng ×N" | ✅ túi đồ chọn số lượng, "Dùng vừa đủ", đan ×1/×5/×10/tất cả | P2 | S |
 | C35 Xếp hạng: "cần X để lên hạng Y" | ✅ `Ranks.svelte` | P2 | S |
 | C37 Màn thu nhận trưởng lão | ✅ `ElderReveal.svelte` | P2 | S |
 | D3 Giữ hiệu ứng lên tầng để diễn khi quay lại núi | 🟡 | P2 | S |
@@ -1322,11 +1322,11 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C17 Ghi nhớ vị trí, chia sẻ thẻ vị trí | ✅ | P2 | M |
 | C18 Bản đồ nhỏ góc bản đồ Giới | ✅ `world/Minimap.svelte` | P2 | M |
 | C19 Sương mù / thám tử trên Giới (cần kiểm lại) | ✅ mê vụ + linh điểu (`core/fog.ts`), Do thám (`world/spy.ts`) | P2 | M |
-| C24 Thẻ "Thí luyện" gom PvE | 🟡 | P2 | M |
+| C24 Thẻ "Thí luyện" gom PvE | ✅ `Trials.svelte` | P2 | M |
 | C26 Lễ vật minh + nhận tất cả | ✅ | P2 | M |
 | C31 Phường thị (chợ Giới đã có luật, thiếu client) | ✅ | P2 | M |
-| C33 Chat: thẻ chia sẻ chiến báo / vị trí / trưởng lão, ghim bố cáo | 🟡 | P2 | M |
-| G8 Tự vận hành việc vặt (tự chữa, tự nhận thưởng ngày) | ❌ | P2 | M |
+| C33 Chat: thẻ chia sẻ chiến báo / vị trí / trưởng lão, ghim bố cáo | ✅ | P2 | M |
+| G8 Tự vận hành việc vặt (tự chữa, tự nhận thưởng ngày) | ✅ công tắc tự chữa + rương Nhật Khóa chưa mở gửi thư khi qua ngày | P2 | M |
 | A7 Tiền cao cấp / cửa hàng (tuỳ kế hoạch kinh doanh) | ❌ | P2 | M–L |
 | C27 Minh pháp (công nghệ minh) | ✅ | P2 | M–L |
 | A14 Zoom liền mạch núi ↔ bản đồ | 🟡 | P2 | L |

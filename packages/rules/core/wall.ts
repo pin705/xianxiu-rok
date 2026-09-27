@@ -30,8 +30,8 @@ export function wallFallAt(s: State, now: number): number | null {
 }
 
 // Thủ thua lúc t: mất WALL_HIT phần trận lực tối đa, núi cháy lại từ đầu FIRE_TIME
-export function wallHit(s: State, t: number): State {
-  const hp = Math.max(0, wallHp(s, t) - WALL_HIT * wallMax(s))
+export function wallHit(s: State, t: number, k = 1): State {
+  const hp = Math.max(0, wallHp(s, t) - WALL_HIT * wallMax(s) * k)
   return { ...s, wall: { hp, at: t, fire: t + FIRE_TIME, ...(s.wall?.mend !== undefined && { mend: s.wall.mend }) } }
 }
 

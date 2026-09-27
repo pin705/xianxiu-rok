@@ -257,7 +257,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 - **Mở, nhịp:** thống đốc mới, 5 ngày, mỗi ngày mở thêm việc.
 - **Cơ chế:** việc cho Wisdom Points; đủ điểm mở quà từng bậc; có "giải cao nhất".
 - **Tu tiên hoá:** **"Nhập Môn Ngộ Đạo"** theo đồng hồ riêng khi vào giới đang chạy (giới nhận người mới tới ngày 21).
-- **Game mình:** ✅/🟡 — Tân Thủ Chi Lộ đã chạy theo đồng hồ riêng (`newbie`), đúng tinh thần này; thiếu điểm và giải cao nhất.
+- **Game mình:** ✅ **Nhập Môn Ngộ Đạo** (fest `nhapMon`, khung `newbie` ngày 0–4, kind `points`): mỗi ngày một nhánh việc ra Ngộ Đạo Điểm (khai sơn → trảm yêu → ngộ đạo → tụ linh → đột phá), 5 mốc quà, mốc cuối là giải cao nhất (5 Vạn Năng Tín Vật + 2 thiếp vàng); cùng Khai Sơn Thất Nhật / Thất Nhật Lễ theo đồng hồ riêng của tông môn.
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### A5. Era Breakthrough — thưởng lên Tòa thị chính (vĩnh viễn)
@@ -610,7 +610,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 #### D4. Trial of Kau Karuak
 - **Mở:** qua Chronicle của Lost Kingdom, **gắn mùa KvK** (thuộc file 6).
 - **Cơ chế:** 5 độ khó × 30 cửa, đánh một mình, có đồng hồ. Thưởng hàng triệu Crystal cho công nghệ KvK.
-- **Tu tiên hoá, game mình:** ❌. Làm sau khi mùa có cây công nghệ riêng.
+- **Tu tiên hoá, game mình:** ✅ Thí Luyện Yêu Hoàng (`sect/trial.ts`: 5 độ khó × 50 cửa, đánh một mình) trong mùa giới: mỗi cửa thắng ra `TRIAL_CRYSTAL` × (độ khó + 1) linh tinh (`ctechGot`) cho Linh Tinh Trận Pháp (doc 6 A12). Khác RoK: không đồng hồ.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### D5. Golden Kingdom — mê cung 20 tầng sương mù
@@ -651,7 +651,7 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   Cả đợt chỉ một trùm do server chọn. Buff tấn công, phòng thủ và mở rộng quân không có tác dụng. Thắng được voucher để mở Bejeweled
   Chest (có quà chính và quà phụ).
 - **Tu tiên hoá:** "Vây Công Yêu Vương" (đợt).
-- **Game mình:** 🟡 — yêu vương là trùm chung kết trận, có khung Phá Yêu Trại (thứ Ba – thứ Tư) chấm điểm minh; lễ **Vây Công Yêu Vương** (`vayCong`, kiểu shop, 3 ngày mỗi 21 ngày, Chủ điện ≥ 10): mỗi lần góp sức hạ yêu vương giới ra 10 Bảo Hạp Phiếu (chỉ số `forts`), đổi bảo hạp quý ở cửa hàng lễ (Vạn Năng Tín Vật Tiên phẩm, Kim Duyên…) — như voucher → Bejeweled Chest. Thiếu "lượt khiêu chiến" (sừng) và trùm 12 người riêng.
+- **Game mình:** ✅ — yêu vương là trùm chung kết trận, có khung Phá Yêu Trại (thứ Ba – thứ Tư) chấm điểm minh; lễ **Vây Công Yêu Vương** (`vayCong`, kiểu shop, 3 ngày mỗi 21 ngày, Chủ điện ≥ 10): mỗi lần góp sức hạ yêu vương giới ra 10 Bảo Hạp Phiếu (chỉ số `forts`), đổi bảo hạp quý ở cửa hàng lễ (Vạn Năng Tín Vật Tiên phẩm, Kim Duyên…) — như voucher → Bejeweled Chest. **Trận vây công 12 người** (`world/assault.ts`, `AllyAssault.svelte`, server `assaultCheck`): trong kỳ lễ, phòng của minh tối đa 12 người bằng đội đầu Luận Kiếm Đài (không mất quân), 8 độ khó mở dần theo độ khó minh đã hạ; đủ người hay hết 15 phút server giải; thắng: 1–8 lần góp sức (10–80 Bảo Hạp Phiếu) + quà thư; thua: trả lượt trong ngày (như sừng hoàn lại).
 - **Ưu tiên:** P2 · **Công sức:** S.
 
 #### D8. Ian's Ballads — đột kích 4 người, bản đồ lớn
@@ -708,14 +708,14 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
 #### D13. A Wall of Arrows — thử đội hình (patch 1.0.63)
 - **Cơ chế:** 6 màn thử đội hình mới, mỗi màn có 3 mục tiêu sao (hạ hết địch / không tướng nào chết / giữ kho). Cho mượn tướng thử.
 - **Tu tiên hoá:** "Trận Đồ Diễn Luyện".
-- **Game mình:** ❌ — chưa có hệ đội hình (PLAN: "trận gộp theo nhóm").
+- **Game mình:** ✅ Trận Đồ Diễn Luyện (thẻ Diễn luyện trong màn Trận Pháp, `drillRun` / `formDrill` ở `sect/formation.ts`, `DRILLF`): 6 màn sa bàn đánh bằng đội mượn (không mất gì), bày trận nào cũng được — cả trận chưa mở; trên sa bàn trận phát huy ×5; ba mục tiêu mỗi màn (thắng · còn ≥ 35 % quân · thắng bằng trận đề bài), mỗi mục tiêu đạt lần đầu +20 Hiền Sĩ Lệnh; trận tất định nên kết quả hiện ngay. Khác RoK: không cho mượn trưởng lão.
 - **Ưu tiên:** P2 · **Công sức:** M.
 
 #### D14. Tempest Clash — hải chiến 5v5
 - **Cơ chế:** CH7; 10 người chia 2 đội, có thể liên server. Chọn 1 loại thuyền: Trireme (nhanh, húc), Armored Ship (chịu đòn), Galley
   (bắn xa). Mọi buff ngoài đời bị tắt. Ra hiệu lệnh trên bản đồ nhỏ. Nằm trong chuỗi Spring Symphony.
 - **Tu tiên hoá:** "Vân Hải Phi Chu".
-- **Game mình:** ⛔ — thời gian thực, liên server.
+- **Game mình:** ✅ bản nhanh bất đồng bộ trong giới: Vân Chu Hội Chiến (`world/vanchu.ts`, doc 6 D5) — mọi buff tắt, 3 linh chu khắc nhau, công / thủ Vận Lương Chu.
 - **Ưu tiên:** — · **Công sức:** —.
 
 ### E. Sự kiện liên minh
@@ -1234,7 +1234,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | A1 | Create Your Own History | Khai Sơn Thất Nhật | ✅ Khai Sơn Thất Nhật (tân thủ) + Tân Giới Thất Nhật (8 ngày đầu mỗi mùa giới, người đã luân hồi) — 5 nhánh mở theo ngày + rương; chưa có rương đổi Tông Môn Lệnh | P0 | M |
 | A2 | Hero Returns | Tông Lệnh Bảo Khố | ✅ | P0 | S |
 | A3 | Who Will Reign Supreme | Giới Chủ Tranh Phong | ✅ `gioiChu` (khung mùa) | P1 | S |
-| A4 | Path of Wisdom | Nhập Môn Ngộ Đạo | ✅/🟡 | P2 | S |
+| A4 | Path of Wisdom | Nhập Môn Ngộ Đạo | ✅ fest `nhapMon`: điểm theo ngày + giải cao nhất | P2 | S |
 | A5 | Era Breakthrough | Cảnh Giới Đột Phá Lễ | ✅ | P2 | S |
 | A6 | Monument | Thiên Đạo Bia | ✅ 13 chương, mở pha sớm theo chương, công đầu từng chương | P1 | M |
 | B1 | Mightiest Governor | Tông Môn Tranh Bá | ✅ 6 ải, bảng từng ải + bảng tổng, quà ải và quà lượt, trưởng lão của đợt | **P0** | M |
@@ -1265,17 +1265,17 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | D1 | Lohar's Trial | Yêu Tướng Thử Luyện | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
 | D2 | Arms Training | Luận Võ Liên Hoàn | ✅ (25/09) mỗi ngày một phiên, công pháp cho giáo đầu mỗi 3 thắng | P1 | M |
 | D3 | Karuak Ceremony | Thí Luyện Yêu Hoàng | ✅ 5 độ khó × 50 cửa; thiếu gọi minh, trùm chung | P1 | M |
-| D4 | Trial of Kau Karuak | (gắn mùa) | ❌ | P2 | M |
+| D4 | Trial of Kau Karuak | Thí Luyện Yêu Hoàng trong mùa | ✅ mỗi cửa thắng trong mùa giới ra linh tinh (`TRIAL_CRYSTAL` × độ khó) cho Linh Tinh Trận Pháp | P2 | M |
 | D5 | Golden Kingdom | Hoàng Kim Mê Cảnh | ✅ 10 tầng sương, 3 đội ảo, phúc, suối, bẫy, thủ lĩnh; chưa relic / chợ | P2 | L |
 | D6 | Ceroli Crisis | Tổ Đội Bí Cảnh | ✅ Man Hoang Cổ Tộc (`world/party.ts`), bất đồng bộ | P2 | L |
-| D7 | Ceroli Assault | Vây Công Yêu Vương | 🟡 | P2 | S |
+| D7 | Ceroli Assault | Vây Công Yêu Vương | ✅ | P2 | S |
 | D8 | Ian's Ballads | Tứ Nhân Thám Bí | ❌ | P2 | L |
 | D9 | Strange Incidents / Ghoulish Graveyard | Thôn Trang Gặp Nạn / Mộ Địa Âm Hồn | ✅ Thôn Trang Gặp Nạn (`world/rescue.ts`); chưa có gọi thổ phỉ, bản Mộ Địa | P1 | M |
 | D10 | Thief in the Night | Dạ Hành Đạo Tặc | ✅ `daTac`: 2 lượt/ngày đội ảo, rương ngày, bảng kỷ lục | P2 | S–M |
 | D11 | Race Against Time | Trảm Yêu Tốc Chiến | ✅ `tocChien`: 3 lượt/ngày × 10 phút, cộng giờ, bảng kỷ lục | P2 | M |
 | D12 | Protect the Supplies | Áp Tiêu Hộ Hàng | ✅ `apTieu`: 1–5 sao mở dần, đội ảo qua 3 đợt phục kích, bảng xếp hạng | P2 | M–L |
-| D13 | A Wall of Arrows | Trận Đồ Diễn Luyện | ❌ | P2 | M |
-| D14 | Tempest Clash | Vân Hải Phi Chu | ⛔ | — | — |
+| D13 | A Wall of Arrows | Trận Đồ Diễn Luyện | ✅ 6 màn sa bàn, đội mượn, 3 mục tiêu mỗi màn (`sect/formation.ts`) | P2 | M |
+| D14 | Tempest Clash | Vân Hải Phi Chu → Vân Chu Hội Chiến | ✅ bất đồng bộ trong giới (doc 6 D5) | P2 | S |
 | E1 | Alliance Mobilization | Tiên Minh Động Viên | ✅ Minh vụ đường | P1 | M |
 | E2 | Silk Road Speculators | Linh Thương Hộ Tống | ✅ `world/convoy.ts`: đoàn buôn của minh, 8 độ khó, hộ tống bằng đội Luận Kiếm Đài | P2 | L |
 | E3 | Shadow Legion Invasion | Ma Triều Công Sơn | ✅ | P1 | M |

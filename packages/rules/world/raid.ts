@@ -4,7 +4,7 @@ import { no } from '../core/action.ts'
 import { admit, marchSide, marchSnap, pushReport, snap, fieldError, launch } from '../core/battle.ts'
 import { bump, evBump } from '../core/calendar.ts'
 import { int, isId, isElder, pickArmy } from '../core/parse.ts'
-import { deputyOf, elderLevel, lead, protectOf } from '../core/stats.ts'
+import { bonus, deputyOf, elderLevel, lead, protectOf } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { eyeOf, volleyOf, wallHit } from '../core/wall.ts'
 import { type Army, type March, type Report, type State } from '../core/types.ts'
@@ -12,8 +12,11 @@ import { bag, minus, compact, noGain } from '../core/util.ts'
 import {
   FOES_MAX,
   FRENZY_TIME,
+  PUPPET_BREAK,
+  PUPPET_BREAK_MAX,
+  PUPPET_MAX,
+  PUPPET_SIEGE,
   RAID_SHARE,
-  RALLY_MAX,
   RALLY_WAIT,
   RESOURCES,
   SHIELD_TIME,
@@ -35,7 +38,18 @@ import {
   type World,
   type WorldActions,
 } from './base.ts'
-import { addArmy, combine, defense, guardOf, raidError, split, carryOf, flipRounds } from './fight.ts'
+import {
+  addArmy,
+  combine,
+  counterSides,
+  defense,
+  guardOf,
+  raidError,
+  rallyCap,
+  split,
+  carryOf,
+  flipRounds,
+} from './fight.ts'
 
 export type RaidAction =
   | { type: 'raid'; pid: number; elder: ElderId; army: Army }
@@ -74,7 +88,7 @@ export const raidActions: WorldActions<RaidAction> = {
       if (!rl || rl.task !== 'raid' || !al || (rl.ally !== al.id && !al.naps?.includes(rl.ally)) || rl.at <= ctx.s.time)
         return no('gone')
       const n = [...ctx.ps.values()].reduce((k, x) => k + x.marches.filter(m => m.rally === rl.id).length, 0)
-      if (n >= RALLY_MAX || ctx.s.marches.some(m => m.rally === rl.id)) return no('full')
+      if (n >= rallyCap(ctx.ps, rl.by) || ctx.s.marches.some(m => m.rally === rl.id)) return no('full')
       return sortie(ctx, rl.i, a.elder, a.army, { rally: rl.id, at: rl.at })
     },
   },
@@ -93,6 +107,7 @@ function sortie({ ps, w, pid, s: att, now, seed, map }: Ctx, to: number, elder: 
   const at = !muster ? t + go.ms : 'wait' in muster ? t + Math.max(muster.wait, go.ms) : muster.at
   if (at < t + go.ms) return no('far') // không kịp tới lúc hẹn
   const rally = muster && ('rally' in muster ? muster.rally : w.nextRally)
+  const pup = bonus(att, 'puppet') > 0 ? Math.min(att.puppet ?? 0, PUPPET_MAX) : 0 // Cơ Quan Khôi Lỗi: tự mang theo
   const m: March = {
     id: att.nextId,
     elder,
@@ -105,9 +120,15 @@ function sortie({ ps, w, pid, s: att, now, seed, map }: Ctx, to: number, elder: 
     foe: other!.name,
     ...(go.path && { path: go.path }),
     ...(rally !== undefined && { rally }),
+    ...(pup && { pup }),
   }
   // đi đánh người khác thì mất khiên, và nổi cơn sát khí (chưa bật lại khiên ngay được)
-  const me: State = { ...launch(att, army, m), shield: 0, frenzy: t + FRENZY_TIME }
+  const me: State = {
+    ...launch(att, army, m),
+    shield: 0,
+    frenzy: t + FRENZY_TIME,
+    ...(pup && { puppet: (att.puppet ?? 0) - pup }),
+  }
   // bên kia thấy đội đang kéo tới (như Tháp canh của RoK; Thiên Nhãn lộ thêm theo tầng trận) — gỡ khi trận giải hoặc đội quay về
   const def = advance(other!, now)
   const warn = { id: m.id, pid, foe: att.name, at, ...eyeOf(def, elder, army) }
@@ -150,6 +171,7 @@ type Bout = {
   m: March
   win: boolean
   wall: number // đệ tử bên đánh bị kiếm trận Hộ Sơn chém trước trận
+  pup: number // khôi lỗi phá trận cả đoàn mang theo
   loot: Partial<Bag>
   delta: number // điểm Elo bên đánh được (bên thủ mất đúng bấy nhiêu)
   n1: number[] // quân bên thủ (nhà + viện binh) còn đứng sau trận
@@ -173,11 +195,19 @@ export function raid(
   helpers: Party = [],
 ): { atts: Players; def: State; helpers: Players } {
   const [attPid, att, m] = party[0]
-  const parts = party.map(([, s2, m2]) => marchSide(s2, m2))
+  const parts = counterSides(
+    party,
+    party.map(([, s2, m2]) => marchSide(s2, m2)),
+    defPid,
+    at,
+  )
   const { side: full, at: aOffs } = party.length > 1 ? combine(parts) : { side: parts[0], at: [0] }
-  const { side: foe, at: hOffs } = combine([defense(def), ...helpers.map(([, hs, hm]) => marchSide(hs, hm))])
+  // khôi lỗi cả đoàn mang theo (Cơ Quan Khôi Lỗi) bớt sức Hộ Sơn Đại Trận: thủ, máu, kiếm trận chém trước
+  const pup = party.reduce((n, [, , m2]) => n + (m2.pup ?? 0), 0),
+    brk = Math.min(PUPPET_BREAK_MAX, pup * PUPPET_BREAK)
+  const { side: foe, at: hOffs } = combine([defense(def, brk), ...helpers.map(([, hs, hm]) => marchSide(hs, hm))])
   // kiếm trận Hộ Sơn chém trước trận: phần bị chém tính như thương vong của trận (chiến báo diễn từ đội đủ lúc tới)
-  const cut = volleyOf(def, at)
+  const cut = volleyOf(def, at) * (1 - brk)
   const me = { ...full, troops: full.troops.map(x => ({ ...x, n: x.n - Math.floor(x.n * cut) })) }
   const f = fight(me, foe, m.seed)
   const last = f.rounds.at(-1)
@@ -194,6 +224,7 @@ export function raid(
     defPid,
     m,
     win: f.win,
+    pup,
     wall: full.troops.reduce((k, x, i) => k + x.n - me.troops[i].n, 0),
     loot: f.win ? plunder(att, def, m.elder, back) : {},
     delta: elo(att.pvp.pts, def.pvp.pts, f.win),
@@ -258,7 +289,7 @@ function attacker({ at, att, def, defPid, m, win, wall, loot, delta, fights }: B
 }
 
 // Bên thủ: mất tài nguyên, thương binh về Đan phòng, chiến báo nhìn từ phía mình, thua thì được khiên và núi bốc linh hỏa
-function defender({ at, att, attPid, def, win, wall, loot, delta, n1, flip }: Bout, party: Party): State {
+function defender({ at, att, attPid, def, win, pup, wall, loot, delta, n1, flip }: Bout, party: Party): State {
   const dIds = UNITS.filter(u => def.troops[u] > 0)
   const dLeft = n1.slice(0, dIds.length)
   const dHurt = Object.fromEntries(dIds.map((u, k) => [u, def.troops[u] - dLeft[k]])) as Army
@@ -300,7 +331,7 @@ function defender({ at, att, attPid, def, win, wall, loot, delta, n1, flip }: Bo
     shield: win ? Math.max(def.shield, at + SHIELD_TIME) : def.shield,
     marches: win ? dd.marches.map(x => (x.target.kind === 'trib' ? { ...x, foil: (x.foil ?? 0) + 1 } : x)) : dd.marches, // phá kiếp
   }
-  return win ? wallHit(out, at) : out
+  return win ? wallHit(out, at, 1 + pup * PUPPET_SIEGE) : out
 }
 
 // Viện binh: chiến báo như bên thủ; thua thì bị đánh bật về nhà, thắng thì ở lại với phần còn lại

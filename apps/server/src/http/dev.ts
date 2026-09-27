@@ -1,7 +1,7 @@
 // Công cụ dev/e2e — chỉ đăng ký khi ALLOW_WARP (config cấm ở production): tua giờ giới, đọc/đặt state của chính mình.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
-import { migrate } from '@rok/rules'
+import { RULES, migrate } from '@rok/rules'
 import { allyOf, put } from '@rok/rules/world'
 import type { Database } from '../db/index.ts'
 import * as store from '../db/store.ts'
@@ -55,6 +55,30 @@ export const devRoutes: FastifyPluginAsyncZod<{ db: Database; host: Host }> = as
     if (!state) return reply.code(400).send({ error: 'state' })
     return w.setState(s.pid, state) ? { ok: true } : reply.code(404).send({ error: 'gone' })
   })
+
+  // Luật mùa của giới (thử các luật Thiên Mệnh Chọn Luật mà không phải chờ hết mùa); k = -1: bỏ luật
+  app.post(
+    '/rule',
+    {
+      preHandler: auth,
+      schema: {
+        body: z.object({
+          k: z
+            .number()
+            .int()
+            .min(-1)
+            .max(RULES.length - 1),
+        }),
+      },
+    },
+    async (req, reply) => {
+      const w = await worldOf(req.session.world)
+      if (!w) return reply.code(409).send({ error: 'moved' })
+      const { rule: _, ...rest } = w.shared
+      w.share(req.body.k < 0 ? rest : { ...w.shared, rule: req.body.k })
+      return { ok: true }
+    },
+  )
 
   // Minh khố của tiên minh mình (thử Cống Hiến Các, trận kỳ mà không phải cung phụng hàng trăm lượt)
   app.post(

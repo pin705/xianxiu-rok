@@ -206,6 +206,8 @@ try {
     `lập tông môn xong không vào game — ${await seen()}`,
   )
   assert.equal(await a.js(`localStorage.getItem('rok.save')`), null, 'save offline cũ không được dọn')
+  // tông môn vừa lập: server có thể chưa kịp ghi state khi máy đang nặng — chờ có state rồi mới đọc
+  assert.ok(await a.until(`${truth}.then(s => !!s)`), 'server chưa có state của tông môn vừa lập')
   for (let i = 0; i < 80 && (await a.js(truth)).quest < 14; i++) {
     await a.js(closeAll)
     await a.js(

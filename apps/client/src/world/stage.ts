@@ -1,6 +1,6 @@
 // Một ứng dụng WebGL (PixiJS) cho cả game: cảnh núi, bản đồ… là các Container gắn vào stage.
 // Hình vẽ tay nướng một lần ra texture (bake), sau đó GPU chỉ việc ghép và diễn chuyển động.
-import { Application, Container, Rectangle, Sprite, Texture, type TextureSource } from 'pixi.js'
+import { Application, Container, Rectangle, Sprite, Texture, UPDATE_PRIORITY, type TextureSource } from 'pixi.js'
 import {
   artOf,
   artPack,
@@ -59,9 +59,31 @@ export function getApp() {
     })
     a.canvas.setAttribute('aria-hidden', 'true')
     Object.assign(a.canvas.style, { position: 'fixed', inset: '0', width: '100%', height: '100%', touchAction: 'none' })
+    pace(a)
     return a
   })()
   return booting
+}
+
+// Nhịp vẽ: canvas phủ cả cửa sổ ở độ phân giải màn hình (2–3x) — vẽ 60 khung/giây liên tục làm nóng máy, giật cả HTML bên
+// trên. Đang thao tác (chạm, kéo, cuộn, phím) thì 60; đứng yên quá IDLE_MS thì 30 (mây trôi, đèn chập chờn vẫn đủ mượt);
+// không cảnh nào hiện (đang ở trang Môn hạ, Bảo khố…) thì gần như dừng.
+const IDLE_MS = 2000
+function pace(app: Application) {
+  let input = performance.now()
+  const poke = () => (input = performance.now())
+  for (const ev of ['pointerdown', 'pointermove', 'wheel', 'keydown', 'resize'] as const)
+    addEventListener(ev, poke, { passive: true, capture: true })
+  addEventListener('scroll', poke, { passive: true, capture: true })
+  app.ticker.add(
+    () => {
+      const shown = app.stage.children.some(c => c.visible)
+      const fps = !shown ? 4 : performance.now() - input < IDLE_MS ? 0 : 30
+      if (app.ticker.maxFPS !== fps) app.ticker.maxFPS = fps
+    },
+    undefined,
+    UPDATE_PRIORITY.HIGH,
+  )
 }
 
 // Gắn một cảnh vào ứng dụng WebGL chung, chạy tick mỗi khung; trả hàm gỡ (gọi được cả khi app chưa kịp khởi động).

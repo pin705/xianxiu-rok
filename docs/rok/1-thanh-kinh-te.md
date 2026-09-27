@@ -377,7 +377,7 @@ Thời gian xây dài khủng khiếp nên thứ quyết định tốc độ kh�
 - **Mở khoá:** CH 21 [1 nguồn: rokstats]. 25 cấp; cấp 25 tốn 15,1M lương, 18,5M gỗ, 7M đá, 34 ngày 20 giờ; +524 281 lực chiến [1 nguồn].
 - **Cơ chế:** nơi nhận **armaments** (trang bị đội hình). Bản 1.0.87 thêm tự tái chế armament theo điều kiện [1 nguồn]. Chi tiết ở file 2.
 - **Tu tiên hoá:** "Trận Đồ Các" (trận đồ gắn cho đội).
-- **Game mình:** ❌ · **Ưu tiên:** P2 (file 2) · **Công sức:** L.
+- **Game mình:** ✅ Vân Du Đường (không phải công trình riêng — thẻ trong màn Trận Pháp, mở từ Diễn võ trường): vân du tốn hành lực ra trận khí / Hiền Sĩ Lệnh, luyện hoá, đổi rương — chi tiết doc 2 mục 2.18 · **Ưu tiên:** P2 · **Công sức:** L.
 
 #### D12. Museum — Bảo tàng
 - **Mở khoá:** khi vương quốc vào **Season of Conquest** [1 nguồn].
@@ -945,7 +945,7 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | C2 | Tháp canh: bắn địch, báo trước | ✅ báo trước (thẻ son + Web Push) + Thiên Nhãn lộ tin theo tầng Hộ Sơn Đại Trận + kiếm trận chém trước trận | P1 | S |
 | C3–C6 | 4 trại lính riêng, hàng song song | ✅ gộp 1 Diễn võ trường | P2 | M |
 | C7 | 4 bệnh viện, viện đầy thì chết | ✅ Đan phòng (1 nhà) | — | — |
-| C8 | Lâu đài: sức chứa kết trận | 🟡 kết trận 8 đội cố định | P2 | S |
+| C8 | Lâu đài: sức chứa kết trận | ✅ kết trận 8 đội, từ Chủ điện 20 mỗi 5 tầng người mở trận thêm một đội (`rallyCap`, `RALLY_UP`) | P2 | S |
 | C9 | Trại trinh sát, làng/hang | ✅ linh điểu + thôn trang / động phủ (mê vụ) | P2 | M |
 | D1 | Học viện: tốc nghiên cứu, cây kinh tế | ✅ Tàng Kinh Các + tốc lĩnh ngộ theo tầng (−1 %/tầng, tối đa −25 %) | P2 | S |
 | D2 | Trung tâm liên minh: 5→30 lượt giúp, viện binh | 🟡 10 → 15 lượt theo Hộ Minh Đại Trận, không công trình | P1 | S |
@@ -957,9 +957,9 @@ Bảng VIP 0–15 lấy từ gamesguideinfo, đã kiểm từng trang VIP 1/6/10
 | D8 | Đài kỷ niệm: mốc chung cả vương quốc | ✅ Thiên Đạo Biên Niên (13 chương, quà cả giới, chương xong sớm mở pha sớm, công đầu từng chương) | P1 | M |
 | D9 | Lyceum (câu đố) | ✅ Vấn Đạo Đài | P2 | M |
 | D10 | Bảng tin | 🟡 thư admin | P2 | S |
-| D11 | State Forum (armaments) | ❌ (file 2) | P2 | L |
+| D11 | State Forum (armaments) | ✅ Vân Du Đường trong màn Trận Pháp (doc 2 mục 2.18) | P2 | L |
 | D12 | Bảo tàng (buff mùa) | ✅ Anh Linh Điện: di vật 3 bậc cho tối đa 3 trưởng lão mỗi mùa (Phi Thăng Tệ) — doc 2 mục 2.13 | P2 | M |
-| D13 | Mỏ/TT nghiên cứu pha lê (công nghệ mùa) | ❌ (file 6) | P2 | M |
+| D13 | Mỏ/TT nghiên cứu pha lê (công nghệ mùa) | ✅ Linh Tinh Trận Pháp (linh tinh từ Công Huân mùa, doc 6 A12) | P2 | M |
 | D14 | Mỏ Heliamber ("Valor") | ❌ chưa xác minh | P2 | — |
 | E6 | Không upkeep quân | ✅ | — | — |
 | E7 | Kho không trần, túi đồ an toàn | 🟡 kho có trần (chủ đích); ✅ túi an toàn | P1 | S |

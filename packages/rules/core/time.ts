@@ -2,7 +2,7 @@
 import { addGain, admit, battle, coolKey } from './battle.ts'
 import { rollDay } from './calendar.ts'
 import { festDrop, rollFest } from './fest.ts'
-import { rate, storage, unitOf, wildRate } from './stats.ts'
+import { autoHeal, rate, storage, unitOf, wildRate } from './stats.ts'
 import { type Job, type JobKind, type State, type TrainJob } from './types.ts'
 import { addItems, compact, count, HOUR, minus, plus, noGain } from './util.ts'
 import { LIGHT, RESOURCES, TRAIN_PTS, UNITS, hallGift, type Bag } from '../data.ts'
@@ -118,13 +118,14 @@ export function due(s: State, now: number): Due[] {
   if (h && h.finishAt <= now)
     ev.push([
       h.finishAt,
-      st => ({
-        ...st,
-        heal: null,
-        troops: plus(st.troops, h.troops),
-        wounded: minus(st.wounded, h.troops),
-        stats: { ...st.stats, healed: st.stats.healed + count(h.troops) },
-      }),
+      st =>
+        autoHeal({
+          ...st,
+          heal: null,
+          troops: plus(st.troops, h.troops),
+          wounded: minus(st.wounded, h.troops),
+          stats: { ...st.stats, healed: st.stats.healed + count(h.troops) },
+        }), // tự chữa: đợt kế cho thương binh về trong lúc chữa
     ])
   const r = s.study
   if (r && r.finishAt <= now)

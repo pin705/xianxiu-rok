@@ -44,6 +44,13 @@ import { potActions, type PotAction } from './pot.ts'
 import { arkActions, type ArkAction } from './ark.ts'
 import { partyActions, type PartyAction } from './party.ts'
 import { convoyActions, type ConvoyAction } from './convoy.ts'
+import { assaultActions, type AssaultAction } from './assault.ts'
+import { royaleActions, type RoyaleAction } from './royale.ts'
+import { daibiActions, type DaibiAction } from './daibi.ts'
+import { silverActions, type SilverAction } from './silver.ts'
+import { vanchuActions, type VanchuAction } from './vanchu.ts'
+import { mysticActions, type MysticAction } from './mystic.ts'
+import { campaignActions, type CampaignAction } from './campaign.ts'
 import { aquizActions, type AquizAction } from './aquiz.ts'
 import { rescueActions, type RescueAction } from './rescue.ts'
 import { planActions, type PlanAction } from './plans.ts'
@@ -83,6 +90,13 @@ export type WorldAction =
   | ArkAction
   | PartyAction
   | ConvoyAction
+  | AssaultAction
+  | RoyaleAction
+  | DaibiAction
+  | SilverAction
+  | VanchuAction
+  | MysticAction
+  | CampaignAction
   | AquizAction
   | RescueAction
   | PlanAction
@@ -121,6 +135,13 @@ const WORLD: WorldActions<WorldAction> = {
   ...arkActions,
   ...partyActions,
   ...convoyActions,
+  ...assaultActions,
+  ...royaleActions,
+  ...daibiActions,
+  ...silverActions,
+  ...vanchuActions,
+  ...mysticActions,
+  ...campaignActions,
   ...aquizActions,
   ...rescueActions,
   ...planActions,

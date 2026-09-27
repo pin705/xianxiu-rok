@@ -42,6 +42,13 @@ export type MailArgs = {
   lohar: [pct: number, summoner: 0 | 1] // hạ Yêu Vương Tuần Sơn: phần sát thương (%), mình là người triệu hồi
   party: [lv: number, waves: number, n: number] // Man Hoang Cổ Tộc: độ khó, số đợt qua, số người trong đội
   convoy: [lv: number, hp: number, n: number] // Linh Thương Hộ Tống: độ khó, % hàng còn, số người hộ tống
+  assault: [lv: number, win: number, n: number] // Vây Công Yêu Vương: độ khó, thắng (1) / thua (0), số người vào trận
+  royale: [place: number, n: number, pts: number] // Cổ Khư Loạn Chiến: hạng, số tông môn, điểm được
+  daibi: [mine: number, theirs: number, flags: number] // Tiên Môn Đại Bỉ: điểm đội mình, điểm đội kia, số cờ mình góp giữ
+  mystic: [mode: number, stages: number, rounds: number, rank: number] // Huyễn Vực Bí Cảnh: độ khó (0 thường · 1 truyền thuyết), số màn qua, tổng lượt đánh, hạng tuần (0: không vào bảng)
+  dailyLeft: [n: number] // Nhật Khóa hôm trước: số rương đủ điểm chưa mở (quà gộp trong thư)
+  silver: [mine: number, theirs: number, sc: number] // Tán Tu Tranh Châu: điểm đội mình, điểm đội kia, công huân cá nhân
+  vanchu: [mine: number, theirs: number, sunk: number, rounds: number, res: number] // Vân Chu Hội Chiến: máu Vận Lương Chu mình / địch còn, số thuyền địch mình góp đánh chìm, số hiệp, kết quả (1 thắng · 0 hoà · −1 thua)
   wallFall: [x: number, y: number] // sơn môn thất thủ: trận lực về 0, tông môn bị đánh bật tới (x, y)
   // do thám linh địa: loại điểm, toạ độ, phe giữ, số đội đóng, tổng đệ tử, lực chiến
   spySpot: [kind: string, x: number, y: number, owner: string, n: number, troops: number, might: number]
@@ -73,8 +80,10 @@ export type MailArgs = {
   bet: [win: 0 | 1, tag: string, stage: 'semi' | 'final' | 'third', n: number] // Luận Kiếm Đặt Cược: trúng nhận n tệ / trượt hoàn n tệ
   hero: [kind: number, votes: number] // Lưu Danh Sử Sách: được bình chọn anh kiệt mùa ở hạng mục kind (HERO_KINDS)
   camp: [camp: 0 | 1, pts: number, other: number] // Chính Tà Phân Tranh: phái mình thắng mùa, điểm hai phái
+  treaty: [tag: string] // Hiệp Ước Thiên Môn: minh phi thăng đã ký hiệp ước với minh mình
+  four: [four: number, pts: number] // Tứ Tượng Tranh Hùng: phe mình thắng mùa (0–3), điểm mùa của phe
   campStage: [n: number, m: string, won: 0 | 1, a: number, b: number] // chặng thi đua n (việc m): phái mình thắng, điểm hai phái
-  ark: [win: 0 | 1, foe: string, mine: number, theirs: number] // Tranh Đoạt Linh Châu: thắng / thua minh foe, điểm hai bên
+  ark: [win: 0 | 1, foe: string, mine: number, theirs: number, sc: number, rank: number] // Tranh Đoạt Linh Châu: thắng / thua minh foe, điểm hai bên, công huân cá nhân và hạng trong minh (thư cũ chưa có)
   // Tổng kết mùa (Yearbook): mùa, tầng Chủ điện, Công Huân (hạng, 0: ngoài bảng), chiến công, yêu thú hạ, cướp thắng, khai mỏ
   yearbook: [
     season: number,

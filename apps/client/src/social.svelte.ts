@@ -11,6 +11,10 @@ export const social = $state<{
   honor: boolean
   drill: boolean
   quiz: boolean
+  arkWatch: boolean // khán giả Tranh Đoạt Linh Châu (thẻ mùa bản đồ / thẻ minh mở, App vẽ)
+  form: boolean // Trận Pháp (Diễn võ trường / bảng chọn đội mở, App vẽ)
+  trials: boolean // Thí Luyện: gom các chế độ PvE (cột phải bản đồ Vùng mở, App vẽ)
+  campaign: boolean // Viễn Chinh (Thí Luyện mở, App vẽ)
   unlock: number // Chủ điện vừa lên tầng này: màn Mở khoá (0: đóng)
   gift: Items | null // vật phẩm vừa nhận: dải Tạ lễ (null: tắt)
   elders: ElderId[] // trưởng lão vừa thu nhận, chờ màn Thu nhận lần lượt (trống: tắt)
@@ -22,6 +26,10 @@ export const social = $state<{
   honor: false,
   drill: false,
   quiz: false,
+  arkWatch: false,
+  form: false,
+  trials: false,
+  campaign: false,
   unlock: 0,
   gift: null,
   elders: [],

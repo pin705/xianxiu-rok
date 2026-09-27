@@ -114,6 +114,15 @@
         {/each}
       </div>
       <small class="t-tiny t-soft">{L.camp.hint(L.camp.names[sea.camp ?? 0])}</small>
+      {#if sea.four}
+        <!-- Tứ Tượng Tranh Hùng (mùa có luật): bốn tấm biển phe, phe mình viền son -->
+        <div class="grid mt-2">
+          {#each sea.four as v, c (c)}
+            <Plaque label={L.four.names[c]} value={num(v)} on={sea.fourMine === c} />
+          {/each}
+        </div>
+        <small class="t-tiny t-soft">{L.four.hint(L.four.names[sea.fourMine ?? 0])}</small>
+      {/if}
       {#if sea.stage}
         <!-- chặng thi đua đang chạy: việc, giờ còn lại, điểm hai phái, phần mình góp -->
         {@const st = sea.stage}

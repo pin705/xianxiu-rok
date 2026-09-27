@@ -1,4 +1,5 @@
 // Đệ tử: tuyển, nâng bậc, chữa thương binh ở Đan phòng, Hồi Xuân Đan.
+import { autoHeal } from '../core/stats.ts'
 import { no, ok, pay, use, type Actions } from '../core/action.ts'
 import { stallCost, stallTake } from '../core/stall.ts'
 import { bump } from '../core/calendar.ts'
@@ -51,8 +52,13 @@ export type ArmyAction =
   | { type: 'promote'; unit: UnitId; n: number } // unit: bậc đang có
   | { type: 'heal' }
   | { type: 'cure' } // cure: Hồi Xuân Đan
+  | { type: 'autoHeal'; on: boolean } // tự vận hành: tự chữa thương binh vừa về
 
 export const armyActions: Actions<ArmyAction> = {
+  autoHeal: {
+    pick: a => (typeof a.on === 'boolean' ? { type: 'autoHeal', on: a.on } : null),
+    run: (s, a) => (s.levels.danPhong ? ok(autoHeal({ ...s, auto: { ...s.auto, heal: a.on } })) : no('locked')), // bật lúc có sẵn thương binh: chữa luôn
+  },
   train: {
     pick: a => (oneOf(UNITS)(a.unit) && int(1, 1e6)(a.n) ? { type: 'train', unit: a.unit, n: a.n } : null),
     run: (s, a) => {

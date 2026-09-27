@@ -3,7 +3,7 @@ import { regionOf, route, tide, type Point } from '../atlas.ts'
 import { no } from '../core/action.ts'
 import { fieldError, launch } from '../core/battle.ts'
 import { isId, int, isElder, oneOf, pickArmy } from '../core/parse.ts'
-import { apOf, spendAp } from '../core/stats.ts'
+import { apOf, bonus, spendAp } from '../core/stats.ts'
 import { advance } from '../core/time.ts'
 import { type Army, type Buff, type March, type State } from '../core/types.ts'
 import { compact, noGain } from '../core/util.ts'
@@ -11,12 +11,12 @@ import {
   AP_HUNT,
   BOSSES,
   GARRISON_MAX,
-  RALLY_MAX,
   RALLY_WAIT,
   RULES,
   TIDE_PROD,
   type Bonus,
   type ElderId,
+  DESERT_RING,
 } from '../data.ts'
 import {
   allyOf,
@@ -57,6 +57,7 @@ import {
   orderBuffs,
   veinBuffs,
 } from './points.ts'
+import { holmBuffs, rallyCap } from './fight.ts'
 
 // Kết trận chỉ để chiếm hoặc đánh yêu vương (khai mỏ đi riêng từng đội)
 const rallyTask = (p: Point) => (TASK_OF[p.kind] === 'gather' ? null : (TASK_OF[p.kind] as 'take' | 'hit'))
@@ -149,6 +150,8 @@ function goAct({ ps, w, pid, s, seed, map }: Ctx, a: Extract<SpotAction, { type:
   const sp = spotOf(w, map, a.i, t)
   if (a.task === 'hit' && (!BOSSES[p.lv] || (sp.until ?? 0) > t)) return no('cooldown')
   if (a.task === 'gather' && ((sp.until ?? 0) > t || !sp.left)) return no('empty')
+  if (a.task === 'gather' && bonus(s, 'desert') > 0 && map.atlas.regions[regionOf(map.atlas, p)].ring === DESERT_RING)
+    return no('locked') // Tử Hải: vòng giữa là vùng chết
   if (a.task === 'hunt' && (sp.until ?? 0) > t) return no('cooldown') // vừa có người hạ, chưa hồi
   if (a.task === 'take' && sp.own && sp.own > 0 && allyOf(w, pid)?.naps?.includes(sp.own)) return no('friend') // minh ước
   if (a.task === 'hunt' && apOf(s, t) < AP_HUNT) return no('limit') // hết hành lực
@@ -292,7 +295,7 @@ function rallyAct(
   const ms = routeMs(s, r.len, a.army)
   if (task === 'hit' && (spotOf(w, map, i, t).until ?? 0) > t) return no('cooldown')
   const members = [...ps.values()].flatMap(x => x.marches.filter(m => rally && m.rally === rally.id)).length
-  if (rally && (members >= RALLY_MAX || s.marches.some(m => m.rally === rally.id))) return no('full')
+  if (rally && (members >= rallyCap(ps, rally.by) || s.marches.some(m => m.rally === rally.id))) return no('full')
   if (rally && t + ms > rally.at) return no('far') // không kịp tới lúc hẹn
   const e = fieldError(s, a.elder, a.army)
   if (e) return no(e)
@@ -345,6 +348,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
     b.src === 'rule' ||
     b.src === 'fort' ||
     b.src === 'askill' ||
+    b.src === 'holm' ||
     b.src.startsWith('tide')
   for (const [pid, s] of ps) {
     const want: Buff[] = [
@@ -367,6 +371,7 @@ export function worldBuffs(ps: Players, w: World, map: MapCtx, at: number): Play
       ...orderBuffs(map, allyOf(w, pid)), // Minh lệnh của thời
       ...Object.entries(RULES[w.rule ?? -1] ?? {}).map(([key, v]) => ({ key: key as Bonus, v, until: 0, src: 'rule' })), // luật mùa
       ...fortBuffs(w, pid, at), // Tổng đà của minh
+      ...holmBuffs(w, pid, at), // Sinh Tử Đài: phái thắng hôm nay
     ]
     const keep = s.buffs.filter(b => !mapped(b))
     const have = s.buffs.filter(mapped)

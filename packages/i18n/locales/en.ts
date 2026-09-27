@@ -438,9 +438,25 @@ export const en: Text = {
       cap: 'March capacity',
       gather: 'Gathering speed',
       study: 'Study time',
+      supply: 'Supply range: armies weaken the farther they march from home',
+      desert: 'Sea of Death: the middle ring is dead land (no gathering, no relocating there)',
+      folio: 'Stratagems: every sect slots three stratagem pages',
+      puppet: 'Siege puppets: the Artifact Forge builds wall-breaking puppets',
+      elite: 'Elite units: tier-5 disciples train into elites',
+      four: 'Four Symbols: four factions race for season points',
+      counter: 'Attack when counter-rallying',
     }
+    if (
+      key === 'supply' ||
+      key === 'desert' ||
+      key === 'folio' ||
+      key === 'puppet' ||
+      key === 'elite' ||
+      key === 'four'
+    )
+      return name[key] // a season-rule flag, not a number
     const down = ['build', 'train', 'march', 'heal', 'brew', 'trib', 'forge', 'study'].includes(key)
-    return `${name[key]} ${down ? '−' : '+'}${pct(v)}`
+    return `${name[key]} ${(down ? v > 0 : v < 0) ? '−' : '+'}${pct(Math.abs(v))}` // âm: bớt (Phong Thỉ thủ −2 %)
   },
   techs: {
     tuLinh: 'Spirit Gathering',
@@ -750,6 +766,230 @@ export const en: Text = {
       ['How many special prizes hang on the Wishing Tree?', ['2', '3', '4', '6']],
     ] as [string, [string, string, string, string]][],
   },
+  campaign: {
+    title: 'Expedition',
+    hint: 'March through the stages with your Arena lineup (phantom disciples — no troop loss); later stages let you bring more squads. Three stars per stage: win · keep ≥ 50 % troops · lose no squad. New stars and first clears give Expedition Medals; one chest a day by total stars.',
+    chapter: (n: number) => `Chapter ${n}`,
+    stage: (n: number) => `Stage ${n}`,
+    boss: 'Chieftain',
+    teams: (n: number) => `${n} squads`,
+    foe: (type: string, might: string) => `Enemy: ${type} · power ${might}`,
+    goals: ['Win', 'Keep ≥ 50 % troops', 'Lose no squad'],
+    go: 'March',
+    result: (win: boolean, keep: number) => (win ? `Victory · ${keep}% troops left` : `Defeat · ${keep}% troops left`),
+    medals: (n: string) => `Medals: ${n}`,
+    stars: (n: number, max: number) => `Stars: ${n}/${max}`,
+    chest: 'Daily chest',
+    chestNeed: (n: number) => `Needs ${n} stars`,
+    shop: 'Medal shop',
+    locked: 'Clear the previous stage first',
+  },
+  trials: {
+    title: 'Trials',
+    tile: 'Trials',
+    hint: 'Every place to hone your skills against beasts and phantom rivals — your progress, unlock conditions, tap to go.',
+    go: 'Go',
+    names: {
+      beast: 'Region beasts',
+      realm: 'Secret realms',
+      tower: 'Heaven Tower',
+      drill: 'Sparring Gauntlet',
+      trial: 'Demon Emperor Trial',
+      form: 'Formation Drill',
+      mystic: 'Realm of Mystique',
+      party: 'Wild Clans',
+      campaign: 'Expedition',
+    },
+    beast: (n: number, max: number) => `Defeated beasts up to level ${n}/${max}`,
+    realm: (n: number, max: number) => `Cleared ${n}/${max} floors`,
+    tower: (n: number) => `Best floor ${n}`,
+    drillToday: (w: number) => `${w} wins today`,
+    drillNone: 'Not sparred today',
+    trialOpen: (g: number, max: number) => `Festival open · gate ${g}/${max}`,
+    trialShut: 'Festival not running',
+    form: (n: number, max: number) => `${n}/${max} objectives`,
+    mystic: (n: number) => `${n} clears`,
+    partyDone: 'Already raided today',
+    partyReady: 'Raid available today',
+    campaign: (n: number, max: number) => `${n}/${max} stars`,
+    locked: (h: number) => `Opens at Main Hall ${h}`,
+    noAlly: 'Join an alliance first',
+  },
+  ctech: {
+    title: 'Crystal Arrays',
+    hint: (per: number) =>
+      `A season-only array tree: every Merit point you earn gives ${per} crystals (your Merit stays for the rankings). Each array needs the previous one in its branch at level 2; arrays fade when the season ends.`,
+    have: (n: string) => `Crystals: ${n}`,
+    branches: ['Fundamentals', 'Military'],
+    names: [
+      'Gathering Array',
+      'Spirit Flow Array',
+      'Bedrock Array',
+      'Rejuvenation Array',
+      'Shrinking Earth Array',
+      'Sword Qi Array',
+      'Thunderfire Array',
+      'Vajra Array',
+      'Black Tortoise Array',
+      'Longevity Array',
+    ],
+    lv: (n: number, max: number) => `Level ${n}/${max}`,
+    up: (n: string) => `Upgrade · ${n}`,
+    need: (name: string) => `Needs ${name} level 2`,
+    max: 'Maxed',
+    off: 'Only during a realm season',
+  },
+  hermit: {
+    title: 'Hermit Caves',
+    hint: (daily: number) =>
+      `Five hermits of the realm ask for small favors: take a task, do it (progress counts from when you took it), then hand it in for favor — at top favor a hermit teaches your whole sect a technique until the season ends. Up to ${daily} hand-ins a day.`,
+    names: {
+      thanhHu: 'Master Pure Void',
+      lacHa: 'Sunset Cloud Fairy',
+      thietSon: 'Iron Mountain Elder',
+      vanDu: 'Wandering Monk',
+      duocVuong: 'Medicine King',
+    },
+    lv: (n: number, max: number) => `Favor ${n}/${max}`,
+    tasks: {
+      hunt: (n: string) => `Hunt ${n} beasts`,
+      gather: (n: string) => `Gather ${n} resources at mines`,
+      train: (n: string) => `Recruit ${n} disciples`,
+      heal: (n: string) => `Heal ${n} wounded`,
+      brew: (n: string) => `Brew ${n} batches`,
+      speed: (n: string) => `Use ${n} minutes of speedups`,
+    } as Record<string, (n: string) => string>,
+    take: 'Take task',
+    hand: 'Hand in',
+    left: (n: number, max: number) => `${n}/${max} hand-ins left today`,
+    taught: 'Technique taught',
+    locked: (hall: number) => `Opens at Main Hall ${hall}, during a realm season`,
+  },
+  form: {
+    title: 'Formations',
+    short:
+      'Set the formation every march and your home defense use; find armaments and inscriptions at the Wanderers’ Hall.',
+    open: 'Open formations',
+    now: (name: string) => `Formation: ${name}`,
+    none: 'No formation set',
+    tabs: { form: 'Formation', arms: 'Armaments', travel: 'Wanderers’ Hall', drill: 'Drill' },
+    names: {
+      phongThi: 'Wedge',
+      phuongVien: 'Hollow Square',
+      nhanHanh: 'Echelon',
+      yenNguyet: 'Crescent',
+      hacDuc: 'Crane Wing',
+      truongXa: 'Long Serpent',
+      tamTai: 'Delta',
+    },
+    lore: {
+      phongThi: 'An arrowhead through the lines — strong attack, open flanks.',
+      phuongVien: 'Four-sided square — defense like a fortress.',
+      nhanHanh: 'Staggered goose line — spell cultivators cast freely.',
+      yenNguyet: 'A crescent embrace — body cultivators shield the rest.',
+      hacDuc: 'Crane wings spread — sword cultivators flank.',
+      truongXa: 'A long winding serpent — tough to break.',
+      tamTai: 'Heaven · earth · man as one — stronger skills.',
+    },
+    special: {
+      phongThi: 'Breakthrough',
+      phuongVien: 'Immovable',
+      nhanHanh: 'Chain Pearl',
+      yenNguyet: 'Moon Shield',
+      hacDuc: 'Crane Strike',
+      truongXa: 'Serpent Coil',
+      tamTai: 'Three as One',
+    },
+    locked: (hall: number) => `Opens at Main Hall ${hall}`,
+    hint: 'Every march carries the formation set when it leaves; your home defense uses it too. A formation’s armaments only count when that formation is set.',
+    set: 'Use this formation',
+    active: 'In use',
+    off: 'Clear formation',
+    slots: ['Banner', 'Battle Map', 'Array Disc', 'Dharma Bell'],
+    q: ['Common', 'Spirit', 'Mystic', 'Earth'],
+    empty: 'Empty slot',
+    wear: 'Equip',
+    worn: 'Equipped',
+    unwear: 'Remove',
+    fits: (n: number) => `${n} fit this slot`,
+    nofit: 'No armament fits this slot yet — travel to find one.',
+    armName: (q: string, slot: string, form: string) => `${q} · ${form} ${slot}`,
+    all: 'All',
+    melt: (n: number) => `Melt +${n}`,
+    meltAll: (n: number, c: number) => `Melt ${n} unequipped common pieces (+${c} tokens)`,
+    bag: (n: number, max: number) => `Armaments ${n}/${max}`,
+    ap: (n: number) => `Action points ${n}`,
+    left: (n: number, max: number) => `${n}/${max} travels left today`,
+    travel: (n: number) => `Travel ×${n}`,
+    travelHint:
+      'Each travel costs 10 action points: 40 % finds an armament (higher grades are rarer; formation random among those unlocked), otherwise Sage Tokens.',
+    got: (arms: number, coin: number) => `Just found: ${arms} armaments · ${coin} Sage Tokens`,
+    coin: (n: number) => `Sage Tokens: ${n}`,
+    shop: 'Armament chests (random formation, guaranteed grade)',
+    chest: (q: string) => `${q} chest`,
+    price: (n: number) => `${n} tokens`,
+    drill: {
+      hint: 'Formation Drill: six sand-table stages fought with borrowed troops (nothing lost), any formation allowed — even locked ones. On the sand table formations work five times as strong so the difference shows. Each objective reached the first time gives 20 Sage Tokens.',
+      names: ['Break the Vanguard', 'Hold the Gate', 'Spell Rain', 'Moon Shield', 'Crane Wing Flank', 'Three as One'],
+      lore: [
+        'Two even sword-and-spell hosts; a spearhead breaks the balance.',
+        'The enemy storms your gate — hold for ten rounds to win; sturdy beats fast.',
+        'An all-spell squad against thick-armored body cultivators.',
+        'An all-body squad blocking a sword charge.',
+        'An all-sword squad chasing spell casters.',
+        'A squad with a burst technique — skill power decides it.',
+      ],
+      goals: (keep: number, form: string) => ['Win', `Win with ≥ ${keep}% troops left`, `Win with ${form}`],
+      none: 'No formation',
+      go: 'Drill',
+      result: (win: boolean, left: number) =>
+        win ? `Victory · ${left}% troops left` : `Defeat · ${left}% troops left`,
+    },
+  },
+  elite: {
+    title: 'Elite Units',
+    lore: 'This season follows Keener Blades: once the Training Grounds unlock tier 5, each disciple type trains up to 5 elite levels — tier-5 disciples of that type grow stronger every level. Elites return to normal when the season ends.',
+    lv: (n: number, max: number) => `Elite level ${n}/${max}`,
+    up: 'Train',
+    max: 'Maxed',
+    locked: 'Needs tier-5 disciples unlocked at the Training Grounds',
+  },
+  puppet: {
+    title: 'Siege Puppets',
+    lore: 'This season follows Shifting Gears: the Artifact Forge builds siege puppets. Raids on other sects carry up to 20 automatically and spend them in the fight — each weakens the target’s Mountain Guard Array by 2.5 % (defense, health, the opening sword volley; up to 50 % for a whole rally), and a win cracks the array harder. Puppets crumble when the season ends.',
+    have: (n: number, cap: number) => `Puppets: ${n}/${cap}`,
+    make: (n: number) => `Build ×${n}`,
+    each: 'Each',
+  },
+  folio: {
+    title: 'Book of Stratagems',
+    lore: 'This season follows Storm of Stratagems: a book with three slots — Attack · Defense · Guile — each holding one stratagem page. New pages open with season Merit; filling an empty slot is free, swapping a page waits 4 hours. The book clears when the season ends.',
+    slots: ['Attack', 'Defense', 'Guile'],
+    pages: [
+      [
+        ['Burn the Boats', 'No way back, only forward.'],
+        ['Strike First', 'Sword disciples charge ahead.'],
+        ['Fire Attack', 'Spellfire razes the enemy camp.'],
+      ],
+      [
+        ['Scorched Earth', 'High walls, empty fields — nothing to plunder.'],
+        ['Rested vs Weary', 'Fresh disciples outlast tired ones.'],
+        ['Wall of Bronze', 'Body cultivators stand like a bronze wall.'],
+      ],
+      [
+        ['Speed Is Precious', 'Armies prize swiftness.'],
+        ['Lead Away the Goat', 'Carry more home.'],
+        [
+          'Besiege Wei to Save Zhao',
+          'Counter-rally: hit harder against whoever just hit you or your rally mates (within 24 hours).',
+        ],
+      ],
+    ] as [string, string][][],
+    honor: (n: number) => `Season Merit: ${n}`,
+    need: (n: number) => `Opens at ${n} Merit`,
+    wait: (t: string) => `Swap this slot in ${t}`,
+    on: 'Slotted',
+  },
   strat: {
     title: 'Season strategy',
     lore: 'Pick one strategy each season, free, kept until the season ends — choose again after rebirth.',
@@ -922,6 +1162,12 @@ export const en: Text = {
   },
   ark: {
     title: 'Spirit Orb Battle',
+    watch: 'Watch the Spirit Orb battle',
+    watchOpen: 'Watch battles realm-wide',
+    watchLoading: 'Opening the battlefield…',
+    watchNone: 'No Spirit Orb battle is running right now.',
+    watchLegend: (a: string, b: string) =>
+      `Green: held by [${a}] · red: held by [${b}] · numbers: [${a}] teams·[${b}] teams`,
     hint: 'Sunday 20:00: alliance vs alliance on an 11-node battlefield, 8 rounds × 10 minutes. Each warrior fields one team (the first Arena lineup team, no troops lost). Buildings score points; obelisks you hold link to each other, each shrine you hold gives +10% attack; escort the Spirit Orb to an outpost you hold for a big score.',
     sign: 'Sign up for the Orb battle',
     unsign: 'Withdraw',
@@ -948,6 +1194,16 @@ export const en: Text = {
     goAll: 'Whole alliance here',
     orb: 'Spirit Orb',
     carrying: 'carrying the Spirit Orb',
+    sc: (n: number) => `Personal merit: ${n}`,
+    mvp: 'Top merit',
+    skillTitle: 'Battlefield skills (coordinator)',
+    skills: {
+      coVu: ['Rally Cry', 'Whole alliance +15 % attack next round'],
+      kienThu: ['Hold Fast', 'Whole alliance +20 % defense next round'],
+      thanToc: ['Swift March', 'Every squad moves two nodes next round'],
+    },
+    skillOn: (r: number) => `active round ${r}`,
+    skillUsed: 'used',
     log: {
       take: (who: string, node: string, pts: number) => `${who} took ${node}${pts ? ` (+${pts})` : ''}`,
       win: (who: string, node: string) => `${who} won the fight at ${node}`,
@@ -982,6 +1238,11 @@ export const en: Text = {
     bones: (n: number) => `Demon bones ${n}/${LOHAR_BONES}`,
     summon: 'Summon the roaming king',
     hint: `World beasts of level ${LOHAR_WILD}+ drop demon bones. With ${LOHAR_BONES}, turn this demon king into its roaming form (×${LOHAR_HP} health, 2 hours) — rally to slay it for a big reward split by damage, plus an extra share for the summoner.`,
+  },
+  four: {
+    names: ['Azure Dragon', 'White Tiger', 'Vermilion Bird', 'Black Tortoise'],
+    hint: (mine: string) =>
+      `Four Symbols season: every alliance and solo sect belongs to one of four factions (Azure Dragon and Vermilion Bird side with Light; White Tiger and Black Tortoise with Darkness); season points add up per faction — the top faction is rewarded when the season ends. You are ${mine}.`,
   },
   camp: {
     names: ['Light', 'Darkness'],
@@ -1199,6 +1460,7 @@ export const en: Text = {
     healAll: 'Heal all',
     healing: (n: number) => `Healing ${n} wounded`,
     noWounded: 'No wounded.',
+    auto: 'Auto-heal returning wounded (when the Alchemy Room is free and resources suffice)',
     brewing: (n: number, p: string) => `Brewing ${n} ${p}`,
     unlock: (n: number) => `Alchemy Room lv ${n}`,
     have: (n: number) => `Have ${n}`,
@@ -1211,6 +1473,8 @@ export const en: Text = {
     revive: (n: string) => `Revive ${n} disciples`,
   },
   world: {
+    desert: 'Sea of Death: middle-ring mines are dead land this season — no gathering',
+    supplyCut: (n: number) => `beyond supply range: attack −${n}%`,
     toggle: { world: 'World', region: 'Region' },
     phase: ['Opening', 'Vein War', 'Array Eyes', 'Ascension'],
     phaseHint: [
@@ -2130,6 +2394,38 @@ export const en: Text = {
         `Spirit Caravan Escort · difficulty ${lv}`,
         `The caravan, guarded by ${n}, ${hp >= 100 ? 'arrived untouched' : hp > 0 ? `arrived with ${hp}% of its cargo` : 'was stripped bare by raiders'}. Your reward is below.`,
       ],
+      assault: (lv: number, win: number, n: number): [string, string] => [
+        `Demon King Siege · difficulty ${lv}`,
+        win
+          ? `Your room of ${n} brought the demon king down — it counts toward the event's Treasure Vouchers; rewards are below. The next difficulty is unlocked.`
+          : `Your room of ${n} could not bring the demon king down. Today's try is refunded — gather more people and siege again.`,
+      ],
+      royale: (place: number, n: number, pts: number): [string, string] => [
+        `War of the Ruins · place ${place}/${n}`,
+        place === 1
+          ? `Last one standing among ${n} sects — champion of the Ruins! +${pts} ruin points; rewards below.`
+          : `Swept out by the sandstorm at place ${place}/${n}. +${pts} ruin points; rewards below.`,
+      ],
+      vanchu: (mine: number, theirs: number, sunk: number, rounds: number, out: number): [string, string] => [
+        `Cloudship Clash · ${out > 0 ? 'victory' : out < 0 ? 'defeat' : 'draw'}`,
+        `${out > 0 ? 'Your team won' : out < 0 ? 'Your team lost' : 'A draw'} after ${rounds} rounds: your supply ship has ${mine} left, theirs ${theirs}${mine === theirs && out ? ' — both went down together; the harder hitters win' : ''}. You helped sink ${sunk} enemy ships. Rewards below.`,
+      ],
+      mystic: (mode: number, stages: number, rounds: number, rank: number): [string, string] => [
+        `Realm of Mystique · ${stages}/3 stages`,
+        `Your ${mode ? 'Legend' : 'Normal'} team ${stages === 3 ? `cleared it in ${rounds} rounds` : `passed ${stages}/3 stages`}.${rank ? ` #${rank} on the weekly board!` : ''} Rewards below.`,
+      ],
+      dailyLeft: (n: number): [string, string] => [
+        'Daily Lessons · yesterday',
+        `You left ${n} Daily Lessons chests unopened yesterday — their rewards are bundled in this mail.`,
+      ],
+      silver: (mine: number, theirs: number, sc?: number): [string, string] => [
+        `Silver Ark · ${mine} – ${theirs}`,
+        `${mine > theirs ? 'Your free team won' : mine < theirs ? 'Your free team lost' : 'Draw'} ${mine} – ${theirs} on the Ark battlefield.${sc !== undefined ? ` Personal merit: ${sc}.` : ''} The battle can be replayed from the Arena. Rewards below.`,
+      ],
+      daibi: (mine: number, theirs: number, flags: number): [string, string] => [
+        `Champions of the Gate · ${mine} – ${theirs}`,
+        `${mine > theirs ? 'Your team won' : mine < theirs ? 'Your team lost' : 'A draw'} ${mine} – ${theirs} flag points; you helped hold ${flags} flag rounds. Rewards below.`,
+      ],
       hero: (kind: number, votes: number): [string, string] => [
         `Annals of Fame · ${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King'][kind] ?? '?'}`,
         `The realm voted you the season's ${['God of War', 'Honored Servant', 'Beast Hunter', 'Ore King'][kind] ?? '?'} (${votes} votes) — your name is written into the Hall of Immortals. Your reward is below.`,
@@ -2144,13 +2440,21 @@ export const en: Text = {
         `Nine Heavens League · alliance rank ${rank}`,
         `This season your alliance placed ${rank} in the Nine Heavens League (the Spirit Orb battles). A reward for every member is below.`,
       ],
+      treaty: (tag: string): [string, string] => [
+        `Heaven Gate Treaty · [${tag}]`,
+        `The season is over: [${tag}] ascended and kept its treaty with your alliance — your share of the ascension rewards is below.`,
+      ],
+      four: (four: number, pts: number): [string, string] => [
+        `${['Azure Dragon', 'White Tiger', 'Vermilion Bird', 'Black Tortoise'][four] ?? '?'} wins the season`,
+        `The Four Symbols season is over: your faction, ${['Azure Dragon', 'White Tiger', 'Vermilion Bird', 'Black Tortoise'][four] ?? '?'}, finished first with ${pts.toLocaleString('en')} season points. Faction rewards below.`,
+      ],
       camp: (camp: 0 | 1, pts: number, other: number): [string, string] => [
         `${camp ? 'Darkness' : 'Light'} wins the season`,
         `Light versus Darkness is over: your ${camp ? 'Darkness' : 'Light'} camp scored ${pts.toLocaleString('en')} season points, the other ${other.toLocaleString('en')}. The winning camp's reward is below.`,
       ],
-      ark: (win: 0 | 1, foe: string, mine: number, theirs: number): [string, string] => [
+      ark: (win: 0 | 1, foe: string, mine: number, theirs: number, sc?: number, rank?: number): [string, string] => [
         win ? `Spirit Orb · won vs [${foe}]` : `Spirit Orb · lost vs [${foe}]`,
-        `The Spirit Orb battle is over: your alliance ${mine.toLocaleString('en')} points, [${foe}] ${theirs.toLocaleString('en')}. ${win ? 'A victory reward for every member is below.' : 'A reward for taking part is below — take it back next week.'}`,
+        `The Spirit Orb battle is over: your alliance ${mine.toLocaleString('en')} points, [${foe}] ${theirs.toLocaleString('en')}.${sc !== undefined ? ` Your personal merit: ${sc}${rank ? ` (#${rank} in your alliance)` : ''}.` : ''} ${win ? 'A victory reward for every member is below.' : 'A reward for taking part is below — take it back next week.'}`,
       ],
       yearbook: (
         season: number,
@@ -2424,6 +2728,18 @@ export const en: Text = {
     hint: `Each elder wears three slots — weapon, armor, treasure — and the bonuses apply only to the army that elder leads. 2 pieces of a set: +${pct(GEAR_SETS.kiem.two.v)} attack for that set's type; the full set: +${pct(GEAR_SETS.kiem.three.v)} technique power. Artifacts level up by forging — no luck involved.`,
     go: 'Forge',
     doing: (name: string, n: number) => `Forging ${name} level ${n}`,
+    awaken: {
+      title: (tier: string) => `Awakening ${tier}`,
+      hint: 'Each awakening tier adds 10 % to the artifact bonus; tier V unlocks a special effect. Always succeeds, costs Artifact Spirit Crystals.',
+      need: (lv: number) => `Forge it to level ${lv} first`,
+      go: 'Awaken',
+      max: 'Fully awakened',
+      v: [
+        'Tier V · weapon: technique power +5 %',
+        'Tier V · armor: army health +3 %',
+        'Tier V · treasure: army defense +3 %',
+      ],
+    },
     cap: (n: number) => `Artifact Forge lv ${n}`,
     maxed: 'Perfected',
     worn: (name: string) => `Worn by ${name}`,
@@ -2584,6 +2900,7 @@ export const en: Text = {
     sound: 'Sound effects',
     music: 'Music',
     calm: 'Reduce motion · save battery',
+    news: 'Big realm news over the mountain',
     account: 'Account',
     accountHint: (name: string) =>
       `${name} is stored on the server: switching devices or clearing browser data keeps your progress when you sign in again.`,
@@ -2896,6 +3213,9 @@ export const en: Text = {
       office: 'Alliance office',
       title: "Realm Lord's title",
       bless: "Realm Lord's blessing",
+      holm: 'Life-and-Death Arena: your path won',
+      rule: 'Season rule',
+      order: 'Alliance order of the tide',
     },
     always: 'Permanent',
     items: 'Talismans in your items',
@@ -3008,6 +3328,127 @@ export const en: Text = {
     fight: 'Meet them',
     skip: 'Skip',
   },
+  daibi: {
+    tab: 'Battles',
+    hint: (n: number, daily: number) =>
+      `Champions of the Gate: ${n} vs ${n} over 5 flags (home, left wing, center, right wing, enemy home). Pick a tactic — which flags your first three Arena teams hold — and queue; when it fills, two teams balanced by Arena points play 3 rounds: contested flags are fought together, losers sit out a round, and each held flag scores by round (center ×2). ${daily} tries a day.`,
+    queue: (n: number, of: number) => `Queued: ${n}/${of} players`,
+    wins: (n: number) => `${n} wins`,
+    left: (n: number, of: number) => `${n}/${of} tries left today`,
+    tactics: { even: 'Spread', left: 'Left wing', mid: 'Center', right: 'Right wing', home: 'Hold home' },
+    join: 'Queue for Champions',
+    leave: 'Leave the queue (refund)',
+  },
+  mystic: {
+    title: 'Realm of Mystique',
+    hint: (n: number, daily: number) =>
+      `A matchmade ${n}-player dungeon: pick a difficulty and a role (Guardian adds defense, Striker adds attack, Healer restores troops between stages) and queue — when it fills (or after 10 minutes, with other cultivators) the team fights three chieftains, the last one a boss; your first Arena team, no troops lost. Fewer rounds ranks higher on the weekly board. ${daily} entries a day.`,
+    modes: { normal: 'Normal', legend: 'Legend' },
+    roles: { hoPhap: 'Guardian', chuCong: 'Striker', triLieu: 'Healer' },
+    queue: (n: number, of: number) => `Queued: ${n}/${of} players`,
+    wins: (n: number) => `${n} clears`,
+    left: (n: number, of: number) => `${n}/${of} entries left today`,
+    join: 'Queue for the Realm',
+    leave: 'Leave the queue (refund)',
+    board: 'Fastest clears this week',
+    none: 'No team has cleared it this week.',
+    rounds: (n: number) => `${n} rounds`,
+  },
+  vanchu: {
+    title: 'Cloudship Clash',
+    hint: (n: number, daily: number) =>
+      `${n} vs ${n} above the clouds with every buff off — everyone sails an identical cloudship. Pick a ship (they counter each other like disciple types) and a stance: attack the enemy supply ship or guard your own. Sunk ships sit out a round and return whole; the first supply ship to sink loses, otherwise the healthier one after 6 rounds wins. ${daily} entries a day.`,
+    queue: (n: number, of: number) => `Queued: ${n}/${of} players`,
+    wins: (n: number) => `${n} wins`,
+    left: (n: number, of: number) => `${n}/${of} entries left today`,
+    ships: { xung: 'Ram Cloudship', giap: 'Ironclad', lau: 'Thunder Galley' },
+    shipNote: {
+      xung: 'Sword · fast, rams hard — beats the Galley',
+      giap: 'Body · thick hull — beats the Ram',
+      lau: 'Spell · long range, thin hull — beats the Ironclad',
+    },
+    stances: { atk: 'Attack their supply ship', def: 'Guard our supply ship' },
+    join: 'Queue for the Clash',
+    leave: 'Leave the queue (refund)',
+  },
+  silver: {
+    title: 'Silver Ark',
+    hint: (n: number, daily: number) =>
+      `The Ark battle for solo players, no alliance needed: pick a heading and queue; at ${n} vs ${n} (or after 15 minutes, filled with other rogues) two teams, Azure and Crimson, are balanced by arena points and fight all 8 rounds on the 11-node battlefield with your first Arena team (no troop loss). Take and hold nodes for points, charge the Orb at the outposts. ${daily} entries a day.`,
+    queue: (n: number, of: number) => `Waiting: ${n}/${of} rogues`,
+    wins: (n: number) => `Won ${n} battles`,
+    left: (n: number, of: number) => `${n}/${of} entries left today`,
+    tactics: {
+      center: 'Strike the Temple',
+      obelisk: 'Take the Obelisks',
+      shrine: 'Hold the Shrine',
+      outpost: 'Hold the Outposts',
+    },
+    join: 'Queue for the Ark',
+    leave: 'Leave the queue (refund)',
+    watch: 'Watch the last battle',
+  },
+  royale: {
+    tab: 'Ruins',
+    hint: (n: number, daily: number) =>
+      `War of the Ruins: join the realm-wide queue with your first Arena team (no troops lost). At ${n} sects — or after 10 minutes, filled with other sects — the brawl begins: each round pairs players at random, every fight grants a random boon (a rogue technique or hired rogues), and two losses get you swept away by the sandstorm. Your place gives ruin points; rewards arrive by mail. ${daily} tries a day.`,
+    queue: (n: number, of: number) => `Queued: ${n}/${of} sects`,
+    pts: (n: number) => `Ruin points: ${n}`,
+    left: (n: number, of: number) => `${n}/${of} tries left today`,
+    join: 'Join the queue',
+    leave: 'Leave the queue (refund)',
+    locked: (hall: number) => `Opens at Main Hall ${hall}`,
+  },
+  treaty: {
+    title: 'Heaven Gate Treaty',
+    hint: (n: number) =>
+      `The alliance holding the Heaven Gate rules the realm: its Realm Lord may sign a treaty with up to ${n} alliances it has a pact with. If the signer still ascends at season end, everyone in the treaty alliances gets a share of the rewards.`,
+    sign: 'Sign treaty',
+    drop: 'End treaty',
+    with: (tag: string) => `Heaven Gate Treaty signed with ${tag}`,
+    by: (tag: string) => `${tag} (realm rulers) signed the Heaven Gate Treaty with your alliance`,
+  },
+  prime: {
+    title: 'Prime Form',
+    hint: (lv: number, tokens: number) =>
+      `A fully mastered elder can be reborn in Prime form: needs Expertise (every technique maxed), 6 stars, level ${lv} and ${tokens} of their own tokens. The Prime elder gains +15 % technique power and a bound artifact — their technique applies to every disciple type.`,
+    need: ['Expertise', '6 stars', 'Level reached', 'Enough tokens'],
+    go: 'Rebirth',
+    done: 'Prime form · bound artifact',
+  },
+  divine: {
+    title: 'Season Artifact',
+    hint: 'Each world season, bind the artifact to one elder (no rebinding that season): their technique hits every troop type and technique power +10%.',
+    held: 'Holds this season’s artifact',
+    other: (name: string) => `This season’s artifact is with ${name}`,
+    bind: 'Bind the artifact to this elder',
+  },
+  aux: {
+    title: 'Borrowed Arts',
+    hint: 'During a world season, when this elder leads they borrow other elders’ unlocked passives at half strength. Slots open at Main Hall 14 / 19 / 24.',
+    slots: (n: number, of: number) => `${n}/${of} slots`,
+  },
+  holm: {
+    title: 'Life-and-Death Arena',
+    score: (a: number, b: number) => `Life-and-Death Arena today: Righteous ${a} – ${b} Demonic`,
+    won: (camp: 0 | 1) =>
+      `${camp ? 'Demonic' : 'Righteous'} path wins: the whole path gets +5% attack and production until 21:00 tomorrow`,
+    draw: 'A draw — no path gets the buff',
+    none: 'Not enough Arena champions on both paths for the Life-and-Death Arena',
+    duel: (a: string, b: string, aWon: boolean) => (aWon ? `${a} beat ${b}` : `${b} beat ${a}`),
+  },
+  assault: {
+    title: 'Demon King Siege',
+    hint: (max: number) =>
+      `During the event: open or join your alliance's room with your first Arena team (no troops lost), up to ${max} people. When it fills or after 15 minutes the whole room besieges the demon king — win for Treasure Vouchers and rewards and to unlock the next difficulty; lose and your try is refunded for the day.`,
+    lv: (lv: number, might: string) => `Difficulty ${lv} · demon king ${might} power`,
+    left: (t: string, n: number, of: number) => `Siege in ${t} · ${n}/${of} people`,
+    star: (n: number) => `${n}★`,
+    reward: (n: number) => `Win: +${n} Treasure Vouchers each`,
+    open: 'Open a siege room',
+    join: 'Join the siege',
+    done: 'Already sieged today',
+  },
   convoy: {
     title: 'Spirit Caravan Escort',
     hint: 'An officer spends alliance funds to send a caravan; for 20 minutes members sign up to guard it with their first Arena team (no troops lost). Then the whole escort fights three waves of raiders — the more cargo survives, the bigger every guard’s reward. One escort per member per day.',
@@ -3064,7 +3505,18 @@ export const en: Text = {
     none: "No rule this season yet — in the season's last three days the realm votes on next season's rule.",
     hint: "In the season's last three days everyone in the realm votes on next season's rule; the winner becomes a realm-wide buff all season.",
     open: "Voting on next season's rule — tap another rule to change your vote; it locks when the season ends.",
-    names: ['Bountiful Harvest', 'Warpath', 'Prosperity', 'Strife of the Eight'],
+    names: [
+      'Bountiful Harvest',
+      'Warpath',
+      'Prosperity',
+      'Strife of the Eight',
+      'March of the Ages',
+      'Desert Conquest',
+      'Storm of Stratagems',
+      'Shifting Gears',
+      'Keener Blades',
+      'Heroic Anthem',
+    ],
     ffa: 'Coalitions are void all season',
     votes: (n: number) => `${n} votes`,
   },
@@ -3435,6 +3887,10 @@ export const en: Text = {
         name: 'Seven Day Rites',
         desc: 'For your newly founded sect: claim a gift for each day you visit. On day seven, Elder Ru Yan comes to pay her respects.',
       },
+      nhapMon: {
+        name: 'Path of Wisdom',
+        desc: 'Your first five days, one branch a day earning Wisdom Points: founding (buildings, disciple tiers) → slaying (beast levels, secret realms) → insight (techniques, speedups) → gathering (resources, victories) → breakthrough (power). Reach milestones for rewards — the last is the grand prize: 5 Universal Tokens and 2 gold invitations.',
+      },
       tanThu: {
         name: 'Seven Days of Founding',
         desc: "Your sect's first eight days: a new branch of goals opens each day (Arrival → Recruitment → Gathering Qi → Opening Veins → Seclusion), every goal has a reward, and the final chests count how many goals you claimed.",
@@ -3669,7 +4125,7 @@ export const en: Text = {
       },
       vayCong: {
         name: 'Demon King Siege',
-        desc: 'Three days of siege: every time you help your alliance bring down a demon king on the world map you earn 10 Treasure Vouchers — trade them for rare caskets (Legendary Universal Tokens, Gold Invitations, speedups…) in the event shop.',
+        desc: 'Three days of siege: every time you help your alliance bring down a demon king on the world map you earn 10 Treasure Vouchers; the 12-player siege under Alliance → War pays more by difficulty. Trade them for rare caskets (Legendary Universal Tokens, Gold Invitations, speedups…) in the event shop.',
       },
       thonTrang: {
         name: 'Villages in Peril',
@@ -3815,6 +4271,10 @@ export const en: Text = {
       hongBao: {
         name: 'Red Envelope',
         desc: 'Send it in World or Alliance chat: the first 5 players to open it each get a random share of spirit stone — it costs the sender nothing else.',
+      },
+      khiTinh: {
+        name: 'Artifact Spirit Crystal',
+        desc: 'Awakens an artifact at the Artifact Forge (tiers I–V, always succeeds) — each tier adds 10 % to the artifact bonus, tier V unlocks a slot effect. Buy it in the Arena shop and the Heaven Gate Emporium.',
       },
       hoanNguyen: {
         name: 'Restoration Talisman',

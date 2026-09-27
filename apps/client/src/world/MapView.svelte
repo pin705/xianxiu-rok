@@ -22,6 +22,7 @@
   import { MAP, MAP_H, MapScene } from './map'
   import View from './View.svelte'
   import { useGame } from '../game'
+  import { social } from '../social.svelte'
 
   let {
     onpick,
@@ -156,6 +157,8 @@
       onclick={onrivals}
     />{/if}
   <Tile art="ev-report" icon="scroll" label={L.report.title} n={unread} size={54} look="ink" onclick={onreports} />
+  <!-- Thí Luyện: gom các chế độ PvE -->
+  <Tile art="ev-arena" icon="star" label={L.trials.tile} size={54} look="ink" onclick={() => (social.trials = true)} />
 </Dock>
 
 {#if game.marches.length}

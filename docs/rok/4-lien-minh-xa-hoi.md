@@ -283,7 +283,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** trang Kho minh hiện sản lượng mỗi giờ theo loại [1 nguồn].
 - **Giữ chân:** thấy "của chung" lớn dần.
 - **Tu tiên hoá:** "Minh khố" nhận linh khí từ linh mạch trong linh vực.
-- **Game mình:** 🟡 Minh khố (`world/storehouse.ts`): mỗi ô lãnh thổ sinh 0,1 Minh khố mỗi giờ (chốt giờ tròn), cộng với phần từ cung phụng, dùng cắm trận kỳ, dựng Tổng đà / Phân đà / Minh khoáng, nhập hàng Cống Hiến Các. Chưa có điểm tài nguyên từng loại sinh tài nguyên vào kho minh (Minh khố là một quỹ chung, không có trần nên cũng không có nâng kho).
+- **Game mình:** 🟡 Minh khố (`world/storehouse.ts`): mỗi ô lãnh thổ sinh 0,1 Minh khố mỗi giờ (chốt giờ tròn), cộng với phần từ cung phụng, dùng cắm trận kỳ, dựng Tổng đà / Phân đà / Minh khoáng, nhập hàng Cống Hiến Các; người trong minh khai mỏ trong lãnh thổ minh thì mỗi 10.000 tài nguyên thêm 1 Minh khố (`TERR_GATHER_FUND`, như phần góp kho minh khi thu mỏ trong lãnh thổ của RoK). Khác RoK: Minh khố là một quỹ chung (không chia từng loại, không trần nên không nâng kho).
 - **Ưu tiên:** P1 · **Công sức:** M.
 
 #### C5. Buff trong lãnh thổ và dịch chuyển lãnh thổ — **Territory Buffs / Territorial Teleport**
@@ -747,7 +747,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 - **UI/UX:** bảng đăng ký có khung giờ và danh sách; bản đồ trận riêng; màn xem trực tiếp có cược.
 - **Giữ chân:** lịch cố định; không mất quân nên ai cũng dám đánh; xem và cược tạo cộng đồng khán giả.
 - **Tu tiên hoá:** "Thần Chu tranh đoạt" (hộ tống linh chu); "Cửu Thiên Luận Đạo Hội" (giải có khán giả, cược bằng "linh tệ" không quy ra tiền, PLAN mục 9).
-- **Game mình:** ✅ Luận Kiếm Minh Chiến (`world/war.ts`: minh ghi danh, 20h thứ Bảy ghép cặp theo điểm minh chiến, người thứ k đấu người thứ k bằng đội hình Luận Kiếm Đài) + Tranh Đoạt Linh Châu (`world/ark.ts`, `ArkCard.svelte`: 20h Chủ nhật, chiến trường 11 ô như bản đồ Ark — Tụ Linh Nhãn nối nhau, Linh Tháp +10 % công, Linh Châu nạp ở Tiểu Trận — 8 hiệp × 10 phút giải tất định, không mất quân) + Cửu Thiên Luận Đạo Hội (bảng giải cả mùa, playoff bán kết / chung kết / tranh hạng ba cho 4 minh đầu — `leagueBoard` / `cupSetup` / `leagueRank`, quà theo hạng). Cược: Luận Kiếm Đặt Cược (`world/bets.ts`, doc 5 F12). Còn thiếu: khán giả xem trực tiếp.
+- **Game mình:** ✅ Luận Kiếm Minh Chiến (`world/war.ts`: minh ghi danh, 20h thứ Bảy ghép cặp theo điểm minh chiến, người thứ k đấu người thứ k bằng đội hình Luận Kiếm Đài) + Tranh Đoạt Linh Châu (`world/ark.ts`, `ArkCard.svelte`: 20h Chủ nhật, chiến trường 11 ô như bản đồ Ark — Tụ Linh Nhãn nối nhau, Linh Tháp +10 % công, Linh Châu nạp ở Tiểu Trận — 8 hiệp × 10 phút giải tất định, không mất quân) + Cửu Thiên Luận Đạo Hội (bảng giải cả mùa, playoff bán kết / chung kết / tranh hạng ba cho 4 minh đầu — `leagueBoard` / `cupSetup` / `leagueRank`, quà theo hạng). Cược: Luận Kiếm Đặt Cược (`world/bets.ts`, doc 5 F12). Khán giả xem trực tiếp (`ArkWatch.svelte`); bản Silver cho người lẻ: Tán Tu Tranh Châu (`world/silver.ts`, doc 6 C2).
 - **Ưu tiên:** P1 · **Công sức:** L.
 
 #### J3. Karuak Ceremony / Trial of Kau Karuak — **Karuak Ceremony**
@@ -875,7 +875,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | C1 | Pháo đài trung tâm/phụ | ✅ Tổng đà + Phân đà (1 + 1 mỗi 10 người, tối đa 3, `world/flags.ts`), góp quân xây, độ bền; chưa bị kết trận / cháy | P1 | L |
 | C2 | Cờ, tiền đồn, khiên cờ, tháp tên | ✅ trận kỳ (cắm, nới lãnh thổ, bị phá, tự hồi) + đóng quân giữ cờ (25/09); chưa có Outpost, khiên cờ, tháp tên | P1 | L |
 | C3 | Trung tâm tài nguyên minh (thu an toàn) | ✅ Minh khoáng (dựng trong lãnh thổ, kho 3 triệu, 30.000/giờ mỗi đội, không bị cướp) | P2 | M |
-| C4 | Điểm tài nguyên minh và kho minh | 🟡 kho minh: lãnh thổ sinh Minh khố theo giờ (25/09); chưa có điểm tài nguyên từng loại sinh vào kho | P1 | M |
+| C4 | Điểm tài nguyên minh và kho minh | ✅ kho minh: lãnh thổ sinh Minh khố theo giờ + khai mỏ trong lãnh thổ góp vào Minh khố + Minh khoáng; quỹ chung một loại (chủ đích) | P1 | M |
 | C5 | Buff lãnh thổ và dịch chuyển vào lãnh thổ | ✅ lãnh thổ tiên minh (khai mỏ +25 %), dời tông môn vào lãnh thổ, dời núi tân thủ | P1 | M |
 | C6 | Thánh địa, đèo, thưởng chiếm lần đầu | ✅ linh mạch (tăng ích theo điểm)/trận nhãn/Thiên Môn/di tích, quà chiếm lần đầu; thiếu chuyển quyền giữ điểm | P1 | S–M |
 | D1 | Kết trận và tab Chiến tranh | ✅ điểm, yêu vương và tông môn (kết trận công sơn, 25/09); danh sách kết trận + nút góp đội ở trang Tiên minh | P1 | M |
@@ -913,7 +913,7 @@ Ngay sau năm khoảng cách trên: quản trị minh (duyệt đơn, 5 bậc, c
 | I11 | Kill points, honor, lực chiến | ✅ chiến công (bảng xếp hạng), Công Huân, lực chiến, Elo | P1 | S |
 | I12 | KvK, xếp hạng vương quốc | ⛔ thay bằng mùa 49 ngày | — | — |
 | J1 | Động viên liên minh (Mobilization) | ✅ Minh vụ đường | **P0** | M |
-| J2 | Ark of Osiris, Osiris League (khán giả, cược) | 🟡 Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu giản lược + bảng giải mùa + playoff + cược (Luận Kiếm Đặt Cược); chưa có khán giả xem trực tiếp | P1 | L |
+| J2 | Ark of Osiris, Osiris League (khán giả, cược) | ✅ Luận Kiếm Minh Chiến + Tranh Đoạt Linh Châu giản lược + bảng giải mùa + playoff + cược (Luận Kiếm Đặt Cược) + khán giả: cả giới xem mọi trận đang diễn (sơ đồ, điểm, nhật ký hiệp — `arkWatch`, `ArkWatch.svelte`) | P1 | L |
 | J3 | Karuak Ceremony / Trial | ✅ Thí Luyện Yêu Hoàng; thiếu nhờ minh giúp | P2 | S |
 | J4 | Ceroli Crisis/Assault (tổ đội PvE) | ✅ Man Hoang Cổ Tộc (tổ 4 người trong minh, 3 vai, 5 độ khó); chưa có bản 12 người | P2 | L |
 | J5 | Shadow Legion (ma triều công sơn) | ✅ Ma Triều Công Sơn (5 đợt tối thứ Tư) | P1 | M |

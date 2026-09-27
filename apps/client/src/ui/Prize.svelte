@@ -25,7 +25,16 @@
   } = $props()
 </script>
 
-<button class="prize" class:gold class:can class:faded={dim} disabled={!can} aria-label={label} {onclick}>
+<button
+  class="prize"
+  class:gold
+  class:can
+  class:pulse={can}
+  class:faded={dim}
+  disabled={!can}
+  aria-label={label}
+  {onclick}
+>
   {@render children()}
   {#if stamp}<span class="got">{stamp}</span>
   {:else if lock}<span class="mark"><Icon name="lock" size={14} /></span>{/if}
@@ -54,7 +63,6 @@
     cursor: pointer;
     border-color: var(--cinnabar);
     box-shadow: 0 0 0 2px rgb(var(--gold-glow) / 0.6);
-    animation: glow 1.6s ease-in-out infinite;
   }
   .got {
     position: absolute;
@@ -65,11 +73,6 @@
     position: absolute;
     top: 3px;
     right: 3px;
-  }
-  @keyframes glow {
-    50% {
-      box-shadow: 0 0 0 4px rgb(var(--gold-glow) / 0.3);
-    }
   }
   @media (prefers-reduced-motion: reduce) {
     .can {

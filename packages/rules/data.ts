@@ -194,6 +194,13 @@ export type Bonus =
   | 'cap' // trận dung (sức chứa đệ tử mỗi đội)
   | 'gather' // tốc khai mỏ trên bản đồ giới
   | 'study' // bớt thời gian lĩnh ngộ công pháp (Tàng Kinh Các — như tốc nghiên cứu của Học viện RoK)
+  | 'supply' // cờ luật mùa Cổ Tháp Hành Quân (> 0: linh vực cung ứng — đội đi xa tông môn yếu dần, core/battle.ts marchSide)
+  | 'desert' // cờ luật mùa Tử Hải Hoang Mạc (> 0: vòng giữa DESERT_RING thành vùng chết — không khai mỏ, không dời núi vào)
+  | 'folio' // cờ luật mùa Binh Thư Phong Vân (> 0: mỗi tông môn cài trang sách lược — sect/folio.ts)
+  | 'puppet' // cờ luật mùa Cơ Quan Khôi Lỗi (> 0: Luyện Khí Phòng chế khôi lỗi phá trận — sect/puppet.ts)
+  | 'elite' // cờ luật mùa Tinh Binh Luận Kiếm (> 0: luyện tinh binh bậc 5 theo hệ — sect/elite.ts)
+  | 'four' // cờ luật mùa Tứ Tượng Tranh Hùng (> 0: bốn phe tranh điểm mùa — world/points.ts fourOf)
+  | 'counter' // phản kết trận (trang Vây Ngụy Cứu Triệu): công thêm khi đánh kẻ vừa đánh mình hay người cùng đoàn (world/raid.ts)
 
 // ---------- Ngũ hành ----------
 
@@ -509,6 +516,166 @@ export const GEAR_SETS: Record<UnitType, { two: GearBonus; three: GearBonus }> =
   phap: { two: { key: 'atk.phap', v: 0.03 }, three: { key: 'skill', v: 0.1 } },
   the: { two: { key: 'atk.the', v: 0.03 }, three: { key: 'skill', v: 0.1 } },
 }
+// Khai Linh (Iconic I–V của RoK — thức tỉnh trang bị): pháp bảo luyện tới cấp 2 × (tầng kế) thì khai linh được một tầng bằng Khí Linh Tinh
+// (AWAKEN_COST[tầng hiện tại]), chắc chắn thành công; mỗi tầng tăng ích của pháp bảo thêm AWAKEN_STEP; tột tầng (AWAKEN_MAX) mở hiệu ứng
+// riêng theo ô (AWAKEN_V: binh khí sức công pháp · hộ thân máu · linh bảo thủ) cho người đeo. Khí Linh Tinh: cửa hàng Luận Kiếm Đài,
+// Thiên Môn Thương Điếm
+export const AWAKEN_MAX = 5
+export const AWAKEN_STEP = 0.1
+export const AWAKEN_COST = [1, 2, 3, 4, 6]
+export const AWAKEN_V: readonly GearBonus[] = [
+  { key: 'skill', v: 0.05 },
+  { key: 'hp', v: 0.03 },
+  { key: 'def', v: 0.03 },
+]
+
+// ---------- Trận pháp (Formations · Armaments · Inscriptions · State Forum của RoK) ----------
+
+// Trận Pháp: từ Chủ điện FORMS[id].hall mở trận; tông môn bày một trận (s.form) — mọi đội xuất quân mang trận đang bày lúc đi (m.form),
+// thủ nhà theo trận đang bày. Mỗi trận có tăng ích gốc (FORMS[id].bonus) và 4 ô trận khí (ARM_SLOTS); trận khí thuộc một trận, chỉ đeo
+// vào trận đó và chỉ tính khi đội / nhà bày đúng trận. Trận khí giữ qua luân hồi; trận chỉ tính khi Chủ điện còn đủ tầng mở
+export const FORM_IDS = ['phongThi', 'phuongVien', 'nhanHanh', 'yenNguyet', 'hacDuc', 'truongXa', 'tamTai'] as const
+export type FormId = (typeof FORM_IDS)[number]
+export const FORMS: Record<FormId, { hall: number; bonus: Partial<Record<Bonus, number>> }> = {
+  phongThi: { hall: 10, bonus: { atk: 0.03, def: -0.02 } }, // Phong Thỉ (Wedge): mũi tên — công mạnh, sườn hở
+  phuongVien: { hall: 10, bonus: { def: 0.15, atk: -0.01 } }, // Phương Viên (Hollow Square): trận vuông — thủ chắc (thủ giảm sát thương chậm: DEF_K)
+  nhanHanh: { hall: 14, bonus: { 'atk.phap': 0.04 } }, // Nhạn Hành (Echelon): hàng nhạn so le — pháp tu thi triển thoải mái
+  yenNguyet: { hall: 14, bonus: { 'hp.the': 0.04 } }, // Yển Nguyệt (Arch): trăng khuyết — thể tu ôm trận
+  hacDuc: { hall: 18, bonus: { 'atk.kiem': 0.04 } }, // Hạc Dực (Pincer): cánh hạc — kiếm tu bọc sườn
+  truongXa: { hall: 18, bonus: { hp: 0.02, def: 0.01 } }, // Trường Xà (Line): rắn dài — bền bỉ
+  tamTai: { hall: 22, bonus: { skill: 0.08 } }, // Tam Tài (Delta): thiên địa nhân — công pháp mạnh
+}
+// Trận khí: phẩm 0 phàm · 1 linh · 2 huyền · 3 địa; chỉ số gốc theo ô và phẩm; số dòng trận văn = phẩm + 1
+export const ARM_SLOTS: readonly { key: Bonus; v: readonly number[] }[] = [
+  { key: 'atk', v: [0.005, 0.01, 0.015, 0.025] }, // trận kỳ
+  { key: 'def', v: [0.005, 0.01, 0.015, 0.025] }, // trận đồ
+  { key: 'hp', v: [0.005, 0.01, 0.015, 0.025] }, // trận bàn
+  { key: 'skill', v: [0.01, 0.02, 0.03, 0.05] }, // pháp chung
+]
+// Trận văn: mã 0–3 thường, 4–7 hiếm (cùng thứ tự công · thủ · máu · công pháp), INS_SPECIAL đặc biệt (INS_OF của chính trận của trận khí)
+export const INS: readonly { key: Bonus; v: number }[] = [
+  { key: 'atk', v: 0.005 },
+  { key: 'def', v: 0.005 },
+  { key: 'hp', v: 0.005 },
+  { key: 'skill', v: 0.01 },
+  { key: 'atk', v: 0.01 },
+  { key: 'def', v: 0.01 },
+  { key: 'hp', v: 0.01 },
+  { key: 'skill', v: 0.02 },
+]
+export const INS_SPECIAL = 8
+export const INS_OF: Record<FormId, { key: Bonus; v: number }> = {
+  phongThi: { key: 'atk', v: 0.02 }, // Phá Trận
+  phuongVien: { key: 'def', v: 0.02 }, // Bất Động
+  nhanHanh: { key: 'atk.phap', v: 0.03 }, // Liên Châu
+  yenNguyet: { key: 'hp.the', v: 0.03 }, // Nguyệt Thuẫn
+  hacDuc: { key: 'atk.kiem', v: 0.03 }, // Hạc Kích
+  truongXa: { key: 'hp', v: 0.02 }, // Xà Bàn
+  tamTai: { key: 'skill', v: 0.04 }, // Tam Tài Quy Nhất
+}
+// tỉ lệ một dòng trận văn ra [hiếm, đặc biệt] theo phẩm trận khí (mỗi trận khí tối đa một dòng đặc biệt)
+export const INS_ODDS: readonly (readonly [number, number])[] = [
+  [0.15, 0],
+  [0.3, 0.05],
+  [0.45, 0.12],
+  [0.5, 0.25],
+]
+// Vân Du Đường (State Forum của RoK): từ Chủ điện VANDU_HALL, mỗi lần vân du tốn VANDU_AP hành lực, mỗi ngày tối đa VANDU_DAILY lần;
+// VANDU_ARM phần ra trận khí (phẩm theo ARM_ODDS, trận ngẫu nhiên trong các trận đã mở), còn lại ra Hiền Sĩ Lệnh (VANDU_COIN: từ – tới).
+// Trận khí thừa luyện hoá ra lệnh (ARM_MELT theo phẩm); đổi rương trận khí phẩm chắc chắn (ARM_SHOP) bằng lệnh. Túi tối đa ARM_BAG món
+export const VANDU_HALL = 10
+export const VANDU_AP = 10
+export const VANDU_DAILY = 20
+export const VANDU_ARM = 0.4
+export const VANDU_COIN = [5, 15] as const
+export const ARM_ODDS = [0.6, 0.3, 0.09, 0.01]
+export const ARM_MELT = [2, 6, 20, 80]
+export const ARM_SHOP: readonly { q: number; price: number }[] = [
+  { q: 2, price: 250 },
+  { q: 3, price: 1000 },
+]
+export const ARM_BAG = 60
+// Trận Đồ Diễn Luyện (A Wall of Arrows của RoK): 6 màn sa bàn (DRILLF) — đánh bằng đội mượn DRILLF_STR (không mất gì), chọn trận nào cũng
+// được (cả trận chưa mở), trên sa bàn trận phát huy DRILLF_K lần. Ba mục tiêu mỗi màn (bit): thắng · thắng còn ≥ DRILLF_KEEP quân · thắng
+// bằng trận đề bài (form); mỗi mục tiêu đạt lần đầu +DRILLF_COIN Hiền Sĩ Lệnh. def: mình giữ trận (trụ hết lượt là thắng)
+export const DRILLF_K = 5
+export const DRILLF_KEEP = 0.35
+export const DRILLF_COIN = 20
+export const DRILLF_STR = 10_000
+export const DRILLF: readonly {
+  form: FormId
+  me: [UnitType, number][]
+  foe: [UnitType, number][]
+  str: number
+  def?: true
+  skill?: Skill
+}[] = [
+  {
+    form: 'phongThi',
+    me: [
+      ['kiem', 0.5],
+      ['phap', 0.5],
+    ],
+    foe: [
+      ['kiem', 0.5],
+      ['phap', 0.5],
+    ],
+    str: 9100,
+  },
+  {
+    form: 'phuongVien',
+    me: [
+      ['kiem', 0.5],
+      ['phap', 0.5],
+    ],
+    foe: [
+      ['kiem', 0.5],
+      ['phap', 0.5],
+    ],
+    str: 9100,
+    def: true,
+  },
+  {
+    form: 'nhanHanh',
+    me: [['phap', 1]],
+    foe: [
+      ['the', 0.5],
+      ['phap', 0.5],
+    ],
+    str: 9550,
+  },
+  {
+    form: 'yenNguyet',
+    me: [['the', 1]],
+    foe: [
+      ['kiem', 0.5],
+      ['the', 0.5],
+    ],
+    str: 10_650,
+  },
+  {
+    form: 'hacDuc',
+    me: [['kiem', 1]],
+    foe: [
+      ['phap', 0.5],
+      ['kiem', 0.5],
+    ],
+    str: 11_000,
+  },
+  {
+    form: 'tamTai',
+    me: [
+      ['the', 0.5],
+      ['kiem', 0.5],
+    ],
+    foe: [
+      ['the', 0.5],
+      ['kiem', 0.5],
+    ],
+    str: 10_750,
+    skill: { kind: 'burst', v: 1.5 },
+  },
+]
 
 // ---------- Bản đồ ----------
 
@@ -546,6 +713,7 @@ export type BagDef =
   | { use: 'swap' } // Truyền Công Phù: không dùng thẳng — trả phí Truyền công ở bảng trưởng lão (trong Truyền Công Đại Hội)
   | { use: 'packet' } // Hồng Bao: không dùng thẳng — gửi ở kênh chat Giới / Tiên minh (world/packet.ts)
   | { use: 'reset' } // Hoàn Nguyên Phù: không dùng thẳng — đặt lại công pháp đã ngộ của một trưởng lão (trang trưởng lão)
+  | { use: 'awaken' } // Khí Linh Tinh: không dùng thẳng — khai linh pháp bảo ở Luyện Khí Phòng
   | { use: 'token'; rarity: 2 | 3 | 4 } // Vạn Năng Tín Vật: không dùng thẳng — đổi thành tín vật của trưởng lão cùng phẩm đã thu nhận (trang trưởng lão)
 export const SPEED_MIN = [5, 15, 60, 180, 480, 1440] as const // mệnh giá phù tăng tốc (phút)
 const PACK_N = [1000, 5000, 20_000, 100_000] as const // mệnh giá nang tài nguyên
@@ -611,6 +779,7 @@ const bag = {
   vanNang2: { use: 'token', rarity: 2 }, // Vạn Năng Tín Vật (tượng vạn năng của RoK): Tinh / Huyền / Tiên phẩm
   vanNang3: { use: 'token', rarity: 3 },
   vanNang4: { use: 'token', rarity: 4 },
+  khiTinh: { use: 'awaken' }, // Khí Linh Tinh (Iconic Crystal của RoK): khai linh pháp bảo
 } satisfies Record<string, BagDef>
 export type BagId = keyof typeof bag
 export const BAG: Record<BagId, BagDef> = bag
@@ -652,6 +821,7 @@ export const BAG_FAMILIES = [
   'hongBao',
   'vanNang',
   'hoanNguyen',
+  'khiTinh',
 ] as const
 export type BagFamily = (typeof BAG_FAMILIES)[number]
 export type ItemId = PillId | BagId
@@ -1261,6 +1431,14 @@ export const ARK_SHRINE = 0.1
 export const ARK_TAKE = [0, 60, 80, 60, 100, 200, 100, 60, 80, 60, 0]
 export const ARK_HOLD = [0, 10, 15, 10, 20, 40, 20, 10, 15, 10, 0]
 export const ARK_CHARGE = 400
+// Linh Tháp còn là Hồi Tháp (Shrine of Life): bên giữ cả hai Linh Tháp thì đội thua không phải nghỉ — hiệp sau ra trận ngay từ Linh Đài.
+// Công huân cá nhân (điểm cá nhân của Ark): chiếm ô lần đầu ARK_SC.take (chiếm lại ARK_SC.retake), mỗi hiệp đứng trên ô phe mình giữ
+// ARK_SC.hold, thắng trận ở ô ARK_SC.win (thua vẫn được ARK_SC.fight), nạp Linh Châu ARK_SC.charge
+export const ARK_SC = { take: 20, retake: 5, hold: 2, win: 10, fight: 3, charge: 40 }
+// Chiến pháp (battlefield skills của RoK — người điều phối dùng): trưởng lão / minh chủ của bên đang đánh mỗi trận dùng mỗi chiến pháp một
+// lần, hiệu lực cả bên ở hiệp kế: Cổ Vũ công +coVu, Kiên Thủ thủ +kienThu, Thần Tốc mọi đội đi thanToc ô
+export const ARK_SKILLS = { coVu: 0.15, kienThu: 0.2, thanToc: 2 } as const
+export type ArkSkill = keyof typeof ARK_SKILLS
 export const ARK_WIN: Reward = { items: { thoiQuang180: 1, kimDuyen: 1, kinhThu2k: 2 } }
 export const ARK_LOSE: Reward = { items: { thoiQuang60: 2, nganDuyen: 1 } }
 // Cửu Thiên Luận Đạo Hội (Osiris League giản lược): cả mùa mỗi trận Linh Châu cộng điểm giải (thắng LEAGUE_WIN, thua LEAGUE_LOSE);
@@ -1346,6 +1524,50 @@ export const SEASON_RUIN = 120
 export const SEASON_ALTAR = 180
 export const HONOR_RUIN = 2
 export const HONOR_ALTAR = 4
+// Linh Tinh Trận Pháp (Crystal Tech của RoK — cây công nghệ chỉ có trong mùa): trong mùa giới mỗi Công Huân kiếm được ra CTECH_PER linh
+// tinh (không trừ Công Huân); tiêu linh tinh nâng các trận của hai nhánh Căn Cơ (0) / Chiến Pháp (1) — CTECH, mỗi trận CTECH_MAX tầng,
+// tầng kế tốn cost × tầng kế; trận sau cần trận trước cùng nhánh đủ CTECH_NEED tầng. Hết mùa trận pháp tan cùng Công Huân
+export const CTECH_PER = 2
+// Thí Luyện Yêu Hoàng trong mùa giới (Trial of Kau Karuak của RoK — thưởng pha lê): mỗi cửa thắng thêm TRIAL_CRYSTAL × (độ khó + 1) linh tinh
+export const TRIAL_CRYSTAL = 3
+export const CTECH_MAX = 5
+export const CTECH_NEED = 2
+export const CTECH: readonly { branch: 0 | 1; key: Bonus; v: number; cost: number }[] = [
+  { branch: 0, key: 'gather', v: 0.03, cost: 40 }, // Tụ Linh Trận
+  { branch: 0, key: 'prod', v: 0.02, cost: 60 }, // Dẫn Linh Trận
+  { branch: 0, key: 'build', v: 0.02, cost: 80 }, // Bàn Thạch Trận
+  { branch: 0, key: 'heal', v: 0.03, cost: 100 }, // Hồi Xuân Trận
+  { branch: 0, key: 'march', v: 0.03, cost: 120 }, // Súc Địa Trận
+  { branch: 1, key: 'atk.kiem', v: 0.02, cost: 60 }, // Kiếm Khí Trận
+  { branch: 1, key: 'atk.phap', v: 0.02, cost: 60 }, // Lôi Hoả Trận
+  { branch: 1, key: 'atk.the', v: 0.02, cost: 60 }, // Kim Cương Trận
+  { branch: 1, key: 'def', v: 0.015, cost: 100 }, // Huyền Vũ Trận
+  { branch: 1, key: 'hp', v: 0.015, cost: 120 }, // Trường Sinh Trận
+]
+// Ẩn Sĩ Động Phủ (Bastions của RoK): trong mùa giới, từ Chủ điện HERMIT_HALL, năm ẩn sĩ (HERMITS) nhờ việc vặt — mỗi lúc mỗi ẩn sĩ một
+// việc (HERMIT_TASKS xoay vòng theo ngày + số việc đã xong: săn yêu thú, khai mỏ, tuyển, chữa thương, luyện đan, tăng tốc — tính phần tăng
+// từ lúc nhận); xong thì nộp được, hảo cảm +1, cả ngày tối đa HERMIT_DAILY lần nộp (mọi ẩn sĩ). Hảo cảm đủ HERMIT_FAVOR[k] thì lên cấp
+// k + 2; tột cấp (HERMIT_FAVOR.length + 1) ẩn sĩ truyền tâm pháp (HERMITS[id]) cho cả tông môn tới hết mùa
+export const HERMIT_HALL = 12
+export const HERMIT_DAILY = 15
+export const HERMIT_FAVOR = [2, 5, 9, 14, 20]
+export const HERMITS = {
+  thanhHu: { 'atk.kiem': 0.03 }, // Thanh Hư Tử — kiếm tiên ẩn cư
+  lacHa: { 'atk.phap': 0.03 }, // Lạc Hà Tiên Tử — pháp tu ở động mây ráng
+  thietSon: { 'hp.the': 0.03 }, // Thiết Sơn Lão Tổ — thể tu luyện thân trong núi sắt
+  vanDu: { def: 0.02 }, // Vân Du Tăng — hoà thượng đi mây
+  duocVuong: { heal: 0.05, hospital: 0.05 }, // Dược Vương — lão y tiên
+} satisfies Record<string, Partial<Record<Bonus, number>>>
+export type HermitId = keyof typeof HERMITS
+export const HERMIT_IDS = Object.keys(HERMITS) as HermitId[]
+export const HERMIT_TASKS: readonly { m: Metric; n: number }[] = [
+  { m: 'hunt', n: 2 },
+  { m: 'gather', n: 20_000 },
+  { m: 'train', n: 100 },
+  { m: 'heal', n: 40 },
+  { m: 'brew', n: 2 },
+  { m: 'speed', n: 60 },
+]
 // Phi Thăng Tệ (Conquest Coins của RoK): mỗi COIN_PER Công Huân kiếm được (cả đời, không mất khi hết mùa) thành một đồng — tiêu ở
 // Thiên Môn Thương Điếm, chưa tiêu thì mang sang mùa sau
 export const COIN_PER = 20
@@ -1357,10 +1579,170 @@ export const RULES: Partial<Record<Bonus, number>>[] = [
   { atk: 0.05, loot: 0.1 },
   { build: 0.1, train: 0.1 },
   { atk: 0.05, march: 0.1 },
+  { atk: 0.03, supply: 1 },
+  { gather: 0.15, desert: 1 },
+  { def: 0.03, folio: 1 },
+  { build: 0.05, puppet: 1 },
+  { train: 0.1, elite: 1 },
+  { prod: 0.05, four: 1 },
 ]
 // Bát Phương Hỗn Chiến (Strife of the Eight của RoK): luật mùa thứ tư — ngoài tăng ích, Minh Ước mất hiệu lực cả mùa (không bất xâm
 // phạm, không chung kết trận, không lập minh ước mới): minh nào cũng chỉ còn chính mình
 export const RULE_FFA = 3
+// Cổ Tháp Hành Quân (March of the Ages của RoK): luật mùa thứ năm — linh vực cung ứng: đội trên bản đồ giới có đường đi dài hơn
+// SUPPLY_FREE ô thì mỗi ô vượt bớt SUPPLY_FALL công, không dưới SUPPLY_MIN (đánh xa tông môn phải dời núi, không đánh bừa khắp giới)
+export const RULE_SUPPLY = 4
+// Sinh Tử Đài (Holmgang của King of All Britain / Nhân Yêu Tranh Bá): mỗi ngày HOLM_HOUR giờ VN, HOLM_PICKS cao thủ Luận Kiếm Đài
+// mỗi phái Chính / Tà (điểm đài cao nhất) đấu tay đôi xa luân từng cặp bằng đội hình Luận Kiếm Đài (không mất quân); phái thắng nhiều
+// cặp hơn được HOLM_BUFF cả phái tới trận hôm sau
+// Thần Binh Xuất Thế (Warriors Unbound của RoK — thần binh mùa): trong mùa giới, từ Chủ điện DIVINE_HALL, mỗi mùa gắn thần binh cho một
+// trưởng lão (không đổi lại trong mùa): công pháp của người đó áp cho mọi hệ đệ tử (bỏ giới hạn hệ) và sức công pháp +DIVINE_SKILL
+export const DIVINE_HALL = 16
+export const DIVINE_SKILL = 0.1
+// Mượn Pháp (Siege of Orléans của RoK — kỹ năng phụ): trong mùa giới, trưởng lão dẫn đội mượn tâm pháp đã mở của trưởng lão khác —
+// mỗi mốc Chủ điện AUX_HALLS mở một ô; tâm pháp mượn có hiệu lực AUX_SHARE, chỉ khi người mượn dẫn đội
+export const AUX_HALLS = [14, 19, 24]
+export const AUX_SHARE = 0.5
+// Tử Hải Hoang Mạc (Desert Conquest của RoK): luật mùa thứ sáu — vòng giữa của giới (DESERT_RING) thành vùng chết: mỏ ở đó không khai
+// được, không dời núi vào (Càn Khôn Phù); bù lại khai mỏ nơi khác nhanh hơn
+export const RULE_DESERT = 5
+// Binh Thư Phong Vân (Storm of Stratagems của RoK): luật mùa thứ bảy — mỗi tông môn có quyển Binh Thư 3 ô (Công · Thủ · Mưu), mỗi ô
+// cài một trang sách lược (FOLIO[ô][trang]); trang thứ k mở khi Công Huân mùa ≥ FOLIO_HONOR[k]; cài vào ô trống lúc nào cũng được,
+// thay trang đang cài thì chờ FOLIO_COOL từ lần đổi ô đó. Trang Vây Ngụy Cứu Triệu là phản kết trận: công +v khi đánh tông môn vừa
+// đánh mình hay người cùng đoàn kết trận (trong REVENGE_TIME). Hết mùa Binh Thư trống lại
+export const RULE_FOLIO = 6
+// Cơ Quan Khôi Lỗi (Shifting Gears của RoK — quân công thành): luật mùa thứ tám — Luyện Khí Phòng chế khôi lỗi phá trận (PUPPET_COST mỗi
+// con, giữ tối đa PUPPET_CAP × tầng Luyện Khí Phòng). Đội đi cướp tông môn khác (cả góp kết trận) tự mang theo tối đa PUPPET_MAX con, dùng
+// hết trong trận: mỗi con bớt PUPPET_BREAK sức Hộ Sơn Đại Trận bên thủ (thủ, máu, kiếm trận chém trước — cả đoàn không quá
+// PUPPET_BREAK_MAX), và thắng thì phá trận lực mạnh hơn (× 1 + PUPPET_SIEGE mỗi con). Hết mùa khôi lỗi còn lại tan
+export const RULE_PUPPET = 7
+// Tinh Binh Luận Kiếm (Keener Blades của RoK — quân tinh nhuệ): luật mùa thứ chín — Diễn Võ Trường đã mở bậc 5 thì mỗi hệ luyện tinh
+// binh tới ELITE_MAX cấp (cấp kế tốn ELITE_COST × cấp mỗi loại tài nguyên): đệ tử bậc 5 của hệ đó thêm công / máu ELITE[hệ] mỗi cấp
+// (Kiếm nghiêng công, Thể nghiêng máu, Pháp toàn công). Hết mùa tinh binh về đệ tử thường
+export const RULE_ELITE = 8
+// Tứ Tượng Tranh Hùng (Heroic Anthem của RoK — bốn phe mỗi phe một góc): luật mùa thứ mười — mọi bên (tiên minh / người đi lẻ) chia bốn
+// phe Thanh Long · Bạch Hổ · Chu Tước · Huyền Vũ (theo mã bên, nên Thanh Long + Chu Tước thuộc Chính phái, Bạch Hổ + Huyền Vũ thuộc Tà
+// phái); điểm mùa cộng cho phe, hết mùa phe nhiều điểm nhất — mọi người trong phe — nhận FOUR_WIN
+export const RULE_FOUR = 9
+// Hiệp Ước Thiên Môn (Camp Treaty của RoK): Giới Chủ (minh chủ của minh giữ Thiên Môn) ký hiệp ước với tối đa TREATY_MAX tiên minh đang
+// có minh ước với minh mình, đổi được tới hết mùa. Hết mùa nếu minh ký vẫn là minh phi thăng (đứng đầu) thì mọi người trong các minh hiệp
+// ước nhận TREATY_GIFT — chia phần thưởng phi thăng cho đồng minh đã góp sức
+export const TREATY_MAX = 2
+export const TREATY_GIFT: Reward = { items: { thoiQuang480: 1, kimDuyen: 1, kinhThu8k: 1 } }
+export const FOUR_WIN: Reward = { items: { thoiQuang480: 1, kimDuyen: 1, huongHoa200: 1 } }
+export const ELITE_MAX = 5
+export const ELITE_COST = 200_000
+export const ELITE: Record<UnitType, { atk: number; hp: number }> = {
+  kiem: { atk: 0.04, hp: 0.01 },
+  phap: { atk: 0.05, hp: 0 },
+  the: { atk: 0.01, hp: 0.05 },
+}
+export const PUPPET_COST = b(300, 0, 600)
+export const PUPPET_CAP = 5
+export const PUPPET_MAX = 20
+export const PUPPET_BREAK = 0.025
+export const PUPPET_BREAK_MAX = 0.5
+export const PUPPET_SIEGE = 0.05
+export const FOLIO_COOL = 4 * 3_600_000
+export const FOLIO_HONOR = [0, 200, 600]
+export const FOLIO: readonly (readonly { key: Bonus; v: number }[])[] = [
+  [
+    { key: 'atk', v: 0.04 }, // Phá Phủ Trầm Chu
+    { key: 'atk.kiem', v: 0.08 }, // Tiên Phát Chế Nhân
+    { key: 'atk.phap', v: 0.08 }, // Hoả Công
+  ],
+  [
+    { key: 'def', v: 0.04 }, // Kiên Bích Thanh Dã
+    { key: 'hp', v: 0.04 }, // Dĩ Dật Đãi Lao
+    { key: 'hp.the', v: 0.08 }, // Thiết Bích Đồng Tường
+  ],
+  [
+    { key: 'march', v: 0.1 }, // Binh Quý Thần Tốc
+    { key: 'loot', v: 0.15 }, // Thuận Thủ Khiên Dương
+    { key: 'counter', v: 0.1 }, // Vây Ngụy Cứu Triệu (phản kết trận)
+  ],
+]
+export const DESERT_RING = 1
+// Cổ Khư Loạn Chiến (War of the Ruins của RoK, bất đồng bộ): từ Chủ điện ROYALE_HALL vào hàng chờ cả giới (mỗi ngày ROYALE_DAILY
+// lượt); đủ ROYALE_N người (chờ quá ROYALE_WAIT thì bù tông môn NPC) server giải ngay: mỗi vòng ghép cặp ngẫu nhiên người còn lại, mỗi
+// trận mỗi bên một kỳ ngộ ngẫu nhiên (công pháp tán tu: công ×ROYALE_BOON · thuê tán tu: quân ×ROYALE_BOON), thua 2 lần bị loại
+// ("sa bão"); xếp hạng 1…ROYALE_N theo thứ tự bị loại, điểm ROYALE_PTS[hạng] cộng dồn, quà thư theo hạng
+export const ROYALE_HALL = 10
+export const ROYALE_N = 8
+export const ROYALE_WAIT = 10 * 60_000
+export const ROYALE_DAILY = 3
+export const ROYALE_BOON = 1.2
+export const ROYALE_PTS = [10, 7, 5, 4, 3, 2, 1, 1]
+export function royaleGift(place: number): Reward {
+  if (place === 1) return { items: { kimDuyen: 1, thoiQuang180: 2 } }
+  if (place <= 3) return { items: { nganDuyen: 1, thoiQuang60: 2 } }
+  return { items: { thoiQuang15: 2 } }
+}
+// Tiên Môn Đại Bỉ (Champions of Olympia của RoK, bản nhanh bất đồng bộ): từ Chủ điện DAIBI_HALL vào hàng chờ với một chiến thuật
+// (DAIBI_TACTICS: 3 đội đầu Luận Kiếm Đài đứng ở cờ nào — 0 cờ nhà, 1 cánh trái, 2 giữa, 3 cánh phải); đủ 2 × DAIBI_TEAM người (chờ quá
+// DAIBI_WAIT thì bù NPC) server chia hai đội cân theo điểm đài và giải 3 hiệp: mỗi cờ có cả hai bên thì gộp đánh, bên thắng giữ cờ (đội
+// đứng ở cờ mình giữ hồi đủ), đội thua nghỉ một hiệp; mỗi hiệp mỗi cờ giữ được (hiệp thứ k) × k điểm, cờ giữa × 2. Mỗi ngày DAIBI_DAILY lượt
+export const DAIBI_HALL = 12
+export const DAIBI_TEAM = 5
+export const DAIBI_WAIT = 10 * 60_000
+export const DAIBI_DAILY = 3
+export const DAIBI_ROUNDS = 3
+export const DAIBI_TACTICS = {
+  even: [1, 2, 3], // dàn đều ba cờ giữa
+  left: [1, 1, 2], // dồn cánh trái
+  mid: [2, 2, 1], // dồn giữa
+  right: [3, 3, 2], // dồn cánh phải
+  home: [0, 0, 2], // thủ cờ nhà
+} as const
+export type DaibiTactic = keyof typeof DAIBI_TACTICS
+export function daibiGift(won: boolean): Reward {
+  return won ? { items: { thoiQuang180: 2, nganDuyen: 1 } } : { items: { thoiQuang60: 1 } }
+}
+// Vân Chu Hội Chiến (Tempest Clash của RoK — biến thể luật của Tiên Môn Đại Bỉ): mọi buff tắt, từ Chủ điện VANCHU_HALL mỗi người chọn
+// một linh chu đồng chỉ số (VANCHU_SHIPS: hệ đệ tử khắc nhau như thường + nét thuyền) và một thế (công: đánh Vận Lương Chu địch · thủ:
+// giữ Vận Lương Chu mình). Đủ 2 × VANCHU_TEAM người (chờ quá VANCHU_WAIT thì bù NPC) server chia hai đội xen kẽ, giải tối đa VANCHU_ROUNDS
+// hiệp: ở mỗi Vận Lương Chu thuyền công của địch gộp đánh thuyền thủ (thủ +VANCHU_GUARD), thuyền chìm nghỉ một hiệp rồi về đủ; thuyền
+// công còn đứng mỗi chiếc phá VANCHU_HIT × phần quân còn vào Vận Lương Chu (máu VANCHU_SUPPLY). Chìm trước thì thua, hết hiệp so máu còn.
+// Mỗi ngày VANCHU_DAILY lượt
+export const VANCHU_HALL = 12
+export const VANCHU_TEAM = 5
+export const VANCHU_WAIT = 10 * 60_000
+export const VANCHU_DAILY = 2
+export const VANCHU_ROUNDS = 6
+export const VANCHU_TIER = 3
+export const VANCHU_N = 600
+export const VANCHU_SUPPLY = 100
+export const VANCHU_HIT = 12
+export const VANCHU_GUARD = 0.15
+// Xung Vân Chu (≈ Trireme: nhanh, húc) · Huyền Giáp Chu (≈ Armored Ship: chịu đòn) · Lôi Hoả Chu (≈ Galley: đánh xa, giáp mỏng)
+export const VANCHU_SHIPS = {
+  xung: { type: 'kiem', atk: 1.15, def: 0.9, hp: 1 },
+  giap: { type: 'the', atk: 0.85, def: 1.25, hp: 1.2 },
+  lau: { type: 'phap', atk: 1.3, def: 0.8, hp: 0.9 },
+} as const satisfies Record<string, { type: UnitType; atk: number; def: number; hp: number }>
+export type VanchuShip = keyof typeof VANCHU_SHIPS
+export const VANCHU_STANCES = ['atk', 'def'] as const
+export type VanchuStance = (typeof VANCHU_STANCES)[number]
+export function vanchuGift(won: boolean): Reward {
+  return won ? { items: { thoiQuang180: 2, nganDuyen: 1 } } : { items: { thoiQuang60: 1 } }
+}
+// Tán Tu Tranh Châu (Ark of Osiris — Silver của RoK): người chơi lẻ (không cần minh) từ Chủ điện SILVER_HALL vào hàng chờ với một
+// hướng đánh (SILVER_TACTICS: ô đích trên chiến trường Linh Châu, nhìn từ phía mình); đủ 2 × SILVER_TEAM người (chờ quá SILVER_WAIT thì
+// bù NPC) server chia hai đội tán tu cân theo điểm đài và giải trọn ARK_ROUNDS hiệp ngay trên chiến trường 11 ô; thắng thua theo điểm,
+// quà như Linh Châu. Mỗi ngày SILVER_DAILY lượt
+export const SILVER_HALL = 10
+export const SILVER_TEAM = 8
+export const SILVER_WAIT = 15 * 60_000
+export const SILVER_DAILY = 2
+export const SILVER_TACTICS = { center: [5], obelisk: [1, 3], shrine: [2], outpost: [4, 6] } as const
+export type SilverTactic = keyof typeof SILVER_TACTICS
+export const HOLM_HOUR = 21
+export const HOLM_PICKS = 3
+export const HOLM_BUFF: Partial<Record<Bonus, number>> = { atk: 0.05, prod: 0.05 }
+export const SUPPLY_FREE = 12
+export const SUPPLY_FALL = 0.02
+export const SUPPLY_MIN = 0.6
+export const supplyK = (tiles: number) => Math.max(SUPPLY_MIN, 1 - SUPPLY_FALL * Math.max(0, tiles - SUPPLY_FREE))
 // Lưu Danh Sử Sách (Hall of Fame của RoK): VOTE_DAYS ngày cuối mùa (cùng khung Thiên Mệnh Chọn Luật) cả giới bình chọn anh kiệt mùa ở
 // từng hạng mục — HERO_PICKS người dẫn đầu chỉ số mùa của hạng mục đó (chốt lúc mở bình chọn): chiến công, Công Huân, yêu thú hạ được,
 // tài nguyên khai mỏ. Hết mùa người nhiều phiếu nhất mỗi hạng mục được ghi vào Phong Thần Bảng và nhận HERO_GIFT
@@ -1397,6 +1779,7 @@ export const COIN_SHOP: { reward: Reward; price: number }[] = [
   { reward: { items: { tucHoa: 2 } }, price: 15 },
   { reward: { items: { khaiLinh24: 1 } }, price: 30 },
   { reward: { items: { diSon: 1 } }, price: 15 },
+  { reward: { items: { khiTinh: 2 } }, price: 30 },
   { reward: { items: { canKhon: 1 } }, price: 45 },
   { reward: { items: { tapDich48: 1 } }, price: 50 },
   { reward: { items: { caiDanh: 1 } }, price: 20 },
@@ -1577,6 +1960,38 @@ export const KY_LOSE = 8
 // Phục thù Luận Kiếm: mỗi ngày một lần đánh lại người vừa thắng mình lúc mình giữ đài (trong ngày), không tốn lượt; thắng thêm
 // KY_REVENGE Kiếm Ý
 export const KY_REVENGE = 15
+// Viễn Chinh (Expedition của RoK): VC_STAGES màn (chương VC_CHAPTER màn), đánh bằng đội hình Luận Kiếm Đài (đệ tử ảo — không mất quân),
+// mang theo nhiều đội hơn ở màn sau (VC_TEAMS: màn bắt đầu mang 1, 2, 3 đội — đánh xa luân với một đạo quân dựng sẵn). Địch màn k: hệ xoay
+// vòng, sức VC_STR × VC_GROW^k, mỗi màn thứ VC_BOSS_EVERY là thủ lĩnh (×VC_BOSS, có công pháp). Qua màn trước mới đánh màn sau, đánh lại
+// thoải mái (trận tất định). Ba sao: thắng · còn ≥ VC_KEEP quân · không đội nào ngã; mỗi sao đạt lần đầu +VC_MEDAL Huân Chương Viễn Chinh,
+// qua màn lần đầu +VC_FIRST huân chương (thủ lĩnh thêm quà). Mỗi ngày một rương theo tổng sao (VC_CHEST mốc); huân chương đổi quà (VC_SHOP)
+export const VC_HALL = 6
+export const VC_STAGES = 30
+export const VC_CHAPTER = 10
+export const VC_TEAMS = [0, 6, 16]
+export const VC_STR = 800
+export const VC_GROW = 1.125
+export const VC_BOSS_EVERY = 5
+export const VC_BOSS = 1.3
+export const VC_KEEP = 0.5
+export const VC_MEDAL = 5
+export const VC_FIRST = 10
+export const VC_CHEST = [10, 30, 60, 90]
+export const VC_CHEST_GIFT: Reward[] = [
+  { items: { thoiQuang15: 2, kinhThu500: 1 } },
+  { items: { thoiQuang60: 2, kinhThu2k: 1 } },
+  { items: { thoiQuang180: 1, kinhThu2k: 2, nganDuyen: 1 } },
+  { items: { thoiQuang480: 1, kinhThu8k: 1, kimDuyen: 1 } },
+]
+export const VC_BOSS_GIFT: Reward = { items: { vanNang2: 2, thoiQuang60: 1 } }
+export const VC_SHOP: { item: ItemId; n: number; price: number; week: number }[] = [
+  { item: 'kinhThu2k', n: 1, price: 40, week: 5 },
+  { item: 'thoiQuang60', n: 1, price: 50, week: 5 },
+  { item: 'luanKiem', n: 1, price: 60, week: 3 },
+  { item: 'khiTinh', n: 1, price: 150, week: 2 },
+  { item: 'vanNang2', n: 1, price: 120, week: 3 },
+  { item: 'kimDuyen', n: 1, price: 300, week: 1 },
+]
 export const KY_CHEST = [10, 20, 30, 40]
 export const KY_SHOP: { item: ItemId; n: number; price: number; week: number }[] = [
   { item: 'kinhThu2k', n: 1, price: 60, week: 5 },
@@ -1586,6 +2001,7 @@ export const KY_SHOP: { item: ItemId; n: number; price: number; week: number }[]
   { item: 'kinhThu8k', n: 1, price: 250, week: 1 },
   { item: 'kimDuyen', n: 1, price: 400, week: 1 },
   { item: 'tuyTam20k', n: 1, price: 150, week: 3 },
+  { item: 'khiTinh', n: 1, price: 200, week: 2 },
 ]
 export const ARENA_TOP = 10 // thư quà hạng tuần: hạng 1 · 2–3 · 4–10
 // Luận Kiếm Đại Hội (Sunset Canyon Tournament của RoK): từ ngày TOURNEY_DAY của mùa giới (tuần cuối), TOURNEY_N người điểm Luận Kiếm Đài
@@ -1935,6 +2351,27 @@ export const PARTY_MIGHT = [2500, 5000, 9000, 14000, 20000] // lực chiến đ�
 export const PARTY_GROW = 1.25
 export const PARTY_ROLES = { hoPhap: { def: 0.15, hp: 0.1 }, chuCong: { atk: 0.12 }, triLieu: { heal: 0.2 } } as const
 export type PartyRole = keyof typeof PARTY_ROLES
+// Huyễn Vực Bí Cảnh (Realm of Mystique của RoK): hàng chờ lẻ, mỗi người một vai (PARTY_ROLES) và một độ khó (MYSTIC_MODES); đủ
+// MYSTIC_TEAM người cùng độ khó (chờ quá MYSTIC_WAIT thì bù NPC) server ghép đội ngẫu nhiên, đánh ba thủ lĩnh bằng đội đầu Luận Kiếm Đài
+// (không mất quân) — sức thủ lĩnh màn k = lực chiến cả đội × MYSTIC_BOSS[k] × hệ số độ khó, màn cuối là trùm có công pháp. Tổng số lượt
+// đánh là "thời gian": bảng tuần giữ MYSTIC_TOP đội phá đảo nhanh nhất mỗi độ khó. Mỗi ngày MYSTIC_DAILY lượt; quà theo số màn qua
+export const MYSTIC_HALL = 12
+export const MYSTIC_TEAM = 4
+export const MYSTIC_WAIT = 10 * 60_000
+export const MYSTIC_DAILY = 2
+export const MYSTIC_TOP = 10
+export const MYSTIC_BOSS = [0.55, 0.8, 1.05]
+export const MYSTIC_MODES = { normal: 1, legend: 1.3 } as const
+export type MysticMode = keyof typeof MYSTIC_MODES
+export function mysticGift(mode: MysticMode, stages: number): Reward {
+  if (!stages) return { items: { kinhThu500: 1 } }
+  const legend = mode === 'legend'
+  const items: Partial<Record<ItemId, number>> = {
+    [legend ? 'thoiQuang180' : 'thoiQuang60']: stages,
+    ...(stages === 3 && { [legend ? 'kimDuyen' : 'nganDuyen']: 1 }),
+  }
+  return { items }
+}
 export function partyGift(lv: number, waves: number): Reward {
   if (!waves) return { items: { kinhThu500: 1 } } // có đi là có chút quà
   const speed = (['thoiQuang15', 'thoiQuang60', 'thoiQuang60', 'thoiQuang180', 'thoiQuang180'] as const)[lv - 1]
@@ -1942,6 +2379,19 @@ export function partyGift(lv: number, waves: number): Reward {
   const items: Partial<Record<ItemId, number>> = { [speed]: waves, ...(waves >= 3 && { [book]: 1 }) }
   if (waves >= PARTY_WAVES) items[lv >= 4 ? 'kimDuyen' : 'nganDuyen'] = 1
   return { items }
+}
+// Vây Công Yêu Vương — trận 12 người (Ceroli Assault của RoK, giản lược): trong kỳ lễ vayCong, người trong minh mở phòng độ khó lv (qua
+// độ khó trước mới mở độ khó sau — theo độ khó cao nhất minh đã hạ), tối đa ASSAULT_MAX người vào bằng đội đầu Luận Kiếm Đài (không mất
+// quân; mỗi người mỗi ngày một lượt); đủ người hay hết ASSAULT_WAIT server giải một trận với yêu vương (lực chiến ASSAULT_MIGHT[lv]).
+// Thắng: mỗi người ASSAULT_FORTS[lv] lần góp sức hạ yêu vương (ra Bảo Hạp Phiếu của lễ) + quà thư; thua: lượt được trả lại (như sừng)
+export const ASSAULT_MAX = 12
+export const ASSAULT_WAIT = 15 * 60_000
+export const ASSAULT_MIGHT = [20000, 40000, 70000, 120000, 200000, 330000, 520000, 800000]
+export const ASSAULT_FORTS = [1, 2, 3, 4, 5, 6, 7, 8]
+export function assaultGift(lv: number, win: boolean): Reward {
+  if (!win) return { items: { kinhThu500: 1 } }
+  const speed = (['thoiQuang60', 'thoiQuang60', 'thoiQuang180', 'thoiQuang180'] as const)[lv - 1] ?? 'thoiQuang480'
+  return { items: { [speed]: 2, ...(lv >= 3 && { kimDuyen: lv >= 7 ? 2 : 1 }), ...(lv >= 5 && { vanNang4: lv - 3 }) } }
 }
 // Linh Thương Hộ Tống (Silk Road Speculators của RoK, giản lược): trưởng lão / minh chủ tốn CONVOY_COST Minh khố cho đoàn buôn độ khó
 // lv khởi hành (qua độ khó trước mới mở độ khó sau — theo điểm cao nhất của minh); trong CONVOY_WAIT người trong minh ghi danh hộ tống
@@ -2014,6 +2464,7 @@ export const TERR_SEAT = 3
 export const TERR_POINT = 5
 export const TERR_GATHER = 0.25
 export const TERR_FUND = 0.1 // kho minh: mỗi ô lãnh thổ sinh chừng này Minh khố mỗi giờ (chốt mỗi giờ)
+export const TERR_GATHER_FUND = 10_000 // người trong minh khai mỏ trong lãnh thổ minh: mỗi chừng này tài nguyên thêm 1 Minh khố (Alliance Resource của RoK)
 export const MOVE_COOL = 24 * 3_600_000
 // Mê vụ (Fog of War của RoK): mỗi tông môn một bản đồ sương riêng, ô sương FOG_CELL × FOG_CELL ô bản đồ; lúc đầu đã khai
 // FOG_HOME ô sương quanh tông môn. Linh điểu (Scout): 1 + 1 mỗi CRANE_PER tầng Chủ điện (tối đa CRANE_MAX), thả vào ô sương
@@ -2106,6 +2557,9 @@ export const TIDE_PROD = 0.15
 export const TIDE_MINE = 0.5
 // Kết trận: tối đa RALLY_MAX đội, chờ RALLY_WAIT rồi cùng tới đích. Viện binh: tối đa REINFORCE_MAX đội đóng ở nhà đồng minh.
 export const RALLY_MAX = 8
+// Sức chứa kết trận theo tầng Chủ điện người mở trận (Castle của RoK: lâu đài càng cao kết trận càng đông): từ tầng RALLY_UP[0], mỗi
+// RALLY_UP[1] tầng thêm một đội
+export const RALLY_UP = [15, 5] as const
 export const RALLY_WAIT = [5 * 60_000, 10 * 60_000, 30 * 60_000]
 export const REINFORCE_MAX = 3
 
@@ -2241,6 +2695,12 @@ export const TRUYEN_PER = 4
 export const SKILL_LV_POWER = 0.08
 export const PASSIVE_LV = 0.25
 export const EXPERTISE: Partial<Record<Bonus, number>> = { atk: 0.05, def: 0.05, hp: 0.05, skill: 0.1 }
+// Chân Thân (Prime Commander của RoK) + Bản Mệnh Pháp Bảo (Commander Artifact — như Megingjörð của Ragnar Prime): trưởng lão đã Bản Mệnh
+// Thần Thông (mọi công pháp tột tầng), đủ STAR_MAX sao và cấp PRIME_LV thì chuyển thế thành Chân Thân bằng PRIME_TOKENS tín vật của chính
+// người đó: sức công pháp +PRIME_SKILL và bản mệnh pháp bảo khiến công pháp áp cho mọi hệ đệ tử (như Thần Binh mùa, nhưng mãi mãi)
+export const PRIME_LV = 30
+export const PRIME_TOKENS = 100
+export const PRIME_SKILL = 0.15
 // Trưởng lão có tín vật trong Chiêu Hiền Đài (người của sự kiện / mùa giải thì không)
 export const TAVERN_ELDERS: Record<TavernKind, ElderId[]> = {
   silver: ['thanhPhong', 'thachKien', 'nhuYen', 'loiChan', 'vanHac'],
@@ -2673,6 +3133,27 @@ const fests = {
       { res: b(10000, 10000, 10000), items: { hoSon24: 1, loBan180: 1 } },
       { items: { thoiQuang180: 2, luyenBinh180: 1, tuLinh24: 1 } },
       { res: b(20000, 20000, 20000), items: { thoiQuang480: 1, kinhThu8k: 1 }, elder: 'nhuYen' },
+    ],
+  },
+  // Nhập Môn Ngộ Đạo (Path of Wisdom của RoK — tân thủ vào muộn): 5 ngày đầu của tông môn, mỗi ngày một nhánh việc ra Ngộ Đạo Điểm (điểm
+  // theo ngày như Tông Môn Tranh Bá); đủ mốc nhận quà, mốc cuối là giải cao nhất (Vạn Năng Tín Vật + thiếp vàng)
+  nhapMon: {
+    window: { kind: 'newbie', from: 0, to: 4 },
+    kind: 'points',
+    stages: [
+      { build: 40, trainPts: 1 }, // ngày 1 khai sơn: tầng công trình, bậc đệ tử
+      { huntLv: 20, realm: 60 }, // ngày 2 trảm yêu: cấp yêu thú, tầng bí cảnh
+      { tech: 100, speed: 1 }, // ngày 3 ngộ đạo: công pháp, phút tăng tốc
+      { gather: 0.01, win: 30 }, // ngày 4 tụ linh: tài nguyên mang về, trận thắng
+      { power: 1, build: 20 }, // ngày 5 đột phá: thế lực tăng, công trình
+    ],
+    goals: [300, 900, 1800, 3000, 4500],
+    rewards: [
+      { items: { thoiQuang15: 2, kinhThu500: 2 } },
+      { items: { thoiQuang60: 2, luyenBinh60: 1 } },
+      { res: b(15000, 15000, 15000), items: { thoiQuang180: 1, nganDuyen: 1 } },
+      { items: { thoiQuang480: 1, kinhThu2k: 2, tuLinh24: 1 } },
+      { items: { vanNang2: 5, kimDuyen: 2, thoiQuang480: 1 } }, // giải cao nhất
     ],
   },
   // Tân Thủ Chi Lộ: chuỗi mục tiêu 7 ngày đầu — mỗi mục tiêu một phần quà

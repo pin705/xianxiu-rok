@@ -71,6 +71,7 @@
     requestAnimationFrame(
       () => scroller && (scroller.scrollTop = (scroller.scrollHeight - scroller.clientHeight) * start),
     )
+    let lastTop = NaN
     const unmount = mountScene({
       make,
       art,
@@ -88,7 +89,11 @@
           const m = `${x - (scroller?.getBoundingClientRect().left ?? 0)}px`
           space.style.marginLeft = layer.style.marginLeft = m
         }
-        if (layer) layer.style.transform = `translate3d(0, ${-top}px, 0)`
+        // chỉ ghi khi cảnh cuộn thật: ghi lại cùng giá trị mỗi khung vẫn bắt trình duyệt tính lại style 60 lần/giây
+        if (layer && top !== lastTop) {
+          lastTop = top
+          layer.style.transform = `translate3d(0, ${-top}px, 0)`
+        }
         s.tick(app.ticker.deltaMS / 1000, top / kk)
       },
     })

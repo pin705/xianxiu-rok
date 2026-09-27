@@ -9,6 +9,8 @@
   import { L, num } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
+  import CrystalTech from './CrystalTech.svelte'
+  import Hermits from './Hermits.svelte'
 
   let { api }: { api: Pick<Net, 'ask'> | null } = $props()
   const g = useGame()
@@ -94,4 +96,6 @@
       {/each}
     </div>
   </Section>
+  <CrystalTech />
+  <Hermits />
 </Sheet>

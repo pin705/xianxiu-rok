@@ -46,7 +46,7 @@
     {#if state === 'held'}
       <span class="tick"><img src={tick} width="48" height="48" alt="" draggable="false" /></span>
     {:else if state === 'done'}
-      <span class="claim"
+      <span class="claim pulse"
         >{#if ink}<Seal size={60}>{claim}</Seal>{:else}<Tag tone="gold" icon="star">{claim}</Tag>{/if}</span
       >
     {:else}
@@ -87,7 +87,6 @@
   }
   .claim {
     pointer-events: none;
-    animation: glow 1.4s var(--ease) infinite;
   }
   .tick {
     display: grid;
@@ -127,15 +126,6 @@
     height: 30px;
     color: var(--cinnabar);
     background: var(--img-disc-paper) center / 100% 100% no-repeat;
-  }
-  @keyframes glow {
-    0% {
-      filter: drop-shadow(0 0 0 rgb(var(--gold-glow) / 0.9));
-    }
-    60%,
-    100% {
-      filter: drop-shadow(0 0 9px rgb(var(--gold-glow) / 0));
-    }
   }
   /* điện thoại rất hẹp (320px): nút nhận thưởng xuống dòng, phần thưởng dàn ngang — thẻ không cao lên che biển tên Chủ điện */
   @media (max-width: 360px) {
@@ -180,12 +170,6 @@
     position: absolute;
     right: -12px;
     bottom: -14px;
-    animation: throb 1.4s var(--ease) infinite;
-  }
-  @keyframes throb {
-    50% {
-      scale: 1.08;
-    }
   }
   .ink .go {
     position: absolute;

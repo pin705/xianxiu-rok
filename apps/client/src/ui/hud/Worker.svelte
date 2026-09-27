@@ -28,7 +28,7 @@
   } = $props()
 </script>
 
-<button class="builder" class:ink class:away class:idle {onclick} aria-label={label}>
+<button class="builder" class:ink class:away class:idle class:pulse={idle} {onclick} aria-label={label}>
   {#if ink}
     <img class="worker" src={img} alt="" draggable="false" />
   {:else}
@@ -57,9 +57,6 @@
   }
   .builder:active {
     transform: scale(0.94);
-  }
-  .idle {
-    animation: glow 1.6s var(--ease) infinite;
   }
   .away {
     display: none;
@@ -123,15 +120,6 @@
   }
   .ink.idle .btime {
     background: var(--cinnabar);
-  }
-  @keyframes glow {
-    0% {
-      filter: drop-shadow(0 0 0 rgb(var(--gold-glow) / 0.9));
-    }
-    60%,
-    100% {
-      filter: drop-shadow(0 0 9px rgb(var(--gold-glow) / 0));
-    }
   }
   @keyframes bob {
     0%,

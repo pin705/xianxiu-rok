@@ -29,6 +29,7 @@
   import { L, LOOK, num } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
+  import { social } from './social.svelte'
 
   let {
     foe,
@@ -131,6 +132,12 @@
     disabled={!lead || !count(army)}
     onclick={() => lead && g.act({ type: 'preset', i: slot, elder: lead, army }, 'tap')}>{L.army.save}</Button
   >
+</div>
+
+<!-- trận pháp đang bày: đội đi mang theo (đổi ở màn Trận Pháp) -->
+<div class="row between mt-2">
+  <small class="t-tiny t-soft">{game.form ? L.form.now(L.form.names[game.form]) : L.form.none}</small>
+  <Button size="sm" variant="quiet" icon="flag" onclick={() => (social.form = true)}>{L.form.title}</Button>
 </div>
 
 <Section title={L.army.elder}>

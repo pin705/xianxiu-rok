@@ -17,6 +17,7 @@ import {
   STRATS,
   STRAT_HALL,
   TRIAL_AP,
+  TRIAL_CRYSTAL,
   TRIAL_GATES,
   advance,
   apOf,
@@ -265,6 +266,12 @@ test('Thí Luyện Yêu Hoàng: chọn độ khó một lần mỗi lượt; đ�
   assert.ok(rep.win, 'cửa đầu độ khó Thường: đội 1000 đệ tử bậc 3 thắng')
   assert.equal(s1.trial!.gate, 1)
   assert.equal(s1.stats.trial, 2, 'độ khó Thường: 2 điểm mỗi cửa')
+  assert.equal(s1.ctechGot, undefined, 'ngoài mùa giới: không ra linh tinh')
+  const inSeason = run({ ...s, seasonAt: s.time - DAY }, go)
+  assert.ok(
+    inSeason.ok && inSeason.state.ctechGot === TRIAL_CRYSTAL * 2,
+    'trong mùa: linh tinh theo độ khó (Trial of Kau Karuak)',
+  )
   assert.ok((s1.troops.kiem3 ?? 0) < 1000 || s1.reports.at(-1)!.dead, 'quân thật: có thương vong')
   assert.deepEqual(run({ ...s1, ap: { n: 0, at: s1.time } }, go), { ok: false, error: 'not_enough' })
   assert.deepEqual(run({ ...s1, trial: { ...s1.trial!, gate: TRIAL_GATES } }, go), { ok: false, error: 'max_level' })

@@ -44,6 +44,9 @@
     armySpeed,
     count,
     cutOf,
+    bonus,
+    supplyK,
+    DESERT_RING,
     might,
     type Army,
     type ElderId,
@@ -143,7 +146,11 @@
   const road = (to: { x: number; y: number }) => (game.seat ? route(atlas, game.seat, to, phase, shut) : null)
   const farText = (to: { x: number; y: number }) =>
     game.seat && shut?.size && route(atlas, game.seat, to, phase) ? L.err.blocked : L.err.far
-  const time = (len: number, a?: Army) => clock((len * TILE_TIME * cutOf(game, 'march')) / (a ? armySpeed(a, game) : 1))
+  // Cổ Tháp Hành Quân (luật mùa): đường dài hơn SUPPLY_FREE ô thì công giảm — ghi ngay cạnh giờ đi
+  const supply = (len: number) => (bonus(game, 'supply') > 0 ? 1 - supplyK(len) : 0)
+  const time = (len: number, a?: Army) =>
+    clock((len * TILE_TIME * cutOf(game, 'march')) / (a ? armySpeed(a, game) : 1)) +
+    (supply(len) ? ` · ${L.world.supplyCut(Math.round(supply(len) * 100))}` : '')
   const seat = $derived(pick?.kind === 'seat' ? snap?.seats.find(s => s.pid === pick.pid) : undefined)
   const point = $derived(pick?.kind === 'point' ? atlas.points[pick.i] : undefined)
   const spot = $derived(point ? snap?.spots.find(s => s.i === point.i) : undefined)
@@ -548,6 +555,9 @@
           </div>
         </Card>
       </div>
+    {:else if task === 'gather' && bonus(game, 'desert') > 0 && atlas.regions[point.region].ring === DESERT_RING}
+      <!-- luật mùa Tử Hải Hoang Mạc: mỏ vòng giữa là vùng chết -->
+      <p class="t-small t-bad mt-3">{L.world.desert}</p>
     {:else if r && !dead && win.open && (point.kind !== 'heaven' || phase >= 3)}
       {@const guard = task === 'take' && spot?.side === undefined && !spot?.tamed ? guardSide(atlas, point.i) : null}
       {@const slice = task === 'hit' ? bossSlice(atlas, point.i) : task === 'hunt' ? wildSide(atlas, point.i) : guard}

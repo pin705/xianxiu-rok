@@ -22,6 +22,17 @@ import {
   BASE_RATE,
   DAOS,
   STRATS,
+  FOLIO,
+  PRIME_SKILL,
+  AWAKEN_MAX,
+  AWAKEN_STEP,
+  AWAKEN_V,
+  CTECH,
+  HERMITS,
+  HERMIT_FAVOR,
+  HERMIT_IDS,
+  type HermitId,
+  ELITE,
   STUDY_CUT,
   DEPUTY_HALL,
   MARCH_CAP,
@@ -75,6 +86,9 @@ import {
   EXPERTISE,
   RELIC_BONUS,
   PASSIVE_LV,
+  AUX_HALLS,
+  AUX_SHARE,
+  DIVINE_SKILL,
   SKILL_LV_POWER,
   SKILL_MAX,
   VIP_LEVELS,
@@ -102,8 +116,20 @@ export function bonus(s: State, key: Bonus) {
   for (const b of s.buffs) if (b.key === key) v += b.v
   if (s.dao) v += (DAOS[s.dao.id] as Partial<Record<Bonus, number>>)[key] ?? 0
   if (s.strat) v += (STRATS[s.strat] as Partial<Record<Bonus, number>>)[key] ?? 0
+  s.ctech?.forEach((lv, i) => (v += CTECH[i]?.key === key ? CTECH[i].v * lv : 0)) // Linh Tinh Trận Pháp (mùa)
+  for (const h of HERMIT_IDS)
+    if (hermitLv(s, h) > HERMIT_FAVOR.length) v += (HERMITS[h] as Partial<Record<Bonus, number>>)[key] ?? 0
+  if (s.folio && s.buffs.some(b => b.key === 'folio'))
+    s.folio.p.forEach((pg, k) => (v += pg !== null && FOLIO[k][pg]?.key === key ? FOLIO[k][pg].v : 0)) // Binh Thư (chỉ mùa có luật)
   return v + (VIP_PERKS[vipLevel(s)][key] ?? 0)
 }
+// Tinh Binh Luận Kiếm: hệ số công / máu của đệ tử bậc 5 hệ type đã luyện tinh binh — chỉ mùa có luật, không thì 1 (giữ nguyên từng số)
+export function eliteK(s: State, type: UnitType, tier: Tier) {
+  const lv = tier === 5 && s.elite?.[type] && s.buffs.some(b => b.key === 'elite') ? s.elite[type] : 0
+  return { atk: 1 + ELITE[type].atk * lv, hp: 1 + ELITE[type].hp * lv }
+}
+// Ẩn Sĩ Động Phủ: cấp hảo cảm của ẩn sĩ h (1 — tột cấp HERMIT_FAVOR.length + 1)
+export const hermitLv = (s: State, h: HermitId) => 1 + HERMIT_FAVOR.filter(n => (s.hermit?.fav[h] ?? 0) >= n).length
 // Cấp Hương Hỏa theo tổng điểm (save cũ chưa có: cấp 0)
 export const vipLevel = (s: State) => {
   const pts = s.vip?.pts ?? 0
@@ -131,10 +157,29 @@ export function passive(s: State, e: ElderId, key: Bonus) {
     0,
   )
 }
-// bonus của cả tông môn + của riêng trưởng lão dẫn đội: bị động, pháp bảo đang đeo, thiên phú
+// Thần Binh mùa này: người cầm (gắn trong mùa giới hiện tại) — công pháp người đó áp cho mọi hệ
+export const divineOf = (s: State) => (s.divine && s.divine.season === s.seasonAt ? s.divine.elder : undefined)
+export function skillOf(s: State, e: ElderId) {
+  const sk = ELDERS[e].skill
+  return (divineOf(s) === e || s.prime?.includes(e)) && sk.type ? { ...sk, type: undefined } : sk // Thần Binh / bản mệnh pháp bảo
+}
+// Mượn Pháp: số ô (trong mùa giới, theo tầng Chủ điện) và người cho trưởng lão e mượn tâm pháp (đã thu nhận, không phải chính mình)
+export const auxSlots = (s: State) =>
+  s.seasonAt === undefined ? 0 : AUX_HALLS.filter(h => s.levels.chuDien >= h).length
+export const auxOf = (s: State, e: ElderId) =>
+  (s.aux?.[e] ?? []).filter(x => x !== e && s.elders[x] !== undefined).slice(0, auxSlots(s))
+// bonus của cả tông môn + của riêng trưởng lão dẫn đội: bị động (cả tâm pháp mượn), pháp bảo đang đeo, thiên phú, Thần Binh
 export function lead(s: State, elder: ElderId, key: Bonus) {
   let v = bonus(s, key) + passive(s, elder, key)
-  for (const g of GEAR_IDS) if (s.gear[g]?.on === elder && GEAR[g].key === key) v += GEAR[g].v * s.gear[g]!.lv
+  for (const x of auxOf(s, elder)) v += AUX_SHARE * passive(s, x, key)
+  if (key === 'skill' && divineOf(s) === elder) v += DIVINE_SKILL
+  if (key === 'skill' && s.prime?.includes(elder)) v += PRIME_SKILL // Chân Thân
+  for (const g of GEAR_IDS) {
+    const x = s.gear[g]
+    if (x?.on !== elder) continue
+    if (GEAR[g].key === key) v += GEAR[g].v * x.lv * (1 + AWAKEN_STEP * (x.aw ?? 0)) // khai linh: × 1 khi chưa khai
+    if ((x.aw ?? 0) >= AWAKEN_MAX && AWAKEN_V[GEAR[g].slot].key === key) v += AWAKEN_V[GEAR[g].slot].v
+  }
   gearSets(s, elder).forEach(([t, n]) => {
     const d = GEAR_SETS[t]
     if (n >= 2 && d.two.key === key) v += d.two.v
@@ -292,4 +337,16 @@ export function spendAp(s: State, t: number, n: number): State {
   const have = apOf(s, t)
   const at = have >= AP_MAX || !s.ap ? t : s.ap.at + Math.floor((t - s.ap.at) / AP_EVERY) * AP_EVERY
   return { ...s, ap: { n: have - n, at } }
+}
+// Tự vận hành (G8): bật tự chữa thì thương binh tự vào đợt chữa khi Đan phòng rảnh và đủ tài nguyên (không thì chờ như thường)
+export function autoHeal(s: State): State {
+  if (!s.auto?.heal || s.heal || !s.levels.danPhong || !count(s.wounded)) return s
+  const c = healCost(s, s.wounded)
+  if (!afford(s.res, c)) return s
+  const hurt = { ...s.wounded }
+  return {
+    ...s,
+    res: bag(r => s.res[r] - c[r]),
+    heal: { troops: hurt, startAt: s.time, finishAt: s.time + healTime(s, hurt) },
+  }
 }

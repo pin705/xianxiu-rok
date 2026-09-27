@@ -20,6 +20,7 @@ import {
   SEASON_BOSS,
   TIDE_MINE,
   TERR_GATHER,
+  TERR_GATHER_FUND,
   TIER,
   UNITS,
   WILD_LOOT,
@@ -34,9 +35,9 @@ import { mail } from '../sect/inbox.ts'
 import {
   addHonor,
   addKp,
-  allyGifts,
   routeMs,
   allyOf,
+  put,
   garrison,
   setSpot,
   sideKey,
@@ -49,7 +50,7 @@ import {
   type Spot,
   type World,
 } from './base.ts'
-import { addArmy, carryOf, combine, split, flipRounds, tribeBank } from './fight.ts'
+import { addArmy, carryOf, combine, split, flipRounds, tribeBank, allyGifts } from './fight.ts'
 import { bank, claimsOf, eveAdd, guardSide, hold, ownerAt, closedTo, spotOf, bossSlice, wildSide } from './points.ts'
 
 type Arrived = { changed: Players; world: World }
@@ -127,7 +128,9 @@ function gather(ps: Players, w: World, map: MapCtx, [pid, att, m]: Party[number]
       returnAt: end + travel(m),
     }),
   )
-  return { changed, world: setSpot(w, i, left > 0 ? { left } : { left: 0, until: at + MINE_RESPAWN }) }
+  const al = terr > 1 ? allyOf(w, pid) : undefined // khai trong lãnh thổ minh: góp một phần vào Minh khố
+  const w2 = al ? put(w, { ...al, fund: (al.fund ?? 0) + Math.floor(amount / TERR_GATHER_FUND) }) : w
+  return { changed, world: setSpot(w2, i, left > 0 ? { left } : { left: 0, until: at + MINE_RESPAWN }) }
 }
 
 // Yêu vương: kho máu chung, mỗi đội đánh một lát; sát thương chia theo lực chiến góp vào. Hạ thì thưởng qua thư, rồi hồi sinh

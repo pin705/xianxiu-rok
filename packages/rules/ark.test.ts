@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   ARK_CHARGE,
   ARK_ROUND,
+  ARK_SC,
   ARK_ROUNDS,
   ARK_TAKE,
   HONOR_CUP,
@@ -78,6 +79,17 @@ test('Tranh Đoạt Linh Châu: ghi danh, 20h Chủ nhật dựng trận, mỗi 
   assert.ok(f0.units.every(u => u.at === (u.side ? 10 : 0) && u.to === 5))
   assert.deepEqual(f0.own, [0, null, null, null, null, null, null, null, null, null, 1])
   assert.deepEqual(arkRow(w, 2).live?.b, 2)
+  // chiến pháp (thử trên bản sao — không đổi diễn biến trận bên dưới): minh chủ dùng, mỗi trận mỗi cái một lần, hiệu lực hiệp kế
+  const sk = worldAct(ps, 1, { type: 'arkSkill', k: 'coVu' } as never, start + 2000, 1, undefined, w)
+  assert.ok(sk.ok)
+  const fs = arkOf(sk.world).live[0]
+  assert.deepEqual([fs.used?.[0], fs.buffs], [['coVu'], [{ side: 0, k: 'coVu', r: 1 }]])
+  const again = worldAct(ps, 1, { type: 'arkSkill', k: 'coVu' } as never, start + 2000, 1, undefined, sk.world)
+  assert.deepEqual(again, { ok: false, error: 'claimed' })
+  assert.deepEqual(worldAct(ps, 2, { type: 'arkSkill', k: 'kienThu' } as never, start + 2000, 1, undefined, w), {
+    ok: false,
+    error: 'locked',
+  })
   // lệnh: đội mình tới Tiểu Trận Nam; không vào Linh Đài bên kia; cả minh chỉ trưởng lão / minh chủ
   assert.equal(act(5, { type: 'arkOrder', to: 6 }, start + 2000), null)
   assert.equal(act(5, { type: 'arkOrder', to: 0 }, start + 2000), 'bad')
@@ -129,6 +141,10 @@ test('Tranh Đoạt Linh Châu: ghi danh, 20h Chủ nhật dựng trận, mỗi 
   for (const p of [1, 2, 3, 4, 5, 6]) assert.equal(r.changed.get(p)!.mail.at(-1)!.k, 'ark')
   assert.equal(r.changed.get(1)!.mail.at(-1)!.a![0], 1)
   assert.equal(r.changed.get(4)!.mail.at(-1)!.a![0], 0)
+  // công huân cá nhân: thư ghi điểm của mình và hạng trong minh; ai cũng có điểm (chiếm / giữ / đánh)
+  const ma = r.changed.get(1)!.mail.at(-1)!.a as number[]
+  assert.ok(ma[4] > 0 && ma[5] >= 1, JSON.stringify(ma))
+  assert.ok(arkOf(r.world).last.length === 1)
   assert.equal(arkStep(ps, w, start + ARK_ROUNDS * ARK_ROUND + 60_000, 7).world, w, 'tuần này xong rồi')
   // Cửu Thiên Luận Đạo Hội: thắng 3 điểm, thua 1; hết mùa minh top giải có quà
   assert.deepEqual(
@@ -389,4 +405,68 @@ test('Luận Kiếm Đặt Cược: hết mùa còn cược treo thì hoàn tệ
   const out = endSeason(ps, w, { atlas: atlas(7), phase: 3 }, T0, 1, new Set())
   assert.equal(coins(out.changed.get(100)!), 200)
   assert.equal(out.world.bets, undefined)
+})
+
+test('Linh Châu: công huân cá nhân (chiếm, giữ, đánh, nạp Châu); Hồi Tháp — giữ cả hai Linh Tháp thì đội thua khỏi nghỉ; chiến pháp hiệp kế', () => {
+  const ps: Players = new Map([
+    [1, sect('Nhãn', true)],
+    [2, sect('Kia', true)],
+  ])
+  const base = (own: ArkFight['own'], units: ArkFight['units'], extra: Partial<ArkFight> = {}): ArkFight => ({
+    a: 1,
+    b: 2,
+    an: 'A',
+    bn: 'B',
+    round: 0,
+    units,
+    own,
+    pts: [0, 0],
+    taken: [[], []],
+    charged: [[], []],
+    orb: null,
+    log: [],
+    ...extra,
+  })
+  const none = [0, null, null, null, null, null, null, null, null, null, 1] as ArkFight['own']
+  // chiếm ô lần đầu + giữ trong hiệp: công huân
+  const walker = [{ pid: 1, side: 0 as const, at: 0, to: 2, n: [] }]
+  const f1 = arkRound(ps, base(none, walker), 3)
+  assert.equal(f1.units[0].sc, ARK_SC.take + ARK_SC.hold)
+  // đánh ở Tiểu Trận Bắc: bên thua về Linh Đài; bên B giữ cả hai Linh Tháp thì khỏi nghỉ
+  const duel = [
+    { pid: 1, side: 0 as const, at: 4, to: 4, n: [] },
+    { pid: 2, side: 1 as const, at: 4, to: 4, n: [] },
+  ]
+  const fought = arkRound(ps, base(none, duel), 1)
+  const lost = fought.units.find(u => u.at === 0 || u.at === 10)!
+  assert.equal(lost.rest, 2, 'thường: nghỉ hết hiệp sau')
+  assert.ok(
+    fought.units.every(u => (u.sc ?? 0) >= ARK_SC.fight),
+    'đánh là có công huân',
+  )
+  // bên A yếu (trưởng lão cấp thấp) giữ cả hai Linh Tháp: thua vẫn về Linh Đài nhưng hiệp sau ra trận ngay
+  const weak: Players = new Map([
+    [1, sect('Yếu', false)],
+    [2, sect('Mạnh', true)],
+  ])
+  const bothA = none.map((x, i) => (i === 2 || i === 8 ? 0 : x))
+  const lifeRun = arkRound(weak, base(bothA, duel), 1)
+  const loserA = lifeRun.units.find(u => u.pid === 1)!
+  assert.equal(loserA.at, 0, 'bên yếu thua')
+  assert.equal(loserA.rest, 1, 'Hồi Tháp: hiệp sau ra trận ngay')
+  // chiến pháp Cổ Vũ của bên A ở hiệp 1: bên A còn nhiều quân hơn
+  const left = (x: ArkFight) => {
+    const u = x.units.find(v => v.pid === 1)!
+    return u.at === 0 ? 0 : u.n.reduce((a, b) => a + b, 0)
+  }
+  const cheered = base(none, duel, { buffs: [{ side: 0, k: 'coVu', r: 1 }] })
+  for (const seed of [2, 3, 4])
+    assert.ok(left(arkRound(ps, cheered, seed)) >= left(arkRound(ps, base(none, duel), seed)))
+  // Thần Tốc: đi hai ô một hiệp
+  const fast = arkRound(
+    ps,
+    base(none, [{ pid: 1, side: 0 as const, at: 0, to: 5, n: [] }], { buffs: [{ side: 0, k: 'thanToc', r: 1 }] }),
+    3,
+  )
+  assert.equal(fast.units[0].at, 5)
 })

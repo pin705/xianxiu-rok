@@ -6,7 +6,7 @@
   let { n, label, onclick }: { n: number; label: string; onclick: () => void } = $props()
 </script>
 
-<button class="help" {onclick} aria-label={label}><Icon name="people" size={26} /><Badge {n} /></button>
+<button class="help pulse" {onclick} aria-label={label}><Icon name="people" size={26} /><Badge {n} /></button>
 
 <style>
   .help {
@@ -21,19 +21,9 @@
     pointer-events: auto;
     background: var(--img-disc-gold) center / 100% 100% no-repeat;
     border: 0;
-    animation: glow 1.6s var(--ease) infinite;
     cursor: pointer;
   }
   .help:active {
     transform: scale(0.94);
-  }
-  @keyframes glow {
-    0% {
-      filter: drop-shadow(0 0 0 rgb(var(--gold-glow) / 0.9));
-    }
-    60%,
-    100% {
-      filter: drop-shadow(0 0 9px rgb(var(--gold-glow) / 0));
-    }
   }
 </style>

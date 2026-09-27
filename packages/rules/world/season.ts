@@ -4,6 +4,9 @@ import {
   ASCEND,
   ASCEND_HALL,
   CAMP_WIN,
+  FOUR_WIN,
+  TREATY_GIFT,
+  RULE_FOUR,
   EVENT_PRIZES,
   EVENT_TOP,
   FEST_PRIZES,
@@ -25,7 +28,7 @@ import { seasonEnd } from '../sect/rebirth.ts'
 import { allyOf, freshWorld, sideKey, type MapCtx, type Players, type World } from './base.ts'
 import { unsold } from './market.ts'
 import { leagueRank } from './ark.ts'
-import { campOf, campTotal, type SeasonRow, seasonBoard } from './points.ts'
+import { campOf, campTotal, fourOf, fourPts, type SeasonRow, seasonBoard } from './points.ts'
 import { voteWinner } from './vote.ts'
 import { betSettle } from './bets.ts'
 import { heroWinners } from './heroes.ts'
@@ -51,6 +54,10 @@ export function endSeason(
       .map((id, k) => [id, k]),
   ) // Cửu Thiên: minh → hạng (playoff trước, rồi bảng giải)
   const won = camps[0] === camps[1] ? null : camps[0] > camps[1] ? 0 : 1 // Chính Tà Phân Tranh: phái thắng mùa
+  // Tứ Tượng Tranh Hùng (mùa có luật): phe nhiều điểm nhất, bằng nhau thì không phe nào
+  const four = w.rule === RULE_FOUR ? fourPts(top) : [],
+    best = Math.max(0, ...four),
+    fourWon = best > 0 && four.filter(v => v === best).length === 1 ? four.indexOf(best) : -1
   const changed: Players = new Map()
   const paid = betSettle(ps, w, now, true).changed // Luận Kiếm Đặt Cược còn treo: hoàn tệ
   const heroes = heroWinners(w) // Lưu Danh Sử Sách: anh kiệt mỗi hạng mục
@@ -60,7 +67,18 @@ export function endSeason(
     const side = sideKey(w, pid)
     const up = (side === first && s.levels.chuDien >= ASCEND_HALL) || s.levels.chuDien >= MAX_LEVEL
     // Công Huân: top HONOR_RANKS nhận quà theo hạng (thư trước thư kết mùa); mùa mới mọi người về 0
-    let x: State = { ...seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined), honor: 0, honorGot: 0 }
+    let x: State = {
+      ...seasonEnd(s, now, up ? ASCEND : 1, up ? season : undefined),
+      honor: 0,
+      honorGot: 0,
+      folio: undefined,
+      puppet: undefined,
+      elite: undefined,
+      ctech: undefined,
+      ctechSpent: undefined,
+      ctechGot: undefined,
+      hermit: undefined,
+    }
     const hr = honors.findIndex(([id]) => id === pid)
     if (hr >= 0) x = mail(x, { at: now, k: 'honorTop', a: [hr + 1, s.honor ?? 0], gift: honorPrize(hr) })
     if (hr === 0) x = { ...x, crowns: [...(x.crowns ?? []), season] } // danh hiệu mùa: đệ nhất Công Huân
@@ -70,6 +88,11 @@ export function endSeason(
     // Chính Tà Phân Tranh: người phái thắng mùa có quà (thư trước thư kết mùa)
     if (won !== null && campOf(side) === won)
       x = mail(x, { at: now, k: 'camp', a: [won, camps[won], camps[won ? 0 : 1]], gift: CAMP_WIN })
+    // Hiệp Ước Thiên Môn: minh ký vẫn là minh phi thăng thì người trong các minh hiệp ước được chia phần
+    if (w.treaty && w.treaty.by === first && w.treaty.with.includes(side))
+      x = mail(x, { at: now, k: 'treaty', a: [w.allies[first]?.tag ?? '?'], gift: TREATY_GIFT })
+    if (fourWon >= 0 && fourOf(side) === fourWon)
+      x = mail(x, { at: now, k: 'four', a: [fourWon, best], gift: FOUR_WIN })
     // danh hiệu mùa (giữ qua luân hồi): anh kiệt từng hạng mục, người trong minh quán quân Cửu Thiên
     const podium = hr === 1 ? [HONOR_SILVER] : hr === 2 ? [HONOR_BRONZE] : [] // hạng 2 / 3 Công Huân
     const titled = [

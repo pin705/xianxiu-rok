@@ -395,7 +395,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** phòng chờ ghép đội, chọn vai, trận điều khiển trực tiếp trong phó bản riêng.
 - **Vì sao giữ chân:** co-op có vai trò rõ, "raid" cho người thích PvE.
 - **Tu tiên hoá:** *Man Hoang Cổ Tộc* / *Thượng cổ hung thú* — tổ đội 4 người (hộ pháp / chủ công / trị liệu).
-- **Game mình:** 🟡 Man Hoang Cổ Tộc (`world/party.ts`, `AllyParty.svelte` — như Ceroli Crisis): Chủ Điện ≥ 8, phòng tối đa 4 người trong minh, 3 vai (Hộ Pháp / Chủ Công / Trị Liệu), 5 độ khó; đội đầu Luận Kiếm Đài (đệ tử ảo) đánh 5 đợt hung thú mạnh dần, server giải tự động, quà qua thư. Thiếu: Ceroli Assault 12 người, Realm of Mystique, cửa hàng tiền riêng.
+- **Game mình:** 🟡 Man Hoang Cổ Tộc (`world/party.ts`, `AllyParty.svelte` — như Ceroli Crisis): Chủ Điện ≥ 8, phòng tối đa 4 người trong minh, 3 vai (Hộ Pháp / Chủ Công / Trị Liệu), 5 độ khó; đội đầu Luận Kiếm Đài (đệ tử ảo) đánh 5 đợt hung thú mạnh dần, server giải tự động, quà qua thư. Ceroli Assault = Vây Công Yêu Vương 12 người (`world/assault.ts`); **Realm of Mystique = Huyễn Vực Bí Cảnh** (`world/mystic.ts`, `MysticCard.svelte` trong thẻ Hội chiến của Luận Kiếm Đài): hàng chờ lẻ mỗi độ khó (Thường / Truyền Thuyết), chọn vai, đủ 4 người (chờ 10 phút thì bù NPC) ghép đội ngẫu nhiên đánh ba thủ lĩnh (sức theo lực chiến cả đội, màn cuối là trùm có công pháp), tổng lượt đánh là thời gian — bảng tuần 10 đội phá đảo nhanh nhất mỗi độ khó; 2 lượt / ngày. Thiếu: cửa hàng tiền riêng.
 - **Ưu tiên:** P2 · **Công sức:** L.
 
 #### C10. Karuak Ceremony & Trial of Kau Karuak
@@ -871,7 +871,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | C6 | Marauders & Encampments | ✅ Khai Giới Trảm Tà (`world/eve.ts`); chưa có trại lưu khấu | P2 | M |
 | C7 | Barbarian Camps & Keeps (KvK) | ❌ (ngoài phạm vi) | P2 | M |
 | C8 | Lohar's Trial (vật phẩm triệu hồi boss) | ✅ Yêu Vương Tuần Sơn (`world/lohar.ts`) | P1 | M |
-| C9 | Ceroli Crisis / Assault / Realm of Mystique | 🟡 Man Hoang Cổ Tộc (`world/party.ts`): Crisis 4 người 3 vai 5 độ khó, giải tự động; thiếu Assault 12 người, Realm | P2 | L |
+| C9 | Ceroli Crisis / Assault / Realm of Mystique | ✅ Man Hoang Cổ Tộc (`world/party.ts`): Crisis 4 người 3 vai 5 độ khó; Assault = Vây Công Yêu Vương 12 người (`world/assault.ts`, 8 độ khó); Realm of Mystique = Huyễn Vực Bí Cảnh (`world/mystic.ts`: ghép đội ngẫu nhiên 4 người, 2 độ khó, ba thủ lĩnh, bảng phá đảo nhanh nhất tuần) | P2 | L |
 | C10 | Karuak Ceremony / Trial of Kau Karuak | ✅ Thí Luyện Yêu Hoàng (5 độ khó × 50 cửa); thiếu nhờ minh giúp | P2 | S–M |
 | C11 | Shadow Legion (minh thủ sóng quái) | ✅ Ma Triều Công Sơn (`world/legion.ts`) | P1 | M |
 | C12 | Holy-site Guardians & Runes | ✅ hộ trận linh thú + phù văn 12 giờ | P2 | M |

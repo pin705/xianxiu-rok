@@ -9,12 +9,14 @@ import { num, obj } from './parse.ts'
 import { buildTime } from './stats.ts'
 import { type Job, type State } from './types.ts'
 import { bag, IDS, troops } from './util.ts'
+import { validLater } from './valid.ts'
 import {
   ACHS,
   DAILY,
   DAOS,
   DRILL_MODS,
   STRATS,
+  UNIT_BASE,
   ELDERS,
   EVENT_GOALS,
   FESTS,
@@ -135,6 +137,8 @@ export function migrate(raw: unknown): State | null {
 // Save từ ngoài vào (nhập tay, file, bản sửa tay) có thể thiếu hay sai trường. Kiểm đủ khuôn trước khi chơi:
 // thiếu là từ chối (người chơi được báo "save không hợp lệ"), không để game vỡ lúc vẽ rồi kẹt vòng lặp lỗi.
 const optNum = (v: unknown) => v === undefined || num(v)
+// lượt mỗi ngày của các chế độ hàng chờ (Đại Bỉ, Tán Tu Tranh Châu, Vân Chu): ngày, số lượt, số trận thắng
+const daily = (v: any) => v === undefined || (obj(v) && [v.day, v.n, v.win].every(num))
 const isBag = (x: unknown) => obj(x) && RESOURCES.every(r => num(x[r]))
 const isTroops = (x: unknown) => obj(x) && UNITS.every(u => num(x[u]) && x[u] >= 0)
 const isTimed = (j: unknown) => j === null || (obj(j) && num(j.startAt) && num(j.finishAt))
@@ -175,11 +179,6 @@ function valid(s: any): s is State {
     obj(s.items) &&
     byElder(s.elders, num) &&
     byElder(s.talents, t => nums(t) && t.length === TALENT_NODES.length) &&
-    obj(s.gear) &&
-    Object.entries(s.gear).every(
-      ([g, x]: [string, any]) =>
-        Object.hasOwn(GEAR, g) && obj(x) && num(x.lv) && (x.on === undefined || Object.hasOwn(ELDERS, x.on)),
-    ) &&
     Array.isArray(s.buffs) &&
     s.buffs.every(
       (b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string',
@@ -246,6 +245,10 @@ const validLate = (s: any) =>
   (s.trial === undefined || (obj(s.trial) && [s.trial.key, s.trial.d, s.trial.gate].every(num))) &&
   (s.tpage === undefined ||
     byElder(s.tpage, p => obj(p) && num(p.at) && Array.isArray(p.pages) && p.pages.every(nums))) &&
+  (s.aux === undefined || byElder(s.aux, v => Array.isArray(v) && v.every((e: string) => Object.hasOwn(ELDERS, e)))) &&
+  (s.divine === undefined || (obj(s.divine) && Object.hasOwn(ELDERS, s.divine.elder) && num(s.divine.season))) &&
+  (s.royale === undefined || (obj(s.royale) && [s.royale.day, s.royale.n, s.royale.pts].every(num))) &&
+  [s.daibi, s.silver, s.vanchu, s.mystic].every(daily) &&
   (s.digs === undefined || (Array.isArray(s.digs) && s.digs.every((d: any) => obj(d) && num(d.x) && num(d.y)))) &&
   (s.tshop === undefined ||
     (obj(s.tshop) &&
@@ -302,9 +305,11 @@ const validFest = (s: any) =>
   // trường số thêm sau (save cũ thiếu là không có)
   [s.frenzy, s.moved, s.builder2, s.joined, s.towerDay, s.honor].every(optNum) &&
   [s.honorGot, s.guestAt, s.frag, s.bones, s.honorAll, s.partyDay, s.seasonAt].every(optNum) &&
-  [s.veil, s.mirage, s.born, s.coinSpent, s.secludeAt, s.guests, s.convoyDay].every(optNum) &&
+  [s.veil, s.mirage, s.born, s.coinSpent, s.secludeAt, s.guests, s.convoyDay, s.assaultDay].every(optNum) &&
+  optNum(s.puppet) &&
   (s.friends === undefined || (Array.isArray(s.friends) && s.friends.every(num))) &&
   validLate(s) &&
+  validLater(s) &&
   (s.potOpened === undefined || (obj(s.potOpened) && num(s.potOpened.week) && num(s.potOpened.n))) &&
   [s.crowns, s.honors].every(x => x === undefined || (Array.isArray(x) && x.every(num))) &&
   (s.yb === undefined || (obj(s.yb) && num(s.yb.kp) && num(s.yb.hunted) && num(s.yb.raided) && num(s.yb.gathered))) &&
@@ -313,6 +318,10 @@ const validFest = (s: any) =>
   (s.side === undefined || (Array.isArray(s.side) && s.side.length <= 4 && s.side.every(num))) &&
   (s.quiz === undefined || (obj(s.quiz) && num(s.quiz.day) && num(s.quiz.n) && num(s.quiz.right))) &&
   (s.strat === undefined || Object.hasOwn(STRATS, s.strat)) &&
+  (s.elite === undefined ||
+    (obj(s.elite) && Object.entries(s.elite).every(([k, v]) => Object.hasOwn(UNIT_BASE, k) && num(v)))) &&
+  (s.folio === undefined ||
+    (obj(s.folio) && nums(s.folio.at) && nums(Array.isArray(s.folio.p) && s.folio.p.map((x: unknown) => x ?? 0)))) &&
   (s.drill === undefined ||
     (obj(s.drill) &&
       [s.drill.day, s.drill.base, s.drill.wins, s.drill.got].every(num) &&

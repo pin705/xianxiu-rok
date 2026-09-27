@@ -216,6 +216,10 @@ export type SeasonRow = { side: number; name: string; pts: number } // side > 0:
 // Chính Tà Phân Tranh: phái của một phe (tiên minh theo mã minh, người đi một mình theo mã người) — 0 Chính phái, 1 Tà phái.
 // ponytail: chia theo chẵn lẻ (đều về số phe, không cân lực chiến); cân theo lực chiến lúc lập minh nếu hai phái lệch nhiều
 export const campOf = (side: number) => (((side % 2) + 2) % 2) as 0 | 1
+// Tứ Tượng Tranh Hùng: phe của một bên — 0 Thanh Long · 1 Bạch Hổ · 2 Chu Tước · 3 Huyền Vũ (cùng chẵn lẻ với Chính / Tà phái)
+export const fourOf = (side: number) => ((side % 4) + 4) % 4
+export const fourPts = (rows: SeasonRow[]) =>
+  rows.reduce((t, r) => t.map((v, k) => (k === fourOf(r.side) ? v + r.pts : v)), [0, 0, 0, 0])
 export const campPts = (rows: SeasonRow[]): [number, number] =>
   rows.reduce<[number, number]>((t, r) => (campOf(r.side) ? [t[0], t[1] + r.pts] : [t[0] + r.pts, t[1]]), [0, 0])
 // Điểm phái cả mùa: điểm mùa các phe + CAMP_STAGE_PTS mỗi chặng thi đua thắng

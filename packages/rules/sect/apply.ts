@@ -31,6 +31,11 @@ import { wallActions, type WallAction } from './wall.ts'
 import { heroActions, type HeroAction } from './hero.ts'
 import { eveActions, type EveAction } from './eve.ts'
 import { secluded, secludeActions, type SecludeAction } from './seclude.ts'
+import { folioActions, type FolioAction } from './folio.ts'
+import { puppetActions, type PuppetAction } from './puppet.ts'
+import { eliteActions, type EliteAction } from './elite.ts'
+import { formActions, type FormAction } from './formation.ts'
+import { crystalActions, type CrystalAction } from './crystal.ts'
 import { buildingActions, type BuildingAction } from './buildings.ts'
 import { elderActions, type ElderAction } from './elders.ts'
 import { expeditionActions, type ExpeditionAction } from './expedition.ts'
@@ -77,6 +82,11 @@ export type Action =
   | HeroAction
   | EveAction
   | SecludeAction
+  | FolioAction
+  | PuppetAction
+  | EliteAction
+  | FormAction
+  | CrystalAction
 
 const ACTIONS: Actions<Action> = {
   ...buildingActions,
@@ -114,6 +124,11 @@ const ACTIONS: Actions<Action> = {
   ...heroActions,
   ...eveActions,
   ...secludeActions,
+  ...folioActions,
+  ...puppetActions,
+  ...eliteActions,
+  ...formActions,
+  ...crystalActions,
 }
 
 export const ACTION_TYPES = Object.keys(ACTIONS) as Action['type'][]

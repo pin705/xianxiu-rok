@@ -113,6 +113,7 @@ tâm điểm, chữ ngắn, hình + số. Tranh đồ vật: `artOf('ui:<tên>')
 | `Fold` | mục gập (cẩm nang, hỏi đáp): tiêu đề mũi tên son, lời mở bên dưới |
 | `Moment` | khoảnh khắc lớn (đột phá, luân hồi, thất bại): huy hiệu đập xuống, dải lụa son / dấu mực (`fail`), hào quang (`glory`) |
 | `Chit` | mẩu giấy báo nổi trên thanh tab (popover): tranh nghiêng, tiêu đề son, phần con — vừa nhận quà |
+| `Sweep` | dải mực quét ngang phía trên núi (tin lớn toàn giới): trượt vào, dừng đọc, mờ đi; chạm để mở chi tiết |
 | `Orb` | nút tròn chọn một trong hàng (chân dung, khung): `on` viền vàng, `lock` ổ khoá |
 | `BigStat` | số liệu chính (thế lực): tranh đồ vật, nhãn nhỏ, số rất to, gạch son dưới |
 | `Letter` | tờ thư giấy trắng: mỗi `section` một đoạn ngăn nét mực đứt, `warn` dòng son cuối thư |

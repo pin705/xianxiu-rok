@@ -21,6 +21,8 @@ function reborn(s: State, t: number, n: number): State {
     elders: s.elders,
     talents: s.talents,
     ...(s.tpage && { tpage: s.tpage }),
+    ...(s.divine && { divine: s.divine }),
+    ...(s.aux && { aux: s.aux }),
     gear: s.gear,
     forge: s.forge,
     guard: s.guard,

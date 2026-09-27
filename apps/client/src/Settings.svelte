@@ -2,6 +2,7 @@
   // Cài đặt: âm thanh, ngôn ngữ, hướng dẫn, tài khoản, thông tin. Tiến độ nằm trên server (không còn xuất/nhập save).
   // Bố cục: mỗi nhóm một tấm bảng giấy khung đôi (Card), trong bảng là các hàng kẻ chấm — không xếp chồng từng thẻ rời.
   import { Icon } from '@rok/art'
+  import { read, write } from './storage'
   import { Button, Card, Fold, Section, Select, Sheet, Toggle } from './ui'
   import { SECLUDE_DAYS } from '@rok/rules'
   import { LOCALES, LOCALE_IDS, type Locale } from '@rok/i18n'
@@ -33,6 +34,7 @@
 
   let music = $state(isMusicOn())
   let calmOn = $state(calm())
+  let newsOn = $state(read('rok.news') !== '0')
 </script>
 
 <Sheet {open} {onclose} title={L.settings.title}>
@@ -56,6 +58,14 @@
         calmOn = on
         setCalm(on)
       }}><Icon name="power" size={20} />{L.settings.calm}</Toggle
+    >
+    <!-- tin lớn toàn giới quét ngang trên núi (NewsSweep): tắt thì không hiện -->
+    <Toggle
+      checked={newsOn}
+      onchange={on => {
+        newsOn = on
+        write('rok.news', on ? '1' : '0')
+      }}><Icon name="scroll" size={20} />{L.settings.news}</Toggle
     >
     <!-- tên mỗi ngôn ngữ viết bằng chính ngôn ngữ đó: người đọc không hiểu ngôn ngữ đang hiện vẫn tìm được tiếng mình -->
     <Select

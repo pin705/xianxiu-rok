@@ -135,7 +135,8 @@
     border-radius: 12px;
     background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.5) 48%, transparent 58%) 130% 0 / 260% 100%
       no-repeat;
-    animation: sheen 4.5s var(--ease) 1.2s infinite;
+    /* lướt 3 lần sau khi hiện rồi thôi: lặp mãi thì mỗi nút son trên màn bắt trình duyệt vẽ lại từng khung hình */
+    animation: sheen 4.5s var(--ease) 1.2s 3;
     pointer-events: none;
   }
   @keyframes sheen {

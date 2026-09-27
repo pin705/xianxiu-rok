@@ -1,7 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  DAY_OFFSET,
+  DESERT_RING,
   DECREE_TTL,
+  HOLM_BUFF,
+  RULE_FFA,
+  SUPPLY_FALL,
+  SUPPLY_FREE,
+  SUPPLY_MIN,
+  marchSide,
   EYE,
   WALL_VOLLEY,
   eyeOf,
@@ -86,6 +94,7 @@ import {
   TRIB_CLOUD,
   TRIB_EXP,
   TERR_GATHER,
+  TERR_GATHER_FUND,
   TERR_SEAT,
   MOVE_COOL,
   FOG_HOME,
@@ -234,6 +243,10 @@ import {
   goodsLeft,
   goodsOn,
   worldSnap,
+  napBetween,
+  holmAt,
+  holmBuffs,
+  holmStep,
 } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 23, 3)
@@ -1258,6 +1271,10 @@ test('minh ước (NAP): đề nghị, nhận / từ chối, huỷ; đang minh �
     w,
   )
   assert.deepEqual(raid, { ok: false, error: 'friend' }, 'minh ước: không cướp')
+  // mùa Bát Phương Hỗn Chiến: minh ước vô hiệu (cướp được), không lập minh ước mới
+  const ffa: World = { ...w, rule: RULE_FFA }
+  assert.equal(napBetween(ffa, 1, 2), false)
+  assert.equal(worldAct(ps, 3, { type: 'napAsk', id: 2 }, T0, 1, undefined, ffa).ok, false)
   assert.equal(act(2, { type: 'napEnd', id: 1 }), null)
   assert.deepEqual([w.allies[1].naps, w.allies[2].naps], [[], []], 'một bên huỷ là huỷ cả hai')
   assert.ok(
@@ -1564,11 +1581,16 @@ test('lãnh thổ tiên minh: mốc từ tông môn trong minh + điểm minh gi
     assert.ok(r.ok)
     for (const [k, v] of r.changed) q.set(k, v)
     const m = q.get(1)!.marches[0]
-    const g = advanceAll(q, wx, m.arriveAt, map).changed.get(1)!.marches[0]
+    const out = advanceAll(q, wx, m.arriveAt, map)
+    const g = out.changed.get(1)!.marches[0]
+    fund = [out.world.allies[1]?.fund ?? 0, g.mine!.amount]
     return g.mine!.end - g.arriveAt
   }
+  let fund: [number, number] = [0, 0]
   const solo = dig({ ...w, allies: { 2: ally(2, 2) } })
   assert.ok(Math.abs(dig(w) * (1 + TERR_GATHER) - solo) < 2, 'khai nhanh hơn 25 %')
+  // khai trong lãnh thổ minh: một phần vào Minh khố (Alliance Resource của RoK)
+  assert.equal(fund[0] - (w.allies[1]?.fund ?? 0), Math.floor(fund[1] / TERR_GATHER_FUND))
   // dời tông môn: vào ô trống trong lãnh thổ minh mình (vùng ngoài, cách tông môn / điểm từ 3 ô), mọi đội ở nhà, 24 giờ một lần
   const move = (x: number, y: number, st = ps, t = T0) => worldAct(st, 1, { type: 'move', x, y }, t, 1, map, w)
   const spot = [...Array(7).keys()]
@@ -3178,7 +3200,10 @@ test('Thiên Mệnh Chọn Luật: 3 ngày cuối mùa bỏ phiếu luật mùa 
   assert.equal(vote(2, 2, 47), null)
   assert.equal(vote(3, 0, 48), null)
   assert.equal(vote(3, 2, 48), null, 'đổi phiếu')
-  assert.deepEqual(voteTally(w), [0, 0, 3])
+  assert.deepEqual(
+    voteTally(w),
+    RULES.map((_, k) => (k === 2 ? 3 : 0)),
+  )
   const next = endSeason(ps, w, map(49), T0, 1, new Set()).world
   assert.equal(next.rule, 2)
   assert.equal(next.votes, undefined, 'mùa mới bỏ phiếu lại từ đầu')
@@ -3391,4 +3416,97 @@ test('Thương Đội Gặp Nạn: trong kỳ lễ mỗi giờ hàng rơi quanh 
   const d2 = advanceAll(ps, w, Math.max(m2.arriveAt, m.arriveAt), map)
   for (const [k, v] of d2.changed) ps.set(k, v)
   if (m2.arriveAt >= m.arriveAt) assert.equal(ps.get(2)!.stats.goods ?? 0, 0, 'tới sau: về tay không')
+})
+
+test('Cổ Tháp Hành Quân (luật mùa): đường đi dài hơn SUPPLY_FREE ô thì công đội giảm dần, không dưới SUPPLY_MIN; không có luật thì như cũ', () => {
+  const s = sect('A', 10, { kiem3: 100 })
+  const m = (tiles: number) =>
+    ({
+      id: 1,
+      elder: 'thanhPhong',
+      army: { kiem3: 100 },
+      target: { kind: 'beast', i: 0 },
+      startAt: T0,
+      arriveAt: T0 + HOUR,
+      returnAt: 0,
+      path: Array.from({ length: tiles + 1 }, (_, k) => ({ x: k, y: 0 })),
+    }) as March
+  const atk = (st: State, tiles: number) => marchSide(st, m(tiles)).troops[0].atk
+  const ruled: State = { ...s, buffs: [...s.buffs, { key: 'supply', v: 1, until: 0, src: 'rule' }] }
+  assert.equal(atk(ruled, SUPPLY_FREE), atk(s, SUPPLY_FREE), 'trong linh vực: như cũ')
+  assert.ok(Math.abs(atk(ruled, SUPPLY_FREE + 10) - atk(s, SUPPLY_FREE + 10) * (1 - SUPPLY_FALL * 10)) < 1e-6)
+  assert.ok(Math.abs(atk(ruled, 200) - atk(s, 200) * SUPPLY_MIN) < 1e-6, 'không dưới sàn')
+  assert.equal(atk(s, 200), atk(s, 1), 'không có luật mùa: đi xa không yếu')
+})
+
+test('Sinh Tử Đài: 21h mỗi ngày cao thủ Luận Kiếm Đài hai phái đấu tay đôi theo thứ hạng; phái thắng nhiều cặp được tăng ích tới trận hôm sau', () => {
+  const arena = (pts: number) => ({ lineup: [], pts, week: 0, day: 0, left: 0, chest: 0 }) as unknown as State['arena']
+  const ps = world(sect('A', 16), sect('B', 16), sect('C', 16), sect('D', 16))
+  for (const [pid, pts] of [
+    [1, 900],
+    [2, 800],
+    [3, 700],
+    [4, 600],
+  ])
+    ps.set(pid, { ...ps.get(pid)!, arena: arena(pts), elders: { thanhPhong: 40_000 } })
+  // minh 2 (chẵn) là phái Chính, minh 1 (lẻ) là phái Tà
+  let w: World = {
+    ...freshWorld(),
+    allies: {
+      1: { id: 1, name: 'Tà', tag: 'TA', members: { 3: 2, 4: 0 }, notice: '', at: T0, helps: [] },
+      2: { id: 2, name: 'Chính', tag: 'CH', members: { 1: 2, 2: 0 }, notice: '', at: T0, helps: [] },
+    },
+  }
+  const map = { atlas: atlas(777), phase: 3, day: 5 }
+  const d = Math.floor((T0 + DAY + DAY_OFFSET) / DAY)
+  const at = holmAt(d)
+  assert.equal(holmStep(ps, w, map, at - 1).world, w, 'chưa tới giờ')
+  assert.equal(holmStep(ps, w, { ...map, day: undefined }, at).world, w, 'sim không có ngày mùa: không chạy')
+  w = holmStep(ps, w, map, at).world
+  assert.equal(w.holm?.day, d)
+  assert.deepEqual(
+    w.holm?.duels.map(([a, b]) => [a, b]),
+    [
+      [1, 3],
+      [2, 4],
+    ],
+    'cặp theo thứ hạng điểm đài từng phái',
+  )
+  assert.equal(holmStep(ps, w, map, at + HOUR).world, w, 'mỗi ngày một lần')
+  if (w.holm!.win !== null) {
+    const winner = w.holm!.win === 0 ? 1 : 3
+    const loser = w.holm!.win === 0 ? 3 : 1
+    assert.deepEqual(
+      holmBuffs(w, winner, at + HOUR).map(b => [b.key, b.v]),
+      Object.entries(HOLM_BUFF),
+    )
+    assert.deepEqual(holmBuffs(w, loser, at + HOUR), [])
+    assert.deepEqual(holmBuffs(w, winner, holmAt(d + 1)), [], 'hết hạn khi tới trận hôm sau')
+  }
+})
+
+test('Tử Hải Hoang Mạc (luật mùa): mỏ ở vòng giữa không khai được, mỏ vòng ngoài vẫn khai; không có luật thì như cũ', () => {
+  const a = atlas(777)
+  const map = { atlas: a, phase: 3 }
+  const mid = a.points.find(p => p.kind === 'mine' && a.regions[p.region].ring === DESERT_RING)!
+  const out = a.points.find(p => p.kind === 'mine' && a.regions[p.region].ring === 0)!
+  const home = { x: a.regions[mid.region].cx, y: a.regions[mid.region].cy }
+  const base = { ...sect('A', 10, { kiem2: 100 }), seat: home }
+  const desert: State = { ...base, buffs: [...base.buffs, { key: 'desert', v: 1, until: 0, src: 'rule' }] }
+  const go = (s: State, i: number) =>
+    worldAct(
+      world(s),
+      1,
+      { type: 'go', i, task: 'gather', elder: 'thanhPhong', army: { kiem2: 100 } },
+      T0,
+      1,
+      map,
+      freshWorld(),
+    )
+  assert.deepEqual(go(desert, mid.i), { ok: false, error: 'locked' }, 'vùng chết')
+  assert.ok(go(base, mid.i).ok, 'không có luật: khai được')
+  assert.ok(
+    go({ ...desert, seat: { x: a.regions[out.region].cx, y: a.regions[out.region].cy } }, out.i).ok,
+    'vòng ngoài vẫn khai',
+  )
 })

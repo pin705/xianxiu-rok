@@ -19,10 +19,13 @@
     type MapSnap,
     type Mark,
     type WorldAction,
+    arkAt,
   } from '@rok/rules/world'
   import {
     DIG_FRAGS,
     DIG_MAX,
+    ARK_ROUND,
+    ARK_ROUNDS,
     BLESSINGS,
     DECREE_MAX,
     BOOK,
@@ -35,6 +38,7 @@
     cellOf,
     clear,
     dayOf,
+    weekOf,
     fogOf,
     type BlessKey,
   } from '@rok/rules'
@@ -347,6 +351,9 @@
   type Find = 'mine' | 'vein' | 'boss' | 'wild'
   let finding = $state(false)
   let decree = $state('') // Giới Chủ soạn chiếu
+  const seatName = (pid: number) => snap?.seats.find(x => x.pid === pid)?.name ?? '?'
+  // giờ Tranh Đoạt Linh Châu (tối Chủ nhật): cả giới xem được trận
+  const arkLive = $derived(now >= arkAt(weekOf(now)) && now < arkAt(weekOf(now)) + (ARK_ROUNDS + 1) * ARK_ROUND)
   let want = $state<{ kind: Find; lv: number }>({ kind: 'mine', lv: 1 })
   let miss = $state(false)
   function find() {
@@ -547,6 +554,9 @@
               >{/if}</span
           >
         {/if}
+        {#if !slim && arkLive}<button class="t-action t-tiny" onclick={() => (social.arkWatch = true)}
+            ><Icon name="swords" size={12} />{L.ark.watch}</button
+          >{/if}
         {#if lordSeat}<button class="t-action t-tiny" onclick={() => (social.profile = lordSeat.pid)}
             ><Icon name="flag" size={12} />{L.lord.now(lordSeat.name)}</button
           >{/if}
@@ -588,6 +598,19 @@
           </span>
         {/if}
         {#if !slim}<small class="t-tiny t-soft">{L.world.phaseHint[phase]}</small>{/if}
+        <!-- Sinh Tử Đài hôm nay: tỉ số hai phái, phái thắng được tăng ích, từng cặp đấu -->
+        {#if !slim && snap?.holm && snap.holm.day === dayOf(now)}
+          {@const h = snap.holm}
+          {@const aw = h.duels.filter(x => x[2] === 0).length}
+          <small class="t-tiny" class:t-gold={h.win !== null}
+            >{h.duels.length
+              ? `${L.holm.score(aw, h.duels.length - aw)} · ${h.win === null ? L.holm.draw : L.holm.won(h.win)}`
+              : L.holm.none}</small
+          >
+          {#each h.duels as [a, b, won] (a)}<small class="t-tiny t-soft"
+              >{L.holm.duel(seatName(a), seatName(b), won === 0)}</small
+            >{/each}
+        {/if}
         {#if !slim && snap?.eveWin && snap.eveWin.until > now && snap.eveWin.tags.length}<small class="t-tiny t-gold"
             >{L.eve.won(snap.eveWin.tags.join(', '), clock(snap.eveWin.until - now))}</small
           >{/if}

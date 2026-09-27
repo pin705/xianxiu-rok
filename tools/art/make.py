@@ -166,6 +166,9 @@ HIRES = {
   'plaque': (640, lambda im: [round(im.height * 0.3), round(im.height * 0.5), round(im.height * 0.3), round(im.height * 0.5)]),
 }
 
+# da khung viền (border-image): WebP chất lượng cao — PNG 3x nặng 2,5 MB chặn màn tải; WebP 92 còn ~0,3 MB, nét mực đôi vẫn sắc
+SKIN_Q = 92
+
 def kit():
   """bộ giao diện sạch: 3 mẫu gốc (KIT_BASES) → mọi da trong KIT, đúng khung + thông số 9 mảnh của từng da (bản vẽ code)"""
   meta = json.load(open(os.path.join(X.WORK, 'skins', 'meta.json')))
@@ -201,7 +204,7 @@ def kit():
       ins = [v * 3 for v in wcss]
       if dark: img = X.lacquer(img, dark)
       out = X.nine(img, bins, W, H, ins)
-      X.save(f'skin:{n}', out, 'skin', extra={'slice': ins, 'width': wcss, 'outset': m.get('outset') or 0, 'repeat': 'stretch'}, fmt='PNG')
+      X.save(f'skin:{n}', out, 'skin', extra={'slice': ins, 'width': wcss, 'outset': m.get('outset') or 0, 'repeat': 'stretch'}, q=SKIN_Q)
       continue
     ins = [v * m['S'] for v in m['slice']]  # ảnh 2x như bản code: px ảnh = px CSS × 2
     wcss = m['slice']
@@ -350,7 +353,7 @@ def chrome():
   for n in (args[1:] or [*C.SKINS, *C.DOUBLE]):
     if n not in meta: continue
     im, extra = C.render_double(n, meta[n]) if n in C.DOUBLE else C.render(n, meta[n])
-    X.save(f'skin:{n}', im, 'skin', extra=extra, fmt='PNG')  # PNG: mép kim loại sắc, không nhoè nén
+    X.save(f'skin:{n}', im, 'skin', extra=extra, q=SKIN_Q)
 
 
 def creative():

@@ -17,12 +17,20 @@
     lineupOf,
     marchSlots,
     KY_SHOP,
+    ROYALE_DAILY,
+    DAIBI_DAILY,
+    DAIBI_HALL,
+    DAIBI_TACTICS,
+    DAIBI_TEAM,
+    type DaibiTactic,
+    ROYALE_HALL,
+    ROYALE_N,
     kyBought,
     type ArenaTeam,
     type BagId,
     type Report,
   } from '@rok/rules'
-  import { canRevenge, type WorldAction } from '@rok/rules/world'
+  import { canRevenge, daibiUsed, royaleUsed, type WorldAction } from '@rok/rules/world'
   import type { Ack, ArenaView } from '@rok/protocol'
   import type { Net } from './net'
   import { Icon, Portrait, type IconName } from '@rok/art'
@@ -44,6 +52,9 @@
     Tag,
   } from './ui'
   import Tourney from './Tourney.svelte'
+  import SilverCard from './SilverCard.svelte'
+  import VanchuCard from './VanchuCard.svelte'
+  import MysticCard from './MysticCard.svelte'
   import { L, LOOK, MASTER, num, sfx } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
@@ -65,7 +76,7 @@
   const game = $derived(g.game)
   const now = $derived(g.now)
 
-  type Tab = 'foes' | 'lineup' | 'log' | 'board' | 'shop'
+  type Tab = 'foes' | 'lineup' | 'log' | 'board' | 'shop' | 'royale' | 'daibi'
   // thẻ của đài: icon trên, tên dưới (năm thẻ chữ dài — thẻ kẹp sách thường bị cắt chữ trên điện thoại)
   const TABS: { id: Tab; icon: IconName; label: string }[] = [
     { id: 'foes', icon: 'swords', label: L.arena.foes },
@@ -73,6 +84,8 @@
     { id: 'log', icon: 'scroll', label: L.arena.log },
     { id: 'board', icon: 'rank', label: L.arena.board },
     { id: 'shop', icon: 'star', label: L.arena.shop },
+    { id: 'royale', icon: 'skull', label: L.royale.tab },
+    { id: 'daibi', icon: 'flag', label: L.daibi.tab },
   ]
   let tab = $state<Tab>('foes')
   let view = $state.raw<ArenaView | null>(null)
@@ -85,6 +98,7 @@
   const band = $derived(arenaBand(a.pts))
   // đội hình đang sửa (lưu mới gửi)
   let draft = $state<ArenaTeam[] | null>(null)
+  let tactic = $state<DaibiTactic>('even') // Tiên Môn Đại Bỉ: chiến thuật chọn trước khi vào hàng
   const lineup = $derived(draft ?? lineupOf(game))
   const free = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined && !lineup.some(x => x.elder === e)))
   const edit = (f: (l: ArenaTeam[]) => ArenaTeam[]) => (draft = f([...lineup]))
@@ -302,6 +316,66 @@
             </li>
           {/each}
         </ul>
+      {:else if tab === 'royale'}
+        <!-- Cổ Khư Loạn Chiến: hàng chờ cả giới, đủ 8 tông môn (chờ lâu thì bù NPC) thì loạn chiến, hạng ra điểm — kết quả qua thư -->
+        {@const used = royaleUsed(game, now)}
+        <p class="t-small t-soft">{L.royale.hint(ROYALE_N, ROYALE_DAILY)}</p>
+        <Card tone="silk">
+          <div class="stack" style:--gap="6px">
+            <p class="row between t-small">
+              <b>{L.royale.queue(view?.royale.q ?? 0, ROYALE_N)}</b><span class="t-gold"
+                >{L.royale.pts(game.royale?.pts ?? 0)}</span
+              >
+            </p>
+            <small class="t-tiny t-soft">{L.royale.left(ROYALE_DAILY - used, ROYALE_DAILY)}</small>
+            {#if view?.royale.mine}
+              <Button variant="ghost" onclick={() => send({ type: 'royaleLeave' }).then(load)}>{L.royale.leave}</Button>
+            {:else}
+              <Button
+                variant="gold"
+                icon="swords"
+                disabled={used >= ROYALE_DAILY || game.levels.chuDien < ROYALE_HALL}
+                onclick={() => send({ type: 'royaleJoin' }).then(load)}
+                >{game.levels.chuDien < ROYALE_HALL ? L.royale.locked(ROYALE_HALL) : L.royale.join}</Button
+              >
+            {/if}
+          </div>
+        </Card>
+      {:else if tab === 'daibi'}
+        <!-- Tiên Môn Đại Bỉ: chọn chiến thuật (3 đội đứng ở cờ nào), vào hàng; đủ 10 người thì chia đội, giải 3 hiệp — kết quả qua thư -->
+        {@const used = daibiUsed(game, now)}
+        <p class="t-small t-soft">{L.daibi.hint(DAIBI_TEAM, DAIBI_DAILY)}</p>
+        <Card tone="silk">
+          <div class="stack" style:--gap="6px">
+            <p class="row between t-small">
+              <b>{L.daibi.queue(view?.daibi.q ?? 0, 2 * DAIBI_TEAM)}</b><span class="t-gold"
+                >{L.daibi.wins(game.daibi?.win ?? 0)}</span
+              >
+            </p>
+            <small class="t-tiny t-soft">{L.daibi.left(DAIBI_DAILY - used, DAIBI_DAILY)}</small>
+            {#if view?.daibi.mine}
+              <Button variant="ghost" onclick={() => send({ type: 'daibiLeave' }).then(load)}>{L.daibi.leave}</Button>
+            {:else}
+              <div class="row wrap" style:--gap="4px">
+                {#each Object.keys(DAIBI_TACTICS) as DaibiTactic[] as k (k)}
+                  <Button size="sm" variant={tactic === k ? 'gold' : 'ghost'} onclick={() => (tactic = k)}
+                    >{L.daibi.tactics[k]}</Button
+                  >
+                {/each}
+              </div>
+              <Button
+                variant="gold"
+                icon="flag"
+                disabled={used >= DAIBI_DAILY || game.levels.chuDien < DAIBI_HALL}
+                onclick={() => send({ type: 'daibiJoin', tactic }).then(load)}
+                >{game.levels.chuDien < DAIBI_HALL ? L.royale.locked(DAIBI_HALL) : L.daibi.join}</Button
+              >
+            {/if}
+          </div>
+        </Card>
+        <SilverCard q={view?.silver.q ?? 0} mine={!!view?.silver.mine} {send} onchange={load} />
+        <VanchuCard q={view?.vanchu.q ?? 0} mine={!!view?.vanchu.mine} {send} onchange={load} />
+        <MysticCard view={view?.mystic} {send} onchange={load} />
       {:else}
         <!-- bảng tuần: đồng tiền vàng / bạc / đồng cho ba hạng đầu, dòng của mình tô son -->
         <ol class="ledger">

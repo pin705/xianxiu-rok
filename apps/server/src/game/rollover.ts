@@ -53,6 +53,12 @@ import {
   SEASON_DAYS,
   partyStep,
   convoyStep,
+  assaultStep,
+  royaleStep,
+  daibiStep,
+  silverStep,
+  vanchuStep,
+  mysticStep,
   aquizStep,
   wallStep,
   planStep,
@@ -204,6 +210,12 @@ export function allyEvents(w: World, now: number) {
   arkCheck(w, now)
   partyCheck(w, now)
   convoyCheck(w, now)
+  assaultCheck(w, now)
+  royaleCheck(w, now)
+  daibiCheck(w, now)
+  silverCheck(w, now)
+  vanchuCheck(w, now)
+  mysticCheck(w, now)
   wallCheck(w, now)
   planCheck(w, now)
   tourneyCheck(w, now)
@@ -282,6 +294,66 @@ function partyCheck(w: World, now: number) {
 // Linh Thương Hộ Tống: đoàn buôn tới giờ khởi hành hay đủ người thì giải (mầm bí mật của server), quà qua thư
 function convoyCheck(w: World, now: number) {
   const r = convoyStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Vây Công Yêu Vương: phòng 12 người đủ người hay hết giờ chờ thì giải (mầm bí mật của server), thư cho người trong phòng
+function assaultCheck(w: World, now: number) {
+  const r = assaultStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Cổ Khư Loạn Chiến: hàng chờ đủ người (hay chờ lâu thì bù tông môn NPC) thì giải ngay (mầm bí mật của server), thư hạng
+function royaleCheck(w: World, now: number) {
+  const r = royaleStep(w.ps, w.shared, now, randomInt(1, 2 ** 31), [...w.npc])
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Tiên Môn Đại Bỉ: hàng chờ đủ 10 người (hay chờ lâu thì bù tông môn NPC) thì chia đội, giải 3 hiệp (mầm bí mật của server)
+function daibiCheck(w: World, now: number) {
+  const r = daibiStep(w.ps, w.shared, now, randomInt(1, 2 ** 31), [...w.npc])
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Tán Tu Tranh Châu: hàng chờ đủ 16 tán tu (hay chờ lâu thì bù tông môn NPC) thì chia hai đội, giải trọn trận Linh Châu
+function silverCheck(w: World, now: number) {
+  const r = silverStep(w.ps, w.shared, now, randomInt(1, 2 ** 31), [...w.npc])
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Vân Chu Hội Chiến: hàng chờ đủ 10 người (hay chờ lâu thì bù tông môn NPC) thì chia hai đội, giải ngay (mầm bí mật của server)
+function vanchuCheck(w: World, now: number) {
+  const r = vanchuStep(w.ps, w.shared, now, randomInt(1, 2 ** 31), [...w.npc])
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Huyễn Vực Bí Cảnh: mỗi độ khó, hàng chờ đủ 4 người (hay chờ lâu thì bù tông môn NPC) thì ghép đội, giải ba màn
+function mysticCheck(w: World, now: number) {
+  const r = mysticStep(w.ps, w.shared, now, randomInt(1, 2 ** 31), [...w.npc])
   if (r.world === w.shared) return
   w.share(r.world)
   for (const [pid, s] of r.changed) {

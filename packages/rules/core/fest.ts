@@ -21,6 +21,7 @@ import {
   type FestDef,
   type FestId,
   type Metric,
+  type Reward,
 } from '../data.ts'
 
 export const FEST_IDS = Object.keys(FESTS) as FestId[]
@@ -142,8 +143,20 @@ function bankStage(s: State, id: FestId, f: Fest): Fest {
 }
 // Mở sự kiện mới (chụp chỉ số), sang giai đoạn mới (dồn điểm giai đoạn trước), hết lượt thì khoá điểm (việc làm sau giờ đóng — trước
 // lúc server trao quà bảng xếp hạng — không tính)
+// Gộp nhiều phần quà tài nguyên / vật phẩm / hallRes thành một (thư gộp)
+const mergeRewards = (rs: Reward[]): Reward => {
+  const res: Partial<Record<string, number>> = {},
+    items: Partial<Record<string, number>> = {}
+  for (const r of rs) {
+    for (const [k, v] of Object.entries(r.res ?? {})) res[k] = (res[k] ?? 0) + (v ?? 0)
+    for (const [k, v] of Object.entries(r.items ?? {})) items[k] = (items[k] ?? 0) + (v ?? 0)
+  }
+  const hallRes = rs.reduce((n, r) => n + (r.hallRes ?? 0), 0)
+  return { res, items, ...(hallRes && { hallRes }) } as Reward
+}
 export function rollFest(s: State, t: number): State {
   let fest = s.fest
+  let left: Reward[] = [] // Nhật Khóa hôm trước: rương đủ điểm chưa mở — gửi thư (tự vận hành, G8)
   for (const id of FEST_IDS) {
     const d = FESTS[id]
     const w = festWindow(s, d, t)
@@ -152,9 +165,13 @@ export function rollFest(s: State, t: number): State {
     if (!w) {
       if (!cur || cur.shut) continue
       f = { ...bankStage(s, id, cur), shut: true }
-    } else if (!cur || cur.key !== w.key)
+    } else if (!cur || cur.key !== w.key) {
+      if (cur && d.kind === 'activity' && d.panel === 'daily') {
+        const pts = festPoints(s, id)
+        left = d.goals.flatMap((g, i) => (pts >= g && !cur.got.includes(i) ? [d.rewards[i]] : []))
+      }
       f = { key: w.key, stage: w.stage, base: snap(s, d), bank: 0, got: [], days: 0, last: -1 }
-    else if (cur.stage !== w.stage || cur.shut) {
+    } else if (cur.stage !== w.stage || cur.shut) {
       const { shut, ...c } = cur // mở lại cùng lượt (khung ngày có quãng nghỉ): điểm đã dồn lúc đóng
       // việc của lễ nhiều ngày tính từ lúc mở lượt, trừ lễ làm mới mỗi ngày
       const keep = d.kind === 'tasks' && !d.daily
@@ -162,7 +179,9 @@ export function rollFest(s: State, t: number): State {
     } else continue
     fest = { ...fest, [id]: f }
   }
-  return fest === s.fest ? s : { ...s, fest }
+  if (fest === s.fest) return s
+  const out = { ...s, fest }
+  return left.length ? mail(out, { at: t, k: 'dailyLeft', a: [left.length], gift: mergeRewards(left) }) : out
 }
 // Người chơi vào game hôm nay (thao tác login, client gửi mỗi lần vào): mỗi sự kiện đăng nhập đang mở đếm thêm một ngày.
 // Không đếm trong advance(): server còn đưa state tới trước lúc xử lý trận, việc hẹn giờ… ngay cả khi người chơi vắng.

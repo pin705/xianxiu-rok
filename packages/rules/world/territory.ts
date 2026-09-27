@@ -8,7 +8,8 @@ import { MAP_W, dist, regionOf, spawn, type Atlas, type Pos } from '../atlas.ts'
 import { rng } from '../combat.ts'
 import { no, use } from '../core/action.ts'
 import { int } from '../core/parse.ts'
-import { MOVE_COOL, NEWBIE_MOVE_HALL } from '../data.ts'
+import { DESERT_RING, MOVE_COOL, NEWBIE_MOVE_HALL } from '../data.ts'
+import { bonus } from '../core/stats.ts'
 import { resettle as relocate } from '../core/fog.ts'
 import { allyOf, type Players, type WorldActions } from './base.ts'
 import { type State } from '../core/types.ts'
@@ -43,6 +44,7 @@ export const territoryActions: WorldActions<TerritoryAction> = {
         // Càn Khôn Phù: vùng đã mở, không cần lãnh thổ, không chờ
         if (!s.items.canKhon) return no('no_item')
         if (ring === undefined || !ringOpen(ring, map.phase)) return no('far')
+        if (ring === DESERT_RING && bonus(s, 'desert') > 0) return no('locked') // Tử Hải: không dời núi vào vùng chết
         if (!free(ps, atlas, pid, at)) return no('taken')
         return { ok: true, world: w, changed: new Map([[pid, relocate(s, at, { items: use(s, 'canKhon', 1) })]]) }
       }

@@ -80,6 +80,7 @@ export { default as Moment } from './Moment.svelte'
 export { default as Pennant, BADGE_EMBLEMS, BADGE_TONES } from './Pennant.svelte'
 export { default as Expander } from './Expander.svelte'
 export { default as Chit } from './Chit.svelte'
+export { default as Sweep } from './Sweep.svelte'
 export { default as Orb } from './Orb.svelte'
 export { default as BigStat } from './BigStat.svelte'
 // Cảnh (lớp HTML đè lên cảnh Pixi: khung cuộn, ghim nhãn, bản đồ nhỏ, thanh công cụ — ui/scene/)

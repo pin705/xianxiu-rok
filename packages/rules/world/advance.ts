@@ -32,6 +32,7 @@ import { tribeStep } from './tribe.ts'
 import { eveStep } from './eve.ts'
 import { loharStep } from './lohar.ts'
 import { campStep } from './camp.ts'
+import { holmStep } from './holm.ts'
 import { contestStep } from './points.ts'
 
 // Lúc đội kế tiếp tới nơi cần server giải (cướp, điểm trên bản đồ) — để server hẹn giờ.
@@ -161,6 +162,7 @@ const hourly = (view: () => Players, now: number, map?: MapCtx): Step[] => [
         (x: World) => eveStep(view(), x, map, now),
         (x: World) => ({ changed: new Map(), world: loharStep(x, map, now) }),
         (x: World) => campStep(view(), x, map, now),
+        (x: World) => holmStep(view(), x, map, now),
         (x: World) => ({ changed: new Map(), world: contestStep(x, map, now) }),
       ]
     : []),
@@ -181,5 +183,6 @@ export function worldSnap(ps: Players, w: World, map: MapCtx, now: number, npc: 
     bless: w.bless,
     ...(goods.length && { goods }),
     ...(w.decree && w.decree.at + DECREE_TTL > now && { decree: w.decree }),
+    ...(w.holm && { holm: w.holm }),
   }
 }

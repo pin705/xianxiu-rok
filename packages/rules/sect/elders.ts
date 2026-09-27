@@ -2,10 +2,23 @@
 import { no, ok, use, type Actions } from '../core/action.ts'
 import { giveExp } from '../core/battle.ts'
 import { int, isElder, oneOf } from '../core/parse.ts'
-import { talentPoints, talentUsed, isMarching, vipLevel } from '../core/stats.ts'
+import {
+  auxSlots,
+  divineOf,
+  elderLevel,
+  expertOf,
+  talentPoints,
+  talentUsed,
+  isMarching,
+  vipLevel,
+} from '../core/stats.ts'
 import { type Err, type State } from '../core/types.ts'
 import {
   STRAT_HALL,
+  DIVINE_HALL,
+  PRIME_LV,
+  PRIME_TOKENS,
+  STAR_MAX,
   STRAT_IDS,
   type StratId,
   BOI_NGUYEN_EXP,
@@ -26,11 +39,22 @@ import {
   type FrameId,
 } from '../data.ts'
 
+// Chân Thân: cần Bản Mệnh Thần Thông, đủ sao, đủ cấp và tín vật; mỗi người một lần
+export function primeError(s: State, e: ElderId): Err | null {
+  if (s.elders[e] === undefined) return 'locked'
+  if (s.prime?.includes(e)) return 'claimed'
+  if (!expertOf(s, e) || (s.stars?.[e] ?? 1) < STAR_MAX || elderLevel(s.elders[e]) < PRIME_LV) return 'locked'
+  return (s.tokens[e] ?? 0) >= PRIME_TOKENS ? null : 'not_enough'
+}
+
 export type ElderAction =
   | { type: 'feed'; elder: ElderId; n: number }
   | { type: 'talent'; elder: ElderId; node: number } // cộng một điểm vào nút thiên phú (TALENT_NODES)
   | { type: 'wash'; elder: ElderId } // Tẩy Tủy Đan
   | { type: 'talentAuto'; elder: ElderId; tree: number } // cộng hết điểm còn lại vào cây tree theo thứ tự nút (gợi ý)
+  | { type: 'divine'; elder: ElderId } // Thần Binh mùa: gắn cho trưởng lão (mỗi mùa một lần)
+  | { type: 'prime'; elder: ElderId } // Chân Thân: chuyển thế trưởng lão tột bậc
+  | { type: 'aux'; elder: ElderId; others: ElderId[] } // Mượn Pháp: người cho trưởng lão elder mượn tâm pháp
   | { type: 'tpage'; elder: ElderId; page: number } // đổi bộ thiên phú (lưu bộ đang dùng, nạp bộ page)
   | { type: 'guard'; elder: ElderId | null } // trưởng lão giữ nhà
   | { type: 'face'; elder: ElderId | null } // đổi chân dung: trưởng lão đã thu nhận (null: chân dung chưởng môn)
@@ -128,6 +152,45 @@ export const elderActions: Actions<ElderAction> = {
       const { [a.elder]: _, ...rest } = s.talents
       const talents = pages[a.page].some(x => x > 0) ? { ...rest, [a.elder]: pages[a.page] } : rest
       return ok({ ...s, talents, tpage: { ...s.tpage, [a.elder]: { at: a.page, pages } } })
+    },
+  },
+  // Thần Binh Xuất Thế: trong mùa giới, từ Chủ điện DIVINE_HALL, gắn cho một trưởng lão — không đổi lại tới mùa sau
+  prime: {
+    pick: a => (isElder(a.elder) ? { type: 'prime', elder: a.elder } : null),
+    run: (s, a) => {
+      const e = primeError(s, a.elder)
+      if (e) return no(e)
+      const tokens = { ...s.tokens, [a.elder]: (s.tokens[a.elder] ?? 0) - PRIME_TOKENS }
+      return ok({ ...s, tokens, prime: [...(s.prime ?? []), a.elder] })
+    },
+  },
+  divine: {
+    pick: a => (isElder(a.elder) ? { type: 'divine', elder: a.elder } : null),
+    run: (s, a) => {
+      if (s.seasonAt === undefined || s.levels.chuDien < DIVINE_HALL || s.elders[a.elder] === undefined)
+        return no('locked')
+      if (divineOf(s)) return no('claimed')
+      return ok({ ...s, divine: { elder: a.elder, season: s.seasonAt } })
+    },
+  },
+  // Mượn Pháp: chọn lại người cho mượn (đã thu nhận, khác người mượn, không trùng, không quá số ô); đang xuất quân thì không đổi
+  aux: {
+    pick: a => {
+      const others = Array.isArray(a.others) ? a.others : null
+      return isElder(a.elder) &&
+        others &&
+        others.length <= 3 &&
+        others.every(isElder) &&
+        new Set(others).size === others.length
+        ? { type: 'aux', elder: a.elder, others: others as ElderId[] }
+        : null
+    },
+    run: (s, a) => {
+      if (s.elders[a.elder] === undefined || a.others.length > auxSlots(s)) return no('locked')
+      if (a.others.some(x => x === a.elder || s.elders[x] === undefined)) return no('bad')
+      if (isMarching(s, a.elder)) return no('busy')
+      const { [a.elder]: _, ...rest } = s.aux ?? {}
+      return ok({ ...s, aux: a.others.length ? { ...rest, [a.elder]: a.others } : rest })
     },
   },
   guard: {

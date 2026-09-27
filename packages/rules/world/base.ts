@@ -8,8 +8,6 @@ import { dayOf } from '../core/calendar.ts'
 import { type Army, type Buff, type Contrib, type Err, type JobKind, type March, type State } from '../core/types.ts'
 import {
   ALLY_WELCOME,
-  ALLY_GIFT_LV,
-  ALLY_GIFTS,
   ALLY_HELPS,
   ALLY_MAX,
   ALLY_TECH_IDS,
@@ -18,7 +16,6 @@ import {
   ELO_K,
   OFFICE_IDS,
   OFFICES,
-  GIFT_PTS,
   HELP_CREDIT,
   HELP_CREDIT_DAY,
   HONOR_KP,
@@ -29,6 +26,12 @@ import {
   TITLES,
   type TitleId,
   type AllyTechId,
+  type DaibiTactic,
+  type SilverTactic,
+  type ArkSkill,
+  type VanchuShip,
+  type VanchuStance,
+  type MysticMode,
   type BlessKey,
   type AllySkillId,
   type Bonus,
@@ -116,6 +119,8 @@ export type Alliance = {
   convoy?: Convoy // Linh Thương Hộ Tống: đoàn buôn đang chờ khởi hành (mỗi minh một đoàn)
   convoyBest?: number // điểm chuyến hộ tống cao nhất của minh (mở độ khó)
   badge?: [number, number] // cờ minh: linh thú (0…ALLY_BADGE[0]−1), màu (0…ALLY_BADGE[1]−1)
+  assault?: Assault // Vây Công Yêu Vương: phòng 12 người đang chờ (mỗi minh một phòng)
+  assaultTop?: number // độ khó cao nhất minh đã hạ (mở độ khó kế)
   plans?: Plan[] // Minh sự lịch: việc chung đã hẹn giờ
   skills?: Partial<Record<AllySkillId, number>> // Minh trận thần thông: hiệu lực tới lúc này
   named?: number // lần đổi tên / hiệu gần nhất
@@ -124,8 +129,12 @@ export type Alliance = {
 }
 // Man Hoang Cổ Tộc: người mở, độ khó, lúc xuất phát, người trong đội và vai
 export type PartyRoom = { by: number; lv: number; at: number; members: { pid: number; role: PartyRole }[] }
+// Sinh Tử Đài: ngày (giờ VN), các cặp [người phái Chính, người phái Tà, phái thắng cặp], phái thắng (null: hoà / thiếu người)
+export type Holm = { day: number; duels: [a: number, b: number, win: 0 | 1][]; win: 0 | 1 | null }
 // Chiếu Giới Chủ: lời chiếu, lúc ban, tên tông môn Giới Chủ lúc ban
 export type Decree = { text: string; at: number; by: string }
+// Phòng Vây Công Yêu Vương: người mở, độ khó, lúc giải (hết giờ chờ), người vào (theo thứ tự)
+export type Assault = { by: number; lv: number; at: number; members: number[] }
 // Đoàn buôn: người mở, độ khó, lúc khởi hành (server giải), người hộ tống (theo thứ tự ghi danh)
 export type Convoy = { by: number; lv: number; at: number; guards: number[] }
 // Chặng thi đua Chính Tà: chặng thứ n của mùa, mốc chỉ số của từng người lúc chặng mở (hay lúc thấy lần đầu)
@@ -207,7 +216,16 @@ export type World = {
   bless?: { key: BlessKey; until: number; day: number } // Giới Chủ ban phúc cả giới (ngày dayOf đã ban)
   boon?: { week: number; left: number } // Thiên Ân lễ Giới Chủ còn ban được trong tuần
   banishAt?: number // lần Phóng Trục gần nhất của Giới Chủ (world/lord.ts)
+  treaty?: { by: number; with: number[]; at: number } // Hiệp Ước Thiên Môn: minh ký, các minh được chia phần, lúc ký
   decree?: Decree // Chiếu Giới Chủ gần nhất (world/lord.ts)
+  holm?: Holm // Sinh Tử Đài hôm gần nhất (world/holm.ts)
+  royale?: { q: number[]; at: number } // Cổ Khư Loạn Chiến: hàng chờ (theo thứ tự vào), lúc người đầu vào
+  daibi?: { q: [pid: number, tactic: DaibiTactic][]; at: number } // Tiên Môn Đại Bỉ: hàng chờ (người, chiến thuật), lúc người đầu vào
+  silver?: { q: [pid: number, tactic: SilverTactic][]; at: number } // Tán Tu Tranh Châu: hàng chờ (người, hướng đánh)
+  vanchu?: { q: [pid: number, ship: VanchuShip, stance: VanchuStance][]; at: number } // Vân Chu Hội Chiến: hàng chờ (người, thuyền, thế)
+  mystic?: Partial<Record<MysticMode, { q: [pid: number, role: PartyRole][]; at: number }>> // Huyễn Vực Bí Cảnh: hàng chờ mỗi độ khó
+  mysticBoard?: { week: number } & Record<MysticMode, { names: string[]; rounds: number }[]> // bảng phá đảo nhanh nhất tuần
+  silverLast?: ArkFight // trận Tán Tu Tranh Châu gần nhất (khán giả xem lại)
   goods?: { cyc: number; got: number[] } // Thương Đội Gặp Nạn (world/encamp.ts): kiện hàng rơi đã nhặt trong chu kỳ cyc
   flags?: Record<number, Flag> // trận kỳ các tiên minh đã cắm
   nextFlag?: number
@@ -255,7 +273,17 @@ export type Flag = {
 export type WarResult = { a: number; b: number; an: string; bn: string; wa: number; wb: number }
 export type War = { done: number; signed: number[]; pts: Record<number, number>; last: WarResult[] }
 // Tranh Đoạt Linh Châu (world/ark.ts): đội = người chơi, phe, ô đứng, ô muốn tới, quân còn theo nhóm ([]: đủ), nghỉ tới hết hiệp rest
-export type ArkUnit = { pid: number; side: 0 | 1; at: number; to: number; n: number[]; rest?: number }
+// sc: công huân cá nhân trên chiến trường · nm: tên tông môn (khán giả, bảng công huân)
+export type ArkUnit = {
+  pid: number
+  side: 0 | 1
+  at: number
+  to: number
+  n: number[]
+  rest?: number
+  sc?: number
+  nm?: string
+}
 export type ArkLog = [
   round: number,
   k: 'take' | 'win' | 'orb' | 'charge' | 'drop',
@@ -279,6 +307,8 @@ export type ArkFight = {
   orb: { at: number; by?: number; back?: number; n: number } | null
   log: ArkLog[]
   cup?: 'semi' | 'final' | 'third' // trận playoff Cửu Thiên Luận Đạo Hội
+  used?: [ArkSkill[], ArkSkill[]] // chiến pháp mỗi bên đã dùng
+  buffs?: { side: 0 | 1; k: ArkSkill; r: number }[] // chiến pháp có hiệu lực ở hiệp r
 }
 // warned: tuần đã nhắc · league: Cửu Thiên Luận Đạo Hội của mùa — mỗi minh [thắng, thua, điểm giải]
 export type Ark = {
@@ -432,23 +462,6 @@ export function helpCredit(s: State, n: number, t: number): State {
   }
 }
 
-// Minh lễ: người trong các minh vừa góp sức hạ yêu vương cấp lv → mọi người trong minh đó nhận quà qua thư (theo cấp quà
-// hiện tại), minh thêm điểm quà. Ghi state người nhận vào changed.
-export const giftLevel = (al: Alliance) => ALLY_GIFT_LV.filter(p => (al.gift ?? 0) >= p).length
-export function allyGifts(ps: Players, changed: Players, w: World, pids: number[], lv: number, at: number): World {
-  const pts = GIFT_PTS[lv]
-  if (!pts) return w
-  let next = w
-  for (const al of new Set(pids.map(p => allyOf(w, p)).filter(x => x !== undefined))) {
-    const glv = giftLevel(al)
-    for (const p of Object.keys(al.members).map(Number)) {
-      const st = changed.get(p) ?? ps.get(p)
-      if (st) changed.set(p, mail(st, { at, k: 'allyGift', a: [lv, glv], gift: ALLY_GIFTS[glv - 1] }))
-    }
-    next = put(next, { ...al, gift: (al.gift ?? 0) + pts })
-  }
-  return next
-}
 // Phúc của Giới Chủ ban cho cả giới (còn hạn lúc at): worldBuffs gắn vào mọi tông môn, nguồn 'bless'
 export const blessBuffs = (w: World, at: number): Buff[] =>
   w.bless && w.bless.until > at

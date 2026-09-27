@@ -40,6 +40,7 @@ test('nhắc lúc rời game: rương Nhật Khóa đủ mốc chưa nhận (2 g
       ...s.fest,
       nhatKhoa: { ...nk, base: { ...nk.base, build: metric(s, 'build') - 2 } }, // xây 2 lần: đủ mốc rương đầu
       tranhBa: { ...tb, bank: 120 },
+      nhapMon: undefined, // lễ tân thủ Nhập Môn Ngộ Đạo cũng đang tích điểm: bỏ ra cho gọn
     },
   }
   const got = Object.fromEntries(careReminds(s, s.time).map(r => [r.k, r.at]))

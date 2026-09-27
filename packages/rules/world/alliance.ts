@@ -72,6 +72,8 @@ export type AllyInfo = Alliance & {
   // Ma Triều Công Sơn của tuần `week` (client so với tuần hiện tại): minh đã ghi danh chưa, số đợt đã đánh, điểm minh, điểm mình
   legion: { week: number; signed: boolean; done: number; pts: number; mine: number }
   terr?: number // ô lãnh thổ (server tính lúc trả lời, cần bản đồ)
+  lord?: boolean // minh mình đang làm chủ giới (giữ Thiên Môn) — server tính, cần bản đồ
+  treaty?: { by: number; with: number[] } // Hiệp Ước Thiên Môn có dính tới minh mình
   tribe: { week: number; pts: number; rank: number } // Phá Yêu Trại tuần `week`: điểm minh, hạng (0: chưa có điểm)
 }
 // Phá Yêu Trại của minh: điểm, hạng trong giới

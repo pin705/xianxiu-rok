@@ -8,6 +8,7 @@
     GEAR_IDS,
     GEAR_MAX,
     GEAR_SETS,
+    AWAKEN_STEP,
     forgeError,
     gearCap,
     gearCost,
@@ -20,6 +21,7 @@
   import { Icon, Portrait } from '@rok/art'
   import { Bag, Banner, Button, Card, Shelf, Tag, Ware } from './ui'
   import JobRow from './JobRow.svelte'
+  import Awaken from './Awaken.svelte'
   import { L, LOOK, clock } from './lib'
   import { useGame } from './game'
 
@@ -35,6 +37,7 @@
   const cur = $derived(pick ?? GEAR_IDS.find(x => !forgeError(game, x)) ?? GEAR_IDS[0])
   const d = $derived(GEAR[cur])
   const lv = $derived(game.gear[cur]?.lv ?? 0)
+  const awk = $derived(1 + AWAKEN_STEP * (game.gear[cur]?.aw ?? 0)) // khai linh: tăng ích pháp bảo ×
   const on = $derived(game.gear[cur]?.on)
   const err = $derived(forgeError(game, cur))
   // chi phí + nút luyện (ẩn khi đang luyện chính món này)
@@ -91,6 +94,7 @@
       </ul>
     {/if}
   {/if}
+  {#if lv}<Awaken gear={cur} />{/if}
   {#if costRow}
     <div class="row wrap between">
       {#if lv >= GEAR_MAX}
@@ -117,9 +121,9 @@
   {#snippet lead()}
     <small class="t-tiny t-soft">{L.forge.slots[d.slot]} · {L.forge.sets[d.set]}</small>
     <p class="t-small">
-      {L.bonus(d.key, d.v * Math.max(1, lv))}
+      {L.bonus(d.key, d.v * Math.max(1, lv) * awk)}
       {#if lv && lv < GEAR_MAX}<span class="t-good">
-          → {L.bonus(d.key, d.v * (lv + 1))
+          → {L.bonus(d.key, d.v * (lv + 1) * awk)
             .split(' ')
             .at(-1)}</span
         >{/if}

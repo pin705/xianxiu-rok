@@ -46,6 +46,8 @@ const Query = z.discriminatedUnion('k', [
   z.object({ k: z.literal('board') }),
   z.object({ k: z.literal('topic'), id: z.number().int().positive() }),
   z.object({ k: z.literal('search'), q: z.string().min(1).max(20) }),
+  z.object({ k: z.literal('arkWatch') }),
+  z.object({ k: z.literal('news') }),
   z.object({ k: z.literal('friends') }),
   z.object({ k: z.literal('shared'), pid: z.number().int().positive(), id: z.number().int().positive() }),
   z.object({ k: z.literal('fest'), id: z.enum(FEST_IDS as [FestId, ...FestId[]]) }),

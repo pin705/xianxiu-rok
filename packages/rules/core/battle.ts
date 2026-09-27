@@ -11,15 +11,20 @@ import {
   elderLevel,
   expAt,
   hospital,
+  autoHeal,
   lead,
   marchSlots,
   passive,
+  skillOf,
   unitOf,
   isMarching,
   daoUnit,
+  eliteK,
 } from './stats.ts'
 import { type Army, type Err, type Gain, type March, type Report, type Snap, type State, type Target } from './types.ts'
+import { formBonus } from './form.ts'
 import { addBag, addItems, bag, compact, count, grow, mark, minus, nextSeed, noGain } from './util.ts'
+import { towerReward, towerStr, towerType } from './tower.ts'
 import {
   BEAST_COOLDOWN,
   BEAST_EXP,
@@ -39,6 +44,7 @@ import {
   MAP_HALL,
   MARCH_MIN,
   MARCH_SPEED,
+  supplyK,
   MAX_CUT,
   PHA_CANH,
   PVP_GATE,
@@ -49,11 +55,6 @@ import {
   SECTS,
   TIER,
   TOWER,
-  TOWER_ELDERS,
-  TOWER_GROW,
-  TOWER_RES,
-  TOWER_RES_GROW,
-  TOWER_STR,
   TRIBS,
   TYPES,
   UNIT_BASE,
@@ -61,6 +62,7 @@ import {
   FALLEN_KEEP,
   type Bonus,
   type ElderId,
+  type FormId,
   type PillId,
   type Reward,
   type Skill,
@@ -125,19 +127,6 @@ const pair = (type: UnitType, share: number): [UnitType, number][] => [
   [BEATS[type], 1 - share],
 ]
 
-// Thông Thiên Tháp, tầng f (0 = tầng 1): sức địch, hệ chính (đổi theo vòng), thưởng lần đầu
-export const towerStr = (f: number) => grow(TOWER_STR, TOWER_GROW, f)
-export const towerType = (f: number): UnitType => TYPES[f % TYPES.length]
-export function towerReward(f: number): Reward {
-  const n = f + 1
-  return {
-    res: bag(() => grow(TOWER_RES, TOWER_RES_GROW, f)),
-    items: n % 10 === 0 ? { doKiep: 1, boiNguyen: 1 } : n % 5 === 0 ? { tuKhi: 3 } : undefined,
-    elder: TOWER_ELDERS[n],
-    exp: 300 + 40 * f,
-  }
-}
-
 export function enemyOf(s: State, t: Target): Side {
   if (t.kind === 'tower') return mob(towerStr(s.tower), 3, pair(towerType(s.tower), MAIN_SHARE), 1 + s.tower)
   if (t.kind === 'beast') {
@@ -156,11 +145,12 @@ export function enemyOf(s: State, t: Target): Side {
 }
 
 // elder null: đội không người dẫn (giữ nhà khi không ai trấn thủ) — chỉ có bonus của tông môn.
-// deputy: phó trưởng lão — tâm pháp đã mở cộng vào đội, công pháp nổ sau chủ tướng với DEPUTY_SKILL sức
-export function sideOf(s: State, elder: ElderId | null, army: Army, deputy?: ElderId): Side {
+// deputy: phó trưởng lão — tâm pháp đã mở cộng vào đội, công pháp nổ sau chủ tướng với DEPUTY_SKILL sức · form: trận pháp của đội
+export function sideOf(s: State, elder: ElderId | null, army: Army, deputy?: ElderId, form?: FormId): Side {
   const m = elder ? 1 + ELDER_STEP * (elderLevel(s.elders[elder]) - 1) : 1
-  const b = (k: Bonus) => (elder ? lead(s, elder, k) : bonus(s, k)) + (deputy ? passive(s, deputy, k) : 0)
-  const sk = elder ? ELDERS[elder].skill : undefined,
+  const b = (k: Bonus) =>
+    (elder ? lead(s, elder, k) : bonus(s, k)) + (deputy ? passive(s, deputy, k) : 0) + formBonus(s, form, k)
+  const sk = elder ? skillOf(s, elder) : undefined,
     power = elder ? b('skill') : 0
   const ds = elder && deputy ? ELDERS[deputy].skill : undefined
   const uni = daoUnit(s)
@@ -174,13 +164,14 @@ export function sideOf(s: State, elder: ElderId | null, army: Army, deputy?: Eld
       const base = UNIT_BASE[type],
         k = TIER[tier].stat
       const d = uni?.type === type ? uni : undefined // đệ tử đặc trưng: chỉ số gốc cao hơn (× 1 thì giữ nguyên từng số)
+      const el = eliteK(s, type, tier) // Tinh Binh Luận Kiếm
       return {
         type,
         tier,
         n: army[u]!,
-        atk: base.atk * k * m * (1 + b('atk') + b(`atk.${type}`)) * (1 + (d?.atk ?? 0)),
+        atk: base.atk * k * m * (1 + b('atk') + b(`atk.${type}`)) * (1 + (d?.atk ?? 0)) * el.atk,
         def: base.def * k * (1 + b('def')) * (1 + (d?.def ?? 0)),
-        hp: base.hp * k * m * (1 + b('hp') + b(`hp.${type}`)) * (1 + (d?.hp ?? 0)),
+        hp: base.hp * k * m * (1 + b('hp') + b(`hp.${type}`)) * (1 + (d?.hp ?? 0)) * el.hp,
       }
     }),
   }
@@ -199,7 +190,12 @@ export function armyError(s: State, elder: ElderId, army: Army): Err | null {
 }
 
 // Đội đang đi (trên bản đồ giới): chủ tướng, phó đi cùng, quân mang theo; ảnh chụp đội đó trong chiến báo
-export const marchSide = (s: State, m: March) => sideOf(s, m.elder, compact(m.army), m.deputy)
+// Đội trên bản đồ giới; luật mùa Cổ Tháp Hành Quân (cờ bonus 'supply'): đường đi dài thì công giảm (supplyK)
+export function marchSide(s: State, m: March) {
+  const side = sideOf(s, m.elder, compact(m.army), m.deputy, m.form)
+  const k = bonus(s, 'supply') > 0 ? supplyK((m.path?.length ?? 1) - 1) : 1
+  return k < 1 ? { ...side, troops: side.troops.map(t => ({ ...t, atk: t.atk * k })) } : side
+}
 export const marchSnap = (s: State, side: Side, m: March) =>
   snap(side, m.elder, elderLevel(s.elders[m.elder]), m.deputy)
 
@@ -223,13 +219,13 @@ export function admit(s: State, hurt: Army): { state: State; dead: Army } {
     wounded[u] += inn
     if (n > inn) dead[u] = n - inn
   }
-  if (!count(dead)) return { state: { ...s, wounded }, dead }
+  if (!count(dead)) return { state: autoHeal({ ...s, wounded }), dead }
   // Anh Linh Điện: hồn đệ tử tử trận ở lại FALLEN_KEEP (còn hạn thì cộng dồn, hạn tính lại từ bây giờ)
   const kept = s.fallen && s.fallen.until > s.time ? s.fallen.army : {}
   const army = Object.fromEntries(
     UNITS.flatMap(u => ((kept[u] ?? 0) + (dead[u] ?? 0) ? [[u, (kept[u] ?? 0) + (dead[u] ?? 0)]] : [])),
   )
-  return { state: { ...s, wounded, fallen: { army, until: s.time + FALLEN_KEEP } }, dead }
+  return { state: autoHeal({ ...s, wounded, fallen: { army, until: s.time + FALLEN_KEEP } }), dead }
 }
 
 export function giveExp(s: State, elder: ElderId, exp: number): State {
@@ -434,7 +430,7 @@ export function launch(s: State, army: Army, m: March): State {
   return {
     ...s,
     troops: minus(s.troops, army),
-    marches: [...s.marches, deputy ? { ...m, deputy } : m],
+    marches: [...s.marches, { ...m, ...(deputy && { deputy }), ...(s.form && { form: s.form }) }], // trận đang bày đi theo đội
     nextId: s.nextId + 1,
   }
 }

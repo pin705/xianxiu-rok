@@ -41,7 +41,7 @@ const FIRST = ['home', 'bld1', 'bld2', 'bld3', 'map', 'bld4', 'bld5', 'world', '
 await loadArt()
 await applyTheme()
 mount(App, { target: document.getElementById('app')! })
-void artAll(FIRST) // tải hết các gói còn lại, lần lượt — màn tiêu đề đợi xong mới vào game (Title.svelte)
+void artAll(FIRST) // tải nền mọi gói, lần lượt (home trước) — màn tiêu đề chỉ đợi home (Title.svelte)
 
 // PWA: mở nhanh từ bộ nhớ sau lần tải đầu (chơi thì cần mạng: server là trọng tài). Bản dev không đăng ký để khỏi dính cache cũ.
 // Mỗi bản build một tên cache (sw.js đọc từ ?v=), bản mới kích hoạt thì xoá cache của bản cũ.

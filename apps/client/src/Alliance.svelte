@@ -5,6 +5,7 @@
   import {
     ALLY_COST,
     ALLY_GIFT_LV,
+    TREATY_MAX,
     ALLY_HALL,
     ALLY_MAX,
     CHAT_HALL,
@@ -78,6 +79,7 @@
   import AllyParty from './AllyParty.svelte'
   import AllyConvoy from './AllyConvoy.svelte'
   import AllyBadge from './AllyBadge.svelte'
+  import AllyAssault from './AllyAssault.svelte'
   import AllyPlans from './AllyPlans.svelte'
   import { social } from './social.svelte'
 
@@ -607,6 +609,7 @@
       {#if me !== null}<ArkCard row={ally.ark} {me} aid={ally.id} officer={myRole >= 1} {go} />{/if}
       {#if me !== null}<AllyParty {ally} {me} {go} />{/if}
       {#if me !== null}<AllyConvoy {ally} {me} {go} />{/if}
+      {#if me !== null}<AllyAssault {ally} {me} {go} />{/if}
 
       <Section title={L.legion.title}>
         <p class="t-small t-soft">{L.legion.lore}</p>
@@ -641,13 +644,31 @@
             </div>
           {/each}
           {#each ally.naps ?? [] as id (id)}
+            {@const inTreaty = ally.treaty?.by === ally.id && ally.treaty.with.includes(id)}
+            {@const deal = ally.treaty?.by === ally.id ? ally.treaty.with : []}
             <div class="row" style:--gap="6px">
               <span class="t-small grow"><Icon name="shield" size={14} /> {napName(id)}</span>
+              {#if ally.lord && myRole === 2}
+                <!-- Hiệp Ước Thiên Môn: Giới Chủ chọn minh ước được chia phần phi thăng -->
+                <Button
+                  size="sm"
+                  variant={inTreaty ? 'gold' : 'ghost'}
+                  disabled={!inTreaty && deal.length >= TREATY_MAX}
+                  onclick={() =>
+                    go({ type: 'treaty', with: inTreaty ? deal.filter(x => x !== id) : [...deal, id] }, 'reward')}
+                  >{inTreaty ? L.treaty.drop : L.treaty.sign}</Button
+                >
+              {/if}
               {#if myRole >= 1}<Button size="sm" variant="quiet" onclick={() => go({ type: 'napEnd', id })}
                   >{L.nap.end}</Button
                 >{/if}
             </div>
           {/each}
+          {#if ally.lord}<small class="t-tiny t-soft">{L.treaty.hint(TREATY_MAX)}</small>{/if}
+          {#if ally.treaty?.by === ally.id}{#each ally.treaty.with as id (id)}<small class="t-tiny t-gold"
+                >{L.treaty.with(napName(id))}</small
+              >{/each}{:else if ally.treaty}<small class="t-tiny t-gold">{L.treaty.by(napName(ally.treaty.by))}</small
+            >{/if}
           {#if myRole >= 1}
             <div class="row wrap" style:--gap="4px">
               {#each others.filter(r => r.id !== ally?.id && !ally?.naps?.includes(r.id)) as r (r.id)}

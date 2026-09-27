@@ -28,6 +28,7 @@
     onreplay,
     narrow = false,
     send: act2,
+    notice = '',
   }: {
     me: number | null
     ally?: boolean
@@ -38,6 +39,7 @@
     onreplay?: (r: Report) => void // xem trận người khác chia sẻ ("#r<id>" trong tin)
     narrow?: boolean // dải chat ở núi: chừa chỗ nút tạp dịch bên phải
     send?: (a: WorldAction) => Promise<Ack> // nhóm chat: lập, rời
+    notice?: string // bố cáo của tiên minh: ghim đầu kênh minh
   } = $props()
   const g = useGame()
   const game = $derived(g.game)
@@ -328,6 +330,13 @@
     {#if (tab === 'world' || tab === 'camp') && game.levels.chuDien < 3}<p class="t-small t-soft mt-2">
         {tab === 'camp' ? L.chat.campLocked : L.chat.locked}
       </p>{/if}
+    {#if tab === 'ally' && notice.trim()}
+      <!-- bố cáo của minh chủ ghim đầu kênh minh -->
+      <p class="row t-small t-lore mt-2" style:--gap="6px">
+        <Icon name="flag" size={14} /><b>{L.ally.notice}:</b>
+        {notice}
+      </p>
+    {/if}
     <!-- tin là bong bóng lời nói: người khác bên trái, mình bên phải tô son nhạt -->
     <ol class="scroll-box stack" style:--gap="6px" style:--max-h={inline ? '320px' : undefined}>
       {#each shown as m (m.id)}

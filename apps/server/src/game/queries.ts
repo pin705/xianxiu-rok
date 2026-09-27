@@ -11,16 +11,19 @@ import {
   power,
   weekOf,
   type FestId,
+  RULE_FOUR,
 } from '@rok/rules'
 import {
   allyInfo,
   allyOf,
+  arkOf,
   allyRows,
   arenaBoard,
   arenaFoes,
   boonLeft,
   honorBoard,
   lordOf,
+  lordSide,
   marketOf,
   profileOf,
   rivals,
@@ -30,7 +33,10 @@ import {
   territoryTiles,
   arkRow,
   campOf,
+  mysticIn,
   campTotal,
+  fourOf,
+  fourPts,
   festAllyBoard,
   festBoard,
   stageGain,
@@ -46,6 +52,7 @@ import {
   boardView,
   topicView,
   voteTally,
+  type Chron,
 } from '@rok/rules/world'
 import type { Answer, FestView, Query, QueryOf } from '@rok/protocol'
 import * as store from '../db/store.ts'
@@ -133,9 +140,16 @@ function findPlayers(w: World, me: number, q: string) {
   })
 }
 
+const NEWS: Chron['k'][] = ['trib', 'boss', 'war', 'cup', 'duel', 'book', 'season'] // loại tin lên dải mực trên núi
 // Truy vấn xã giao: truyền âm, nhóm chat, đạo hữu, Giới Báo, tìm người
-const social = (w: World): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper' | 'board' | 'topic' | 'search'> => ({
+const social = (
+  w: World,
+): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper' | 'board' | 'topic' | 'search' | 'arkWatch' | 'news'> => ({
   search: (sock, q) => findPlayers(w, sock.data.pid, q.q),
+  // tin lớn toàn giới (dải mực quét ngang trên núi): đột phá, hạ yêu vương, minh chiến, quán quân, chương biên niên — vài tin mới nhất
+  news: () => w.chron.filter(c => NEWS.includes(c.k)).slice(-3),
+  // khán giả Tranh Đoạt Linh Châu (như xem Ark of Osiris của RoK) + trận Tán Tu Tranh Châu gần nhất
+  arkWatch: () => [...arkOf(w.shared).live, ...(w.shared.silverLast ? [w.shared.silverLast] : [])],
   board: sock => boardView(w.shared, sock.data.pid), // Luận Đạo Bảng
   topic: (_sock, q) => topicView(w.shared, q.id),
   dms: sock => dmsOf(w, sock.data.pid),
@@ -152,6 +166,23 @@ const social = (w: World): Pick<Answers, 'dms' | 'groups' | 'friends' | 'paper' 
       return [{ pid, name: s.name, hall: s.levels.chuDien, online, away: awayDays(s, now), called }]
     }),
 })
+
+// Các chế độ hàng chờ ở thẻ Hội chiến / Loạn chiến của Luận Kiếm Đài: số người chờ, mình có trong hàng không (Huyễn Vực: cả bảng tuần)
+function battles(w: World, pid: number, now: number) {
+  const sh = w.shared
+  const mb = sh.mysticBoard?.week === weekOf(now) ? sh.mysticBoard : undefined
+  return {
+    royale: { q: sh.royale?.q.length ?? 0, mine: !!sh.royale?.q.includes(pid) }, // Cổ Khư Loạn Chiến
+    daibi: { q: sh.daibi?.q.length ?? 0, mine: !!sh.daibi?.q.some(([p]) => p === pid) }, // Tiên Môn Đại Bỉ
+    silver: { q: sh.silver?.q.length ?? 0, mine: !!sh.silver?.q.some(([p]) => p === pid) }, // Tán Tu Tranh Châu
+    vanchu: { q: sh.vanchu?.q.length ?? 0, mine: !!sh.vanchu?.q.some(([p]) => p === pid) }, // Vân Chu Hội Chiến
+    mystic: {
+      q: { normal: sh.mystic?.normal?.q.length ?? 0, legend: sh.mystic?.legend?.q.length ?? 0 },
+      mine: mysticIn(sh, pid),
+      board: { normal: mb?.normal ?? [], legend: mb?.legend ?? [] },
+    }, // Huyễn Vực Bí Cảnh
+  }
+}
 
 export const answersOf = (w: World): Answers => ({
   rivals: (sock, q) => {
@@ -189,6 +220,7 @@ export const answersOf = (w: World): Answers => ({
       board: board.slice(0, ARENA_ROWS).map(([pid, s]) => ({ pid, name: s.name, pts: s.arena!.pts })),
       rank: k < 0 ? null : k + 1,
       cup: tourneyView(w.shared, w.ps),
+      ...battles(w, sock.data.pid, now),
     }
   },
   honor: sock => {
@@ -201,12 +233,15 @@ export const answersOf = (w: World): Answers => ({
   },
   ally: sock => {
     const info = allyInfo(w.shared, w.ps, sock.data.pid, p => !!w.slots.get(p)?.conns.size)
-    const now = w.now()
+    const now = w.now(),
+      t = w.shared.treaty
     return (
       info && {
         ...info,
         terr: territoryTiles(w.ps, w.shared, w.map(now), now).get(info.id) ?? 0,
         ark: arkRow(w.shared, info.id),
+        lord: lordSide(w.shared, w.ps, w.map(now), now) === info.id,
+        ...(t && (t.by === info.id || t.with.includes(info.id)) && { treaty: { by: t.by, with: t.with } }), // Hiệp Ước Thiên Môn
       }
     )
   },
@@ -221,6 +256,7 @@ export const answersOf = (w: World): Answers => ({
       fame: w.fame,
       camps: campTotal(rows, w.shared), // Chính Tà Phân Tranh: điểm mùa hai phái (cả chặng thắng), phái của mình
       camp: campOf(side),
+      ...(w.shared.rule === RULE_FOUR && { four: fourPts(rows), fourMine: fourOf(side) }), // Tứ Tượng Tranh Hùng
       stage: stageView(w, sock.data.pid),
       ...pollsOf(w, sock.data.pid),
     }

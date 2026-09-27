@@ -816,9 +816,10 @@ test(
     assert.deepEqual(bet, { open: [], mine: [] }, 'Luận Kiếm Đặt Cược: đầu mùa chưa có playoff')
     assert.deepEqual(heroes, { open: false, picks: [], mine: [0, 0, 0, 0] }, 'Lưu Danh Sử Sách: đầu mùa chưa bình chọn')
     assert.deepEqual(await c.ask({ k: 'paper' }), { issues: [], gift: false }, 'Giới Báo: số đầu ra lúc 0h')
+    assert.deepEqual(await c.ask({ k: 'arkWatch' }), [], 'Linh Châu: ngoài giờ trận không có gì để xem')
     assert.deepEqual(
       vote,
-      { open: false, tally: [0, 0, 0] },
+      { open: false, tally: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
       'Thiên Mệnh Chọn Luật: đầu mùa chưa bỏ phiếu, chưa có luật',
     )
     assert.deepEqual([camps, [0, 1].includes(camp)], [[0, 0], true], 'Chính Tà: điểm hai phái, phái của mình')

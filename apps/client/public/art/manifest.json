@@ -2806,187 +2806,187 @@
     }
   },
   "skin:badge": {
-    "src": "skin/skin-badge.png?v=51cb0b5200",
+    "src": "skin/skin-badge.webp?v=2398225283",
+    "pack": "boot",
     "slice": [30, 33, 30, 33],
     "width": [10, 11, 10, 11],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:badge-fresh": {
-    "src": "skin/skin-badge-fresh.png?v=7565d0908d",
+    "src": "skin/skin-badge-fresh.webp?v=4cc88d1e9d",
+    "pack": "boot",
     "slice": [30, 33, 30, 33],
     "width": [10, 11, 10, 11],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:blot": {
     "src": "skin/skin-blot.webp?v=6df68366f2",
     "pack": "boot"
   },
   "skin:btn": {
-    "src": "skin/skin-btn.png?v=46d5184a25",
+    "src": "skin/skin-btn.webp?v=47e64ff472",
+    "pack": "boot",
     "slice": [48, 48, 48, 48],
     "width": [16, 16, 16, 16],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:btn-danger": {
-    "src": "skin/skin-btn-danger.png?v=a837754442",
+    "src": "skin/skin-btn-danger.webp?v=03a1d7ad36",
+    "pack": "boot",
     "slice": [48, 48, 48, 48],
     "width": [16, 16, 16, 16],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:btn-ghost": {
-    "src": "skin/skin-btn-ghost.png?v=317eb63050",
+    "src": "skin/skin-btn-ghost.webp?v=ad06d45aca",
+    "pack": "boot",
     "slice": [48, 48, 48, 48],
     "width": [16, 16, 16, 16],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:btn-gold": {
-    "src": "skin/skin-btn-gold.png?v=17c301c65d",
+    "src": "skin/skin-btn-gold.webp?v=3d8a0a1ae3",
+    "pack": "boot",
     "slice": [48, 48, 48, 48],
     "width": [16, 16, 16, 16],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:btn-off": {
-    "src": "skin/skin-btn-off.png?v=b9858768ee",
+    "src": "skin/skin-btn-off.webp?v=630f17d724",
+    "pack": "boot",
     "slice": [48, 48, 48, 48],
     "width": [16, 16, 16, 16],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:capsule": {
-    "src": "skin/skin-capsule.png?v=d06d4dc79f",
+    "src": "skin/skin-capsule.webp?v=758c0cd315",
+    "pack": "boot",
     "slice": [39, 51, 39, 51],
     "width": [13, 17, 13, 17],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:card": {
-    "src": "skin/skin-card.png?v=cda9209c71",
+    "src": "skin/skin-card.webp?v=9747e15bcb",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:card-glow": {
-    "src": "skin/skin-card-glow.png?v=d716af91d5",
+    "src": "skin/skin-card-glow.webp?v=d035500ade",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:card-plain": {
-    "src": "skin/skin-card-plain.png?v=27c5469224",
+    "src": "skin/skin-card-plain.webp?v=742e97601e",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:card-sel": {
-    "src": "skin/skin-card-sel.png?v=5b9e00e235",
+    "src": "skin/skin-card-sel.webp?v=3dab049abb",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:card-silk": {
-    "src": "skin/skin-card-silk.png?v=a2e32e9442",
+    "src": "skin/skin-card-silk.webp?v=d1068762df",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:disc-azure": {
-    "src": "skin/skin-disc-azure.png?v=7ab435ed6f",
+    "src": "skin/skin-disc-azure.webp?v=cd33842b9d",
     "pack": "boot"
   },
   "skin:disc-gold": {
-    "src": "skin/skin-disc-gold.png?v=c2a84075d2",
+    "src": "skin/skin-disc-gold.webp?v=4d7f408f2c",
     "pack": "boot"
   },
   "skin:disc-paper": {
-    "src": "skin/skin-disc-paper.png?v=d82c69b844",
+    "src": "skin/skin-disc-paper.webp?v=72a36dc2cb",
     "pack": "boot"
   },
   "skin:disc-silk": {
-    "src": "skin/skin-disc-silk.png?v=d82c69b844",
+    "src": "skin/skin-disc-silk.webp?v=72a36dc2cb",
     "pack": "boot"
   },
   "skin:field": {
-    "src": "skin/skin-field.png?v=28c604dc68",
+    "src": "skin/skin-field.webp?v=13e8cdfe6f",
+    "pack": "boot",
     "slice": [24, 30, 30, 30],
     "width": [8, 10, 10, 10],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:fill": {
-    "src": "skin/skin-fill.png?v=d75de1831a",
+    "src": "skin/skin-fill.webp?v=9c31ae2eac",
+    "pack": "boot",
     "slice": [15, 21, 15, 18],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:fill-azure": {
-    "src": "skin/skin-fill-azure.png?v=6db0f8943e",
+    "src": "skin/skin-fill-azure.webp?v=277eac0f6e",
+    "pack": "boot",
     "slice": [15, 21, 15, 18],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:fill-bad": {
-    "src": "skin/skin-fill-bad.png?v=e3813403fe",
+    "src": "skin/skin-fill-bad.webp?v=09e3e178da",
+    "pack": "boot",
     "slice": [15, 21, 15, 18],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:fill-gold": {
-    "src": "skin/skin-fill-gold.png?v=a97619ad2d",
+    "src": "skin/skin-fill-gold.webp?v=d9b1a1fdd6",
+    "pack": "boot",
     "slice": [15, 21, 15, 18],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:fill-good": {
-    "src": "skin/skin-fill-good.png?v=4c3eade207",
+    "src": "skin/skin-fill-good.webp?v=c89ac24db0",
+    "pack": "boot",
     "slice": [15, 21, 15, 18],
     "width": [5, 7, 5, 6],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:groove": {
-    "src": "skin/skin-groove.png?v=217fbc0304",
+    "src": "skin/skin-groove.webp?v=f15b767632",
+    "pack": "boot",
     "slice": [36, 36, 36, 36],
     "width": [12, 12, 12, 12],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:knob": {
-    "src": "skin/skin-knob.png?v=2df9359de4",
+    "src": "skin/skin-knob.webp?v=e9fe3fbe6f",
     "pack": "boot"
   },
   "skin:paper": {
@@ -2994,12 +2994,12 @@
     "pack": "boot"
   },
   "skin:plate": {
-    "src": "skin/skin-plate.png?v=e604a1706c",
+    "src": "skin/skin-plate.webp?v=bf9ea62ebb",
+    "pack": "boot",
     "slice": [36, 45, 36, 45],
     "width": [12, 15, 12, 15],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:rod": {
     "src": "skin/skin-rod.webp?v=b0566356d2",
@@ -3010,36 +3010,36 @@
     "pack": "boot"
   },
   "skin:scroll": {
-    "src": "skin/skin-scroll.png?v=da50090624",
+    "src": "skin/skin-scroll.webp?v=bca2fc507d",
+    "pack": "boot",
     "slice": [30, 30, 30, 30],
     "width": [10, 10, 10, 10],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:slip": {
-    "src": "skin/skin-slip.png?v=324a424026",
+    "src": "skin/skin-slip.webp?v=5165c6ccb6",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:slip-bad": {
-    "src": "skin/skin-slip-bad.png?v=95c45dbe84",
+    "src": "skin/skin-slip-bad.webp?v=9e8a410e7b",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:strip": {
-    "src": "skin/skin-strip.png?v=1ba5ff3a77",
+    "src": "skin/skin-strip.webp?v=655c42fe45",
+    "pack": "boot",
     "slice": [30, 30, 30, 30],
     "width": [10, 10, 10, 10],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:stroke": {
     "src": "skin/skin-stroke.webp?v=cbdd2ed174",
@@ -3054,92 +3054,92 @@
     "pack": "boot"
   },
   "skin:switch": {
-    "src": "skin/skin-switch.png?v=03cd45f217",
+    "src": "skin/skin-switch.webp?v=0919064564",
     "pack": "boot"
   },
   "skin:switch-on": {
-    "src": "skin/skin-switch-on.png?v=88f2759496",
+    "src": "skin/skin-switch-on.webp?v=10db6c53d3",
     "pack": "boot"
   },
   "skin:tag": {
-    "src": "skin/skin-tag.png?v=24796f83db",
+    "src": "skin/skin-tag.webp?v=6f321b5833",
+    "pack": "boot",
     "slice": [27, 42, 27, 42],
     "width": [9, 14, 9, 14],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:tag-bad": {
-    "src": "skin/skin-tag-bad.png?v=6b37bd0d54",
+    "src": "skin/skin-tag-bad.webp?v=6953cf0798",
+    "pack": "boot",
     "slice": [27, 42, 27, 42],
     "width": [9, 14, 9, 14],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:tag-dark": {
-    "src": "skin/skin-tag-dark.png?v=561a534c5a",
+    "src": "skin/skin-tag-dark.webp?v=606a220c4a",
+    "pack": "boot",
     "slice": [27, 42, 27, 42],
     "width": [9, 14, 9, 14],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:tag-gold": {
-    "src": "skin/skin-tag-gold.png?v=ef02394eeb",
+    "src": "skin/skin-tag-gold.webp?v=3dd50b7ae1",
+    "pack": "boot",
     "slice": [27, 42, 27, 42],
     "width": [9, 14, 9, 14],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:tag-good": {
-    "src": "skin/skin-tag-good.png?v=2557b90cb3",
+    "src": "skin/skin-tag-good.webp?v=8cc8075c25",
+    "pack": "boot",
     "slice": [27, 42, 27, 42],
     "width": [9, 14, 9, 14],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:tag-red": {
-    "src": "skin/skin-tag-red.png?v=bbc36bad1c",
+    "src": "skin/skin-tag-red.webp?v=cbb8dd2d37",
+    "pack": "boot",
     "slice": [27, 42, 27, 42],
     "width": [9, 14, 9, 14],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:tag-silk": {
-    "src": "skin/skin-tag-silk.png?v=fff8271881",
+    "src": "skin/skin-tag-silk.webp?v=7bbd129aa5",
+    "pack": "boot",
     "slice": [27, 42, 27, 42],
     "width": [9, 14, 9, 14],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:toast": {
-    "src": "skin/skin-toast.png?v=fa3fe72348",
+    "src": "skin/skin-toast.webp?v=4d66d4ff61",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:toast-bad": {
-    "src": "skin/skin-toast-bad.png?v=124e970adc",
+    "src": "skin/skin-toast-bad.webp?v=e71d2e593a",
+    "pack": "boot",
     "slice": [27, 27, 27, 27],
     "width": [9, 9, 9, 9],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "skin:track": {
-    "src": "skin/skin-track.png?v=300bd1f878",
+    "src": "skin/skin-track.webp?v=318820fe62",
+    "pack": "boot",
     "slice": [15, 18, 15, 18],
     "width": [5, 6, 5, 6],
     "outset": 0,
-    "repeat": "stretch",
-    "pack": "boot"
+    "repeat": "stretch"
   },
   "sold:dao:danTong": {
     "src": "battle/sold-dao-danTong.webp?v=c400090b07",

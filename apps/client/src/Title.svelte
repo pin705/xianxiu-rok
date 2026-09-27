@@ -3,7 +3,7 @@
   // wait: đã xong màn tiêu đề nhưng server chưa gửi state (mạng chậm) — hiện dòng "đang kết nối".
   import { onMount } from 'svelte'
   import { DAOS, DAO_IDS, type Bonus, type DaoId } from '@rok/rules'
-  import { DAO_TONES, artAll, emblemArt, onArtProgress, paintedUrl } from '@rok/art'
+  import { DAO_TONES, artPack, emblemArt, onArtProgress, paintedUrl } from '@rok/art'
   import { Button, Cover, Leaf, Masthead, Medal, Patron, Slam, Splash, TapHint, Verse } from './ui'
   import { L, sfx, suggestNames } from './lib'
   import DaoChoose, { ACCENT } from './DaoChoose.svelte'
@@ -35,13 +35,15 @@
   let error = $state('')
   let sending = $state(false)
 
-  // Màn tiêu đề kiêm màn tải (như Godot): tải hết tranh (@rok/art artAll) rồi mới vào game — vào rồi không cảnh nào phải đợi.
+  // Màn tiêu đề kiêm màn tải: đợi tranh cảnh tông môn (gói home — vào game là thấy ngay), không đợi cả game: đợi hết mọi gói
+  // (bản đồ, trận, các tầng công trình) làm lần mở đầu khựng lâu. Gói còn lại tải nền (main.ts artAll); cảnh nào mở trước khi
+  // gói của nó về thì tự đợi gói đó (stage.ts mountScene), như màn nạp theo cảnh của engine.
   // Người mới vẫn xem lời dẫn, đặt tên trong lúc tải; tới bước vào game mà chưa xong thì đợi trên vạch tiến độ.
   let loaded = $state(1)
-  let ready = $state(false) // artAll xong thật (vạch 100% giữa chừng không tính)
+  let ready = $state(false) // gói home đã về thật
   let live = true
   onMount(() => onArtProgress((done, total) => (loaded = total ? done / total : 1)))
-  onMount(() => void artAll().then(() => (ready = true)))
+  onMount(() => void artPack('home').then(() => (ready = true)))
   onMount(() => () => void (live = false))
   let entered = false
   const go = () => {
@@ -49,7 +51,7 @@
     entered = true
     ondone()
   }
-  const enter = (min: number) => void Promise.all([new Promise(r => setTimeout(r, min)), artAll()]).then(go)
+  const enter = (min: number) => void Promise.all([new Promise(r => setTimeout(r, min)), artPack('home')]).then(go)
   onMount(() => {
     if (mode === 'splash') enter(1600) // người cũ: đủ 1.6 giây và tranh đã về
   })

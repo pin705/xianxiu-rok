@@ -78,6 +78,9 @@
   import { unlocked } from './notices'
   import Merchant from './Merchant.svelte'
   import DaoPick from './DaoPick.svelte'
+  import FolioPick from './FolioPick.svelte'
+  import PuppetCard from './PuppetCard.svelte'
+  import EliteCard from './EliteCard.svelte'
   import { L, LANG, clock, num, type PanelTab } from './lib'
   import Help from './Help.svelte'
   import { useGame } from './game'
@@ -174,6 +177,26 @@
 
     {#if tab === 'train'}
       <Train />
+      <EliteCard />
+      <!-- Trận Pháp + Vân Du Đường: bày trận cho đội xuất quân, trận khí -->
+      <Card tone="silk">
+        <div class="row">
+          <Icon name="flag" size={26} />
+          <span class="grow stack" style:--gap="2px"
+            ><b>{L.form.title}</b><small class="t-tiny t-soft"
+              >{game.form ? L.form.now(L.form.names[game.form]) : L.form.short}</small
+            ></span
+          >
+          <Button
+            size="sm"
+            variant="ghost"
+            onclick={() => {
+              onclose()
+              social.form = true
+            }}>{L.form.open}</Button
+          >
+        </div>
+      </Card>
       <!-- Luận Võ Liên Hoàn: mỗi ngày một phiên đấu liên tiếp giáo đầu (từ tầng DRILL_HALL) -->
       <Card tone="silk">
         <div class="row">
@@ -245,6 +268,7 @@
       </Card>
     {:else if tab === 'forge'}
       <Forge />
+      <PuppetCard />
     {:else if tab === 'guard'}
       <Guard />
     {:else if locked}
@@ -446,7 +470,7 @@
             </p>{/if}
         </div>
       {/if}
-      {#if id === 'chuDien'}<DaoPick />{/if}
+      {#if id === 'chuDien'}<DaoPick /><FolioPick />{/if}
       {#if id === 'chuDien' && hall >= REBIRTH_HALL}
         <!-- Luân hồi -->
         <Section title={L.rebirth.title}>

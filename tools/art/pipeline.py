@@ -187,11 +187,11 @@ def manifest():
           if f in o: o[f] = o[f].split('?')[0]
   return _manifest
 
-def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP', hd=None):
+def save(key, im, sub, aliases=(), extra=None, tex=False, fmt='WEBP', hd=None, q=None):
   """ghi ảnh vào public/art/<sub>/ và dòng manifest cho key (+ các key dùng chung file). tex: texture cảnh (bộ nạp giải mã sẵn)."""
   name = fname(key) + ('.webp' if fmt == 'WEBP' else '.png')
   os.makedirs(os.path.join(ART, sub), exist_ok=True)
-  im.save(os.path.join(ART, sub, name), fmt, **({'quality': Q, 'method': 6} if fmt == 'WEBP' else {}))
+  im.save(os.path.join(ART, sub, name), fmt, **({'quality': q or Q, 'method': 6, 'alpha_quality': 100} if fmt == 'WEBP' else {}))
   for k in (key, *aliases):
     # giữ tên gói (theo key, không đổi); bỏ khung atlas cũ — game tải file lẻ (đúng ảnh mới) tới khi chạy lại `pack`
     keep = {'pack': manifest()[k]['pack']} if 'pack' in manifest().get(k, {}) else {}
