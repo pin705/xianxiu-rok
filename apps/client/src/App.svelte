@@ -686,7 +686,9 @@
     <GiftStrip />
     <Toasts
       list={toasts}
-      top={DESK?.matches ? 'calc(var(--top) + 16px)' : `calc(${tab === 'tongMon' ? 236 : 150}px + var(--safe-t))`}
+      top={DESK?.matches
+        ? 'calc(var(--top) + 16px)'
+        : `calc(${({ tongMon: 236, banDo: 200 } as Record<string, number>)[tab] ?? 150}px + var(--safe-t))`}
     />
 
     <AwaySummary {away} open={awayOpen} onclose={() => (awayOpen = false)} />

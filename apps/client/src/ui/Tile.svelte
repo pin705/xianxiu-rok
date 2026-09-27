@@ -16,6 +16,7 @@
     size = 72,
     look = 'paper',
     selected = false,
+    bare = false,
     dim = false,
     onclick,
   }: {
@@ -28,6 +29,7 @@
     size?: number
     look?: 'paper' | 'ink'
     selected?: boolean
+    bare?: boolean // chỉ tranh (nhãn thành chữ cho trình đọc màn hình): lối tắt nhỏ trong hàng nút chật
     dim?: boolean // ngăn chưa mở của công tắc tranh: mờ, bớt màu
     onclick: (e: MouseEvent) => void
   } = $props()
@@ -37,6 +39,7 @@
 <button
   type="button"
   class="tile {look}"
+  title={bare ? label : undefined}
   class:selected
   class:faded={dim}
   aria-pressed={selected || undefined}
@@ -52,7 +55,7 @@
         size={Math.round(size * 0.45)}
       />{/if}</span
   >
-  <b class="tl">{label}</b>
+  <b class="tl" class:sr={bare}>{label}</b>
   {#if sub}<small class="t-tiny t-soft">{sub}</small>{/if}
   <Badge {n} {dot} />
 </button>

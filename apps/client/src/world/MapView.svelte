@@ -134,6 +134,30 @@
   {/snippet}
 </View>
 
+{#snippet shortcuts(bare: boolean)}
+  {@const size = bare ? 40 : 54}
+  {#if game.levels.chuDien >= PVP_HALL}<Tile
+      art="fx-battle"
+      icon="swords"
+      label={L.pvp.find}
+      {size}
+      {bare}
+      look="ink"
+      onclick={onrivals}
+    />{/if}
+  <Tile art="ev-report" icon="scroll" label={L.report.title} n={unread} {size} {bare} look="ink" onclick={onreports} />
+  <!-- Thí Luyện: gom các chế độ PvE -->
+  <Tile
+    art="ev-arena"
+    icon="star"
+    label={L.trials.tile}
+    {size}
+    {bare}
+    look="ink"
+    onclick={() => (social.trials = true)}
+  />
+{/snippet}
+
 <Dock at="top" fade class="row">
   {#if toggle}{@render toggle()}{/if}
   <!-- điện thoại hẹp: chỉ "0/2" (đủ chỗ cho nút gạt + hai nút), chữ đủ đọc bằng trình đọc màn hình -->
@@ -145,21 +169,11 @@
       ></Tag
     ></span
   >
+  <!-- điện thoại: lối tắt là huy hiệu tranh nhỏ trong hàng trên — cột bên phải che mất yêu thú, bí cảnh sát mép phải -->
+  <span class="row phone-only" style:--gap="6px">{@render shortcuts(true)}</span>
 </Dock>
-<!-- lối tắt cột phải như cột biểu tượng bản đồ của game: tranh đóng khung, nhãn viên mực -->
-<Dock at="side">
-  {#if game.levels.chuDien >= PVP_HALL}<Tile
-      art="fx-battle"
-      icon="swords"
-      label={L.pvp.find}
-      size={54}
-      look="ink"
-      onclick={onrivals}
-    />{/if}
-  <Tile art="ev-report" icon="scroll" label={L.report.title} n={unread} size={54} look="ink" onclick={onreports} />
-  <!-- Thí Luyện: gom các chế độ PvE -->
-  <Tile art="ev-arena" icon="star" label={L.trials.tile} size={54} look="ink" onclick={() => (social.trials = true)} />
-</Dock>
+<!-- desktop: cảnh hẹp hơn vùng bản đồ, cột phải nằm ngoài cảnh — tranh đóng khung, nhãn viên mực như cột biểu tượng của game -->
+<Dock at="side" class="desk-only">{@render shortcuts(false)}</Dock>
 
 {#if game.marches.length}
   <Dock at="foot">

@@ -117,7 +117,12 @@
     const dy = typeof innerHeight === 'undefined' ? 0 : (padTop() - PAD.bottom) / 2
     return { x: ((game.seat?.x ?? MAP_W / 2) + 0.5) * T, y: ((game.seat?.y ?? MAP_W / 2) + 0.5) * T - dy / z, z }
   }
-  let cam = $state<Cam>(home(0.55))
+  // Độ phóng (px CSS mỗi DU; một ô = 16 DU). Mở bản đồ ở Z_OPEN: ô ~21px, huy hiệu (worldmap MARK) không đè nhau, đọc được
+  // tên — 0,55 cũ (ô 9px) làm cả vùng quanh tông môn thành một cụm huy hiệu chồng chất. Z_MAX: mảnh nền nướng ~2 px/DU,
+  // phóng tới 2 vẫn đủ nét tranh thủy mặc. Thu nhỏ hết cỡ (zMin) vẫn thấy cả giới.
+  const Z_OPEN = 1.3
+  const Z_MAX = 2
+  let cam = $state<Cam>(home(Z_OPEN))
   onMount(() => void (cam = clamp(cam)))
   let scene = $state.raw<WorldScene>()
   let layer = $state<HTMLDivElement>()
@@ -180,7 +185,7 @@
     return () => ro.disconnect()
   })
   const clamp = (c: Cam): Cam => {
-    const z = Math.min(1.4, Math.max(zMin(), c.z))
+    const z = Math.min(Z_MAX, Math.max(zMin(), c.z))
     const hx = (innerWidth - railPx()) / 2 / z,
       hy = innerHeight / 2 / z
     // giới lọt thỏm trong khung: đặt giữa khoảng trống (trên chừa thẻ mùa, dưới chừa tab), không phải giữa màn
@@ -193,7 +198,7 @@
     const c = center()
     const wx = cam.x + (sx - c.x) / cam.z,
       wy = cam.y + (sy - c.y) / cam.z
-    const z = Math.min(1.4, Math.max(zMin(), cam.z * k))
+    const z = Math.min(Z_MAX, Math.max(zMin(), cam.z * k))
     cam = clamp({ z, x: wx - (sx - c.x) / z, y: wy - (sy - c.y) / z })
   }
 
@@ -329,7 +334,7 @@
   $effect(() => {
     if (!goto) return
     steered = true
-    cam = clamp({ x: (goto.x + 0.5) * T, y: (goto.y + 0.5) * T, z: Math.max(cam.z, 0.9) })
+    cam = clamp({ x: (goto.x + 0.5) * T, y: (goto.y + 0.5) * T, z: Math.max(cam.z, Z_OPEN) })
     ping = { ...goto, until: now + 4000 }
     ongone?.()
   })
@@ -376,7 +381,7 @@
   // bay tới ô (x, y), nháy vòng son, mở bảng của vật ở đó (Tìm, Sơn Hà Xã Tắc Đồ)
   function fly(x: number, y: number) {
     steered = true
-    cam = clamp({ x: (x + 0.5) * T, y: (y + 0.5) * T, z: Math.max(cam.z, 0.9) })
+    cam = clamp({ x: (x + 0.5) * T, y: (y + 0.5) * T, z: Math.max(cam.z, Z_OPEN) })
     ping = { x, y, until: now + 4000 }
     pickAt(x, y)
   }
@@ -618,7 +623,7 @@
       <Button size="sm" variant="ghost" onclick={() => (finding = !finding)}
         ><Icon name="globe" size={14} />{L.world.find}</Button
       >
-      <Button size="sm" variant="ghost" label={L.world.you} onclick={() => (cam = clamp(home(Math.max(cam.z, 0.7))))}
+      <Button size="sm" variant="ghost" label={L.world.you} onclick={() => (cam = clamp(home(Math.max(cam.z, Z_OPEN))))}
         ><Icon name="flag" size={14} /><span class="hidden-narrow">{L.world.you}</span></Button
       >
       <Expander open={!slim} label={slim ? L.world.more : L.world.less} onclick={fold} />
@@ -692,7 +697,7 @@
                 variant="quiet"
                 icon="star"
                 onclick={() => {
-                  cam = clamp({ x: (m.x + 0.5) * T, y: (m.y + 0.5) * T, z: Math.max(cam.z, 0.9) })
+                  cam = clamp({ x: (m.x + 0.5) * T, y: (m.y + 0.5) * T, z: Math.max(cam.z, Z_OPEN) })
                   ping = { x: m.x, y: m.y, until: now + 4000 }
                   finding = false
                   pickAt(m.x, m.y)

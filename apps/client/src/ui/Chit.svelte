@@ -1,6 +1,7 @@
 <script lang="ts">
-  // Mẩu giấy báo nổi trên thanh tab (vừa nhận quà…): popover lên lớp trên cùng, dải giấy hai đầu lụa, tranh đồ vật
-  // nghiêng bên trái (ui:<art>, tắt art thì bỏ), tiêu đề son, phần con bên dưới; chạm để tắt. Màn giữ `el` để mở/đóng.
+  // Mẩu giấy báo nổi trên thanh tab (vừa nhận quà…): popover lên lớp trên cùng, tờ giấy nhỏ viền mực đôi mảnh (gọn, không
+  // phải dải to kín bề ngang), tranh đồ vật nhỏ bên trái (ui:<art>, tắt art thì bỏ), tiêu đề son, phần con bên dưới;
+  // chạm để tắt. Màn giữ `el` để mở/đóng.
   import type { Snippet } from 'svelte'
   import { artOf } from '@rok/art'
 
@@ -35,8 +36,8 @@
 <style>
   .chit {
     position: fixed;
-    inset: auto auto calc(96px + var(--safe-b, 0px)) 50%; /* trên thanh tab */
-    width: min(100% - 32px, 420px);
+    inset: auto auto calc(var(--nav-h, 96px) + 12px + var(--safe-b, 0px)) 50%; /* trên thanh tab */
+    width: min(100% - 32px, 340px);
     margin: 0;
     padding: 0;
     overflow: visible;
@@ -48,25 +49,29 @@
   button {
     display: grid;
     justify-items: center;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
-    padding: 12px 28px 13px;
-    border: 0 solid transparent;
-    border-image: var(--sk-slip);
-    filter: drop-shadow(0 4px 8px rgb(var(--shade) / 0.35));
+    padding: 8px 14px 9px;
+    background: var(--paper);
+    border: 1.5px solid var(--rim, var(--ink3));
+    border-radius: 10px;
+    box-shadow:
+      inset 0 0 0 2px var(--paper),
+      inset 0 0 0 3px var(--paper3),
+      0 4px 10px rgb(var(--shade) / 0.28);
     animation: rise var(--dur-3) var(--spring);
   }
   .boxed {
-    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-columns: 36px minmax(0, 1fr);
     justify-items: start;
-    column-gap: 12px;
-    padding-left: 18px;
+    column-gap: 10px;
+    padding-left: 10px;
     text-align: left;
   }
   .boxed img {
     grid-row: span 2;
-    width: 52px;
-    height: 52px;
+    width: 36px;
+    height: 36px;
     object-fit: contain;
     rotate: -6deg;
     filter: drop-shadow(0 2px 3px rgb(var(--shade) / 0.25));

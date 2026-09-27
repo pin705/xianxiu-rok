@@ -427,6 +427,18 @@ dialog::backdrop {
     display: none;
   }
 }
+/* theo bố cục (cùng điểm gãy desktop với lib.ts DESK): .phone-only chỉ hiện ở bố cục điện thoại, .desk-only chỉ ở desktop.
+   Chỉ ẩn, không đặt lại display — phần tử giữ bố cục riêng (grid, flex) của nó. */
+@media (max-width: 1023px), (max-height: 599px) {
+  .desk-only {
+    display: none !important;
+  }
+}
+@media (min-width: 1024px) and (min-height: 600px) {
+  .phone-only {
+    display: none !important;
+  }
+}
 /* điện thoại hẹp: .sr-narrow thành chữ cho trình đọc màn hình (ẩn khỏi mắt), .only-narrow chỉ hiện trên máy hẹp */
 .only-narrow {
   display: none;
