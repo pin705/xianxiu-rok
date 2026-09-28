@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**Tiếng Việt** · [English](README.en.md)
+**Tiếng Việt** · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
 [![CI](https://github.com/pin705/xianxiu-rok/actions/workflows/ci.yml/badge.svg)](https://github.com/pin705/xianxiu-rok/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
