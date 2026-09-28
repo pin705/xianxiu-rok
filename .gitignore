@@ -2,3 +2,6 @@ node_modules
 dist
 release.zip
 .env
+__pycache__
+*.pyc
+.DS_Store

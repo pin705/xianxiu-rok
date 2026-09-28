@@ -1,6 +1,25 @@
 # Sơn Hà Tiên Tông
 
+<div align="center">
+
+**Tiếng Việt** · [English](README.en.md)
+
+[![CI](https://github.com/pin705/rok/actions/workflows/ci.yml/badge.svg)](https://github.com/pin705/rok/actions/workflows/ci.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-green.svg)](CONTRIBUTING.md)
+
+<img src="docs/screenshots/sect.png" width="240" alt="Sơn môn tông môn" /> <img src="docs/screenshots/battle.png" width="240" alt="Trận đánh" /> <img src="docs/screenshots/world.png" width="240" alt="Bản đồ giới" /> <img src="docs/screenshots/elders.png" width="240" alt="Môn hạ" />
+
+</div>
+
 Game tu tiên chiến lược (SLG) chạy trên trình duyệt: dựng tông môn, thu nhận trưởng lão, xuất quân đánh yêu thú, độ kiếp, luân hồi. **Chơi online**: server làm trọng tài (chạy chính bộ luật của client), tiến độ lưu trên PostgreSQL. Cài được như app (PWA). Đa ngôn ngữ (hiện có Tiếng Việt, English).
+
+Cần Node.js 24+. Chạy nhanh nhất:
+
+```bash
+npm install
+npm start          # database (Docker) + server + client: mở http://localhost:5173
+```
 
 ```bash
 npm install
@@ -88,3 +107,14 @@ npm run format && npm run lint && npm test && npm run check && npm run sim
 Alegreya (serif nét bút lông, giấy phép OFL), tự host trong `apps/client/public/fonts`: đủ Latin, Latin mở rộng (châu Âu, Thổ Nhĩ Kỳ, Indonesia…), tiếng Việt, Cyrillic (Nga, Ukraina…), Hy Lạp. Mỗi hệ chữ một file kèm `unicode-range`, trình duyệt chỉ tải phần đang dùng (người chơi Việt tải ~110 KB).
 
 Hệ chữ Alegreya không có (Trung/Nhật/Hàn, Thái, Ả Rập, Hindi…) dùng họ **Noto Serif** tương ứng: cùng tinh thần serif, phủ gần như mọi hệ chữ, Google cắt CJK thành nhiều lát nhỏ nên cũng chỉ tải chữ cần. Bỏ dấu `//` trước họ font trong `apps/client/fonts.mjs` rồi chạy `npm run fonts`.
+
+## Đóng góp
+
+Mọi đóng góp đều quý — sửa lỗi, thêm tính năng, dịch ngôn ngữ, vẽ tranh, viết tài liệu. Đọc [CONTRIBUTING.md](CONTRIBUTING.md) để bắt đầu (môi trường dev, quy ước repo, quy trình PR). Báo lỗi dùng [issue templates](.github/ISSUE_TEMPLATE); lỗi an ninh báo riêng tư qua [SECURITY.md](SECURITY.md). Mong mọi người tuân theo [Quy tắc ứng xử](CODE_OF_CONDUCT.md).
+
+## Giấy phép
+
+Dự án phát hành theo **[GNU AGPL-3.0-or-later](LICENSE)**: toàn bộ mã nguồn, số liệu, tranh và tài liệu trong repo. Tự host server công khai thì phải công bố mã nguồn bản đã sửa (điều 13 AGPL).
+
+- Font Alegreya giữ giấy phép riêng [SIL OFL](apps/client/public/fonts/OFL-Alegreya.txt) (nằm cạnh font).
+- Tên và gameplay do người làm dự án giữ bản quyền thương hiệu; game không liên kết với và không dùng tài sản của Lilith Games (Rise of Kingdoms) dù lấy cảm hứng thể loại.

@@ -10,7 +10,7 @@ export const meta = {
   ],
 }
 
-const ROOT = '/Users/bon/Documents/rok'
+const ROOT = new URL('../..', import.meta.url).pathname.replace(/\/$/, '')
 const OUT = (args && args.out) || 'docs/PLAYTEST.md'
 
 const PERSONAS = [
