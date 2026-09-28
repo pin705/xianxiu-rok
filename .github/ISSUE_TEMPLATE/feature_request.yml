@@ -4,7 +4,7 @@ labels: ['enhancement']
 body:
   - type: markdown
     attributes:
-      value: Trước khi gửi, đọc [docs/PLAN.md](https://github.com/pin705/xianxiu-rok/blob/master/docs/PLAN.md) — ý tưởng có thể đã nằm trong lộ trình.
+      value: Trước khi gửi, đọc [docs/PLAN.md](https://github.com/pin705/xiuxian-rok/blob/master/docs/PLAN.md) — ý tưởng có thể đã nằm trong lộ trình.
   - type: textarea
     id: problem
     attributes:
