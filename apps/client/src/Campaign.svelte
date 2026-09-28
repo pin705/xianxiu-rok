@@ -51,11 +51,12 @@
     <Tabs
       look="chips"
       fit
-      items={chapters.map(k => ({ id: k, label: L.campaign.chapter(k + 1) }))}
-      value={ch}
+      items={chapters.map(k => ({ id: String(k), label: L.campaign.chapter(k + 1) }))}
+      value={String(ch)}
       onchange={k => {
-        ch = k
-        pick = k * VC_CHAPTER
+        const n = Number(k)
+        ch = n
+        pick = n * VC_CHAPTER
         res = null
       }}
     />
