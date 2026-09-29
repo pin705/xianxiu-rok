@@ -34,6 +34,7 @@ import {
   arkRow,
   campOf,
   mysticIn,
+  balladIn,
   campTotal,
   fourOf,
   fourPts,
@@ -181,6 +182,17 @@ function battles(w: World, pid: number, now: number) {
       mine: mysticIn(sh, pid),
       board: { normal: mb?.normal ?? [], legend: mb?.legend ?? [] },
     }, // Huyễn Vực Bí Cảnh
+    // Tứ Nhân Thám Bí: phòng đang chờ (chủ phòng, độ khó, số người, giờ đi), phòng mình
+    ballad: {
+      rooms: (sh.ballads ?? []).map(r => ({
+        id: r.id,
+        lv: r.lv,
+        by: w.ps.get(r.by)?.name ?? '?',
+        n: r.members.length,
+        at: r.at,
+      })),
+      mine: balladIn(sh, pid)?.id ?? null,
+    },
   }
 }
 

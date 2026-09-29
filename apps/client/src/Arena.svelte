@@ -55,6 +55,7 @@
   import SilverCard from './SilverCard.svelte'
   import VanchuCard from './VanchuCard.svelte'
   import MysticCard from './MysticCard.svelte'
+  import BalladCard from './BalladCard.svelte'
   import { L, LOOK, MASTER, num, sfx } from './lib'
   import { useGame } from './game'
   import { social } from './social.svelte'
@@ -376,6 +377,7 @@
         <SilverCard q={view?.silver.q ?? 0} mine={!!view?.silver.mine} {send} onchange={load} />
         <VanchuCard q={view?.vanchu.q ?? 0} mine={!!view?.vanchu.mine} {send} onchange={load} />
         <MysticCard view={view?.mystic} {send} onchange={load} />
+        <BalladCard view={view?.ballad} {send} onchange={load} />
       {:else}
         <!-- bảng tuần: đồng tiền vàng / bạc / đồng cho ba hạng đầu, dòng của mình tô son -->
         <ol class="ledger">

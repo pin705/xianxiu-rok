@@ -37,6 +37,10 @@ import { cellOf, clear, type Fog } from '@rok/rules'
 const T = WORLD_TILE
 export const WORLD_DU = MAP_W * T
 export const FINE_Z = 0.42 // từ độ phóng này (px CSS mỗi DU) mới cần mảnh nét
+// Độ phóng (px CSS mỗi DU, một ô 16 DU): mở bản đồ ở Z_OPEN — ô ~21px, huy hiệu (MARK) không đè nhau (0,55 cũ: ô 9px, cả
+// vùng quanh tông môn thành một cụm huy hiệu). Z_MAX: mảnh nền nướng ~2 px/DU, phóng tới 2 vẫn đủ nét tranh thủy mặc.
+export const Z_OPEN = 1.3
+export const Z_MAX = 2
 const PIECE = 30 // ô mỗi cạnh một mảnh nét (5 × 5 mảnh)
 const PIECE_PX = 1024
 const OVERVIEW_PX = 1536

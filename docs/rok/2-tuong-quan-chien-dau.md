@@ -97,7 +97,9 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* 3 huy hiệu chuyên môn dưới tên tướng; màn tạo đội tự gợi ý tướng theo việc (bản 1.0.88: không còn gợi ý tướng thu thập khi đánh man tộc).
 - *Giữ chân:* một người cần nhiều tướng cho nhiều việc, nên sưu tập có lý do.
 - **Tu tiên hoá:** "đạo" của trưởng lão: Thể (bộ binh), Kiếm (kỵ binh), Pháp (cung thủ), Khôi Lỗi / Trận Khí (công thành), Thống Ngự (Leadership), Hỗn Nguyên (Integration), Trấn Thủ, Trảm Yêu (Peacekeeping), Khai Mạch (Gathering), Chinh Phạt, Thần Thông (Skill), Hộ Pháp (Support), Thân Pháp (Mobility), Vạn Biến (Versatility), Sát Phạt (Attack), Hộ Thể (Defense).
-- **Game mình:** 🟡 — mỗi trưởng lão có 1 hệ (kiếm / pháp / thể) và 1 hành; bị động đã có vai trò riêng (chiến lợi phẩm, kinh nghiệm, độ kiếp, thủ…), nhưng không có cây theo chuyên môn. Thiên phú là 3 nhánh chung (công / thể / đạo) cho mọi người.
+- **Game mình:** ✅ — mỗi trưởng lão có 1 hệ, 1 hành và đúng 3 chuyên môn trong 8 (`ELDER_SPECS`: Sát Phạt, Hộ Thể, Thần Thông, Khai
+  Mạch, Chinh Phạt, Thống Ngự, Trấn Thủ — thủ / máu khi giữ nhà, khoá `guard`; Trảm Yêu — công khi đánh PvE, khoá `pve`, `pveSide`),
+  mỗi chuyên môn một cây thiên phú riêng (`SPECS`, `talentNode`). Chưa có chuyên môn theo loại quân (đã có nút "hệ mình"). Bị động vẫn có vai trò riêng (chiến lợi phẩm, kinh nghiệm, độ kiếp, thủ…).
 - **Ưu tiên:** P1 · **Công sức:** M (gắn 3 chuyên môn cho mỗi trưởng lão, đi kèm cây thiên phú ở mục 2.10).
 
 #### 2.3 Nguồn tướng và tượng
@@ -226,7 +228,8 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 - *UI/UX:* 3 cây nhánh; chạm nút xem hiệu ứng, bấm "+" để cộng điểm; nút đặt lại; lưu và tải bộ. Công cụ ngoài (Talent Tree Planner, MetaRoK với bộ 74 điểm) rất phổ biến.
 - *Giữ chân:* theorycraft không hồi kết; chia sẻ build.
 - **Tu tiên hoá:** **Linh căn ba mạch** theo 3 "đạo" của trưởng lão; Tẩy Tủy Đan để đặt lại; "đồ phổ" là bộ thiên phú đã lưu.
-- **Game mình:** ✅ — **Linh căn ba mạch** (`TALENT_TREES`, `talentError` ở `sect/elders.ts`): 3 cây Công mạch (công, công hệ mình, chiến lợi phẩm, trận dung → Phá Trận) / Thủ mạch (thủ, sinh lực, sinh lực hệ mình → Bất Động Như Sơn) / Đạo mạch (sức công pháp, kinh nghiệm, khai mỏ, độ kiếp → Thiên Nhân Hợp Nhất), mỗi cây 3 tầng × 2 nút (tối đa 3) + nút cuối, tầng mở khi đã cộng 5 / 10 / 16 điểm trong cây; điểm = cấp − 1 + 2 mỗi sao (tối đa 49, mỗi cây cần 19 → phải chọn); nút 'hệ mình' theo hệ của trưởng lão; chỉ đội người đó dẫn; Tẩy Tủy Đan trả lại (bộ đang dùng); save cũ trả điểm. **Lưu bộ** (26/09): mỗi trưởng lão 3 bộ thiên phú (`TALENT_PAGES`, lệnh `tpage`, `State.tpage`), mỗi bộ cộng điểm riêng, đổi miễn phí khi không xuất quân — như talent pages của RoK.
+- **Game mình:** ✅ — **Thiên phú theo chuyên môn** (`SPECS` / `ELDER_SPECS` / `talentNode`, `talentError` ở `sect/elders.ts`; mỗi
+  trưởng lão 3 cây trong 8, xem mục 2.2) — ba cây gốc: Sát Phạt (công, công hệ mình, chiến lợi phẩm, trận dung → Phá Trận) / Hộ Thể (thủ, sinh lực, sinh lực hệ mình → Bất Động Như Sơn) / Thần Thông (sức công pháp, kinh nghiệm, khai mỏ, độ kiếp → Thiên Nhân Hợp Nhất), mỗi cây 3 tầng × 2 nút (tối đa 3) + nút cuối, tầng mở khi đã cộng 5 / 10 / 16 điểm trong cây; điểm = cấp − 1 + 2 mỗi sao (tối đa 49, mỗi cây cần 19 → phải chọn); nút 'hệ mình' theo hệ của trưởng lão; chỉ đội người đó dẫn; Tẩy Tủy Đan trả lại (bộ đang dùng); save cũ trả điểm. **Lưu bộ** (26/09): mỗi trưởng lão 3 bộ thiên phú (`TALENT_PAGES`, lệnh `tpage`, `State.tpage`), mỗi bộ cộng điểm riêng, đổi miễn phí khi không xuất quân — như talent pages của RoK.
 - **Ưu tiên:** P1 · **Công sức:** L (nội dung cây và UI cây).
 
 #### 2.11 Cặp tướng chính và phụ
@@ -388,7 +391,8 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
   - Sự kiện gắn với huấn luyện (giai đoạn huấn luyện của MGE, Arms Training) biến tốc lực thành điểm.
 - *UI/UX:* chạm nhà lính → chọn bậc → thanh trượt số lượng → "Huấn luyện" hoặc "Huấn luyện ngay" (gem); quân xong hiện bong bóng để thu.
 - **Tu tiên hoá:** Diễn Võ Trường (thể tu), Kiếm Các (kiếm tu), Pháp Đàn (pháp tu), Khôi Lỗi Phường (công thành).
-- **Game mình:** 🟡 — 1 nhà (Diễn võ trường) cho cả 3 hệ, 1 hàng đợi; mỗi lượt 20 + 20 × tầng (tầng 25 được 520); mỗi hệ ăn chủ yếu một loại tài nguyên; tiên minh giúp được.
+- **Game mình:** ✅ — 1 nhà (Diễn võ trường) cho cả 3 hệ, 2 hàng song song (tầng 10 mở hàng 2 — `train2`, `TRAIN2_LV`; tuyển hay nâng bậc
+  đều được, phù Luyện Binh / tiên minh giúp / hoàn thành ngay dùng cho cả hai); mỗi lượt 20 + 20 × tầng (tầng 25 được 520); mỗi hệ ăn chủ yếu một loại tài nguyên; tiên minh giúp được.
 - **Ưu tiên:** P2 · **Công sức:** S (thêm hàng đợi; PLAN đã ghi "thêm 1 hàng đợi" là món có thể bán).
 
 #### 2.23 Nâng bậc quân
@@ -678,7 +682,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | # | Tính năng (RoK) | Game mình | Ưu tiên | Công sức |
 |---|---|---|---|---|
 | 2.1 | Độ hiếm tướng (4 bậc màu) | ✅ phẩm trưởng lão (`RARITY`) | P1 | S |
-| 2.2 | Chuyên môn / vai trò tướng (15+ nhánh) | 🟡 1 hệ + 1 hành, bị động có vai trò | P1 | M |
+| 2.2 | Chuyên môn / vai trò tướng (15+ nhánh) | ✅ 3 chuyên môn / trưởng lão trong 8 cây (`ELDER_SPECS`, gồm Trấn Thủ / Trảm Yêu) | P1 | M |
 | 2.3 | Nguồn tướng đa dạng (sự kiện, VIP, shop) | ✅ cột mốc + tín vật Chiêu Hiền Đài (thiếp miễn phí / sự kiện / cửa hàng) + Thiên Cơ Luân | P1 | M |
 | 2.4 | Tavern (rương tướng, bảo hiểm) | ✅ Chiêu Hiền Đài (thiếp miễn phí, bảo hiểm thiếp vàng; không bán) | P1 (free) / P2 (bán) | M |
 | 2.5 | Cấp tướng 60 và sách EXP | ✅ cấp 40, Bồi Nguyên Đan, Tâm Đắc Kinh Thư | P2 | S |
@@ -701,7 +705,7 @@ Vòng xoáy: tướng mạnh hơn → hạ man tộc nhanh và ít hao AP hơn �
 | 2.20 | Tốc độ và tải theo loại quân | ✅ tốc độ + sức mang theo hệ (bản đồ giới) | P1 | S |
 | 2.21 | 5 bậc quân và chỉ số | ✅ (chênh bậc lớn hơn RoK) | — | — |
 | 2.21 | Quân đặc thù theo văn minh | ✅ đệ tử đặc trưng theo đạo thống (`DAO_UNITS`) | P2 | M |
-| 2.22 | Huấn luyện (4 nhà, 4 hàng song song) | 🟡 1 nhà, 1 hàng | P2 | S |
+| 2.22 | Huấn luyện (4 nhà, 4 hàng song song) | ✅ 2 hàng song song (Diễn võ trường tầng 10 mở hàng 2, `train2`) — 1 nhà | P2 | S |
 | 2.23 | Nâng bậc quân | ✅ nâng bậc đệ tử (Diễn võ trường) | P1 | S |
 | 2.24 | Hàng đợi hành quân 1–5 | ✅ theo cảnh giới | — | — |
 | 2.25 | Sức chứa một đội (và vật phẩm mở rộng) | ✅ trận dung theo cấp / sao chủ tướng (bản đồ giới) | P0 | M |

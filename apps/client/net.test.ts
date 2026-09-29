@@ -1,9 +1,10 @@
 // Phần thuần của lớp mạng client: gập thao tác đoán trước, chọn mẫu đồng hồ
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { newGame, type State } from '@rok/rules'
+import { ELDER_IDS, expAt, newGame, type State } from '@rok/rules'
 import { view } from '@rok/protocol'
 import { fold, offsetOf, withReports, type Pending } from './src/sync.ts'
+import { openingReport, skillDemo } from './src/opening.ts'
 
 const base = (): State => withReports(view({ ...newGame(0, 'Thử'), seed: 12345 }), [])
 
@@ -37,4 +38,15 @@ test('đồng hồ: lấy độ lệch của mẫu ping có vòng đi-về ngắ
     ]),
     5,
   )
+})
+
+test('Diễn thử công pháp: trận ảo đủ dài để mọi trưởng lão tung công pháp, không đổi state', () => {
+  const s0 = newGame(Date.UTC(2026, 8, 21))
+  const s: State = { ...s0, elders: Object.fromEntries(ELDER_IDS.map(e => [e, expAt(20)])) }
+  for (const e of ELDER_IDS)
+    assert.ok(
+      skillDemo(s, e).fights[0].rounds.some(r => r.cast[0]),
+      e,
+    )
+  assert.equal(openingReport(s0).win, true)
 })

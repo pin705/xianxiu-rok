@@ -98,22 +98,24 @@ export function due(s: State, now: number): Due[] {
             : done
         },
       ])
-  const t = s.train
-  if (t && t.finishAt <= now)
-    ev.push([
-      t.finishAt,
-      st => ({
-        ...st,
-        train: null,
-        troops: plus(st.troops, { [t.unit]: t.n }),
-        stats: {
-          ...st.stats,
-          trained: st.stats.trained + t.n,
-          trainPts: (st.stats.trainPts ?? 0) + trainPts(t),
-          ...t2(st, t),
-        },
-      }),
-    ])
+  for (const k of ['train', 'train2'] as const) {
+    const t = s[k]
+    if (t && t.finishAt <= now)
+      ev.push([
+        t.finishAt,
+        st => ({
+          ...st,
+          [k]: null,
+          troops: plus(st.troops, { [t.unit]: t.n }),
+          stats: {
+            ...st.stats,
+            trained: st.stats.trained + t.n,
+            trainPts: (st.stats.trainPts ?? 0) + trainPts(t),
+            ...t2(st, t),
+          },
+        }),
+      ])
+  }
   const h = s.heal
   if (h && h.finishAt <= now)
     ev.push([

@@ -61,7 +61,7 @@
   } from '../ui'
   import { L, clock, keyBlocked, num } from '../lib'
   import { mountScene, railPx } from './stage'
-  import { FINE_Z, WORLD_DU, WorldScene, type Cam, type Layer, type Pick, type Rel } from './worldmap'
+  import { FINE_Z, WORLD_DU, WorldScene, Z_MAX, Z_OPEN, type Cam, type Layer, type Pick, type Rel } from './worldmap'
   import { useGame } from '../game'
   import { social } from '../social.svelte'
   import { terrColor } from './territory'
@@ -117,11 +117,6 @@
     const dy = typeof innerHeight === 'undefined' ? 0 : (padTop() - PAD.bottom) / 2
     return { x: ((game.seat?.x ?? MAP_W / 2) + 0.5) * T, y: ((game.seat?.y ?? MAP_W / 2) + 0.5) * T - dy / z, z }
   }
-  // Độ phóng (px CSS mỗi DU; một ô = 16 DU). Mở bản đồ ở Z_OPEN: ô ~21px, huy hiệu (worldmap MARK) không đè nhau, đọc được
-  // tên — 0,55 cũ (ô 9px) làm cả vùng quanh tông môn thành một cụm huy hiệu chồng chất. Z_MAX: mảnh nền nướng ~2 px/DU,
-  // phóng tới 2 vẫn đủ nét tranh thủy mặc. Thu nhỏ hết cỡ (zMin) vẫn thấy cả giới.
-  const Z_OPEN = 1.3
-  const Z_MAX = 2
   let cam = $state<Cam>(home(Z_OPEN))
   onMount(() => void (cam = clamp(cam)))
   let scene = $state.raw<WorldScene>()
@@ -188,10 +183,14 @@
     const z = Math.min(Z_MAX, Math.max(zMin(), c.z))
     const hx = (innerWidth - railPx()) / 2 / z,
       hy = innerHeight / 2 / z
-    // giới lọt thỏm trong khung: đặt giữa khoảng trống (trên chừa thẻ mùa, dưới chừa tab), không phải giữa màn
-    const fit = (v: number, h: number, lo: number, hi: number) =>
-      h * 2 >= WORLD_DU + lo + hi ? WORLD_DU / 2 + (hi - lo) / 2 : Math.min(WORLD_DU - h + hi, Math.max(h - lo, v))
-    return { z, x: fit(c.x, hx, PAD.side / z, PAD.side / z), y: fit(c.y, hy, padTop() / z, PAD.bottom / z) }
+    // giới lọt thỏm: đặt giữa khoảng trống (trừ thẻ mùa, tab). Phóng gần: kéo tới khi mép giới ở giữa khoảng trống (off: lệch
+    // tâm khoảng trống so với tâm màn) — tông môn sát góc giới vẫn vào giữa được, không kẹt ở góc với cả màn là sương
+    const fit = (v: number, h: number, lo: number, hi: number, off: number) =>
+      h * 2 >= WORLD_DU + lo + hi
+        ? WORLD_DU / 2 + (hi - lo) / 2
+        : Math.min(Math.max(WORLD_DU - h + hi, WORLD_DU - off), Math.max(Math.min(h - lo, -off), v))
+    const off = (padTop() - PAD.bottom) / 2 / z
+    return { z, x: fit(c.x, hx, PAD.side / z, PAD.side / z, 0), y: fit(c.y, hy, padTop() / z, PAD.bottom / z, off) }
   }
   // Đổi độ phóng mà giữ nguyên điểm dưới (sx, sy)
   function zoomAt(k: number, sx: number, sy: number) {

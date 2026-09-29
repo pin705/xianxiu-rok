@@ -142,6 +142,7 @@ export type ArenaView = {
   silver: { q: number; mine: boolean } // Tán Tu Tranh Châu: số người đang chờ, mình có trong hàng không
   vanchu: { q: number; mine: boolean } // Vân Chu Hội Chiến: số người đang chờ, mình có trong hàng không
   // Huyễn Vực Bí Cảnh: số người chờ mỗi độ khó, hàng mình đang đứng, bảng phá đảo nhanh nhất tuần
+  ballad: { rooms: { id: number; lv: number; by: string; n: number; at: number }[]; mine: number | null } // Tứ Nhân Thám Bí
   mystic: {
     q: Record<MysticMode, number>
     mine: MysticMode | null

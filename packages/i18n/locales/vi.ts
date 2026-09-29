@@ -95,6 +95,7 @@ import {
   type UnitType,
   type MailArgs,
   type MailKind,
+  type SpecId,
 } from '@rok/rules'
 import type { ChronArgs, ChronKind } from '@rok/rules/world'
 
@@ -443,6 +444,8 @@ export const vi = {
       puppet: 'Khôi Lỗi: Luyện Khí Phòng chế khôi lỗi phá trận',
       elite: 'Tinh Binh: đệ tử bậc 5 luyện thành tinh binh',
       four: 'Tứ Tượng: bốn phe tranh điểm mùa',
+      guard: 'Thủ và máu khi giữ nhà',
+      pve: 'Công khi đánh yêu thú, bí cảnh',
       counter: 'Công khi phản kết trận',
     }
     if (
@@ -786,6 +789,7 @@ export const vi = {
       mystic: 'Huyễn Vực Bí Cảnh',
       party: 'Man Hoang Cổ Tộc',
       campaign: 'Viễn Chinh',
+      ballad: 'Tứ Nhân Thám Bí',
     },
     beast: (n: number, max: number) => `Đã hạ yêu thú cấp ${n}/${max}`,
     realm: (n: number, max: number) => `Đã qua ${n}/${max} tầng`,
@@ -799,6 +803,8 @@ export const vi = {
     partyDone: 'Hôm nay đã vào tổ đội',
     partyReady: 'Hôm nay còn lượt',
     campaign: (n: number, max: number) => `${n}/${max} sao`,
+    balladDone: 'Tuần này đã nhận quà',
+    balladReady: 'Tuần này còn quà',
     locked: (h: number) => `Mở ở Chủ điện tầng ${h}`,
     noAlly: 'Cần vào tiên minh',
   },
@@ -1428,6 +1434,7 @@ export const vi = {
 
   // ---------- Công trình chức năng ----------
   train: {
+    queue2: (lv: number) => `Diễn võ trường tầng ${lv} mở hàng tuyển thứ hai (tuyển song song)`,
     doneAt: (t: string) => `Tuyển xong lúc ${t}`,
     tab: 'Tuyển đệ tử',
     pick: 'Chọn hệ',
@@ -2418,6 +2425,10 @@ export const vi = {
         `Vân Chu Hội Chiến · ${out > 0 ? 'thắng' : out < 0 ? 'thua' : 'hoà'}`,
         `${out > 0 ? 'Đội bạn thắng' : out < 0 ? 'Đội bạn thua' : 'Hai đội hoà'} sau ${rounds} hiệp: Vận Lương Chu mình còn ${mine}, của địch còn ${theirs}${mine === theirs && out ? ' — hai thuyền lương cùng chìm, bên phá mạnh hơn thắng' : ''}. Bạn góp đánh chìm ${sunk} thuyền địch. Quà ở dưới.`,
       ],
+      ballad: (lv: number, reached: number, gifted: number): [string, string] => [
+        `Tứ Nhân Thám Bí · ${reached}/7 chặng`,
+        `Chuyến thám bí độ khó ${['Dễ', 'Thường', 'Khó', 'Ác Mộng', 'Địa Ngục'][lv] ?? '?'} ${reached === 7 ? 'hạ cả ba trùm' : `dừng ở chặng ${reached + 1}/7`}.${gifted ? ' Quà tuần này ở dưới.' : ' Tuần này bạn đã nhận quà — lần này chỉ luyện tay.'}`,
+      ],
       mystic: (mode: number, stages: number, rounds: number, rank: number): [string, string] => [
         `Huyễn Vực Bí Cảnh · ${stages}/3 màn`,
         `Đội ghép ${mode ? 'Truyền Thuyết' : 'Thường'} ${stages === 3 ? `phá đảo sau ${rounds} lượt đánh` : `qua ${stages}/3 màn`}.${rank ? ` Hạng ${rank} bảng tuần!` : ''} Quà ở dưới.`,
@@ -2713,6 +2724,7 @@ export const vi = {
     done: {
       build: 'Công trình đã xây xong — tạp dịch đang rảnh',
       train: 'Đệ tử mới đã nhập môn',
+      train2: 'Hàng tuyển thứ hai đã xong — đệ tử mới đã nhập môn',
       heal: 'Thương binh đã lành',
       study: 'Tàng Kinh Các đã lĩnh ngộ xong công pháp',
       brew: 'Đan phòng đã luyện xong',
@@ -2755,10 +2767,20 @@ export const vi = {
     empty: 'Chưa có pháp bảo. Luyện ở Luyện Khí Phòng.',
   },
   talent: {
-    title: 'Thiên phú — Linh căn ba mạch',
-    trees: ['Công mạch', 'Thủ mạch', 'Đạo mạch'],
-    nodes: [
-      [
+    title: 'Thiên phú — ba chuyên môn',
+    trees: {
+      satPhat: 'Sát Phạt',
+      hoThe: 'Hộ Thể',
+      thanThong: 'Thần Thông',
+      khaiMach: 'Khai Mạch',
+      chinhPhat: 'Chinh Phạt',
+      thongNgu: 'Thống Ngự',
+      tranThu: 'Trấn Thủ',
+      tramYeu: 'Trảm Yêu',
+    } as Record<SpecId, string>,
+    specs: (names: string) => `Chuyên môn: ${names}`,
+    nodes: {
+      satPhat: [
         'Khai Phong',
         'Bản Mệnh Tinh Thông',
         'Đoạt Bảo',
@@ -2767,12 +2789,33 @@ export const vi = {
         'Hệ Chủ Chân Truyền',
         'Phá Trận',
       ],
-      ['Thiết Bích', 'Dưỡng Khí', 'Hộ Mệnh', 'Kiên Thủ', 'Kim Cang', 'Trường Sinh', 'Bất Động Như Sơn'],
-      ['Ngộ Tính', 'Minh Tâm', 'Thông Huyền', 'Tầm Mạch', 'Đại Đạo', 'Độ Ách', 'Thiên Nhân Hợp Nhất'],
-    ],
+      hoThe: ['Thiết Bích', 'Dưỡng Khí', 'Hộ Mệnh', 'Kiên Thủ', 'Kim Cang', 'Trường Sinh', 'Bất Động Như Sơn'],
+      thanThong: ['Ngộ Tính', 'Minh Tâm', 'Thông Huyền', 'Tầm Mạch', 'Đại Đạo', 'Độ Ách', 'Thiên Nhân Hợp Nhất'],
+      khaiMach: [
+        'Tầm Long',
+        'Túi Càn Khôn',
+        'Xuyên Sơn',
+        'Hộ Khoáng',
+        'Dẫn Mạch',
+        'Thạch Giáp',
+        'Địa Mạch Tương Thông',
+      ],
+      chinhPhat: [
+        'Lược Đoạt',
+        'Chiến Ý',
+        'Trường Chinh',
+        'Bản Hệ Xung Phong',
+        'Thu Chiến Lợi',
+        'Liệt Trận',
+        'Quét Sạch Sơn Môn',
+      ],
+      thongNgu: ['Điểm Binh', 'Kiện Thể', 'Mở Doanh', 'Kết Trận', 'Đồng Tâm', 'Đại Doanh', 'Vạn Quân Quy Nhất'],
+      tranThu: ['Thủ Sơn', 'Thiết Giáp', 'Cố Thủ', 'Kiên Cốt', 'Trấn Môn', 'Hộ Hệ', 'Kim Thành Thang Trì'],
+      tramYeu: ['Săn Yêu', 'Lịch Luyện', 'Truy Tung', 'Thu Yêu Đan', 'Diệt Yêu', 'Bản Hệ Trảm Yêu', 'Hàng Yêu Phục Ma'],
+    } as Record<SpecId, string[]>,
     points: (n: number) => (n ? `${n} điểm chưa cộng` : 'Đã cộng hết điểm'),
     hint: (need: number[], star: number) =>
-      `Mỗi cấp trưởng lão một điểm, mỗi sao trên một thêm ${star}. Tầng sau mở khi đã cộng ${need.slice(1).join(' / ')} điểm trong cây; nút cuối mạnh nhất. Không đủ điểm lấp cả ba cây — chọn cây chính.`,
+      `Mỗi trưởng lão có ba chuyên môn riêng, mỗi chuyên môn một cây. Mỗi cấp trưởng lão một điểm, mỗi sao trên một thêm ${star}. Tầng sau mở khi đã cộng ${need.slice(1).join(' / ')} điểm trong cây; nút cuối mạnh nhất. Không đủ điểm lấp cả ba cây — chọn cây chính.`,
     need: (n: number) => `Mở khi đã cộng ${n} điểm trong cây`,
     spent: (n: number) => `${n} điểm`,
     add: 'Cộng',
@@ -2788,6 +2831,7 @@ export const vi = {
     go: 'Lĩnh ngộ',
     doing: (name: string, n: number) => `Đang lĩnh ngộ ${name} tầng ${n}`,
     maxed: 'Viên mãn',
+    advise: 'Nên học',
   },
   trib: {
     title: 'Độ kiếp',
@@ -2837,6 +2881,7 @@ export const vi = {
   // ---------- Trang ----------
   monHa: {
     share: 'Chia sẻ vào chat',
+    demo: 'Diễn thử',
     sortBy: 'Sắp theo',
     sort: { lv: 'Cấp', rar: 'Phẩm', star: 'Sao' },
     title: 'Môn hạ',
@@ -2895,6 +2940,7 @@ export const vi = {
   jobs: {
     build: 'Xây dựng',
     train: 'Tuyển đệ tử',
+    train2: 'Tuyển đệ tử (hàng 2)',
     heal: 'Chữa thương',
     study: 'Nghiên cứu',
     brew: 'Luyện đan',
@@ -3356,6 +3402,19 @@ export const vi = {
     tactics: { even: 'Dàn đều', left: 'Dồn cánh trái', mid: 'Dồn giữa', right: 'Dồn cánh phải', home: 'Thủ cờ nhà' },
     join: 'Vào hàng Đại Bỉ',
     leave: 'Rời hàng (trả lượt)',
+  },
+  ballad: {
+    title: 'Tứ Nhân Thám Bí',
+    hint: 'Mở phòng hay vào phòng của đạo hữu bất kỳ (tối đa 4 người, không cần cùng minh); đủ người hay hết 15 phút chờ thì cả đội (đội đầu Luận Kiếm Đài, không mất quân) đi hết 7 chặng: trại yêu và ba trùm — qua trại hồi một nửa quân ngã, trùm cuối gọi vật tổ mạnh thêm theo số người đã ngã. Quà theo chặng xa nhất, mỗi tuần một lần.',
+    lv: ['Dễ', 'Thường', 'Khó', 'Ác Mộng', 'Địa Ngục'],
+    open: 'Mở phòng',
+    join: 'Vào',
+    leave: 'Rời phòng',
+    room: (by: string, lv: string, n: number, max: number) => `${by} · ${lv} · ${n}/${max}`,
+    mine: (t: string) => `Bạn đang trong phòng · đi sau ${t}`,
+    none: 'Chưa có phòng nào đang chờ — mở phòng để đạo hữu vào cùng.',
+    gifted: 'Tuần này đã nhận quà (vẫn vào luyện được)',
+    locked: (h: number) => `Độ khó này mở ở Chủ điện tầng ${h}`,
   },
   mystic: {
     title: 'Huyễn Vực Bí Cảnh',
@@ -3992,6 +4051,10 @@ export const vi = {
         name: 'Xuân Hồi Vạn Vật',
         desc: 'Xuân về vạn vật hồi sinh: năm ngày xây, nghiên cứu, tuyển đệ tử, khai mỏ ra điểm, đủ mốc mở rương.',
       },
+      thuNoan: {
+        name: 'Linh Thú Noãn Hội',
+        desc: 'Năm ngày quanh lễ Phục sinh: linh thú đẻ trứng khắp giới — săn yêu, săn liên hoàn, khai mỏ, ghé thôn trang / động phủ nhặt Thú Noãn, đổi quà ở kho lễ.',
+      },
       trienLam: {
         name: 'Tàng Bảo Các Triển Lãm',
         desc: 'Ba ngày triển lãm bảo vật: khai mê vụ, ghé thôn trang / động phủ, mở thiếp, luyện pháp bảo ra Cổ Vật, đổi quà ở kho lễ.',
@@ -4174,6 +4237,7 @@ export const vi = {
       phienBai: 'Kỳ Ngộ Lệnh',
       trienLam: 'Cổ Vật',
       haChi: 'Hạ Hoa',
+      thuNoan: 'Thú Noãn',
     } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Đổi · ${price}`,
     left: (n: number, max: number) => `Còn ${n}/${max}`,

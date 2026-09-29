@@ -45,6 +45,7 @@ export type MailArgs = {
   assault: [lv: number, win: number, n: number] // Vây Công Yêu Vương: độ khó, thắng (1) / thua (0), số người vào trận
   royale: [place: number, n: number, pts: number] // Cổ Khư Loạn Chiến: hạng, số tông môn, điểm được
   daibi: [mine: number, theirs: number, flags: number] // Tiên Môn Đại Bỉ: điểm đội mình, điểm đội kia, số cờ mình góp giữ
+  ballad: [lv: number, reached: number, gifted: number] // Tứ Nhân Thám Bí: độ khó, số chặng qua (trên 7), tuần này có quà không
   mystic: [mode: number, stages: number, rounds: number, rank: number] // Huyễn Vực Bí Cảnh: độ khó (0 thường · 1 truyền thuyết), số màn qua, tổng lượt đánh, hạng tuần (0: không vào bảng)
   dailyLeft: [n: number] // Nhật Khóa hôm trước: số rương đủ điểm chưa mở (quà gộp trong thư)
   silver: [mine: number, theirs: number, sc: number] // Tán Tu Tranh Châu: điểm đội mình, điểm đội kia, công huân cá nhân

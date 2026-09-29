@@ -81,7 +81,7 @@ export const buildingActions: Actions<BuildingAction> = {
       const stats = {
         ...next.stats,
         sped: (next.stats.sped ?? 0) + ms / 60_000,
-        ...(a.job === 'train' && { spedTrain: (next.stats.spedTrain ?? 0) + ms / 60_000 }),
+        ...((a.job === 'train' || a.job === 'train2') && { spedTrain: (next.stats.spedTrain ?? 0) + ms / 60_000 }),
       }
       return ok(advance({ ...next, stats, items: use(s, pill, a.n) }, s.time))
     },

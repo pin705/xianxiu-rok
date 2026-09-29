@@ -224,6 +224,8 @@ export type World = {
   silver?: { q: [pid: number, tactic: SilverTactic][]; at: number } // Tán Tu Tranh Châu: hàng chờ (người, hướng đánh)
   vanchu?: { q: [pid: number, ship: VanchuShip, stance: VanchuStance][]; at: number } // Vân Chu Hội Chiến: hàng chờ (người, thuyền, thế)
   mystic?: Partial<Record<MysticMode, { q: [pid: number, role: PartyRole][]; at: number }>> // Huyễn Vực Bí Cảnh: hàng chờ mỗi độ khó
+  ballads?: { id: number; by: number; lv: number; at: number; members: number[] }[] // Tứ Nhân Thám Bí: phòng đang chờ
+  nextBallad?: number
   mysticBoard?: { week: number } & Record<MysticMode, { names: string[]; rounds: number }[]> // bảng phá đảo nhanh nhất tuần
   silverLast?: ArkFight // trận Tán Tu Tranh Châu gần nhất (khán giả xem lại)
   goods?: { cyc: number; got: number[] } // Thương Đội Gặp Nạn (world/encamp.ts): kiện hàng rơi đã nhặt trong chu kỳ cyc

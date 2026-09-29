@@ -11,12 +11,13 @@
     TRIAL_GATES,
     VANDU_HALL,
     VC_HALL,
+    BALLAD_LV,
     VC_STAGES,
     dayOf,
     festOpen,
     trialNow,
   } from '@rok/rules'
-  import { vcStars } from '@rok/rules/world'
+  import { balladGifted, vcStars } from '@rok/rules/world'
   import { Icon, type IconName } from '@rok/art'
   import { Button, Card, Sheet } from './ui'
   import { L } from './lib'
@@ -97,6 +98,16 @@
       go: () => {
         close()
         social.campaign = true
+      },
+    },
+    {
+      k: 'ballad',
+      icon: 'people',
+      text: balladGifted(game, g.now) ? L.trials.balladDone : L.trials.balladReady,
+      lock: hall < BALLAD_LV[0].hall ? L.trials.locked(BALLAD_LV[0].hall) : '',
+      go: () => {
+        close()
+        social.arena = true
       },
     },
     {

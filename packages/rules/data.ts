@@ -89,6 +89,7 @@ export const UNITS = TYPES.flatMap(t => TIERS.map(n => `${t}${n}` as UnitId))
 
 export const BATCH_BASE = 20 // số đệ tử mỗi lượt tuyển: BATCH_BASE + BATCH_STEP × tầng Diễn võ trường
 export const BATCH_STEP = 20
+export const TRAIN2_LV = 10 // Diễn võ trường tầng này mở hàng tuyển thứ hai (tuyển / nâng bậc song song)
 export const HOSPITAL_BASE = 80 // chỗ nằm thương binh: HOSPITAL_BASE + HOSPITAL_STEP × tầng Đan phòng
 export const HOSPITAL_STEP = 120
 export const HEAL_COST = 0.4 // chữa 1 thương binh tốn 40% chi phí tuyển
@@ -200,6 +201,8 @@ export type Bonus =
   | 'puppet' // cờ luật mùa Cơ Quan Khôi Lỗi (> 0: Luyện Khí Phòng chế khôi lỗi phá trận — sect/puppet.ts)
   | 'elite' // cờ luật mùa Tinh Binh Luận Kiếm (> 0: luyện tinh binh bậc 5 theo hệ — sect/elite.ts)
   | 'four' // cờ luật mùa Tứ Tượng Tranh Hùng (> 0: bốn phe tranh điểm mùa — world/points.ts fourOf)
+  | 'guard' // Trấn Thủ: thủ và máu đội khi giữ nhà (world/fight.ts defense)
+  | 'pve' // Trảm Yêu: công khi đánh mục tiêu PvE trên bản đồ Vùng (core/battle.ts pveSide)
   | 'counter' // phản kết trận (trang Vây Ngụy Cứu Triệu): công thêm khi đánh kẻ vừa đánh mình hay người cùng đoàn (world/raid.ts)
 
 // ---------- Ngũ hành ----------
@@ -334,6 +337,24 @@ const elders = {
 } satisfies Record<string, ElderDef>
 export type ElderId = keyof typeof elders
 export const ELDERS: Record<ElderId, ElderDef> = elders
+// Ba chuyên môn mỗi trưởng lão (thứ tự = thứ tự cây thiên phú), theo vai: kiếm công / trảm yêu, thể thủ / trấn thủ, pháp công pháp,
+// trị liệu khai mỏ / cướp
+export const ELDER_SPECS: Record<ElderId, readonly [SpecId, SpecId, SpecId]> = {
+  thanhPhong: ['satPhat', 'hoThe', 'thanThong'],
+  thachKien: ['hoThe', 'tranThu', 'thongNgu'],
+  nhuYen: ['thanThong', 'satPhat', 'hoThe'],
+  loiChan: ['satPhat', 'tramYeu', 'thanThong'],
+  vanHac: ['khaiMach', 'hoThe', 'chinhPhat'],
+  hanBang: ['tranThu', 'hoThe', 'satPhat'],
+  bachVoNhai: ['satPhat', 'tramYeu', 'chinhPhat'],
+  macSau: ['thanThong', 'tramYeu', 'thongNgu'],
+  hoacThienCuong: ['hoThe', 'thongNgu', 'satPhat'],
+  toMiNuong: ['khaiMach', 'chinhPhat', 'thanThong'],
+  diepCoThanh: ['tramYeu', 'satPhat', 'khaiMach'],
+  huyenMinh: ['tranThu', 'thongNgu', 'thanThong'],
+}
+export const talentNode = (e: ElderId, i: number): TalentNode | undefined =>
+  SPECS[ELDER_SPECS[e][Math.floor(i / TALENT_TREE_SIZE)]]?.[i % TALENT_TREE_SIZE]
 // Phẩm trưởng lão (độ hiếm 4 bậc màu của RoK — chỉ để hiện, theo độ khó thu nhận): 2 Tinh (lam) · 3 Huyền (tím) · 4 Tiên (vàng)
 export const RARITY: Record<ElderId, 1 | 2 | 3 | 4> = {
   thanhPhong: 2,
@@ -356,10 +377,11 @@ export type FrameId = (typeof FRAMES)[number]
 export const FRAME_VIP = 6 // Hương Hỏa tối thiểu
 export const FRAME_DUELS = 50 // trận Luận Kiếm Đài thắng tối thiểu
 
-// Thiên phú — Linh căn ba mạch (Talent Trees của RoK): 3 cây Công mạch / Thủ mạch / Đạo mạch, mỗi cây 3 tầng × 2 nút (mỗi nút tối
-// đa max điểm) + nút cuối 1 điểm; nút tầng k mở khi đã cộng TALENT_TIER[k] điểm trong cây đó. Điểm: cấp trưởng lão − 1, thêm
-// TALENT_STAR mỗi sao trên 1 — không đủ lấp cả ba cây, phải chọn. Chỉ đội người đó dẫn dùng. Tẩy Tủy Đan trả lại hết điểm.
-// key 'atk.own' / 'hp.own': theo hệ của chính trưởng lão. Nút i = cây × TALENT_TREE_SIZE + vị trí.
+// Thiên phú — chuyên môn (Commander Specialties / Talent Trees của RoK): mỗi trưởng lão có đúng 3 chuyên môn (ELDER_SPECS) trong
+// SPECS, mỗi chuyên môn một cây 3 tầng × 2 nút (mỗi nút tối đa max điểm) + nút cuối 1 điểm; nút tầng k mở khi đã cộng TALENT_TIER[k]
+// điểm trong cây đó. Điểm: cấp trưởng lão − 1, thêm TALENT_STAR mỗi sao trên 1 — không đủ lấp cả ba cây, phải chọn. Chỉ đội người đó
+// dẫn dùng. Tẩy Tủy Đan trả lại hết điểm. key 'atk.own' / 'hp.own': theo hệ của chính trưởng lão. Nút i = cây × TALENT_TREE_SIZE + vị
+// trí (cây: thứ tự trong ELDER_SPECS của trưởng lão đó — talentNode).
 export type TalentNode = { key: Bonus | 'atk.own' | 'hp.own'; v: number; max: number; tier: number }
 export const TALENT_TIER = [0, 5, 10, 16]
 // Liệt truyện trưởng lão: chương k mở khi trưởng lão tới cấp ELDER_STORY_LV[k] (càng tu luyện cùng nhau càng hiểu chuyện xưa)
@@ -367,9 +389,9 @@ export const ELDER_STORY_LV = [10, 20, 30]
 export const TALENT_STAR = 2
 // Lưu bộ thiên phú (talent pages của RoK): mỗi trưởng lão chừng ấy bộ, đổi bộ miễn phí khi không xuất quân
 export const TALENT_PAGES = 3
-export const TALENT_TREES: TalentNode[][] = [
-  [
-    { key: 'atk', v: 0.008, max: 3, tier: 0 }, // Công mạch: công
+const specs = {
+  satPhat: [
+    { key: 'atk', v: 0.008, max: 3, tier: 0 }, // Sát Phạt (Attack): công
     { key: 'atk.own', v: 0.01, max: 3, tier: 0 }, // công đệ tử hệ mình
     { key: 'loot', v: 0.03, max: 3, tier: 1 }, // chiến lợi phẩm
     { key: 'cap', v: 0.015, max: 3, tier: 1 }, // trận dung
@@ -377,8 +399,8 @@ export const TALENT_TREES: TalentNode[][] = [
     { key: 'atk.own', v: 0.012, max: 3, tier: 2 },
     { key: 'atk', v: 0.04, max: 1, tier: 3 }, // Phá Trận
   ],
-  [
-    { key: 'def', v: 0.008, max: 3, tier: 0 }, // Thủ mạch: thủ
+  hoThe: [
+    { key: 'def', v: 0.008, max: 3, tier: 0 }, // Hộ Thể (Defense): thủ
     { key: 'hp', v: 0.01, max: 3, tier: 0 }, // sinh lực
     { key: 'hp.own', v: 0.01, max: 3, tier: 1 }, // sinh lực đệ tử hệ mình
     { key: 'def', v: 0.008, max: 3, tier: 1 },
@@ -386,8 +408,8 @@ export const TALENT_TREES: TalentNode[][] = [
     { key: 'hp', v: 0.012, max: 3, tier: 2 },
     { key: 'def', v: 0.04, max: 1, tier: 3 }, // Bất Động Như Sơn
   ],
-  [
-    { key: 'skill', v: 0.02, max: 3, tier: 0 }, // Đạo mạch: sức công pháp
+  thanThong: [
+    { key: 'skill', v: 0.02, max: 3, tier: 0 }, // Thần Thông (Skill): sức công pháp
     { key: 'exp', v: 0.03, max: 3, tier: 0 }, // kinh nghiệm
     { key: 'skill', v: 0.02, max: 3, tier: 1 },
     { key: 'gather', v: 0.03, max: 3, tier: 1 }, // khai mỏ
@@ -395,9 +417,57 @@ export const TALENT_TREES: TalentNode[][] = [
     { key: 'trib', v: 0.02, max: 3, tier: 2 }, // độ kiếp
     { key: 'skill', v: 0.1, max: 1, tier: 3 }, // Thiên Nhân Hợp Nhất
   ],
-]
-export const TALENT_TREE_SIZE = TALENT_TREES[0].length
-export const TALENT_NODES = TALENT_TREES.flat()
+  khaiMach: [
+    { key: 'gather', v: 0.04, max: 3, tier: 0 }, // Khai Mạch (Gathering): tốc khai mỏ
+    { key: 'cap', v: 0.01, max: 3, tier: 0 }, // trận dung (chở được nhiều)
+    { key: 'gather', v: 0.04, max: 3, tier: 1 },
+    { key: 'hp', v: 0.008, max: 3, tier: 1 }, // đội khai mỏ bền hơn khi bị cướp
+    { key: 'gather', v: 0.05, max: 3, tier: 2 },
+    { key: 'def', v: 0.008, max: 3, tier: 2 },
+    { key: 'gather', v: 0.15, max: 1, tier: 3 }, // Địa Mạch Tương Thông
+  ],
+  chinhPhat: [
+    { key: 'loot', v: 0.04, max: 3, tier: 0 }, // Chinh Phạt (Conquering): chiến lợi phẩm khi cướp
+    { key: 'atk', v: 0.006, max: 3, tier: 0 },
+    { key: 'cap', v: 0.015, max: 3, tier: 1 },
+    { key: 'atk.own', v: 0.01, max: 3, tier: 1 },
+    { key: 'loot', v: 0.05, max: 3, tier: 2 },
+    { key: 'atk', v: 0.008, max: 3, tier: 2 },
+    { key: 'loot', v: 0.15, max: 1, tier: 3 }, // Quét Sạch Sơn Môn
+  ],
+  thongNgu: [
+    { key: 'cap', v: 0.015, max: 3, tier: 0 }, // Thống Ngự (Leadership): trận dung
+    { key: 'hp', v: 0.008, max: 3, tier: 0 },
+    { key: 'cap', v: 0.015, max: 3, tier: 1 },
+    { key: 'def', v: 0.008, max: 3, tier: 1 },
+    { key: 'hp.own', v: 0.01, max: 3, tier: 2 },
+    { key: 'cap', v: 0.02, max: 3, tier: 2 },
+    { key: 'cap', v: 0.05, max: 1, tier: 3 }, // Vạn Quân Quy Nhất
+  ],
+  tranThu: [
+    { key: 'guard', v: 0.02, max: 3, tier: 0 }, // Trấn Thủ (Garrison): thủ + máu khi giữ nhà
+    { key: 'def', v: 0.006, max: 3, tier: 0 },
+    { key: 'guard', v: 0.02, max: 3, tier: 1 },
+    { key: 'hp', v: 0.008, max: 3, tier: 1 },
+    { key: 'guard', v: 0.03, max: 3, tier: 2 },
+    { key: 'hp.own', v: 0.01, max: 3, tier: 2 },
+    { key: 'guard', v: 0.08, max: 1, tier: 3 }, // Kim Thành Thang Trì
+  ],
+  tramYeu: [
+    { key: 'pve', v: 0.02, max: 3, tier: 0 }, // Trảm Yêu (Peacekeeping): công khi đánh yêu thú, tông môn NPC, bí cảnh
+    { key: 'exp', v: 0.03, max: 3, tier: 0 },
+    { key: 'pve', v: 0.02, max: 3, tier: 1 },
+    { key: 'loot', v: 0.03, max: 3, tier: 1 },
+    { key: 'pve', v: 0.03, max: 3, tier: 2 },
+    { key: 'atk.own', v: 0.008, max: 3, tier: 2 },
+    { key: 'pve', v: 0.08, max: 1, tier: 3 }, // Hàng Yêu Phục Ma
+  ],
+} satisfies Record<string, TalentNode[]>
+export type SpecId = keyof typeof specs
+export const SPECS: Record<SpecId, TalentNode[]> = specs
+export const TALENT_TREE_SIZE = 7
+export const TALENT_TREES_N = 3
+export const TALENT_N = TALENT_TREES_N * TALENT_TREE_SIZE
 
 // ---------- Tàng Kinh Các ----------
 
@@ -2372,6 +2442,36 @@ export function mysticGift(mode: MysticMode, stages: number): Reward {
   }
   return { items }
 }
+// Tứ Nhân Thám Bí (Ian's Ballads của RoK, bất đồng bộ): phòng tối đa BALLAD_MAX người mở cho cả giới (không cần minh), mỗi độ khó một
+// ngưỡng Chủ điện (BALLAD_LV); đủ người hay hết BALLAD_WAIT thì server giải — cả đội gộp đội đầu Luận Kiếm Đài (không mất quân) đi hết
+// BALLAD_ROUTE: trại yêu và ba trùm, sức địch theo độ khó (lực chiến might × hệ số chặng; trùm ×BALLAD_BOSS). Qua trại (trạm cắm trại) hồi
+// BALLAD_CAMP phần quân ngã; trùm cuối gọi vật tổ — mỗi người trong đội đã ngã hết quân thì trùm thêm BALLAD_TOTEM công. Quà theo chặng xa
+// nhất, mỗi người mỗi tuần nhận quà một lần (vào lại vẫn đánh được, không quà)
+export const BALLAD_MAX = 4
+export const BALLAD_WAIT = 15 * 60_000
+export const BALLAD_LV: readonly { hall: number; might: number }[] = [
+  { hall: 16, might: 16_000 },
+  { hall: 18, might: 24_000 },
+  { hall: 21, might: 34_000 },
+  { hall: 23, might: 46_000 },
+  { hall: 25, might: 60_000 },
+]
+export const BALLAD_ROUTE = ['camp', 'camp', 'boss', 'camp', 'boss', 'camp', 'boss'] as const
+export const BALLAD_STEP = 0.12
+export const BALLAD_BOSS = 1.4
+export const BALLAD_CAMP = 0.5
+export const BALLAD_TOTEM = 0.15
+export function balladGift(lv: number, reached: number): Reward {
+  if (!reached) return { items: { kinhThu500: 1 } }
+  const bosses = BALLAD_ROUTE.slice(0, reached).filter(x => x === 'boss').length
+  const items: Partial<Record<ItemId, number>> = {
+    thoiQuang60: 1 + lv,
+    ...(bosses >= 1 && { kinhThu2k: 1 + lv }),
+    ...(bosses >= 2 && { khiTinh: 1 + Math.floor(lv / 2) }),
+    ...(bosses >= 3 && { vanNang2: 2 + lv, kimDuyen: 1 }),
+  }
+  return { items }
+}
 export function partyGift(lv: number, waves: number): Reward {
   if (!waves) return { items: { kinhThu500: 1 } } // có đi là có chút quà
   const speed = (['thoiQuang15', 'thoiQuang60', 'thoiQuang60', 'thoiQuang180', 'thoiQuang180'] as const)[lv - 1]
@@ -3731,6 +3831,21 @@ const fests = {
       { items: { loBan60: 2, thachNang5k: 1 } },
       { items: { loBan180: 1, kinhThu2k: 1 } },
       { items: { thoiQuang480: 1, kimDuyen: 1 } },
+    ],
+  },
+  // Linh Thú Noãn Hội (Easter của RoK — Scavenger Hunt rơi trứng + đổi quà, quanh lễ Phục sinh): 5 ngày — săn yêu, săn liên hoàn, khai
+  // mỏ, ghé thôn trang / động phủ nhặt Thú Noãn, đổi quà ở kho lễ. Phục sinh từng năm: 28/3/2027, 16/4/2028
+  thuNoan: {
+    window: { kind: 'dates', from: [vnDay(2027, 3, 28), vnDay(2028, 4, 16)], len: 5 },
+    hall: 3,
+    kind: 'shop',
+    stages: [{ hunt: 4, chain: 5, gather: 0.001, sites: 5 }],
+    shop: [
+      { reward: { items: { kimDuyen: 1 } }, price: 120, max: 1 },
+      { reward: { items: { kinhThu8k: 1 } }, price: 60, max: 2 },
+      { reward: { items: { thoiQuang180: 1 } }, price: 40, max: 3 },
+      { reward: { items: { loBan60: 2 } }, price: 25, max: 5 },
+      { reward: { items: { thaoNang5k: 1 } }, price: 10, max: 5 },
     ],
   },
   // Tàng Bảo Các Triển Lãm (Grand Museum Day, 18/5): 3 ngày — khai mê vụ, ghé thôn trang / động phủ, mở thiếp, luyện pháp bảo ra Cổ

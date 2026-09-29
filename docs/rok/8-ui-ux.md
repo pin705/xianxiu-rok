@@ -495,7 +495,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - Tàng Kinh Các như **một bức cuộn dài**: 5 hàng công pháp nối bằng nét mực.
   - Công pháp đang lĩnh ngộ có vòng linh khí. Hàng chưa mở phủ sương ghi "Tàng Kinh Các tầng N".
   - Có một dấu son "Nên học" cho người mới.
-- **Game mình:** 🟡. 32 công pháp chia 8 hàng, hàng sau mở theo tầng Tàng Kinh Các (hàng khoá mờ đi), mỗi lúc lĩnh ngộ một môn (`Library.svelte`). Chỉ là danh sách thẻ theo hàng: chưa có nét nối cây, chưa có dấu "Nên học".
+- **Game mình:** 🟡. 32 công pháp chia 8 hàng, hàng sau mở theo tầng Tàng Kinh Các (hàng khoá mờ đi), mỗi lúc lĩnh ngộ một môn (`Library.svelte`). Dấu son "Nên học" trên môn rẻ nhất còn học được (hàng thấp trước, rồi tầng đã ngộ ít nhất). Vẫn là kệ theo hàng: chưa có nét nối cây.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C7 · Hospital: chữa thương
@@ -523,7 +523,9 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 - **Tu tiên hoá:**
   - Công pháp trưởng lão: 1 dòng gọn ("Mưa kiếm: 3 lượt, sát thương lan") + "Xem đầy đủ".
   - Nút **"Diễn thử"** phát 3 giây hiệu ứng công pháp. Đã có sẵn phòng thử `lab.html?view=battle&skill=…`, chỉ cần đưa vào.
-- **Game mình:** 🟡. Trưởng lão có hành, pháp bảo, thiên phú, công pháp (chi tiết trong Sheet). Chưa có bản gọn / đầy đủ, chưa có diễn thử.
+- **Game mình:** 🟡. Trưởng lão có hành, pháp bảo, thiên phú, công pháp (chi tiết trong Sheet). Nút "Diễn thử" ở thẻ công pháp phát
+  trận ảo: trưởng lão dẫn quân nghiêng về hệ mình đấu địch ngang sức, đủ lượt để tung công pháp (`skillDemo` ở `opening.ts`, mở
+  Replay). Chưa có bản gọn / đầy đủ.
 - **Ưu tiên:** P2 · **Công sức:** M
 
 #### C10 · Commander Talents: cây tài năng
@@ -840,7 +842,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
 
 - **Construction Complete**: công trình xong có hiệu ứng và âm thanh (chưa xác minh).
 - **Tu tiên hoá:** vòng sóng vàng, 12 tia, "Tầng N" bay lên, chuông, rung nhẹ (đã có).
-- **Game mình:** 🟡. Lên tầng có cột sáng vàng, sóng vòng, tia vàng rơi, chữ "Tầng N" bay lên (`world/home/bursts.ts`, `Home.svelte`). Đang ở tab khác thì chỉ có thông báo: `bursts` hết hạn sau 2 giây, chưa giữ lại để diễn khi quay về núi.
+- **Game mình:** ✅. Lên tầng có cột sáng vàng, sóng vòng, tia vàng rơi, chữ "Tầng N" bay lên (`world/home/bursts.ts`, `Home.svelte`). Đang ở tab khác thì giữ lại, về núi mới diễn (đóng dấu giờ mới, `App.svelte`), mỗi công trình một lần.
 - **Ưu tiên:** P2 · **Công sức:** S
 
 #### D4 · Milestone Moment: khoảnh khắc mốc lớn
@@ -1042,7 +1044,7 @@ Tên RoK viết theo tiếng Anh trong game. Mỗi mục gồm: RoK làm gì · 
   - `M` thư;
   - `Esc` đóng (đã có).
   - Hiện gợi ý phím khi rê chuột (title).
-- **Game mình:** 🟡 (phím 1–5 chuyển tab, Esc đóng bảng, mũi tên và +/− trên bản đồ Giới, +/− trên bản đồ Vùng; chưa có Space, Q, H, B, M) · **Ưu tiên:** P2 · **Công sức:** S
+- **Game mình:** ✅ (phím 1–5 chuyển tab, Space núi ↔ bản đồ, Q nhiệm vụ, H giúp tất cả, B tạp dịch, M thư — `Hud.svelte`; Esc đóng bảng, mũi tên và +/− trên bản đồ Giới / Vùng). Chưa có gợi ý phím khi rê chuột · **Ưu tiên:** P2 · **Công sức:** S
 
 ### H. Phong cách thị giác
 
@@ -1309,14 +1311,14 @@ Chỉ liệt kê mục game mình 🟡 / ❌. Xếp theo ưu tiên, trong cùng 
 | C30 + G9 Tổng thời gian tụ khí, "Dùng ×N" | ✅ túi đồ chọn số lượng, "Dùng vừa đủ", đan ×1/×5/×10/tất cả | P2 | S |
 | C35 Xếp hạng: "cần X để lên hạng Y" | ✅ `Ranks.svelte` | P2 | S |
 | C37 Màn thu nhận trưởng lão | ✅ `ElderReveal.svelte` | P2 | S |
-| D3 Giữ hiệu ứng lên tầng để diễn khi quay lại núi | 🟡 | P2 | S |
+| D3 Giữ hiệu ứng lên tầng để diễn khi quay lại núi | ✅ | P2 | S |
 | G10 Ghim / tìm kiếm trong danh sách dài | 🟡 tìm đạo hữu theo tên ở thẻ Truyền âm (query `search`, không phân biệt dấu); chưa ghim | P2 | S |
-| G12 Phím tắt desktop mở rộng | 🟡 | P2 | S |
+| G12 Phím tắt desktop mở rộng | ✅ Space / Q / H / B / M; chưa gợi ý khi rê chuột | P2 | S |
 | H3 Soát icon ở 16 px | 🟡 | P2 | S |
 | B1 Chip nhanh trên công trình đang có việc | 🟡 | P2 | M |
 | B5 Khách lạ trên cảnh (thương nhân vân du, hạc đưa thư) | ✅ Vân Du Khách | P2 | M |
-| C6 Cây công pháp trực quan + dấu "Nên học" (cần kiểm lại) | 🟡 | P2 | M |
-| C9 Công pháp: bản gọn / đầy đủ, nút "Diễn thử" | 🟡 | P2 | M |
+| C6 Cây công pháp trực quan + dấu "Nên học" (cần kiểm lại) | 🟡 có dấu "Nên học"; chưa nét nối cây | P2 | M |
+| C9 Công pháp: bản gọn / đầy đủ, nút "Diễn thử" | 🟡 có "Diễn thử"; chưa bản gọn / đầy đủ | P2 | M |
 | C10 Thiên phú: "% chưởng môn chọn", điểm theo gợi ý | 🟡 "Cộng hết vào cây đang xem" (`talentAuto`, tầng dưới trước) + lưu 3 bộ; chưa có % người chọn | P2 | S–M |
 | C14 Mức zoom định sẵn (Cận / Trung / Viễn), lớp tình hình | 🟡 | P2 | M |
 | C17 Ghi nhớ vị trí, chia sẻ thẻ vị trí | ✅ | P2 | M |

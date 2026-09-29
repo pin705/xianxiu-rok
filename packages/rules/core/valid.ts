@@ -14,6 +14,7 @@ import {
   HERMIT_TASKS,
   INS,
   INS_SPECIAL,
+  UNITS,
 } from '../data.ts'
 import { int, num, obj } from './parse.ts'
 
@@ -81,5 +82,10 @@ const validVc = (s: any) =>
 // tự vận hành: công tắc
 const validAuto = (s: any) =>
   s.auto === undefined || (obj(s.auto) && (s.auto.heal === undefined || typeof s.auto.heal === 'boolean'))
+// hàng tuyển thứ hai
+const validTrain2 = (s: any) =>
+  s.train2 === undefined ||
+  s.train2 === null ||
+  (obj(s.train2) && UNITS.includes(s.train2.unit) && num(s.train2.n) && num(s.train2.startAt) && num(s.train2.finishAt))
 export const validLater = (s: any) =>
-  validGear(s) && validForm(s) && validSeason(s) && validAuto(s) && validPrime(s) && validVc(s)
+  validGear(s) && validForm(s) && validSeason(s) && validAuto(s) && validPrime(s) && validVc(s) && validTrain2(s)

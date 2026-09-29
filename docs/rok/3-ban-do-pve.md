@@ -622,7 +622,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 - **UI/UX:** bản đồ chương dạng đường đi qua các màn (sao dưới mỗi màn) → màn chuẩn bị: điều kiện sao, đội địch, chọn tướng + đội hình → trận điều khiển trực tiếp → kết quả sao; rương ngày luôn nhấp nháy khi đầy.
 - **Vì sao giữ chân:** nơi dùng tướng "ngồi không", thưởng tượng tướng ổn định mỗi ngày, câu đố chiến thuật; không mất quân thật nên không sợ thử.
 - **Tu tiên hoá:** *Tiên Lộ Viễn Chinh* / *Vạn Lý Hành* — mỗi chương là một châu (Đông Thắng Thần Châu…), màn là "trạm dừng"; điều kiện sao theo lore ("hộ tống thư đồng", "không để trưởng lão nào trọng thương").
-- **Game mình:** 🟡 bí cảnh (5 × 5 tầng, đánh ngay, mỗi tầng một lần, thưởng đan + trưởng lão) và Thông Thiên Tháp (vô hạn tầng, thưởng lần đầu, trưởng lão ở tầng 30/45) là PvE solo tương tự; rương ngày Tĩnh tọa ngộ đạo theo tầng tháp đã qua (`towerChest`). Thiếu: sao / điều kiện phụ, quân ảo (vẫn đánh bằng đệ tử thật, có thương vong), nhiều đội cùng trận, tiền + cửa hàng riêng. Trận tự động (PLAN: không làm trận điều khiển nhiều phút).
+- **Game mình:** ✅ **Viễn Chinh** (`world/campaign.ts`, `Campaign.svelte`, mở từ thẻ Thí Luyện): 30 màn chia 3 chương, đánh bằng đội hình Luận Kiếm Đài (đệ tử ảo — không mất quân, như kho quân viễn chinh của RoK), mang 1 đội → 2 đội từ màn 7 → 3 đội từ màn 17, đánh xa luân với một đạo quân dựng sẵn (hệ xoay vòng, mạnh dần; mỗi màn thứ 5 là thủ lĩnh có công pháp). Ba sao: thắng · còn ≥ 50 % quân · không đội nào ngã; sao mới và lần qua màn đầu ra Huân Chương Viễn Chinh (thủ lĩnh thêm Vạn Năng Tín Vật); mỗi ngày một rương theo tổng sao; cửa hàng huân chương (giới hạn tuần). Trận tất định nên đánh lại được để lấy đủ sao. Khác RoK: không điều khiển trực tiếp giữa trận.
 - **Ưu tiên:** P2 · **Công sức:** M (sao + rương ngày trên bí cảnh/tháp có sẵn) / L (chương mới, nhiều đội).
 
 #### F2. Expedition Store — cửa hàng huân chương
@@ -888,7 +888,7 @@ P3 đã dựng đúng **khung RoK-lite** theo tinh thần PLAN (bản đồ theo
 | E5 | Luật chung khi dịch chuyển | ✅ đội ở nhà, sát khí chặn dời, ô trống, dời lãnh thổ 24 giờ một lần | theo E1–E4 | — |
 | E6 | Migration | ❌ (cố ý) | P2 | M |
 | E7 | Beginner's protection & Peace Shield | ✅ khiên 72 / 8 giờ, Hộ Sơn Phù, Bế Quan Lệnh, linh hỏa thiêu sơn; khiên chưa chặn do thám | P1 | S |
-| F1 | Expedition | 🟡 bí cảnh + Thông Thiên Tháp + rương ngày theo tầng tháp; thiếu sao, quân ảo | P2 | M / L |
+| F1 | Expedition | ✅ Viễn Chinh: 30 màn, 3 sao, đội ảo Luận Kiếm Đài, huân chương, rương ngày, cửa hàng (`world/campaign.ts`) + bí cảnh / Thông Thiên Tháp | P2 | M / L |
 | F2 | Expedition Store | ✅ Trấn Tháp Các (Tháp Lệnh) | P2 | S |
 | F3 | Lyceum of Wisdom | ✅ Vấn Đạo Đài | P2 | M |
 | F4 | Sunset Canyon | ✅ Luận Kiếm Đài (đệ tử ảo, không mất quân) | P2 | M |

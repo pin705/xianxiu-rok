@@ -17,7 +17,7 @@ import {
   REALMS,
   REBIRTH_HALL,
   SECTS,
-  TALENT_NODES,
+  TALENT_N,
   TECH_IDS,
   TIERS,
   TRIBS,
@@ -32,7 +32,7 @@ import {
   elderLevel,
   enemyOf,
   fight,
-  sideOf,
+  pveSide,
   storage,
   protectOf,
   talentError,
@@ -176,7 +176,7 @@ export function turn(start: State, o: BotOpts = {}): State {
       ? winChance(st, e, army, t, pill) >= SURE_WIN
       : t === 'trib'
         ? true
-        : fight(sideOf(st, e, army, deputyOf(st, e)), enemyOf(st, t), st.seed).win
+        : fight(pveSide(st, e, army, deputyOf(st, e)), enemyOf(st, t), st.seed).win
   const sumType = (t: string) =>
     UNITS.filter(u => unitOf(u).type === t).reduce((sum, u) => sum + s.troops[u] * unitOf(u).tier, 0)
   tryDo({ type: 'collect' }) // vào núi: chạm thu sản lượng trước
@@ -246,7 +246,7 @@ export function turn(start: State, o: BotOpts = {}): State {
     for (const e of idleElders(s))
       // thiên phú: lấp Công mạch rồi Thủ mạch rồi Đạo mạch, nút tầng thấp trước (tầng trên mở dần theo điểm đã cộng)
       while (talentUsed(s, e) < talentPoints(s, e)) {
-        const b = TALENT_NODES.findIndex((_, i) => !talentError(s, e, i))
+        const b = Array.from({ length: TALENT_N }, (_, i) => i).findIndex(i => !talentError(s, e, i))
         if (b < 0 || !tryDo({ type: 'talent', elder: e, node: b })) break
         acted = true
       }

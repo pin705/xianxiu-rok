@@ -43,7 +43,7 @@
     if (using) qty = 1
   })
   const qtys = (have: number) => [...new Set([1, 5, 10, have])].filter(k => k >= 1 && k <= have)
-  const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge'] // luyện đan không rút ngắn bằng đan được
+  const JOBS: JobKind[] = ['build', 'train', 'train2', 'heal', 'study', 'forge'] // luyện đan không rút ngắn bằng đan được
   const jobs = $derived(JOBS.filter(k => jobOf(game, k)))
   const has = (e: (typeof ELDER_IDS)[number]) => game.elders[e] !== undefined
   // mỗi loại đan một cách dùng: chọn việc, chọn trưởng lão, dùng ngay, hay tự dùng khi độ kiếp

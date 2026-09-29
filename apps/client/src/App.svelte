@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { flushSync, onMount } from 'svelte'
+  import { flushSync, onMount, untrack } from 'svelte'
   import {
     TRIBS,
     newGame,
@@ -55,21 +55,7 @@
   import { provideGame } from './game'
   import { setMood } from './music'
   import type { AllyInfo, AllyRow, ArkRow, WorldAction } from '@rok/rules/world'
-  import {
-    DESK,
-    L,
-    LANG,
-    TABS,
-    devTools,
-    forgetP1,
-    isMuted,
-    keyBlocked,
-    setMuted,
-    sfx,
-    type Sfx,
-    type Tab,
-    type PanelTab,
-  } from './lib'
+  import { DESK, L, LANG, devTools, forgetP1, isMuted, setMuted, sfx, type Sfx, type Tab, type PanelTab } from './lib'
 
   const preview = newGame(Date.now()) // cảnh nền cho màn tiêu đề
 
@@ -213,21 +199,13 @@
     const tick = setInterval(() => {
       now = n.now()
       n.tick()
-      if (bursts.length && now - bursts[0].t > 2000) bursts = bursts.filter(b => now - b.t < 2000)
+      // lên tầng lúc đang ở tab khác: giữ tới khi về núi mới diễn
+      if (tab === 'tongMon' && bursts.length && now - bursts[0].t > 2000) bursts = bursts.filter(b => now - b.t < 2000)
     }, 250)
-    // Phím 1–5: chuyển tab (không khi đang gõ chữ hay có hộp thoại modal che)
-    const keys = (e: KeyboardEvent) => {
-      const t = TABS[Number(e.key) - 1]
-      if (!t || !game || screen !== 'game' || keyBlocked(e)) return
-      if (game.levels.chuDien >= t.unlock && t.id !== tab)
-        switchTab(t.id, new MouseEvent('click', { clientX: innerWidth / 2, clientY: innerHeight / 2 }))
-    }
-    addEventListener('keydown', keys)
     if (import.meta.env.DEV) devTools(n, () => game)
     return () => {
       clearInterval(tick)
       offAlly()
-      removeEventListener('keydown', keys)
       n.close()
     }
   })
@@ -271,6 +249,11 @@
     )
     select(id, v)
   }
+
+  // Về núi: diễn lại các lần lên tầng lúc ở tab khác (đóng dấu giờ mới — Home diễn mỗi dấu một lần)
+  $effect(() => {
+    if (tab === 'tongMon') untrack(() => bursts.length && (bursts = bursts.map(b => ({ ...b, t: now }))))
+  })
 
   // Chuyển tab: vết mực loang ra từ chỗ chạm (trình duyệt không hỗ trợ View Transitions thì chuyển ngay)
   function switchTab(t: Tab, e: MouseEvent) {
@@ -487,6 +470,7 @@
     {#if tab === 'monHa'}
       <Disciples
         onfocus={focus}
+        onreplay={r => (replay = r)}
         share={t =>
           net
             ?.say(ally ? 'ally' : 'world', t)

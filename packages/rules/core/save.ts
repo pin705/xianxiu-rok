@@ -32,7 +32,7 @@ import {
   RESOURCES,
   SECTS,
   START,
-  TALENT_NODES,
+  TALENT_N,
   TRIBS,
   UNITS,
   WEEKLY,
@@ -178,7 +178,7 @@ function valid(s: any): s is State {
     obj(s.tech) &&
     obj(s.items) &&
     byElder(s.elders, num) &&
-    byElder(s.talents, t => nums(t) && t.length === TALENT_NODES.length) &&
+    byElder(s.talents, t => nums(t) && t.length === TALENT_N) &&
     Array.isArray(s.buffs) &&
     s.buffs.every(
       (b: any) => obj(b) && typeof b.key === 'string' && num(b.v) && num(b.until) && typeof b.src === 'string',
@@ -307,6 +307,7 @@ const validFest = (s: any) =>
   [s.honorGot, s.guestAt, s.frag, s.bones, s.honorAll, s.partyDay, s.seasonAt].every(optNum) &&
   [s.veil, s.mirage, s.born, s.coinSpent, s.secludeAt, s.guests, s.convoyDay, s.assaultDay].every(optNum) &&
   optNum(s.puppet) &&
+  optNum(s.ballad) &&
   (s.friends === undefined || (Array.isArray(s.friends) && s.friends.every(num))) &&
   validLate(s) &&
   validLater(s) &&
@@ -393,7 +394,7 @@ function upgradeSave(raw: unknown) {
   if (s.v !== SAVE_VERSION || typeof s.time !== 'number') return null
   // Trường thêm sau (trong cùng bản): thiếu thì lấy mặc định
   // thiên phú kiểu cũ (3 nhánh): trả lại điểm để cộng vào cây mới
-  const fit = ([, t]: [string, any]) => t?.length === TALENT_NODES.length
+  const fit = ([, t]: [string, any]) => t?.length === TALENT_N
   if (s.talents && !Object.entries(s.talents).every(fit))
     s = { ...s, talents: Object.fromEntries(Object.entries(s.talents).filter(fit)) }
   if (!s.daily) s = { ...s, daily: freshDaily(s.time) } // save làm trước khi có nhiệm vụ ngày

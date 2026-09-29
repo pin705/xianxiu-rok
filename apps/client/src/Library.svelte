@@ -31,6 +31,12 @@
   const open = $derived(game.levels.tangKinhCac >= TECH_ROWS[d.row])
   const err = $derived(techError(game, cur))
   const doing = $derived(game.study?.tech === cur)
+  // dấu son "Nên học" cho người mới: môn rẻ nhất còn học được — hàng thấp trước, rồi tầng đã ngộ ít nhất
+  const advise = $derived(
+    TECH_IDS.filter(t => game.levels.tangKinhCac >= TECH_ROWS[TECHS[t].row] && (game.tech[t] ?? 0) < TECHS[t].max).sort(
+      (a, b) => TECHS[a].row - TECHS[b].row || (game.tech[a] ?? 0) - (game.tech[b] ?? 0),
+    )[0],
+  )
 </script>
 
 {#if game.study}
@@ -96,7 +102,8 @@
           on={t === cur}
           busy={game.study?.tech === t}
           onclick={() => (pick = t)}
-        />
+          >{#if t === advise}<Tag tone="bad" size="sm">{L.library.advise}</Tag>{/if}</Ware
+        >
       {/each}
     </Shelf>
   </section>

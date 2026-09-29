@@ -86,11 +86,11 @@
     if (import.meta.env.DEV && scene && !still) Object.assign(globalThis, { rokHome: scene })
   })
   // Pháo hoa lên tầng: mỗi burst một lần
-  const seen = new Set<number>()
+  const seen = new Set<string>()
   $effect(() => {
     for (const b of bursts)
-      if (scene && !seen.has(b.t)) {
-        seen.add(b.t)
+      if (scene && !hidden && !seen.has(b.id + b.t)) {
+        seen.add(b.id + b.t)
         scene.burst(b.id)
       }
   })
@@ -113,7 +113,7 @@
 
   // Việc của công trình chức năng và gợi ý khi rảnh (UX: màn nào cũng trả lời "làm gì tiếp?")
   function work(id: BuildingId) {
-    if (id === 'dienVoTruong') return game.train
+    if (id === 'dienVoTruong') return game.train ?? game.train2
     if (id === 'tangKinhCac') return game.study
     if (id === 'danPhong') return game.heal ?? game.brew
     return null

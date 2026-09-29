@@ -660,7 +660,10 @@ Mỗi mục: **mở khoá, nhịp** · **cơ chế** (điểm, mốc, thưởng)
   hồi máu khi ngoài giao tranh. 3 trùm (Kikkara, Mokka, trùm cuối gọi totem, tăng sát thương khi hạ được một đạo quân). Quái chồng
   debuff lên tới 99 lớp.
 - **Tu tiên hoá:** "Tứ Nhân Thám Bí".
-- **Game mình:** ❌ — thời gian thực, trái PLAN.
+- **Game mình:** ✅ bản bất đồng bộ (`world/ballad.ts`): phòng mở cho cả giới theo 5 độ khó (Chủ điện 16/18/21/23/25), tối đa 4
+  người; đủ người hay hết 15 phút chờ thì server giải cả đội (gộp đội đầu Luận Kiếm Đài, không mất quân) đi 7 chặng trại yêu + 3
+  trùm; qua trại hồi nửa quân ngã, trùm cuối gọi vật tổ (mỗi người đã ngã hết quân +15% công trùm). Quà theo chặng xa nhất, mỗi tuần
+  một lần; thư mọi chuyến. Chưa có: bản đồ đi lại, debuff chồng lớp, nút hồi máu tay.
 - **Ưu tiên:** P2 · **Công sức:** L.
 
 #### D9. Strange Incidents / Ghoulish Graveyard — nhiệm vụ trên bản đồ
@@ -1014,7 +1017,9 @@ Mọi lễ lớn đều lắp từ cùng một bộ, chỉ đổi tên, hình, t
 - **Cơ chế:** Easter Parade (7+1), Bunny Bonanza (Fancy Eggs 25 cấp, Super Party bằng gem, Mega Party bằng tiền; trang trí Bunny Blessings,
   theme Easter Party), Scavenger Hunt (rơi trứng), Ceroli Assault, Protect the Supplies (hạng 1: 20 tượng huyền thoại). 35 tượng tổng.
 - **Tu tiên hoá:** chỉ cho bản EN, hoặc bỏ; cơ chế dùng lại cho "Linh Thú Noãn".
-- **Game mình:** ❌ · **Ưu tiên:** P2 · **Công sức:** S.
+- **Game mình:** ✅ Linh Thú Noãn Hội (lễ `thuNoan` theo lịch Phục sinh 28/3/2027, 16/4/2028, 5 ngày, kiểu kho đổi): săn yêu, săn liên hoàn,
+  khai mỏ, ghé thôn trang / động phủ nhặt Thú Noãn (Scavenger Hunt), đổi quà ở kho lễ. Chưa có Fancy Eggs 25 cấp, Easter Parade ·
+  **Ưu tiên:** P2 · **Công sức:** S.
 
 #### H5. Grand Museum Day — Witnessing History (Ngày bảo tàng)
 - **Cơ chế:** Keepsake Stamps (7+1), Ingenious Craftsmanship (nộp Ruby phục chế vương miện 25 cấp; cấp 15 trang trí Town Hall Treasure,
@@ -1269,7 +1274,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | D5 | Golden Kingdom | Hoàng Kim Mê Cảnh | ✅ 10 tầng sương, 3 đội ảo, phúc, suối, bẫy, thủ lĩnh; chưa relic / chợ | P2 | L |
 | D6 | Ceroli Crisis | Tổ Đội Bí Cảnh | ✅ Man Hoang Cổ Tộc (`world/party.ts`), bất đồng bộ | P2 | L |
 | D7 | Ceroli Assault | Vây Công Yêu Vương | ✅ | P2 | S |
-| D8 | Ian's Ballads | Tứ Nhân Thám Bí | ❌ | P2 | L |
+| D8 | Ian's Ballads | Tứ Nhân Thám Bí | ✅ bất đồng bộ (`world/ballad.ts`) | P2 | L |
 | D9 | Strange Incidents / Ghoulish Graveyard | Thôn Trang Gặp Nạn / Mộ Địa Âm Hồn | ✅ Thôn Trang Gặp Nạn (`world/rescue.ts`); chưa có gọi thổ phỉ, bản Mộ Địa | P1 | M |
 | D10 | Thief in the Night | Dạ Hành Đạo Tặc | ✅ `daTac`: 2 lượt/ngày đội ảo, rương ngày, bảng kỷ lục | P2 | S–M |
 | D11 | Race Against Time | Trảm Yêu Tốc Chiến | ✅ `tocChien`: 3 lượt/ngày × 10 phút, cộng giờ, bảng kỷ lục | P2 | M |
@@ -1300,7 +1305,7 @@ bí cảnh / thế lực / tổng lực. Giữ bản nào cũng được, miễn
 | H1 | Tết Âm lịch | Tân Xuân Khai Sơn | ✅ lì xì 7 ngày (fest `tanXuan`) | P1 | S (sau H0) |
 | H2 | Valentine's | (thay bằng Thất Tịch) | ✅ thay bằng Ô Thước Kiều (H8) | P2 | — |
 | H3 | Spring's Return / Spring Symphony | Xuân Hồi Vạn Vật | ✅ `xuanHoi` (5 ngày quanh xuân phân) | P2 | S |
-| H4 | Easter | Linh Thú Noãn (EN) | ❌ | P2 | S |
+| H4 | Easter | Linh Thú Noãn Hội | ✅ `thuNoan` (kho đổi); chưa Fancy Eggs 25 cấp | P2 | S |
 | H5 | Grand Museum Day | Tàng Bảo Các Triển Lãm | ✅ `trienLam` (kho đổi Cổ Vật, 18/5) | P2 | S |
 | H6 | Dragon Boat (Zongzi) | Đoan Ngọ Tống Tử | ✅ `doanNgo` (5/5 âm lịch) | P2 | S |
 | H7 | Summer Festival / Summer of Passion | Hạ Chí Thịnh Hội | ✅ `haChi` (kho đổi Hạ Hoa, 7 ngày) | P2 | S |

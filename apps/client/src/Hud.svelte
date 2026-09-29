@@ -74,6 +74,7 @@
     MASTER,
     TABS,
     clock,
+    keyBlocked,
     num,
     progress,
     sfx,
@@ -173,6 +174,25 @@
   })
 
   const hall = $derived(game.levels.chuDien)
+  // Phím tắt desktop: 1–5 chuyển tab, Space núi ↔ bản đồ, Q nhiệm vụ, H giúp tất cả, B tạp dịch, M thư (không khi đang gõ chữ,
+  // có hộp thoại modal che hay đang độ kiếp; Space trên nút đang chọn thì để nút nhận)
+  function keys(e: KeyboardEvent) {
+    const k = e.key.toLowerCase()
+    if (storm || keyBlocked(e) || (k === ' ' && (e.target as HTMLElement).closest?.('button, a, [role]'))) return
+    const go = (t: Tab) =>
+      hall >= TABS.find(x => x.id === t)!.unlock &&
+      t !== tab &&
+      ontab(t, new MouseEvent('click', { clientX: innerWidth / 2, clientY: innerHeight / 2 }))
+    const t = TABS[Number(e.key) - 1]
+    if (t) go(t.id)
+    else if (k === ' ') go(tab === 'banDo' ? 'tongMon' : 'banDo')
+    else if (k === 'q') onquest()
+    else if (k === 'h' && helpable && onhelp) void onhelp()
+    else if (k === 'b') onbuilder()
+    else if (k === 'm') onmail()
+    else return
+    e.preventDefault()
+  }
   const duels = $derived(hall >= PVP_HALL ? arenaOf(game, now).left : 0) // lượt Luận Kiếm Đài còn hôm nay
   // việc đồng minh đang nhờ mà mình giúp được: nút nổi, một chạm giúp tất cả
   const helpable = $derived(
@@ -250,13 +270,14 @@
         end: j.finishAt,
         go: () => onfocus(j.building, 'upgrade'),
       })
-    if (game.train) {
-      const u = unitOf(game.train.unit)
+    for (const t of [game.train, game.train2]) {
+      if (!t) continue
+      const u = unitOf(t.unit)
       out.push({
-        key: 't',
+        key: `t${t.startAt}`,
         icon: 'people',
-        text: L.train.doing(game.train.n, `${L.units[u.type]} ${L.tiers[u.tier]}`),
-        end: game.train.finishAt,
+        text: L.train.doing(t.n, `${L.units[u.type]} ${L.tiers[u.tier]}`),
+        end: t.finishAt,
         go: () => onfocus('dienVoTruong', 'train'),
       })
     }
@@ -570,6 +591,7 @@
     {/each}
   </NavBar>
 </HudFrame>
+<svelte:window onkeydown={keys} />
 <ResSheet res={resOpen} onclose={() => (resOpen = null)} {onfocus} />
 <VipSheet open={vipOpen} onclose={() => (vipOpen = false)} />
 <PowerSheet open={powOpen} {game} onclose={() => (powOpen = false)} {onfocus} {ontab} />

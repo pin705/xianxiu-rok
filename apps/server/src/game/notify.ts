@@ -29,7 +29,7 @@ const LAST_CALL = 2 * 3_600_000 // rương Nhật Khóa chưa nhận / lễ sắ
 // Việc dài xong sớm nhất lúc rời game (tạp dịch rảnh, đệ tử tuyển xong, đội về…); null: không việc nào đủ dài để nhắc
 export function nextRemind(s: State, now: number): Remind | null {
   const jobs: Remind[] = [
-    ...(['build', 'train', 'study', 'forge'] as const).flatMap(k => {
+    ...(['build', 'train', 'train2', 'study', 'forge'] as const).flatMap(k => {
       const j = jobOf(s, k)
       return j ? [{ k, at: j.finishAt }] : []
     }),

@@ -13,7 +13,7 @@ export const int =
   (x: unknown): x is number =>
     Number.isSafeInteger(x) && (x as number) >= lo && (x as number) <= hi
 export const isElder = oneOf(ELDER_IDS)
-export const JOB_KINDS: readonly JobKind[] = ['build', 'train', 'heal', 'study', 'brew', 'forge']
+export const JOB_KINDS: readonly JobKind[] = ['build', 'train', 'train2', 'heal', 'study', 'brew', 'forge']
 export function pickArmy(x: unknown): Army | null {
   if (!obj(x)) return null
   const out: Army = {}

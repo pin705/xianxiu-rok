@@ -1,7 +1,7 @@
 // Trận nhiều bên: phòng thủ nhà (trưởng lão giữ nhà, Hộ Sơn Đại Trận), dò thám, gộp / tách đội, sức mang; điều kiện cướp.
 import { fight, type Side, type Round } from '../combat.ts'
 import { sideOf, chance } from '../core/battle.ts'
-import { bonus, deputyOf, elderLevel, unitOf, isMarching, power } from '../core/stats.ts'
+import { bonus, deputyOf, elderLevel, unitOf, isMarching, lead, power } from '../core/stats.ts'
 import { type Army, type Buff, type Err, type March, type State } from '../core/types.ts'
 import {
   ALLY_GIFTS,
@@ -70,7 +70,7 @@ export const guardOf = (s: State) =>
 export function defense(s: State, brk = 0): Side {
   const g = guardOf(s)
   const side = sideOf(s, g, compact(s.troops), deputyOf(s, g), s.form) // thủ nhà theo trận đang bày
-  const k = 1 + GUARD_STEP * s.levels.hoSonDaiTran * (1 - brk)
+  const k = (1 + GUARD_STEP * s.levels.hoSonDaiTran * (1 - brk)) * (1 + (g ? lead(s, g, 'guard') : 0)) // Trấn Thủ
   return { ...side, troops: side.troops.map(t => ({ ...t, def: t.def * k, hp: t.hp * k })) }
 }
 

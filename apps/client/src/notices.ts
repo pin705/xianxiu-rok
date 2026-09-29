@@ -93,7 +93,7 @@ export function reveal(c: { hall: number; items: Items; elders?: ElderId[] }) {
 
 // Vừa giao một việc dài (≥ 30 phút): lúc hợp để hỏi bật thông báo đẩy
 export const longJob = (prev: State, next: State) =>
-  (['build', 'train', 'study', 'forge'] as const).some(k => {
+  (['build', 'train', 'train2', 'study', 'forge'] as const).some(k => {
     const j = jobOf(next, k)
     return !!j && j !== jobOf(prev, k) && j.finishAt - next.time >= 30 * 60_000
   })
@@ -107,7 +107,7 @@ export function pushTime(prev: State, next: State) {
 }
 // Việc vừa giao mà đồng minh giúp rút ngắn được (mọi việc hẹn giờ trừ luyện đan): tự nhờ giúp như bấm bàn tay của RoK
 export const newHelps = (prev: State, next: State) =>
-  (['build', 'train', 'heal', 'study', 'forge'] as const).filter(k => {
+  (['build', 'train', 'train2', 'heal', 'study', 'forge'] as const).filter(k => {
     const j = jobOf(next, k)
     return !!j && j.startAt !== jobOf(prev, k)?.startAt
   })

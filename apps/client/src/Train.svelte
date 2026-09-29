@@ -20,6 +20,8 @@
     promoteCost,
     promoteError,
     promoteTime,
+    TRAIN2_LV,
+    type TrainQ,
     type Tier,
     type UnitId,
     type UnitType,
@@ -65,7 +67,9 @@
   )
   let n = $state(0)
   const count = $derived(Math.min(n || most, cap))
-  const err = $derived(trainError(game, u, count))
+  // hàng tuyển: hàng 1 đang bận thì dùng hàng 2 (Diễn võ trường tầng TRAIN2_LV — tuyển song song)
+  const q = $derived<TrainQ>(game.train && game.levels.dienVoTruong >= TRAIN2_LV ? 2 : 1)
+  const err = $derived(trainError(game, u, count, q))
   const cost = $derived(stallCost(game, 'train', trainCost(u, count))) // Cát Tường Hạ Giá: giá đã giảm
   const lucky = $derived(stallOf(game, 'train'))
   const uni = $derived(daoUnit(game)) // đệ tử đặc trưng của đạo thống: chỉ số gốc cao hơn
@@ -79,28 +83,32 @@
   const from = $derived(tier > 1 ? (`${type}${tier - 1}` as UnitId) : null)
   let pn = $state(0)
   const pcount = $derived(from ? Math.min(pn || game.troops[from], game.troops[from], cap) : 0)
-  const perr = $derived(from && pcount ? promoteError(game, from, pcount) : 'empty')
+  const perr = $derived(from && pcount ? promoteError(game, from, pcount, q) : 'empty')
   function promote() {
-    if (from && act({ type: 'promote', unit: from, n: pcount })) {
+    if (from && act({ type: 'promote', unit: from, n: pcount, ...(q === 2 && { q }) })) {
       sfx('build')
       pn = 0
     }
   }
 
   function go() {
-    if (act({ type: 'train', unit: u, n: count })) {
+    if (act({ type: 'train', unit: u, n: count, ...(q === 2 && { q }) })) {
       sfx('build')
       n = 0
     }
   }
 </script>
 
-{#if game.train}
-  {@const t = unitOf(game.train.unit)}
-  <div class="mt-3">
-    <JobRow kind="train" label={L.train.doing(game.train.n, `${unitName(t.type, game)} ${L.tiers[t.tier]}`)} />
-  </div>
-{/if}
+{#each ['train', 'train2'] as const as k (k)}
+  {@const job = game[k]}
+  {#if job}
+    {@const t = unitOf(job.unit)}
+    <div class="mt-3">
+      <JobRow kind={k} label={L.train.doing(job.n, `${unitName(t.type, game)} ${L.tiers[t.tier]}`)} />
+    </div>
+  {/if}
+{/each}
+{#if game.train && q === 1}<small class="t-tiny t-soft">{L.train.queue2(TRAIN2_LV)}</small>{/if}
 
 <!-- sân tập: chạm một tổ sư để chọn hệ; hệ đang chọn bước lên bệ đá -->
 <div class="mt-3">

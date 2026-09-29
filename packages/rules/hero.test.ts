@@ -1,6 +1,26 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { FALLEN_KEEP, admit, apply, count, fallenOf, hospital, newGame, reviveCost, type State } from './index.ts'
+import {
+  ELDER_SPECS,
+  FALLEN_KEEP,
+  SPECS,
+  TALENT_TREE_SIZE,
+  TRAIN2_LV,
+  admit,
+  advance,
+  apply,
+  count,
+  expAt,
+  fallenOf,
+  hospital,
+  lead,
+  newGame,
+  pveSide,
+  reviveCost,
+  sideOf,
+  type State,
+} from './index.ts'
+import { defense } from './world.ts'
 
 const T0 = Date.UTC(2026, 8, 21, 3)
 
@@ -30,4 +50,66 @@ test('Anh Linh Điện: tử trận vì Đan phòng đầy thì giữ hồn 3 ng
     ok: false,
     error: 'not_enough',
   })
+})
+
+test('Chuyên môn: mỗi trưởng lão ba cây riêng — cùng nút 0 nhưng Thanh Phong cộng công (Sát Phạt), Vân Hạc cộng khai mỏ (Khai Mạch)', () => {
+  const s0: State = { ...newGame(T0, 'Chuyên'), elders: { thanhPhong: expAt(10), vanHac: expAt(10) } }
+  assert.deepEqual(ELDER_SPECS.vanHac, ['khaiMach', 'hoThe', 'chinhPhat'])
+  let s = s0
+  for (const elder of ['thanhPhong', 'vanHac'] as const) {
+    const r = apply(s, { type: 'talent', elder, node: 0 }, T0)
+    assert.ok(r.ok)
+    s = r.state
+  }
+  assert.equal(lead(s, 'thanhPhong', 'atk') - lead(s0, 'thanhPhong', 'atk'), SPECS.satPhat[0].v)
+  assert.equal(lead(s, 'vanHac', 'gather') - lead(s0, 'vanHac', 'gather'), SPECS.khaiMach[0].v)
+  assert.equal(lead(s, 'vanHac', 'atk'), lead(s0, 'vanHac', 'atk'), 'Vân Hạc không có Sát Phạt ở cây đầu')
+  // talentAuto dồn đúng cây chuyên môn của người đó
+  const auto = apply(s0, { type: 'talentAuto', elder: 'vanHac', tree: 2 }, T0)
+  assert.ok(auto.ok)
+  assert.ok(lead(auto.state, 'vanHac', 'loot') > lead(s0, 'vanHac', 'loot'), 'cây thứ ba của Vân Hạc là Chinh Phạt')
+  // Trấn Thủ (cây 2 của Thạch Kiên): thủ nhà mạnh hơn khi người đó giữ nhà; Trảm Yêu (cây 1 của Diệp Cô Thành): công khi đánh PvE
+  const g0: State = {
+    ...s0,
+    elders: { thachKien: expAt(10), diepCoThanh: expAt(10) },
+    guard: 'thachKien',
+    troops: { ...s0.troops, the1: 100 },
+  }
+  const g1 = apply(g0, { type: 'talent', elder: 'thachKien', node: TALENT_TREE_SIZE }, T0)
+  assert.ok(g1.ok)
+  assert.ok(defense(g1.state).troops[0].def > defense(g0).troops[0].def)
+  const p1 = apply(g0, { type: 'talent', elder: 'diepCoThanh', node: 0 }, T0)
+  assert.ok(p1.ok)
+  const army = { kiem1: 10 }
+  assert.equal(
+    pveSide(p1.state, 'diepCoThanh', army).troops[0].atk,
+    sideOf(p1.state, 'diepCoThanh', army).troops[0].atk * (1 + SPECS.tramYeu[0].v),
+  )
+})
+
+test('Hàng tuyển thứ hai: Diễn võ trường tầng TRAIN2_LV mở hàng 2 — tuyển song song, xong thì cả hai về hàng ngũ; phù tuyển dùng cho cả hàng 2', () => {
+  const base = newGame(T0, 'Song')
+  const s0: State = {
+    ...base,
+    levels: { ...base.levels, dienVoTruong: TRAIN2_LV - 1 },
+    res: { linhThach: 1e7, linhThao: 1e7, linhKhoang: 1e7 },
+    items: { ...base.items, luyenBinh60: 1 },
+  }
+  const a = apply(s0, { type: 'train', unit: 'kiem1', n: 10 }, T0)
+  assert.ok(a.ok)
+  assert.deepEqual(apply(a.state, { type: 'train', unit: 'phap1', n: 10, q: 2 }, T0), { ok: false, error: 'locked' })
+  const up = { ...a.state, levels: { ...a.state.levels, dienVoTruong: TRAIN2_LV } }
+  assert.deepEqual(apply(up, { type: 'train', unit: 'phap1', n: 10 }, T0), { ok: false, error: 'busy' }, 'hàng 1 bận')
+  const b = apply(up, { type: 'train', unit: 'phap1', n: 10, q: 2 }, T0)
+  assert.ok(b.ok)
+  assert.equal(b.state.train2?.unit, 'phap1')
+  assert.ok(
+    apply(b.state, { type: 'use', item: 'luyenBinh60', n: 1, job: 'train2' }, T0).ok,
+    'phù Luyện Binh cho hàng 2',
+  )
+  const done = advance(b.state, T0 + 86_400_000)
+  assert.equal(done.train, null)
+  assert.equal(done.train2, null)
+  assert.equal(done.troops.kiem1 - s0.troops.kiem1, 10)
+  assert.equal(done.troops.phap1 - s0.troops.phap1, 10)
 })

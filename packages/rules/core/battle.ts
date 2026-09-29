@@ -191,11 +191,16 @@ export function armyError(s: State, elder: ElderId, army: Army): Err | null {
 
 // Đội đang đi (trên bản đồ giới): chủ tướng, phó đi cùng, quân mang theo; ảnh chụp đội đó trong chiến báo
 // Đội trên bản đồ giới; luật mùa Cổ Tháp Hành Quân (cờ bonus 'supply'): đường đi dài thì công giảm (supplyK)
-export function marchSide(s: State, m: March) {
-  const side = sideOf(s, m.elder, compact(m.army), m.deputy, m.form)
-  const k = bonus(s, 'supply') > 0 ? supplyK((m.path?.length ?? 1) - 1) : 1
-  return k < 1 ? { ...side, troops: side.troops.map(t => ({ ...t, atk: t.atk * k })) } : side
-}
+const atkBy = (side: Side, k: number): Side =>
+  k === 1 ? side : { ...side, troops: side.troops.map(t => ({ ...t, atk: t.atk * k })) }
+export const marchSide = (s: State, m: March) =>
+  atkBy(
+    sideOf(s, m.elder, compact(m.army), m.deputy, m.form),
+    bonus(s, 'supply') > 0 ? supplyK((m.path?.length ?? 1) - 1) : 1,
+  )
+// Đội đánh mục tiêu PvE trên bản đồ Vùng: thêm công theo chuyên môn Trảm Yêu ('pve')
+export const pveSide = (s: State, elder: ElderId, army: Army, deputy?: ElderId) =>
+  atkBy(sideOf(s, elder, army, deputy), 1 + lead(s, elder, 'pve'))
 export const marchSnap = (s: State, side: Side, m: March) =>
   snap(side, m.elder, elderLevel(s.elders[m.elder]), m.deputy)
 
@@ -280,7 +285,7 @@ export const pushReport = (s: State, r: Omit<Report, 'id'>): State => ({
 // (hành quân: lúc về tới tông môn; bí cảnh: ngay).
 export function battle(s: State, t: Target, elder: ElderId, army: Army, seed: number, at: number, deputy?: ElderId) {
   const ids = UNITS.filter(u => (army[u] ?? 0) > 0)
-  const me = sideOf(s, elder, army, deputy)
+  const me = pveSide(s, elder, army, deputy)
   const foe = enemyOf(s, t)
   const f = fight(me, foe, seed)
   const left = f.rounds.at(-1)?.n[0] ?? ids.map(u => army[u]!)
@@ -403,7 +408,7 @@ export function winChance(s: State, elder: ElderId, army: Army, t: Target | 'tri
   return chance(seed =>
     t === 'trib'
       ? tribulation(s, elder, army, tribPill(s, pill), seed, 1, d).win
-      : fight(sideOf(s, elder, army, d), enemyOf(s, t), seed).win,
+      : fight(pveSide(s, elder, army, d), enemyOf(s, t), seed).win,
   )
 }
 

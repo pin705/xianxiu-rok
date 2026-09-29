@@ -5,7 +5,7 @@
   import { vcBoss, vcBought, vcChestTier, vcFoe, vcMedals, vcOpen, vcRun, vcStars, vcTeams } from '@rok/rules/world'
   import type { WorldAction } from '@rok/rules/world'
   import type { Ack } from '@rok/protocol'
-  import { might } from '@rok/rules'
+  import { dayOf, might } from '@rok/rules'
   import { Button, Card, Sheet, Tabs, Tag } from './ui'
   import { L, num } from './lib'
   import { useGame } from './game'
@@ -44,18 +44,18 @@
       <Button
         size="sm"
         variant="gold"
-        disabled={!tier || game.vc?.chest === Math.floor((g.now + 7 * 3_600_000) / 86_400_000)}
+        disabled={!tier || game.vc?.chest === dayOf(g.now)}
         onclick={() => send({ type: 'vcChest' })}>{L.campaign.chest}{tier ? ` · ${tier}` : ''}</Button
       >
     </div>
     <Tabs
       look="chips"
       fit
-      items={chapters.map(k => ({ id: k, label: L.campaign.chapter(k + 1) }))}
-      value={ch}
-      onchange={k => {
-        ch = k
-        pick = k * VC_CHAPTER
+      items={chapters.map(k => ({ id: String(k), label: L.campaign.chapter(k + 1) }))}
+      value={String(ch)}
+      onchange={id => {
+        ch = Number(id)
+        pick = ch * VC_CHAPTER
         res = null
       }}
     />

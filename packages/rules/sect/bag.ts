@@ -30,7 +30,7 @@ export function useError(s: State, a: BagAction): Err | null {
   if (a.n > (s.items[a.item] ?? 0)) return 'no_item'
   if (d.use === 'speed') {
     // luyện đan không rút ngắn được (có giảm thời gian là thành vòng lặp đẻ đan); phù riêng chỉ cho đúng việc
-    if (!a.job || a.job === 'brew' || (d.job && d.job !== a.job)) return 'bad'
+    if (!a.job || a.job === 'brew' || (d.job && d.job !== a.job.replace('train2', 'train'))) return 'bad' // phù tuyển: cả hàng 2
     return jobOf(s, a.job) ? null : 'empty'
   }
   if (d.use === 'shield' && (s.frenzy ?? 0) > s.time) return 'frenzy' // vừa đi cướp: chưa bật khiên được
@@ -76,7 +76,7 @@ export const bagActions: Actions<BagAction> = {
       const st: State = { ...s, items: use(s, a.item, a.n) }
       if (d.use === 'speed') {
         const min = d.min * a.n,
-          train = a.job === 'train' ? { spedTrain: (st.stats.spedTrain ?? 0) + min } : {}
+          train = a.job === 'train' || a.job === 'train2' ? { spedTrain: (st.stats.spedTrain ?? 0) + min } : {}
         const sped = { ...st, stats: { ...st.stats, sped: (st.stats.sped ?? 0) + min, ...train } }
         return ok(advance(shorten(sped, a.job!, d.min * 60_000 * a.n), s.time))
       }

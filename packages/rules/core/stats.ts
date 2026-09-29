@@ -67,7 +67,7 @@ import {
   REBIRTH_MAX,
   REBIRTH_PROD,
   RESOURCES,
-  TALENT_NODES,
+  talentNode,
   TALENT_STAR,
   TECH_COST_GROWTH,
   TECH_TIME_GROWTH,
@@ -187,7 +187,7 @@ export function lead(s: State, elder: ElderId, key: Bonus) {
   })
   const t = s.talents[elder]
   const own = (k: string) => k.replace('.own', `.${ELDERS[elder].type}`) // nút theo hệ của chính trưởng lão
-  if (t) TALENT_NODES.forEach((d, i) => own(d.key) === key && (v += d.v * (t[i] ?? 0)))
+  if (t) t.forEach((n, i) => n && own(talentNode(elder, i)?.key ?? '') === key && (v += talentNode(elder, i)!.v * n))
   if (key === 'skill') v += SKILL_LV_POWER * (skillLv(s, elder)[0] - 1) // tầng công pháp đã ngộ
   if (expertOf(s, elder)) v += EXPERTISE[key] ?? 0 // Bản Mệnh Thần Thông
   v += (RELIC_BONUS[key] ?? 0) * (s.relics?.[elder] ?? 0) // Anh Linh Điện (di vật trong mùa)

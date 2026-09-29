@@ -2,6 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   ARK_ROUNDS,
+  BALLAD_MAX,
+  BALLAD_ROUTE,
+  BALLAD_WAIT,
   MYSTIC_DAILY,
   MYSTIC_WAIT,
   VANCHU_DAILY,
@@ -28,6 +31,8 @@ import {
   type State,
 } from './index.ts'
 import {
+  balladRun,
+  balladStep,
   mysticRun,
   mysticStep,
   vanchuResult,
@@ -443,4 +448,50 @@ test('Huyễn Vực Bí Cảnh: hàng chờ lẻ mỗi độ khó, đủ 4 ngư�
   assert.equal(f.changed.has(6), false, 'NPC không nhận thư')
   ps.set(8, { ...ps.get(8)!, mystic: { day: dayOf(T0), n: MYSTIC_DAILY, win: 0 } })
   assert.equal(act(8, { type: 'mysticJoin', mode: 'normal', role: 'triLieu' }), 'limit')
+})
+
+test('Tứ Nhân Thám Bí: phòng mở cho cả giới theo độ khó (ngưỡng Chủ điện), đủ 4 người hay hết giờ thì giải — thư chặng xa nhất, quà mỗi tuần một lần', () => {
+  const ps: Players = new Map(Array.from({ length: 6 }, (_, k) => [k + 1, sect(`T${k + 1}`, 16)]))
+  let w: World = freshWorld()
+  const act = (pid: number, raw: object, at = T0) => {
+    const r = worldAct(ps, pid, raw as never, at, 1, undefined, w)
+    if (!r.ok) return r.error
+    w = r.world
+    for (const [p, s] of r.changed) ps.set(p, s)
+    return null
+  }
+  assert.equal(act(1, { type: 'balladOpen', lv: 1 }), 'locked', 'Khó cần Chủ điện 18')
+  assert.equal(act(1, { type: 'balladOpen', lv: 0 }), null)
+  const id = w.ballads![0].id
+  assert.equal(act(1, { type: 'balladOpen', lv: 0 }), 'busy', 'một phòng mỗi lúc')
+  for (const p of [2, 3, 4]) assert.equal(act(p, { type: 'balladJoin', id }), null)
+  assert.equal(w.ballads![0].members.length, BALLAD_MAX)
+  assert.equal(act(5, { type: 'balladJoin', id }), 'full')
+  const r0 = w.ballads![0]
+  const reached = balladRun(ps, r0, 9)
+  assert.equal(balladRun(ps, r0, 9), reached, 'tất định theo mầm')
+  assert.ok(
+    reached > balladRun(ps, { ...r0, members: [1] }, 9) || reached === BALLAD_ROUTE.length,
+    'đội 4 đi xa hơn 1 người',
+  )
+  assert.ok(balladRun(ps, { ...r0, lv: 4 }, 9) <= reached, 'độ khó cao khó hơn')
+  const r = balladStep(ps, w, T0 + 1000, 9)
+  const m = r.changed.get(2)!.mail.at(-1)!
+  assert.equal(m.k, 'ballad')
+  assert.deepEqual(m.a, [0, balladRun(ps, r0, (9 + r0.id * 104_729) >>> 0), 1])
+  assert.ok(m.gift, 'tuần đầu có quà')
+  assert.equal(r.world.ballads, undefined, 'giải xong bỏ phòng')
+  w = r.world
+  for (const [p, s] of r.changed) ps.set(p, s)
+  // tuần này đã nhận quà: chuyến sau chỉ thư; chủ phòng rời thì giải tán; hết giờ chờ thì giải dù thiếu người
+  assert.equal(act(1, { type: 'balladOpen', lv: 0 }), null)
+  assert.equal(act(5, { type: 'balladJoin', id: w.ballads![0].id }), null)
+  assert.equal(act(1, { type: 'balladLeave' }), null)
+  assert.equal(w.ballads, undefined)
+  assert.equal(act(1, { type: 'balladOpen', lv: 0 }), null)
+  assert.equal(balladStep(ps, w, T0 + 1000, 1).world, w, 'chưa đủ người, chưa hết giờ')
+  const late = balladStep(ps, w, T0 + BALLAD_WAIT, 1)
+  const again = late.changed.get(1)!.mail.at(-1)!
+  assert.equal((again.a as number[])[2], 0)
+  assert.equal(again.gift, undefined)
 })

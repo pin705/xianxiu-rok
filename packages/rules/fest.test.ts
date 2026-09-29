@@ -505,11 +505,12 @@ test('Nguyện Thụ Cầu Duyên: rút quà còn trên cây (không trùng tron
   assert.deepEqual(wishAt(s, 'nguyenThu'), { round: 1, drawn: [] }, 'cây nở lại')
 })
 
-test('lễ theo lịch: Nguyên Tiêu, Xuân Hồi, Triển Lãm, Đoan Ngọ, Hạ Chí, Tạ Ơn mở đúng ngày (giờ VN), đóng ngoài ngày', () => {
+test('lễ theo lịch: Nguyên Tiêu, Xuân Hồi, Thú Noãn, Triển Lãm, Đoan Ngọ, Hạ Chí, Tạ Ơn mở đúng ngày (giờ VN), đóng ngoài ngày', () => {
   const noon = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 5) // 12h trưa giờ VN
   const cases: [FestId, [number, number, number], number][] = [
     ['nguyenTieu', [2027, 2, 20], 3],
     ['xuanHoi', [2027, 3, 20], 5],
+    ['thuNoan', [2027, 3, 28], 5],
     ['trienLam', [2027, 5, 18], 3],
     ['doanNgo', [2027, 6, 9], 5],
     ['haChi', [2027, 6, 21], 7],

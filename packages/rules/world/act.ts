@@ -51,6 +51,7 @@ import { silverActions, type SilverAction } from './silver.ts'
 import { vanchuActions, type VanchuAction } from './vanchu.ts'
 import { mysticActions, type MysticAction } from './mystic.ts'
 import { campaignActions, type CampaignAction } from './campaign.ts'
+import { balladActions, type BalladAction } from './ballad.ts'
 import { aquizActions, type AquizAction } from './aquiz.ts'
 import { rescueActions, type RescueAction } from './rescue.ts'
 import { planActions, type PlanAction } from './plans.ts'
@@ -97,6 +98,7 @@ export type WorldAction =
   | VanchuAction
   | MysticAction
   | CampaignAction
+  | BalladAction
   | AquizAction
   | RescueAction
   | PlanAction
@@ -142,6 +144,7 @@ const WORLD: WorldActions<WorldAction> = {
   ...vanchuActions,
   ...mysticActions,
   ...campaignActions,
+  ...balladActions,
   ...aquizActions,
   ...rescueActions,
   ...planActions,

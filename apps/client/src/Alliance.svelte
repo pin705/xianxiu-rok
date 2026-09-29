@@ -156,7 +156,7 @@
       : 1,
   )
   const myRole = $derived<Role | -9>(ally && me !== null ? (ally.members[me] ?? -9) : -9) // −9: chưa vào minh
-  const JOBS: JobKind[] = ['build', 'train', 'heal', 'study', 'forge']
+  const JOBS: JobKind[] = ['build', 'train', 'train2', 'heal', 'study', 'forge']
   const running = $derived(JOBS.filter(k => jobOf(game, k)))
   const asked = (k: JobKind) =>
     !!ally?.helps.some(h => h.pid === me && h.job === k && h.startAt === jobOf(game, k)?.startAt)

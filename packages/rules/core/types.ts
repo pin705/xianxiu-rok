@@ -39,7 +39,7 @@ export type StudyJob = { tech: TechId; level: number; startAt: number; finishAt:
 export type BrewJob = { pill: PillId; n: number; startAt: number; finishAt: number }
 export type ForgeJob = { gear: GearId; level: number; startAt: number; finishAt: number }
 export type Gear = { lv: number; on?: ElderId; aw?: number } // on: trưởng lão đang đeo · aw: tầng khai linh (Iconic)
-export type Talent = number[] // điểm đã cộng mỗi nút thiên phú (TALENT_NODES)
+export type Talent = number[] // điểm đã cộng mỗi nút thiên phú (talentNode)
 // until: lúc hết (due() gỡ đúng giờ, nên sản lượng trước/sau tính đúng); 0 = giữ tới khi server gỡ. src: nguồn, mỗi nguồn một buff
 export type Buff = { key: Bonus; v: number; until: number; src: string }
 // pvp: i = mã người chơi bị cướp · spot: i = chỉ số điểm trên bản đồ giới (atlas.points) · trib: kiếp vân, i = lần độ kiếp
@@ -271,6 +271,7 @@ export type State = {
   troops: Troops // đệ tử đang ở tông môn
   wounded: Troops // thương binh nằm ở Đan phòng (kể cả đang được chữa)
   train: TrainJob | null
+  train2?: TrainJob | null // hàng tuyển thứ hai (Diễn võ trường tầng TRAIN2_LV — như nhiều nhà lính tuyển song song của RoK)
   heal: HealJob | null
   study: StudyJob | null
   brew: BrewJob | null
@@ -287,6 +288,7 @@ export type State = {
   daibi?: { day: number; n: number; win: number } // Tiên Môn Đại Bỉ: ngày (giờ VN), lượt đã vào hôm đó, số trận thắng
   silver?: { day: number; n: number; win: number } // Tán Tu Tranh Châu: ngày (giờ VN), lượt đã vào hôm đó, số trận thắng
   vanchu?: { day: number; n: number; win: number } // Vân Chu Hội Chiến: ngày (giờ VN), lượt đã vào hôm đó, số trận thắng
+  ballad?: number // Tứ Nhân Thám Bí: tuần đã nhận quà
   mystic?: { day: number; n: number; win: number } // Huyễn Vực Bí Cảnh: ngày (giờ VN), lượt hôm đó, số lần phá đảo
   // Viễn Chinh: sao từng màn (bit: thắng · còn quân · không đội ngã), huân chương đã kiếm / đã tiêu, ngày mở rương, tuần và số đã đổi mỗi món
   vc?: { stars: number[]; medals: number; spent: number; chest: number; week?: number; n?: number[] }
@@ -401,7 +403,7 @@ export type State = {
   born?: number // lúc lập tông môn (ms) — sự kiện tân thủ tính theo giờ từ đây (lập lúc 23h vẫn đủ 24 giờ ngày đầu)
 }
 
-export type JobKind = 'build' | 'train' | 'heal' | 'study' | 'brew' | 'forge'
+export type JobKind = 'build' | 'train' | 'train2' | 'heal' | 'study' | 'brew' | 'forge'
 // Lỗi thao tác. cap: vượt trận dung của trưởng lão dẫn đội · claimed: phần thưởng đã nhận rồi · frenzy: vừa đi cướp, chưa bật khiên
 // được (cơn sát khí) · secluded: đang bế quan, xuất quan mới làm được · blocked: cửa ải phe khác đang giữ chặn đường
 type ErrJob = 'max_level' | 'need_main_hall' | 'busy' | 'queue_full' | 'not_enough' | 'not_done' | 'locked' | 'cooldown'

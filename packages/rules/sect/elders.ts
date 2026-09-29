@@ -29,9 +29,10 @@ import {
   FRAME_DUELS,
   FRAME_VIP,
   FRAMES,
-  TALENT_NODES,
+  TALENT_N,
+  talentNode,
   TALENT_PAGES,
-  TALENT_TREES,
+  TALENT_TREES_N,
   TALENT_TIER,
   TALENT_TREE_SIZE,
   type DaoId,
@@ -49,7 +50,7 @@ export function primeError(s: State, e: ElderId): Err | null {
 
 export type ElderAction =
   | { type: 'feed'; elder: ElderId; n: number }
-  | { type: 'talent'; elder: ElderId; node: number } // cộng một điểm vào nút thiên phú (TALENT_NODES)
+  | { type: 'talent'; elder: ElderId; node: number } // cộng một điểm vào nút thiên phú (talentNode)
   | { type: 'wash'; elder: ElderId } // Tẩy Tủy Đan
   | { type: 'talentAuto'; elder: ElderId; tree: number } // cộng hết điểm còn lại vào cây tree theo thứ tự nút (gợi ý)
   | { type: 'divine'; elder: ElderId } // Thần Binh mùa: gắn cho trưởng lão (mỗi mùa một lần)
@@ -77,7 +78,7 @@ export function frameOpen(s: State, id: FrameId): boolean {
 export const talentSpent = (s: State, e: ElderId, tree: number) =>
   (s.talents[e] ?? []).slice(tree * TALENT_TREE_SIZE, (tree + 1) * TALENT_TREE_SIZE).reduce((a, b) => a + b, 0)
 export function talentError(s: State, e: ElderId, i: number): Err | null {
-  const d = TALENT_NODES[i]
+  const d = talentNode(e, i)
   if (!d || s.elders[e] === undefined) return 'locked'
   if (isMarching(s, e)) return 'busy'
   if ((s.talents[e]?.[i] ?? 0) >= d.max) return 'max_level'
@@ -95,13 +96,13 @@ export const elderActions: Actions<ElderAction> = {
   },
   talent: {
     pick: a =>
-      isElder(a.elder) && int(0, TALENT_NODES.length - 1)(a.node)
+      isElder(a.elder) && int(0, TALENT_N - 1)(a.node)
         ? { type: 'talent', elder: a.elder, node: a.node as number }
         : null,
     run: (s, a) => {
       const e = talentError(s, a.elder, a.node)
       if (e) return no(e)
-      const cur = s.talents[a.elder] ?? TALENT_NODES.map(() => 0)
+      const cur = s.talents[a.elder] ?? Array<number>(TALENT_N).fill(0)
       const next = cur.map((x, i) => (i === a.node ? x + 1 : x))
       return ok({ ...s, talents: { ...s.talents, [a.elder]: next } })
     },
@@ -109,7 +110,7 @@ export const elderActions: Actions<ElderAction> = {
   // Cộng theo gợi ý: dồn hết điểm còn lại vào một cây, nút theo thứ tự (tầng dưới trước — tầng trên mở dần khi đủ điểm trong cây)
   talentAuto: {
     pick: a =>
-      isElder(a.elder) && int(0, TALENT_TREES.length - 1)(a.tree)
+      isElder(a.elder) && int(0, TALENT_TREES_N - 1)(a.tree)
         ? { type: 'talentAuto', elder: a.elder, tree: a.tree as number }
         : null,
     run: (s, a) => {
@@ -119,7 +120,7 @@ export const elderActions: Actions<ElderAction> = {
         for (let k = 0; k < TALENT_TREE_SIZE && !added; k++) {
           const i = a.tree * TALENT_TREE_SIZE + k
           if (talentError(st, a.elder, i)) continue
-          const cur = st.talents[a.elder] ?? TALENT_NODES.map(() => 0)
+          const cur = st.talents[a.elder] ?? Array<number>(TALENT_N).fill(0)
           st = { ...st, talents: { ...st.talents, [a.elder]: cur.map((x, j) => (j === i ? x + 1 : x)) } }
           added = true
         }

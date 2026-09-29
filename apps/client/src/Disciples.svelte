@@ -14,7 +14,8 @@
     TALENT_PAGES,
     TALENT_STAR,
     TALENT_TIER,
-    TALENT_TREES,
+    ELDER_SPECS,
+    SPECS,
     TALENT_TREE_SIZE,
     talentError,
     talentSpent,
@@ -40,6 +41,7 @@
     PASSIVE_LV,
     type Bonus,
     type BuildingId,
+    type Report,
     type ElderId,
     type UnitId,
     isMarching,
@@ -67,12 +69,15 @@
   import Help from './Help.svelte'
   import { itemName } from './bag'
   import { useGame } from './game'
+  import { skillDemo } from './opening'
 
   let {
     onfocus,
     share,
+    onreplay,
   }: {
     onfocus: (id: BuildingId, view?: PanelTab | null) => void
+    onreplay?: (r: Report) => void // Diễn thử công pháp (trận ảo, opening.ts skillDemo)
     share?: (text: string) => void // gửi thẻ trưởng lão vào chat (kênh minh nếu có minh)
   } = $props()
   const g = useGame()
@@ -303,6 +308,9 @@
             ></span
           ><Beads look="pips" n={SKILL_MAX} on={sk[0]} /></span
         >
+        {#if onreplay}<Button size="sm" variant="ghost" icon="swords" onclick={() => onreplay(skillDemo(game, e))}
+            >{L.monHa.demo}</Button
+          >{/if}
       </Card>
     </Section>
     <Section title={L.monHa.passive}>
@@ -491,9 +499,9 @@
       </div>
       <small class="t-tiny t-soft">{L.talent.pageHint}</small>
       <Tabs
-        items={TALENT_TREES.map((_, k) => ({
+        items={ELDER_SPECS[e].map((sp, k) => ({
           id: String(k),
-          label: `${L.talent.trees[k]} · ${L.talent.spent(talentSpent(game, e, k))}`,
+          label: `${L.talent.trees[sp]} · ${L.talent.spent(talentSpent(game, e, k))}`,
         }))}
         value={String(tree)}
         onchange={k => (tree = Number(k))}
@@ -505,14 +513,15 @@
               ><Icon name="lock" size={12} /> {L.talent.need(TALENT_TIER[tier])}</small
             >{/if}
           <div class="stack" style:--gap="6px">
-            {#each TALENT_TREES[tree] as d, k (k)}
+            {#each SPECS[ELDER_SPECS[e][tree]] as d, k (k)}
               {#if d.tier === tier}
                 {@const i = tree * TALENT_TREE_SIZE + k}
                 {@const n = tal[i] ?? 0}
                 <Card tone={d.tier === 3 ? 'glow' : undefined}>
                   <div class="row" style:--gap="6px">
                     <span class="grow stack" style:--gap="1px"
-                      ><b class="t-small">{L.talent.nodes[tree][k]} · {n}/{d.max}</b><small class="t-tiny t-soft"
+                      ><b class="t-small">{L.talent.nodes[ELDER_SPECS[e][tree]][k]} · {n}/{d.max}</b><small
+                        class="t-tiny t-soft"
                         >{L.bonus(d.key.replace('.own', `.${ELDERS[e].type}`) as Bonus, d.v * Math.max(1, n))}</small
                       ></span
                     >
@@ -535,7 +544,7 @@
           wide
           disabled={busy}
           onclick={() => act({ type: 'talentAuto', elder: e, tree }, 'reward')}
-          >{L.talent.auto(pts, L.talent.trees[tree])}</Button
+          >{L.talent.auto(pts, L.talent.trees[ELDER_SPECS[e][tree]])}</Button
         >
       {/if}
       {#if game.items.taiTuy && talentUsed(game, e)}

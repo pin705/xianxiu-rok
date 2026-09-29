@@ -59,6 +59,7 @@ import {
   silverStep,
   vanchuStep,
   mysticStep,
+  balladStep,
   aquizStep,
   wallStep,
   planStep,
@@ -216,6 +217,7 @@ export function allyEvents(w: World, now: number) {
   silverCheck(w, now)
   vanchuCheck(w, now)
   mysticCheck(w, now)
+  balladCheck(w, now)
   wallCheck(w, now)
   planCheck(w, now)
   tourneyCheck(w, now)
@@ -354,6 +356,16 @@ function vanchuCheck(w: World, now: number) {
 // Huyễn Vực Bí Cảnh: mỗi độ khó, hàng chờ đủ 4 người (hay chờ lâu thì bù tông môn NPC) thì ghép đội, giải ba màn
 function mysticCheck(w: World, now: number) {
   const r = mysticStep(w.ps, w.shared, now, randomInt(1, 2 ** 31), [...w.npc])
+  if (r.world === w.shared) return
+  w.share(r.world)
+  for (const [pid, s] of r.changed) {
+    const slot = w.slots.get(pid)
+    if (slot) w.commit(slot, s)
+  }
+}
+// Tứ Nhân Thám Bí: phòng đủ 4 người hay hết giờ chờ thì giải cả chuyến (mầm bí mật của server)
+function balladCheck(w: World, now: number) {
+  const r = balladStep(w.ps, w.shared, now, randomInt(1, 2 ** 31))
   if (r.world === w.shared) return
   w.share(r.world)
   for (const [pid, s] of r.changed) {

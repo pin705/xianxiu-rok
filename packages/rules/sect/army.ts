@@ -7,12 +7,21 @@ import { int, oneOf } from '../core/parse.ts'
 import { batch, healCost, healTime, HIGH_FIRST, tierOpen, trainCost, trainTime, unitOf } from '../core/stats.ts'
 import { type Army, type Err, type State } from '../core/types.ts'
 import { afford, bag, count, minus, plus } from '../core/util.ts'
-import { CURE, UNITS, type UnitId } from '../data.ts'
+import { CURE, TRAIN2_LV, UNITS, type UnitId } from '../data.ts'
 
-export function trainError(s: State, u: UnitId, n: number): Err | null {
+// Hàng tuyển: 1 (mặc định) hay 2 (Diễn võ trường tầng TRAIN2_LV)
+export type TrainQ = 1 | 2
+const slot = (q: TrainQ = 1) => (q === 2 ? 'train2' : 'train')
+function queueError(s: State, q: TrainQ): Err | null {
+  if (q === 2 && s.levels.dienVoTruong < TRAIN2_LV) return 'locked'
+  return s[slot(q)] ? 'busy' : null
+}
+
+export function trainError(s: State, u: UnitId, n: number, q: TrainQ = 1): Err | null {
   if (!UNITS.includes(u) || !Number.isInteger(n) || n < 1 || n > batch(s)) return 'bad'
   if (!s.levels.dienVoTruong || !tierOpen(s, unitOf(u).tier)) return 'locked'
-  if (s.train) return 'busy'
+  const qe = queueError(s, q)
+  if (qe) return qe
   return afford(s.res, stallCost(s, 'train', trainCost(u, n))) ? null : 'not_enough' // Cát Tường Hạ Giá
 }
 
@@ -38,18 +47,19 @@ export function promoteTime(s: State, u: UnitId, n: number) {
   const full = trainTime(s, promoteTo(u) ?? u, n)
   return Math.max(full - trainTime(s, u, n), Math.round(full * 0.3))
 }
-export function promoteError(s: State, u: UnitId, n: number): Err | null {
+export function promoteError(s: State, u: UnitId, n: number, q: TrainQ = 1): Err | null {
   const to = promoteTo(u)
   if (!to || !Number.isInteger(n) || n < 1 || n > batch(s)) return 'bad'
   if (!s.levels.dienVoTruong || !tierOpen(s, unitOf(to).tier)) return 'locked'
-  if (s.train) return 'busy'
+  const qe = queueError(s, q)
+  if (qe) return qe
   if (s.troops[u] < n) return 'not_enough'
   return afford(s.res, promoteCost(u, n)) ? null : 'not_enough'
 }
 
 export type ArmyAction =
-  | { type: 'train'; unit: UnitId; n: number }
-  | { type: 'promote'; unit: UnitId; n: number } // unit: bậc đang có
+  | { type: 'train'; unit: UnitId; n: number; q?: TrainQ }
+  | { type: 'promote'; unit: UnitId; n: number; q?: TrainQ } // unit: bậc đang có; q: hàng tuyển
   | { type: 'heal' }
   | { type: 'cure' } // cure: Hồi Xuân Đan
   | { type: 'autoHeal'; on: boolean } // tự vận hành: tự chữa thương binh vừa về
@@ -60,19 +70,25 @@ export const armyActions: Actions<ArmyAction> = {
     run: (s, a) => (s.levels.danPhong ? ok(autoHeal({ ...s, auto: { ...s.auto, heal: a.on } })) : no('locked')), // bật lúc có sẵn thương binh: chữa luôn
   },
   train: {
-    pick: a => (oneOf(UNITS)(a.unit) && int(1, 1e6)(a.n) ? { type: 'train', unit: a.unit, n: a.n } : null),
+    pick: a =>
+      oneOf(UNITS)(a.unit) && int(1, 1e6)(a.n) && (a.q === undefined || int(1, 2)(a.q))
+        ? { type: 'train', unit: a.unit, n: a.n, q: a.q as TrainQ | undefined }
+        : null,
     run: (s, a) => {
-      const e = trainError(s, a.unit, a.n)
+      const e = trainError(s, a.unit, a.n, a.q)
       if (e) return no(e)
       const train = { unit: a.unit, n: a.n, startAt: s.time, finishAt: s.time + trainTime(s, a.unit, a.n) }
       const t = stallTake(s, 'train', trainCost(a.unit, a.n))
-      return ok(bump({ ...t.s, res: pay(t.s, t.cost), train }, 'train', a.n))
+      return ok(bump({ ...t.s, res: pay(t.s, t.cost), [slot(a.q)]: train }, 'train', a.n))
     },
   },
   promote: {
-    pick: a => (oneOf(UNITS)(a.unit) && int(1, 1e6)(a.n) ? { type: 'promote', unit: a.unit, n: a.n } : null),
+    pick: a =>
+      oneOf(UNITS)(a.unit) && int(1, 1e6)(a.n) && (a.q === undefined || int(1, 2)(a.q))
+        ? { type: 'promote', unit: a.unit, n: a.n, q: a.q as TrainQ | undefined }
+        : null,
     run: (s, a) => {
-      const e = promoteError(s, a.unit, a.n)
+      const e = promoteError(s, a.unit, a.n, a.q)
       if (e) return no(e)
       const train = {
         unit: promoteTo(a.unit)!,
@@ -82,7 +98,7 @@ export const armyActions: Actions<ArmyAction> = {
         up: true as const,
       }
       const troops = minus(s.troops, { [a.unit]: a.n })
-      return ok(bump({ ...s, troops, res: pay(s, promoteCost(a.unit, a.n)), train }, 'train', a.n))
+      return ok(bump({ ...s, troops, res: pay(s, promoteCost(a.unit, a.n)), [slot(a.q)]: train }, 'train', a.n))
     },
   },
   heal: {

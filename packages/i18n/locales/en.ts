@@ -93,6 +93,7 @@ import {
   type Tier,
   type UnitId,
   type UnitType,
+  type SpecId,
 } from '@rok/rules'
 import type { ChronTexts, MailTexts, Text } from './vi.ts'
 
@@ -444,6 +445,8 @@ export const en: Text = {
       puppet: 'Siege puppets: the Artifact Forge builds wall-breaking puppets',
       elite: 'Elite units: tier-5 disciples train into elites',
       four: 'Four Symbols: four factions race for season points',
+      guard: 'Defense and HP when guarding home',
+      pve: 'Attack vs beasts and realms',
       counter: 'Attack when counter-rallying',
     }
     if (
@@ -799,6 +802,7 @@ export const en: Text = {
       mystic: 'Realm of Mystique',
       party: 'Wild Clans',
       campaign: 'Expedition',
+      ballad: 'Four Seekers',
     },
     beast: (n: number, max: number) => `Defeated beasts up to level ${n}/${max}`,
     realm: (n: number, max: number) => `Cleared ${n}/${max} floors`,
@@ -812,6 +816,8 @@ export const en: Text = {
     partyDone: 'Already raided today',
     partyReady: 'Raid available today',
     campaign: (n: number, max: number) => `${n}/${max} stars`,
+    balladDone: 'Weekly rewards taken',
+    balladReady: 'Weekly rewards available',
     locked: (h: number) => `Opens at Main Hall ${h}`,
     noAlly: 'Join an alliance first',
   },
@@ -1436,6 +1442,7 @@ export const en: Text = {
 
   // ---------- Function buildings ----------
   train: {
+    queue2: (lv: number) => `Training Grounds level ${lv} opens a second recruiting queue (train in parallel)`,
     doneAt: (t: string) => `Done at ${t}`,
     tab: 'Recruit',
     pick: 'Path',
@@ -2410,6 +2417,10 @@ export const en: Text = {
         `Cloudship Clash · ${out > 0 ? 'victory' : out < 0 ? 'defeat' : 'draw'}`,
         `${out > 0 ? 'Your team won' : out < 0 ? 'Your team lost' : 'A draw'} after ${rounds} rounds: your supply ship has ${mine} left, theirs ${theirs}${mine === theirs && out ? ' — both went down together; the harder hitters win' : ''}. You helped sink ${sunk} enemy ships. Rewards below.`,
       ],
+      ballad: (lv: number, reached: number, gifted: number): [string, string] => [
+        `Four Seekers · ${reached}/7 stages`,
+        `Your ${['Easy', 'Normal', 'Hard', 'Nightmare', 'Hell'][lv] ?? '?'} expedition ${reached === 7 ? 'felled all three bosses' : `stopped at stage ${reached + 1}/7`}.${gifted ? ' This week’s rewards are below.' : ' You already took this week’s rewards — this run was practice.'}`,
+      ],
       mystic: (mode: number, stages: number, rounds: number, rank: number): [string, string] => [
         `Realm of Mystique · ${stages}/3 stages`,
         `Your ${mode ? 'Legend' : 'Normal'} team ${stages === 3 ? `cleared it in ${rounds} rounds` : `passed ${stages}/3 stages`}.${rank ? ` #${rank} on the weekly board!` : ''} Rewards below.`,
@@ -2716,6 +2727,7 @@ export const en: Text = {
     done: {
       build: 'Construction finished — your builders are free',
       train: 'New disciples have joined',
+      train2: 'Second recruiting queue done — new disciples have joined',
       heal: 'The wounded have recovered',
       study: 'The library finished studying a technique',
       brew: 'The alchemy room finished brewing',
@@ -2758,16 +2770,71 @@ export const en: Text = {
     empty: 'No artifacts yet. Forge them at the Artifact Forge.',
   },
   talent: {
-    title: 'Talents — Three Meridians',
-    trees: ['Offense', 'Defense', 'Dao'],
-    nodes: [
-      ['Keen Edge', 'Native Mastery', 'Plunder', 'Command', 'Blazing Assault', 'Lineage Mastery', 'Array Breaker'],
-      ['Iron Wall', 'Nurtured Qi', 'Life Ward', 'Steadfast', 'Diamond Body', 'Longevity', 'Unmoving Mountain'],
-      ['Insight', 'Clear Mind', 'Mystic Flow', 'Vein Seeker', 'Great Dao', 'Trial Warden', 'Heaven and Man as One'],
-    ],
+    title: 'Talents — Three Specialties',
+    trees: {
+      satPhat: 'Attack',
+      hoThe: 'Defense',
+      thanThong: 'Skill',
+      khaiMach: 'Gathering',
+      chinhPhat: 'Conquering',
+      thongNgu: 'Leadership',
+      tranThu: 'Garrison',
+      tramYeu: 'Peacekeeping',
+    } as Record<SpecId, string>,
+    specs: (names: string) => `Specialties: ${names}`,
+    nodes: {
+      satPhat: [
+        'Keen Edge',
+        'Native Mastery',
+        'Plunder',
+        'Command',
+        'Blazing Assault',
+        'Lineage Mastery',
+        'Array Breaker',
+      ],
+      hoThe: ['Iron Wall', 'Nurtured Qi', 'Life Ward', 'Steadfast', 'Diamond Body', 'Longevity', 'Unmoving Mountain'],
+      thanThong: [
+        'Insight',
+        'Clear Mind',
+        'Mystic Flow',
+        'Vein Seeker',
+        'Great Dao',
+        'Trial Warden',
+        'Heaven and Man as One',
+      ],
+      khaiMach: [
+        'Dragon Seeker',
+        'Deep Pockets',
+        'Mountain Borer',
+        'Mine Ward',
+        'Vein Guide',
+        'Stone Armor',
+        'Earth Veins United',
+      ],
+      chinhPhat: [
+        'Pillage',
+        'War Spirit',
+        'Long March',
+        'Lineage Charge',
+        'Spoils of War',
+        'Battle Line',
+        'Sweep the Sect',
+      ],
+      thongNgu: ['Muster', 'Hardy', 'Open Camp', 'Formation', 'One Heart', 'Grand Camp', 'Ten Thousand as One'],
+      tranThu: [
+        'Hold the Peak',
+        'Iron Mail',
+        'Stand Fast',
+        'Hard Bones',
+        'Gate Warden',
+        'Lineage Ward',
+        'Walls of Gold',
+      ],
+      tramYeu: ['Beast Hunt', 'Seasoned', 'Tracker', 'Demon Cores', 'Slayer', 'Lineage Slayer', 'Subdue All Demons'],
+    } as Record<SpecId, string[]>,
     points: (n: number) => (n ? `${n} unspent points` : 'All points spent'),
     hint: (need: number[], star: number) =>
-      `One point per elder level, plus ${star} per star above one. Each tier opens after spending ${need.slice(1).join(' / ')} points in that tree; the last node is the strongest. There are not enough points for all three trees — pick a main one.`,
+      `Each elder has three specialties of their own, one tree each. One point per elder level, plus ${star} per star above one. Each tier opens after spending ${need.slice(1).join(' / ')} points in that tree; the last node is the strongest. There are not enough points for all three trees — pick a main one.`,
     need: (n: number) => `Opens after ${n} points in this tree`,
     spent: (n: number) => `${n} pts`,
     add: 'Add',
@@ -2784,6 +2851,7 @@ export const en: Text = {
     go: 'Study',
     doing: (name: string, n: number) => `Studying ${name} level ${n}`,
     maxed: 'Perfected',
+    advise: 'Suggested',
   },
   trib: {
     title: 'Tribulation',
@@ -2832,6 +2900,7 @@ export const en: Text = {
   // ---------- Pages ----------
   monHa: {
     share: 'Share to chat',
+    demo: 'Preview',
     sortBy: 'Sort by',
     sort: { lv: 'Level', rar: 'Rarity', star: 'Stars' },
     title: 'Disciples',
@@ -2889,6 +2958,7 @@ export const en: Text = {
   jobs: {
     build: 'Building',
     train: 'Recruiting',
+    train2: 'Recruiting (queue 2)',
     heal: 'Healing',
     study: 'Research',
     brew: 'Brewing',
@@ -3338,6 +3408,19 @@ export const en: Text = {
     tactics: { even: 'Spread', left: 'Left wing', mid: 'Center', right: 'Right wing', home: 'Hold home' },
     join: 'Queue for Champions',
     leave: 'Leave the queue (refund)',
+  },
+  ballad: {
+    title: 'Four Seekers',
+    hint: 'Open a room or join anyone’s (up to 4, no alliance needed); when it fills or after 15 minutes the team (first Arena teams, no troop loss) runs all 7 stages: beast camps and three bosses — camps heal half the fallen, the final boss summons a totem that grows with every fallen member. Rewards by the furthest stage, once a week.',
+    lv: ['Easy', 'Normal', 'Hard', 'Nightmare', 'Hell'],
+    open: 'Open room',
+    join: 'Join',
+    leave: 'Leave room',
+    room: (by: string, lv: string, n: number, max: number) => `${by} · ${lv} · ${n}/${max}`,
+    mine: (t: string) => `You are in a room · departs in ${t}`,
+    none: 'No room is waiting — open one for fellow cultivators to join.',
+    gifted: 'This week’s rewards taken (you can still practice)',
+    locked: (h: number) => `This difficulty opens at Main Hall ${h}`,
   },
   mystic: {
     title: 'Realm of Mystique',
@@ -3975,6 +4058,10 @@ export const en: Text = {
         name: "Spring's Return",
         desc: 'Spring brings everything back to life: five days of building, research, training and gathering for points and chests.',
       },
+      thuNoan: {
+        name: 'Spirit Egg Hunt',
+        desc: 'Five days around Easter: spirit beasts lay eggs across the realm — hunt beasts, chain hunts, gather, visit villages and caves to pick up Beast Eggs, then trade them in the event shop.',
+      },
       trienLam: {
         name: 'Grand Treasure Exhibition',
         desc: 'Three days of treasures on show: explore the fog, visit villages and caves, draw scrolls and forge artifacts for Relics, then trade them in the event shop.',
@@ -4157,6 +4244,7 @@ export const en: Text = {
       phienBai: 'Fortune Token',
       trienLam: 'Relic',
       haChi: 'Summer Blossom',
+      thuNoan: 'Beast Egg',
     } as Partial<Record<FestId, string>>,
     buy: (price: string) => `Exchange · ${price}`,
     left: (n: number, max: number) => `${n}/${max} left`,

@@ -56,7 +56,7 @@ export const itemName = (id: BagId) => [L.bag.family[bagFamily(id)].name, denom(
 export const speedsFor = (s: State, k: JobKind) =>
   BAG_IDS.filter(id => {
     const d = BAG[id]
-    return d.use === 'speed' && (!d.job || d.job === k) && (s.items[id] ?? 0) > 0
+    return d.use === 'speed' && (!d.job || d.job === k.replace('train2', 'train')) && (s.items[id] ?? 0) > 0
   }).sort((a, b) => speedMin(a) - speedMin(b))
 export const speedMin = (id: BagId) => {
   const d = BAG[id]

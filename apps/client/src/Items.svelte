@@ -39,9 +39,11 @@
       n = 1
     } else if (n > have) n = have
   })
-  const JOBS: JobKind[] = ['build', 'train', 'study', 'heal', 'forge']
+  const JOBS = ['build', 'train', 'study', 'heal', 'forge'] as const
   const jobs = $derived(
-    pick && def?.use === 'speed' ? JOBS.filter(k => !useError(game, { type: 'use', item: pick!, n, job: k })) : [],
+    pick && def?.use === 'speed'
+      ? [...JOBS, 'train2' as const].filter(k => !useError(game, { type: 'use', item: pick!, n, job: k }))
+      : [],
   )
   const elders = $derived(ELDER_IDS.filter(e => game.elders[e] !== undefined && elderLevel(game.elders[e]) < ELDER_MAX))
   const choose = (id: BagId) => {
@@ -59,7 +61,7 @@
       const d = BAG[id]
       if (d.use === 'speed') by[d.job ?? 'any'] = (by[d.job ?? 'any'] ?? 0) + d.min * 60_000 * (game.items[id] ?? 0)
     }
-    const each = JOBS.filter(k => by[k]).map(k => [k, by[k]!] as [JobKind, number])
+    const each = JOBS.filter(k => by[k]).map(k => [k, by[k]!] as const)
     return { all: (by.any ?? 0) + each.reduce((a, [, ms]) => a + ms, 0), jobs: each }
   })
   function use(extra: { job?: JobKind; elder?: (typeof ELDER_IDS)[number]; res?: Res } = {}) {
