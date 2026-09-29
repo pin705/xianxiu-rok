@@ -1,0 +1,39 @@
+name: Báo lỗi
+description: Có gì sai — mô tả để người khác tái hiện được
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: Cảm ơn đã báo lỗi! Điền giúp các mục dưới — càng dễ tái hiện, càng nhanh sửa.
+  - type: textarea
+    id: what
+    attributes:
+      label: Chuyện gì xảy ra?
+      description: Mô tả rõ kết quả nhận được; nếu biết, nói thêm điều bạn mong đợi.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Các bước tái hiện
+      placeholder: |
+        1. Mở …
+        2. Bấm …
+        3. Thấy …
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Môi trường
+      description: Thiết bị, hệ điều hành, trình duyệt (kèm phiên bản); tự host thì ghi phiên bản Node/Postgres và commit đang chạy.
+      placeholder: Chrome 141 · Android 15 / Windows 11 · commit e552457
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Ảnh chụp / video / log
+      description: Ảnh màn hình hoặc log từ console (F12) nếu có.
+    validations:
+      required: false

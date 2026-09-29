@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Lỗi an ninh
+    url: https://github.com/pin705/xiuxian-rok/security/advisories/new
+    about: Báo cáo lỗ hổng bảo mật riêng tư — đừng mở issue công khai (xem SECURITY.md).
